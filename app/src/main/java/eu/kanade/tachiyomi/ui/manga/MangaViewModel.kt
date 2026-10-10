@@ -900,6 +900,7 @@ class MangaViewModel(
                 downloadManager.startDownloadNow(chapterId)
             } else {
                 downloadChapters(chapters)
+                toggleAllSelection(false)
             }
 
             if (!isFavorited && !successState.hasPromptedToAddBefore) {
@@ -1060,7 +1061,6 @@ class MangaViewModel(
     private fun downloadChapters(chapters: List<Chapter>) {
         val manga = successState?.manga ?: return
         downloadManager.downloadChapters(manga, chapters)
-        toggleAllSelection(false)
     }
 
     /**
