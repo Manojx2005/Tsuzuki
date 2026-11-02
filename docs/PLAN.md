@@ -259,6 +259,37 @@ gap-filling from a second source.
 **Onboarding**: welcome → languages → import (LNReader backup, Mihon-style
 backup, Drive) → reading theme; permissions asked in context, not up front.
 
+### Inherited from Tsundoku (audited 2026-11-02)
+
+Tsundoku already ships these. Each one now has a design in both themes on the
+canvas page **"Final · Power tools (from Tsundoku)"**, or in an existing board.
+
+| Tsundoku feature (code) | Design board |
+|---|---|
+| Custom sources from CSS selectors (`ui/customsource`, `CustomSourcesScreen`) | Make a source |
+| Element selector wizard, 9 steps, auto-detect, full test (`ElementSelectorScreen`) | Site picker |
+| Search inside downloaded chapters, regex / case / whole word (`ChapterSearchScreen`) | Search inside chapters |
+| Duplicate detection: exact / contains / URL, bulk select, move, delete (`library/duplicate`) | Find duplicates |
+| Source priority by type and by source (`SourcePriorityScreen`) | Source priority |
+| EPUB import with novel/volume grouping (`ImportEpubScreen`) | Import EPUB |
+| Mass import by URL, batches, pause, retry errors (`MassImportDialog`) | Mass import by URL |
+| Batch EPUB export: translation mode, join volumes, CSS/JS, file name (`BatchExportEpubDialog`) | Export as EPUB |
+| Library search syntax `title: author: tag: source: id: -x` and regex (`LibrarySearchSpec`), open random | Library power search + tools |
+| Upcoming calendar (`mihon/feature/upcoming`) | Upcoming calendar |
+| Font manager: system, imported TTF/OTF, Google Fonts (`FontManagerScreen`) | Font manager |
+| Status bar elements and toolbar button placement (`StatusBarElementsScreen`, `AppbarItemConfig`) | Reader status bar + toolbar |
+| Quotes saved from selected text (`reader/quote`, `QuotesSheet`) | Quotes sheet |
+| Translation engines: OpenAI, DeepSeek, Gemini, DeepL, Google free, Ollama, LibreTranslate, NVIDIA NIM, SYSTRAN, HuggingFace, Custom HTTP; queue, chunking, contextual anchoring (`SettingsTranslationScreen`) | Translation engines |
+| Novel reader engine: native text vs WebView, paged WebView, auto-load/mark-read thresholds, block media, raw HTML, source CSS, margins, TTS speed/pitch (`SettingsNovelReaderScreen`) | Reader engine settings |
+| Library update schedule and restrictions, smart update, per-source throttle overrides, page-load delay, download ahead (`SettingsLibrary/NovelDownload/Download/Browse`) | Updates, downloads, throttling |
+| LNReader backup import, storage location, DB stats and maintenance (normalise URLs, remove duplicate URLs, delete translations, clear DB), DoH, user agent, worker info (`SettingsData/Advanced`, `WorkerInfoScreen`) | Data & maintenance |
+| Trackers: NovelUpdates (with list mapping), NovelList, RanobeDB, MangaBaka, MAL, AniList, Kitsu, MangaUpdates, Shikimori, Bangumi, Hikka (`SettingsTrackingScreen`) | Tracker accounts |
+| Manga support: image reader (webtoon, L→R, R→L, vertical), combined or separate Novels/Manga library, "hide manga UI" | Manga reader |
+| Novel notes (`MangaNotesScreen`), migration config/list, extension stores and filters, source preferences, backup create/restore, app lock, onboarding, about | Existing boards: Notebook, Migration, Extension repos, Extension detail, Backup, App lock, Onboarding, About |
+
+Not designed (plain system UI is fine): crash screen, debug info, open-source
+licences, deep-link handler, app-language picker, new-update dialog.
+
 ---
 
 ## 5. Features beyond Mihon
