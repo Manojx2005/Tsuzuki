@@ -1,5 +1,7 @@
 # LightNovelReader — Product & Engineering Plan
 
+> Scope: light novels **and** manga / manhwa / webtoons in one app.
+
 A light-novel / web-novel reader for Android, written entirely in Kotlin, built on
 the Mihon codebase, with LNReader's 328 source plugins re-implemented as native
 Kotlin extensions. Goal: Mihon-level smoothness and polish, plus reading features
@@ -284,11 +286,38 @@ canvas page **"Final · Power tools (from Tsundoku)"**, or in an existing board.
 | Library update schedule and restrictions, smart update, per-source throttle overrides, page-load delay, download ahead (`SettingsLibrary/NovelDownload/Download/Browse`) | Updates, downloads, throttling |
 | LNReader backup import, storage location, DB stats and maintenance (normalise URLs, remove duplicate URLs, delete translations, clear DB), DoH, user agent, worker info (`SettingsData/Advanced`, `WorkerInfoScreen`) | Data & maintenance |
 | Trackers: NovelUpdates (with list mapping), NovelList, RanobeDB, MangaBaka, MAL, AniList, Kitsu, MangaUpdates, Shikimori, Bangumi, Hikka (`SettingsTrackingScreen`) | Tracker accounts |
-| Manga support: image reader (webtoon, L→R, R→L, vertical), combined or separate Novels/Manga library, "hide manga UI" | Manga reader |
+| Manga support: image reader (webtoon, L→R, R→L, vertical), combined or separate Novels/Manga library, "hide manga UI" | Page "Final · Manga & manhwa" (see §4b) |
 | Novel notes (`MangaNotesScreen`), migration config/list, extension stores and filters, source preferences, backup create/restore, app lock, onboarding, about | Existing boards: Notebook, Migration, Extension repos, Extension detail, Backup, App lock, Onboarding, About |
 
 Not designed (plain system UI is fine): crash screen, debug info, open-source
 licences, deep-link handler, app-language picker, new-update dialog.
+
+### 4b. Manga & manhwa (first-class, not an extra)
+
+LightNovelReader reads light novels, manga and manhwa/webtoons. The Mihon base
+already has the image readers (`ui/reader/viewer/pager`, `webtoon`), Mihon/Tachiyomi
+extension repo support and manga trackers. Manga screens are on by default
+(`hideMangaUi = false`, `joinedLibrary = true`). No repo is bundled; users add repos.
+
+Designs (page **"Final · Manga & manhwa"**, both themes):
+
+| Screen | What it shows | Code status |
+|---|---|---|
+| Onboarding: "What do you read?" | Novels / Manga / Manhwa, which sets the tabs and `hideMangaUi` | New step (replace checkbox in `ThemeStep`) |
+| Library | One library with All / Novels / Manga / Manhwa chips and type badges | New type filter; badges new |
+| Browse | Novels / Manga / All switch, manga sources, add Mihon repo | Restyle of existing |
+| Manhwa details | Scanlator filter, page counts, "opens as webtoon" per series | Auto-webtoon is new |
+| Paged reader | Right-to-left manga, tap-zone overlay, page slider | Restyle of existing pager |
+| Webtoon reader | Long strip for manhwa | Restyle of existing webtoon viewer |
+| Reader settings sheet | Reading mode, tap zones, scale, crop, two-page, split, colour filters, CBZ | Mostly existing settings |
+| Tablet spread | Two pages side by side in landscape | Existing pager dual-page, restyled |
+
+New logic to build:
+1. **Content type** per entry (novel / manga / manhwa), from the source or tags
+   (manhwa, webtoon, long strip), editable on the details screen.
+2. **Auto reading mode**: manhwa opens in webtoon, manga in right-to-left;
+   per-series override (Mihon already stores per-series viewer flags).
+3. **Library type filter** and badges; History, Updates and Stats can also be split by type.
 
 ---
 
