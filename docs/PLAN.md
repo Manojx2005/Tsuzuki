@@ -96,21 +96,32 @@ chapter lists, `parseChapter` → `getChapterContent`, `filters` → `FilterList
 
 ---
 
-## 3. Design system
+## 3. Design system — two themes, one layout
 
-- **Look:** "Lamp-lit night shelf": solid charcoal surfaces, warm amber accent,
-  real book typography. No translucency. Material 3 components, custom theme.
-- **Color tokens:** background `#101114`, surface `#1A1B20`, surface-high `#24262D`,
-  outline `#26282F`, text `#ECEDF1`, text-secondary `#A6A9B5`, accent `#F5B65C`,
-  on-accent `#1A1206`, info `#8FB3FF`, success `#5FD3A0`, error `#FF8A7A`.
-  Light theme + **Material You dynamic color** as options.
-- **Type:** Plus Jakarta Sans (UI), Literata (titles + reading). Reader also offers
-  Source Serif, Atkinson Hyperlegible, OpenDyslexic, system and user `.ttf`.
-- **Shape:** 10–12 dp covers, 16–22 dp cards, 18 dp pills, 28 dp sheets.
-- **Motion:** shared-element cover transition library → details → reader;
-  predictive back; 60/120 Hz everywhere (no layout work on main thread).
-- **Accessibility:** 48 dp touch targets, TalkBack labels, 4.5:1 contrast,
-  font scaling to 200%, reduced-motion respected.
+The whole app uses one **bento** layout (tiles of different sizes) with two
+switchable themes. Theme is chosen in **Settings › Appearance** (and onboarding);
+switching never moves anything, only the skin changes.
+
+| Token | Colour | Dot |
+|---|---|---|
+| Background | the current book's cover colour (e.g. navy `#1C2B4A`) | `#000` + 12 px dot grid |
+| Tile | `rgba(255,255,255,.08)`, no border | `#0D0D0D`, 1 px `#262626` border |
+| Accent | book's second colour (e.g. gold `#E9B44C`) | `#FF2D2D` only |
+| Display type | Instrument Serif italic | Doto (dot-matrix), uppercase |
+| Body type | Manrope | Space Mono, uppercase labels |
+| Progress | solid bar / solid ring | rows of dots / ring of dots, red = "you are here" |
+| Covers | full colour | greyscale (red is the only colour) |
+| Reading text | Literata on deep book tint | Literata on black |
+
+- **Shared components:** Cover (generated art until real covers load), Icon, Nav (phone),
+  Rail (tablet), Bar (progress, solid or dotted).
+- **UX rules:** Resume is one tap from Home and from every novel page; primary actions
+  sit in the bottom third (thumb reach); 44 px minimum targets; every gesture has a visible
+  button; unread counts live on the book; source problems surface as a Home tile before
+  they break a book; reader keeps Literata in both themes for long-form comfort.
+- **Implementation:** one Compose `ColorScheme`-like token set per theme, provided via
+  `CompositionLocal`; Colour theme derives its tokens from the cover palette
+  (`androidx.palette`) of the book you're reading.
 
 ### Adaptive layouts (phones, foldables, tablets, ChromeOS/desktop)
 Uses `WindowSizeClass` + Compose Material 3 Adaptive (`NavigationSuiteScaffold`,
