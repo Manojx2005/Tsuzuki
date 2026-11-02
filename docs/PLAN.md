@@ -18,6 +18,25 @@ phone, tablet, desktop).
 | **Yomiden** (SirJohnyD/yomiden) | Mihon fork | Planned QuickJS host for LNReader plugins | Spec only, nothing implemented |
 | IReader, NovelDokusha, Shosetsu | Standalone apps | Own source systems | Not Mihon-based |
 
+### Code we can reuse (licence-checked 2026-11-02)
+
+| Project | Licence | Reuse | Notes |
+|---|---|---|---|
+| **Tsundoku** (tsundoku-otaku/tsundoku) | Apache-2.0 | **Fork base (recommended)** | Mihon-derived; already has novel reader, TTS, translation, EPUB/TXT/HTML, LNReader plugins (QuickJS), LNReader backup import. Released v0.3.4 (Oct 2026). |
+| Mihon | Apache-2.0 | Upstream | Keep merging upstream fixes via Tsundoku. |
+| IReader | Apache-2.0 | Borrow pieces | Compose + KMP, Piper TTS on desktop, translation engines, Legado import. |
+| IReader-extensions | **MPL-2.0** | Copy Kotlin sources (~85) and the Madara multisrc | MPL is file-level: copied files stay MPL, the app stays Apache. |
+| LNReader plugins | MIT | Port logic to Kotlin | Already planned. |
+| NovelDokusha / WebnovelReader | **GPL-3.0** | Ideas only | Copying code would force the whole app to GPL-3. |
+| Readium Kotlin toolkit | BSD-3 | EPUB parsing/export | |
+| sherpa-onnx | Apache-2.0 | Offline neural TTS | |
+
+**Cost impact:** forking Tsundoku instead of Mihon removes most of Phases 0–4
+(novel data model, reader, downloads, local EPUB, LNReader import, JS plugin host).
+Plan becomes: fork Tsundoku → reskin to the chosen design → keep the JS plugin host
+as a fallback while porting sources to Kotlin (starting from IReader-extensions'
+Kotlin sources + the 14 LNReader multisrc templates) → add the "beyond Mihon" features.
+
 **Conclusion:** no shipped Mihon-based app runs LNReader's catalogue as **native
 Kotlin** sources. That is the gap this project fills. Native Kotlin sources (no JS
 runtime) give faster startup, lower memory, real stack traces, compile-time
