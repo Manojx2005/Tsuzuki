@@ -29,6 +29,9 @@ class ThemingDelegateImpl : ThemingDelegate {
 }
 
 private val themeResources: Map<AppTheme, Int> = mapOf(
+    // Compose colours come from LnrColour/LnrDotColorScheme; these only theme legacy Views/splash.
+    AppTheme.COLOUR to R.style.Theme_Tachiyomi_TidalWave,
+    AppTheme.DOT to R.style.Theme_Tachiyomi_Monochrome,
     AppTheme.MONET to R.style.Theme_Tachiyomi_Monet,
     AppTheme.CATPPUCCIN to R.style.Theme_Tachiyomi_Catppuccin,
     AppTheme.TOKYONIGHT to R.style.Theme_Tachiyomi_TokyoNight,

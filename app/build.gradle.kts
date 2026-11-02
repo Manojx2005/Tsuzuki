@@ -30,10 +30,10 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.tsundoku"
+        applicationId = "io.github.manojx2005.lightnovelreader"
 
         versionCode = 24
-        versionName = "0.3.4"
+        versionName = "0.1.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")

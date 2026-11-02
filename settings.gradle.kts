@@ -28,7 +28,7 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Tsundoku"
+rootProject.name = "LightNovelReader"
 include(":app")
 include(":baseline-profile")
 include(":core-metadata")

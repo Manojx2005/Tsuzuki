@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Tsundoku</string>
+    <string name="app_name" translatable="false">LightNovelReader</string>
 
     <!-- Generic strings -->
     <string name="on">On</string>
@@ -238,6 +238,8 @@
     <string name="theme_lavender">Lavender</string>
     <string name="theme_midnightdusk">Midnight Dusk</string>
     <string name="theme_monochrome">Monochrome</string>
+    <string name="theme_lnr_colour">Colour</string>
+    <string name="theme_lnr_dot">Dot</string>
     <string name="theme_nord">Nord</string>
     <string name="theme_strawberrydaiquiri">Strawberry Daiquiri</string>
     <string name="theme_tako">Tako</string>
