@@ -4,7 +4,7 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.MR
 
 enum class AppTheme(val titleRes: StringResource?) {
-    // LightNovelReader themes (see docs/PLAN.md §3)
+    // Tsuzuki themes (see docs/PLAN.md §3)
     COLOUR(MR.strings.theme_lnr_colour),
     DOT(MR.strings.theme_lnr_dot),
 

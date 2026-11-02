@@ -1,4 +1,4 @@
-# LightNovelReader — Product & Engineering Plan
+# Tsuzuki — Product & Engineering Plan
 
 > Scope: light novels **and** manga / manhwa / webtoons in one app.
 
@@ -7,7 +7,7 @@ the Mihon codebase, with LNReader's 328 source plugins re-implemented as native
 Kotlin extensions. Goal: Mihon-level smoothness and polish, plus reading features
 Mihon (a manga app) never needed.
 
-Screen designs: see the "LightNovelReader App Screens" design canvas (24 artboards:
+Screen designs: see the "Tsuzuki App Screens" design canvas (24 artboards:
 phone, tablet, desktop).
 
 ---
@@ -294,7 +294,7 @@ licences, deep-link handler, app-language picker, new-update dialog.
 
 ### 4b. Manga & manhwa (first-class, not an extra)
 
-LightNovelReader reads light novels, manga and manhwa/webtoons. The Mihon base
+Tsuzuki reads light novels, manga and manhwa/webtoons. The Mihon base
 already has the image readers (`ui/reader/viewer/pager`, `webtoon`), Mihon/Tachiyomi
 extension repo support and manga trackers. Manga screens are on by default
 (`hideMangaUi = false`, `joinedLibrary = true`). No repo is bundled; users add repos.

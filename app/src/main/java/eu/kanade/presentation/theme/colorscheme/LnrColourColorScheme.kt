@@ -5,7 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * LightNovelReader "Colour" theme.
+ * Tsuzuki "Colour" theme.
  *
  * Night-ink navy with a lamp-gold accent. This is the default palette; the reader and
  * novel screens may further tint it from the current book's cover (see docs/PLAN.md §3).

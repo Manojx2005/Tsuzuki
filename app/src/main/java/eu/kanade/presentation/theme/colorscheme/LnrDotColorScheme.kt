@@ -5,7 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * LightNovelReader "Dot" theme.
+ * Tsuzuki "Dot" theme.
  *
  * Monochrome dot-matrix look with a single red accent. Paired with Doto + Space Mono
  * typography (see [eu.kanade.presentation.theme.lnrTypography]).

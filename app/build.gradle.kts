@@ -30,7 +30,7 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "io.github.manojx2005.lightnovelreader"
+        applicationId = "io.github.manojx2005.tsuzuki"
 
         versionCode = 24
         versionName = "0.1.0"

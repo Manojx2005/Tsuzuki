@@ -11,7 +11,7 @@ import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.tachiyomi.R
 
 /*
- * Typography for the two LightNovelReader themes (docs/PLAN.md §3).
+ * Typography for the two Tsuzuki themes (docs/PLAN.md §3).
  *
  * Colour: Instrument Serif (italic) for display/headline, Manrope for everything else.
  * Dot:    Doto (dot-matrix) for display/headline, Space Mono for everything else.

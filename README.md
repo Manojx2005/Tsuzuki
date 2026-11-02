@@ -1,10 +1,10 @@
-# LightNovelReader
+# Tsuzuki
 
-A light-novel and web-novel reader for Android, written in Kotlin with Jetpack Compose.
+A reader for light novels, web novels, manga and manhwa on Android, written in Kotlin with Jetpack Compose. *Tsuzuki* (続き) means "continuation": what happens next.
 
 > **Status:** early development (v0.1.0). Not yet released.
 
-LightNovelReader is a fork of **[Tsundoku](https://github.com/tsundoku-otaku/tsundoku)**, which is itself a fork of
+Tsuzuki is a fork of **[Tsundoku](https://github.com/tsundoku-otaku/tsundoku)**, which is itself a fork of
 **[Mihon](https://github.com/mihonapp/mihon)**. Tsundoku already provides the novel reader, text-to-speech,
 translation, EPUB/TXT import, LNReader plugin support and LNReader backup import. That saves months of work.
 This fork adds:
@@ -29,10 +29,10 @@ Requires JDK 17+ and the Android SDK (compile SDK set in `gradle/mihon.versions.
 ## Credits and licences
 
 - Code: Apache License 2.0 (see [LICENSE](LICENSE)). Copyright the Mihon and Tsundoku contributors,
-  and the LightNovelReader contributors. The original Tsundoku README is kept at
+  and the Tsuzuki contributors. The original Tsundoku README is kept at
   [`docs/TSUNDOKU_README.md`](docs/TSUNDOKU_README.md).
 - LNReader plugin logic: MIT (LNReader contributors).
 - Bundled fonts (Doto, Space Mono, Instrument Serif, Manrope): SIL Open Font License 1.1
   ([`docs/licenses/OFL-1.1.txt`](docs/licenses/OFL-1.1.txt)).
 
-LightNovelReader is not affiliated with Mihon, Tsundoku or LNReader.
+Tsuzuki is not affiliated with Mihon, Tsundoku or LNReader.

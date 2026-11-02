@@ -24,7 +24,7 @@ git checkout ccr-275897ff-mwbv6p
    ```sh
    ./gradlew :app:installDebug
    ```
-   The debug app is installed as `io.github.manojx2005.lightnovelreader.debug` and can sit next to a release build.
+   The debug app is installed as `io.github.manojx2005.tsuzuki.debug` and can sit next to a release build.
 
 Telemetry and the self-updater are off by default. No Firebase file is needed.
 
@@ -43,7 +43,7 @@ If the build fails, the likely places are:
 
 On the phone, check:
 
-- [ ] App name shows **LightNovelReader**.
+- [ ] App name shows **Tsuzuki**.
 - [ ] Settings › Appearance lists **Colour** and **Dot** first. Switching changes colours and fonts.
 - [ ] Headings use Instrument Serif in Colour and the dot-matrix font in Dot.
 - [ ] Browse › Extensions can add LNReader plugins and open a novel (this part is Tsundoku's, unchanged).
@@ -51,7 +51,7 @@ On the phone, check:
 ## 5. Where things are
 
 - Product and engineering plan: [`docs/PLAN.md`](PLAN.md)
-- Screen designs, both themes, plus Motion: the "LightNovelReader App Screens" canvas
+- Screen designs, both themes, plus Motion: the "Tsuzuki App Screens" canvas
   (https://claude.ai/artifact/JupsRJRJ2GsXbLaXnmbjMC)
 - Original Tsundoku readme: [`docs/TSUNDOKU_README.md`](TSUNDOKU_README.md)
 
