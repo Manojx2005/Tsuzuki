@@ -1,0 +1,301 @@
+# LightNovelReader — Product & Engineering Plan
+
+A light-novel / web-novel reader for Android, written entirely in Kotlin, built on
+the Mihon codebase, with LNReader's 328 source plugins re-implemented as native
+Kotlin extensions. Goal: Mihon-level smoothness and polish, plus reading features
+Mihon (a manga app) never needed.
+
+Screen designs: see the "LightNovelReader App Screens" design canvas (24 artboards:
+phone, tablet, desktop).
+
+---
+
+## 1. Prior art (researched 2026-11-02)
+
+| Project | Base | Novel sources | State |
+|---|---|---|---|
+| **Hayai** (HayaiApp/hayai) | TachiyomiJ2K fork (not Mihon) | Kotlin APKs + LNReader **JS** plugins | Active, nightly builds only, no stable release |
+| **Yomiden** (SirJohnyD/yomiden) | Mihon fork | Planned QuickJS host for LNReader plugins | Spec only, nothing implemented |
+| IReader, NovelDokusha, Shosetsu | Standalone apps | Own source systems | Not Mihon-based |
+
+**Conclusion:** no shipped Mihon-based app runs LNReader's catalogue as **native
+Kotlin** sources. That is the gap this project fills. Native Kotlin sources (no JS
+runtime) give faster startup, lower memory, real stack traces, compile-time
+checking, and simpler sandboxing.
+
+---
+
+## 2. Source catalogue (from `plugins.min.json`, LNReader v3.0.0)
+
+- **328 plugins**. Index fields: `id, name, site, lang, version, url, iconUrl, customCSS?`
+- **Languages:** English 187 · Russian 26 · Arabic 20 · Spanish 18 · French 17 ·
+  Turkish 15 · Portuguese 11 · Indonesian 10 · Chinese 8 · Vietnamese 5 · other 11
+- **Multisrc themes (161 sources share 14 templates):** madara 77 · lightnovelwp 36 ·
+  readnovelfull 8 · fictioneer 8 · readwn 7 · mtlnovel 6 · hotnovelpub 5 ·
+  webnovelworld 3 · rulate 3 · novelcool 2 · novelfire 2 · ranobes 2 · ifreedom 2
+- **Standalone:** 167 hand-written plugins → individual Kotlin ports.
+
+### Kotlin source API (`source-api` module)
+
+```kotlin
+interface NovelSource {
+    val id: Long            // stable hash of LNReader plugin id → backup compatibility
+    val name: String
+    val lang: String        // ISO code, mapped from the index's native-script names
+    suspend fun getPopular(page: Int, filters: FilterList): NovelsPage
+    suspend fun getLatest(page: Int): NovelsPage
+    suspend fun search(query: String, page: Int, filters: FilterList): NovelsPage
+    suspend fun getNovelDetails(novel: SNovel): SNovel
+    suspend fun getChapterList(novel: SNovel): List<SChapter>
+    suspend fun getChapterContent(chapter: SChapter): ChapterContent   // sanitized HTML
+    fun getFilterList(): FilterList
+}
+interface ConfigurableNovelSource { fun setupPreferences(screen: PreferenceScreen) }
+abstract class HttpNovelSource : NovelSource  // OkHttp, rate limit, CF interceptor, Jsoup helpers
+```
+
+Mapping from LNReader: `popularNovels` → `getPopular/getLatest`, `searchNovels` →
+`search`, `parseNovel` → `getNovelDetails + getChapterList`, `parsePage` → paged
+chapter lists, `parseChapter` → `getChapterContent`, `filters` → `FilterList`,
+`pluginSettings` → `ConfigurableNovelSource`.
+
+### Extension repo
+- Separate Gradle project (or `extensions/` dir): `lib/` (date parsing, CF, crypto),
+  `lib-multisrc/<theme>/`, `src/<lang>/<source>/`.
+- Each source → signed APK; CI generates `index.min.json` + icons (Mihon format).
+- **Generator script** reads `plugins.min.json` → creates source stubs, `build.gradle`,
+  icons, version metadata. Logic is ported by hand.
+- **Testing:** fixture tests (saved HTML, offline) for every source + nightly live
+  smoke test (popular → details → chapters → content). Results publish a
+  `health.json` that the app shows in Browse (see §4 Source health).
+
+### Port order
+1. 14 multisrc templates → 161 sources
+2. Top ~95 English standalone sources (by popularity)
+3. Remaining ~72 non-English standalone
+4. Flag dead/blocked sites instead of porting blindly.
+
+---
+
+## 3. Design system
+
+- **Look:** "Lamp-lit night shelf": solid charcoal surfaces, warm amber accent,
+  real book typography. No translucency. Material 3 components, custom theme.
+- **Color tokens:** background `#101114`, surface `#1A1B20`, surface-high `#24262D`,
+  outline `#26282F`, text `#ECEDF1`, text-secondary `#A6A9B5`, accent `#F5B65C`,
+  on-accent `#1A1206`, info `#8FB3FF`, success `#5FD3A0`, error `#FF8A7A`.
+  Light theme + **Material You dynamic color** as options.
+- **Type:** Plus Jakarta Sans (UI), Literata (titles + reading). Reader also offers
+  Source Serif, Atkinson Hyperlegible, OpenDyslexic, system and user `.ttf`.
+- **Shape:** 10–12 dp covers, 16–22 dp cards, 18 dp pills, 28 dp sheets.
+- **Motion:** shared-element cover transition library → details → reader;
+  predictive back; 60/120 Hz everywhere (no layout work on main thread).
+- **Accessibility:** 48 dp touch targets, TalkBack labels, 4.5:1 contrast,
+  font scaling to 200%, reduced-motion respected.
+
+### Adaptive layouts (phones, foldables, tablets, ChromeOS/desktop)
+Uses `WindowSizeClass` + Compose Material 3 Adaptive (`NavigationSuiteScaffold`,
+`ListDetailPaneScaffold`).
+
+| Width class | Navigation | Library / Browse | Reader |
+|---|---|---|---|
+| Compact (< 600 dp, phones) | Bottom bar | Single pane, 3-col grid | Single column / single page |
+| Medium (600–840 dp, foldables, small tablets) | Navigation rail | List-detail when landscape | Single page, wider margins (max 70 ch line length) |
+| Expanded (> 840 dp, tablets) | Rail | **List + detail panes** (grid left, novel details right) | **Two-page spread** in paged mode; centered column in scroll mode |
+| Large / desktop (> 1200 dp: ChromeOS, Samsung DeX, Android desktop windowing) | Permanent sidebar w/ pinned sources | **Three panes** (sidebar · grid · preview) | Two-page spread, optional side TOC |
+
+Plus: keyboard shortcuts (`/` search, `Ctrl K`, arrows/space to turn pages,
+`A` add to library), mouse hover states, right-click context menus, resizable
+windows, foldable hinge awareness (no text across the hinge), stylus-friendly
+highlighting.
+
+---
+
+## 4. Screens and features
+
+### Main tabs (bottom bar / rail / sidebar)
+
+**Library**
+- "Continue reading" hero card (cover, chapter, %, time left, Resume)
+- Category tabs with counts; per-category sort & display
+- Grid (compact / comfortable / cover-only) or list; adjustable columns
+- Badges: unread, downloaded, local, language, source down
+- Filters: unread, downloaded, started, completed, tracked, bookmarked, source
+- Sort: alphabetical, last read, last update, unread, chapter count, date added, word count
+- Multi-select actions: categorize, mark read, download, delete, migrate, merge
+- Search within library; global-search fallback
+- Pull to refresh (update library)
+
+**Updates**
+- Grouped by date; new / saved / read states
+- "N new chapters" banner with Get all
+- Per-row download, mark read, bookmark; multi-select
+- Update schedule summary (last / next check)
+- Restrictions: Wi-Fi only, charging, skip completed/unstarted
+
+**History**
+- Today/yesterday/older groups with per-entry progress bar
+- Reading summary tiles: time today, chapters, streak
+- Resume, remove entry, clear all; search
+
+**Browse**
+- Tabs: **Sources · Extensions · Migrate**
+- Sources: pinned, last used, by language; Latest shortcut; **health dot**
+  (working / slow / down + latency)
+- Extensions: language filter, updates pending (Update all), installed, available,
+  trust/untrusted states, per-extension settings, multiple repos
+- Global search across all/pinned sources with per-source status (results /
+  searching / Cloudflare / error) and progress
+
+**More**
+- Downloaded only, Incognito toggles
+- Download queue, Stats & goals, Source health & migration, Categories,
+  Backup & sync, Settings, About
+
+### Discovery & novel
+
+**Source catalogue**: Popular / Latest / Completed; filter sheet (genres,
+status, sort; source-defined); "Hide in library"; WebView button; infinite grid.
+
+**Novel details**
+- Cover, title, author, status, source, chapter count, **word count**
+- Actions: Add to library (with category), Tracking, **Merge sources**, WebView,
+  share, edit metadata (title, cover, description), download options
+- Synopsis (expand), tags (tap → search)
+- Chapter list: new / saved / read, read %, per-chapter **reading time estimate**,
+  filter/sort, scanlator/volume grouping, range-select download
+- Resume FAB
+
+### Reading
+
+**Reader (scroll)**: native Compose text renderer (not a WebView)
+- Top bar: title, chapter, % + time left, bookmark, find-in-chapter, menu
+- Bottom bar: chapter slider with prev/next, Contents, Listen, Appearance,
+  Translate, Notes
+- Seamless infinite scroll into next chapter (preloaded)
+- Long-press selection → highlight (4 colours), note, copy, share quote,
+  define, translate, search web, add to glossary
+- Tap zones configurable; volume-key scrolling; auto-scroll with speed
+- Progress saved per paragraph; resume exactly where left
+
+**Reader (paged)**
+- Pagination computed off-thread with `TextMeasurer`; slide / curl / none animations
+- Header/footer (title, chapter, page x/y, time left); no text ever under footer
+- Two-page spread on wide screens
+
+**Appearance sheet** (live preview behind sheet)
+- Tabs: Appearance · Layout · Controls
+- Themes: Paper, Sepia, Sage, Slate, Night, AMOLED, custom (bg/text/link colors)
+- Fonts incl. user fonts; size, line spacing, paragraph spacing, margins,
+  justify + hyphenation, indent, max line width
+- Paged/scroll, **Focus reading** (bold word starts, dim non-active lines),
+  keep screen on, brightness/warmth overlay, immersive mode, orientation lock
+- Per-novel overrides ("use for this novel only")
+
+**Listen (TTS)**
+- Media3 `MediaSessionService`: lock-screen/notification/Bluetooth controls
+- Engines: system TTS + **offline neural voices** (sherpa-onnx / Piper)
+- Sentence highlighting synced in reader; paragraph skip; chapter skip
+- Speed 0.5–3×, pitch; per-novel voice; pronunciation dictionary
+- Sleep timer (minutes / end of chapter); auto-continue N chapters
+- Works with screen off and across downloaded chapters
+
+**Notebook (highlights, notes, glossary)**
+- Highlights with notes, by chapter; bookmarks
+- **Glossary / character tracker**, spoiler-safe up to current chapter
+- Export Markdown / Obsidian / Anki CSV
+
+**Tracking sheet**: NovelUpdates (new), AniList, MyAnimeList, Kitsu; status,
+chapters, score, dates; auto-sync on chapter finish; auto-match on add.
+
+### System
+
+**Download queue**: grouped by novel; progress; errors with auto-retry/backoff
+(HTTP 429 aware); reorder; pause/resume all; parallel per source; Wi-Fi only;
+storage estimate.
+
+**Stats & goals**: daily goal ring, streak, minutes chart (week/month/year),
+words read, reading speed (wpm), chapters, TTS time, top genres, per-novel stats.
+
+**Settings**: Appearance · Library · Reader · Listen · Translation & dictionary ·
+Downloads · Tracking · Browse · Backup & sync · Security & privacy · Advanced
+(network, DoH, user agent, logs), all searchable.
+
+**Source health & migration**: working/slow/down summary (on-device telemetry +
+nightly CI `health.json`); alert when a library source fails; one-tap
+migration with **fuzzy matching**, chapter-number mapping, progress kept,
+gap-filling from a second source.
+
+**Onboarding**: welcome → languages → import (LNReader backup, Mihon-style
+backup, Drive) → reading theme; permissions asked in context, not up front.
+
+---
+
+## 5. Features beyond Mihon
+
+1. **Native Kotlin ports of all 328 LNReader sources** with live health status
+2. **Source health dashboard + proactive migration** when a site dies
+3. **Merge sources**: one novel, several sources, missing chapters filled automatically
+4. **Offline neural TTS** with sentence sync, sleep timer and auto-continue
+5. **Highlights, notes, glossary/character tracker** (spoiler-safe) with export
+6. **On-device translation** (ML Kit) incl. bilingual side-by-side mode and
+   **text replacement rules** (fix MTL names, regex cleanup per novel/source)
+7. **Tap-to-define dictionary** (offline dictionaries, Yomitan format)
+8. **Reading goals, streaks and deep stats** (wpm, words, time)
+9. **Reading time estimates** per chapter and "time left" everywhere
+10. **Smart downloads**: auto-fetch next N chapters on Wi-Fi/charging, auto-delete after read
+11. **Cross-device sync** (Google Drive / WebDAV / self-hosted), not just backups
+12. **LNReader backup import** and EPUB import/export (with cover & metadata)
+13. **Focus reading** (bionic-style), dyslexia font, line focus, max line width
+14. **First-class tablets, foldables and ChromeOS** with two-page spread and
+    keyboard shortcuts
+15. **Home-screen widgets**: continue reading, daily goal
+16. **Duplicate detection** when adding a novel already in library from another source
+
+---
+
+## 6. Architecture (inherited from Mihon, adapted)
+
+- Modules: `app`, `core`, `core-metadata`, `data`, `domain`, `source-api`,
+  `source-local` (EPUB/TXT), `presentation-core`, `presentation-widget`, `i18n`,
+  `macrobenchmark`, `reader-engine` (new), `tts` (new).
+- Compose + Voyager navigation, SQLDelight DB, Injekt DI, coroutines/Flow,
+  OkHttp + Coil, WorkManager.
+- **reader-engine**: HTML → sanitized block model (Jsoup `Safelist`) →
+  `AnnotatedString` per paragraph, cached in memory + disk; `LazyColumn` for scroll;
+  `TextMeasurer` paginator for paged; images via Coil.
+- **DB changes:** manga → novel tables; chapter: `word_count`, `last_paragraph`,
+  `last_offset`; new tables: `highlights`, `notes`, `glossary_terms`,
+  `replacement_rules`, `reading_sessions`, `source_health`, `merged_sources`.
+- **Performance budget:** cold start < 600 ms on mid-range device, chapter
+  open < 150 ms from cache, 0 janky frames during scroll; enforced with baseline
+  profiles + macrobenchmarks in CI.
+
+---
+
+## 7. Roadmap
+
+| Phase | Scope | Est. |
+|---|---|---|
+| 0 | Fork Mihon, rebrand (name, app id, icon), remove image-reader code, CI | 2 days |
+| 1 | `source-api`, DB migration, LNReader-compatible source IDs, ISO lang mapping | 4 days |
+| 2 | reader-engine: scroll mode, appearance sheet, progress | 2 weeks |
+| 3 | Paged mode, two-page spread, adaptive layouts (rail, list-detail, desktop) | 1.5 weeks |
+| 4 | Downloads (HTML), local EPUB/TXT, EPUB export, LNReader backup import | 1 week |
+| 5 | Extension repo + generator + multisrc templates (161 sources) | 2 weeks |
+| 6 | TTS (system → neural), notebook, glossary | 2 weeks |
+| 7 | Standalone ports wave 1 (EN) + nightly health CI | 3–4 weeks |
+| 8 | Tracking (NovelUpdates), stats & goals, smart downloads, migration/merge | 2 weeks |
+| 9 | Translation, dictionary, sync, widgets, standalone ports wave 2 | 3 weeks |
+| 10 | Polish, accessibility pass, translations, release | 1 week |
+
+**v0.1 milestone** = Phases 0–3 + madara & lightnovelwp templates (113 sources).
+
+---
+
+## 8. Open decisions
+
+1. Extensions as separate APKs (recommended, Mihon model) vs bundled
+2. Extensions in this repo vs a second repo
+3. Final app name and application ID (e.g. `io.github.manojx2005.lightnovelreader`)
+4. License: Apache-2.0 (inherited) is fine; ported plugin logic credits LNReader (MIT)
