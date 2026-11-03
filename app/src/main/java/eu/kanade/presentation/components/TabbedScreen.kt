@@ -61,18 +61,30 @@ fun TabbedScreen(
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
             ),
         ) {
-            PrimaryScrollableTabRow(
-                selectedTabIndex = state.currentPage,
-                edgePadding = 0.dp,
-                modifier = Modifier.zIndex(1f),
+            if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
             ) {
-                tabs.forEachIndexed { index, tab ->
-                    Tab(
-                        selected = state.currentPage == index,
-                        onClick = { scope.launch { state.animateScrollToPage(index) } },
-                        text = { TabText(text = stringResource(tab.titleRes), badgeCount = tab.badgeNumber) },
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                    )
+                // Tsuzuki themes: tabs as pills (board "Browse").
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
+                    labels = tabs.map { stringResource(it.titleRes) },
+                    counts = tabs.map { it.badgeNumber },
+                    selected = state.currentPage,
+                    onClick = { index -> scope.launch { state.animateScrollToPage(index) } },
+                )
+            } else {
+                PrimaryScrollableTabRow(
+                    selectedTabIndex = state.currentPage,
+                    edgePadding = 0.dp,
+                    modifier = Modifier.zIndex(1f),
+                ) {
+                    tabs.forEachIndexed { index, tab ->
+                        Tab(
+                            selected = state.currentPage == index,
+                            onClick = { scope.launch { state.animateScrollToPage(index) } },
+                            text = { TabText(text = stringResource(tab.titleRes), badgeCount = tab.badgeNumber) },
+                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
 

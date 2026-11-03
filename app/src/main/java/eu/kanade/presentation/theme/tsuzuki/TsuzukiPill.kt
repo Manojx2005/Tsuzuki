@@ -65,3 +65,37 @@ fun TsuzukiPill(
         }
     }
 }
+
+/**
+ * Horizontally scrolling row of [TsuzukiPill]s that keeps the selected one in view (category tabs,
+ * Browse/Updates tab rows). [counts] may hold null for "no count".
+ */
+@Composable
+fun TsuzukiPillRow(
+    labels: List<String>,
+    selected: Int,
+    onClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    counts: List<Int?> = emptyList(),
+) {
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(selected) {
+        val visible = listState.layoutInfo.visibleItemsInfo
+        if (visible.none { it.index == selected && it.offset >= 0 }) listState.animateScrollToItem(selected)
+    }
+    androidx.compose.foundation.lazy.LazyRow(
+        modifier = modifier,
+        state = listState,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(labels.size) { index ->
+            TsuzukiPill(
+                text = labels[index],
+                selected = index == selected,
+                onClick = { onClick(index) },
+                count = counts.getOrNull(index),
+            )
+        }
+    }
+}
