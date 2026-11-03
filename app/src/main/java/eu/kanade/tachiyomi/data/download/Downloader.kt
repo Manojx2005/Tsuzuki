@@ -111,12 +111,9 @@ class Downloader(
     private val _queueState = MutableStateFlow<List<Download>>(emptyList())
     val queueState = _queueState.asStateFlow()
 
-    /**
-     * Novel manga ids whose downloads are individually paused, independent of the global queue
-     * state. Downloads of these groups are excluded from the active set while the queue runs.
-     */
-    private val _pausedNovelMangaIds = MutableStateFlow<Set<Long>>(emptySet())
-    val pausedNovelMangaIds = _pausedNovelMangaIds.asStateFlow()
+    // Tsuzuki: novel-only behaviour lives in NovelDownloadEngine so this file stays close to Mihon's.
+    private val novel = NovelDownloadEngine(context, novelDownloadPreferences, translationPreferences, translationService)
+    val pausedNovelMangaIds = novel.pausedMangaIds
 
     /**
      * Notifier for the downloader state and progress.
@@ -130,8 +127,6 @@ class Downloader(
 
     // Used to avoid spamming warning notifications during bulk queueing.
     private val hasShownQueueSizeWarning = AtomicBoolean(false)
-
-    private val novelChapterTotals = java.util.concurrent.ConcurrentHashMap<Long, Int>()
 
     /**
      * Whether the downloader is running.
@@ -235,7 +230,7 @@ class Downloader(
      * Pauses downloads for a single novel group without affecting the rest of the queue.
      */
     fun pauseNovelGroup(mangaId: Long) {
-        _pausedNovelMangaIds.update { it + mangaId }
+        novel.pause(mangaId)
         // activeDownloadsFlow will re-evaluate and cancel the in-flight job; status reset
         // happens in launchDownloadJob's CancellationException handler to avoid a race.
     }
@@ -244,7 +239,7 @@ class Downloader(
      * Resumes a previously paused novel group, starting the downloader if it isn't running.
      */
     fun resumeNovelGroup(mangaId: Long) {
-        _pausedNovelMangaIds.update { it - mangaId }
+        novel.resume(mangaId)
         if (!isRunning && !isPaused) {
             DownloadJob.start(context)
         }
@@ -265,46 +260,22 @@ class Downloader(
             val activeDownloadsFlow = combine(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
-                novelDownloadPreferences.parallelNovelDownloads().changes(),
+                novel.parallelLimit(),
                 // Re-evaluate the active set whenever a group is paused/resumed.
-                _pausedNovelMangaIds,
+                novel.pausedMangaIds,
             ) { queue, parallelCount, parallelNovelCount, _ ->
                 Triple(queue, parallelCount, parallelNovelCount)
             }.transformLatest { (queue, parallelCount, parallelNovelCount) ->
                 while (true) {
-                    val maxMangaActiveSources = parallelCount.coerceAtLeast(1)
-                    val maxNovelActiveManga = parallelNovelCount.coerceAtLeast(1)
-
-                    var mangaActiveCount = 0
-                    var novelActiveCount = 0
-                    val usedMangaSourceIds = HashSet<Long>(maxMangaActiveSources)
-                    val usedNovelMangaIds = HashSet<Long>(maxNovelActiveManga)
-
-                    val activeDownloads = buildList {
-                        for (download in queue) {
-                            // Ignore completed downloads, leave them in the queue
-                            if (download.status.value > Download.State.DOWNLOADING.value) continue
-
-                            if (download.source.isNovelSource()) {
-                                if (download.mangaId in _pausedNovelMangaIds.value) continue
-                                if (novelActiveCount >= maxNovelActiveManga) continue
-                                if (usedNovelMangaIds.add(download.mangaId)) {
-                                    add(download)
-                                    novelActiveCount++
-                                }
-                            } else {
-                                if (mangaActiveCount >= maxMangaActiveSources) continue
-                                if (usedMangaSourceIds.add(download.source.id)) {
-                                    add(download)
-                                    mangaActiveCount++
-                                }
-                            }
-
-                            if (mangaActiveCount >= maxMangaActiveSources && novelActiveCount >= maxNovelActiveManga) {
-                                break
-                            }
-                        }
-                    }
+                    val activeDownloads = queue.asSequence()
+                        .filterNot { it.source.isNovelSource() }
+                        // Ignore completed downloads, leave them in the queue
+                        .filter { it.status.value <= Download.State.DOWNLOADING.value }
+                        .groupBy { it.source }
+                        .toList()
+                        .take(parallelCount.coerceAtLeast(1))
+                        .map { (_, downloads) -> downloads.first() } +
+                        novel.pickActive(queue, parallelNovelCount)
                     emit(activeDownloads)
 
                     if (activeDownloads.isEmpty()) break
@@ -382,9 +353,7 @@ class Downloader(
             // Clean up unconditionally (success, error, or early throw before any progress
             // event) so a chapter that fails before novelChapterProgress ever runs doesn't
             // leave a stale total behind for this manga.
-            if (download.source.isNovelSource()) {
-                clearNovelChapterTotalIfDone(download.mangaId)
-            }
+            if (download.source.isNovelSource()) novel.clearTotalIfDone(download.mangaId, queueState.value)
         }
     }
 
@@ -588,7 +557,7 @@ class Downloader(
                 .collect {
                     // Do when page is downloaded.
                     if (isNovel) {
-                        notifier.onProgressChange(download, novelChapterProgress(download))
+                        notifier.onProgressChange(download, novel.progress(download, queueState.value))
                     } else {
                         notifier.onProgressChange(download)
                     }
@@ -644,20 +613,7 @@ class Downloader(
 
             download.status = Download.State.DOWNLOADED
 
-            // Queue for translation if enabled and is a novel source
-            if (download.source.isNovelSource() &&
-                translationPreferences.translationEnabled().get() &&
-                translationPreferences.autoTranslateDownloads().get()
-            ) {
-                if (manga != null && chapter != null) {
-                    translationService.enqueue(
-                        manga = manga,
-                        chapter = chapter,
-                        priority = TranslationService.PRIORITY_LOW,
-                    )
-                    TranslationJob.start(context)
-                }
-            }
+            if (download.source.isNovelSource()) novel.onDownloaded(manga, chapter)
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
@@ -676,74 +632,7 @@ class Downloader(
      * @param tmpDir the temporary directory of the download.
      */
     private suspend fun getOrDownloadImage(page: Page, download: Download, tmpDir: UniFile) {
-        val debugMsg = buildString {
-            append("getOrDownloadImage: page=")
-            append(page.number)
-            append(", url=")
-            append(page.url)
-            append(", imageUrl=")
-            append(page.imageUrl)
-            append(", text=")
-            append(page.text?.take(50))
-            append(", isNovelSource=")
-            append(download.source.isNovelSource())
-        }
-        logcat { debugMsg }
-
-        // If the page has text, save it as a text file
-        if (page.text == null && download.source.isNovelSource()) {
-            logcat { "  -> Fetching novel page text for page ${page.number}" }
-            try {
-                page.text = download.source.fetchPageText(page)
-                logcat { "  -> Fetched text, length=${page.text?.length ?: 0}" }
-            } catch (e: Throwable) {
-                logcat(LogPriority.ERROR, e) { "  -> Error fetching novel page text" }
-                page.status = Page.State.Error(e)
-                return
-            }
-        }
-
-        if (download.source.isNovelSource() && page.text.isNullOrBlank() && page.imageUrl.isNullOrEmpty()) {
-            logcat(LogPriority.ERROR) { "  -> Novel page ${page.number} returned no text; failing download" }
-            page.status = Page.State.Error(Exception("Chapter is empty - the source returned no text"))
-            return
-        }
-
-        if (!page.text.isNullOrBlank()) {
-            val digitCount = (download.pages?.size ?: 0).toString().length.coerceAtLeast(3)
-            val filename = "%0${digitCount}d.html".format(Locale.ENGLISH, page.number)
-            logcat { "  -> Saving text to $filename" }
-
-            // Embed images if enabled
-            val htmlContent = if (novelDownloadPreferences.downloadChapterImages().get()) {
-                logcat { "  -> Embedding images in chapter HTML" }
-                val baseUrl = page.url.takeIf { it.isNotBlank() }
-                    ?: (download.source as? HttpSource)?.baseUrl
-                    ?: (download.source as? JsSource)?.baseUrl
-                val embedder = ChapterImageEmbedder()
-                embedder.processHtml(page.text!!, baseUrl, tmpDir)
-            } else {
-                page.text!!
-            }
-
-            val file = try {
-                tmpDir.createFile(filename)
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "Failed to create file $filename" }
-                null
-            }
-
-            if (file == null) {
-                page.status = Page.State.Error(Exception("Failed to create file $filename"))
-                return
-            }
-
-            file.openOutputStream().use { it.write(htmlContent.toByteArray()) }
-            page.uri = file.uri
-            page.progress = 100
-            page.status = Page.State.Ready
-            return
-        }
+        if (download.source.isNovelSource() && novel.fetchPage(page, download, tmpDir)) return
 
         // If the image URL is empty, skip the page. Empty novel pages are already failed above.
         if (page.imageUrl == null) {
@@ -952,7 +841,7 @@ class Downloader(
     ) {
         val extension = if (isNovel) "zip" else "cbz"
         val zip = mangaDir.createFile("$dirname.$extension$TMP_DIR_SUFFIX")!!
-        val compressionLevel = if (isNovel) novelDownloadPreferences.zipCompressionLevel().get() else 0
+        val compressionLevel = if (isNovel) novel.archiveCompressionLevel() else 0
         ZipWriter(context, zip, compressionLevel).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
                 writer.write(file)
@@ -1005,26 +894,6 @@ class Downloader(
      */
     private fun areAllDownloadsFinished(): Boolean {
         return queueState.value.none { it.status.value <= Download.State.DOWNLOADING.value }
-    }
-
-    private fun novelChapterProgress(download: Download): Pair<Int, Int> {
-        val outstanding = queueState.value.count {
-            it.mangaId == download.mangaId && it.source.isNovelSource()
-        }
-        val total = novelChapterTotals.merge(download.mangaId, outstanding, ::maxOf)!!
-        return (total - outstanding + 1).coerceIn(1, total) to total
-    }
-
-    // Called when a novel download job ends, on every path (success, error, or cancellation).
-    // Removes the manga's tracked total once no queued/downloading novel chapters remain for
-    // it, so a stale total can't leak into a later, unrelated download batch.
-    private fun clearNovelChapterTotalIfDone(mangaId: Long) {
-        val hasOutstanding = queueState.value.any {
-            it.mangaId == mangaId &&
-                it.source.isNovelSource() &&
-                it.status.value <= Download.State.DOWNLOADING.value
-        }
-        if (!hasOutstanding) novelChapterTotals.remove(mangaId)
     }
 
     private fun addAllToQueue(downloads: List<Download>) {
