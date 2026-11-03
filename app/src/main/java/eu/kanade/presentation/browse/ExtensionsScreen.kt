@@ -624,7 +624,7 @@ private fun ExtensionHeader(
         if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
             eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
         ) {
-            eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel(
                 text = text,
                 modifier = Modifier.weight(1f),
             )

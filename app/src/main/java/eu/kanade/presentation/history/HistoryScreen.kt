@@ -95,25 +95,50 @@ fun HistoryScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    if (showAllFilter) {
+                    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                    ) {
+                        // Tsuzuki themes: pills (board "History").
+                        if (showAllFilter) {
+                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                text = stringResource(MR.strings.all),
+                                selected = state.filter == HistoryFilter.ALL,
+                                onClick = { onFilterSelected(HistoryFilter.ALL) },
+                            )
+                        }
+                        if (showMangaFilter) {
+                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                text = stringResource(TDMR.strings.label_manga),
+                                selected = state.filter == HistoryFilter.MANGA,
+                                onClick = { onFilterSelected(HistoryFilter.MANGA) },
+                            )
+                        }
+                        eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                            text = stringResource(TDMR.strings.label_novels),
+                            selected = state.filter == HistoryFilter.NOVELS,
+                            onClick = { onFilterSelected(HistoryFilter.NOVELS) },
+                        )
+                    } else {
+                        if (showAllFilter) {
+                            FilterChip(
+                                selected = state.filter == HistoryFilter.ALL,
+                                onClick = { onFilterSelected(HistoryFilter.ALL) },
+                                label = { Text(stringResource(MR.strings.all)) },
+                            )
+                        }
+                        if (showMangaFilter) {
+                            FilterChip(
+                                selected = state.filter == HistoryFilter.MANGA,
+                                onClick = { onFilterSelected(HistoryFilter.MANGA) },
+                                label = { Text(stringResource(TDMR.strings.label_manga)) },
+                            )
+                        }
                         FilterChip(
-                            selected = state.filter == HistoryFilter.ALL,
-                            onClick = { onFilterSelected(HistoryFilter.ALL) },
-                            label = { Text(stringResource(MR.strings.all)) },
+                            selected = state.filter == HistoryFilter.NOVELS,
+                            onClick = { onFilterSelected(HistoryFilter.NOVELS) },
+                            label = { Text(stringResource(TDMR.strings.label_novels)) },
                         )
                     }
-                    if (showMangaFilter) {
-                        FilterChip(
-                            selected = state.filter == HistoryFilter.MANGA,
-                            onClick = { onFilterSelected(HistoryFilter.MANGA) },
-                            label = { Text(stringResource(TDMR.strings.label_manga)) },
-                        )
-                    }
-                    FilterChip(
-                        selected = state.filter == HistoryFilter.NOVELS,
-                        onClick = { onFilterSelected(HistoryFilter.NOVELS) },
-                        label = { Text(stringResource(TDMR.strings.label_novels)) },
-                    )
                 }
             }
 
@@ -166,10 +191,19 @@ private fun HistoryScreenContent(
         ) { item ->
             when (item) {
                 is HistoryUiModel.Header -> {
-                    ListGroupHeader(
-                        modifier = Modifier.animateItem(),
-                        text = relativeDateText(item.date),
-                    )
+                    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                    ) {
+                        eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel(
+                            modifier = Modifier.animateItem(),
+                            text = relativeDateText(item.date),
+                        )
+                    } else {
+                        ListGroupHeader(
+                            modifier = Modifier.animateItem(),
+                            text = relativeDateText(item.date),
+                        )
+                    }
                 }
                 is HistoryUiModel.Item -> {
                     val value = item.item

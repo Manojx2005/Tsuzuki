@@ -59,7 +59,7 @@ fun PreferenceScreen(
                     item {
                         Column {
                             if (tsuzuki) {
-                                eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(text = preference.title)
+                                eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel(text = preference.title)
                             } else {
                                 PreferenceGroupHeader(title = preference.title)
                             }

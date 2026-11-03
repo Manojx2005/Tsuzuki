@@ -120,7 +120,7 @@ fun SourcesScreen(
                     when (model) {
                         is SourceUiModel.Header -> if (tsuzuki) {
                             androidx.compose.foundation.layout.Column(Modifier.animateItem()) {
-                                eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
+                                eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel(
                                     text = if (model.isGroup) {
                                         model.language
                                     } else {

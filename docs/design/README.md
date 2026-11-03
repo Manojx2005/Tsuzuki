@@ -63,7 +63,7 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 | Nav, Rail | done | `theme/tsuzuki/TsuzukiNav.kt`, wired in `ui/home/HomeScreen.kt` |
 | Main, TabletPortraitLibrary, TabletLibrary (with details pane), LibraryEmpty | done, verified with real books in Dot and Colour | `presentation/tsuzuki/home/`, `ui/tsuzuki/home/` |
 | MotionSplash (startup) | done, verified on both devices | `presentation/tsuzuki/startup/`, `ui/main/MainActivity.kt` |
-| History (rows) | done | `presentation/tsuzuki/history/` |
+| History | rows, filter pills, date labels done; stat tiles wait for reading sessions | `presentation/tsuzuki/history/` |
 | Updates | partly: row tiles (seen with data), New count + Save all tiles, filter pills; Airing strip waits for anime | `presentation/updates/`, `presentation/tsuzuki/updates/` |
 | LibraryList | partly: greyscale covers, accent badges, display title, progress under covers (both grids), category pills; LibraryMixed not started | `presentation/library/components/` (`LibraryTabs`, `LibraryBadges`, grids) |
 | More | done (no Source health tile yet) | `presentation/tsuzuki/more/` |

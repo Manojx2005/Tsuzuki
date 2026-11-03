@@ -99,3 +99,16 @@ fun TsuzukiPillRow(
         }
     }
 }
+
+/** Small uppercase label above a group of tiles (Browse, Settings, History, Updates boards). */
+@Composable
+fun TsuzukiSectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text.uppercase(),
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = 1.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

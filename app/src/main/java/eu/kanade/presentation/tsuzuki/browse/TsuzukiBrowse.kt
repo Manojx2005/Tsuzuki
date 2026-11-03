@@ -57,19 +57,6 @@ fun TsuzukiGlobalSearchTile(sourceCount: Int, onClick: () -> Unit, modifier: Mod
     }
 }
 
-/** Board "Browse": section label above a group of sources. */
-@Composable
-fun TsuzukiSourceHeader(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text.uppercase(),
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
-        fontSize = 11.sp,
-        fontWeight = FontWeight.ExtraBold,
-        letterSpacing = 1.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
 /**
  * One row of a grouped tile: consecutive rows share one rounded tile, so only the first row gets
  * the top corners and only the last gets the bottom corners.
