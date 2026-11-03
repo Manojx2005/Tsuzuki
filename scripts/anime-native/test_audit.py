@@ -27,8 +27,8 @@ class NativeAuditTest(unittest.TestCase):
         self.evidence.mkdir()
         self.config = self.evidence / "ffmpeg-config.h"
         self.config.write_text("".join(f"#define CONFIG_{name} 0\n" for name in (
-            "GPL", "GPLV3", "NONFREE", "VERSION3", "POSTPROC",
-        )))
+            "GPL", "GPLV3", "NONFREE", "POSTPROC",
+        )) + '#define CONFIG_VERSION3 1\n#define FFMPEG_LICENSE "LGPL version 3 or later"\n')
         self.options = self.evidence / "mpv-buildoptions.json"
         self.options.write_text(json.dumps([{"name": "gpl", "value": False}]))
         self.libraries = self.root / "jniLibs/arm64-v8a"
@@ -48,10 +48,27 @@ class NativeAuditTest(unittest.TestCase):
 
     def test_each_disallowed_ffmpeg_option_is_rejected(self):
         clean = self.config.read_text()
-        for name in ("GPL", "GPLV3", "NONFREE", "VERSION3", "POSTPROC"):
+        for name in ("GPL", "GPLV3", "NONFREE", "POSTPROC"):
             with self.subTest(option=name):
                 self.config.write_text(clean.replace(f"CONFIG_{name} 0", f"CONFIG_{name} 1"))
                 with self.assertRaisesRegex(ValueError, f"CONFIG_{name}"):
+                    self.run_audit()
+
+    def test_lgpl_version_modes_are_accepted_and_recorded(self):
+        clean = self.config.read_text()
+        for version3, licence in ((0, "LGPL version 2.1 or later"), (1, "LGPL version 3 or later")):
+            with self.subTest(version3=version3):
+                self.config.write_text(clean.replace("CONFIG_VERSION3 1", f"CONFIG_VERSION3 {version3}")
+                                       .replace("LGPL version 3 or later", licence))
+                self.run_audit()
+                self.assertEqual((self.evidence / "ffmpeg-license.txt").read_text().strip(), licence)
+
+    def test_missing_or_non_lgpl_licence_is_rejected(self):
+        clean = self.config.read_text()
+        for licence in ("GPL version 3 or later", "nonfree and unredistributable", ""):
+            with self.subTest(licence=licence):
+                self.config.write_text(clean.replace("LGPL version 3 or later", licence))
+                with self.assertRaisesRegex(ValueError, "FFmpeg licence"):
                     self.run_audit()
 
     def test_missing_configuration_is_rejected(self):

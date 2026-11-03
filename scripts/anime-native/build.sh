@@ -39,7 +39,9 @@ ffmpeg = root / 'buildscripts/scripts/ffmpeg.sh'
 text = ffmpeg.read_text()
 old = '--enable-{gpl,version3}'
 assert text.count(old) == 1
-text = text.replace(old, '--disable-{gpl,version3,nonfree,postproc}')
+# mbedTLS requires FFmpeg's version3 mode. With GPL disabled this selects
+# LGPLv3, not GPLv3; audit the generated flags and licence string below.
+text = text.replace(old, '--enable-version3 --disable-{gpl,nonfree,postproc}')
 old = '--extra-ldflags="-L$prefix_dir/lib"'
 assert text.count(old) == 1
 text = text.replace(old, '--extra-ldflags="-L$prefix_dir/lib -Wl,-z,max-page-size=16384"')

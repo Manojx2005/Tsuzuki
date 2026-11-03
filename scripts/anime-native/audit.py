@@ -11,10 +11,18 @@ import sys
 def audit(root):
     evidence = root / "evidence"
     ffmpeg = (evidence / "ffmpeg-config.h").read_text()
-    for name in ("GPL", "GPLV3", "NONFREE", "VERSION3", "POSTPROC"):
+    for name in ("GPL", "GPLV3", "NONFREE", "POSTPROC"):
         matches = re.findall(rf"^#define CONFIG_{name} ([01])$", ffmpeg, re.M)
         if matches != ["0"]:
             raise ValueError(f"FFmpeg CONFIG_{name} must be explicitly disabled: {matches}")
+
+    version3 = re.findall(r"^#define CONFIG_VERSION3 ([01])$", ffmpeg, re.M)
+    licence = re.findall(r'^#define FFMPEG_LICENSE "([^"]+)"$', ffmpeg, re.M)
+    if len(version3) != 1:
+        raise ValueError("FFmpeg version3 configuration must be explicit")
+    expected = "LGPL version 3 or later" if version3 == ["1"] else "LGPL version 2.1 or later"
+    if licence != [expected]:
+        raise ValueError(f"Unexpected FFmpeg licence for version3={version3}: {licence}")
 
     options = json.loads((evidence / "mpv-buildoptions.json").read_text())
     gpl = [option["value"] for option in options if option["name"] == "gpl"]
@@ -48,6 +56,7 @@ def audit(root):
             raise ValueError(f"No PT_LOAD in {path.name}")
         report[path.name] = {"sha256": hashlib.sha256(data).hexdigest(), "load_alignments": alignments}
     (evidence / "audit.json").write_text(json.dumps(report, indent=2) + "\n")
+    (evidence / "ffmpeg-license.txt").write_text(licence[0] + "\n")
     print(f"Audited {len(report)} arm64 ELF libraries; GPL options disabled, PT_LOAD >= 16 KB.")
     print("This checks build configuration and ELF layout; licence/source review and APK zipalign remain required.")
 
