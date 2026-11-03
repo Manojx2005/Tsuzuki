@@ -1,0 +1,45 @@
+name: Anime native spike
+
+on:
+  push:
+    branches: [codex/anime-spike]
+    paths:
+      - .github/workflows/anime-native.yml
+      - scripts/anime-native/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anime-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Check native auditor
+        run: python3 -m unittest discover -s scripts/anime-native -p 'test_*.py' -v
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool libtool-bin pkg-config ninja-build meson nasm python3-jsonschema wget unzip
+      - name: Build arm64 native libraries
+        run: bash scripts/anime-native/build.sh
+      - name: Save native libraries and build evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: anime-native-arm64-${{ github.run_id }}
+          path: build/anime-native-output/
+          if-no-files-found: error
+          retention-days: 14
