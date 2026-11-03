@@ -82,6 +82,7 @@ class FontManager(
      */
     fun getSystemFonts(): List<FontInfo> {
         return listOf(
+            FontInfo("Literata", "literata", "literata", false),
             FontInfo("Sans Serif", "sans-serif", "sans-serif", false),
             FontInfo("Serif", "serif", "serif", false),
             FontInfo("Monospace", "monospace", "monospace", false),

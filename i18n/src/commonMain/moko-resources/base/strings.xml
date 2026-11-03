@@ -1329,5 +1329,6 @@
     <string name="tsz_watch_f3_sub">Backups and AniList / MAL tracking</string>
     <string name="tsz_back_to_reading">Back to reading</string>
     <string name="tsz_search">Search</string>
+    <string name="tsz_font_literata">Literata</string>
     <string name="tsz_settings">Settings</string>
 </resources>

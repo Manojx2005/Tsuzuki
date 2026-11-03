@@ -963,5 +963,6 @@
     <string name="tsz_watch_f3_sub">バックアップとAniList / MALのトラッキング</string>
     <string name="tsz_back_to_reading">読書に戻る</string>
     <string name="tsz_search">検索</string>
+    <string name="tsz_font_literata">Literata</string>
     <string name="tsz_settings">設定</string>
 </resources>

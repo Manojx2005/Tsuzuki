@@ -594,7 +594,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 }
                 val page = preparedChapter.pages?.firstOrNull() ?: run {
                     val prepareError = (preparedChapter.state as? ReaderChapter.State.Error)?.error
-                    logcat(LogPriority.ERROR) { "NovelViewer: No page in prepared next chapter, prepareError=$prepareError" }
+                    logcat(LogPriority.ERROR) {
+                        "NovelViewer: No page in prepared next chapter, prepareError=$prepareError"
+                    }
                     loadFailed = true
                     if (prepareError != null) {
                         inlineFeedback.showInlineError(prepareError, isPrepend = false, onRetry = retry)
@@ -1605,7 +1607,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     inlineFeedback.showInlineError(
                         activity.stringResource(TDMR.strings.novel_error_empty_chapter),
                         isPrepend = false,
-                        onRetry = { nextLoadRequiresManualRetry = false; loadNextChapterIfAvailable() },
+                        onRetry = {
+                            nextLoadRequiresManualRetry = false
+                            loadNextChapterIfAvailable()
+                        },
                     )
                 } else {
                     abortPendingTtsOnLoadFailure()
@@ -1767,6 +1772,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         textView.includeFontPadding = false
 
         textView.typeface = when {
+            // Tsuzuki: bundled Literata (res/font/lnr_literata.ttf).
+            fontFamily == "literata" ->
+                androidx.core.content.res.ResourcesCompat.getFont(activity, eu.kanade.tachiyomi.R.font.lnr_literata)
+                    ?: android.graphics.Typeface.SERIF
             fontFamily.startsWith("file://") || fontFamily.startsWith("content://") -> {
                 if (fontFamily == cachedFontUri && cachedTypeface != null) {
                     cachedTypeface!!

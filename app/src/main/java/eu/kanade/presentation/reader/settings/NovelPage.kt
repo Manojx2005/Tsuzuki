@@ -127,6 +127,7 @@ private val novelThemes = listOf(
 
 // System fonts - always available
 private val systemFonts = listOf(
+    MR.strings.tsz_font_literata to "literata",
     TDMR.strings.novel_font_sans_serif to "sans-serif",
     TDMR.strings.novel_font_serif to "serif",
     TDMR.strings.novel_font_monospace to "monospace",

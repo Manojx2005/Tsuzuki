@@ -200,6 +200,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.novelFontFamily,
                     entries = mapOf(
+                        "literata" to "Literata",
                         "sans-serif" to "Sans Serif",
                         "serif" to "Serif",
                         "monospace" to "Monospace",

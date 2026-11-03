@@ -138,6 +138,14 @@ internal class NovelWebViewStyler(
             fontUriString = null
             return "" to fontFamily
         }
+        if (fontFamily == "literata") {
+            // Tsuzuki: bundled Literata, streamed from resources by interceptFont().
+            fontUriString = "android.resource://${activity.packageName}/${eu.kanade.tachiyomi.R.font.lnr_literata}"
+            val url = "$FONT_URL_PREFIX?v=literata"
+            val declaration =
+                "@font-face { font-family: 'CustomFont'; src: url('$url') format('truetype'); font-display: swap; }"
+            return declaration to "'CustomFont', serif"
+        }
         if (!(fontFamily.startsWith("file://") || fontFamily.startsWith("content://"))) {
             fontUriString = null
             return "" to fontFamily
