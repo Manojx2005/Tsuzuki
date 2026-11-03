@@ -82,6 +82,15 @@ fun SourcesScreen(
             ScrollbarLazyColumn(
                 contentPadding = contentPadding + topSmallPaddingValues,
             ) {
+                val pinnedRows: Map<Int, List<Source>> = if (tsuzuki) pinnedSections(state.items) else emptyMap()
+                val hiddenRows = pinnedRows.values.flatten().let { pinned ->
+                    state.items.indices.filter { i ->
+                        val m = state.items[i]
+                        m is SourceUiModel.Item && m.sectionKey.isEmpty() && pinnedRows.any { (h, list) ->
+                            i > h && i <= h + list.size
+                        }
+                    }.toSet()
+                }
                 // Tsuzuki themes: "search every source" tile on top (board "Browse").
                 if (tsuzuki && onClickGlobalSearch != null) {
                     item(key = "tsuzuki_global_search") {
@@ -110,14 +119,23 @@ fun SourcesScreen(
                 ) { index, model ->
                     when (model) {
                         is SourceUiModel.Header -> if (tsuzuki) {
-                            eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
-                                modifier = Modifier.animateItem(),
-                                text = if (model.isGroup) {
-                                    model.language
-                                } else {
-                                    LocaleHelper.getSourceDisplayName(model.language, LocalContext.current)
-                                },
-                            )
+                            androidx.compose.foundation.layout.Column(Modifier.animateItem()) {
+                                eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
+                                    text = if (model.isGroup) {
+                                        model.language
+                                    } else {
+                                        LocaleHelper.getSourceDisplayName(model.language, LocalContext.current)
+                                    },
+                                )
+                                pinnedRows[index]?.let { pinned ->
+                                    eu.kanade.presentation.tsuzuki.browse.TsuzukiPinnedSources(
+                                        sources = pinned,
+                                        onClick = { onClickItem(it, Listing.Popular) },
+                                        onLongClick = onLongClickItem,
+                                        onUnpin = onClickPin,
+                                    )
+                                }
+                            }
                         } else {
                             SourceHeader(
                                 modifier = Modifier.animateItem(),
@@ -125,29 +143,33 @@ fun SourcesScreen(
                                 isGroup = model.isGroup,
                             )
                         }
-                        is SourceUiModel.Item -> SourceItem(
-                            modifier = Modifier
-                                .animateItem()
-                                .then(
-                                    if (tsuzuki) {
-                                        // Rows between two headers form one tile.
-                                        eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
-                                            first = state.items.getOrNull(index - 1) !is SourceUiModel.Item,
-                                            last = state.items.getOrNull(index + 1) !is SourceUiModel.Item,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                            source = model.source,
-                            hasDefaultPreset = model.hasDefaultPreset,
-                            groupSection = model.sectionKey.ifEmpty { null },
-                            onClickItem = onClickItem,
-                            onLongClickItem = onLongClickItem,
-                            onClickPin = onClickPin,
-                            onLongClickPin = onLongClickPin,
-                            onRemoveFromGroup = onRemoveFromGroup,
-                        )
+                        is SourceUiModel.Item -> if (index in hiddenRows) {
+                            // Shown in the pinned tile grid above.
+                        } else {
+                            SourceItem(
+                                modifier = Modifier
+                                    .animateItem()
+                                    .then(
+                                        if (tsuzuki) {
+                                            // Rows between two headers form one tile.
+                                            eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                                first = state.items.getOrNull(index - 1) !is SourceUiModel.Item,
+                                                last = state.items.getOrNull(index + 1) !is SourceUiModel.Item,
+                                            )
+                                        } else {
+                                            Modifier
+                                        },
+                                    ),
+                                source = model.source,
+                                hasDefaultPreset = model.hasDefaultPreset,
+                                groupSection = model.sectionKey.ifEmpty { null },
+                                onClickItem = onClickItem,
+                                onLongClickItem = onLongClickItem,
+                                onClickPin = onClickPin,
+                                onLongClickPin = onLongClickPin,
+                                onRemoveFromGroup = onRemoveFromGroup,
+                            )
+                        }
                     }
                 }
             }
@@ -510,4 +532,17 @@ sealed interface SourceUiModel {
         val language: String,
         val isGroup: Boolean = false,
     ) : SourceUiModel
+}
+
+/** Header index -> the plain (non-group) rows under the "pinned" header. */
+private fun pinnedSections(items: List<SourceUiModel>): Map<Int, List<Source>> {
+    val out = mutableMapOf<Int, List<Source>>()
+    items.forEachIndexed { i, m ->
+        if (m is SourceUiModel.Header && !m.isGroup && m.language == "pinned") {
+            out[i] = items.drop(i + 1)
+                .takeWhile { it is SourceUiModel.Item && it.sectionKey.isEmpty() }
+                .map { (it as SourceUiModel.Item).source }
+        }
+    }
+    return out
 }
