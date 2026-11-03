@@ -97,10 +97,19 @@ internal fun LazyListScope.updatesUiItems(
     ) { item ->
         when (item) {
             is UpdatesUiModel.Header -> {
-                ListGroupHeader(
-                    modifier = Modifier.animateItem(),
-                    text = relativeDateText(item.date),
-                )
+                if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                ) {
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel(
+                        modifier = Modifier.animateItem(),
+                        text = relativeDateText(item.date),
+                    )
+                } else {
+                    ListGroupHeader(
+                        modifier = Modifier.animateItem(),
+                        text = relativeDateText(item.date),
+                    )
+                }
             }
             is UpdatesUiModel.Item -> {
                 val updatesItem = item.item
