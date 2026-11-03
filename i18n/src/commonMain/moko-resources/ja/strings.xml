@@ -969,5 +969,9 @@
     <string name="tsz_to_save">未読 %1$d 話をダウンロード</string>
     <string name="tsz_all_saved">保存済み</string>
     <string name="tsz_search_sources">%1$d 件のソースをまとめて検索</string>
+    <string name="tsz_search_settings">設定を検索</string>
+    <string name="tsz_theme">テーマ</string>
+    <string name="tsz_theme_colour_sub">本ごとの色をまとう</string>
+    <string name="tsz_theme_dot_sub">モノクロに赤ひとつ</string>
     <string name="tsz_settings">設定</string>
 </resources>

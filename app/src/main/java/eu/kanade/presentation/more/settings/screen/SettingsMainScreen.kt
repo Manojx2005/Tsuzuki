@@ -131,16 +131,47 @@ object SettingsMainScreen : Screen() {
                     null
                 }
 
+                val tsuzuki = !twoPane &&
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
                 LazyColumn(
                     state = state,
                     contentPadding = contentPadding,
                 ) {
+                    // Tsuzuki themes: search + theme cards, then every section in one tile (board "Settings").
+                    if (tsuzuki) {
+                        item(key = "tsuzuki_settings_header") {
+                            val uiPreferences = remember { Injekt.get<eu.kanade.domain.ui.UiPreferences>() }
+                            val context = androidx.compose.ui.platform.LocalContext.current
+                            val appTheme by uiPreferences.appTheme.collectAsState()
+                            eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsHeader(
+                                appTheme = appTheme,
+                                onSearch = { navigator.navigate(SettingsSearchScreen(), twoPane) },
+                                onPickTheme = {
+                                    if (it != appTheme) {
+                                        uiPreferences.appTheme.set(it)
+                                        // Same as the Appearance picker: rebuild the activity in the new theme.
+                                        (context as? android.app.Activity)?.let { a ->
+                                            androidx.core.app.ActivityCompat.recreate(a)
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
                     itemsIndexed(
                         items = visibleItems,
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
+                        var modifier: Modifier = if (tsuzuki) {
+                            eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                first = index == 0,
+                                last = index == visibleItems.lastIndex,
+                            )
+                        } else {
+                            Modifier
+                        }
                         var contentColor = LocalContentColor.current
                         if (twoPane) {
                             modifier = Modifier
