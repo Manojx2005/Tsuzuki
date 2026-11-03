@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Resume tile on book details (board "NovelDetails"): play disc, what comes next, and progress
@@ -47,7 +49,9 @@ fun TsuzukiResumeTile(
     val ink = if (t.isDot) Color.White else t.onAccent
     val shape = RoundedCornerShape(24.dp)
     val started = readCount > 0
-    val label = (if (started) "Resume" else "Start") + " · $readCount / $total"
+    val label =
+        (if (started) stringResource(MR.strings.tsz_resume) else stringResource(MR.strings.tsz_start)) +
+            " · $readCount / $total"
     Row(
         modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)

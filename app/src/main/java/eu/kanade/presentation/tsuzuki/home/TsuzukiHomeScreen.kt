@@ -70,6 +70,8 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.tachiyomi.ui.tsuzuki.home.ChapterStatus
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeBook
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeState
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -153,7 +155,10 @@ private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        listOf(false to "Read", true to "Watch").forEach { (isWatch, label) ->
+        listOf(
+            false to stringResource(MR.strings.tsz_read),
+            true to stringResource(MR.strings.tsz_watch),
+        ).forEach { (isWatch, label) ->
             val selected = watching == isWatch
             Text(
                 text = t.case(label),
@@ -185,20 +190,23 @@ private fun WatchPlaceholder(onBack: () -> Unit) {
             .widthIn(max = 640.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(t.case("Coming soon"), style = labelStyle(t), color = t.accent)
-        Text(t.case("Watch"), style = displayStyle(56.sp), color = Color.White)
+        Text(t.case(stringResource(MR.strings.tsz_coming_soon)), style = labelStyle(t), color = t.accent)
+        Text(t.case(stringResource(MR.strings.tsz_watch)), style = displayStyle(56.sp), color = Color.White)
         Text(
             t.case(
-                "Anime is on its way: episodes and seasons, a full mpv player and anime tracking, in the same two themes. Your reading stays exactly where it is.",
+                stringResource(MR.strings.tsz_watch_body),
             ),
             style = bodyStyle(14.sp, FontWeight.Medium).copy(lineHeight = 21.sp),
             color = muted(t),
         )
         Spacer(Modifier.height(4.dp))
         listOf(
-            Icons.Filled.PlayArrow to ("Episodes & seasons" to "Fillers marked, next episode countdown"),
-            Icons.Outlined.Explore to ("mpv player" to "Skip intros, subtitles, audio, quality"),
-            Icons.Outlined.FileUpload to ("Bring your Aniyomi library" to "Backups and AniList / MAL tracking"),
+            Icons.Filled.PlayArrow to
+                (stringResource(MR.strings.tsz_watch_f1) to stringResource(MR.strings.tsz_watch_f1_sub)),
+            Icons.Outlined.Explore to
+                (stringResource(MR.strings.tsz_watch_f2) to stringResource(MR.strings.tsz_watch_f2_sub)),
+            Icons.Outlined.FileUpload to
+                (stringResource(MR.strings.tsz_watch_f3) to stringResource(MR.strings.tsz_watch_f3_sub)),
         ).forEach { (icon, text) ->
             Row(
                 Modifier
@@ -218,7 +226,7 @@ private fun WatchPlaceholder(onBack: () -> Unit) {
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            t.case("Back to reading"),
+            t.case(stringResource(MR.strings.tsz_back_to_reading)),
             style = bodyStyle(15.sp, FontWeight.ExtraBold),
             color = t.onAccent,
             modifier = Modifier
@@ -256,7 +264,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             IconCircle(onClick = actions.onSearch) {
                 Icon(
                     Icons.Outlined.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(MR.strings.tsz_search),
                     tint = Color.White,
                     modifier = Modifier.size(20.dp),
                 )
@@ -271,7 +279,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             Box(
                 Modifier
                     .width(162.dp)
-                    .clickable(role = Role.Button, onClickLabel = "Show next book") {
+                    .clickable(role = Role.Button, onClickLabel = stringResource(MR.strings.tsz_show_next_book)) {
                         stackIndex = (stackIndex + 1) % stack.size
                     },
             ) {
@@ -309,7 +317,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
                 Spacer(Modifier.weight(1f))
                 if (stack.size > 1) {
                     Text(
-                        t.case("Tap the stack to switch"),
+                        t.case(stringResource(MR.strings.tsz_tap_stack)),
                         style = bodyStyle(12.sp, FontWeight.SemiBold),
                         color = if (t.isDot) Color(0xFF5A5A5A) else Color.White.copy(alpha = 0.55f),
                     )
@@ -324,7 +332,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             ResumeTile(current, state.fromHistory, onClick = { actions.onResume(current) })
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatTile(
-                    "New chapters",
+                    stringResource(MR.strings.tsz_new_chapters),
                     state.newChapters.toString(),
                     null,
                     Modifier.weight(1f).height(100.dp),
@@ -333,9 +341,9 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
                     onClick = actions.onUpdates,
                 )
                 StatTile(
-                    "Today",
+                    stringResource(MR.strings.tsz_today),
                     state.todayMinutes.toString(),
-                    "min",
+                    stringResource(MR.strings.tsz_min),
                     Modifier.weight(1f).height(100.dp),
                     onClick = actions.onHistory,
                 )
@@ -378,7 +386,7 @@ private fun TabletPortraitHome(state: HomeState, actions: HomeActions) {
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatTile(
-                "New",
+                stringResource(MR.strings.tsz_new),
                 state.newChapters.toString(),
                 null,
                 Modifier.weight(1f).height(130.dp),
@@ -388,17 +396,17 @@ private fun TabletPortraitHome(state: HomeState, actions: HomeActions) {
                 onClick = actions.onUpdates,
             )
             StatTile(
-                "Today",
+                stringResource(MR.strings.tsz_today),
                 state.todayMinutes.toString(),
-                "min",
+                stringResource(MR.strings.tsz_min),
                 Modifier.weight(1f).height(130.dp),
                 bigSize = 40.sp,
                 onClick = actions.onHistory,
             )
             StatTile(
-                "Library",
+                stringResource(MR.strings.tsz_library),
                 state.libraryCount.toString(),
-                "books",
+                stringResource(MR.strings.tsz_books_unit),
                 Modifier.weight(1f).height(130.dp),
                 bigSize = 40.sp,
                 onClick = actions.onAllBooks,
@@ -442,7 +450,7 @@ private fun TabletLandscapeHome(state: HomeState, actions: HomeActions) {
                 Column(Modifier.weight(1.6f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.weight(150f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         StatTile(
-                            "New",
+                            stringResource(MR.strings.tsz_new),
                             state.newChapters.toString(),
                             null,
                             Modifier.weight(1f).fillMaxSize(),
@@ -452,9 +460,9 @@ private fun TabletLandscapeHome(state: HomeState, actions: HomeActions) {
                             onClick = actions.onUpdates,
                         )
                         StatTile(
-                            "Library",
+                            stringResource(MR.strings.tsz_library),
                             state.libraryCount.toString(),
-                            "books",
+                            stringResource(MR.strings.tsz_books_unit),
                             Modifier.weight(1f).fillMaxSize(),
                             bigSize = 44.sp,
                             onClick = actions.onAllBooks,
@@ -462,17 +470,17 @@ private fun TabletLandscapeHome(state: HomeState, actions: HomeActions) {
                     }
                     Row(Modifier.weight(120f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         StatTile(
-                            "Today",
+                            stringResource(MR.strings.tsz_today),
                             state.todayMinutes.toString(),
-                            "min",
+                            stringResource(MR.strings.tsz_min),
                             Modifier.weight(1f).fillMaxSize(),
                             bigSize = 34.sp,
                             onClick = actions.onHistory,
                         )
                         StatTile(
-                            "History",
+                            stringResource(MR.strings.tsz_history),
                             state.books.size.toString(),
-                            "recent",
+                            stringResource(MR.strings.tsz_recent),
                             Modifier.weight(1f).fillMaxSize(),
                             bigSize = 34.sp,
                             onClick = actions.onHistory,
@@ -541,15 +549,20 @@ private fun DetailsPane(book: HomeBook, actions: HomeActions) {
         ) {
             Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = t.onAccent, modifier = Modifier.size(18.dp))
             Text(
-                t.case(if (canResume) "Resume" else "Open"),
+                t.case(if (canResume) stringResource(MR.strings.tsz_resume) else stringResource(MR.strings.tsz_open)),
                 style = bodyStyle(15.sp, FontWeight.ExtraBold),
                 color = t.onAccent,
             )
         }
-        Text(t.case("Chapters"), style = labelStyle(t), color = muted(t), modifier = Modifier.padding(top = 6.dp))
+        Text(
+            t.case(stringResource(MR.strings.tsz_chapters)),
+            style = labelStyle(t),
+            color = muted(t),
+            modifier = Modifier.padding(top = 6.dp),
+        )
         if (book.recentChapters.isEmpty()) {
             Text(
-                t.case("Open the book to load its chapters."),
+                t.case(stringResource(MR.strings.tsz_load_chapters)),
                 style = bodyStyle(13.sp, FontWeight.Medium),
                 color = muted(t),
             )
@@ -576,9 +589,9 @@ private fun DetailsPane(book: HomeBook, actions: HomeActions) {
                     modifier = Modifier.weight(1f),
                 )
                 val (label, color) = when (ch.status) {
-                    ChapterStatus.NEW -> "New" to t.accent
-                    ChapterStatus.IN_PROGRESS -> "Reading" to Color.White
-                    ChapterStatus.READ -> "Read" to muted(t)
+                    ChapterStatus.NEW -> stringResource(MR.strings.tsz_new) to t.accent
+                    ChapterStatus.IN_PROGRESS -> stringResource(MR.strings.tsz_reading) to Color.White
+                    ChapterStatus.READ -> stringResource(MR.strings.tsz_read_state) to muted(t)
                     ChapterStatus.UNREAD -> "" to muted(t)
                 }
                 if (label.isNotEmpty()) Text(t.case(label), style = bodyStyle(11.sp, FontWeight.Bold), color = color)
@@ -604,14 +617,14 @@ private fun EmptyHome(actions: HomeActions, compact: Boolean, bottomPad: Dp) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(t.case("Welcome"), style = labelStyle(t), color = muted(t))
+            Text(t.case(stringResource(MR.strings.tsz_welcome)), style = labelStyle(t), color = muted(t))
             Text(
-                t.case("An empty shelf,\nfor now."),
+                t.case(stringResource(MR.strings.tsz_empty_title)),
                 style = displayStyle(if (compact) 52.sp else 64.sp),
                 color = Color.White,
             )
             Text(
-                t.case("Add novels from 300+ sources, bring your LNReader library across, or open an EPUB."),
+                t.case(stringResource(MR.strings.tsz_empty_body)),
                 style = bodyStyle(14.sp, FontWeight.Medium).copy(lineHeight = 21.sp),
                 color = muted(t),
             )
@@ -641,9 +654,13 @@ private fun EmptyHome(actions: HomeActions, compact: Boolean, bottomPad: Dp) {
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(t.case("Browse sources"), style = bodyStyle(18.sp, FontWeight.ExtraBold), color = t.onAccent)
                 Text(
-                    t.case("LNReader novels and Keiyoushi manga"),
+                    t.case(stringResource(MR.strings.tsz_browse_sources)),
+                    style = bodyStyle(18.sp, FontWeight.ExtraBold),
+                    color = t.onAccent,
+                )
+                Text(
+                    t.case(stringResource(MR.strings.tsz_browse_sources_sub)),
                     style = bodyStyle(13.sp, FontWeight.SemiBold),
                     color = t.onAccent.copy(alpha = 0.8f),
                 )
@@ -652,15 +669,15 @@ private fun EmptyHome(actions: HomeActions, compact: Boolean, bottomPad: Dp) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ActionTile(
                 Icons.Outlined.FileUpload,
-                "Import backup",
-                "LNReader, Mihon, Tsundoku",
+                stringResource(MR.strings.tsz_import_backup),
+                stringResource(MR.strings.tsz_import_backup_sub),
                 Modifier.weight(1f),
                 actions.onImportBackup,
             )
             ActionTile(
                 Icons.Outlined.FolderOpen,
-                "Open EPUB",
-                "From this device",
+                stringResource(MR.strings.tsz_open_epub),
+                stringResource(MR.strings.tsz_open_epub_sub),
                 Modifier.weight(1f),
                 actions.onOpenEpub,
             )
@@ -680,7 +697,7 @@ private fun Header(state: HomeState, titleSize: TextUnit = 60.sp) {
     ) {
         Text(t.case(greeting()), style = displayStyle(titleSize), color = Color.White)
         Text(
-            t.case("${state.libraryCount} books"),
+            t.case(stringResource(MR.strings.tsz_books_count, state.libraryCount)),
             style = bodyStyle(13.sp, FontWeight.SemiBold),
             color = muted(t),
             modifier = Modifier.padding(bottom = 8.dp),
@@ -688,7 +705,7 @@ private fun Header(state: HomeState, titleSize: TextUnit = 60.sp) {
     }
 }
 
-/** The big "Continue" tile. Colour: accent fill with book-coloured text. Dot: dark tile, red play. */
+/** The big stringResource(MR.strings.tsz_continue) tile. Colour: accent fill with book-coloured text. Dot: dark tile, red play. */
 @Composable
 private fun HeroTile(
     book: HomeBook,
@@ -704,14 +721,22 @@ private fun HeroTile(
         modifier
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = true))
-            .clickable(role = Role.Button, onClickLabel = "Resume", onClick = onClick)
+            .clickable(role = Role.Button, onClickLabel = stringResource(MR.strings.tsz_resume), onClick = onClick)
             .padding(22.dp),
         horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
         Cover(book, Modifier.width(coverWidth).rotate(-3f))
         Column(Modifier.weight(1f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                t.case(if (canResume) "Continue" else "Start reading"),
+                t.case(
+                    if (canResume) {
+                        stringResource(
+                            MR.strings.tsz_continue,
+                        )
+                    } else {
+                        stringResource(MR.strings.tsz_start_reading)
+                    },
+                ),
                 style = labelStyle(t),
                 color = ink.copy(alpha = 0.75f),
             )
@@ -763,7 +788,10 @@ private fun ResumeTile(book: HomeBook, canResume: Boolean, onClick: () -> Unit) 
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val pct = book.progress?.let { " · ${(it * 100).toInt()}%" }.orEmpty()
             Text(
-                t.case((if (canResume) "Resume" else "Start") + pct),
+                t.case(
+                    (if (canResume) stringResource(MR.strings.tsz_resume) else stringResource(MR.strings.tsz_start)) +
+                        pct,
+                ),
                 style = if (t.isDot) {
                     bodyStyle(
                         14.sp,
@@ -863,12 +891,12 @@ private fun ShelfSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                t.case("Shelf · ${shelf.size}"),
+                t.case(stringResource(MR.strings.tsz_shelf, shelf.size)),
                 style = labelStyle(t),
                 color = muted(t),
             )
             Text(
-                t.case("All books →"),
+                t.case(stringResource(MR.strings.tsz_all_books)),
                 style = bodyStyle(13.sp, FontWeight.ExtraBold),
                 color = t.accent,
                 modifier = Modifier
@@ -1065,11 +1093,17 @@ private fun numberStyle(t: TsuzukiTokens, size: TextUnit): TextStyle = if (t.isD
     )
 }
 
+@Composable
 private fun greeting(): String = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-    in 5..11 -> "This morning"
-    in 12..16 -> "This afternoon"
-    else -> "Tonight"
+    in 5..11 -> stringResource(MR.strings.tsz_greeting_morning)
+    in 12..16 -> stringResource(MR.strings.tsz_greeting_afternoon)
+    else -> stringResource(MR.strings.tsz_greeting_night)
 }
 
-private fun todayKicker(books: Int): String =
-    SimpleDateFormat("EEE d MMM", Locale.ENGLISH).format(Date()) + " · $books books"
+@Composable
+private fun todayKicker(books: Int): String {
+    // Device locale, e.g. "Mon 2 Nov" or "11月3日(火)".
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMM")
+    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date()) + " · " +
+        stringResource(MR.strings.tsz_books_count, books)
+}

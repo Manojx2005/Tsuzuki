@@ -26,6 +26,8 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.launch
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Tsuzuki bento Home: the first tab when the Colour or Dot theme is active. */
 data object TsuzukiHomeTab : Tab {
@@ -34,7 +36,7 @@ data object TsuzukiHomeTab : Tab {
         @Composable
         get() = TabOptions(
             index = 10u,
-            title = "Home",
+            title = stringResource(MR.strings.tsz_home),
             icon = rememberVectorPainter(Icons.Outlined.GridView),
         )
 

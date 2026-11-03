@@ -49,6 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.tachiyomi.R
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * One destination in the Tsuzuki nav bar / rail (design boards: Nav, Rail).
@@ -235,7 +237,7 @@ fun TsuzukiRail(
         ) {
             Icon(
                 Icons.Outlined.Search,
-                contentDescription = "Search",
+                contentDescription = stringResource(MR.strings.tsz_search),
                 tint = Color.White,
                 modifier = Modifier.size(22.dp),
             )
@@ -253,7 +255,7 @@ fun TsuzukiRail(
         ) {
             Icon(
                 Icons.Outlined.Settings,
-                contentDescription = "Settings",
+                contentDescription = stringResource(MR.strings.tsz_settings),
                 tint = if (t.isDot) DotRailMuted else Color.White.copy(alpha = 0.7f),
                 modifier = Modifier.size(22.dp),
             )
