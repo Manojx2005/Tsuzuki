@@ -117,7 +117,7 @@ Done:
 Next, in order:
 - [ ] Samsung cold start shows ~1 s of `#1F2125` grey (the system's dynamic dark background) before the startup animation. **Ruled out (2026-11-03):** it is not our splash. With `windowSplashScreenBackground` set to bright red (both `windowSplashScreenBackground` and `android:` variants, `res/values-v31/splash.xml`) the red never appeared, for both `monkey` and `am start --splashscreen-show-icon` launches; the original logo splash also sat on this grey. Next ideas: tap the real launcher icon, reboot to clear starting-window caches, test on a non-Samsung device, check One UI's app-launch animation settings. Low priority: it's the system's surface while the process starts.
 - [ ] Library (`LibraryList`, `LibraryDisplay`, `LibrarySearch`): covers/badges already follow the theme. Done: display-face title, progress bar under each cover (both grids). Category pills done (`LibraryTabs`). Still to do: `LibraryMixed` (novel/manga/manhwa filter).
-- [ ] Updates: the stat tiles from the board ("New tonight", "Save all") above the list; check the row tiles once a library update brings new chapters.
+- [ ] Updates: stat tiles done (`presentation/tsuzuki/updates/TsuzukiUpdatesTiles.kt`: New count + Save all). Still to do: restyle the Material filter chips (All / Manga / Novels) as pills; "Airing today" strip waits for anime.
 - [ ] History: the three stat tiles from the board (Today / Chapters / Streak) once reading sessions are recorded.
 - [ ] Novel details: chapter filter and download sheets (synopsis tile done).
 - [ ] Reader chrome (`Reader`, `ReaderSettings`, `ReaderTOC`, `ReaderBars`): Literata on black in Dot, on the book tint in Colour.

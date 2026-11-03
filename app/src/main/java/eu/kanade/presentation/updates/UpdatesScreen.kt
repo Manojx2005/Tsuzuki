@@ -183,6 +183,26 @@ fun UpdateScreen(
                             }
                         }
 
+                        // Tsuzuki themes: stat tiles above the list (board "Updates").
+                        if (state.items.isNotEmpty()) {
+                            item(key = "tsuzuki_update_tiles") {
+                                if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                                ) {
+                                    val unread = state.items.filter { !it.update.read }
+                                    val toSave = unread.filter {
+                                        it.downloadStateProvider() ==
+                                            eu.kanade.tachiyomi.data.download.model.Download.State.NOT_DOWNLOADED
+                                    }
+                                    eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTiles(
+                                        newCount = unread.size,
+                                        toSave = toSave.size,
+                                        onSaveAll = { onDownloadChapter(toSave, ChapterDownloadAction.START) },
+                                    )
+                                }
+                            }
+                        }
+
                         updatesLastUpdatedItem(lastUpdated)
 
                         if (state.items.isEmpty()) {

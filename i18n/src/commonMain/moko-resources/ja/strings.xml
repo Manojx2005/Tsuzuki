@@ -964,5 +964,9 @@
     <string name="tsz_back_to_reading">読書に戻る</string>
     <string name="tsz_search">検索</string>
     <string name="tsz_font_literata">Literata</string>
+    <string name="tsz_ch">話</string>
+    <string name="tsz_save_all">すべて保存</string>
+    <string name="tsz_to_save">未読 %1$d 話をダウンロード</string>
+    <string name="tsz_all_saved">保存済み</string>
     <string name="tsz_settings">設定</string>
 </resources>
