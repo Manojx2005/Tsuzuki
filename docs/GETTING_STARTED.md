@@ -3,9 +3,8 @@
 ## 1. Get the code
 
 ```sh
-git clone https://github.com/Manojx2005/LightNovelReader.git
-cd LightNovelReader
-git checkout ccr-275897ff-mwbv6p
+git clone https://github.com/Manojx2005/Tsuzuki.git
+cd Tsuzuki
 ```
 
 ## 2. Install the tools
@@ -24,7 +23,7 @@ git checkout ccr-275897ff-mwbv6p
    ```sh
    ./gradlew :app:installDebug
    ```
-   The debug app is installed as `io.github.manojx2005.tsuzuki.debug` and can sit next to a release build.
+   The debug app is installed as `io.github.manojx2005.tsuzuki.dev` and can sit next to a release build.
 
 Telemetry and the self-updater are off by default. No Firebase file is needed.
 
