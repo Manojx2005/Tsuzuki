@@ -160,25 +160,50 @@ fun UpdateScreen(
                                         .padding(horizontal = 16.dp, vertical = 8.dp),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    if (showAllFilter) {
+                                    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                                        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                                    ) {
+                                        // Tsuzuki themes: pills (board "Updates").
+                                        if (showAllFilter) {
+                                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                                text = stringResource(MR.strings.all),
+                                                selected = state.filter == UpdatesFilter.ALL,
+                                                onClick = { onFilterSelected(UpdatesFilter.ALL) },
+                                            )
+                                        }
+                                        if (showMangaFilter) {
+                                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                                text = stringResource(TDMR.strings.label_manga),
+                                                selected = state.filter == UpdatesFilter.MANGA,
+                                                onClick = { onFilterSelected(UpdatesFilter.MANGA) },
+                                            )
+                                        }
+                                        eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                            text = stringResource(TDMR.strings.label_novels),
+                                            selected = state.filter == UpdatesFilter.NOVELS,
+                                            onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
+                                        )
+                                    } else {
+                                        if (showAllFilter) {
+                                            FilterChip(
+                                                selected = state.filter == UpdatesFilter.ALL,
+                                                onClick = { onFilterSelected(UpdatesFilter.ALL) },
+                                                label = { Text(stringResource(MR.strings.all)) },
+                                            )
+                                        }
+                                        if (showMangaFilter) {
+                                            FilterChip(
+                                                selected = state.filter == UpdatesFilter.MANGA,
+                                                onClick = { onFilterSelected(UpdatesFilter.MANGA) },
+                                                label = { Text(stringResource(TDMR.strings.label_manga)) },
+                                            )
+                                        }
                                         FilterChip(
-                                            selected = state.filter == UpdatesFilter.ALL,
-                                            onClick = { onFilterSelected(UpdatesFilter.ALL) },
-                                            label = { Text(stringResource(MR.strings.all)) },
+                                            selected = state.filter == UpdatesFilter.NOVELS,
+                                            onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
+                                            label = { Text(stringResource(TDMR.strings.label_novels)) },
                                         )
                                     }
-                                    if (showMangaFilter) {
-                                        FilterChip(
-                                            selected = state.filter == UpdatesFilter.MANGA,
-                                            onClick = { onFilterSelected(UpdatesFilter.MANGA) },
-                                            label = { Text(stringResource(TDMR.strings.label_manga)) },
-                                        )
-                                    }
-                                    FilterChip(
-                                        selected = state.filter == UpdatesFilter.NOVELS,
-                                        onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
-                                        label = { Text(stringResource(TDMR.strings.label_novels)) },
-                                    )
                                 }
                             }
                         }
