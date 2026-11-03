@@ -167,9 +167,16 @@ fun NovelReaderAppBars(
     onTopBarHeight: (Int) -> Unit = {},
     onBottomBarHeight: (Int) -> Unit = {},
 ) {
-    val backgroundColor = MaterialTheme.colorScheme
-        .surfaceColorAtElevation(3.dp)
-        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    // Tsuzuki themes: solid bars (never see-through, no red tint in Dot).
+    val tsuzukiBars = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    val backgroundColor = if (tsuzukiBars) {
+        MaterialTheme.colorScheme.surfaceContainer
+    } else {
+        MaterialTheme.colorScheme
+            .surfaceColorAtElevation(3.dp)
+            .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    }
 
     // onSizeChanged doesn't fire a final 0 when AnimatedVisibility removes the bars, so clear the
     // reported heights here when the menu hides.

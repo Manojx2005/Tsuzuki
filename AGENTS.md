@@ -110,6 +110,7 @@ Done:
 - [x] Library progress bar under covers in both grid modes (compact + comfortable)
 - [x] Novel details: action buttons are tiles (`MangaActionButton`), chapter rows are tiles with swipe actions kept (`MangaChapterListItem`)
 - [x] Novel details: Resume tile with progress + next chapter (`presentation/tsuzuki/details/TsuzukiResumeTile.kt`, phone + tablet layouts); action labels wrap to two lines in 72 dp tiles
+- [x] Reader bars are solid in the Tsuzuki themes (`NovelReaderAppBars`: surfaceContainer instead of a 90% tinted surface)
 
 Next, in order:
 - [ ] Samsung cold start shows ~1 s of `#1F2125` grey (the system's dynamic dark background) before the startup animation. **Ruled out (2026-11-03):** it is not our splash. With `windowSplashScreenBackground` set to bright red (both `windowSplashScreenBackground` and `android:` variants, `res/values-v31/splash.xml`) the red never appeared, for both `monkey` and `am start --splashscreen-show-icon` launches; the original logo splash also sat on this grey. Next ideas: tap the real launcher icon, reboot to clear starting-window caches, test on a non-Samsung device, check One UI's app-launch animation settings. Low priority: it's the system's surface while the process starts.
