@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +42,9 @@ fun PreferenceScreen(
         }
     }
 
+    // Tsuzuki themes: each preference group is one tile under a small label (board "Settings").
+    val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     ScrollbarLazyColumn(
         modifier = modifier,
         state = state,
@@ -54,14 +58,30 @@ fun PreferenceScreen(
 
                     item {
                         Column {
-                            PreferenceGroupHeader(title = preference.title)
+                            if (tsuzuki) {
+                                eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(text = preference.title)
+                            } else {
+                                PreferenceGroupHeader(title = preference.title)
+                            }
                         }
                     }
-                    items(preference.preferenceItems) { item ->
-                        PreferenceItem(
-                            item = item,
-                            highlightKey = highlightKey,
-                        )
+                    val groupItems = preference.preferenceItems
+                    itemsIndexed(groupItems) { index, item ->
+                        if (tsuzuki) {
+                            androidx.compose.foundation.layout.Box(
+                                eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                    first = index == 0,
+                                    last = index == groupItems.lastIndex,
+                                ),
+                            ) {
+                                PreferenceItem(item = item, highlightKey = highlightKey)
+                            }
+                        } else {
+                            PreferenceItem(
+                                item = item,
+                                highlightKey = highlightKey,
+                            )
+                        }
                     }
                     item {
                         if (i < items.lastIndex) {
