@@ -47,6 +47,7 @@ fun Screen.sourcesTab(): TabContent {
         ),
         content = { contentPadding, snackbarHostState ->
             SourcesScreen(
+                onClickGlobalSearch = { navigator.push(GlobalSearchScreen()) },
                 state = state,
                 contentPadding = contentPadding,
                 onClickItem = { source, listing ->

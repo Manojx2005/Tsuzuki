@@ -1334,5 +1334,6 @@
     <string name="tsz_save_all">Save all</string>
     <string name="tsz_to_save">%1$d unread to download</string>
     <string name="tsz_all_saved">All saved</string>
+    <string name="tsz_search_sources">Search %1$d sources at once</string>
     <string name="tsz_settings">Settings</string>
 </resources>

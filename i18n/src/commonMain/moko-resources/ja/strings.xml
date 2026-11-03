@@ -968,5 +968,6 @@
     <string name="tsz_save_all">すべて保存</string>
     <string name="tsz_to_save">未読 %1$d 話をダウンロード</string>
     <string name="tsz_all_saved">保存済み</string>
+    <string name="tsz_search_sources">%1$d 件のソースをまとめて検索</string>
     <string name="tsz_settings">設定</string>
 </resources>

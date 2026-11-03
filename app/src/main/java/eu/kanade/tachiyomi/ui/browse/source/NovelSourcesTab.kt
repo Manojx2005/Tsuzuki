@@ -59,6 +59,7 @@ fun Screen.novelSourcesTab(): TabContent {
                 null -> null
             }
             SourcesScreen(
+                onClickGlobalSearch = { navigator.push(NovelGlobalSearchScreen()) },
                 state = SourcesViewModel.State(
                     dialog = mappedDialog,
                     isLoading = state.isLoading,

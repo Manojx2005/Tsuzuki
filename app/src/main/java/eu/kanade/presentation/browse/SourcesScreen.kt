@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.PushPin
@@ -67,7 +68,10 @@ fun SourcesScreen(
     onLongClickPin: (Source) -> Unit,
     onRemoveFromGroup: (Source, String) -> Unit,
     onLongClickItem: (Source) -> Unit,
+    onClickGlobalSearch: (() -> Unit)? = null,
 ) {
+    val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
         state.isEmpty -> EmptyScreen(
@@ -78,23 +82,43 @@ fun SourcesScreen(
             ScrollbarLazyColumn(
                 contentPadding = contentPadding + topSmallPaddingValues,
             ) {
-                items(
+                // Tsuzuki themes: "search every source" tile on top (board "Browse").
+                if (tsuzuki && onClickGlobalSearch != null) {
+                    item(key = "tsuzuki_global_search") {
+                        eu.kanade.presentation.tsuzuki.browse.TsuzukiGlobalSearchTile(
+                            sourceCount = state.items.filterIsInstance<SourceUiModel.Item>().distinctBy {
+                                it.source.id
+                            }.size,
+                            onClick = onClickGlobalSearch,
+                        )
+                    }
+                }
+                itemsIndexed(
                     items = state.items,
-                    contentType = {
+                    contentType = { _, it ->
                         when (it) {
                             is SourceUiModel.Header -> "header"
                             is SourceUiModel.Item -> "item"
                         }
                     },
-                    key = {
+                    key = { _, it ->
                         when (it) {
                             is SourceUiModel.Header -> it.hashCode()
                             is SourceUiModel.Item -> "source-${it.sectionKey}-${it.source.key()}"
                         }
                     },
-                ) { model ->
+                ) { index, model ->
                     when (model) {
-                        is SourceUiModel.Header -> {
+                        is SourceUiModel.Header -> if (tsuzuki) {
+                            eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
+                                modifier = Modifier.animateItem(),
+                                text = if (model.isGroup) {
+                                    model.language
+                                } else {
+                                    LocaleHelper.getSourceDisplayName(model.language, LocalContext.current)
+                                },
+                            )
+                        } else {
                             SourceHeader(
                                 modifier = Modifier.animateItem(),
                                 language = model.language,
@@ -102,7 +126,19 @@ fun SourcesScreen(
                             )
                         }
                         is SourceUiModel.Item -> SourceItem(
-                            modifier = Modifier.animateItem(),
+                            modifier = Modifier
+                                .animateItem()
+                                .then(
+                                    if (tsuzuki) {
+                                        // Rows between two headers form one tile.
+                                        eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                            first = state.items.getOrNull(index - 1) !is SourceUiModel.Item,
+                                            last = state.items.getOrNull(index + 1) !is SourceUiModel.Item,
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
                             source = model.source,
                             hasDefaultPreset = model.hasDefaultPreset,
                             groupSection = model.sectionKey.ifEmpty { null },
