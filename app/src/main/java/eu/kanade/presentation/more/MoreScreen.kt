@@ -44,6 +44,26 @@ fun MoreScreen(
 ) {
     val uriHandler = LocalUriHandler.current
 
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.more.TsuzukiMoreScreen(
+            downloadQueueStateProvider = downloadQueueStateProvider,
+            downloadedOnly = downloadedOnly,
+            onDownloadedOnlyChange = onDownloadedOnlyChange,
+            incognitoMode = incognitoMode,
+            onIncognitoModeChange = onIncognitoModeChange,
+            onClickDownloadQueue = onClickDownloadQueue,
+            onClickCategories = onClickCategories,
+            onClickStats = onClickStats,
+            onClickDataAndStorage = onClickDataAndStorage,
+            onClickSettings = onClickSettings,
+            onClickAbout = onClickAbout,
+            onClickHelp = { uriHandler.openUri(Constants.URL_HELP) },
+        )
+        return
+    }
+
     Scaffold { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
             item {

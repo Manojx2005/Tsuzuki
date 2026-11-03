@@ -167,8 +167,16 @@ fun AppBarTitle(
 ) {
     Column(modifier = modifier) {
         title?.let {
+            // Tsuzuki themes: screen titles use the display face (Doto / Instrument Serif).
+            val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+            val tsuzuki = tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
             Text(
-                text = it,
+                text = if (tokens.isDot) it.uppercase() else it,
+                style = if (tsuzuki) {
+                    MaterialTheme.typography.headlineSmall.copy(fontSize = 30.sp, lineHeight = 32.sp)
+                } else {
+                    androidx.compose.material3.LocalTextStyle.current
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

@@ -15,8 +15,9 @@ internal object LnrDotColorScheme : BaseColorScheme() {
     override val darkScheme = darkColorScheme(
         primary = Color(0xFFFF2D2D),
         onPrimary = Color(0xFFFFFFFF),
-        primaryContainer = Color(0xFF2A0A0A),
-        onPrimaryContainer = Color(0xFFFF8A80),
+        // Main actions (Start/Resume FAB, selected pills) use the red accent, as on the boards.
+        primaryContainer = Color(0xFFFF2D2D),
+        onPrimaryContainer = Color(0xFFFFFFFF),
         secondary = Color(0xFFFFFFFF),
         onSecondary = Color(0xFF000000),
         secondaryContainer = Color(0xFF1A1A1A),

@@ -2,9 +2,11 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.MangaCover
@@ -36,34 +38,48 @@ internal fun LibraryCompactGrid(
             contentType = { "library_compact_grid_item" },
         ) { libraryItem ->
             val manga = libraryItem.libraryManga.manga
-            MangaCompactGridItem(
-                isSelected = manga.id in selection,
-                title = manga.title.takeIf { showTitle },
-                coverData = MangaCover(
-                    mangaId = manga.id,
-                    sourceId = manga.source,
-                    isMangaFavorite = manga.favorite,
-                    url = manga.thumbnailUrl,
-                    lastModified = manga.coverLastModified,
-                ),
-                coverBadgeStart = {
-                    DownloadsBadge(count = libraryItem.badges.downloadCount)
-                    UnreadBadge(count = libraryItem.badges.unreadCount)
-                },
-                coverBadgeEnd = {
-                    LanguageBadge(
-                        isLocal = libraryItem.badges.isLocal,
-                        sourceLanguage = libraryItem.badges.sourceLanguage,
+            // Tsuzuki themes: reading progress under each cover (board "LibraryList").
+            val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+            val total = libraryItem.libraryManga.totalChapters
+            androidx.compose.foundation.layout.Column {
+                MangaCompactGridItem(
+                    isSelected = manga.id in selection,
+                    title = manga.title.takeIf { showTitle },
+                    coverData = MangaCover(
+                        mangaId = manga.id,
+                        sourceId = manga.source,
+                        isMangaFavorite = manga.favorite,
+                        url = manga.thumbnailUrl,
+                        lastModified = manga.coverLastModified,
+                    ),
+                    coverBadgeStart = {
+                        DownloadsBadge(count = libraryItem.badges.downloadCount)
+                        UnreadBadge(count = libraryItem.badges.unreadCount)
+                    },
+                    coverBadgeEnd = {
+                        LanguageBadge(
+                            isLocal = libraryItem.badges.isLocal,
+                            sourceLanguage = libraryItem.badges.sourceLanguage,
+                        )
+                    },
+                    onLongClick = { onLongClick(libraryItem.libraryManga) },
+                    onClick = { onClick(libraryItem.libraryManga) },
+                    onClickContinueReading = if (onClickContinueReading != null && libraryItem.unreadCount > 0) {
+                        { onClickContinueReading(libraryItem.libraryManga) }
+                    } else {
+                        null
+                    },
+                )
+                if (tsuzuki && total > 0) {
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar(
+                        progress = libraryItem.libraryManga.readCount.toFloat() / total,
+                        dots = 12,
+                        thickness = 4.dp,
+                        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 6.dp),
                     )
-                },
-                onLongClick = { onLongClick(libraryItem.libraryManga) },
-                onClick = { onClick(libraryItem.libraryManga) },
-                onClickContinueReading = if (onClickContinueReading != null && libraryItem.unreadCount > 0) {
-                    { onClickContinueReading(libraryItem.libraryManga) }
-                } else {
-                    null
-                },
-            )
+                }
+            }
         }
 
         loadMoreSentinel(loadMoreKey, onLoadMore)

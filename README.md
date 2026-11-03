@@ -32,7 +32,7 @@ Requires JDK 17+ and the Android SDK (compile SDK set in `gradle/mihon.versions.
   and the Tsuzuki contributors. The original Tsundoku README is kept at
   [`docs/TSUNDOKU_README.md`](docs/TSUNDOKU_README.md).
 - LNReader plugin logic: MIT (LNReader contributors).
-- Bundled fonts (Doto, Space Mono, Instrument Serif, Manrope): SIL Open Font License 1.1
-  ([`docs/licenses/OFL-1.1.txt`](docs/licenses/OFL-1.1.txt)).
+- Bundled fonts (Doto, Space Mono, Instrument Serif, Manrope, and for Japanese: DotGothic16, M PLUS 1 Code,
+  Noto Serif JP, Zen Kaku Gothic New): SIL Open Font License 1.1 ([`docs/licenses/`](docs/licenses/)).
 
 Tsuzuki is not affiliated with Mihon, Tsundoku or LNReader.

@@ -94,11 +94,10 @@ private fun LibraryRegularToolbar(
     SearchToolbar(
         titleContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = title.text,
-                    maxLines = 1,
+                // Shared title: picks up the Tsuzuki display face (and stays stock in other themes).
+                eu.kanade.presentation.components.AppBarTitle(
+                    title = title.text,
                     modifier = Modifier.weight(1f, false),
-                    overflow = TextOverflow.Ellipsis,
                 )
                 if (title.numberOfManga != null) {
                     Pill(

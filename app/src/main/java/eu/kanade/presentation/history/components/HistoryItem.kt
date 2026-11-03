@@ -43,6 +43,19 @@ fun HistoryItem(
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.history.TsuzukiHistoryItem(
+            history,
+            onClickCover,
+            onClickResume,
+            onClickDelete,
+            onClickFavorite,
+            modifier,
+        )
+        return
+    }
     Row(
         modifier = modifier
             .clickable(onClick = onClickResume)

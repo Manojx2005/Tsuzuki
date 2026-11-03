@@ -2,6 +2,8 @@
 
 package eu.kanade.presentation.updates
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -159,8 +162,24 @@ private fun UpdatesUiItem(
     val haptic = LocalHapticFeedback.current
     val textAlpha = if (update.read) DISABLED_ALPHA else 1f
 
+    // Tsuzuki themes: each update is a tile (design board "Updates").
+    val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     Row(
         modifier = modifier
+            .then(
+                if (tsuzuki.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
+                    Modifier
+                        .padding(horizontal = 12.dp, vertical = 3.dp)
+                        .clip(tileShape)
+                        .background(tsuzuki.tile)
+                        .then(
+                            tsuzuki.tileBorder?.let { Modifier.border(1.dp, it, tileShape) } ?: Modifier,
+                        )
+                } else {
+                    Modifier
+                },
+            )
             .selectedBackground(selected)
             .combinedClickable(
                 onClick = onClick,

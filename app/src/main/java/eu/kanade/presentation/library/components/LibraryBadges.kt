@@ -23,7 +23,12 @@ internal fun DownloadsBadge(count: Int) {
 @Composable
 internal fun UnreadBadge(count: Long) {
     if (count > 0) {
-        Badge(text = "$count")
+        val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+        if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
+            Badge(text = "$count", color = tokens.accent, textColor = tokens.onAccent)
+        } else {
+            Badge(text = "$count")
+        }
     }
 }
 

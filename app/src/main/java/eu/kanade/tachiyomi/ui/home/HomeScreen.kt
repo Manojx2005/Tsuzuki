@@ -11,6 +11,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -21,11 +27,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +44,11 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiNavBar
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiNavItem
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiRail
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -45,6 +58,8 @@ import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
+import eu.kanade.tachiyomi.ui.tsuzuki.home.TsuzukiHomeTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -84,6 +99,15 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
+    /** Tsuzuki (Colour / Dot themes): Home replaces Library in the nav; Library opens from Home. */
+    private val TSUZUKI_TABS = listOf(
+        TsuzukiHomeTab,
+        UpdatesTab,
+        HistoryTab,
+        BrowseTab,
+        MoreTab,
+    )
+
     private val JOINED_TABS = listOf(
         NovelsTab,
         UpdatesTab,
@@ -99,95 +123,131 @@ object HomeScreen : Screen() {
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val isJoined by libraryPreferences.joinedLibrary.collectAsState()
         val hideMangaUi by basePreferences.hideMangaUi.collectAsState()
-        val tabs = if (isJoined || hideMangaUi) JOINED_TABS else TABS
-        TabNavigator(
-            tab = NovelsTab,
-            key = TabNavigatorKey,
-        ) { tabNavigator ->
-            // Provide usable navigator to content screen
-            CompositionLocalProvider(LocalNavigator provides navigator) {
-                Scaffold(
-                    startBar = {
-                        if (isTabletUi()) {
-                            NavigationRail {
-                                tabs.fastForEach {
-                                    NavigationRailItem(it)
-                                }
-                            }
-                        }
-                    },
-                    bottomBar = {
-                        if (!isTabletUi()) {
-                            val bottomNavVisible by produceState(initialValue = true) {
-                                showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
-                            }
-                            AnimatedVisibility(
-                                visible = bottomNavVisible,
-                                enter = expandVertically(),
-                                exit = shrinkVertically(),
-                            ) {
-                                NavigationBar {
+        val isTsuzuki = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
+        val tabs = when {
+            isTsuzuki -> TSUZUKI_TABS
+            isJoined || hideMangaUi -> JOINED_TABS
+            else -> TABS
+        }
+        val homeTab = if (isTsuzuki) TsuzukiHomeTab else NovelsTab
+        // Colour theme: the whole app takes the colours of the book you read last.
+        val latestCover by remember {
+            Injekt.get<tachiyomi.domain.history.interactor.GetHistory>().subscribe(query = "", limit = 1)
+        }.collectAsState(initial = emptyList())
+        val bookPalette = if (TsuzukiTheme.tokens.style == TsuzukiStyle.COLOUR) {
+            eu.kanade.presentation.theme.tsuzuki.rememberBookPalette(latestCover.firstOrNull()?.coverData)
+        } else {
+            null
+        }
+        eu.kanade.presentation.theme.tsuzuki.ProvideBookPalette(bookPalette) {
+            val tsuzukiBackground = TsuzukiTheme.tokens.background
+            val containerColor = if (isTsuzuki) {
+                tsuzukiBackground.takeOrElse { MaterialTheme.colorScheme.background }
+            } else {
+                MaterialTheme.colorScheme.background
+            }
+            TabNavigator(
+                tab = homeTab,
+                key = TabNavigatorKey,
+            ) { tabNavigator ->
+                // Provide usable navigator to content screen
+                CompositionLocalProvider(LocalNavigator provides navigator) {
+                    Scaffold(
+                        containerColor = containerColor,
+                        startBar = {
+                            if (isTabletUi() && isTsuzuki) {
+                                TsuzukiRail(
+                                    items = tsuzukiNavItems(tabs),
+                                    onSearch = { tabNavigator.current = NovelsTab },
+                                    onSettings = { navigator.push(SettingsScreen()) },
+                                )
+                            } else if (isTabletUi()) {
+                                NavigationRail {
                                     tabs.fastForEach {
-                                        NavigationBarItem(it)
+                                        NavigationRailItem(it)
                                     }
                                 }
                             }
-                        }
-                    },
-                    contentWindowInsets = WindowInsets(0),
-                ) { contentPadding ->
-                    Box(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding),
-                    ) {
-                        AnimatedContent(
-                            targetState = tabNavigator.current,
-                            transitionSpec = {
-                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration) togetherWith
-                                    materialFadeThroughOut(durationMillis = TabFadeDuration)
-                            },
-                            label = "tabContent",
-                        ) {
-                            tabNavigator.saveableState(key = "currentTab", it) {
-                                it.Content()
-                            }
-                        }
-                    }
-                }
-            }
-
-            val goToNovelsTab = { tabNavigator.current = NovelsTab }
-
-            BackHandler(enabled = tabNavigator.current != NovelsTab, onBack = goToNovelsTab)
-
-            LaunchedEffect(Unit) {
-                launch {
-                    librarySearchEvent.receiveAsFlow().collectLatest {
-                        goToNovelsTab()
-                        NovelsTab.search(it)
-                    }
-                }
-                launch {
-                    openTabEvent.receiveAsFlow().collectLatest {
-                        tabNavigator.current = when (it) {
-                            is Tab.Library -> if (isJoined || hideMangaUi) NovelsTab else LibraryTab
-                            Tab.Updates -> UpdatesTab
-                            Tab.History -> HistoryTab
-                            is Tab.Browse -> {
-                                if (it.toExtensions) {
-                                    BrowseTab.showExtension()
+                        },
+                        bottomBar = {
+                            if (!isTabletUi()) {
+                                val bottomNavVisible by produceState(initialValue = true) {
+                                    showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
                                 }
-                                BrowseTab
+                                AnimatedVisibility(
+                                    visible = bottomNavVisible,
+                                    enter = expandVertically(),
+                                    exit = shrinkVertically(),
+                                ) {
+                                    if (isTsuzuki) {
+                                        TsuzukiNavBar(items = tsuzukiNavItems(tabs))
+                                    } else {
+                                        NavigationBar {
+                                            tabs.fastForEach {
+                                                NavigationBarItem(it)
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            is Tab.More -> MoreTab
+                        },
+                        contentWindowInsets = WindowInsets(0),
+                    ) { contentPadding ->
+                        Box(
+                            modifier = Modifier
+                                .padding(contentPadding)
+                                .consumeWindowInsets(contentPadding),
+                        ) {
+                            AnimatedContent(
+                                targetState = tabNavigator.current,
+                                transitionSpec = {
+                                    materialFadeThroughIn(
+                                        initialScale = 1f,
+                                        durationMillis = TabFadeDuration,
+                                    ) togetherWith materialFadeThroughOut(durationMillis = TabFadeDuration)
+                                },
+                                label = "tabContent",
+                            ) {
+                                tabNavigator.saveableState(key = "currentTab", it) {
+                                    it.Content()
+                                }
+                            }
                         }
+                    }
+                }
 
-                        if (it is Tab.Library && it.mangaIdToOpen != null) {
-                            navigator.push(MangaScreen(it.mangaIdToOpen))
+                val goToNovelsTab = { tabNavigator.current = NovelsTab }
+
+                BackHandler(enabled = tabNavigator.current != homeTab, onBack = { tabNavigator.current = homeTab })
+
+                LaunchedEffect(Unit) {
+                    launch {
+                        librarySearchEvent.receiveAsFlow().collectLatest {
+                            goToNovelsTab()
+                            NovelsTab.search(it)
                         }
-                        if (it is Tab.More && it.toDownloads) {
-                            navigator.push(DownloadQueueScreen())
+                    }
+                    launch {
+                        openTabEvent.receiveAsFlow().collectLatest {
+                            tabNavigator.current = when (it) {
+                                is Tab.Library -> if (isJoined || hideMangaUi) NovelsTab else LibraryTab
+                                Tab.Updates -> UpdatesTab
+                                Tab.History -> HistoryTab
+                                is Tab.Browse -> {
+                                    if (it.toExtensions) {
+                                        BrowseTab.showExtension()
+                                    }
+                                    BrowseTab
+                                }
+                                is Tab.More -> MoreTab
+                            }
+
+                            if (it is Tab.Library && it.mangaIdToOpen != null) {
+                                navigator.push(MangaScreen(it.mangaIdToOpen))
+                            }
+                            if (it is Tab.More && it.toDownloads) {
+                                navigator.push(DownloadQueueScreen())
+                            }
                         }
                     }
                 }
@@ -304,6 +364,49 @@ object HomeScreen : Screen() {
             Icon(
                 painter = tab.options.icon!!,
                 contentDescription = tab.options.title,
+            )
+        }
+    }
+
+    /** Builds the Tsuzuki nav entries; Library tabs count as "Home" since Home opens them. */
+    @Composable
+    private fun tsuzukiNavItems(tabs: List<eu.kanade.presentation.util.Tab>): List<TsuzukiNavItem> {
+        val tabNavigator = LocalTabNavigator.current
+        val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
+        val updatesCount by produceState(initialValue = 0) {
+            val pref = Injekt.get<LibraryPreferences>()
+            combine(pref.newShowUpdatesCount.changes(), pref.newUpdatesCount.changes()) { show, count ->
+                if (show) count else 0
+            }.collectLatest { value = it }
+        }
+        val current = tabNavigator.current
+        return tabs.map { tab ->
+            val selected = when (tab) {
+                is TsuzukiHomeTab -> current is TsuzukiHomeTab || current is NovelsTab || current is LibraryTab
+                else -> current::class == tab::class
+            }
+            val (short, icon) = when (tab) {
+                is TsuzukiHomeTab -> "HOME" to Icons.Outlined.GridView
+                is UpdatesTab -> "NEW" to Icons.Outlined.NotificationsNone
+                is HistoryTab -> "PAST" to Icons.Outlined.Schedule
+                is BrowseTab -> "FIND" to Icons.Outlined.Explore
+                else -> "•••" to Icons.Outlined.MoreHoriz
+            }
+            TsuzukiNavItem(
+                key = tab.key,
+                label = tab.options.title,
+                shortLabel = short,
+                icon = icon,
+                selected = selected,
+                badge = if (tab is UpdatesTab) updatesCount else 0,
+                onClick = {
+                    if (current::class != tab::class) {
+                        tabNavigator.current = tab
+                    } else {
+                        scope.launch { tab.onReselect(navigator) }
+                    }
+                },
             )
         }
     }

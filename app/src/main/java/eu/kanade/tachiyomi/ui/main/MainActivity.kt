@@ -58,8 +58,13 @@ import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
 import eu.kanade.presentation.components.IndexingBannerBackgroundColor
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.startup.TsuzukiStartupOverlay
+import eu.kanade.presentation.tsuzuki.startup.rememberAnimationsEnabled
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
@@ -106,6 +111,7 @@ class MainActivity : BaseActivity() {
 
     private val libraryPreferences: LibraryPreferences by injectLazy()
     private val preferences: BasePreferences by injectLazy()
+    private val uiPreferences: eu.kanade.domain.ui.UiPreferences by injectLazy()
 
     private val downloadCache: DownloadCache by injectLazy()
     private val chapterCache: ChapterCache by injectLazy()
@@ -115,6 +121,10 @@ class MainActivity : BaseActivity() {
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
+
+    /** Set once the Tsuzuki startup overlay (or the app, if it is skipped) has composed. */
+    @Volatile
+    private var startupOverlayDrawn = false
 
     private var navigator: Navigator? = null
 
@@ -127,6 +137,10 @@ class MainActivity : BaseActivity() {
 
         // Prevent splash screen showing up on configuration changes
         val splashScreen = if (isLaunch) installSplashScreen() else null
+        // Colour / Dot draw their own startup animation, so the (blank) system splash leaves at once.
+        val tsuzukiStartup = isLaunch && uiPreferences.appTheme.get().let {
+            it == eu.kanade.domain.ui.model.AppTheme.COLOUR || it == eu.kanade.domain.ui.model.AppTheme.DOT
+        }
 
         super.onCreate(savedInstanceState)
 
@@ -177,6 +191,9 @@ class MainActivity : BaseActivity() {
                         // dialog is opened instead.
                         // Set start screen
                         handleIntentAction(intent, navigator, closeImportScreenOnDone = true)
+                        // A plain launcher start returns false before setting `ready`, which kept the
+                        // splash up until SPLASH_MAX_DURATION. The start screen is set now either way.
+                        ready = true
 
                         // Reset Incognito Mode on relaunch
                         preferences.incognitoMode.set(false)
@@ -246,11 +263,27 @@ class MainActivity : BaseActivity() {
                 ShowOnboarding()
                 // ShowDonationCampaign()
             }
+
+            val animationsEnabled = rememberAnimationsEnabled()
+            val tsuzukiTheme = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
+            var showStartup by remember { mutableStateOf(tsuzukiStartup && tsuzukiTheme && animationsEnabled) }
+            if (!showStartup) androidx.compose.runtime.SideEffect { startupOverlayDrawn = true }
+            if (showStartup) {
+                androidx.compose.runtime.SideEffect { startupOverlayDrawn = true }
+                TsuzukiStartupOverlay(
+                    isReady = { ready || eu.kanade.presentation.tsuzuki.startup.StartupSignal.homeReady },
+                    isTablet = isTabletUi(),
+                    onFinished = { showStartup = false },
+                )
+            }
         }
 
         val startTime = System.currentTimeMillis()
         splashScreen?.setKeepOnScreenCondition {
             val elapsed = System.currentTimeMillis() - startTime
+            // Hold the (blank, black) system splash until the startup overlay is on screen,
+            // otherwise the grey window background flashes while the app initialises.
+            if (tsuzukiStartup) return@setKeepOnScreenCondition !startupOverlayDrawn && elapsed <= SPLASH_MAX_DURATION
             elapsed <= SPLASH_MIN_DURATION || (!ready && elapsed <= SPLASH_MAX_DURATION)
         }
         setSplashScreenExitAnimation(splashScreen)

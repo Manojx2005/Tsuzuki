@@ -27,6 +27,7 @@ enum class MangaCover(val ratio: Float) {
         contentDescription: String = "",
         shape: Shape = MaterialTheme.shapes.extraSmall,
         onClick: (() -> Unit)? = null,
+        colorFilter: androidx.compose.ui.graphics.ColorFilter? = null,
     ) {
         AsyncImage(
             model = data,
@@ -48,6 +49,12 @@ enum class MangaCover(val ratio: Float) {
                     },
                 ),
             contentScale = ContentScale.Crop,
+            // Tsuzuki Dot theme: covers are greyscale everywhere (red is the only colour).
+            colorFilter = colorFilter ?: if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.isDot) {
+                eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
+            } else {
+                null
+            },
         )
     }
 }

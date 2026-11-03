@@ -134,6 +134,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             Injekt.get<Database>()
 
             Injekt.get<DownloadManager>()
+
+            runCatching { eu.kanade.tachiyomi.tsuzuki.DefaultSourceRepos.seed() }
         }
 
         setupNotificationChannels()

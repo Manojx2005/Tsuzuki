@@ -6,6 +6,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.UiPreferences
@@ -28,6 +29,8 @@ import eu.kanade.presentation.theme.colorscheme.TidalWaveColorScheme
 import eu.kanade.presentation.theme.colorscheme.TokyoNightColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
+import eu.kanade.presentation.theme.tsuzuki.LocalTsuzukiTokens
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -69,9 +72,13 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
-        typography = lnrTypography(appTheme) ?: MaterialTheme.typography,
-        content = content,
-    )
+        typography = lnrTypography(appTheme, context.resources) ?: MaterialTheme.typography,
+    ) {
+        CompositionLocalProvider(
+            LocalTsuzukiTokens provides tsuzukiTokensFor(appTheme),
+            content = content,
+        )
+    }
 }
 
 private fun getThemeColorScheme(

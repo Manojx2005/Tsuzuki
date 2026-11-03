@@ -459,9 +459,17 @@ private fun ColumnScope.MangaContentInfo(
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
     val context = LocalContext.current
+    // Tsuzuki themes: the book title uses the display face (board "NovelDetails").
+    val tsuzukiTokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val tsuzuki = tsuzukiTokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    val shownTitle = title.ifBlank { stringResource(MR.strings.unknown_title) }
     Text(
-        text = title.ifBlank { stringResource(MR.strings.unknown_title) },
-        style = MaterialTheme.typography.titleLarge,
+        text = if (tsuzukiTokens.isDot) shownTitle.uppercase() else shownTitle,
+        style = if (tsuzuki) {
+            MaterialTheme.typography.headlineMedium.copy(fontSize = 32.sp, lineHeight = 34.sp)
+        } else {
+            MaterialTheme.typography.titleLarge
+        },
         modifier = Modifier.clickableNoIndication(
             onLongClick = {
                 if (title.isNotBlank()) {
