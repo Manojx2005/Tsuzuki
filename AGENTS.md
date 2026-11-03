@@ -16,6 +16,7 @@ It is a fork of Tsundoku (itself a Mihon fork). Read these before changing anyth
      Start here.
    - `docs/design/boards/*.dc.html` (if present): raw board HTML exported by the owner. The layout is the markup;
      the numbers are in the `renderVals()` script at the bottom.
+   - `docs/design/boards/png/*.png`: screenshots of the boards to compare against (see `docs/design/boards/README.md`).
    - `docs/design/README.md`: tokens, nav/rail specs, board index and implementation status.
    If a task's board is in none of these, ask the owner for it instead of inventing a layout.
    Build it for **Dot first**, then check Colour.
