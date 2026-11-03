@@ -5,12 +5,20 @@ It is a fork of Tsundoku (itself a Mihon fork). Read these before changing anyth
 
 - `docs/PLAN.md`: product and engineering plan (the theme system is in §3).
 - `docs/design/README.md`: design tokens, nav/rail specs, board index, and **implementation status**.
+- `docs/design/specs.md`: the remaining boards written out (the canvas is only reachable from Claude).
 - `docs/GETTING_STARTED.md`: first-time setup.
 
 ## When the owner says "continue"
 
 1. Open **Task queue** below and take the first unchecked task.
-2. Find its design board in `docs/design/README.md` and build it for **Dot first**, then check Colour.
+2. Find its design board. The canvas itself is private to Claude, so use the copies in the repo:
+   - **`docs/design/specs.md`**: the boards for every open task, written out with sizes, colours, states and motion.
+     Start here.
+   - `docs/design/boards/*.dc.html` (if present): raw board HTML exported by the owner. The layout is the markup;
+     the numbers are in the `renderVals()` script at the bottom.
+   - `docs/design/README.md`: tokens, nav/rail specs, board index and implementation status.
+   If a task's board is in none of these, ask the owner for it instead of inventing a layout.
+   Build it for **Dot first**, then check Colour.
 3. Build, install on the connected devices, look at a screenshot (see **Test on devices**), and fix what's off.
 4. Tick the task here, update the status table in `docs/design/README.md`, then report what changed and what you saw on the devices.
    Don't commit unless the owner asks.
@@ -83,6 +91,13 @@ done
 - **Sources.** Default repos are seeded once on first launch by `eu/kanade/tachiyomi/tsuzuki/DefaultSourceRepos.kt`:
   the LNReader plugin index (novels, via the QuickJS plugin host) and Keiyoushi (`repo.json`, which points at their
   v2 protobuf index; the legacy `index.min.json` only lists an "Outdated App" stub).
+- **Reuse the Tsuzuki building blocks** before writing new UI: `TsuzukiPill` / `TsuzukiPillRow`,
+  `TsuzukiSectionLabel` (`theme/tsuzuki/TsuzukiPill.kt`), `tsuzukiGroupedTile` (`presentation/tsuzuki/browse/`),
+  `TsuzukiTile`, `TsuzukiProgressBar`. Dialog tabs (`TabbedDialog`), screen tabs (`TabbedScreen`) and preference
+  groups (`PreferenceScreen`) already switch to these in the Tsuzuki themes.
+- **Small upstream diffs:** don't wrap and re-indent upstream code. Add a slot parameter or a thin wrapper instead
+  (see `LibraryToolbar(below = ...)`).
+- **Restoring a file:** use `git show HEAD:<file> > <file>`.
 - **Commits:** only when asked. The owner is the sole author: no `Co-Authored-By` or "Generated with" trailers.
 - **Licences:** Apache-2.0 app. Don't copy GPL code (NovelDokusha and similar); see PLAN.md §1.
 
@@ -126,7 +141,7 @@ Next, in order:
 - [ ] Motion (`MotionSpec`, then `MotionOpen`, `MotionReader`, `MotionStack`, `MotionTheme`, `MotionSheet`).
 - [ ] Data-backed tiles: reading streak and daily goal (needs a reading-sessions table), Listen tile (TTS state), source health (`SourceHealth`).
 - [ ] Translate the `tsz_*` strings into more languages (only base English + Japanese exist). Dot nav short labels (HOME/NEW/PAST/FIND) are intentionally English.
-- [ ] Fix the 16 KB page alignment of native libraries, then release v0.1.
+- [ ] Fix the 16 KB page alignment of native libraries, then release v0.1. To start: check each `.so` with `zipalign -c -P 16 -v 4 <apk>` (build-tools in `%LOCALAPPDATA%/Android/Sdk/build-tools/37.0.0`) and the ELF `p_align` with `llvm-readelf -l` from the NDK (`Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/bin`). Misaligned prebuilt libs need newer dependency versions; AGP handles the zip alignment.
 
 Later (after the queue above), anime integration from Aniyomi (Apache-2.0), designed on the canvas page "Final · Anime":
 - [ ] Stage 1 spike on a branch: copy Aniyomi's `animesource` API, anime extension loader and mpv player (+ `aniyomi-mpv-lib`, `ffmpeg-kit`); play one episode from one extension. Clone Aniyomi with `git -c core.longpaths=true clone` on Windows.
