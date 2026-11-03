@@ -68,7 +68,7 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 | LibraryList | partly: greyscale covers, accent badges, display title, progress under covers (both grids), category pills; LibraryMixed not started | `presentation/library/components/` (`LibraryTabs`, `LibraryBadges`, grids) |
 | More | done (no Source health tile yet) | `presentation/tsuzuki/more/` |
 | NovelDetails, TabletNovel | partly: display title, action tiles, Resume tile with progress, synopsis tile, chapter rows as tiles; filter/download sheets not started | `presentation/manga/`, `presentation/tsuzuki/details/` |
-| Reader, ReaderBars | partly: solid bars, Literata default reading face; book-tint background not started | `presentation/reader/appbars/NovelReaderAppBars.kt`, `res/font/lnr_literata.ttf` |
+| Reader, ReaderBars | partly: solid bars, Literata default reading face, book-tint background in Colour (via `BookTint`) | `presentation/reader/appbars/NovelReaderAppBars.kt`, `res/font/lnr_literata.ttf` |
 | Browse, Extensions | partly: pill tab row (all tabbed screens), global-search tile, sources and extensions grouped in tiles; pinned two-up tiles; health dots not started | `presentation/components/TabbedScreen.kt`, `presentation/browse/`, `presentation/tsuzuki/browse/` |
 | Settings | partly: search tile, Colour/Dot theme cards, sections in one tile, every preference group as a tile; tablet two-pane list still stock | `presentation/more/settings/`, `presentation/tsuzuki/settings/` |
 | Shared pill | done | `theme/tsuzuki/TsuzukiPill.kt` (`TsuzukiPill`, `TsuzukiPillRow`) |

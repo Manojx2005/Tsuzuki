@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -138,6 +139,13 @@ object HomeScreen : Screen() {
             eu.kanade.presentation.theme.tsuzuki.rememberBookPalette(latestCover.firstOrNull()?.coverData)
         } else {
             null
+        }
+        // Hand the tint to the novel reader so that book reads on its own colour.
+        val latestMangaId = latestCover.firstOrNull()?.mangaId
+        androidx.compose.runtime.LaunchedEffect(bookPalette, latestMangaId) {
+            if (bookPalette != null && latestMangaId != null) {
+                eu.kanade.presentation.theme.tsuzuki.BookTint.set(latestMangaId, bookPalette.background.toArgb())
+            }
         }
         eu.kanade.presentation.theme.tsuzuki.ProvideBookPalette(bookPalette) {
             val tsuzukiBackground = TsuzukiTheme.tokens.background

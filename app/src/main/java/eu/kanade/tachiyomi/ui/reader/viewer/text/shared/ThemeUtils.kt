@@ -15,7 +15,7 @@ object ThemeUtils {
         val fontColor = preferences.novelFontColor.get()
 
         return when (theme) {
-            "app" -> {
+            "app" -> eu.kanade.presentation.theme.tsuzuki.BookTint.forReader(activity) ?: run {
                 val typedValue = android.util.TypedValue()
                 val actTheme = activity.theme
                 val bgColor = if (actTheme.resolveAttribute(
