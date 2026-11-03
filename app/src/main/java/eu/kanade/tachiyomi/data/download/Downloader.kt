@@ -147,6 +147,9 @@ class Downloader(
         // restore() does blocking DB lookups per queued download; keep it off the main thread or a
         // large restored queue stalls app startup (splash freeze / ANR).
         scope.launch {
+            // Tsuzuki: restore drops (and clears) downloads whose source isn't loaded yet, so wait for extensions
+            // and JS plugins first, or a cold start loses the queue
+            sourceManager.isInitialized.first { it }
             val chapters = async(Dispatchers.IO) { store.restore() }
             addAllToQueue(chapters.await())
         }
