@@ -63,8 +63,13 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 | Nav, Rail | done | `theme/tsuzuki/TsuzukiNav.kt`, wired in `ui/home/HomeScreen.kt` |
 | Main, TabletPortraitLibrary, TabletLibrary (with details pane), LibraryEmpty | done, verified with real books in Dot and Colour | `presentation/tsuzuki/home/`, `ui/tsuzuki/home/` |
 | MotionSplash (startup) | done, verified on both devices | `presentation/tsuzuki/startup/`, `ui/main/MainActivity.kt` |
-| History (rows), Updates (rows) | done (Updates rows not yet seen with data) | `presentation/tsuzuki/history/`, `presentation/updates/UpdatesUiItem.kt` |
-| LibraryList | partly: greyscale covers, accent badges, display title, progress under covers (compact grid) | `presentation/manga/components/MangaCover.kt`, `presentation/library/components/LibraryBadges.kt` |
+| History (rows) | done | `presentation/tsuzuki/history/` |
+| Updates | partly: row tiles (seen with data), New count + Save all tiles, filter pills; Airing strip waits for anime | `presentation/updates/`, `presentation/tsuzuki/updates/` |
+| LibraryList | partly: greyscale covers, accent badges, display title, progress under covers (both grids), category pills; LibraryMixed not started | `presentation/library/components/` (`LibraryTabs`, `LibraryBadges`, grids) |
 | More | done (no Source health tile yet) | `presentation/tsuzuki/more/` |
-| NovelDetails | partly: display title, accent Start/Resume, greyscale cover | `presentation/manga/components/MangaInfoHeader.kt`, colour schemes |
+| NovelDetails, TabletNovel | partly: display title, action tiles, Resume tile with progress, synopsis tile, chapter rows as tiles; filter/download sheets not started | `presentation/manga/`, `presentation/tsuzuki/details/` |
+| Reader, ReaderBars | partly: solid bars, Literata default reading face; book-tint background not started | `presentation/reader/appbars/NovelReaderAppBars.kt`, `res/font/lnr_literata.ttf` |
+| Browse, Extensions | partly: pill tab row (all tabbed screens), global-search tile, sources and extensions grouped in tiles; pinned two-up tiles and health dots not started | `presentation/components/TabbedScreen.kt`, `presentation/browse/`, `presentation/tsuzuki/browse/` |
+| Settings | partly: search tile, Colour/Dot theme cards, sections in one tile, every preference group as a tile; tablet two-pane list still stock | `presentation/more/settings/`, `presentation/tsuzuki/settings/` |
+| Shared pill | done | `theme/tsuzuki/TsuzukiPill.kt` (`TsuzukiPill`, `TsuzukiPillRow`) |
 | Everything else | not started | — |
