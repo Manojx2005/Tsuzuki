@@ -122,7 +122,7 @@ Next, in order:
 - [ ] Novel details: chapter filter and download sheets (synopsis tile done).
 - [ ] Reader chrome (`Reader`, `ReaderSettings`, `ReaderTOC`, `ReaderBars`): Literata on black in Dot, on the book tint in Colour.
 - [ ] Settings (`Settings`, `SettingsAppearance`, `TabletSettings`). Add the Source health tile to More once health data exists.
-- [ ] Browse (`Browse`, `Extensions`, `ExtensionRepos`, `BrowseManga`, `Catalogue`, `TabletBrowse`). Done: tab row is a pill row (`TabbedScreen` → `TsuzukiPillRow`). Global-search tile and grouped source tiles done (`presentation/tsuzuki/browse/TsuzukiBrowse.kt`). Still to do: pinned sources as big two-up tiles, extension rows as tiles (health dots wait for source health data).
+- [ ] Browse (`Browse`, `Extensions`, `ExtensionRepos`, `BrowseManga`, `Catalogue`, `TabletBrowse`). Done: tab row is a pill row (`TabbedScreen` → `TsuzukiPillRow`). Global-search tile and grouped source tiles done (`presentation/tsuzuki/browse/TsuzukiBrowse.kt`). Extension sections are tiles too. Still to do: pinned sources as big two-up tiles (health dots wait for source health data).
 - [ ] Motion (`MotionSpec`, then `MotionOpen`, `MotionReader`, `MotionStack`, `MotionTheme`, `MotionSheet`).
 - [ ] Data-backed tiles: reading streak and daily goal (needs a reading-sessions table), Listen tile (TTS state), source health (`SourceHealth`).
 - [ ] Translate the `tsz_*` strings into more languages (only base English + Japanese exist). Dot nav short labels (HOME/NEW/PAST/FIND) are intentionally English.

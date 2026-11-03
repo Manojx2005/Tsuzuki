@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GetApp
@@ -206,10 +207,10 @@ private fun ExtensionContent(
                 }
             }
 
-            items(
+            itemsIndexed(
                 items = items,
-                contentType = { "item" },
-                key = { item ->
+                contentType = { _, _ -> "item" },
+                key = { _, item ->
                     when (val extension = item.extension) {
                         is Extension.Untrusted -> {
                             "extension-untrusted-${extension.pkgName}-${extension.versionCode}-${extension.signatureHash}"
@@ -225,9 +226,23 @@ private fun ExtensionContent(
                         }
                     }
                 },
-            ) { item ->
+            ) { index, item ->
                 ExtensionItem(
-                    modifier = Modifier.animateItem(),
+                    modifier = Modifier
+                        .animateItem()
+                        .then(
+                            if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                            ) {
+                                // Tsuzuki themes: each section is one tile (board "Extensions").
+                                eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                    first = index == 0,
+                                    last = index == items.lastIndex,
+                                )
+                            } else {
+                                Modifier
+                            },
+                        ),
                     item = item,
                     onClickItem = {
                         when (it) {
@@ -606,13 +621,22 @@ private fun ExtensionHeader(
         modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .weight(1f),
-            style = MaterialTheme.typography.header,
-        )
+        if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+        ) {
+            eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHeader(
+                text = text,
+                modifier = Modifier.weight(1f),
+            )
+        } else {
+            Text(
+                text = text,
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .weight(1f),
+                style = MaterialTheme.typography.header,
+            )
+        }
         action()
     }
 }
