@@ -109,13 +109,14 @@ Done:
 - [x] Anime placeholder in the app: Home has a Read / Watch switch; Watch shows a themed "coming soon" screen (`WatchPlaceholder` in `TsuzukiHomeScreen.kt`). The canvas boards on every page already include anime.
 - [x] Library progress bar under covers in both grid modes (compact + comfortable)
 - [x] Novel details: action buttons are tiles (`MangaActionButton`), chapter rows are tiles with swipe actions kept (`MangaChapterListItem`)
+- [x] Novel details: Resume tile with progress + next chapter (`presentation/tsuzuki/details/TsuzukiResumeTile.kt`, phone + tablet layouts); action labels wrap to two lines in 72 dp tiles
 
 Next, in order:
 - [ ] Samsung cold start shows ~1 s of `#1F2125` grey (the system's dynamic dark background) before the startup animation. **Ruled out (2026-11-03):** it is not our splash. With `windowSplashScreenBackground` set to bright red (both `windowSplashScreenBackground` and `android:` variants, `res/values-v31/splash.xml`) the red never appeared, for both `monkey` and `am start --splashscreen-show-icon` launches; the original logo splash also sat on this grey. Next ideas: tap the real launcher icon, reboot to clear starting-window caches, test on a non-Samsung device, check One UI's app-launch animation settings. Low priority: it's the system's surface while the process starts.
 - [ ] Library (`LibraryList`, `LibraryDisplay`, `LibrarySearch`): covers/badges already follow the theme. Done: display-face title, progress bar under each cover (both grids). Still to do: category pills, `LibraryMixed` (novel/manga/manhwa filter).
 - [ ] Updates: the stat tiles from the board ("New tonight", "Save all") above the list; check the row tiles once a library update brings new chapters.
 - [ ] History: the three stat tiles from the board (Today / Chapters / Streak) once reading sessions are recorded.
-- [ ] Novel details, rest of the board (`NovelDetails`, `TabletNovel`): Resume tile with progress, synopsis tile with tag pills; shorten action labels so they fit narrow tiles ("ライブラリ内" truncates in the tablet two-pane); then the chapter filter and download sheets.
+- [ ] Novel details: synopsis as a tile with tag pills; then the chapter filter and download sheets.
 - [ ] Reader chrome (`Reader`, `ReaderSettings`, `ReaderTOC`, `ReaderBars`): Literata on black in Dot, on the book tint in Colour.
 - [ ] Settings (`Settings`, `SettingsAppearance`, `TabletSettings`). Add the Source health tile to More once health data exists.
 - [ ] Browse (`Browse`, `Extensions`, `ExtensionRepos`, `BrowseManga`, `Catalogue`, `TabletBrowse`).

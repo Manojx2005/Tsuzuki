@@ -58,6 +58,7 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.tsuzuki.details.TsuzukiResumeTile
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
@@ -512,6 +513,22 @@ private fun MangaScreenSmallImpl(
                         )
                     }
 
+                    // Tsuzuki themes: Resume tile under the actions (board "NovelDetails").
+                    if (state.chapters.isNotEmpty()) {
+                        item(key = "tsuzuki_resume", contentType = "tsuzuki_resume") {
+                            if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                            ) {
+                                TsuzukiResumeTile(
+                                    readCount = state.chapters.count { it.chapter.read },
+                                    total = state.chapters.size,
+                                    nextChapter = state.chapters.getNextUnread(state.manga)?.name,
+                                    onClick = onContinueReading,
+                                )
+                            }
+                        }
+                    }
+
                     item(
                         key = MangaScreenItem.DESCRIPTION_WITH_TAG,
                         contentType = MangaScreenItem.DESCRIPTION_WITH_TAG,
@@ -806,6 +823,17 @@ fun MangaScreenLargeImpl(
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
                         )
+                        if (state.chapters.isNotEmpty() &&
+                            eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                        ) {
+                            TsuzukiResumeTile(
+                                readCount = state.chapters.count { it.chapter.read },
+                                total = state.chapters.size,
+                                nextChapter = state.chapters.getNextUnread(state.manga)?.name,
+                                onClick = onContinueReading,
+                            )
+                        }
                         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
                         val sortMangaTags by libraryPreferences.sortMangaTags.changes().collectAsState(
                             initial = false,

@@ -833,7 +833,7 @@ private fun RowScope.MangaActionButton(
                 if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
                     Modifier
                         .padding(horizontal = 3.dp)
-                        .height(64.dp)
+                        .height(72.dp)
                         .clip(tileShape)
                         .background(tokens.tile)
                         .then(
@@ -858,8 +858,10 @@ private fun RowScope.MangaActionButton(
             Text(
                 text = title,
                 color = color,
-                fontSize = 12.sp,
+                fontSize = if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) 11.sp else 12.sp,
+                lineHeight = 13.sp,
                 textAlign = TextAlign.Center,
+                maxLines = 2,
             )
         }
     }
