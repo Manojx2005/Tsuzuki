@@ -50,10 +50,50 @@ fun LibraryToolbar(
     below: (@Composable () -> Unit)? = null,
 ) {
     if (below == null) {
-        LibraryToolbarBar(hasActiveFilters = hasActiveFilters, selectedCount = selectedCount, title = title, onClickUnselectAll = onClickUnselectAll, onClickSelectAll = onClickSelectAll, onClickInvertSelection = onClickInvertSelection, onClickFilter = onClickFilter, onClickRefresh = onClickRefresh, onClickGlobalUpdate = onClickGlobalUpdate, onClickOpenRandomManga = onClickOpenRandomManga, searchQuery = searchQuery, onSearchQueryChange = onSearchQueryChange, onSearch = onSearch, onSearchClear = onSearchClear, scrollBehavior = scrollBehavior, onClickMassImport = onClickMassImport, onClickImportEpub = onClickImportEpub, onClickFindDuplicates = onClickFindDuplicates, onClickCategoryActions = onClickCategoryActions)
+        LibraryToolbarBar(
+            hasActiveFilters = hasActiveFilters,
+            selectedCount = selectedCount,
+            title = title,
+            onClickUnselectAll = onClickUnselectAll,
+            onClickSelectAll = onClickSelectAll,
+            onClickInvertSelection = onClickInvertSelection,
+            onClickFilter = onClickFilter,
+            onClickRefresh = onClickRefresh,
+            onClickGlobalUpdate = onClickGlobalUpdate,
+            onClickOpenRandomManga = onClickOpenRandomManga,
+            searchQuery = searchQuery,
+            onSearchQueryChange = onSearchQueryChange,
+            onSearch = onSearch,
+            onSearchClear = onSearchClear,
+            scrollBehavior = scrollBehavior,
+            onClickMassImport = onClickMassImport,
+            onClickImportEpub = onClickImportEpub,
+            onClickFindDuplicates = onClickFindDuplicates,
+            onClickCategoryActions = onClickCategoryActions,
+        )
     } else {
         androidx.compose.foundation.layout.Column {
-            LibraryToolbarBar(hasActiveFilters = hasActiveFilters, selectedCount = selectedCount, title = title, onClickUnselectAll = onClickUnselectAll, onClickSelectAll = onClickSelectAll, onClickInvertSelection = onClickInvertSelection, onClickFilter = onClickFilter, onClickRefresh = onClickRefresh, onClickGlobalUpdate = onClickGlobalUpdate, onClickOpenRandomManga = onClickOpenRandomManga, searchQuery = searchQuery, onSearchQueryChange = onSearchQueryChange, onSearch = onSearch, onSearchClear = onSearchClear, scrollBehavior = scrollBehavior, onClickMassImport = onClickMassImport, onClickImportEpub = onClickImportEpub, onClickFindDuplicates = onClickFindDuplicates, onClickCategoryActions = onClickCategoryActions)
+            LibraryToolbarBar(
+                hasActiveFilters = hasActiveFilters,
+                selectedCount = selectedCount,
+                title = title,
+                onClickUnselectAll = onClickUnselectAll,
+                onClickSelectAll = onClickSelectAll,
+                onClickInvertSelection = onClickInvertSelection,
+                onClickFilter = onClickFilter,
+                onClickRefresh = onClickRefresh,
+                onClickGlobalUpdate = onClickGlobalUpdate,
+                onClickOpenRandomManga = onClickOpenRandomManga,
+                searchQuery = searchQuery,
+                onSearchQueryChange = onSearchQueryChange,
+                onSearch = onSearch,
+                onSearchClear = onSearchClear,
+                scrollBehavior = scrollBehavior,
+                onClickMassImport = onClickMassImport,
+                onClickImportEpub = onClickImportEpub,
+                onClickFindDuplicates = onClickFindDuplicates,
+                onClickCategoryActions = onClickCategoryActions,
+            )
             below()
         }
     }
