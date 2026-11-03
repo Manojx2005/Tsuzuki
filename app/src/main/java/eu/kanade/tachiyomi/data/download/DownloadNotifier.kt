@@ -71,6 +71,8 @@ internal class DownloadNotifier(private val context: Context) {
      *
      * @param download download object containing download information.
      */
+    // Pages report their progress from several threads, and they share the builder
+    @Synchronized
     fun onProgressChange(download: Download, chapterProgress: Pair<Int, Int>? = null) {
         with(progressNotificationBuilder) {
             if (!isDownloading) {

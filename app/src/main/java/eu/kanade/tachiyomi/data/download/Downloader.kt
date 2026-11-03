@@ -25,29 +25,31 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import eu.kanade.tachiyomi.util.storage.saveTo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
@@ -55,7 +57,6 @@ import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.Response
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
@@ -75,6 +76,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
@@ -112,7 +114,8 @@ class Downloader(
     val queueState = _queueState.asStateFlow()
 
     // Tsuzuki: novel-only behaviour lives in NovelDownloadEngine so this file stays close to Mihon's.
-    private val novel = NovelDownloadEngine(context, novelDownloadPreferences, translationPreferences, translationService)
+    private val novel =
+        NovelDownloadEngine(context, novelDownloadPreferences, translationPreferences, translationService)
     val pausedNovelMangaIds = novel.pausedMangaIds
 
     /**
@@ -291,36 +294,90 @@ class Downloader(
 
             // Use supervisorScope to cancel child jobs when the downloader job is cancelled
             supervisorScope {
-                val downloadJobs = mutableMapOf<Download, Job>()
+                val sourceJobs = mutableMapOf<CatalogueSource, Job>()
+                val downloadJobs = ConcurrentHashMap<Download, Job>()
+                // Tsuzuki: novels keep one job per chapter, picked by NovelDownloadEngine.pickActive
+                val novelJobs = mutableMapOf<Download, Job>()
 
-                activeDownloadsFlow.collectLatest { activeDownloads ->
-                    val downloadJobsToStop = downloadJobs.filter { it.key !in activeDownloads }
-                    downloadJobsToStop.forEach { (download, job) ->
+                // A source runs several of its chapters at once, so a removed one is stopped by itself
+                launch {
+                    queueState.collect { queue ->
+                        downloadJobs.keys.filter { it !in queue }.forEach { downloadJobs.remove(it)?.cancel() }
+                    }
+                }
+
+                activeDownloadsFlow.collectLatest { allActiveDownloads ->
+                    val (novelDownloads, activeDownloads) = allActiveDownloads.partition { it.source.isNovelSource() }
+                    novelJobs.filter { it.key !in novelDownloads }.forEach { (download, job) ->
                         job.cancel()
-                        downloadJobs.remove(download)
+                        novelJobs.remove(download)
+                    }
+                    novelDownloads.filter { it !in novelJobs }.forEach { download ->
+                        novelJobs[download] = launchDownloadJob(download, Semaphore(1), CompletableDeferred())
                     }
 
-                    val downloadsToStart = activeDownloads.filter { it !in downloadJobs }
-                    downloadsToStart.forEach { download ->
-                        downloadJobs[download] = launchDownloadJob(download)
+                    val activeSources = activeDownloads.map { it.source }
+                    val sourceJobsToStop = sourceJobs.filter { it.key !in activeSources }
+                    sourceJobsToStop.forEach { (source, job) ->
+                        job.cancel()
+                        sourceJobs.remove(source)
+                    }
+
+                    val sourcesToStart = activeSources.filter { it !in sourceJobs }
+                    sourcesToStart.forEach { source ->
+                        sourceJobs[source] = launchSourceJob(source, downloadJobs)
                     }
                 }
             }
         }
     }
 
-    private fun CoroutineScope.launchDownloadJob(download: Download) = launchIO {
+    /**
+     * Downloads the queued chapters of [source] in queue order. They share the source's page slots, and the next
+     * chapter starts once every page of the current one has a slot, so slots don't sit idle while a chapter's last
+     * pages finish and it's archived.
+     */
+    private fun CoroutineScope.launchSourceJob(
+        source: CatalogueSource,
+        downloadJobs: MutableMap<Download, Job>,
+    ) = launchIO {
+        val slots = Semaphore(downloadPreferences.parallelPageLimit.get())
+        while (true) {
+            // A canceled job can mark a chapter as downloading after it's been reset, so that counts as waiting too
+            val download = queueState
+                .map { queue ->
+                    queue.firstOrNull {
+                        it.source == source &&
+                            (it.status == Download.State.QUEUE || it.status == Download.State.DOWNLOADING) &&
+                            it !in downloadJobs
+                    }
+                }
+                .filterNotNull()
+                .first()
+            val pagesStarted = CompletableDeferred<Unit>()
+            val job = launchDownloadJob(download, slots, pagesStarted)
+            downloadJobs[download] = job
+            job.invokeOnCompletion { downloadJobs.remove(download, job) }
+            pagesStarted.await()
+        }
+    }
+
+    private fun CoroutineScope.launchDownloadJob(
+        download: Download,
+        slots: Semaphore,
+        pagesStarted: CompletableDeferred<Unit>,
+    ) = launchIO {
         try {
             // Per-request pacing now happens in the shared OkHttp client
             // (see PerHostDynamicRateLimitInterceptor), not here.
             val host = download.source.rateLimitHost()
             if (download.bypassRateLimit) {
-                InteractiveRateLimitBypass.bypassing(host) { downloadChapter(download) }
+                InteractiveRateLimitBypass.bypassing(host) { downloadChapter(download, slots, pagesStarted) }
             } else {
                 // Marks this host as having active background work so an unrelated interactive
                 // bypass (e.g. the user browsing the same source) can't let this download's own
                 // requests skip pacing too.
-                BackgroundRateLimitGuard.active(host) { downloadChapter(download) }
+                BackgroundRateLimitGuard.active(host) { downloadChapter(download, slots, pagesStarted) }
             }
 
             // Remove successful download from queue
@@ -350,6 +407,8 @@ class Downloader(
                 stop()
             }
         } finally {
+            // Also when the chapter fails before its pages, so the source moves on to the next one
+            pagesStarted.complete(Unit)
             // Clean up unconditionally (success, error, or early throw before any progress
             // event) so a chapter that fails before novelChapterProgress ever runs doesn't
             // leave a stale total behind for this manga.
@@ -477,8 +536,10 @@ class Downloader(
      * Downloads a chapter.
      *
      * @param download the chapter to be downloaded.
+     * @param slots the page download slots of the chapter's source.
+     * @param pagesStarted completed once every page has a slot.
      */
-    private suspend fun downloadChapter(download: Download) {
+    private suspend fun downloadChapter(download: Download, slots: Semaphore, pagesStarted: CompletableDeferred<Unit>) {
         val mangaDir = provider.getMangaDir(download.mangaTitle, download.source).getOrElse { e ->
             download.setError(e)
             download.status = Download.State.ERROR
@@ -531,37 +592,36 @@ class Downloader(
             download.status = Download.State.DOWNLOADING
 
             // Start downloading images/text, consider we can have downloaded images already
+            // Novels get a single slot, so their pages stay one at a time
             val isNovel = download.source.isNovelSource()
-            pageList.asFlow().flatMapMerge(
-                concurrency = if (isNovel) 1 else downloadPreferences.parallelPageLimit.get(),
-            ) { page ->
-                flow {
-                    // For novel sources, skip image URL fetching - we'll get text content instead
-                    if (!isNovel && page.imageUrl.isNullOrEmpty()) {
-                        page.status = Page.State.LoadPage
-                        try {
-                            val httpSource = download.source as? HttpSource
-                            if (httpSource != null && page.url.isNotBlank()) {
-                                page.imageUrl = httpSource.getImageUrl(page)
+            coroutineScope {
+                pageList.forEach { page ->
+                    slots.acquire()
+                    // Released on completion, since a page canceled before it starts never runs its body
+                    launch(Dispatchers.IO) {
+                        // For novel sources, skip image URL fetching - we'll get text content instead
+                        if (!isNovel && page.imageUrl.isNullOrEmpty()) {
+                            page.status = Page.State.LoadPage
+                            try {
+                                val httpSource = download.source as? HttpSource
+                                if (httpSource != null && page.url.isNotBlank()) {
+                                    page.imageUrl = httpSource.getImageUrl(page)
+                                }
+                            } catch (e: Throwable) {
+                                page.status = Page.State.Error(e)
                             }
-                        } catch (e: Throwable) {
-                            page.status = Page.State.Error(e)
                         }
-                    }
 
-                    withIOContext { getOrDownloadImage(page, download, tmpDir) }
-                    emit(page)
+                        getOrDownloadImage(page, download, tmpDir)
+                        if (isNovel) {
+                            notifier.onProgressChange(download, novel.progress(download, queueState.value))
+                        } else {
+                            notifier.onProgressChange(download)
+                        }
+                    }.invokeOnCompletion { slots.release() }
                 }
-                    .flowOn(Dispatchers.IO)
+                pagesStarted.complete(Unit)
             }
-                .collect {
-                    // Do when page is downloaded.
-                    if (isNovel) {
-                        notifier.onProgressChange(download, novel.progress(download, queueState.value))
-                    } else {
-                        notifier.onProgressChange(download)
-                    }
-                }
 
             // Do after download completes
 
