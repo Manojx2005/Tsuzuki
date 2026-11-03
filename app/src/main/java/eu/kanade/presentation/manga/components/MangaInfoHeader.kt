@@ -274,7 +274,23 @@ fun ExpandableMangaDescription(
     onEditNotes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    // Tsuzuki themes: synopsis + tags sit in a tile (board "NovelDetails").
+    val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
+    Column(
+        modifier = modifier.then(
+            if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
+                Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clip(tileShape)
+                    .background(tokens.tile)
+                    .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, tileShape) } ?: Modifier)
+                    .padding(vertical = 6.dp)
+            } else {
+                Modifier
+            },
+        ),
+    ) {
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }

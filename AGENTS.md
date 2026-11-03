@@ -116,7 +116,7 @@ Next, in order:
 - [ ] Library (`LibraryList`, `LibraryDisplay`, `LibrarySearch`): covers/badges already follow the theme. Done: display-face title, progress bar under each cover (both grids). Still to do: category pills, `LibraryMixed` (novel/manga/manhwa filter).
 - [ ] Updates: the stat tiles from the board ("New tonight", "Save all") above the list; check the row tiles once a library update brings new chapters.
 - [ ] History: the three stat tiles from the board (Today / Chapters / Streak) once reading sessions are recorded.
-- [ ] Novel details: synopsis as a tile with tag pills; then the chapter filter and download sheets.
+- [ ] Novel details: chapter filter and download sheets (synopsis tile done).
 - [ ] Reader chrome (`Reader`, `ReaderSettings`, `ReaderTOC`, `ReaderBars`): Literata on black in Dot, on the book tint in Colour.
 - [ ] Settings (`Settings`, `SettingsAppearance`, `TabletSettings`). Add the Source health tile to More once health data exists.
 - [ ] Browse (`Browse`, `Extensions`, `ExtensionRepos`, `BrowseManga`, `Catalogue`, `TabletBrowse`).
