@@ -1,5 +1,7 @@
 package eu.kanade.presentation.manga.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -85,8 +88,18 @@ fun MangaChapterListItem(
         onSwipe = { onChapterSwipe(chapterSwipeEndAction) },
     )
 
+    // Tsuzuki themes: each chapter is a tile; swipe actions stay inside its rounded shape.
+    val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val tsuzuki = tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
     SwipeableActionsBox(
-        modifier = Modifier.clipToBounds(),
+        modifier = if (tsuzuki) {
+            Modifier
+                .padding(horizontal = 12.dp, vertical = 3.dp)
+                .clip(tileShape)
+        } else {
+            Modifier.clipToBounds()
+        },
         startActions = listOfNotNull(start),
         endActions = listOfNotNull(end),
         swipeThreshold = swipeActionThreshold,
@@ -94,6 +107,15 @@ fun MangaChapterListItem(
     ) {
         Row(
             modifier = modifier
+                .then(
+                    if (tsuzuki) {
+                        Modifier
+                            .background(tokens.tile)
+                            .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, tileShape) } ?: Modifier)
+                    } else {
+                        Modifier
+                    },
+                )
                 .selectedBackground(selected)
                 .combinedClickable(
                     onClick = onClick,

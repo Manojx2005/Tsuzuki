@@ -7,6 +7,7 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
@@ -820,9 +822,29 @@ private fun RowScope.MangaActionButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
+    // Tsuzuki themes: each action is a tile (board "NovelDetails").
+    val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     TextButton(
         onClick = onClick,
-        modifier = Modifier.weight(1f),
+        modifier = Modifier
+            .weight(1f)
+            .then(
+                if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
+                    Modifier
+                        .padding(horizontal = 3.dp)
+                        .height(64.dp)
+                        .clip(tileShape)
+                        .background(tokens.tile)
+                        .then(
+                            tokens.tileBorder
+                                ?.let { Modifier.border(1.dp, it, tileShape) }
+                                ?: Modifier,
+                        )
+                } else {
+                    Modifier
+                },
+            ),
         onLongClick = onLongClick,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
