@@ -152,6 +152,7 @@ data object NovelsTab : Tab {
                     page = state.coercedActiveCategoryIndex,
                 )
                 LibraryToolbar(
+                    below = { eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(isManga = false) },
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
                     title = title,

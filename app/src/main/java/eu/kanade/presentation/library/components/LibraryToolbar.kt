@@ -46,6 +46,40 @@ fun LibraryToolbar(
     onClickImportEpub: (() -> Unit)? = null,
     onClickFindDuplicates: (() -> Unit)? = null,
     onClickCategoryActions: (() -> Unit)? = null,
+    /** Tsuzuki themes: shown under the bar (Novels / Manga switch, board "LibraryList"). */
+    below: (@Composable () -> Unit)? = null,
+) {
+    if (below == null) {
+        LibraryToolbarBar(hasActiveFilters = hasActiveFilters, selectedCount = selectedCount, title = title, onClickUnselectAll = onClickUnselectAll, onClickSelectAll = onClickSelectAll, onClickInvertSelection = onClickInvertSelection, onClickFilter = onClickFilter, onClickRefresh = onClickRefresh, onClickGlobalUpdate = onClickGlobalUpdate, onClickOpenRandomManga = onClickOpenRandomManga, searchQuery = searchQuery, onSearchQueryChange = onSearchQueryChange, onSearch = onSearch, onSearchClear = onSearchClear, scrollBehavior = scrollBehavior, onClickMassImport = onClickMassImport, onClickImportEpub = onClickImportEpub, onClickFindDuplicates = onClickFindDuplicates, onClickCategoryActions = onClickCategoryActions)
+    } else {
+        androidx.compose.foundation.layout.Column {
+            LibraryToolbarBar(hasActiveFilters = hasActiveFilters, selectedCount = selectedCount, title = title, onClickUnselectAll = onClickUnselectAll, onClickSelectAll = onClickSelectAll, onClickInvertSelection = onClickInvertSelection, onClickFilter = onClickFilter, onClickRefresh = onClickRefresh, onClickGlobalUpdate = onClickGlobalUpdate, onClickOpenRandomManga = onClickOpenRandomManga, searchQuery = searchQuery, onSearchQueryChange = onSearchQueryChange, onSearch = onSearch, onSearchClear = onSearchClear, scrollBehavior = scrollBehavior, onClickMassImport = onClickMassImport, onClickImportEpub = onClickImportEpub, onClickFindDuplicates = onClickFindDuplicates, onClickCategoryActions = onClickCategoryActions)
+            below()
+        }
+    }
+}
+
+@Composable
+private fun LibraryToolbarBar(
+    hasActiveFilters: Boolean,
+    selectedCount: Int,
+    title: LibraryToolbarTitle,
+    onClickUnselectAll: () -> Unit,
+    onClickSelectAll: () -> Unit,
+    onClickInvertSelection: () -> Unit,
+    onClickFilter: () -> Unit,
+    onClickRefresh: () -> Unit,
+    onClickGlobalUpdate: () -> Unit,
+    onClickOpenRandomManga: () -> Unit,
+    searchQuery: String?,
+    onSearchQueryChange: (String?) -> Unit,
+    onSearch: (String) -> Unit,
+    onSearchClear: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior?,
+    onClickMassImport: (() -> Unit)? = null,
+    onClickImportEpub: (() -> Unit)? = null,
+    onClickFindDuplicates: (() -> Unit)? = null,
+    onClickCategoryActions: (() -> Unit)? = null,
 ) = when {
     selectedCount > 0 -> LibrarySelectionToolbar(
         selectedCount = selectedCount,
