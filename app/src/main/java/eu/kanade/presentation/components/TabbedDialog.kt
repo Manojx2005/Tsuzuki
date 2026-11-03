@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -65,28 +66,41 @@ fun TabbedDialog(
         val scope = rememberCoroutineScope()
 
         Column {
-            Row {
-                PrimaryTabRow(
-                    modifier = Modifier.weight(1f),
-                    selectedTabIndex = pagerState.currentPage,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE &&
+                    tabTitles.all { it is TabTitle.Text }
                 ) {
-                    tabTitles.fastForEachIndexed { index, tab ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            text = if (tab is TabTitle.Text) ({ TabText(text = tab.value) }) else null,
-                            icon = if (tab is TabTitle.Icon) {
-                                (
-                                    {
-                                        Icon(imageVector = tab.imageVector, contentDescription = null)
-                                    }
-                                    )
-                            } else {
-                                null
-                            },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        )
+                    // Tsuzuki themes: sheet tabs as pills (boards "ChapterFilter", "LibraryDisplay").
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
+                        labels = tabTitles.map { (it as TabTitle.Text).value },
+                        selected = pagerState.currentPage,
+                        onClick = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
+                        modifier = Modifier.weight(1f).padding(top = 8.dp),
+                    )
+                } else {
+                    PrimaryTabRow(
+                        modifier = Modifier.weight(1f),
+                        selectedTabIndex = pagerState.currentPage,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        tabTitles.fastForEachIndexed { index, tab ->
+                            Tab(
+                                selected = pagerState.currentPage == index,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                text = if (tab is TabTitle.Text) ({ TabText(text = tab.value) }) else null,
+                                icon = if (tab is TabTitle.Icon) {
+                                    (
+                                        {
+                                            Icon(imageVector = tab.imageVector, contentDescription = null)
+                                        }
+                                        )
+                                } else {
+                                    null
+                                },
+                                unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
 
