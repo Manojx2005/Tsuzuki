@@ -36,12 +36,16 @@ Home/Library/details/cached-reader/tabs collector and separate Home-ready startu
 retain legacy coverage and package successfully; preview/debug builds, 630 tests and 16 KB checks pass.
 See `docs/PERFORMANCE.md`. Both devices now have separate preview copies of the four-book library; debug
 data remains separate. Phone Royal Road JS plugin installed; Asura upgraded in place from 1.4.54 to tablet's
-1.6.71, with old/new APKs saved locally. Re-check phone manga after the upgrade. Preview tests change only
+1.6.71, with old/new APKs saved locally. Phone manga now renders in paged and long-strip modes; swipe advances
+pages and the original default mode was restored. Preview tests change only
 their copied reader history; original debug baseline is preserved. ReaderSettings Japanese labels clipped
 on the phone: fixed responsive labels plus 48 dp touch boxes, checked in Dot/Colour on both devices with
 reversible value changes and screenshots. Build/tests/optimized preview pass. Evidence and live test helpers
-are in `app/build/codex-preview-20261104/`. Both preview copies are currently Colour in reader settings;
-return tablet to Dot Home before leaving it. Remaining runtime sweep still includes downloads, TTS,
+are in `app/build/codex-preview-20261104/`. Startup/frame benchmark and splash draw-phase cleanup saved in
+`b68b3fc2c`; measurements and limits are in `docs/PERFORMANCE.md` (no demonstrated overall smoothness gain).
+Both reader progress labels also exclude invisible sizing text from accessibility; all eight device/theme/reader
+checks pass, optimized/debug builds and 630 tests pass. Both preview copies are now Dot; return tablet to Dot
+Home before leaving it. Remaining runtime sweep still includes downloads, TTS,
 translation, alternate rendering modes, rotation/process death and measured smoothness.
 
 ## Previous handoff (2026-11-04 ~10:45, from Claude; commit/merge steps completed above)

@@ -70,6 +70,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -790,7 +791,11 @@ private fun NovelProgressSlider(
         Box(contentAlignment = Alignment.CenterEnd) {
             Text(text = if (isPaged) pageLabel else "$currentProgress%")
             // Taking up full length so the slider doesn't shift
-            Text(text = if (isPaged) maxPageLabel else "100%", color = Color.Transparent)
+            Text(
+                text = if (isPaged) maxPageLabel else "100%",
+                color = Color.Transparent,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
         }
 
         Slider(

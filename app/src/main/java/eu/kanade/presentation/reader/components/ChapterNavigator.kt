@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -192,7 +193,11 @@ fun HorizontalChapterNavigator(
                         Box(contentAlignment = Alignment.CenterEnd) {
                             Text(text = currentPage.toString())
                             // Taking up full length so the slider doesn't shift when 'currentPage' length changes
-                            Text(text = totalPages.toString(), color = Color.Transparent)
+                            Text(
+                                text = totalPages.toString(),
+                                color = Color.Transparent,
+                                modifier = Modifier.clearAndSetSemantics {},
+                            )
                         }
 
                         Slider(
