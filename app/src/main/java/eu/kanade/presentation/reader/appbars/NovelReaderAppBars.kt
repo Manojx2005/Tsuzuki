@@ -349,8 +349,9 @@ private fun NovelReaderTopBar(
     AppBar(
         modifier = modifier,
         backgroundColor = Color.Transparent,
-        title = novelTitle,
-        subtitle = chapterTitle,
+        titleContent = {
+            eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderTitle(novelTitle, chapterTitle, novel = true)
+        },
         navigateUp = navigateUp,
         actions = {
             AppBarActions(

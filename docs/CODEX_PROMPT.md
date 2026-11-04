@@ -48,6 +48,13 @@ checks pass, optimized/debug builds and 630 tests pass. Both preview copies are 
 Home before leaving it. Remaining runtime sweep still includes downloads, TTS,
 translation, alternate rendering modes, rotation/process death and measured smoothness.
 
+Reader toolbar titles now use the boards' compact body typography through `TsuzukiReaderTitle` rather than
+the global display heading; Dot/Colour on both devices in both readers and phone Default fallback checked.
+Builds and 630 tests pass. Phone TTS reached playing/highlight state, then paused/stopped; playback changes
+only the preview copy. Found next: stock horizontal progress slider still differs from the boards' Dot dots /
+Colour thin track; fix its themed track without changing seek behavior or legacy rendering. TTS highlight
+currently uses the user's/default configured yellow even in Dot; assess its preference semantics before changing.
+
 ## Previous handoff (2026-11-04 ~10:45, from Claude; commit/merge steps completed above)
 
 Owner's order: **(1) merge everything done so far → (2) quality-of-life and smoothness → (3) Mihon work → (4) new features.**

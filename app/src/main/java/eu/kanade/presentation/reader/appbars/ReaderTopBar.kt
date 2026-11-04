@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderTitle
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -26,8 +27,7 @@ fun ReaderTopBar(
     AppBar(
         modifier = modifier,
         backgroundColor = Color.Transparent,
-        title = mangaTitle,
-        subtitle = chapterTitle,
+        titleContent = { TsuzukiReaderTitle(title = mangaTitle, subtitle = chapterTitle) },
         navigateUp = navigateUp,
         actions = {
             AppBarActions(
