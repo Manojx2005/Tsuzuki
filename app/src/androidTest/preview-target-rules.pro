@@ -16,3 +16,12 @@
 -keep class eu.kanade.tachiyomi.extension.model.Extension$Available { public <init>(...); }
 -keep class mihon.domain.extension.model.ExtensionStore { public <init>(...); }
 -keep class mihon.domain.extension.model.ExtensionStore$Contact { public <init>(...); }
+
+# Storage compatibility tests call these target APIs and a temporary source constructor directly.
+-keep class eu.kanade.tachiyomi.data.download.DownloadProvider {
+    public <init>(...);
+    public *** getMangaDir*(...);
+    public *** findSourceDir(...);
+    public *** findChapterDir(...);
+}
+-keep class tachiyomi.domain.source.model.StubSource { public <init>(...); }

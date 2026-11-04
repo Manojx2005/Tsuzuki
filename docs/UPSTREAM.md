@@ -263,3 +263,33 @@ Final Dot Home screenshots inspected; daily main-process crash logs empty. Test 
 removed, original debug data untouched. Seven ARM64 ELF alignments, APK zip alignment and profile assets pass.
 Final build `codex-installer-daily-validation.log`; all 640 app tests also rerun successfully after test cleanup
 synchronization in `codex-installer-final-tests.log`. DownloadProvider and live successful install matrix remain.
+
+### 2026-11-04: download provider compatibility group
+
+`DownloadProvider.kt` now follows Mihon `8794e89a8` with Injekt defaults, retained synchronous get/find entry
+points for existing Tsundoku reader/export/cache callers, always-enabled new-download hash default (no new
+preference), and `.zip` alongside `.cbz`. The existing writer's combined scanlator/name and six-character URL
+hash are unchanged. Upstream's cached naming parts recognize older independently-sanitized chapter/scanlator
+forms and ASCII/hash variants. Batch `findChapterDirs` is now suspend and shares the optimized lookup already
+used by downloaded-ID discovery: one case-insensitive listing for at least 50 SAF chapters, per-name probing
+for plain files. The existing call site already suspends, so no caller edits were needed.
+
+All 647 app tests and debug/optimized builds pass. Seven new tests cover stable write names, historical/ASCII
+variants with ZIP support, slash safety, multibyte byte limits, old ZIP lookup, the single-list SAF path and
+plain-file per-name behavior. Initial focused run exposed an incorrect test expectation (older split naming
+left the scanlator Unicode); corrected to the actual historic combined ASCII name, with no production change.
+Both optimized device tests pass: Tab S11 0.290 s / S22 0.533 s. Each creates a unique source folder, writes an
+older-name novel ZIP, finds and reads its HTML via the real provider, then verifies file and folder cleanup.
+No book added, preference changed or existing download modified. Matching test pair/SHA and device logs are
+under `app/build/codex-preview-20261104/` (`provider-instrumented-pair.json`, `provider-compatibility-test.log`).
+The direct provider methods and temporary StubSource constructor have conditional instrumentation-only keeps.
+
+**Still open:** move synchronous reader/cache/export/translation callers together to asynchronous storage APIs.
+This port preserves their existing API and does not claim to fix main-thread storage access. In particular,
+`ReaderTransitionView` currently requests an uncached on-disk check while binding, and needs a measured follow-up.
+Successful live extension installation and the broader optimized download/recovery matrix also remain open.
+Logs: `codex-provider-debug-validation.log`, `codex-provider-preview-validation.log`; normal daily build passes.
+Ordinary daily preview excludes instrumentation keeps (configuration checked), is installed on both, and leaves
+both Dot Home with final screenshots inspected and current main-process crash logs empty. Companions removed;
+original debug data untouched. Seven ARM64 ELF alignments, zipalign and baseline.prof/profm packaging pass.
+Final build log `codex-provider-daily-validation.log`; no live build/device process remains.

@@ -7,6 +7,22 @@ the boards show actually working.
 
 ## START HERE: latest checkpoint (2026-11-04, Codex)
 
+Provider compatibility group validated after installer commit `2c7bcae9a`: `DownloadProvider.kt` follows
+Mihon `8794e89a8` with retained synchronous get/find APIs, Injekt defaults, hash enabled for new names and novel
+ZIP support. New write names remain unchanged; old split/ASCII/hash variants are recognized. Batch directory
+lookup now shares the optimized suspend path (one large SAF listing, individual plain-file probes). All 647 app
+tests, debug/optimized builds and changed-file formatting pass. Both optimized device tests find/read an older-name
+novel ZIP and verify removal of their unique temporary source folder (0.290 s tablet / 0.533 s phone), without
+adding books/changing preferences/touching existing downloads. Ordinary daily preview rebuilt without test-only
+keeps, installed on both; Dot Home screenshots inspected, current main-process crash logs empty, companions
+removed. Seven ARM64 alignments, zipalign and baseline profile assets pass. Original debug data untouched.
+Logs `codex-provider-{debug,preview,daily}-validation.log`; device evidence/matching pair/SHA in
+`app/build/codex-preview-20261104/`. Remaining: synchronous reader/cache/export/translation storage callers must
+move together to async APIs; `ReaderTransitionView` still performs an uncached storage probe while binding and
+needs a measured follow-up. Do not claim this port eliminates main-thread IO. Live successful extension install
+and the broader optimized download/recovery, TextView, translation, EPUB/mass-import and rotation matrix remain.
+Both devices are now ordinary preview Dot Home; no live build/device process remains. No push.
+
 Installer compatibility group validated (evening): `ExtensionInstaller.kt` follows Mihon `8794e89a8` whole
 with small Injekt/IO/rate-limit/private-result/cancel-broadcast adapters. Cancellable downloads own/close their
 responses and reject APKs not signed with the listing store's key before invoking any installer. Loader helpers
