@@ -1,8 +1,9 @@
 # Board specs for the remaining work
 
-The design lives on a private Claude Design canvas ("Tsuzuki App Screens") that only Claude can open.
-This file writes the boards for the open tasks in `AGENTS.md` out in words and numbers, so any agent
-(Codex included) can build them without the canvas. Sizes are dp, text is sp.
+The design lives on the private "Tsuzuki App Screens" canvas. All 16 pages were saved from the
+owner's Vivaldi session on 2026-11-03: see [the offline index](boards/INDEX.md) for PNGs and HTML.
+Open the relevant screenshot before changing UI. This file supplies written measurements and
+implementation constraints for the tasks in `AGENTS.md`. Sizes are dp, text is sp.
 
 If a task needs a board that isn't here, check `docs/design/boards/` (the owner can export boards there,
 see the end of this file). If it isn't there either, ask the owner instead of inventing a layout.

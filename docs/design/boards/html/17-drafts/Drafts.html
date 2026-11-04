@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--
+  AGENT DRAFT, NOT OWNER-APPROVED (2026-11-03).
+  Boards for app screens that had no design: AppLanguage, NewUpdate, BookNotes (approved 2026-11-04);
+  Menus, MenuPick (dropdown menus, 2026-11-04, awaiting approval).
+  Open with ?board=AppLanguage|NewUpdate|BookNotes&theme=colour|dot. Without parameters, all six render side by side.
+  Tokens follow docs/design/README.md; fonts are the app's own res/font files.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tsuzuki drafts</title>
+<style>
+@font-face { font-family: Doto; src: url(../../../../../app/src/main/res/font/lnr_doto.ttf); font-weight: 900; }
+@font-face { font-family: SpaceMono; src: url(../../../../../app/src/main/res/font/lnr_space_mono_regular.ttf); font-weight: 400; }
+@font-face { font-family: SpaceMono; src: url(../../../../../app/src/main/res/font/lnr_space_mono_bold.ttf); font-weight: 700; }
+@font-face { font-family: InstrumentSerif; src: url(../../../../../app/src/main/res/font/lnr_instrument_serif_italic.ttf); font-style: italic; }
+@font-face { font-family: Manrope; src: url(../../../../../app/src/main/res/font/lnr_manrope.ttf); font-weight: 200 800; }
+@font-face { font-family: Literata; src: url(../../../../../app/src/main/res/font/lnr_literata.ttf); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #111; }
+body.single { width: 390px; height: 844px; overflow: hidden; }
+.sheet { display: flex; gap: 40px; padding: 40px; flex-wrap: wrap; }
+
+.board { width: 390px; height: 844px; position: relative; overflow: hidden; --pad: 16px; }
+
+/* Colour tokens */
+.colour { --bg: #1C2B4A; --tile: rgba(255,255,255,.08); --tile-border: transparent; --accent: #E9B44C;
+  --on-accent: #1C2B4A; --text: #fff; --muted: rgba(255,255,255,.72); --track: rgba(255,255,255,.18);
+  --display: InstrumentSerif, serif; --body: Manrope, sans-serif; --label-case: none; --label-spacing: .8px;
+  font-family: var(--body); color: var(--text); background: var(--bg); }
+.colour .display { font-family: var(--display); font-style: italic; font-weight: 400; }
+
+/* Dot tokens */
+.dot { --bg: #000; --tile: #0D0D0D; --tile-border: #262626; --accent: #FF2D2D; --on-accent: #fff; --text: #fff;
+  --muted: #8A8A8A; --track: #2E2E2E; --display: Doto, monospace; --body: SpaceMono, monospace;
+  --label-case: uppercase; --label-spacing: 1.2px; font-family: var(--body); color: var(--text);
+  background: #000 radial-gradient(circle, #1C1C1C 1px, transparent 1.2px) 0 0 / 12px 12px; }
+.dot .display { font-family: var(--display); font-weight: 900; text-transform: uppercase; }
+.dot .up { text-transform: uppercase; }
+
+.draft { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 9px/1 SpaceMono, monospace; letter-spacing: 1px;
+  color: #000; background: #FFD84D; padding: 4px 6px; border-radius: 4px; z-index: 9; text-transform: uppercase; }
+
+.top { display: flex; align-items: center; gap: 12px; padding: 20px var(--pad) 8px; }
+.circle { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: var(--tile);
+  border: 1px solid var(--tile-border); flex: none; }
+.circle svg { width: 20px; height: 20px; }
+.title { font-size: 44px; line-height: 1; }
+.dot .title { font-size: 40px; letter-spacing: 1px; }
+.subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.dot .subtitle { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+
+.tile { background: var(--tile); border: 1px solid var(--tile-border); border-radius: 24px; margin: 0 var(--pad) 10px; }
+.label { font-size: 11px; font-weight: 700; letter-spacing: var(--label-spacing); text-transform: uppercase;
+  color: var(--muted); padding: 16px 20px 6px; }
+.row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; min-height: 60px; }
+.row + .row { border-top: 1px solid rgba(255,255,255,.06); }
+.dot .row + .row { border-top-color: #1A1A1A; }
+.row .main { flex: 1; min-width: 0; }
+.row .name { font-size: 16px; font-weight: 700; }
+.row .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.dot .row .name { text-transform: uppercase; font-size: 15px; letter-spacing: .4px; }
+.dot .row .sub { text-transform: uppercase; letter-spacing: .8px; font-size: 11px; }
+.check { width: 26px; height: 26px; border-radius: 13px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.check svg { width: 15px; height: 15px; }
+.value { color: var(--accent); font-weight: 700; font-size: 13px; }
+.dot .value { text-transform: uppercase; letter-spacing: 1px; }
+.search { display: flex; align-items: center; gap: 10px; height: 52px; border-radius: 26px; padding: 0 18px;
+  background: var(--tile); border: 1px solid var(--tile-border); margin: 6px var(--pad) 12px; color: var(--muted); font-size: 14px; }
+.dot .search { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+.search svg { width: 18px; height: 18px; }
+.fade { position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
+  background: linear-gradient(transparent, var(--bg)); pointer-events: none; }
+.dot .fade { background: linear-gradient(transparent, #000); }
+
+.iconblock { width: 64px; height: 64px; border-radius: 20px; background: var(--accent); display: grid; place-items: center; margin: 18px var(--pad) 14px; }
+.iconblock svg { width: 30px; height: 30px; }
+.bigtitle { font-size: 52px; line-height: 1; padding: 0 var(--pad); }
+.dot .bigtitle { font-size: 46px; }
+.meta { color: var(--muted); font-size: 15px; padding: 8px var(--pad) 18px; }
+.dot .meta { text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+.notes { padding: 4px 20px 18px; font-size: 14px; line-height: 1.55; }
+.notes h4 { font-size: 13px; margin: 10px 0 4px; }
+.notes li { margin-left: 18px; color: var(--text); }
+.dot .notes { font-size: 13px; }
+.dot .notes h4 { text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.btns { position: absolute; left: var(--pad); right: var(--pad); bottom: 34px; display: flex; flex-direction: column; gap: 10px; }
+.btn { height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-weight: 800; font-size: 16px; }
+.dot .btn { text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; font-size: 14px; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.ghost { border: 1px solid var(--tile-border); background: var(--tile); color: var(--text); }
+.btn svg { width: 18px; height: 18px; }
+.link { text-align: center; color: var(--muted); font-size: 13px; }
+.dot .link { text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+.progress { height: 6px; border-radius: 3px; background: var(--track); margin: 4px 20px 16px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 42%; background: var(--accent); }
+.dots { display: flex; gap: 5px; padding: 6px 20px 16px; }
+.dots i { width: 6px; height: 6px; border-radius: 3px; background: #fff; }
+.dots i.u { background: #2E2E2E; } .dots i.c { background: #FF2D2D; }
+.colour .dots { display: none; } .dot .progress { display: none; }
+
+.editor { margin: 0 var(--pad); padding: 18px 20px; min-height: 520px; font-family: Literata, serif; font-size: 17px; line-height: 1.6; }
+.editor p + p, .editor ul { margin-top: 10px; }
+.editor ul { margin-left: 20px; }
+.editor b { font-weight: 700; }
+.toolbar { position: absolute; left: var(--pad); right: var(--pad); bottom: 30px; display: flex; gap: 8px; padding: 8px;
+  border-radius: 32px; background: var(--tile); border: 1px solid var(--tile-border); }
+.colour .toolbar { background: rgba(255,255,255,.12); backdrop-filter: blur(6px); }
+.tool { flex: 1; height: 48px; border-radius: 24px; display: grid; place-items: center; }
+.tool.on { background: var(--accent); }
+.tool svg { width: 20px; height: 20px; }
+.saved { position: absolute; right: var(--pad); top: 34px; font-size: 11px; color: var(--muted); }
+.dot .saved { text-transform: uppercase; letter-spacing: 1px; }
+
+/* Menus: the shared dropdown (components/DropdownMenu.kt) */
+.behind { position: absolute; inset: 0; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.42); z-index: 2; }
+.dot .scrim { background: rgba(0,0,0,.6); }
+.apptop { display: flex; align-items: center; padding: 22px var(--pad) 4px; }
+.apptop .display { font-size: 34px; flex: 1; }
+.dot .apptop .display { font-size: 30px; }
+.apptop svg { width: 22px; height: 22px; margin-left: 18px; }
+.apptop .hot { width: 40px; height: 40px; border-radius: 20px; display: grid; place-items: center; margin-left: 8px; background: var(--tile); border: 1px solid var(--tile-border); }
+.apptop .hot svg { margin: 0; }
+.count { color: var(--muted); font-size: 12px; padding: 0 var(--pad) 10px; }
+.dot .count { text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+.pills { display: flex; gap: 8px; padding: 0 var(--pad) 14px; }
+.pill { height: 38px; padding: 0 16px; border-radius: 19px; display: flex; align-items: center; font-weight: 800; font-size: 13px;
+  background: var(--tile); border: 1px solid var(--tile-border); }
+.dot .pill { text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+.pill.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 var(--pad); }
+.cover { aspect-ratio: 2 / 3; border-radius: 12px; background: rgba(255,255,255,.12); }
+.dot .cover { background: #1A1A1A; border: 1px solid #262626; }
+.cap { height: 12px; border-radius: 4px; background: rgba(255,255,255,.12); margin: 8px 18px 0 0; }
+.dot .cap { background: #1A1A1A; }
+
+.menu { position: absolute; z-index: 3; width: 236px; padding: 6px; border-radius: 22px;
+  background: #2A3B60; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.dot .menu { background: #0D0D0D; border: 1px solid #333; border-radius: 16px; box-shadow: none; }
+.mi { display: flex; align-items: center; gap: 14px; height: 48px; padding: 0 14px; border-radius: 16px; font-size: 15px; font-weight: 600; }
+.dot .mi { text-transform: uppercase; font-size: 13px; letter-spacing: .6px; font-weight: 700; border-radius: 10px; }
+.mi svg { width: 20px; height: 20px; flex: none; color: var(--muted); }
+.mi .grow { flex: 1; }
+.mi.press { background: rgba(255,255,255,.10); }
+.dot .mi.press { background: #1C1C1C; }
+.mi .radio { width: 20px; height: 20px; border-radius: 10px; border: 2px solid var(--muted); flex: none; }
+.mi.on .radio { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 4.5px, transparent 5px); }
+.dot .mi .radio { border-radius: 3px; }
+.dot .mi.on .radio { background: var(--accent); border-color: var(--accent); }
+.mi .chev { display: flex; }
+.msep { height: 1px; margin: 6px 10px; background: rgba(255,255,255,.10); }
+.dot .msep { background: #262626; }
+.mhead { font-size: 11px; font-weight: 800; letter-spacing: var(--label-spacing); text-transform: uppercase; color: var(--muted); padding: 10px 14px 4px; }
+.mi.danger { color: var(--accent); }
+.mi.danger svg { color: var(--accent); }
+.spec { position: absolute; z-index: 3; left: var(--pad); right: var(--pad); bottom: 34px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.dot .spec { text-transform: uppercase; letter-spacing: .8px; font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="sheet" id="sheet"></div>
+
+<template id="AppLanguage">
+  <div class="draft">agent draft · not owner-approved</div>
+  <div class="top">
+    <div class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+  </div>
+  <div style="padding: 6px var(--pad) 2px"><div class="display title">Language</div>
+    <div class="subtitle">Changes the app's text. Books stay as they are.</div></div>
+  <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search 69 languages</div>
+  <div class="tile">
+    <div class="row"><div class="main"><div class="name">System default</div><div class="sub">日本語 · from device settings</div></div>
+      <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div></div>
+  </div>
+  <div class="label">All languages</div>
+  <div class="tile">
+    <div class="row"><div class="main"><div class="name">English</div><div class="sub">English</div></div></div>
+    <div class="row"><div class="main"><div class="name">日本語</div><div class="sub">Japanese</div></div></div>
+    <div class="row"><div class="main"><div class="name">Deutsch</div><div class="sub">German</div></div></div>
+    <div class="row"><div class="main"><div class="name">Español</div><div class="sub">Spanish</div></div></div>
+    <div class="row"><div class="main"><div class="name">Français</div><div class="sub">French</div></div></div>
+    <div class="row"><div class="main"><div class="name">한국어</div><div class="sub">Korean</div></div></div>
+    <div class="row"><div class="main"><div class="name">Português (Brasil)</div><div class="sub">Portuguese (Brazil)</div></div></div>
+    <div class="row"><div class="main"><div class="name">简体中文</div><div class="sub">Chinese (Simplified)</div></div></div>
+  </div>
+  <div class="fade"></div>
+</template>
+
+<template id="NewUpdate">
+  <div class="draft">agent draft · not owner-approved</div>
+  <div class="top">
+    <div class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+  </div>
+  <div class="iconblock"><svg viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="2.2"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></div>
+  <div class="display bigtitle">Update ready</div>
+  <div class="meta">Version 0.2.0 · you have 0.1.0</div>
+  <div class="tile">
+    <div class="label">What's new</div>
+    <div class="notes">
+      <h4>New</h4>
+      <ul><li>Next chapter starts while the last pages download</li><li>Language pills in Extensions</li></ul>
+      <h4>Fixed</h4>
+      <ul><li>Download queue kept after a restart</li></ul>
+    </div>
+  </div>
+  <div class="btns">
+    <div class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</div>
+    <div class="btn ghost">Not now</div>
+    <div class="link">Open release on GitHub</div>
+  </div>
+</template>
+
+<template id="BookNotes">
+  <div class="draft">agent draft · not owner-approved</div>
+  <div class="top">
+    <div class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div><div class="display title" style="font-size:36px">Notes</div><div class="subtitle">Mother of Learning</div></div>
+  </div>
+  <div class="saved">Saved</div>
+  <div class="tile editor">
+    <p><b>Time loop rules</b></p>
+    <ul><li>Loop resets at the summer festival</li><li>Zorian keeps his memories, not his mana</li></ul>
+    <p>Check who else remembers the previous month.</p>
+  </div>
+  <div class="toolbar">
+    <div class="tool on"><svg viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="2.4"><path d="M7 4h6a4 4 0 010 8H7zM7 12h7a4 4 0 010 8H7z"/></svg></div>
+    <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4h8M6 20h8M14 4l-4 16"/></svg></div>
+    <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></div>
+    <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6h10M10 12h10M10 18h10M4 5h2v3M4 11.5h2.5L4 15h2.5"/></svg></div>
+  </div>
+</template>
+
+<template id="Menus">
+  <div class="draft">agent draft · not owner-approved</div>
+  <div class="behind">
+    <div class="apptop"><div class="display">Library</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><div class="hot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div></div>
+    <div class="count">3 novels · 1 manga</div>
+    <div class="pills"><div class="pill on">All</div><div class="pill">Novels</div><div class="pill">Manga</div></div>
+    <div class="covers"><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="menu" style="top: 70px; right: 14px">
+    <div class="mi press"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v5h-5"/></svg><span class="grow">Update library</span></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0012 2M19 9A7 7 0 007 7"/></svg><span class="grow">Reload library</span></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></svg><span class="grow">Open random entry</span></div>
+    <div class="msep"></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="grow">Mass import</span></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5"/></svg><span class="grow">Import EPUB</span></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/></svg><span class="grow">Find duplicates</span></div>
+    <div class="msep"></div>
+    <div class="mi danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="grow">Clear category…</span></div>
+  </div>
+  <div class="spec">Every overflow menu: one tile, 48 dp rows with an icon, groups split by a hairline, the destructive action last in the accent. The pressed row lifts. Opens from the ⋮ it belongs to, 200 ms.</div>
+</template>
+
+<template id="MenuPick">
+  <div class="draft">agent draft · not owner-approved</div>
+  <div class="behind">
+    <div class="apptop"><div class="display">Royal Road</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><div class="hot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div></div>
+    <div class="count">Popular · English</div>
+    <div class="pills"><div class="pill on">All</div><div class="pill">Novels</div><div class="pill">Manga</div></div>
+    <div class="covers"><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div><div><div class="cover"></div><div class="cap"></div></div></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="menu" style="top: 70px; right: 14px">
+    <div class="mhead">Display mode</div>
+    <div class="mi on"><span class="grow">Comfortable grid</span><span class="radio"></span></div>
+    <div class="mi "><span class="grow">Compact grid</span><span class="radio"></span></div>
+    <div class="mi "><span class="grow">List</span><span class="radio"></span></div>
+  </div>
+  <div class="menu" style="top: 300px; right: 14px">
+    <div class="mhead">Download queue</div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg><span class="grow">Order by upload</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+    <div class="mi "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg><span class="grow">Order by chapter</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+    <div class="msep"></div>
+    <div class="mi danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="grow">Cancel all</span></div>
+  </div>
+  <div class="spec">Pick-one menus: an optional section label, the choice on the right as an accent radio (Dot: a filled square). Submenus end in a chevron and open beside their row.</div>
+</template>
+
+<script>
+const params = new URLSearchParams(location.search);
+const boards = params.get('board') ? [params.get('board')] : ['AppLanguage', 'NewUpdate', 'BookNotes', 'Menus', 'MenuPick'];
+const themes = params.get('theme') ? [params.get('theme')] : ['colour', 'dot'];
+if (params.get('board')) document.body.classList.add('single');
+const sheet = document.getElementById('sheet');
+if (params.get('board')) { sheet.className = ''; }
+for (const b of boards) for (const t of themes) {
+  const el = document.createElement('div');
+  el.className = 'board ' + t;
+  el.appendChild(document.getElementById(b).content.cloneNode(true));
+  sheet.appendChild(el);
+}
+</script>
+</body>
+</html>

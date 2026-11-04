@@ -1,0 +1,46 @@
+name: Upstream watch
+
+# Every Monday: list what Mihon and Tsundoku added that Tsuzuki hasn't taken yet, in one pinned issue.
+# Nothing is merged automatically; changes reach users only through a Tsuzuki release (docs/UPSTREAM.md).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    if: github.repository == 'Manojx2005/Tsuzuki'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Build the report
+        run: |
+          {
+            echo "Upstream commits not yet in Tsuzuki (refreshed $(date -u +%F))."
+            echo "Flags: \`.\` likely clean · \`D\` Tsundoku changed the file · \`T\` Tsuzuki changed it (check the design)."
+            echo "How to take them: docs/UPSTREAM.md"
+            echo
+            echo '```'
+            bash scripts/upstream-report.sh
+            echo '```'
+          } > report.md
+
+      - name: Create or update the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Upstream changes to review"
+          number=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi
