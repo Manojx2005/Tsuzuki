@@ -7,6 +7,25 @@ the boards show actually working.
 
 ## START HERE: latest checkpoint (2026-11-04, Codex)
 
+Novel renderer coverage corrected and expanded after provider commit `7636bd698` (no app-code changes):
+earlier checks used native TextView, not WebView. Saved UI trees/profile audit confirm it; RUNTIME_QA and
+PERFORMANCE corrected. Both preview backups exported/copied and gzip/protobuf verified: tablet 32,930 B/four
+books/18 app prefs; phone 32,984 B/four books/19 prefs. Paths/SHA in per-device runtime-backup-manifest.json;
+local `runtime-before-webview.tachibk`. Both originally used ABSENT native-default renderer preference.
+Actual WebView renderer now verified in Dot/Colour on BOTH devices: content, compact title, progress labels,
+48 dp hit area, off-track taps, quarter/three-quarter seek, drag destination and restoration. Screenshots looked
+at; evidence uses `*-webview-novel-semantics-*`. Tablet Colour WebView steppers pass 16->17->16 and
+1.6->1.7->1.6, full labels/touch boxes, return to real WebView content. Phone Colour WebView TTS reaches
+playing/highlight, pauses/stops via existing controls, then controls hidden; saved 75% restored after playback.
+Finally BOTH effective renderers restored to Native (TextView), cold native content verified, saved chapter
+positions explicitly restored (tablet 88%, phone 75%), both left Dot Home; current main-process crash logs empty.
+Native mode is now stored explicitly as default in the preview prefs (originally absent); original debug data
+untouched. Preview reading history/minutes contain testing; no test books added. Backups retained locally/on-device.
+No build needed for this read-only/UI sweep; last source validation remains 647 app tests and ordinary optimized
+build/packaging from provider checkpoint. Remaining matrix in RUNTIME_QA: renderer paged/rotation/process death,
+other settings/TTS combinations/background playback, optimized downloads/recovery, imports, translation, etc.
+Async storage call-chain migration also remains open. No live build/device process. No push.
+
 Provider compatibility group validated after installer commit `2c7bcae9a`: `DownloadProvider.kt` follows
 Mihon `8794e89a8` with retained synchronous get/find APIs, Injekt defaults, hash enabled for new names and novel
 ZIP support. New write names remain unchanged; old split/ASCII/hash variants are recognized. Batch directory

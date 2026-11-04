@@ -41,7 +41,9 @@ contains `assets/dexopt/baseline.prof` and `baseline.profm` before treating the 
 The expanded baseline collector passed on the Tab S11 against a seeded optimized preview copy (397 seconds,
 26,422 collected entries). The Home-ready startup collector passed separately (77 seconds, 16,476 entries).
 The merged source profiles have 47,557 baseline entries and 34,382 startup entries. The collected baseline
-includes Tsuzuki Home, the mixed Library grid, details, ReaderActivity and the novel WebView renderer.
+includes Tsuzuki Home, the mixed Library grid, details, ReaderActivity and the native TextView novel renderer.
+Renderer audit: 32 native NovelViewer rules and saved UI trees confirm native content. Two rules mentioning
+NovelWebViewViewer are class/signature references and do not establish that WebView rendering was exercised.
 The test library had four real books, so this run does not establish large-library scrolling performance.
 
 Logs, collected profiles and coverage audit: `app/build/codex-preview-20261104/` (ignored local evidence).
