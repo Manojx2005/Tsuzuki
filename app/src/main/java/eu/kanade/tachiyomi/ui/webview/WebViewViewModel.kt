@@ -2,18 +2,23 @@ package eu.kanade.tachiyomi.ui.webview
 
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toWebViewHeaders
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
@@ -24,7 +29,7 @@ class WebViewViewModel(
     val sourceId: Long?,
     private val sourceManager: SourceManager = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),
-) : StateViewModel<StatsScreenState>(StatsScreenState.Loading) {
+) : ViewModel() {
 
     companion object {
         val SOURCE_ID_KEY = CreationExtras.Key<Long?>()
@@ -38,14 +43,19 @@ class WebViewViewModel(
         }
     }
 
-    var headers = emptyMap<String, String>()
+    private val mutableHeaders = MutableStateFlow<Map<String, String>?>(null)
+    val headers = mutableHeaders.asStateFlow()
 
     init {
-        sourceId?.let { sourceManager.get(it) as? HttpSource }?.let { source ->
-            try {
-                headers = source.headers.toWebViewHeaders()
+        viewModelScope.launch(Dispatchers.IO) {
+            mutableHeaders.value = try {
+                val source = sourceId?.let { sourceManager.get(it) as? HttpSource }
+                source?.headers?.toWebViewHeaders().orEmpty()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to build headers" }
+                emptyMap()
             }
         }
     }

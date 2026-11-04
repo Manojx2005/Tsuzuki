@@ -217,3 +217,17 @@ final tests pass. Daily main-process crash logs after cleanup are empty.
 Still pending in priority 3: asynchronous source-header resolution, installer and download-provider ports.
 The current installer differs in repo/signature models and DI; retain compatibility when adapting it.
 No live concurrent Cloudflare challenge was forced in this check.
+
+Follow-up: source lookup and header construction now run on IO in both the activity and navigator entry
+points, following Mihon's asynchronous readiness pattern while retaining Injekt/manual factory integration.
+The page is not constructed until headers are ready; missing sources and lookup/getter exceptions resolve
+to an empty map, while cancellation propagates. Navigator browser routes have distinct ViewModel keys.
+Four new tests cover blocked off-caller execution/readiness and the missing/getter/lookup failure cases.
+All 634 app tests pass; core remains 26 passing tests. Debug/optimized builds pass. Renderer regression was
+repeated successfully on both devices (2.579 / 4.163 s). Ordinary preview then checked both entry points:
+tablet Colour Asura chapter/activity and Royal Road series/navigator, phone Dot Royal Road chapter/activity
+and Asura series/navigator; all four pages load and BACK returns correctly. Seven-library/profile/16 KB
+checks pass. Both devices returned Dot Home; test companions removed; original debug data untouched.
+Logs: `app/build/codex-webview-headers-{debug,preview,daily}-validation.log`; new device logs use
+`webview-headers-renderer-recovery.log`, with a separate matching instrumentation APK pair retained locally.
+Installer/provider work remains; the previous synchronous-header item is now done.

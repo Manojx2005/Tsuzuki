@@ -7,6 +7,18 @@ the boards show actually working.
 
 ## START HERE: latest checkpoint (2026-11-04, Codex)
 
+Header follow-up after `2510f09f6` validated: source lookup/header construction runs on IO in both WebView
+entry points; nullable readiness prevents premature loading, exceptions finish with empty headers,
+cancellation propagates, and each navigator browser has its own ViewModel key. Four new focused tests and
+all 634 app tests pass; core remains 26 passing tests. Debug and optimized builds pass. Renderer recovery
+still passes on BOTH devices (2.579 s / 4.163 s). Ordinary preview verified BOTH activity and navigator-screen
+browser paths: tablet Colour Asura chapter + Royal Road series, phone Dot Royal Road chapter + Asura series;
+all four return to their prior screen on BACK. Seven ARM64/profile/16 KB packaging checks pass. Final ordinary
+preview installed, both devices returned to Dot Home, test companions removed, primary debug data untouched.
+Build logs `codex-webview-headers-{debug,preview,daily}-validation.log`; device evidence and matching test APK
+pair are under `app/build/codex-preview-20261104/`. Next: installer/provider compatibility work, then remaining
+runtime matrix. Local helpers `verify_source_webview.py`, `verify_screen_webview.py`, `leave_dot_home.py`.
+
 Reader progress saved locally in `02b963e81` after the usage reset. WebView/Cloudflare group from fetched
 Mihon main `8794e89a8` is implemented and device-verified: three core files copied whole, existing app-scope
 DI adapter, shared safe headers in both app entry points, renderer-death callback/message in eight locales,

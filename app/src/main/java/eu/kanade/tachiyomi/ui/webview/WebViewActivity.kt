@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.core.net.toUri
 import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.R
@@ -18,11 +20,15 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toWebViewHeaders
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
@@ -58,21 +64,30 @@ class WebViewActivity : BaseActivity() {
         val url = intent.extras?.getString(URL_KEY) ?: return
         assistUrl = url
 
-        var headers = emptyMap<String, String>()
-        (sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource)?.let { source ->
-            try {
-                headers = source.headers.toWebViewHeaders()
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "Failed to build headers" }
-            }
-        }
-
         setComposeContent {
+            val headers by produceState<Map<String, String>?>(initialValue = null) {
+                value = withContext(Dispatchers.IO) {
+                    try {
+                        val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource
+                        source?.headers?.toWebViewHeaders().orEmpty()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to build headers" }
+                        emptyMap()
+                    }
+                }
+            }
+            if (headers == null) {
+                LoadingScreen()
+                return@setComposeContent
+            }
+
             WebViewScreenContent(
                 onNavigateUp = { finish() },
                 initialTitle = intent.extras?.getString(TITLE_KEY),
                 url = url,
-                headers = headers,
+                headers = headers.orEmpty(),
                 defaultUserAgentProvider = network::defaultUserAgentProvider,
                 onUrlChange = { assistUrl = it },
                 onShare = this::shareWebpage,
