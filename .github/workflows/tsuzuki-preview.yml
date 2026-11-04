@@ -1,0 +1,76 @@
+# Tsuzuki preview releases: builds the optimised `preview` APKs, signs them with the owner's key, and publishes a
+# GitHub release tagged rNNNN (commit count). Installed preview builds find it through Settings → About →
+# Check for updates (and the check on app start). Needs these repository secrets (Settings → Secrets → Actions):
+#   SIGNING_KEY_BASE64  base64 of the .jks keystore
+#   KEY_STORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+# Run it from the Actions tab ("Run workflow"), optionally with release notes.
+name: Tsuzuki preview release
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: Release notes (Markdown); shown in the app's update screen
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tsuzuki-preview
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository_owner == 'Manojx2005'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout (full history, for the commit count)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Work out the tag
+        id: tag
+        run: echo "tag=r$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and sign preview APKs (no telemetry)
+        env:
+          TSUZUKI_GITHUB_RELEASE: 'true'
+          storeFileBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.KEY_ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew :app:assemblePreview
+
+      - name: Rename APKs
+        run: |
+          set -e
+          cd app/build/outputs/apk/preview
+          tag='${{ steps.tag.outputs.tag }}'
+          mv app-universal-preview.apk "tsuzuki-$tag.apk"
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            mv "app-$abi-preview.apk" "tsuzuki-$abi-$tag.apk"
+          done
+          ls -la
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          set -e
+          tag='${{ steps.tag.outputs.tag }}'
+          notes="${NOTES:-Preview build $tag}"
+          gh release create "$tag" app/build/outputs/apk/preview/tsuzuki-*.apk \
+            --title "Tsuzuki $tag" --notes "$notes" --target "$GITHUB_SHA" --latest
