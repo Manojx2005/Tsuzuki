@@ -1,0 +1,53 @@
+# Performance verification
+
+Use JDK 21 and an optimized `preview` APK. Debug Compose timings are not representative.
+Preview uses `io.github.manojx2005.tsuzuki.debug`; debug uses `io.github.manojx2005.tsuzuki.dev`.
+Back up the owner's data before testing and use a separate preview library copy. An Activity-window time
+from `am start -W` is not the same measurement as Home readiness or reader content readiness.
+
+## Baseline and startup profiles
+
+The collector in `baseline-profile` exercises Tsuzuki Home, Library scrolling, details, a cached novel reader,
+Updates, History and Browse/extensions. It requires an English or Japanese test app with a restored library.
+Pass `profileBookTitle` and a short `profileReaderText` that is visible in the cached chapter; collection fails
+if the requested book or chapter does not load. It never seeds sample books in the production app.
+The startup collector waits for the populated Home screen, beyond the first Activity window.
+
+The default Gradle configuration retains the Pixel 6 API 34 managed device. Pass
+`-PtsuzukiProfileConnected=true` to select connected-device collection instead. For collection against an
+already prepared preview copy, the standalone test APK can also be run explicitly on one device:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Android/Android Studio/jbr'
+./gradlew.bat :baseline-profile:assembleNonMinifiedRelease
+$adb = 'C:/Users/Manoj/AppData/Local/Android/Sdk/platform-tools/adb.exe'
+& $adb -s R52Y90HA77L install -r baseline-profile/build/outputs/apk/nonMinifiedRelease/baseline-profile-nonMinifiedRelease.apk
+```
+
+Run `am instrument -w` with runner `mihon.baselineprofile/androidx.test.runner.AndroidJUnitRunner` and these
+arguments: `targetAppId=io.github.manojx2005.tsuzuki.debug`,
+`class=mihon.baselineprofile.BaselineProfileGenerator#generate`, `profileBookTitle=<test novel title>` and
+`profileReaderText=<visible cached text>`. For startup, select
+`mihon.baselineprofile.StartupProfileGenerator#generate` with the same target app.
+Use the test's reported output paths under `Android/media/mihon.baselineprofile/` to pull the text profiles.
+Do not operate the target device while collection is running.
+
+Merge collected rules with the existing `app/src/main/baselineProfiles/` rules, combining H/S/P flags for
+identical descriptors. Keep the existing legacy-theme coverage. Rebuild preview and verify that the APK
+contains `assets/dexopt/baseline.prof` and `baseline.profm` before treating the profiles as shipped.
+
+## 2026-11-04 collection evidence
+
+The expanded baseline collector passed on the Tab S11 against a seeded optimized preview copy (397 seconds,
+26,422 collected entries). The Home-ready startup collector passed separately (77 seconds, 16,476 entries).
+The merged source profiles have 47,557 baseline entries and 34,382 startup entries. The collected baseline
+includes Tsuzuki Home, the mixed Library grid, details, ReaderActivity and the novel WebView renderer.
+The test library had four real books, so this run does not establish large-library scrolling performance.
+
+Logs, collected profiles and coverage audit: `app/build/codex-preview-20261104/` (ignored local evidence).
+The preview/debug build with the new profiles and all 630 app unit tests passed (2m26s). The rebuilt ARM64
+preview APK is 36,767,472 bytes, packages baseline.prof/profm, and passes 16 KB ELF and APK alignment checks
+for all seven ARM64 libraries. Validation log: `app/build/codex-profile-packaging-validation.log`.
+One tablet cold Activity-window launch was 250 ms and one phone launch 594 ms; these are individual
+observations, not comparative benchmark results or proof of Home-ready latency. Frame timing, repeatable
+before/after startup measurements and the remaining reader flows are still required.
