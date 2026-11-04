@@ -331,10 +331,21 @@ fun MassImportDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        modifier = Modifier
+        // Tsuzuki (board 08-tools "MassImport"): a full page in the theme background; stock dialog otherwise.
+        modifier = eu.kanade.presentation.tsuzuki.settings.tsuzukiFullPageDialog() ?: Modifier
             .fillMaxWidth(0.98f)
             .wrapContentHeight()
             .heightIn(max = 700.dp),
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = !eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle(),
+        ),
+        shape = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            androidx.compose.ui.graphics.RectangleShape
+        } else {
+            androidx.compose.material3.AlertDialogDefaults.shape
+        },
+        containerColor = eu.kanade.presentation.tsuzuki.settings.tsuzukiDialogColor()
+            ?: androidx.compose.material3.AlertDialogDefaults.containerColor,
         title = { Text(stringResource(TDMR.strings.mass_import_title)) },
         text = {
             Column(
@@ -671,6 +682,9 @@ fun MassImportDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
+                var analysisResult by remember { mutableStateOf<MassImport.UrlAnalysisResult?>(null) }
+                var isAnalyzing by remember { mutableStateOf(false) }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -684,6 +698,10 @@ fun MassImportDialog(
                         minLines = 3,
                         maxLines = 6,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                        // Tsuzuki (board "MassImport"): links no source can open are marked in the accent.
+                        visualTransformation = eu.kanade.presentation.tsuzuki.library.tsuzukiUnsupportedLinks(
+                            analysisResult?.invalidUrls?.map { it.first }.orEmpty(),
+                        ),
                     )
 
                     Column {
@@ -756,9 +774,6 @@ fun MassImportDialog(
                     }
                 }
 
-                var analysisResult by remember { mutableStateOf<MassImport.UrlAnalysisResult?>(null) }
-                var isAnalyzing by remember { mutableStateOf(false) }
-
                 LaunchedEffect(urlText) {
                     kotlinx.coroutines.delay(300)
                     if (urlText.isNotBlank()) {
@@ -787,6 +802,15 @@ fun MassImportDialog(
                     }
                 } else {
                     analysisResult?.let { analysis ->
+                        // Tsuzuki (board 08-tools "MassImport"): the counts as pills.
+                        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                            eu.kanade.presentation.tsuzuki.library.TsuzukiMassImportCounts(
+                                valid = analysis.totalValid,
+                                inLibrary = analysis.alreadyInLibrary.size,
+                                unsupported = analysis.invalidUrls.size,
+                            )
+                            return@let
+                        }
                         Column(modifier = Modifier.padding(top = 8.dp)) {
                             Text(
                                 text = stringResource(TDMR.strings.mass_import_analysis_valid, analysis.totalValid),
@@ -1067,9 +1091,10 @@ private fun BatchItem(
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            containerColor = eu.kanade.presentation.tsuzuki.settings.tsuzukiTileColor()
+                ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().then(eu.kanade.presentation.tsuzuki.settings.tsuzukiImportCard()),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(
@@ -1238,10 +1263,17 @@ private fun BatchItem(
 
             if (batch.status == MassImportJob.BatchStatus.Running) {
                 Spacer(modifier = Modifier.height(4.dp))
-                LinearProgressIndicator(
-                    progress = { batch.progress.toFloat() / batch.total.coerceAtLeast(1) },
-                    modifier = Modifier.fillMaxWidth().height(4.dp),
-                )
+                if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar(
+                        progress = batch.progress.toFloat() / batch.total.coerceAtLeast(1),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        progress = { batch.progress.toFloat() / batch.total.coerceAtLeast(1) },
+                        modifier = Modifier.fillMaxWidth().height(4.dp),
+                    )
+                }
             }
 
             if (batch.status == MassImportJob.BatchStatus.Completed ||

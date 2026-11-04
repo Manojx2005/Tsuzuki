@@ -35,6 +35,11 @@ fun GlobalSearchResultItem(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    // Tsuzuki themes: one tile per source (board 04-browse "GlobalSearch")
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.browse.TsuzukiGlobalSearchResultItem(title, subtitle, onClick, modifier, content)
+        return
+    }
     Column(modifier = modifier) {
         Row(
             modifier = Modifier

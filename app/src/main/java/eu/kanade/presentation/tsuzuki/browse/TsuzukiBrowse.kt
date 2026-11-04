@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -38,15 +40,22 @@ fun TsuzukiGlobalSearchTile(sourceCount: Int, onClick: () -> Unit, modifier: Mod
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(26.dp)
     val text = stringResource(MR.strings.tsz_search_sources, sourceCount)
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
         modifier
+            .tsuzukiPress(press)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .fillMaxWidth()
             .height(52.dp)
             .clip(shape)
             .background(t.tile)
             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClick = onClick,
+            )
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -105,7 +114,7 @@ fun TsuzukiPinnedSources(
                             .clip(shape)
                             .background(t.tile)
                             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-                            .combinedClickable(
+                            .tsuzukiClickable(
                                 onClick = { onClick(source) },
                                 onLongClick = { onLongClick(source) },
                             )
@@ -151,4 +160,106 @@ fun TsuzukiPinnedSources(
             }
         }
     }
+}
+
+/**
+ * Extensions' language pills (board 04-browse "Extensions"). [language] null shows every group; otherwise only that
+ * language's group of available extensions is shown, and the update / installed / untrusted sections stay.
+ */
+fun tsuzukiExtensionsByLanguage(
+    items: Map<
+        eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Header,
+        List<eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Item>,
+        >,
+    language: String?,
+): Map<
+    eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Header,
+    List<eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Item>,
+    > {
+    if (language == null) return items
+    return items.filterKeys {
+        it !is eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Header.Text || it.text == language
+    }
+}
+
+/** The language groups present, in list order. */
+fun tsuzukiExtensionLanguages(
+    items: Map<eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Header, *>,
+): List<String> = items.keys
+    .filterIsInstance<eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel.Header.Text>()
+    .map { it.text }
+
+/** "All" + each language, as the shared pill row. Shown only with two or more languages. */
+@Composable
+fun TsuzukiExtensionLanguagePills(
+    languages: List<String>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (languages.size < 2) return
+    val labels = listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.all)) + languages
+    eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
+        labels = labels,
+        selected = selected?.let { languages.indexOf(it) + 1 }?.takeIf { it > 0 } ?: 0,
+        onClick = { i -> onSelect(if (i == 0) null else languages[i - 1]) },
+        modifier = modifier,
+    )
+}
+
+/** [tsuzukiGroupedTile] in the Tsuzuki themes, nothing in stock themes. */
+@Composable
+fun tsuzukiGroupedTileOrNone(index: Int, lastIndex: Int): Modifier =
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        tsuzukiGroupedTile(first = index == 0, last = index == lastIndex)
+    } else {
+        Modifier
+    }
+
+/**
+ * A source's Popular / Latest listing as the segmented control (board 04-browse "Catalogue"). Neither is selected
+ * while a search or filter is showing. Sources without a latest listing get a single segment.
+ */
+@Composable
+fun TsuzukiListingSegments(
+    supportsLatest: Boolean,
+    popular: Boolean,
+    latest: Boolean,
+    onPopular: () -> Unit,
+    onLatest: () -> Unit,
+) {
+    val labels = buildList {
+        add(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.popular))
+        if (supportsLatest) add(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.latest))
+    }
+    eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments(
+        labels = labels,
+        selected = when {
+            popular -> 0
+            latest && supportsLatest -> 1
+            else -> -1
+        },
+        onClick = { if (it == 0) onPopular() else onLatest() },
+        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
+    )
+}
+
+/** The board's in-library marker on catalogue covers: an accent pill, uppercase in Dot. */
+@Composable
+fun TsuzukiInLibraryBadge() {
+    val t = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val label = tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.in_library)
+    androidx.compose.material3.Text(
+        if (t.isDot) label.uppercase() else label,
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(t.accent)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        color = t.onAccent,
+        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(
+            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+            letterSpacing = androidx.compose.ui.unit.TextUnit(0.8f, androidx.compose.ui.unit.TextUnitType.Sp),
+        ),
+        maxLines = 1,
+    )
 }

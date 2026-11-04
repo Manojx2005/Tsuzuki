@@ -40,6 +40,8 @@ fun CategoryScreen(
 ) {
     val lazyListState = rememberLazyListState()
     Scaffold(
+        modifier = eu.kanade.presentation.tsuzuki.category.tsuzukiCategoryBackground(),
+        containerColor = eu.kanade.presentation.tsuzuki.category.tsuzukiCategoryContainerColor(),
         topBar = { scrollBehavior ->
             AppBar(
                 title = stringResource(MR.strings.action_edit_categories),
@@ -53,6 +55,7 @@ fun CategoryScreen(
                 onCreate = onClickCreate,
             )
         },
+        bottomBar = { eu.kanade.presentation.tsuzuki.category.TsuzukiCategoryCreateBar(onClickCreate) },
     ) { paddingValues ->
         if (state.isEmpty) {
             EmptyScreen(

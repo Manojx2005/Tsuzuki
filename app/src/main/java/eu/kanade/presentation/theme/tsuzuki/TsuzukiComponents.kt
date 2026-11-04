@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -25,6 +27,8 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -204,3 +208,22 @@ val DotCoverFilter: androidx.compose.ui.graphics.ColorFilter = run {
     )
     androidx.compose.ui.graphics.ColorFilter.colorMatrix(grey)
 }
+
+/** Dot: true when the owner keeps cover colours (Appearance → "Colour covers"). Provided by the app theme. */
+val LocalDotColourCovers = androidx.compose.runtime.compositionLocalOf { false }
+
+/** Reads the "Colour covers" preference for [LocalDotColourCovers]; false where Injekt isn't set up (previews). */
+@Composable
+fun rememberDotColourCovers(): Boolean {
+    val pref = androidx.compose.runtime.remember {
+        runCatching { Injekt.get<eu.kanade.domain.ui.UiPreferences>().tsuzukiDotColourCovers }
+            .getOrNull()
+    } ?: return false
+    val keep by androidx.compose.runtime.remember(pref) { pref.changes() }.collectAsState(initial = pref.get())
+    return keep
+}
+
+/** The filter every cover uses: Dot draws covers in greyscale unless the owner keeps their colours. */
+@Composable
+fun tsuzukiCoverFilter(): androidx.compose.ui.graphics.ColorFilter? =
+    if (TsuzukiTheme.tokens.isDot && !LocalDotColourCovers.current) DotCoverFilter else null

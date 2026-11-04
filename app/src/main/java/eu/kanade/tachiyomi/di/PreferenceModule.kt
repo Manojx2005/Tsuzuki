@@ -83,6 +83,10 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory {
             UiPreferences(get())
         }
+        // Tsuzuki: minutes read per day, for the reading streak.
+        addSingletonFactory {
+            eu.kanade.tachiyomi.tsuzuki.ReadingDays(get())
+        }
         addSingletonFactory {
             BasePreferences(app, get())
         }

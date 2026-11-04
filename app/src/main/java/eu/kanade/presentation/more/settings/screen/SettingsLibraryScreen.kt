@@ -168,6 +168,7 @@ object SettingsLibraryScreen : SearchableSettings {
                         LibraryUpdateJob.setupTask(context, it)
                         true
                     },
+                    tsuzukiPills = true,
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = libraryPreferences.autoUpdateDeviceRestrictions,

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -251,12 +252,19 @@ private fun NavTile(
 ) {
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Column(
         modifier
+            .tsuzukiPress(press)
             .height(height)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t))
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClick = onClick,
+            )
             .padding(14.dp),
     ) {
         Row(

@@ -252,12 +252,20 @@ fun AppBarActions(
             onDismissRequest = { showMenu = false },
         ) {
             overflowActions.map {
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuSeparator(it.destructive)
                 DropdownMenuItem(
                     onClick = {
                         it.onClick()
                         showMenu = false
                     },
-                    text = { Text(it.title, fontWeight = FontWeight.Normal) },
+                    text = {
+                        Text(
+                            eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel(it.title),
+                            fontWeight = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuWeight() ?: FontWeight.Normal,
+                            color = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuDangerColor(it.destructive),
+                        )
+                    },
+                    leadingIcon = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuIcon(it.icon, it.destructive),
                 )
             }
         }
@@ -436,5 +444,8 @@ sealed interface AppBar {
     data class OverflowAction(
         val title: String,
         val onClick: () -> Unit,
+        // Tsuzuki (board 17-drafts "Menus"): optional row icon and accent destructive row, Tsuzuki themes only.
+        val icon: ImageVector? = null,
+        val destructive: Boolean = false,
     ) : AppBarAction
 }

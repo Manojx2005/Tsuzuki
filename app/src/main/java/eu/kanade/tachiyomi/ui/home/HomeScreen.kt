@@ -29,9 +29,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.toArgb
@@ -131,15 +134,31 @@ object HomeScreen : Screen() {
             else -> TABS
         }
         val homeTab = if (isTsuzuki) TsuzukiHomeTab else NovelsTab
+        // Retain the Library tab when the outer navigator temporarily disposes Home during a cover transition.
+        var retainedTsuzukiTab by rememberSaveable { mutableStateOf<String?>(null) }
+        val initialTab = if (isTsuzuki) {
+            (tabs + NovelsTab).firstOrNull { it.key == retainedTsuzukiTab } ?: homeTab
+        } else {
+            homeTab
+        }
         // Colour theme: the whole app takes the colours of the book you read last.
         val latestCover by remember {
             Injekt.get<tachiyomi.domain.history.interactor.GetHistory>().subscribe(query = "", limit = 1)
         }.collectAsState(initial = emptyList())
-        val bookPalette = if (TsuzukiTheme.tokens.style == TsuzukiStyle.COLOUR) {
+        val followBook by remember { Injekt.get<eu.kanade.domain.ui.UiPreferences>().tsuzukiFollowBook.changes() }
+            .collectAsState(initial = true)
+        val bookPalette = if (TsuzukiTheme.tokens.style == TsuzukiStyle.COLOUR && followBook) {
             eu.kanade.presentation.theme.tsuzuki.rememberBookPalette(latestCover.firstOrNull()?.coverData)
         } else {
             null
         }
+        var shelfCover by remember { mutableStateOf<Any?>(null) }
+        val shelfPalette = if (TsuzukiTheme.tokens.style == TsuzukiStyle.COLOUR && followBook) {
+            eu.kanade.presentation.theme.tsuzuki.rememberBookPalette(shelfCover)
+        } else {
+            null
+        }
+        val setShelfCover: (Any?) -> Unit = remember { { shelfCover = it } }
         // Hand the tint to the novel reader so that book reads on its own colour.
         val latestMangaId = latestCover.firstOrNull()?.mangaId
         androidx.compose.runtime.LaunchedEffect(bookPalette, latestMangaId) {
@@ -147,7 +166,7 @@ object HomeScreen : Screen() {
                 eu.kanade.presentation.theme.tsuzuki.BookTint.set(latestMangaId, bookPalette.background.toArgb())
             }
         }
-        eu.kanade.presentation.theme.tsuzuki.ProvideBookPalette(bookPalette) {
+        eu.kanade.presentation.theme.tsuzuki.ProvideBookPalette(shelfPalette ?: bookPalette) {
             val tsuzukiBackground = TsuzukiTheme.tokens.background
             val containerColor = if (isTsuzuki) {
                 tsuzukiBackground.takeOrElse { MaterialTheme.colorScheme.background }
@@ -155,11 +174,15 @@ object HomeScreen : Screen() {
                 MaterialTheme.colorScheme.background
             }
             TabNavigator(
-                tab = homeTab,
+                tab = initialTab,
                 key = TabNavigatorKey,
             ) { tabNavigator ->
+                if (isTsuzuki) androidx.compose.runtime.SideEffect { retainedTsuzukiTab = tabNavigator.current.key }
                 // Provide usable navigator to content screen
-                CompositionLocalProvider(LocalNavigator provides navigator) {
+                CompositionLocalProvider(
+                    LocalNavigator provides navigator,
+                    eu.kanade.presentation.tsuzuki.home.LocalShelfPaletteCover provides setShelfCover,
+                ) {
                     Scaffold(
                         containerColor = containerColor,
                         startBar = {
@@ -238,6 +261,7 @@ object HomeScreen : Screen() {
                     launch {
                         openTabEvent.receiveAsFlow().collectLatest {
                             tabNavigator.current = when (it) {
+                                Tab.Home -> homeTab
                                 is Tab.Library -> if (isJoined || hideMangaUi) NovelsTab else LibraryTab
                                 Tab.Updates -> UpdatesTab
                                 Tab.History -> HistoryTab
@@ -432,6 +456,7 @@ object HomeScreen : Screen() {
     }
 
     sealed interface Tab {
+        data object Home : Tab // Tsuzuki: the Home tab, for the tablet settings rail
         data class Library(val mangaIdToOpen: Long? = null) : Tab
         data object Updates : Tab
         data object History : Tab

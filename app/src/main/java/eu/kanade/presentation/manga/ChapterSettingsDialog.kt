@@ -58,6 +58,9 @@ fun ChapterSettingsDialog(
     onDisplayModeChanged: (Long) -> Unit,
     onSetAsDefault: (applyToExistingManga: Boolean) -> Unit,
     onResetToDefault: () -> Unit,
+    onSortOrderChanged: ((mode: Long, descending: Boolean) -> Unit)? = null,
+    markPreviousCount: Int = 0,
+    onMarkPreviousRead: (() -> Unit)? = null,
 ) {
     var showSetAsDefaultDialog by rememberSaveable { mutableStateOf(false) }
     if (showSetAsDefaultDialog) {
@@ -68,6 +71,28 @@ fun ChapterSettingsDialog(
     }
 
     val downloadedOnly = remember { Injekt.get<BasePreferences>().downloadedOnly.get() }
+
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiChapterFilterSheet(
+            onDismissRequest = onDismissRequest,
+            manga = manga,
+            onDownloadFilterChanged = onDownloadFilterChanged.takeUnless { downloadedOnly },
+            onUnreadFilterChanged = onUnreadFilterChanged,
+            onBookmarkedFilterChanged = onBookmarkedFilterChanged,
+            scanlatorFilterActive = scanlatorFilterActive,
+            onScanlatorFilterClicked = onScanlatorFilterClicked,
+            onSortModeChanged = onSortModeChanged,
+            onSortOrderChanged = onSortOrderChanged,
+            onDisplayModeChanged = onDisplayModeChanged,
+            onSetAsDefault = { showSetAsDefaultDialog = true },
+            onResetToDefault = onResetToDefault,
+            markPreviousCount = markPreviousCount,
+            onMarkPreviousRead = onMarkPreviousRead,
+        )
+        return
+    }
 
     TabbedDialog(
         onDismissRequest = onDismissRequest,

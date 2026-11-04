@@ -92,6 +92,7 @@ import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -392,7 +393,7 @@ private fun MangaAndSourceTitlesLarge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MangaCover.Book(
-            modifier = Modifier.fillMaxWidth(0.65f),
+            modifier = Modifier.fillMaxWidth(0.65f).tsuzukiSharedCover(manga.id),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -436,7 +437,8 @@ private fun MangaAndSourceTitlesSmall(
         MangaCover.Book(
             modifier = Modifier
                 .sizeIn(maxWidth = 100.dp)
-                .align(Alignment.Top),
+                .align(Alignment.Top)
+                .tsuzukiSharedCover(manga.id),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)

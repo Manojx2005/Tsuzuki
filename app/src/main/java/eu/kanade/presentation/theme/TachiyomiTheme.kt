@@ -30,6 +30,7 @@ import eu.kanade.presentation.theme.colorscheme.TokyoNightColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
 import eu.kanade.presentation.theme.tsuzuki.LocalTsuzukiTokens
+import eu.kanade.presentation.theme.tsuzuki.activeColor
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -74,8 +75,12 @@ private fun BaseTachiyomiTheme(
         },
         typography = lnrTypography(appTheme, context.resources) ?: MaterialTheme.typography,
     ) {
+        val tokens = tsuzukiTokensFor(appTheme)
         CompositionLocalProvider(
-            LocalTsuzukiTokens provides tsuzukiTokensFor(appTheme),
+            LocalTsuzukiTokens provides tokens,
+            tachiyomi.presentation.core.theme.LocalActiveColor provides tokens.activeColor,
+            eu.kanade.presentation.theme.tsuzuki.LocalDotColourCovers provides
+                eu.kanade.presentation.theme.tsuzuki.rememberDotColourCovers(),
             content = content,
         )
     }

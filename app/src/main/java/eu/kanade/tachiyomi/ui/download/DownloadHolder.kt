@@ -27,6 +27,11 @@ class DownloadHolder(private val view: View, val adapter: DownloadAdapter) :
     init {
         setDragHandleView(binding.reorder)
         binding.menu.setOnClickListener { it.post { showPopupMenu(it) } }
+        eu.kanade.tachiyomi.tsuzuki.TsuzukiViewStyle.downloadItem(
+            binding.container,
+            binding.mangaFullTitle,
+            binding.downloadProgress,
+        )
     }
 
     private lateinit var download: Download

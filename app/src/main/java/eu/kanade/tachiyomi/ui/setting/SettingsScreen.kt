@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
+import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
@@ -63,6 +64,19 @@ class SettingsScreen(
                 },
                 onBackPressed = null,
             ) {
+                if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTwoPane(
+                        onLeave = { parentNavigator.pop() },
+                        onSearch = { it.replaceAll(SettingsSearchScreen()) },
+                        startContent = {
+                            CompositionLocalProvider(LocalBackPress provides parentNavigator::pop) {
+                                SettingsMainScreen.Content(twoPane = true)
+                            }
+                        },
+                        endContent = { DefaultNavigatorScreenTransition(navigator = it) },
+                    )
+                    return@Navigator
+                }
                 val insets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
                 TwoPanelBox(
                     modifier = Modifier

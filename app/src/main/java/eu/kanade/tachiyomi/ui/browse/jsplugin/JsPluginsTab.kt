@@ -77,10 +77,12 @@ fun jsPluginsTab(
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.action_filter),
                 onClick = { /* TODO: Language filter */ },
+                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.filter,
             ),
             AppBar.OverflowAction(
                 title = stringResource(TDMR.strings.js_plugin_manage_repos),
                 onClick = { showRepoDialog = true },
+                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.repos,
             ),
         ),
         content = { contentPadding, _ ->

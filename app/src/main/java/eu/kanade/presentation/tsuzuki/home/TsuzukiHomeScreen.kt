@@ -39,6 +39,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -67,6 +69,9 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.tachiyomi.ui.tsuzuki.home.ChapterStatus
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeBook
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeState
@@ -232,7 +237,7 @@ private fun WatchPlaceholder(onBack: () -> Unit) {
             modifier = Modifier
                 .clip(RoundedCornerShape(26.dp))
                 .background(t.accent)
-                .clickable(role = Role.Button, onClick = onBack)
+                .tsuzukiClickable(role = Role.Button, onClick = onBack)
                 .padding(horizontal = 24.dp, vertical = 14.dp),
         )
     }
@@ -247,6 +252,9 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
     var stackIndex by rememberSaveable { mutableIntStateOf(0) }
     val stack = state.books.take(4)
     val current = stack[stackIndex.coerceIn(0, stack.lastIndex)]
+    val paletteCover = LocalShelfPaletteCover.current
+    LaunchedEffect(current.cover) { paletteCover(current.cover) }
+    DisposableEffect(paletteCover) { onDispose { paletteCover(null) } }
 
     Column(
         Modifier
@@ -276,20 +284,8 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).height(236.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Box(
-                Modifier
-                    .width(162.dp)
-                    .clickable(role = Role.Button, onClickLabel = stringResource(MR.strings.tsz_show_next_book)) {
-                        stackIndex = (stackIndex + 1) % stack.size
-                    },
-            ) {
-                stack.getOrNull((stackIndex + 2) % stack.size)?.takeIf { stack.size > 2 }?.let {
-                    Cover(it, Modifier.padding(start = 28.dp, top = 16.dp).width(130.dp).rotate(9f).alpha(0.45f))
-                }
-                stack.getOrNull((stackIndex + 1) % stack.size)?.takeIf { stack.size > 1 }?.let {
-                    Cover(it, Modifier.padding(start = 16.dp, top = 8.dp).width(136.dp).rotate(4f).alpha(0.75f))
-                }
-                Cover(current, Modifier.padding(start = 2.dp).width(142.dp).rotate(-3f))
+            TsuzukiCoverStack(stack, stackIndex.coerceIn(0, stack.lastIndex)) {
+                stackIndex = (stackIndex.coerceIn(0, stack.lastIndex) + 1) % stack.size
             }
             Column(Modifier.weight(1f).padding(top = 6.dp)) {
                 if (stack.size > 1) {
@@ -543,7 +539,9 @@ private fun DetailsPane(book: HomeBook, actions: HomeActions) {
                 .height(52.dp)
                 .clip(RoundedCornerShape(26.dp))
                 .background(t.accent)
-                .clickable(role = Role.Button) { if (canResume) actions.onResume(book) else actions.onOpenBook(book) },
+                .tsuzukiClickable(role = Role.Button) {
+                    if (canResume) actions.onResume(book) else actions.onOpenBook(book)
+                },
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -574,7 +572,7 @@ private fun DetailsPane(book: HomeBook, actions: HomeActions) {
                     .heightIn(min = 52.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .then(tileFill(t, hero = false))
-                    .clickable(role = Role.Button) { actions.onOpenChapter(book, ch.id) }
+                    .tsuzukiClickable(role = Role.Button) { actions.onOpenChapter(book, ch.id) }
                     .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -631,13 +629,22 @@ private fun EmptyHome(actions: HomeActions, compact: Boolean, bottomPad: Dp) {
         }
         Spacer(Modifier.height(12.dp))
         // Primary action: accent tile.
+        val browsePress = androidx.compose.runtime.remember {
+            androidx.compose.foundation.interaction.MutableInteractionSource()
+        }
         Row(
             Modifier
+                .tsuzukiPress(browsePress)
                 .fillMaxWidth()
                 .height(120.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(t.accent)
-                .clickable(role = Role.Button, onClick = actions.onBrowse)
+                .clickable(
+                    interactionSource = browsePress,
+                    indication = androidx.compose.material3.ripple(),
+                    role = Role.Button,
+                    onClick = actions.onBrowse,
+                )
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -717,11 +724,20 @@ private fun HeroTile(
 ) {
     val t = TsuzukiTheme.tokens
     val ink = if (t.isDot) Color.White else t.onAccent
+    val heroPress = androidx.compose.runtime.remember {
+        androidx.compose.foundation.interaction.MutableInteractionSource()
+    }
     Row(
-        modifier
+        Modifier.tsuzukiPress(heroPress).then(modifier)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = true))
-            .clickable(role = Role.Button, onClickLabel = stringResource(MR.strings.tsz_resume), onClick = onClick)
+            .clickable(
+                interactionSource = heroPress,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClickLabel = stringResource(MR.strings.tsz_resume),
+                onClick = onClick,
+            )
             .padding(22.dp),
         horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
@@ -773,13 +789,20 @@ private fun HeroTile(
 private fun ResumeTile(book: HomeBook, canResume: Boolean, onClick: () -> Unit) {
     val t = TsuzukiTheme.tokens
     val ink = if (t.isDot) Color.White else t.onAccent
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
         Modifier
+            .tsuzukiPress(press)
             .fillMaxWidth()
             .height(80.dp)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = true))
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClick = onClick,
+            )
             .padding(start = 14.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -825,11 +848,17 @@ private fun StatTile(
     onClick: () -> Unit,
 ) {
     val t = TsuzukiTheme.tokens
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Column(
-        modifier
+        Modifier.tsuzukiPress(press).then(modifier)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = false))
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClick = onClick,
+            )
             .padding(16.dp),
     ) {
         Text(t.case(label), style = labelStyle(t), color = muted(t))
@@ -857,12 +886,18 @@ private fun ActionTile(
     onClick: () -> Unit,
 ) {
     val t = TsuzukiTheme.tokens
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Column(
-        modifier
+        Modifier.tsuzukiPress(press).then(modifier)
             .height(132.dp)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = false))
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = Role.Button,
+                onClick = onClick,
+            )
             .padding(16.dp),
     ) {
         Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
@@ -901,7 +936,7 @@ private fun ShelfSection(
                 color = t.accent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(role = Role.Button, onClick = actions.onAllBooks)
+                    .tsuzukiClickable(role = Role.Button, onClick = actions.onAllBooks)
                     .padding(vertical = 12.dp, horizontal = 4.dp),
             )
         }
@@ -919,13 +954,18 @@ private fun ShelfSection(
                                     Modifier
                                 },
                             )
-                            .clickable(role = Role.Button) {
+                            .tsuzukiClickable(role = Role.Button) {
                                 if (onSelect != null) onSelect(book) else actions.onOpenBook(book)
                             },
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Box {
-                            Cover(book, Modifier.fillMaxWidth())
+                            Cover(
+                                book,
+                                Modifier.fillMaxWidth().then(
+                                    if (onSelect == null) Modifier.tsuzukiSharedCover(book.mangaId) else Modifier,
+                                ),
+                            )
                             if (book.unread > 0) {
                                 UnreadChip(book.unread, Modifier.align(Alignment.TopEnd).padding(6.dp), compact = true)
                             }
@@ -954,7 +994,7 @@ private fun Cover(book: HomeBook, modifier: Modifier) {
         modifier = modifier,
         contentDescription = book.title,
         shape = RoundedCornerShape(8.dp),
-        colorFilter = if (t.isDot) eu.kanade.presentation.theme.tsuzuki.DotCoverFilter else null,
+        colorFilter = eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter(),
     )
 }
 
@@ -1033,7 +1073,7 @@ private fun IconCircle(onClick: () -> Unit, content: @Composable () -> Unit) {
                     Modifier.background(Color.Black.copy(alpha = 0.25f))
                 },
             )
-            .clickable(role = Role.Button, onClick = onClick),
+            .tsuzukiClickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { content() }
 }

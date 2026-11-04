@@ -75,6 +75,20 @@ private fun ExtensionStoresListItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Tsuzuki themes: repository tile (board 04-browse "ExtensionRepos")
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.browse.TsuzukiExtensionStoreItem(
+            store,
+            enabled,
+            onSetEnabled,
+            onOpenWebsite,
+            onOpenDiscord,
+            onCopy,
+            onDelete,
+            modifier,
+        )
+        return
+    }
     ElevatedCard(
         modifier = modifier,
     ) {

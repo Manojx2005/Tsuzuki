@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.tsuzuki.category.TsuzukiCategoryListItem
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
@@ -31,6 +32,11 @@ fun ReorderableCollectionItemScope.CategoryListItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Tsuzuki themes: shelf tile (board 07-system "Categories")
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        TsuzukiCategoryListItem(category, onRename, onDelete, modifier)
+        return
+    }
     ElevatedCard(modifier = modifier) {
         Row(
             modifier = Modifier

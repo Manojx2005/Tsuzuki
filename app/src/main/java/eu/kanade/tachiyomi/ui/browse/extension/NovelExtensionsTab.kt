@@ -41,10 +41,12 @@ fun novelExtensionsTab(
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.action_filter),
                 onClick = { navigator.push(ExtensionFilterScreen()) },
+                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.filter,
             ),
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.extensionStores),
                 onClick = { navigator.push(NovelExtensionReposScreen()) },
+                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.repos,
             ),
         ),
         content = { contentPadding, _ ->

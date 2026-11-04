@@ -52,6 +52,7 @@ fun LibraryPager(
     onLoadMore: (Category) -> Unit = {},
     getLoadMoreKey: (Category) -> Long = { 0 },
     isCategoryLoading: (Category) -> Boolean = { false },
+    mixedLibrary: Boolean = false,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
@@ -110,6 +111,25 @@ fun LibraryPager(
 
         val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
         val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
+
+        if (mixedLibrary && displayMode != LibraryDisplayMode.List) {
+            eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryGrid(
+                items = items,
+                columns = columns,
+                showTitle = displayMode != LibraryDisplayMode.CoverOnlyGrid,
+                contentPadding = contentPadding,
+                selection = selection,
+                onClick = onClickManga,
+                onLongClick = onLongClickManga,
+                onContinueReading = onClickContinueReading,
+                searchQuery = searchQuery,
+                onGlobalSearch = onGlobalSearchClicked,
+                onLoadMore = onLoadMoreForCategory,
+                loadMoreKey = loadMoreKey,
+                titleMaxLines = titleMaxLines,
+            )
+            return@HorizontalPager
+        }
 
         when (displayMode) {
             LibraryDisplayMode.List -> {

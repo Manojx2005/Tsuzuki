@@ -16,6 +16,8 @@ import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
@@ -36,6 +38,22 @@ fun ReaderSettingsDialog(
     viewModel: ReaderSettingsViewModel,
     isNovelMode: Boolean = false,
 ) {
+    // Tsuzuki: the ReaderSettings board, with "All settings" opening the stock sheet below.
+    var showAllNovelSettings by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (isNovelMode && !showAllNovelSettings &&
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSettingsSheet(
+            preferences = viewModel.preferences,
+            onDismissRequest = {
+                onDismissRequest()
+                onShowMenus()
+            },
+            onAllSettings = { showAllNovelSettings = true },
+        )
+        return
+    }
     if (isNovelMode) {
         NovelReaderSettingsDialog(
             onDismissRequest = onDismissRequest,

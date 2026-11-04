@@ -44,8 +44,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    if (System.getenv("TSUNDOKU_GITHUB_RELEASE").toBoolean() &&
-        System.getenv("GITHUB_REPOSITORY_OWNER") == "tsundoku-otaku"
+    // Tsuzuki: CI signs releases for the owner's repo too (workflow tsuzuki-preview.yml).
+    if ((
+            System.getenv("TSUNDOKU_GITHUB_RELEASE").toBoolean() &&
+                System.getenv("GITHUB_REPOSITORY_OWNER") == "tsundoku-otaku"
+            ) ||
+        (
+            System.getenv("TSUZUKI_GITHUB_RELEASE").toBoolean() &&
+                System.getenv("GITHUB_REPOSITORY_OWNER") == "Manojx2005"
+            )
     ) {
         val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("tsundoku.keystore")
 
@@ -107,6 +114,9 @@ android {
             initWith(release)
 
             applicationIdSuffix = ".debug"
+
+            // Tsuzuki: preview is the daily-use channel, so it always checks GitHub releases (tags rNNNN) for updates.
+            buildConfigField("boolean", "UPDATER_ENABLED", "true")
 
             versionNameSuffix = debug.versionNameSuffix
 
@@ -233,6 +243,7 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.presentationCore)
     implementation(projects.presentationWidget)
+    implementation(libs.androidx.glance.appWidget) // Tsuzuki "Reading" widget
     implementation(projects.telemetry)
 
     // Compose
@@ -294,7 +305,7 @@ dependencies {
 
     // JavaScript engine (for JS plugins)
     // implementation(libs.bundles.js.engine)
-    implementation("io.github.dokar3:quickjs-kt:1.0.0-alpha13")
+    implementation("io.github.dokar3:quickjs-kt:1.0.15")
 
     // Disk
     implementation(libs.diskLruCache)

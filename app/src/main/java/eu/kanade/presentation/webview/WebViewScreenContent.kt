@@ -259,18 +259,23 @@ fun WebViewScreenContent(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_webview_refresh),
                                         onClick = { navigator.reload() },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.refresh,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_share),
                                         onClick = { onShare(currentUrl) },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.share,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_open_in_browser),
                                         onClick = { onOpenInBrowser(currentUrl) },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.browser,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.pref_clear_cookies),
                                         onClick = { onClearCookies(currentUrl) },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.cookies,
+                                        destructive = true,
                                     ),
                                 ).toMutableList().apply {
                                     if (windowStack.size > 1) {

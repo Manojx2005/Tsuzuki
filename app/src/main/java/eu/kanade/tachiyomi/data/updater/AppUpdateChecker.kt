@@ -35,13 +35,15 @@ class AppUpdateChecker {
     }
 }
 
+// Tsuzuki ships its own releases; upstream (Mihon / Tsundoku) changes reach users only through
+// a Tsuzuki release (docs/UPSTREAM.md). The repo must be public for this API call to see releases.
 val GITHUB_REPO: String by lazy {
     if (isNightlyBuildType) {
-        "Manojx2005/LightNovelReader"
+        "Manojx2005/Tsuzuki"
     } else if (isPreviewBuildType) {
-        "Manojx2005/LightNovelReader"
+        "Manojx2005/Tsuzuki"
     } else {
-        "Manojx2005/LightNovelReader"
+        "Manojx2005/Tsuzuki"
     }
 }
 

@@ -67,11 +67,12 @@ internal fun BasePreferenceWidget(
             if (!title.isNullOrBlank()) {
                 Text(
                     modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
-                    text = title,
+                    text = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(title) ?: title,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = TitleFontSize,
+                    fontWeight = eu.kanade.presentation.tsuzuki.settings.tsuzukiPreferenceTitleWeight(),
                 )
             }
             subcomponent?.invoke(this)

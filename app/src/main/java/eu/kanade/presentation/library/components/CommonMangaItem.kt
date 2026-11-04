@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -91,6 +93,7 @@ fun MangaCompactGridItem(
                 MangaCover.Book(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .tsuzukiSharedCover(coverData.mangaId)
                         .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                     data = coverData,
                 )
@@ -201,6 +204,7 @@ fun MangaComfortableGridItem(
                     MangaCover.Book(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .tsuzukiSharedCover(coverData.mangaId)
                             .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                         data = coverData,
                     )
@@ -304,7 +308,7 @@ private fun GridItemSelectable(
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
-            .combinedClickable(
+            .tsuzukiClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )

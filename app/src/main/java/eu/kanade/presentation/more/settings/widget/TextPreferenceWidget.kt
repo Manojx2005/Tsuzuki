@@ -32,7 +32,7 @@ fun TextPreferenceWidget(
         subcomponent = if (!subtitle.isNullOrBlank()) {
             {
                 Text(
-                    text = subtitle,
+                    text = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(subtitle) ?: subtitle,
                     modifier = Modifier
                         .padding(horizontal = PrefsHorizontalPadding)
                         .secondaryItemAlpha(),

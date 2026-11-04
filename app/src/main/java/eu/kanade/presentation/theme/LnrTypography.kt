@@ -1,14 +1,17 @@
 package eu.kanade.presentation.theme
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.fonts.FontStyle.FONT_SLANT_ITALIC
 import android.graphics.fonts.FontStyle.FONT_SLANT_UPRIGHT
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontLoadingStrategy
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
@@ -17,6 +20,7 @@ import eu.kanade.tachiyomi.R
 import android.graphics.Typeface as AndroidTypeface
 import android.graphics.fonts.Font as AndroidFont
 import android.graphics.fonts.FontFamily as AndroidFontFamily
+import androidx.compose.ui.text.font.AndroidFont as ComposeAndroidFont
 import androidx.compose.ui.text.font.Typeface as ComposeTypeface
 
 /*
@@ -90,6 +94,45 @@ private class FontLoader(private val res: Resources) {
                     .build(),
             ),
         )
+
+    /**
+     * Like [paired], but one fallback typeface per weight in [weights], so bold text is bold. Compose's
+     * `FontFamily(Typeface)` always draws its single typeface and ignores the requested weight.
+     */
+    fun pairedWeights(
+        latin: AndroidFontFamily,
+        japanese: AndroidFontFamily,
+        system: String,
+        weights: List<Int>,
+    ): FontFamily = FontFamily(
+        weights.map { weight ->
+            TypefaceFont(
+                FontWeight(weight),
+                AndroidTypeface.CustomFallbackBuilder(latin)
+                    .addCustomFallback(japanese)
+                    .setSystemFallback(system)
+                    .setStyle(android.graphics.fonts.FontStyle(weight, FONT_SLANT_UPRIGHT))
+                    .build(),
+            )
+        },
+    )
+}
+
+/** A ready-made Android typeface as one weight of a Compose [FontFamily]. */
+@OptIn(ExperimentalTextApi::class)
+private class TypefaceFont(
+    override val weight: FontWeight,
+    val typeface: AndroidTypeface,
+) : ComposeAndroidFont(FontLoadingStrategy.Blocking, Loader, FontVariation.Settings()) {
+    override val style: FontStyle = FontStyle.Normal
+
+    private object Loader : TypefaceLoader {
+        override fun loadBlocking(context: Context, font: ComposeAndroidFont): AndroidTypeface =
+            (font as TypefaceFont).typeface
+
+        override suspend fun awaitLoad(context: Context, font: ComposeAndroidFont): AndroidTypeface =
+            (font as TypefaceFont).typeface
+    }
 }
 
 /** Dot: Doto + DotGothic16 for display, Space Mono + M PLUS 1 Code for body. */
@@ -100,13 +143,14 @@ private fun buildDotFamilies(res: Resources): Pair<FontFamily, FontFamily> = wit
         family(font(R.font.lnr_jp_dotgothic16, 400)),
         "monospace",
     )
-    val body = paired(
+    val body = pairedWeights(
         family(font(R.font.lnr_space_mono_regular, 400), font(R.font.lnr_space_mono_bold, 700)),
         family(
             font(R.font.lnr_jp_mplus1code, 400, variable = true),
             font(R.font.lnr_jp_mplus1code, 700, variable = true),
         ),
         "monospace",
+        weights = listOf(400, 700),
     )
     display to body
 }
@@ -122,7 +166,7 @@ private fun buildColourFamilies(res: Resources): Pair<FontFamily, FontFamily> = 
         family(font(R.font.lnr_jp_notoserif, 600)),
         "serif",
     )
-    val body = paired(
+    val body = pairedWeights(
         family(
             font(R.font.lnr_manrope, 400, variable = true),
             font(R.font.lnr_manrope, 500, variable = true),
@@ -132,6 +176,7 @@ private fun buildColourFamilies(res: Resources): Pair<FontFamily, FontFamily> = 
         ),
         family(font(R.font.lnr_jp_zenkaku_regular, 400), font(R.font.lnr_jp_zenkaku_bold, 700)),
         "sans-serif",
+        weights = listOf(400, 500, 600, 700, 800),
     )
     display to body
 }

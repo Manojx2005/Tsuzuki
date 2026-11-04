@@ -8,6 +8,8 @@ import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
@@ -18,6 +20,7 @@ fun CategoryFloatingActionButton(
     onCreate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) return
     SmallExtendedFloatingActionButton(
         text = { Text(text = stringResource(MR.strings.action_add)) },
         icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },

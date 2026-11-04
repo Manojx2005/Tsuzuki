@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,11 +16,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.ThemeMode
+import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
+import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiThemeReveal
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -86,24 +98,91 @@ fun TsuzukiSettingsHeader(
                 letterSpacing = 1.sp,
                 color = muted,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                ThemeCard(
-                    selected = appTheme == AppTheme.COLOUR,
-                    name = stringResource(MR.strings.theme_lnr_colour),
-                    blurb = stringResource(MR.strings.tsz_theme_colour_sub),
-                    onClick = { onPickTheme(AppTheme.COLOUR) },
-                    modifier = Modifier.weight(1f),
-                ) { ColourPreview() }
-                ThemeCard(
-                    selected = appTheme == AppTheme.DOT,
-                    name = stringResource(MR.strings.theme_lnr_dot).uppercase(),
-                    blurb = stringResource(MR.strings.tsz_theme_dot_sub),
-                    onClick = { onPickTheme(AppTheme.DOT) },
-                    modifier = Modifier.weight(1f),
-                ) { DotPreview() }
+            TsuzukiThemeCards(appTheme, onPickTheme)
+        }
+    }
+}
+
+/** The Colour / Dot cards (Settings and SettingsAppearance boards); picking one plays the circular reveal. */
+@Composable
+fun TsuzukiThemeCards(appTheme: AppTheme, onPickTheme: (AppTheme) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        val colourClick = TsuzukiThemeReveal.click(appTheme, AppTheme.COLOUR) { onPickTheme(AppTheme.COLOUR) }
+        val dotClick = TsuzukiThemeReveal.click(appTheme, AppTheme.DOT) { onPickTheme(AppTheme.DOT) }
+        ThemeCard(
+            selected = appTheme == AppTheme.COLOUR,
+            name = stringResource(MR.strings.theme_lnr_colour),
+            blurb = stringResource(MR.strings.tsz_theme_colour_sub),
+            onClick = colourClick.onClick,
+            modifier = Modifier.weight(1f).then(colourClick.modifier),
+        ) { ColourPreview() }
+        ThemeCard(
+            selected = appTheme == AppTheme.DOT,
+            name = stringResource(MR.strings.theme_lnr_dot).uppercase(),
+            blurb = stringResource(MR.strings.tsz_theme_dot_sub),
+            onClick = dotClick.onClick,
+            modifier = Modifier.weight(1f).then(dotClick.modifier),
+        ) { DotPreview() }
+    }
+}
+
+/**
+ * Appearance's theme picker in the Tsuzuki themes: the two cards first (SettingsAppearance board), then the stock
+ * mode and theme pickers folded under "App theme" so the other themes stay reachable. Returns false in stock themes,
+ * which keep the stock picker.
+ */
+@Composable
+fun TsuzukiAppearanceThemePicker(
+    appTheme: AppTheme,
+    themeMode: ThemeMode,
+    amoled: Boolean,
+    onPickTheme: (AppTheme) -> Unit,
+    onPickMode: (ThemeMode) -> Unit,
+): Boolean {
+    val t = TsuzukiTheme.tokens
+    if (t.style == TsuzukiStyle.NONE) return false
+    var open by rememberSaveable { mutableStateOf(false) }
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        TsuzukiThemeCards(appTheme, onPickTheme = {
+            if (it != appTheme) {
+                onPickTheme(it)
+                // A theme only applies once the activity is rebuilt, as in the Settings header
+                (context as? android.app.Activity)?.let { a -> androidx.core.app.ActivityCompat.recreate(a) }
+            }
+        })
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(role = Role.Button) { open = !open }
+                .padding(horizontal = 4.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val label = stringResource(MR.strings.pref_app_theme)
+            Text(
+                if (t.isDot) label.uppercase() else label,
+                modifier = Modifier.weight(1f),
+                color = muted,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Icon(
+                if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                tint = muted,
+            )
+        }
+        AnimatedVisibility(open) {
+            Column {
+                AppThemeModePreferenceWidget(value = themeMode, onItemClick = onPickMode)
+                AppThemePreferenceWidget(value = appTheme, amoled = amoled, onItemClick = onPickTheme)
             }
         }
     }
+    return true
 }
 
 @Composable

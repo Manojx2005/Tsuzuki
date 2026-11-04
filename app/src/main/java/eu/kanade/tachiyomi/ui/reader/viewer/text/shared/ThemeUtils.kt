@@ -56,6 +56,10 @@ object ThemeUtils {
             "sepia" -> 0xFFF4ECD8.toInt() to 0xFF5B4636.toInt()
             "black" -> 0xFF000000.toInt() to 0xFFCCCCCC.toInt()
             "grey" -> 0xFF292832.toInt() to 0xFFCCCCCC.toInt()
+            // Tsuzuki reader sheet pages (ReaderSettings board)
+            "paper" -> 0xFFFAFAF7.toInt() to 0xFF1F2024.toInt()
+            "sage" -> 0xFFDDE5D6.toInt() to 0xFF25301F.toInt()
+            "night" -> 0xFF15140F.toInt() to 0xFFDED7C9.toInt()
             "custom" -> {
                 val bg = if (backgroundColor != 0) backgroundColor else 0xFFFFFFFF.toInt()
                 val text = if (fontColor != 0) fontColor else 0xFF000000.toInt()

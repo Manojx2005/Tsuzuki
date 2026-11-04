@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.NavigateBefore
 import androidx.compose.material.icons.automirrored.outlined.NavigateNext
 import androidx.compose.material.icons.outlined.Bookmark
@@ -166,6 +167,8 @@ fun NovelReaderAppBars(
     // transient reader menu bars.
     onTopBarHeight: (Int) -> Unit = {},
     onBottomBarHeight: (Int) -> Unit = {},
+    // Tsuzuki: opens the contents drawer.
+    onOpenContents: (() -> Unit)? = null,
 ) {
     // Tsuzuki themes: solid bars (never see-through, no red tint in Dot).
     val tsuzukiBars = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
@@ -213,6 +216,7 @@ fun NovelReaderAppBars(
                     onReloadSource = onReloadSource,
                     onEditBottomBar = onEditBottomBar,
                     onRetranslate = onRetranslate,
+                    onOpenContents = onOpenContents,
                 )
             }
 
@@ -339,6 +343,7 @@ private fun NovelReaderTopBar(
     onEditBottomBar: () -> Unit,
     onRetranslate: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onOpenContents: (() -> Unit)? = null,
 ) {
     AppBar(
         modifier = modifier,
@@ -349,6 +354,15 @@ private fun NovelReaderTopBar(
         actions = {
             AppBarActions(
                 actions = buildList {
+                    onOpenContents?.let {
+                        add(
+                            AppBar.Action(
+                                stringResource(MR.strings.tsz_reader_contents),
+                                Icons.AutoMirrored.Outlined.List,
+                                onClick = it,
+                            ),
+                        )
+                    }
                     add(
                         AppBar.Action(
                             title = stringResource(
@@ -370,18 +384,21 @@ private fun NovelReaderTopBar(
                         AppBar.OverflowAction(
                             title = stringResource(TDMR.strings.action_reload_local),
                             onClick = onReloadLocal,
+                            icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.reload,
                         ),
                     )
                     add(
                         AppBar.OverflowAction(
                             title = stringResource(TDMR.strings.action_reload_source),
                             onClick = onReloadSource,
+                            icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.refresh,
                         ),
                     )
                     add(
                         AppBar.OverflowAction(
                             title = stringResource(TDMR.strings.action_edit_appbar),
                             onClick = onEditBottomBar,
+                            icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.edit,
                         ),
                     )
                     onOpenInWebView?.let {
@@ -389,6 +406,7 @@ private fun NovelReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_web_view),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.webView,
                             ),
                         )
                     }
@@ -397,6 +415,7 @@ private fun NovelReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_browser),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.browser,
                             ),
                         )
                     }
@@ -405,6 +424,7 @@ private fun NovelReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_share),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.share,
                             ),
                         )
                     }
@@ -413,6 +433,7 @@ private fun NovelReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_retranslate),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.translate,
                             ),
                         )
                     }

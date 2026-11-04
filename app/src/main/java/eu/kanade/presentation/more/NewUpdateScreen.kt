@@ -35,6 +35,19 @@ fun NewUpdateScreen(
     onAcceptUpdate: () -> Unit,
     onRejectUpdate: () -> Unit,
 ) {
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.more.TsuzukiNewUpdateScreen(
+            versionName = versionName,
+            currentVersion = eu.kanade.tachiyomi.BuildConfig.VERSION_NAME,
+            changelogInfo = changelogInfo,
+            stage = stage,
+            downloadProgress = downloadProgress,
+            onOpenInBrowser = onOpenInBrowser,
+            onAcceptUpdate = onAcceptUpdate,
+            onRejectUpdate = onRejectUpdate,
+        )
+        return
+    }
     InfoScreen(
         icon = Icons.Outlined.NewReleases,
         headingText = stringResource(MR.strings.update_check_notification_update_available),

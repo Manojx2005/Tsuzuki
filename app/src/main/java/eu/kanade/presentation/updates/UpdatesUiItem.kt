@@ -215,7 +215,7 @@ private fun UpdatesUiItem(
                 .weight(1f),
         ) {
             Text(
-                text = update.mangaTitle,
+                text = if (tsuzuki.isDot) update.mangaTitle.uppercase() else update.mangaTitle,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalContentColor.current.copy(alpha = textAlpha),
@@ -245,7 +245,7 @@ private fun UpdatesUiItem(
                     Spacer(modifier = Modifier.width(2.dp))
                 }
                 Text(
-                    text = update.chapterName,
+                    text = if (tsuzuki.isDot) update.chapterName.uppercase() else update.chapterName,
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalContentColor.current.copy(alpha = textAlpha),
@@ -257,7 +257,7 @@ private fun UpdatesUiItem(
                 if (readProgress != null) {
                     DotSeparatorText()
                     Text(
-                        text = readProgress,
+                        text = if (tsuzuki.isDot) readProgress.uppercase() else readProgress,
                         maxLines = 1,
                         color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
                         overflow = TextOverflow.Ellipsis,
@@ -301,6 +301,12 @@ private fun UpdatesNovelGroupItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesGroupTile(group, onClick, modifier)
+        return
+    }
     Row(
         modifier = modifier
             .combinedClickable(onClick = onClick)

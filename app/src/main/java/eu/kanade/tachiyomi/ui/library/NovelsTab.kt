@@ -100,13 +100,26 @@ data object NovelsTab : Tab {
         val libraryPreferences = remember { Injekt.get<tachiyomi.domain.library.service.LibraryPreferences>() }
         val isJoined by libraryPreferences.joinedLibrary.collectAsState()
         val libraryType = if (isJoined) LibraryViewModel.LibraryType.All else LibraryViewModel.LibraryType.Novel
+        val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+        val mixedLibrary = isJoined && tsuzuki
+        LaunchedEffect(isJoined, tsuzuki) {
+            // The mixed-library pills share the stock filter. Separate libraries already select
+            // their type, so clear it when leaving combined mode rather than hiding every book.
+            if (tsuzuki && !isJoined) {
+                libraryPreferences.filterNovel().set(tachiyomi.core.common.preference.TriState.DISABLED)
+            }
+        }
+        val libraryOwner = eu.kanade.presentation.tsuzuki.library.rememberTsuzukiLibraryViewModelStoreOwner(libraryType)
         val viewModel = viewModel<LibraryViewModel>(
+            viewModelStoreOwner = libraryOwner,
             factory = LibraryViewModel.Factory,
             extras = CreationExtras {
                 set(LibraryViewModel.TYPE_KEY, libraryType)
             },
         )
         val settingsViewModel = viewModel<LibrarySettingsViewModel>(
+            viewModelStoreOwner = libraryOwner,
             factory = LibrarySettingsViewModel.Factory,
             extras = CreationExtras {
                 set(LibrarySettingsViewModel.TYPE_KEY, libraryType)
@@ -152,10 +165,27 @@ data object NovelsTab : Tab {
                     page = state.coercedActiveCategoryIndex,
                 )
                 LibraryToolbar(
-                    below = { eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(isManga = false) },
+                    below = {
+                        if (mixedLibrary && !state.selectionMode && state.toolbarQuery == null) {
+                            eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
+                                novelCount = state.libraryData.novelCount,
+                                mangaCount = state.libraryData.mangaCount,
+                                showCounts = !viewModel.paginationEnabled && !state.isLoading,
+                                onFilterChanged = viewModel::clearSelection,
+                            )
+                        } else {
+                            eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(isManga = false)
+                        }
+                    },
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
-                    title = title,
+                    title = if (mixedLibrary) {
+                        eu.kanade.presentation.library.components.LibraryToolbarTitle(
+                            stringResource(MR.strings.label_library),
+                        )
+                    } else {
+                        title
+                    },
                     onClickUnselectAll = viewModel::clearSelection,
                     onClickSelectAll = viewModel::selectAll,
                     onClickInvertSelection = viewModel::invertSelection,
@@ -238,6 +268,7 @@ data object NovelsTab : Tab {
                 }
                 else -> {
                     LibraryContent(
+                        mixedLibrary = mixedLibrary,
                         categories = state.displayedCategories,
                         searchQuery = state.searchQuery,
                         selection = state.selection,

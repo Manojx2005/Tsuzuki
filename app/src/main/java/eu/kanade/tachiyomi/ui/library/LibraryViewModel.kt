@@ -56,8 +56,8 @@ import mihon.core.common.utils.mutate
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
-import tachiyomi.core.common.preference.toCommonCheckboxState
 import tachiyomi.core.common.preference.TriState
+import tachiyomi.core.common.preference.toCommonCheckboxState
 import tachiyomi.core.common.util.lang.compareToWithCollator
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -291,6 +291,8 @@ class LibraryViewModel(
                     showSystemCategory = showSystemCategory,
                     categories = categories,
                     favorites = filteredFavorites,
+                    novelCount = favorites.count { it.libraryManga.manga.isNovel },
+                    mangaCount = favorites.count { !it.libraryManga.manga.isNovel },
                     tracksMap = tracksMap,
                     loggedInTrackerIds = trackingFilters.keys,
                 )
@@ -1252,6 +1254,9 @@ class LibraryViewModel(
             val (sortType, asc) = mapSort(category.sort)
             val spec = base.copy(sortType = sortType, sortAscending = asc)
             for (isNovel in novelFlagsFor(category)) {
+                // Type pills must also narrow DB paging, including categories with no matches.
+                if (prefs.filterNovel == TriState.ENABLED_IS && !isNovel) continue
+                if (prefs.filterNovel == TriState.ENABLED_NOT && isNovel) continue
                 map[category.id to isNovel] = spec
             }
         }
@@ -2070,6 +2075,8 @@ class LibraryViewModel(
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
         val favorites: List<LibraryItem> = emptyList(),
+        val novelCount: Int = 0,
+        val mangaCount: Int = 0,
         val tracksMap: Map</* Manga */ Long, List<Track>> = emptyMap(),
         val loggedInTrackerIds: Set<Long> = emptySet(),
     ) {

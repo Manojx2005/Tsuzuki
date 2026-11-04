@@ -104,6 +104,20 @@ internal fun PreferenceItem(
             }
             is Preference.PreferenceItem.ListPreference<*> -> {
                 val value by item.preference.collectAsState()
+                if (item.tsuzukiPills && eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiPillPreference(
+                        title = item.title,
+                        value = value,
+                        entries = item.entries,
+                        enabled = item.enabled,
+                        onValueChange = { newValue ->
+                            scope.launch {
+                                if (item.internalOnValueChanged(newValue!!)) item.internalSet(newValue)
+                            }
+                        },
+                    )
+                    return@StatusWrapper
+                }
                 ListPreferenceWidget(
                     value = value,
                     title = item.title,

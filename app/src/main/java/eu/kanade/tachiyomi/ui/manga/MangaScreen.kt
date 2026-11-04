@@ -316,6 +316,16 @@ class MangaScreen(
                 onUnreadFilterChanged = viewModel::setUnreadFilter,
                 onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
                 onSortModeChanged = viewModel::setSorting,
+                onSortOrderChanged = viewModel::setSortingOrder,
+                markPreviousCount = remember(successState.chapters, successState.manga) {
+                    eu.kanade.presentation.tsuzuki.details.markPreviousCandidates(successState).size
+                },
+                onMarkPreviousRead = {
+                    viewModel.markChaptersRead(
+                        eu.kanade.presentation.tsuzuki.details.markPreviousCandidates(successState),
+                        true,
+                    )
+                },
                 onDisplayModeChanged = viewModel::setDisplayMode,
                 onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
                 onResetToDefault = viewModel::resetToDefaultSettings,

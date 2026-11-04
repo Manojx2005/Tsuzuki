@@ -40,6 +40,12 @@ fun DefaultNavigatorScreenTransition(
     navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiNavigatorTransition(navigator, modifier)
+        return
+    }
     val slideDistance = rememberSlideDistance()
     ScreenTransition(
         navigator = navigator,
@@ -66,8 +72,9 @@ fun ScreenTransition(
         modifier = modifier,
         label = "transition",
     ) { screen ->
+        val visibilityScope = this
         navigator.saveableState("transition", screen) {
-            content(screen)
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiAnimatedScreen(visibilityScope) { content(screen) }
         }
     }
 

@@ -204,11 +204,10 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                 AppBar(
                     titleContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(MR.strings.label_download_queue),
-                                maxLines = 1,
+                            // Tsuzuki: AppBarTitle gives the display face in the Tsuzuki themes; same text style in stock.
+                            eu.kanade.presentation.components.AppBarTitle(
+                                title = stringResource(MR.strings.label_download_queue),
                                 modifier = Modifier.weight(1f, false),
-                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     },
@@ -469,6 +468,8 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_cancel_all),
                                         onClick = { viewModel.clearQueue() },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.cancel,
+                                        destructive = true,
                                     ),
                                 ),
                             )
@@ -513,13 +514,27 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
             },
         ) { contentPadding ->
             Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
-                TabRow(selectedTabIndex = selectedTab) {
-                    tabs.forEachIndexed { index, titleRes ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            text = { Text(titleRes) },
-                        )
+                // Tsuzuki (board 07-system "Downloads"): queued tile, Wi-Fi chip and pill tabs instead of the TabRow.
+                if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiDownloadQueueHeader(
+                        labels = listOf(
+                            stringResource(TDMR.strings.label_novels),
+                            stringResource(TDMR.strings.label_manga),
+                            stringResource(TDMR.strings.label_translations),
+                        ),
+                        counts = listOf(novelCount, mangaCount, translationQueue.size),
+                        selected = selectedTab,
+                        onSelect = { selectedTab = it },
+                    )
+                } else {
+                    TabRow(selectedTabIndex = selectedTab) {
+                        tabs.forEachIndexed { index, titleRes ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = { Text(titleRes) },
+                            )
+                        }
                     }
                 }
 
@@ -669,9 +684,10 @@ private fun NovelDownloadCard(
     var errorsExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        // Tsuzuki (board 07-system "Downloads"): the theme tile and Dot border; nothing in stock themes.
+        modifier = Modifier.fillMaxWidth().then(eu.kanade.presentation.tsuzuki.settings.tsuzukiImportCard()),
         colors = CardDefaults.cardColors(
-            containerColor = if (item.isActive) {
+            containerColor = eu.kanade.presentation.tsuzuki.settings.tsuzukiTileColor() ?: if (item.isActive) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
@@ -695,7 +711,7 @@ private fun NovelDownloadCard(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = item.mangaTitle,
+                        text = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(item.mangaTitle) ?: item.mangaTitle,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = titleMaxLines,
@@ -791,20 +807,27 @@ private fun NovelDownloadCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Progress bar
-            LinearProgressIndicator(
-                progress = { item.overallProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(5.dp)
-                    .clip(MaterialTheme.shapes.small),
-                color = when {
-                    item.hasError -> MaterialTheme.colorScheme.error
-                    item.isActive -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.secondary
-                },
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
+            // Progress bar (Tsuzuki: the theme's bar, dotted in Dot)
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar(
+                    progress = item.overallProgress,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                LinearProgressIndicator(
+                    progress = { item.overallProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    color = when {
+                        item.hasError -> MaterialTheme.colorScheme.error
+                        item.isActive -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.secondary
+                    },
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 

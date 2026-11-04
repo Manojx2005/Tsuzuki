@@ -11,6 +11,10 @@ class DownloadHeaderHolder(view: View, adapter: FlexibleAdapter<*>) : Expandable
 
     private val binding = DownloadHeaderBinding.bind(view)
 
+    init {
+        eu.kanade.tachiyomi.tsuzuki.TsuzukiViewStyle.downloadHeader(binding.container, binding.title)
+    }
+
     @SuppressLint("SetTextI18n")
     fun bind(item: DownloadHeaderItem) {
         setDragHandleView(binding.reorder)

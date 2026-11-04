@@ -54,6 +54,7 @@ fun ReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_web_view),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.webView,
                             ),
                         )
                     }
@@ -62,6 +63,7 @@ fun ReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_browser),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.browser,
                             ),
                         )
                     }
@@ -70,6 +72,7 @@ fun ReaderTopBar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_share),
                                 onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.share,
                             ),
                         )
                     }

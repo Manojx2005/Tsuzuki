@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -52,7 +51,7 @@ fun TsuzukiHistoryItem(
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
-    val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     fun up(s: String) = if (t.isDot) s.uppercase() else s
 
     // Novels store scroll progress as a percent; manga store a page index we can't turn into a
@@ -87,7 +86,7 @@ fun TsuzukiHistoryItem(
             Text(
                 text = up(history.title),
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

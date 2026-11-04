@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Tsuzuki: English plus the locales with full Tsuzuki strings (owner approved 2026-11-04). Tsundoku's own
+     i18n-novel strings are English-only, so those screens show English text in the other languages. -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en"/>
+    <locale android:name="de"/>
+    <locale android:name="es"/>
+    <locale android:name="fr"/>
+    <locale android:name="ja"/>
+    <locale android:name="ko"/>
+    <locale android:name="pt-BR"/>
+    <locale android:name="zh-CN"/>
 </locale-config>

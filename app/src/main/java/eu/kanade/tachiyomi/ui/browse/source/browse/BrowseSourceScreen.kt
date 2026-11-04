@@ -291,31 +291,50 @@ data class BrowseSourceScreen(
                         onSearch = viewModel::search,
                     )
 
+                    // Tsuzuki themes: Popular / Latest as the board's segment control (04-browse "Catalogue")
+                    val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
+                    if (tsuzuki) {
+                        eu.kanade.presentation.tsuzuki.browse.TsuzukiListingSegments(
+                            supportsLatest = viewModel.source.supportsLatest,
+                            popular = state.listing == Listing.Popular,
+                            latest = state.listing == Listing.Latest,
+                            onPopular = {
+                                viewModel.resetFilters()
+                                viewModel.setListing(Listing.Popular)
+                            },
+                            onLatest = {
+                                viewModel.resetFilters()
+                                viewModel.setListing(Listing.Latest)
+                            },
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())
                             .padding(horizontal = MaterialTheme.padding.small),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
-                        FilterChip(
-                            selected = state.listing == Listing.Popular,
-                            onClick = {
-                                viewModel.resetFilters()
-                                viewModel.setListing(Listing.Popular)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Favorite,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(FilterChipDefaults.IconSize),
-                                )
-                            },
-                            label = {
-                                Text(text = stringResource(MR.strings.popular))
-                            },
-                        )
-                        if (viewModel.source.supportsLatest) {
+                        if (!tsuzuki) {
+                            FilterChip(
+                                selected = state.listing == Listing.Popular,
+                                onClick = {
+                                    viewModel.resetFilters()
+                                    viewModel.setListing(Listing.Popular)
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Favorite,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(FilterChipDefaults.IconSize),
+                                    )
+                                },
+                                label = {
+                                    Text(text = stringResource(MR.strings.popular))
+                                },
+                            )
+                        }
+                        if (viewModel.source.supportsLatest && !tsuzuki) {
                             FilterChip(
                                 selected = state.listing == Listing.Latest,
                                 onClick = {

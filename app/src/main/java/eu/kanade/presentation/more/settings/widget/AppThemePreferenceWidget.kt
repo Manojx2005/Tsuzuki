@@ -101,12 +101,17 @@ private fun AppThemesList(
                     appTheme = appTheme,
                     amoled = amoled,
                 ) {
+                    val themeClick = eu.kanade.presentation.theme.tsuzuki.TsuzukiThemeReveal.click(
+                        currentTheme,
+                        appTheme,
+                    ) {
+                        onItemClick(appTheme)
+                        (context as? Activity)?.let { ActivityCompat.recreate(it) }
+                    }
                     AppThemePreviewItem(
                         selected = currentTheme == appTheme,
-                        onClick = {
-                            onItemClick(appTheme)
-                            (context as? Activity)?.let { ActivityCompat.recreate(it) }
-                        },
+                        onClick = themeClick.onClick,
+                        modifier = themeClick.modifier,
                     )
                 }
 
@@ -131,9 +136,10 @@ private fun AppThemesList(
 fun AppThemePreviewItem(
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(9f / 16f)
             .border(

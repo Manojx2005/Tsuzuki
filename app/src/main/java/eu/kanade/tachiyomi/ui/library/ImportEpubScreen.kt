@@ -649,7 +649,10 @@ private fun ImportSelectionContent(
         if (volumeGroups.isNotEmpty()) {
             item {
                 Text(
-                    text = "Novel groups (${volumeGroups.size})",
+                    text = eu.kanade.presentation.tsuzuki.settings.tsuzukiEpubSummary(
+                        files = volumeGroups.sumOf { it.volumes.size },
+                        novels = volumeGroups.size,
+                    ) ?: "Novel groups (${volumeGroups.size})",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -742,7 +745,7 @@ private fun ImportSelectionContent(
             Button(
                 onClick = onImport,
                 enabled = canImport && !isParsing,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().then(eu.kanade.presentation.tsuzuki.settings.tsuzukiImportButton()),
             ) {
                 Text(stringResource(TDMR.strings.epub_action_import))
             }
@@ -767,7 +770,10 @@ private fun VolumeGroupCard(
     onMoveVolumeToNewGroup: (volumeId: String) -> Unit,
     onToggleVolumeExpanded: (volumeId: String) -> Unit,
 ) {
-    Card(shape = RoundedCornerShape(12.dp)) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = eu.kanade.presentation.tsuzuki.settings.tsuzukiImportCard(),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -862,7 +868,11 @@ private fun VolumeGroupCard(
                             }
 
                             Text(
-                                text = volume.file.fileName,
+                                // Tsuzuki (board "ImportEpub"): "N chapters · file.epub"; stock shows the file name.
+                                text = eu.kanade.presentation.tsuzuki.settings.tsuzukiEpubVolumeLine(
+                                    volume.file.tableOfContents.size,
+                                    volume.file.fileName,
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,

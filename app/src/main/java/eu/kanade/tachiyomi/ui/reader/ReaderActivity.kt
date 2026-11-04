@@ -243,15 +243,19 @@ class ReaderActivity : BaseActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         registerSecureActivity(this)
+        val motion = eu.kanade.presentation.theme.tsuzuki.tsuzukiReaderTransition(this, opening = true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
                 OVERRIDE_TRANSITION_OPEN,
-                R.anim.shared_axis_x_push_enter,
-                R.anim.shared_axis_x_push_exit,
+                motion?.first ?: R.anim.shared_axis_x_push_enter,
+                motion?.second ?: R.anim.shared_axis_x_push_exit,
             )
         } else {
             @Suppress("DEPRECATION")
-            overridePendingTransition(R.anim.shared_axis_x_push_enter, R.anim.shared_axis_x_push_exit)
+            overridePendingTransition(
+                motion?.first ?: R.anim.shared_axis_x_push_enter,
+                motion?.second ?: R.anim.shared_axis_x_push_exit,
+            )
         }
 
         enableEdgeToEdge()
@@ -758,17 +762,32 @@ class ReaderActivity : BaseActivity() {
      */
     override fun finish() {
         viewModel.onActivityFinish()
+        val motion = eu.kanade.presentation.theme.tsuzuki.tsuzukiReaderTransition(this, opening = false)
         super.finish()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
                 OVERRIDE_TRANSITION_CLOSE,
-                R.anim.shared_axis_x_pop_enter,
-                R.anim.shared_axis_x_pop_exit,
+                motion?.first ?: R.anim.shared_axis_x_pop_enter,
+                motion?.second ?: R.anim.shared_axis_x_pop_exit,
             )
         } else {
             @Suppress("DEPRECATION")
-            overridePendingTransition(R.anim.shared_axis_x_pop_enter, R.anim.shared_axis_x_pop_exit)
+            overridePendingTransition(
+                motion?.first ?: R.anim.shared_axis_x_pop_enter,
+                motion?.second ?: R.anim.shared_axis_x_pop_exit,
+            )
         }
+    }
+
+    /** Tsuzuki contents drawer: reopen the reader on the picked chapter (same path as opening it from details). */
+    private fun openChapterFromContents(chapterId: Long) {
+        val state = viewModel.state.value
+        val currentId = (state.novelVisibleChapter ?: state.currentChapter?.chapter)?.id
+        val mangaId = state.manga?.id ?: return
+        if (chapterId == currentId) return
+        // singleTask: finish first so the system starts a fresh reader instead of reusing this one.
+        finish()
+        startActivity(newIntent(this, mangaId, chapterId))
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -949,6 +968,9 @@ class ReaderActivity : BaseActivity() {
             var showBottomBarEditor by remember { mutableStateOf(false) }
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
+            var showContents by remember { mutableStateOf(false) }
+            val tsuzukiContents = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1236,6 +1258,16 @@ class ReaderActivity : BaseActivity() {
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
+                onOpenContents = { showContents = true }.takeIf { tsuzukiContents },
+            )
+
+            // Tsuzuki: contents drawer (ReaderTOC board).
+            eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderContents(
+                visible = showContents,
+                manga = state.manga,
+                currentChapterId = (state.novelVisibleChapter ?: state.currentChapter?.chapter)?.id,
+                onDismissRequest = { showContents = false },
+                onOpenChapter = ::openChapterFromContents,
             )
 
             androidx.activity.compose.BackHandler(enabled = isEditing && state.hasUnsavedChanges) {

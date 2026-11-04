@@ -55,6 +55,7 @@ fun LibraryContent(
     onLoadMore: (Category) -> Unit = {},
     getLoadMoreKey: (Category) -> Long = { 0 },
     isCategoryLoading: (Category) -> Boolean = { false },
+    mixedLibrary: Boolean = false,
 ) {
     Column(
         modifier = Modifier.padding(
@@ -102,6 +103,7 @@ fun LibraryContent(
         ) {
             LibraryPager(
                 state = pagerState,
+                mixedLibrary = mixedLibrary,
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,

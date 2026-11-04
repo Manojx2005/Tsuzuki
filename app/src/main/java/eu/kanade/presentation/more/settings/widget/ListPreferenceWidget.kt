@@ -38,10 +38,14 @@ fun <T> ListPreferenceWidget(
 ) {
     var isDialogShown by remember { mutableStateOf(false) }
 
+    // Tsuzuki (TabletSettings / SettingsAppearance boards): a plain "current value" subtitle is shown as an
+    // accent value on the right instead.
+    val accentValue = eu.kanade.presentation.tsuzuki.settings.tsuzukiValueLabel(subtitle, entries[value])
     TextPreferenceWidget(
         title = title,
-        subtitle = subtitle,
+        subtitle = subtitle.takeIf { accentValue == null },
         icon = icon,
+        widget = accentValue,
         onPreferenceClick = { isDialogShown = true },
     )
 

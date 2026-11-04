@@ -39,6 +39,24 @@ fun DropdownMenu(
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val tsuzuki = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuStyle()
+    if (tsuzuki != null) {
+        ComposeDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismissRequest,
+            modifier = modifier.sizeIn(minWidth = 220.dp, maxWidth = 260.dp),
+            offset = offset,
+            scrollState = scrollState,
+            properties = properties,
+            shape = tsuzuki.shape,
+            containerColor = tsuzuki.container,
+            tonalElevation = 0.dp,
+            shadowElevation = tsuzuki.shadow,
+            border = tsuzuki.border,
+            content = content,
+        )
+        return
+    }
     ComposeDropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
@@ -60,7 +78,7 @@ fun RadioMenuItem(
     DropdownMenuItem(
         text = text,
         onClick = onClick,
-        trailingIcon = {
+        trailingIcon = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuRadio(isChecked) ?: {
             if (isChecked) {
                 Icon(
                     imageVector = Icons.Outlined.RadioButtonChecked,

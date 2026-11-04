@@ -11,6 +11,7 @@ import androidx.core.app.ActivityCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
@@ -71,6 +72,20 @@ object SettingsAppearanceScreen : SearchableSettings {
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(MR.strings.pref_app_theme),
                 ) {
+                    if (
+                        eu.kanade.presentation.tsuzuki.settings.TsuzukiAppearanceThemePicker(
+                            appTheme = appTheme,
+                            themeMode = themeMode,
+                            amoled = amoled,
+                            onPickTheme = { appThemePref.set(it) },
+                            onPickMode = {
+                                themeModePref.set(it)
+                                setAppCompatDelegateThemeMode(it)
+                            },
+                        )
+                    ) {
+                        return@CustomPreference
+                    }
                     Column {
                         AppThemeModePreferenceWidget(
                             value = themeMode,
@@ -87,10 +102,26 @@ object SettingsAppearanceScreen : SearchableSettings {
                         )
                     }
                 },
+                // Tsuzuki: "Follow the book" (SettingsAppearance board). Colour only; disabled preferences are
+                // hidden in this screen, so it simply isn't shown in Dot.
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.tsuzukiFollowBook,
+                    title = stringResource(MR.strings.tsz_follow_book),
+                    subtitle = stringResource(MR.strings.tsz_follow_book_sub),
+                    enabled = appTheme == AppTheme.COLOUR,
+                ),
+                // Tsuzuki Dot: covers keep their colours (owner request 2026-11-04); Dot only, like Follow the book.
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.tsuzukiDotColourCovers,
+                    title = stringResource(MR.strings.tsz_dot_colour_covers),
+                    subtitle = stringResource(MR.strings.tsz_dot_colour_covers_sub),
+                    enabled = appTheme == AppTheme.DOT,
+                ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = amoledPref,
                     title = stringResource(MR.strings.pref_dark_theme_pure_black),
-                    enabled = themeMode != ThemeMode.LIGHT,
+                    // Tsuzuki themes are always dark; hidden there like other disabled rows in this screen
+                    enabled = themeMode != ThemeMode.LIGHT && !eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle(),
                     onValueChanged = {
                         (context as? Activity)?.let { ActivityCompat.recreate(it) }
                         true
@@ -119,6 +150,7 @@ object SettingsAppearanceScreen : SearchableSettings {
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_app_language),
+                    widget = eu.kanade.presentation.tsuzuki.settings.tsuzukiAppLanguageValue(),
                     onClick = { navigator.push(AppLanguageScreen()) },
                 ),
                 Preference.PreferenceItem.ListPreference(

@@ -198,14 +198,17 @@ private fun LibraryRegularToolbar(
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.action_update_library),
                     onClick = onClickGlobalUpdate, // still triggers full update (sources)
+                    icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.update,
                 ),
                 AppBar.OverflowAction(
                     title = "Reload Library",
                     onClick = onClickRefresh, // now triggers local DB reload
+                    icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.reload,
                 ),
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.action_open_random_manga),
                     onClick = onClickOpenRandomManga,
+                    icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.random,
                 ),
             )
 
@@ -214,6 +217,7 @@ private fun LibraryRegularToolbar(
                     AppBar.OverflowAction(
                         title = stringResource(TDMR.strings.action_mass_import),
                         onClick = onClickMassImport,
+                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.massImport,
                     ),
                 )
             }
@@ -223,6 +227,7 @@ private fun LibraryRegularToolbar(
                     AppBar.OverflowAction(
                         title = "Import EPUB",
                         onClick = onClickImportEpub,
+                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.importEpub,
                     ),
                 )
             }
@@ -232,6 +237,7 @@ private fun LibraryRegularToolbar(
                     AppBar.OverflowAction(
                         title = "Find Duplicates",
                         onClick = onClickFindDuplicates,
+                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.duplicates,
                     ),
                 )
             }
@@ -241,6 +247,8 @@ private fun LibraryRegularToolbar(
                     AppBar.OverflowAction(
                         title = stringResource(MR.strings.action_clear_category),
                         onClick = onClickCategoryActions,
+                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.delete,
+                        destructive = true,
                     ),
                 )
             }

@@ -33,6 +33,13 @@ fun TrackingPreferenceWidget(
     onClick: (() -> Unit)? = null,
 ) {
     val highlighted = LocalPreferenceHighlighted.current
+    // Tsuzuki themes: board 08-tools "TrackerAccounts"
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        Box(modifier = modifier.highlightBackground(highlighted)) {
+            eu.kanade.presentation.tsuzuki.settings.TsuzukiTrackerRow(tracker, isLoggedIn, onClick)
+        }
+        return
+    }
     Box(modifier = Modifier.highlightBackground(highlighted)) {
         Row(
             modifier = modifier

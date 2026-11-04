@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Match the blank startup window in values/colors.xml. The presentation-core night
+         resource otherwise overrides that default with grey before the app can draw. -->
+    <color name="splash">#000000</color>
+</resources>

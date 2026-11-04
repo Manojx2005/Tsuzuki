@@ -93,7 +93,14 @@ object SettingsMainScreen : Screen() {
 
         Scaffold(
             topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
-            topBar = { scrollBehavior ->
+            topBar = topBar@{ scrollBehavior ->
+                if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTitle(
+                        title = stringResource(MR.strings.label_settings),
+                        onBack = if (twoPane) null else backPress::invoke,
+                    )
+                    return@topBar
+                }
                 AppBar(
                     title = stringResource(MR.strings.label_settings),
                     navigateUp = backPress::invoke,
@@ -164,6 +171,25 @@ object SettingsMainScreen : Screen() {
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         val selected = indexSelected == index
+                        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                            eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsSectionRow(
+                                title = stringResource(item.titleRes),
+                                subtitle = item.formatSubtitle(),
+                                icon = item.icon,
+                                twoPane = twoPane,
+                                selected = selected,
+                                onClick = { navigator.navigate(item.screen, twoPane) },
+                                modifier = if (twoPane) {
+                                    Modifier
+                                } else {
+                                    eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
+                                        first = index == 0,
+                                        last = index == visibleItems.lastIndex,
+                                    )
+                                },
+                            )
+                            return@itemsIndexed
+                        }
                         var modifier: Modifier = if (tsuzuki) {
                             eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
                                 first = index == 0,
@@ -173,27 +199,27 @@ object SettingsMainScreen : Screen() {
                             Modifier
                         }
                         var contentColor = LocalContentColor.current
+                        val tsuzukiPane = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
                         if (twoPane) {
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
                                 .clip(RoundedCornerShape(24.dp))
-                                .then(
-                                    if (selected) {
-                                        Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                    } else {
-                                        Modifier
-                                    },
-                                )
-                            if (selected) {
+                                .then(eu.kanade.presentation.tsuzuki.settings.settingsPaneSelection(selected))
+                            if (selected && !tsuzukiPane) {
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             }
                         }
                         CompositionLocalProvider(LocalContentColor provides contentColor) {
                             TextPreferenceWidget(
                                 modifier = modifier,
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
+                                title = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(
+                                    stringResource(item.titleRes),
+                                ),
+                                subtitle = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(item.formatSubtitle()),
                                 icon = item.icon,
+                                iconTint = eu.kanade.presentation.tsuzuki.settings.tsuzukiSectionIconTint()
+                                    ?: MaterialTheme.colorScheme.primary,
                                 onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
                             )
                         }

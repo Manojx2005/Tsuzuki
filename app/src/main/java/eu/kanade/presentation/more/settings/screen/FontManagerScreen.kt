@@ -371,6 +371,17 @@ private fun FontItem(
     onClick: () -> Unit,
     onDelete: (() -> Unit)?,
 ) {
+    // Tsuzuki themes: board 08-tools "FontManager"
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.settings.TsuzukiFontItem(
+            name = fontInfo.name,
+            kind = if (fontInfo.isCustom) "Custom Font" else "System Font",
+            isSelected = isSelected,
+            onClick = onClick,
+            onDelete = onDelete,
+        )
+        return
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()

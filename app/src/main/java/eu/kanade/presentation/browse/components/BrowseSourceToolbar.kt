@@ -105,6 +105,7 @@ fun BrowseSourceToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.label_help),
                                 onClick = onHelpClick,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.help,
                             ),
                         )
                     } else {
@@ -112,6 +113,7 @@ fun BrowseSourceToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_web_view),
                                 onClick = onWebViewClick,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.webView,
                             ),
                         )
                     }
@@ -120,6 +122,7 @@ fun BrowseSourceToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_settings),
                                 onClick = onSettingsClick,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.settings,
                             ),
                         )
                     }

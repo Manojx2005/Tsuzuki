@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Launch
 import androidx.compose.material.icons.outlined.Settings
@@ -109,14 +110,18 @@ fun ExtensionDetailsScreen(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_enable_all),
                                         onClick = onClickEnableAll,
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.enableAll,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_disable_all),
                                         onClick = onClickDisableAll,
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.disableAll,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.pref_clear_cookies),
                                         onClick = onClickClearCookies,
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.cookies,
+                                        destructive = true,
                                     ),
                                 ),
                             )
@@ -172,6 +177,25 @@ private fun ExtensionDetails(
         }
 
         item {
+            // Tsuzuki themes: board 04-browse "ExtensionDetail"
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                eu.kanade.presentation.tsuzuki.browse.TsuzukiExtensionDetailsHeader(
+                    extension = extension,
+                    siteCount = sources.size,
+                    onClickAgeRating = { showNsfwWarning = true },
+                    onClickUninstall = onClickUninstall,
+                    onClickAppInfo = {
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", extension.pkgName, null)
+                            context.startActivity(this)
+                        }
+                        Unit
+                    }.takeIf { extension.isShared },
+                    incognito = incognitoMode,
+                    onIncognitoChange = onClickIncognito,
+                )
+                return@item
+            }
             DetailsHeader(
                 extension = extension,
                 extIncognitoMode = incognitoMode,
@@ -190,12 +214,13 @@ private fun ExtensionDetails(
             )
         }
 
-        items(
+        itemsIndexed(
             items = sources,
-            key = { it.source.id },
-        ) { source ->
+            key = { _, it -> it.source.id },
+        ) { index, source ->
             SourceSwitchPreference(
-                modifier = Modifier.animateItem(),
+                modifier = Modifier.animateItem()
+                    .then(eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTileOrNone(index, sources.lastIndex)),
                 source = source,
                 onClickSourcePreferences = onClickSourcePreferences,
                 onClickSource = onClickSource,

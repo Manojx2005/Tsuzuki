@@ -31,7 +31,8 @@ object BookTint {
         val id = mangaId ?: return null
         val readerManga = (activity as? ReaderActivity)?.viewModel?.manga ?: return null
         if (readerManga.id != id) return null
-        if (Injekt.get<UiPreferences>().appTheme.get() != AppTheme.COLOUR) return null
+        val ui = Injekt.get<UiPreferences>()
+        if (ui.appTheme.get() != AppTheme.COLOUR || !ui.tsuzukiFollowBook.get()) return null
         return background to INK
     }
 }

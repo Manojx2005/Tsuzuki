@@ -60,6 +60,19 @@ object SourcePriorityScreen : Screen {
         val screenModel = viewModel<SourcePriorityViewModel>()
         val state by screenModel.state.collectAsState()
 
+        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            eu.kanade.presentation.tsuzuki.settings.TsuzukiSourcePriorityScreen(
+                typePriorities = state.typePriorities,
+                sourcePriorities = state.sourcePriorities,
+                sources = state.sourceItems,
+                hasLocalSource = state.hasLocalSource,
+                onBack = { navigator.pop() },
+                onTypePriority = screenModel::setTypePriority,
+                onSourcePriority = screenModel::setSourcePriority,
+            )
+            return
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(

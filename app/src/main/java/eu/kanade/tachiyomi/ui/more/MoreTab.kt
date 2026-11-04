@@ -58,6 +58,8 @@ data object MoreTab : Tab {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = viewModel<MoreViewModel>()
+        val tsuzukiStats = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
         val downloadQueueState by viewModel.downloadQueueState.collectAsState()
         MoreScreen(
             downloadQueueStateProvider = { downloadQueueState },
@@ -67,7 +69,12 @@ data object MoreTab : Tab {
             onIncognitoModeChange = { viewModel.incognitoMode = it },
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen()) },
             onClickCategories = { navigator.push(CategoryScreen()) },
-            onClickStats = { navigator.push(StatsScreen()) },
+            // Tsuzuki: the "Stats & goals" board, which links on to these library statistics.
+            onClickStats = {
+                navigator.push(
+                    if (tsuzukiStats) eu.kanade.tachiyomi.ui.tsuzuki.stats.TsuzukiStatsScreen() else StatsScreen(),
+                )
+            },
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickSupport = { navigator.push(SettingsScreen()) },

@@ -15,3 +15,6 @@ local.properties
 
 # macOS specific files
 .DS_Store
+# Tsuzuki release signing key (never commit)
+*.jks
+*.keystore

@@ -71,6 +71,36 @@ object AboutScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         var isCheckingUpdates by remember { mutableStateOf(false) }
 
+        // Tsuzuki themes: bento About (board 07-system "About")
+        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            eu.kanade.presentation.tsuzuki.more.TsuzukiAboutScreen(
+                version = getVersionName(withBuildDate = false),
+                showWhatsNew = !BuildConfig.DEBUG,
+                showCheckUpdates = updaterEnabled,
+                onBack = if (handleBack != null) handleBack::invoke else null,
+                onVersionClick = {
+                    context.copyToClipboard("Debug information", CrashLogUtil(context).getDebugInfo())
+                },
+                onWhatsNew = { uriHandler.openUri(RELEASE_URL) },
+                onSourceCode = {
+                    uriHandler.openUri("https://github.com/${eu.kanade.tachiyomi.data.updater.GITHUB_REPO}")
+                },
+                onLicences = { navigator.push(OpenSourceLicensesScreen()) },
+                onPrivacyPolicy = { uriHandler.openUri(eu.kanade.tachiyomi.tsuzuki.PRIVACY_POLICY_URL) },
+                onNewUpdate = { result ->
+                    navigator.push(
+                        NewUpdateScreen(
+                            versionName = result.release.version,
+                            changelogInfo = result.release.info,
+                            releaseLink = result.release.releaseLink,
+                            downloadLink = result.release.downloadLink,
+                        ),
+                    )
+                },
+            )
+            return
+        }
+
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
@@ -158,7 +188,7 @@ object AboutScreen : Screen() {
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.privacy_policy),
-                        onPreferenceClick = { uriHandler.openUri("https://tsundoku-otaku.github.io/privacy/") },
+                        onPreferenceClick = { uriHandler.openUri(eu.kanade.tachiyomi.tsuzuki.PRIVACY_POLICY_URL) },
                     )
                 }
 

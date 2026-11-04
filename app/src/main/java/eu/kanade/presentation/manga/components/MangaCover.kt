@@ -50,11 +50,7 @@ enum class MangaCover(val ratio: Float) {
                 ),
             contentScale = ContentScale.Crop,
             // Tsuzuki Dot theme: covers are greyscale everywhere (red is the only colour).
-            colorFilter = colorFilter ?: if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.isDot) {
-                eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
-            } else {
-                null
-            },
+            colorFilter = colorFilter ?: eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter(),
         )
     }
 }

@@ -63,6 +63,8 @@ fun MangaToolbar(
     titleAlphaProvider: () -> Float,
     backgroundAlphaProvider: () -> Float,
     modifier: Modifier = Modifier,
+    // Tsuzuki: replaces the download dropdown with a sheet when set.
+    downloadSheet: (@Composable (onDismissRequest: () -> Unit) -> Unit)? = null,
 ) {
     val isActionMode = actionModeCounter > 0
     AppBar(
@@ -80,7 +82,9 @@ fun MangaToolbar(
         navigateUp = navigateUp,
         actions = {
             var downloadExpanded by remember { mutableStateOf(false) }
-            if (onClickDownload != null) {
+            if (downloadSheet != null) {
+                if (downloadExpanded) downloadSheet { downloadExpanded = false }
+            } else if (onClickDownload != null) {
                 val onDismissRequest = { downloadExpanded = false }
                 DownloadDropdownMenu(
                     expanded = downloadExpanded,
@@ -158,6 +162,7 @@ fun MangaToolbar(
                         AppBar.OverflowAction(
                             title = stringResource(MR.strings.action_webview_refresh),
                             onClick = onClickRefresh,
+                            icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.refresh,
                         ),
                     )
                     if (onClickEditCategory != null) {
@@ -165,6 +170,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_edit_categories),
                                 onClick = onClickEditCategory,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.categories,
                             ),
                         )
                     }
@@ -173,6 +179,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_migrate),
                                 onClick = onClickMigrate,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.migrate,
                             ),
                         )
                     }
@@ -181,6 +188,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = "Similar Novels",
                                 onClick = onClickSimilarNovels,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.similar,
                             ),
                         )
                     }
@@ -189,6 +197,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_edit),
                                 onClick = onClickEdit,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.edit,
                             ),
                         )
                     }
@@ -197,6 +206,8 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_clear_custom_metadata),
                                 onClick = onClickClearCustomInfo,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.clearInfo,
+                                destructive = true,
                             ),
                         )
                     }
@@ -205,6 +216,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = "Find Duplicates",
                                 onClick = onClickFindDuplicates,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.duplicates,
                             ),
                         )
                     }
@@ -213,6 +225,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_share),
                                 onClick = onClickShare,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.share,
                             ),
                         )
                     }
@@ -221,6 +234,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_translate),
                                 onClick = onClickTranslate,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.translate,
                             ),
                         )
                     }
@@ -229,6 +243,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_translate_downloaded),
                                 onClick = onClickTranslateDownloaded,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.translate,
                             ),
                         )
                     }
@@ -237,6 +252,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_search_chapters),
                                 onClick = onClickSearchChapters,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.searchChapters,
                             ),
                         )
                     }
@@ -245,6 +261,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_export_epub),
                                 onClick = onClickExportEpub,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.exportEpub,
                             ),
                         )
                     }
@@ -253,6 +270,7 @@ fun MangaToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(TDMR.strings.action_word_count),
                                 onClick = onClickWordCount,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.wordCount,
                             ),
                         )
                     }
@@ -260,6 +278,7 @@ fun MangaToolbar(
                         AppBar.OverflowAction(
                             title = stringResource(MR.strings.action_notes),
                             onClick = onClickEditNotes,
+                            icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.notes,
                         ),
                     )
                 },

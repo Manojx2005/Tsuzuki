@@ -153,6 +153,11 @@ private fun ExtensionContent(
     val navigator = LocalNavigator.currentOrThrow
     var trustState by remember { mutableStateOf<Extension.Untrusted?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
+    // Tsuzuki themes: language pills over the list (board "Extensions")
+    val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
+    var tsuzukiLanguage by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val languages = eu.kanade.presentation.tsuzuki.browse.tsuzukiExtensionLanguages(state.items)
+    if (tsuzukiLanguage != null && tsuzukiLanguage !in languages) tsuzukiLanguage = null
 
     FastScrollLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
@@ -170,7 +175,23 @@ private fun ExtensionContent(
             }
         }
 
-        state.items.forEach { (header, items) ->
+        if (tsuzuki && languages.size > 1) {
+            item(key = "tsuzuki-extension-languages") {
+                eu.kanade.presentation.tsuzuki.browse.TsuzukiExtensionLanguagePills(
+                    languages = languages,
+                    selected = tsuzukiLanguage,
+                    onSelect = { tsuzukiLanguage = it },
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+        }
+
+        val shownItems = if (tsuzuki) {
+            eu.kanade.presentation.tsuzuki.browse.tsuzukiExtensionsByLanguage(state.items, tsuzukiLanguage)
+        } else {
+            state.items
+        }
+        shownItems.forEach { (header, items) ->
             item(
                 contentType = "header",
                 key = "extensionHeader-${header.hashCode()}",

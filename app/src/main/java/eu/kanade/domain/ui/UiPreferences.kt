@@ -24,6 +24,12 @@ class UiPreferences(
 
     val themeDarkAmoled: Preference<Boolean> = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
 
+    // Tsuzuki: in the Colour theme, take the colours of the book you're reading.
+    val tsuzukiFollowBook: Preference<Boolean> = preferenceStore.getBoolean("tsz_follow_book", true)
+
+    // Tsuzuki Dot: keep manga and novel covers in colour instead of greyscale.
+    val tsuzukiDotColourCovers: Preference<Boolean> = preferenceStore.getBoolean("tsz_dot_colour_covers", false)
+
     val relativeTime: Preference<Boolean> = preferenceStore.getBoolean("relative_time_v2", true)
 
     val dateFormat: Preference<String> = preferenceStore.getString("app_date_format", "")

@@ -15,6 +15,10 @@ fun PreferenceScaffold(
     itemsProvider: @Composable () -> List<Preference>,
 ) {
     Scaffold(
+        // Tsuzuki: theme background (dot grid in Dot) behind every settings screen
+        modifier = eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsBackground(),
+        containerColor = eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsContainer()
+            ?: androidx.compose.material3.MaterialTheme.colorScheme.background,
         topBar = {
             AppBar(
                 title = stringResource(titleRes),

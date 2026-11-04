@@ -178,7 +178,14 @@ private fun HistoryScreenContent(
     onClickFavorite: (HistoryWithRelations) -> Unit,
     onLoadNextPage: () -> Unit,
 ) {
+    val tsuzukiStats = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     FastScrollLazyColumn {
+        if (tsuzukiStats) {
+            item(key = "tsuzuki-history-stats") {
+                eu.kanade.presentation.tsuzuki.history.TsuzukiHistoryStatsTiles()
+            }
+        }
         items(
             items = history,
             key = { "history-${it.hashCode()}" },

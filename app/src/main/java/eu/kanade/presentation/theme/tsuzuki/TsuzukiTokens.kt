@@ -106,7 +106,7 @@ fun ProvideBookPalette(palette: BookPalette?, content: @Composable () -> Unit) {
     val base = LocalTsuzukiTokens.current
     val active = palette != null && base.style == TsuzukiStyle.COLOUR
     // Colours morph when the book changes (Motion board "Stack shuffle + colour morph").
-    val spec = androidx.compose.animation.core.tween<Color>(400)
+    val spec = androidx.compose.animation.core.tween<Color>(TsuzukiMotion.STACK_MS, easing = TsuzukiMotion.Standard)
     val background by androidx.compose.animation.animateColorAsState(
         if (active) palette!!.background else base.background,
         spec,
@@ -137,6 +137,14 @@ fun ProvideBookPalette(palette: BookPalette?, content: @Composable () -> Unit) {
         typography = androidx.compose.material3.MaterialTheme.typography,
         shapes = androidx.compose.material3.MaterialTheme.shapes,
     ) {
-        CompositionLocalProvider(LocalTsuzukiTokens provides tokens, content = content)
+        CompositionLocalProvider(
+            LocalTsuzukiTokens provides tokens,
+            tachiyomi.presentation.core.theme.LocalActiveColor provides tokens.activeColor,
+            content = content,
+        )
     }
 }
+
+/** Upstream's "active" tint (filter icons and the like): the accent in the Tsuzuki themes. */
+val TsuzukiTokens.activeColor: Color
+    get() = if (style == TsuzukiStyle.NONE) Color.Unspecified else accent

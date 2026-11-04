@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import tachiyomi.presentation.core.components.material.padding
 
 @Composable
@@ -21,7 +22,7 @@ fun BaseBrowseItem(
 ) {
     Row(
         modifier = modifier
-            .combinedClickable(
+            .tsuzukiClickable(
                 onClick = onClickItem,
                 onLongClick = onLongClickItem,
             )

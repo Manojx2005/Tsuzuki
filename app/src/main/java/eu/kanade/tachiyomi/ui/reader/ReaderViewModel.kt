@@ -1065,6 +1065,8 @@ class ReaderViewModel @JvmOverloads constructor(
         val chapterId = readerChapter.chapter.id!!
         val endTime = Date()
         val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
+        // Tsuzuki: per-day reading for the streak (history keeps only each chapter's last read).
+        Injekt.get<eu.kanade.tachiyomi.tsuzuki.ReadingDays>().add(java.time.LocalDate.now(), sessionReadDuration)
 
         // Novels stamp last_read on chapter entry via setNovelVisibleChapter, which owns recency.
         // Re-stamping it here (on a chapter switch or pause flush) can push the just-left chapter's

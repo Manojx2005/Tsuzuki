@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,8 +36,9 @@ fun TsuzukiPill(
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(19.dp)
     val ink = if (selected) t.onAccent else MaterialTheme.colorScheme.onSurface
+    val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
-        modifier
+        Modifier.tsuzukiPress(press).then(modifier)
             .height(38.dp)
             .clip(shape)
             .then(
@@ -48,7 +50,12 @@ fun TsuzukiPill(
                         .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
                 },
             )
-            .clickable(role = role, onClick = onClick)
+            .clickable(
+                interactionSource = press,
+                indication = androidx.compose.material3.ripple(),
+                role = role,
+                onClick = onClick,
+            )
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -102,10 +109,14 @@ fun TsuzukiPillRow(
 
 /** Small uppercase label above a group of tiles (Browse, Settings, History, Updates boards). */
 @Composable
-fun TsuzukiSectionLabel(text: String, modifier: Modifier = Modifier) {
+fun TsuzukiSectionLabel(
+    text: String,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
+) {
     Text(
         text = text.uppercase(),
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
+        modifier = modifier.padding(contentPadding),
         fontSize = 11.sp,
         fontWeight = FontWeight.ExtraBold,
         letterSpacing = 1.sp,

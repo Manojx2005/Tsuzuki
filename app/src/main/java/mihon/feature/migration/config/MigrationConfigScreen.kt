@@ -132,10 +132,12 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectEnabledLabel),
                                     onClick = { viewModel.toggleSelection(Model.SelectionConfig.Enabled) },
+                                    icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.enableAll,
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectPinnedLabel),
                                     onClick = { viewModel.toggleSelection(Model.SelectionConfig.Pinned) },
+                                    icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.pinned,
                                 ),
                             ),
                         )

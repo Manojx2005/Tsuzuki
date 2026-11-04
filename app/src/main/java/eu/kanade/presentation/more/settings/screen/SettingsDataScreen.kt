@@ -101,13 +101,20 @@ object SettingsDataScreen : SearchableSettings {
         val backupPreferences = Injekt.get<BackupPreferences>()
         val storagePreferences = Injekt.get<StoragePreferences>()
 
-        return listOf(
+        return listOfNotNull(
             getStorageLocationPref(storagePreferences = storagePreferences),
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             getDataGroup(),
             getExportGroup(),
+            // Tsuzuki (board 08-tools "DataTools", owner-approved 2026-11-04): Advanced's database clean-up group,
+            // with all its dialogs, moves here as "Clean-up". Stock themes keep it in Advanced.
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                SettingsAdvancedScreen.getDataGroup().copy(title = stringResource(MR.strings.tsz_data_cleanup))
+            } else {
+                null
+            },
         )
     }
 
@@ -300,6 +307,23 @@ object SettingsDataScreen : SearchableSettings {
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(restorePreferenceKeyString),
                 ) {
+                    // Tsuzuki themes: two action tiles (board 07-system "Backup")
+                    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                        eu.kanade.presentation.tsuzuki.settings.TsuzukiBackupTiles(
+                            onCreate = { navigator.push(CreateBackupScreen()) },
+                            onRestore = {
+                                if (!BackupRestoreJob.isRunning(context)) {
+                                    if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
+                                        context.toast(MR.strings.restore_miui_warning)
+                                    }
+                                    chooseBackup.launch("*/*")
+                                } else {
+                                    context.toast(MR.strings.restore_in_progress)
+                                }
+                            },
+                        )
+                        return@CustomPreference
+                    }
                     BasePreferenceWidget(
                         subcomponent = {
                             MultiChoiceSegmentedButtonRow(

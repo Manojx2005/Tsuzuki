@@ -1212,6 +1212,22 @@ class MangaViewModel(
         }
     }
 
+    /** Sets the sheet's explicit newest/oldest order without an asynchronous second toggle. */
+    fun setSortingOrder(sort: Long, descending: Boolean) {
+        val manga = successState?.manga ?: return
+        viewModelScope.launchNonCancellable {
+            setMangaChapterFlags.awaitSetAllFlags(
+                mangaId = manga.id,
+                unreadFilter = manga.unreadFilterRaw,
+                downloadedFilter = manga.downloadedFilterRaw,
+                bookmarkedFilter = manga.bookmarkedFilterRaw,
+                sortingMode = sort,
+                sortingDirection = if (descending) Manga.CHAPTER_SORT_DESC else Manga.CHAPTER_SORT_ASC,
+                displayMode = manga.displayMode,
+            )
+        }
+    }
+
     fun setCurrentSettingsAsDefault(applyToExisting: Boolean) {
         val manga = successState?.manga ?: return
         viewModelScope.launchNonCancellable {

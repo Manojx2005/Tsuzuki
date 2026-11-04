@@ -54,6 +54,23 @@ class AppLanguageScreen : Screen() {
             AppCompatDelegate.setApplicationLocales(locale)
         }
 
+        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            eu.kanade.presentation.tsuzuki.settings.TsuzukiAppLanguageScreen(
+                languages = langs.map {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiLanguage(
+                        it.langTag,
+                        it.displayName,
+                        it.localizedDisplayName,
+                    )
+                },
+                current = currentLanguage,
+                deviceLanguage = eu.kanade.presentation.tsuzuki.settings.deviceLanguageName(context),
+                onPick = { currentLanguage = it },
+                onBack = navigator::pop,
+            )
+            return
+        }
+
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(

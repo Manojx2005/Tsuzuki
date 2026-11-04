@@ -139,7 +139,7 @@ object SettingsAdvancedScreen : SearchableSettings {
 
         val libraryPageSize by libraryPreferences.experimentalLibraryPageSize.collectAsState()
 
-        return listOf(
+        return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_dump_crash_logs),
                 subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
@@ -203,7 +203,8 @@ object SettingsAdvancedScreen : SearchableSettings {
                 },
             ),
             getBackgroundActivityGroup(),
-            getDataGroup(),
+            // Tsuzuki: the database clean-up group lives in Data and storage (board 08-tools "DataTools").
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) null else getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),
             getLibraryGroup(libraryPreferences = libraryPreferences),
             getReaderGroup(basePreferences = basePreferences),
@@ -303,12 +304,15 @@ object SettingsAdvancedScreen : SearchableSettings {
 
     private fun allowedNormalizeSourceIds(): Set<Long> =
         Injekt.get<tachiyomi.domain.source.service.SourceManager>().getAll()
-            .filter { it is eu.kanade.tachiyomi.jsplugin.source.JsSource || it is eu.kanade.tachiyomi.source.custom.CustomNovelSource }
+            .filter {
+                it is eu.kanade.tachiyomi.jsplugin.source.JsSource ||
+                    it is eu.kanade.tachiyomi.source.custom.CustomNovelSource
+            }
             .map { it.id }
             .toSet()
 
     @Composable
-    private fun getDataGroup(): Preference.PreferenceGroup {
+    internal fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
@@ -635,7 +639,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     scope.launch {
                                         isRemoving = true
                                         val result = Injekt.get<MangaRepository>()
-                                            .normalizeAllUrlsAdvanced(removeDupDoubleSlashes, allowedNormalizeSourceIds())
+                                            .normalizeAllUrlsAdvanced(
+                                                removeDupDoubleSlashes,
+                                                allowedNormalizeSourceIds(),
+                                            )
                                         isRemoving = false
 
                                         duplicateUrls = result.second
@@ -656,7 +663,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     scope.launch {
                                         isRemoving = true
                                         val result = Injekt.get<MangaRepository>()
-                                            .removePotentialDuplicates(removeDupDoubleSlashes, allowedNormalizeSourceIds())
+                                            .removePotentialDuplicates(
+                                                removeDupDoubleSlashes,
+                                                allowedNormalizeSourceIds(),
+                                            )
                                         isRemoving = false
                                         if (result.first > 0) {
                                             removedDuplicates = result.second

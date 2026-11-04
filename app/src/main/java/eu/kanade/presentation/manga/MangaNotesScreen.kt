@@ -19,6 +19,10 @@ fun MangaNotesScreen(
     navigateUp: () -> Unit,
     onUpdate: (String) -> Unit,
 ) {
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiBookNotesScreen(state, navigateUp, onUpdate)
+        return
+    }
     Scaffold(
         topBar = { topBarScrollBehavior ->
             AppBar(

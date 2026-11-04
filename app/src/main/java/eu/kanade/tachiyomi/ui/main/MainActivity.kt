@@ -278,6 +278,8 @@ class MainActivity : BaseActivity() {
             }
         }
 
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiThemeReveal.attach(this)
+
         val startTime = System.currentTimeMillis()
         splashScreen?.setKeepOnScreenCondition {
             val elapsed = System.currentTimeMillis() - startTime
