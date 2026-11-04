@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -47,6 +49,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.icerock.moko.resources.StringResource
@@ -371,40 +374,68 @@ private fun Stepper(
 ) {
     val tokens = TsuzukiTheme.tokens
     TsuzukiTile(modifier = modifier, padding = 8.dp) {
-        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                cased(label),
-                Modifier.padding(start = 6.dp).weight(1f),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
-            StepButton(Icons.Outlined.Remove, canDecrease, onDecrease)
-            Text(
-                value,
-                Modifier.padding(horizontal = 8.dp),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = tokens.accent,
-            )
-            StepButton(Icons.Outlined.Add, canIncrease, onIncrease)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val compact = maxWidth < 180.dp * LocalDensity.current.fontScale
+            Column {
+                if (compact) {
+                    Text(
+                        cased(label),
+                        Modifier.fillMaxWidth().padding(start = 6.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (!compact) {
+                        Text(
+                            cased(label),
+                            Modifier.padding(start = 6.dp).weight(1f),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                        )
+                    }
+                    StepButton(Icons.Outlined.Remove, "$label −", canDecrease, onDecrease)
+                    Text(
+                        value,
+                        (if (compact) Modifier.weight(1f) else Modifier)
+                            .padding(horizontal = if (compact) 0.dp else 8.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = tokens.accent,
+                        textAlign = TextAlign.Center,
+                    )
+                    StepButton(Icons.Outlined.Add, "$label +", canIncrease, onIncrease)
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
+private fun StepButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
     Box(
-        Modifier.size(40.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
+        Modifier.size(48.dp)
+            .semantics { contentDescription = description }
             .tsuzukiClickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            icon,
-            null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
-        )
+        Box(
+            Modifier.size(40.dp).clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                icon,
+                null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
+            )
+        }
     }
 }
 

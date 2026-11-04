@@ -23,10 +23,26 @@ two new test download folders removed; original directory set matches. Tablet le
 Phone connected, untouched. Evidence: `app/build/codex-merge-20261104/` and `app/build/codex-*-validation.log`.
 Exports and outreach still untracked; anime worktree untouched. No push.
 
-Next: finish cleanup of the old `../Tsuzuki-upstream` folder (Git already unregistered it, but Windows reported
-"Filename too long" during deletion); update the checkpoint once gone. Then verify the optimized preview
-build and continue the bug/smoothness/usability priorities. Preview library transfer still requires the owner's
-decision; release keys, publishing and telemetry changes remain deferred. Workflow not actionlint-checked.
+The old `../Tsuzuki-upstream` folder is fully removed (native PowerShell long paths resolved the deletion
+failure). Next: continue optimized preview bug sweep and measured startup/frame-timing checks.
+Owner approved copying the debug library/settings into preview on both devices, installing the tablet's Royal
+Road and Asura Scans sources on the phone, and temporary EPUB/Royal Road mass-import tests with backup and
+cleanup. Preserve any existing preview data before testing. Release keys, publishing and telemetry changes
+remain deferred. Workflow not actionlint-checked. The owner also authorized designing uncovered/inconsistent
+pages to match the shared Colour/Dot scheme (existing boards remain authoritative).
+
+Afternoon progress: `b8b3938de` regenerates baseline/startup profiles on tablet optimized preview; the full
+Home/Library/details/cached-reader/tabs collector and separate Home-ready startup collector pass. Profiles
+retain legacy coverage and package successfully; preview/debug builds, 630 tests and 16 KB checks pass.
+See `docs/PERFORMANCE.md`. Both devices now have separate preview copies of the four-book library; debug
+data remains separate. Phone Royal Road JS plugin installed; Asura upgraded in place from 1.4.54 to tablet's
+1.6.71, with old/new APKs saved locally. Re-check phone manga after the upgrade. Preview tests change only
+their copied reader history; original debug baseline is preserved. ReaderSettings Japanese labels clipped
+on the phone: fixed responsive labels plus 48 dp touch boxes, checked in Dot/Colour on both devices with
+reversible value changes and screenshots. Build/tests/optimized preview pass. Evidence and live test helpers
+are in `app/build/codex-preview-20261104/`. Both preview copies are currently Colour in reader settings;
+return tablet to Dot Home before leaving it. Remaining runtime sweep still includes downloads, TTS,
+translation, alternate rendering modes, rotation/process death and measured smoothness.
 
 ## Previous handoff (2026-11-04 ~10:45, from Claude; commit/merge steps completed above)
 
