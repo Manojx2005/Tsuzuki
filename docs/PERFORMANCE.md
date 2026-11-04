@@ -51,3 +51,37 @@ for all seven ARM64 libraries. Validation log: `app/build/codex-profile-packagin
 One tablet cold Activity-window launch was 250 ms and one phone launch 594 ms; these are individual
 observations, not comparative benchmark results or proof of Home-ready latency. Frame timing, repeatable
 before/after startup measurements and the remaining reader flows are still required.
+
+## Controlled cold-start measurements (2026-11-04)
+
+`ColdStartupBenchmark` now captures frame timing through populated Home as well as the separate initial-window
+metric. Ten cold launches per compilation mode passed on the Tab S11, optimized preview, Dot, four-book test
+library. No thermal-throttle sleep was reported. APK SHA-256:
+`e7c6c73f078705c4f4bdf057d140b4b50cb7f6afc84ef1c8708da9d1250cf17a`.
+
+| Measurement | Shipped baseline profile | Compilation disabled |
+|---|---:|---:|
+| Initial-window median | 380.7 ms | 393.9 ms |
+| Initial-window min–max | 337.4–399.7 ms | 384.7–443.5 ms |
+| Frame CPU P95 | 19.7 ms | 21.8 ms |
+| Frame overrun P95 | 17.4 ms | 21.8 ms |
+| Frames beyond deadline | 267 / 1,450 (18.4%) | 292 / 1,429 (20.4%) |
+
+The median initial-window difference is about 3.3%; the ranges overlap. This is a small single-device result,
+not evidence of a large speed-up or a measurement of Home-ready latency. The frames include startup motion;
+overruns remain and need trace-led investigation. Evidence: `cold-startup-benchmark.log`,
+`cold-startup-benchmarkData.json`, `cold-startup-summary.json` and `startup-main-thread.csv` under the local
+preview evidence directory above.
+
+The first trace includes WebView initialization during application binding. Its user-agent warm-up deliberately
+precedes dependency initialization to avoid a documented UI/background-thread deadlock in `App.kt`; do not
+simply defer it to improve a startup number.
+
+The splash now reads its exit value inside `graphicsLayer` and its Colour drop value inside the Canvas draw
+callback. This avoids recomposing the surrounding layout for these frame updates and retains the board's
+motion, geometry and timing. Optimized/debug builds and all 630 app tests pass. Dot/Colour startup recordings
+were inspected on the tablet. A further ten-launch baseline-profile run passed (54 seconds): initial-window
+median 365.8 ms, range 346.5–392.6 ms; frame CPU P95 20.3 ms, overrun P95 16.9 ms, 268/1,453 frames beyond
+deadline (18.4%), no thermal sleep. The frame results are mixed and do not demonstrate an overall smoothness
+gain. The initial-window change also precedes the animated state reads and cannot be attributed to them.
+Evidence: `cold-startup-draw-benchmark*` and device `*-startup.mp4` files in the preview evidence directory.

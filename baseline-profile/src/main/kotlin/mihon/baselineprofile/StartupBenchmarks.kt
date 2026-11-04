@@ -2,13 +2,17 @@ package mihon.baselineprofile
 
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 /**
  * Run this benchmark from Studio to see startup measurements, and captured system traces
@@ -74,7 +78,7 @@ abstract class AbstractStartupBenchmark(private val startupMode: StartupMode) {
         // The application id for the running build variant is read from the instrumentation arguments.
         rule.measureRepeated(
             packageName = TARGET_PACKAGE_NAME,
-            metrics = listOf(StartupTimingMetric()),
+            metrics = listOf(StartupTimingMetric(), FrameTimingMetric()),
             compilationMode = compilationMode,
             startupMode = startupMode,
             iterations = 10,
@@ -84,15 +88,17 @@ abstract class AbstractStartupBenchmark(private val startupMode: StartupMode) {
             measureBlock = {
                 startActivityAndWait()
 
-                // TODO Add interactions to wait for when your app is fully drawn.
-                // The app is fully drawn when Activity.reportFullyDrawn is called.
-                // For Jetpack Compose, you can use ReportDrawn, ReportDrawnWhen and ReportDrawnAfter
-                // from the AndroidX Activity library.
-
-                // Check the UiAutomator documentation for more information on how to
-                // interact with the app.
-                // https://d.android.com/training/testing/other-components/ui-automator
-            }
+                // Use the same seeded English/Japanese Home condition as profile collection.
+                // StartupTimingMetric still reports the initial window separately; this wait also
+                // captures startup frames through populated Home instead of ending at the splash.
+                check(
+                    device.wait(
+                        Until.hasObject(By.text(Pattern.compile("(?iu)(all books|すべての本)\\s*→?"))),
+                        10_000,
+                    ),
+                ) { "Restore a test library before benchmarking Home startup" }
+                device.waitForIdle()
+            },
         )
     }
 }

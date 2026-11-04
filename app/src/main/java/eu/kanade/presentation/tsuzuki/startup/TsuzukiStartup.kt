@@ -201,13 +201,13 @@ fun TsuzukiStartupOverlay(
         }
         val startCx = logoLeft + (LOGO_SIZE_DP / 2).dp
         val startCy = logoTop + (LOGO_SIZE_DP / 2).dp
-        val e = exit.value
 
         Box(
             Modifier
                 .offset(x = logoLeft, y = logoTop)
                 .size(LOGO_SIZE_DP.dp)
                 .graphicsLayer {
+                    val e = exit.value
                     translationX = ((target.first - startCx) * e).toPx()
                     translationY = ((target.second - startCy) * e).toPx()
                     val s = 1f - (1f - target.third) * e
@@ -218,7 +218,7 @@ fun TsuzukiStartupOverlay(
             if (dot) {
                 DotRibbon(rowsShown = rowsShown, litDots = litDots)
             } else {
-                ColourRibbon(drop = drop.value, litDots = litDots, accent = t.accent, ink = t.onAccent)
+                ColourRibbon(drop = { drop.value }, litDots = litDots, accent = t.accent, ink = t.onAccent)
             }
         }
 
@@ -304,7 +304,7 @@ private fun DotRibbon(rowsShown: Int, litDots: Int) {
 }
 
 @Composable
-private fun ColourRibbon(drop: Float, litDots: Int, accent: Color, ink: Color) {
+private fun ColourRibbon(drop: () -> Float, litDots: Int, accent: Color, ink: Color) {
     val ribbon = remember {
         // M44 16h20a4 4 0 0 1 4 4v70l-14-11-14 11V20a4 4 0 0 1 4-4z
         Path().apply {
@@ -320,6 +320,7 @@ private fun ColourRibbon(drop: Float, litDots: Int, accent: Color, ink: Color) {
         }
     }
     Canvas(Modifier.fillMaxSize()) {
+        val drop = drop()
         val k = size.width / 108f
         scale(k, k, pivot = Offset.Zero) {
             // Page behind the ribbon

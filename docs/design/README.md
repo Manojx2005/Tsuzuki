@@ -67,7 +67,7 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 | Bar, tile, dot grid | done | `theme/tsuzuki/TsuzukiComponents.kt` |
 | Nav, Rail | done | `theme/tsuzuki/TsuzukiNav.kt`, wired in `ui/home/HomeScreen.kt` |
 | Main, TabletPortraitLibrary, TabletLibrary (with details pane), LibraryEmpty | done, verified with real books in Dot and Colour | `presentation/tsuzuki/home/`, `ui/tsuzuki/home/` |
-| MotionSplash (startup) | done, verified on both devices; inherited grey night-splash resource fixed and rechecked on tablet in Dot/Colour, cold-launch frames stay black before startup | `presentation/tsuzuki/startup/`, `ui/main/MainActivity.kt` |
+| MotionSplash (startup) | done, verified on both devices; inherited grey night-splash resource fixed. Animated exit/drop reads now stay in layer/draw callbacks; tablet Dot/Colour recordings checked. Controlled cold-start/frame measurements recorded without claiming an overall smoothness gain; preview/debug builds + 630 tests pass | `presentation/tsuzuki/startup/`, `ui/main/MainActivity.kt`, `docs/PERFORMANCE.md` |
 | MotionSheet | done: 300/200 ms sheet motion, Dot steps, Colour overshoot, 150 ms reduced-motion fade; recorded and checked on tablet in both themes with animations on/off; build/tests pass, test state restored | `theme/tsuzuki/TsuzukiModalBottomSheet.kt`, `TsuzukiAdaptiveSheet.kt` |
 | History | done: rows, filter pills, date labels, Today / Chapters / Streak tiles (streak from `ReadingDays`) | `presentation/tsuzuki/history/` |
 | Updates | done for novels: grouped book tiles with NEW / SAVED pills (seen with real data), New + Save all tiles, filter pills; Airing strip waits for anime | `presentation/updates/`, `presentation/tsuzuki/updates/` |
