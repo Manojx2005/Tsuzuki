@@ -28,6 +28,7 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 
 android {
     namespace = "eu.kanade.tachiyomi"
+    testBuildType = providers.gradleProperty("tsuzukiTestBuildType").getOrElse("debug")
 
     defaultConfig {
         applicationId = "io.github.manojx2005.tsuzuki"
@@ -112,6 +113,10 @@ android {
         }
         create("preview") {
             initWith(release)
+
+            if (providers.gradleProperty("tsuzukiTestBuildType").orNull == "preview") {
+                proguardFiles("src/androidTest/preview-target-rules.pro")
+            }
 
             applicationIdSuffix = ".debug"
 

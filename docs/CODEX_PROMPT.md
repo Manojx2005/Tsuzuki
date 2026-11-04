@@ -7,6 +7,23 @@ the boards show actually working.
 
 ## START HERE: latest checkpoint (2026-11-04, Codex)
 
+Reader progress saved locally in `02b963e81` after the usage reset. WebView/Cloudflare group from fetched
+Mihon main `8794e89a8` is implemented and device-verified: three core files copied whole, existing app-scope
+DI adapter, shared safe headers in both app entry points, renderer-death callback/message in eight locales,
+WebKit 1.18.0. Normal preview/debug builds and 630 app + 26 core tests pass (three new header regressions).
+`WebViewRendererRecoveryTest` passes on BOTH devices against optimized preview: actual `chrome://crash`
+callback, failed-page closure, then successful fresh data-page rendering. A test-only Trace keep rule is needed
+by AndroidJUnitRunner; ordinary daily preview excludes it. Build BOTH target and test APK in one invocation:
+`:app:assemblePreview :app:assemblePreviewAndroidTest -PtsuzukiTestBuildType=preview`; build debug unit tests
+separately without that property. Matching test APK pair + SHA manifest retained in local preview evidence.
+Ordinary daily preview installed afterwards; real Asura browser flow on tablet Colour and Royal Road on phone
+Dot load and return to reader. Seven ARM64 ELF/APK alignments and profile assets pass. Both devices left on
+Dot Home, current daily main-process crash logs empty, new test companions removed; primary debug data
+untouched. Evidence `app/build/codex-preview-20261104/`, logs `codex-webview-daily-validation.log` and
+`codex-webview-instrumentation-build.log`. No live concurrent Cloudflare challenge was forced. Next priority 3:
+source-header resolution off the main thread, installer and download-provider compatibility work. The installer
+has repo/signature/DI model differences, so do not blindly replace it and lose Tsundoku adapters.
+
 The owner authorized this handoff and local commits/merge, then asked to keep working across usage resets;
 both tablet and phone may be used for reversible tests. No push. Hourly continuation heartbeat:
 `continue-tsuzuki-work` (this chat). Keep the full priority list active; do not start new features yet.

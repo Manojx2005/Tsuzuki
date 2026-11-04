@@ -1086,4 +1086,5 @@
     <string name="tsz_mass_import_valid">유효 %1$d</string>
     <string name="tsz_mass_import_in_library">서재에 있음 %1$d</string>
     <string name="tsz_mass_import_unsupported">지원 안 됨 %1$d</string>
+    <string name="information_webview_crashed">WebView가 정지되어 페이지가 닫혔습니다</string>
 </resources>

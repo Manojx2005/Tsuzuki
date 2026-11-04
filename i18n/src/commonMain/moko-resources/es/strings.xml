@@ -1074,4 +1074,5 @@
     <string name="tsz_mass_import_valid">%1$d válidos</string>
     <string name="tsz_mass_import_in_library">%1$d en la biblioteca</string>
     <string name="tsz_mass_import_unsupported">%1$d no compatibles</string>
+    <string name="information_webview_crashed">WebView dejó de funcionar y la página se cerró</string>
 </resources>

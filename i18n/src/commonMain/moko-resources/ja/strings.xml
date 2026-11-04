@@ -1086,4 +1086,5 @@
     <string name="tsz_mass_import_valid">有効 %1$d</string>
     <string name="tsz_mass_import_in_library">ライブラリ内 %1$d</string>
     <string name="tsz_mass_import_unsupported">非対応 %1$d</string>
+    <string name="information_webview_crashed">WebView が動作を停止し、ページが閉じられました</string>
 </resources>

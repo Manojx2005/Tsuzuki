@@ -174,3 +174,46 @@ Tablet test (Galaxy Tab S11, Asura Scans + Royal Road): 10 manga chapters with c
 kill + cold start restores a seeded manga queue (2 → 2) and a novel queue (3 → 3, resumed and finished). Novel group
 pause wasn't shown on the device: the 3 chapters finished before the pause landed. The code path is unchanged.
 Build and unit tests pass. Test downloads were deleted and the owner's database/preferences restored byte-for-byte.
+
+### 2026-11-04: WebView / Cloudflare robustness group
+
+Fetched Mihon main `8794e89a8`. These three files are identical to that revision:
+`core/common/.../network/interceptor/CloudflareInterceptor.kt`, `WebViewInterceptor.kt`, and
+`util/system/WebViewUtil.kt`. They include per-host challenge serialization, non-GET challenges on the site's
+root, early exit for interactive/failed challenges, renderer-death handling and unsafe-header filtering.
+NetworkHelper uses the existing Injekt app coroutine scope; Tsundoku's rate limiting is retained. Both app
+WebView entry points use the shared header filter. The existing themed browser/menus stay; its renderer-death
+callback closes the failed page with the upstream message (eight locales). WebKit 1.18.0 matches Mihon and
+the [official stable release](https://developer.android.com/jetpack/androidx/releases/webkit#1.18.0).
+
+Normal preview/debug builds, changed-file formatting, 630 app tests and 26 core tests pass. Three new core
+tests reject Origin/transport/proxy headers, retain source authentication/UA/Referer, and preserve the first
+repeated header. Optimized renderer regression passes on Tab S11 (2.689 s) and S22 (4.442 s): actually crash
+the renderer, require the callback and page closure, then render a fresh data page. Ordinary daily preview
+then loaded real Asura (tablet Colour) and Royal Road (phone Dot) pages; BACK returned to the reader.
+Seven ARM64 ELF/APK 16 KB checks and packaged baseline assets pass. Both devices left Dot Home; original
+debug data was untouched. Preview copies contain test reading positions/history.
+
+Reproduce the renderer regression with JDK 21 and the separate seeded preview copy:
+
+```powershell
+./gradlew.bat :app:assemblePreview :app:assemblePreviewAndroidTest -PtsuzukiTestBuildType=preview
+# Install BOTH matching APKs on the selected device before running instrumentation:
+# app/build/outputs/apk/preview/app-arm64-v8a-preview.apk
+# app/build/outputs/apk/androidTest/preview/app-preview-androidTest.apk
+# runner: io.github.manojx2005.tsuzuki.debug.test/androidx.test.runner.AndroidJUnitRunner
+# class: eu.kanade.tachiyomi.tsuzuki.WebViewRendererRecoveryTest
+```
+
+The test refuses the original `.dev` app. AndroidJUnitRunner needs `androidx.tracing.Trace` retained in its
+target; the conditional test-only rule applies solely with this property. Build the normal daily preview
+without it. Selecting preview testBuildType removes the debug unit-test task, so run debug unit validation
+separately. `assemblePreviewAndroidTest` alone does not package an updated target APK: build both as above.
+Local evidence, matching test APK pair/SHA manifest, callbacks, screenshots and daily-process crash logs:
+`app/build/codex-preview-20261104/`; final normal-build log `app/build/codex-webview-daily-validation.log`.
+Two initial instrumentation-runner startup failures were harness/package issues, not renderer recovery; the
+final tests pass. Daily main-process crash logs after cleanup are empty.
+
+Still pending in priority 3: asynchronous source-header resolution, installer and download-provider ports.
+The current installer differs in repo/signature models and DI; retain compatibility when adapting it.
+No live concurrent Cloudflare challenge was forced in this check.
