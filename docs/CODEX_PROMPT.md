@@ -55,6 +55,13 @@ only the preview copy. Found next: stock horizontal progress slider still differ
 Colour thin track; fix its themed track without changing seek behavior or legacy rendering. TTS highlight
 currently uses the user's/default configured yellow even in Dot; assess its preference semantics before changing.
 
+Horizontal reader progress now uses the shared themed bar: Dot read/current/unread dots, Colour thin accent
+track; Material seeking and semantics retained, invisible 48 dp thumb area. Dot/Colour on both devices in
+both readers pass tap/drag/destination and return-near-start checks (phone RTL, tablet LTR). Debug/preview
+builds and 630 tests pass; seven ARM64 ELF/APK alignments and profile assets verified; no preview crash on
+either device. `docs/RUNTIME_QA.md` records verified scope and remaining gaps. Primary debug data untouched;
+preview copies have test reading history/positions. Phone TTS-controls visibility restored to hidden.
+
 ## Previous handoff (2026-11-04 ~10:45, from Claude; commit/merge steps completed above)
 
 Owner's order: **(1) merge everything done so far → (2) quality-of-life and smoothness → (3) Mihon work → (4) new features.**

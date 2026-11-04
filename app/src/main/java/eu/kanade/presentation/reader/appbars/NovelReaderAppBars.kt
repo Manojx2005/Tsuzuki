@@ -811,6 +811,8 @@ private fun NovelProgressSlider(
                 }
             },
             interactionSource = interactionSource,
+            track = { eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderTrack(it) },
+            thumb = { eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderThumb(interactionSource) },
         )
 
         Text(text = if (isPaged) maxPageLabel else "100%")

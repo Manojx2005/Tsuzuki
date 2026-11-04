@@ -206,6 +206,10 @@ fun HorizontalChapterNavigator(
                                 .weight(1f)
                                 .padding(horizontal = 8.dp),
                             interactionSource = interactionSource,
+                            track = { eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderTrack(it) },
+                            thumb = {
+                                eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderThumb(interactionSource)
+                            },
                         )
 
                         Text(text = totalPages.toString())
