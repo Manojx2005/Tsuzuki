@@ -5,6 +5,35 @@ You are continuing work on **Tsuzuki**, an Android reader for light novels, web 
 **complete match of the design boards**: every board built, in both themes (Colour and Dot), with the features
 the boards show actually working.
 
+## START HERE: hand-off state (2026-11-04 ~10:45, from Claude)
+
+Owner's order: **(1) merge everything done so far → (2) quality-of-life and smoothness → (3) Mihon work → (4) new features.**
+Owner chose: commit `main` in logical commits **authored as the owner (Manojx2005), no Co-Authored-By / "Generated
+with" trailers**, then merge `upstream/mihon-picks`; **do not push**.
+
+Done: commit `7c7b6bfe0` (docs, design boards PNG + HTML, AGENTS, UPSTREAM, this prompt, PRIVACY.md, scripts,
+upstream-watch workflow). Build + all unit tests passed on the full working tree just before it.
+
+Next steps, in order:
+1. Commit the rest of `main` (still uncommitted), suggested split: (a) all `i18n/**/strings.xml`; (b) all app / core /
+   presentation-core code and resources + `app/build.gradle.kts` + `.gitignore`; (c) `.github/workflows/tsuzuki-preview.yml`.
+   Leave **uncommitted**: `docs/design/boards/exports/` (78 MB, reference only) and `docs/outreach/` (owner's Reddit draft).
+   Run `:app:assembleDebug :app:testDebugUnitTest` before committing.
+2. Merge `upstream/mihon-picks` (worktree `../Tsuzuki-upstream`; 28 commits; 18 Mihon fixes + per-source manga download
+   speed-up + novel engine split). Keep Tsuzuki UI hooks on conflicts (expect `Downloader`, `MangaViewModel`, `MangaScreen`).
+   Build, test, install on the tablet, smoke-test Home / details / novel + manga reader / a novel and a manga download
+   (back up and restore owner data). Then `git worktree remove ../Tsuzuki-upstream`, update `docs/UPSTREAM.md`, re-check
+   novel group pause/resume (order 8 note). Don't remove `.worktrees/anime-spike`.
+3. Updates channel: `preview` build type now has the updater on (`app/build.gradle.kts`) and
+   `.github/workflows/tsuzuki-preview.yml` publishes signed `rNNNN` releases. Owner must make the repo public, create a
+   release keystore (`keytool -genkeypair -v -keystore tsuzuki-release.jks -alias tsuzuki -keyalg RSA -keysize 4096
+   -validity 36500`), add `keystore.properties` locally (storeFile / storePassword / keyAlias / keyPassword) so local
+   preview builds use the same key, and add Actions secrets SIGNING_KEY_BASE64, KEY_STORE_PASSWORD, KEY_ALIAS,
+   KEY_PASSWORD. Workflow is not yet run or actionlint-checked. The optimised preview APK builds (R8 OK, baseline
+   profile included) but has **not been installed or tested** on a device yet; preview installs beside `.dev`
+   (app id `…tsuzuki.debug`), move the library with backup / restore (ask owner).
+4. Then the PRIORITY list below (starting at item 4, bug sweep), then Part A/B, Part E, Part C/D.
+
 ## PRIORITY (owner, 2026-11-04): usable, stable, smooth and fast first; new features wait
 
 The owner wants to use the app daily as soon as possible. Work in this order and **don't start Part C (new
