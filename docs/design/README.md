@@ -61,6 +61,7 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 
 | Board | Status | Code |
 |---|---|---|
+| Upstream integration checkpoint (2026-11-04) | main UI work committed and all 28 Mihon picks merged; debug build + 630 app tests pass; tablet Dot/Colour novel and manga reader checks, novel pause/resume and queue restart checks pass. Interrupted tall-image split recovery fixed and verified on the same failed chapter; owner data restored and hash-verified. Optimized preview/device bug sweep remains | merge `c54b2f809`, recovery `de061e0ef`; evidence `app/build/codex-merge-20261104/` |
 | Bar, tile, dot grid | done | `theme/tsuzuki/TsuzukiComponents.kt` |
 | Nav, Rail | done | `theme/tsuzuki/TsuzukiNav.kt`, wired in `ui/home/HomeScreen.kt` |
 | Main, TabletPortraitLibrary, TabletLibrary (with details pane), LibraryEmpty | done, verified with real books in Dot and Colour | `presentation/tsuzuki/home/`, `ui/tsuzuki/home/` |

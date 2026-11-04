@@ -5,7 +5,30 @@ You are continuing work on **Tsuzuki**, an Android reader for light novels, web 
 **complete match of the design boards**: every board built, in both themes (Colour and Dot), with the features
 the boards show actually working.
 
-## START HERE: hand-off state (2026-11-04 ~10:45, from Claude)
+## START HERE: latest checkpoint (2026-11-04, Codex)
+
+The owner authorized this handoff and local commits/merge, then asked to keep working across usage resets;
+both tablet and phone may be used for reversible tests. No push. Hourly continuation heartbeat:
+`continue-tsuzuki-work` (this chat). Keep the full priority list active; do not start new features yet.
+
+Completed: main work in `cf5d4326c`, `5bb7e6555`, `f76fc2811`, `fa569add0`; all 28 picks merged cleanly in
+`c54b2f809`. `de061e0ef` fixes interrupted tall-image splits found in the restart test. Changed-file Spotless,
+debug build and all 630 app tests pass. Tablet Dot/Colour novel and manga reader checks pass, novel group
+pause/resume verified, novel and manga queues survive force-stop and resume. The actual failed manga chapter
+recovered without clearing its partial files; CBZ CRCs pass, 43 entries, none empty. Crash buffer empty.
+
+Owner data restored and all 12 original DB/prefs/WorkManager hashes verified before restart. Fresh baseline:
+Continue = Nano Machine chapter 336; preserve this instead of the old Mother of Learning baseline. Only the
+two new test download folders removed; original directory set matches. Tablet left Dot Home with the fixed APK.
+Phone connected, untouched. Evidence: `app/build/codex-merge-20261104/` and `app/build/codex-*-validation.log`.
+Exports and outreach still untracked; anime worktree untouched. No push.
+
+Next: finish cleanup of the old `../Tsuzuki-upstream` folder (Git already unregistered it, but Windows reported
+"Filename too long" during deletion); update the checkpoint once gone. Then verify the optimized preview
+build and continue the bug/smoothness/usability priorities. Preview library transfer still requires the owner's
+decision; release keys, publishing and telemetry changes remain deferred. Workflow not actionlint-checked.
+
+## Previous handoff (2026-11-04 ~10:45, from Claude; commit/merge steps completed above)
 
 Owner's order: **(1) merge everything done so far → (2) quality-of-life and smoothness → (3) Mihon work → (4) new features.**
 Owner chose: commit `main` in logical commits **authored as the owner (Manojx2005), no Co-Authored-By / "Generated
@@ -234,7 +257,7 @@ Build only with real data; each needs storage and logic, not just UI. Ask the ow
 
 ## Blocked on the owner (don't start)
 
-- Order 9: merge `upstream/mihon-picks` into `main`. Waits for the owner to commit `main`.
+- Order 9 merge/build/device checks completed in `c54b2f809`; only old worktree-folder cleanup remains.
 - Order 11: release v0.1, signing, making the repo public, and removing/replacing Tsundoku's Firebase config
   (`app/google-services.json`, `-Pinclude-telemetry` in `.github/workflows/release.yml`); `PRIVACY.md` says no telemetry.
 - AppLock PIN, Support us screen, Import EPUB "off" switch: owner decisions.

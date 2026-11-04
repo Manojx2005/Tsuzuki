@@ -92,6 +92,30 @@ anime = from Aniyomi later).
 
 ## Pick log
 
+### 2026-11-04: picks merged into main
+
+Owner authorized local commits and the merge through the CODEX_PROMPT handoff; no push.
+Main's existing work was committed in `cf5d4326c`, `5bb7e6555`, `f76fc2811`, and `fa569add0`.
+All 28 picks merged without textual conflicts in `c54b2f809`; Tsuzuki hooks were retained.
+Changed-file Spotless, `:app:assembleDebug :app:testDebugUnitTest` (630 tests), and tablet checks passed.
+Checked Dot Home/details/novel reader, Colour details/novel reader/manga long-strip reader, and Dot manga reader.
+Novel group pause held its queue unchanged, Resume advanced it; novel and manga queues survived force-stop
+and resumed. Two manga chapters and a novel batch downloaded alongside each other.
+
+Restart testing found an inherited tall-image recovery bug: process death during splitting leaves the original
+beside incomplete split files, and retry could choose a split first, producing "0 pages failed" while failing
+the folder count. `de061e0ef` prefers the original and removes its interrupted split siblings before regenerating
+them, including when splitting has since been disabled. It also passes the existing padded page filename to
+the splitter. The same failed chapter completed with the fix; its CBZ had 43 entries, valid CRCs and no empty
+files, and opened in the reader. Build/tests passed again. Crash buffer empty.
+
+All 12 fresh owner DB/prefs/WorkManager files were restored with push + run-as cp and SHA-256 verified before
+restart. Continue is now Nano Machine chapter 336 (owner state at test start). Only the two newly created test
+download folders were removed, and the original download-directory set matches. Tablet left in Dot Home.
+Evidence and backup: `app/build/codex-merge-20261104/`; validation logs in `app/build/codex-*-validation.log`.
+Phone was connected but not modified. Git unregistered the merged picks worktree; Windows' long-path deletion
+failure left files in its old folder, so finish cleanup with long-path support. Anime worktree untouched.
+
 ### 2026-11-03: branch `upstream/mihon-picks` (worktree `../Tsuzuki-upstream`)
 
 Applied (18), builds, unit tests pass, novel download checked on the tablet:
