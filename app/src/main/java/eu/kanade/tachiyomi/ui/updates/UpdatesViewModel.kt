@@ -240,6 +240,7 @@ class UpdatesViewModel(
         val filter = state.value.filter
         // Cache source lookups to avoid repeated getOrStub + isNovelSource calls
         val novelSourceCache = mutableMapOf<Long, Boolean>()
+        val queuedDownloads = downloadManager.getQueuedDownloadsByChapterId()
         fun isNovel(sourceId: Long): Boolean = novelSourceCache.getOrPut(sourceId) {
             sourceManager.getOrStub(sourceId).isNovelSource()
         }
@@ -253,7 +254,7 @@ class UpdatesViewModel(
                 }
             }
             .map { update ->
-                val activeDownload = downloadManager.getQueuedDownloadOrNull(update.chapterId)
+                val activeDownload = queuedDownloads[update.chapterId]
                 val downloaded = downloadManager.isChapterDownloaded(
                     update.chapterName,
                     update.scanlator,

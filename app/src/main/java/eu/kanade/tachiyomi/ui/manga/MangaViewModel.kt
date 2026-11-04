@@ -783,24 +783,13 @@ class MangaViewModel(
         manga: Manga,
         translatedChapterIds: Set<Long> = emptySet(),
     ): List<ChapterList.Item> {
+        val isMangaLocal = manga.isLocal()
+        val queuedDownloads = if (isMangaLocal) emptyMap() else downloadManager.getQueuedDownloadsByChapterId()
+        val downloadedChapterIds =
+            if (isMangaLocal) emptySet() else downloadManager.getDownloadedChapterIds(this, manga)
         return map { chapter ->
-            val isMangaLocal = manga.isLocal()
-            val activeDownload = if (isMangaLocal) {
-                null
-            } else {
-                downloadManager.getQueuedDownloadOrNull(chapter.id)
-            }
-            val downloaded = if (isMangaLocal) {
-                true
-            } else {
-                downloadManager.isChapterDownloaded(
-                    chapter.name,
-                    chapter.scanlator,
-                    chapter.url,
-                    manga.title,
-                    manga.source,
-                )
-            }
+            val activeDownload = queuedDownloads[chapter.id]
+            val downloaded = isMangaLocal || chapter.id in downloadedChapterIds
             val downloadState = when {
                 activeDownload != null -> activeDownload.status
                 downloaded -> Download.State.DOWNLOADED
@@ -900,6 +889,7 @@ class MangaViewModel(
                 downloadManager.startDownloadNow(chapterId)
             } else {
                 downloadChapters(chapters)
+                toggleAllSelection(false)
             }
 
             if (!isFavorited && !successState.hasPromptedToAddBefore) {
@@ -1060,7 +1050,6 @@ class MangaViewModel(
     private fun downloadChapters(chapters: List<Chapter>) {
         val manga = successState?.manga ?: return
         downloadManager.downloadChapters(manga, chapters)
-        toggleAllSelection(false)
     }
 
     /**

@@ -4,15 +4,21 @@ import android.content.Context
 import androidx.core.content.edit
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.CatalogueSource
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This class is used to persist active downloads across application restarts.
@@ -98,11 +104,18 @@ class DownloadStore(
         val downloads = mutableListOf<Download>()
         if (objs.isNotEmpty()) {
             val cachedManga = mutableMapOf<Long, Manga?>()
+            val cachedSources = mutableMapOf<Long, CatalogueSource?>()
             for ((mangaId, chapterId) in objs) {
                 val manga = cachedManga.getOrPut(mangaId) {
                     runBlocking { getManga.await(mangaId) }
                 } ?: continue
-                val source = sourceManager.get(manga.source) as? CatalogueSource ?: continue
+                val source = cachedSources.getOrPut(manga.source) { awaitSource(manga.source) }
+                if (source == null) {
+                    logcat(LogPriority.WARN) {
+                        "Dropping queued chapter $chapterId: source ${manga.source} isn't loaded"
+                    }
+                    continue
+                }
                 val chapter = runBlocking { getChapter.await(chapterId) } ?: continue
                 downloads.add(
                     Download.from(manga = manga, chapter = chapter, source = source),
@@ -113,6 +126,21 @@ class DownloadStore(
         // Clear the store, downloads will be added again immediately.
         clear()
         return downloads
+    }
+
+    /**
+     * Tsuzuki: the source manager reports ready a moment before installed extensions reach it, so a source missing
+     * at restore gets a few seconds to appear instead of its queued chapters being dropped.
+     */
+    private fun awaitSource(sourceId: Long): CatalogueSource? {
+        (sourceManager.get(sourceId) as? CatalogueSource)?.let { return it }
+        return runBlocking {
+            withTimeoutOrNull(SOURCE_WAIT) {
+                sourceManager.sources
+                    .mapNotNull { sources -> sources.find { it.id == sourceId } as? CatalogueSource }
+                    .first()
+            }
+        }
     }
 
     /**
@@ -148,3 +176,5 @@ class DownloadStore(
  */
 @Serializable
 private data class DownloadObject(val mangaId: Long, val chapterId: Long, val order: Int)
+
+private val SOURCE_WAIT = 10.seconds
