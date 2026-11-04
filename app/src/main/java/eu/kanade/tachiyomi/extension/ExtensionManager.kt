@@ -245,7 +245,7 @@ class ExtensionManager(
      * @param extension The extension to be installed.
      */
     fun installExtension(extension: Extension.Available): Flow<InstallStep> {
-        return installer.downloadAndInstall(extension.apkUrl, extension)
+        return installer.downloadAndInstall(extension)
     }
 
     /**
@@ -258,7 +258,7 @@ class ExtensionManager(
     fun updateExtension(extension: Extension.Installed): Flow<InstallStep> {
         val availableExt = availableExtensionMapFlow.value[extension.pkgName] ?: return emptyFlow()
         val isUpdateForPrivatelyInstalled = !extension.isShared
-        return installer.downloadAndInstall(availableExt.apkUrl, availableExt, isUpdateForPrivatelyInstalled)
+        return installer.downloadAndInstall(availableExt, isUpdateForPrivatelyInstalled)
     }
 
     fun cancelInstallUpdateExtension(extension: Extension) {

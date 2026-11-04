@@ -66,9 +66,17 @@ internal object ExtensionLoader {
 
     private fun getPrivateExtensionDir(context: Context) = File(context.filesDir, "exts")
 
-    fun installPrivateExtensionFile(context: Context, file: File): Boolean {
-        val extension = context.packageManager.getPackageArchiveInfo(file.absolutePath, PACKAGE_FLAGS)
-            ?.takeIf { isPackageAnExtension(it) } ?: return false
+    fun getArchivePackageInfo(context: Context, file: File): PackageInfo? {
+        return context.packageManager.getPackageArchiveInfo(file.absolutePath, PACKAGE_FLAGS)
+            ?.takeIf { isPackageAnExtension(it) }
+    }
+
+    fun installPrivateExtensionFile(
+        context: Context,
+        file: File,
+        packageInfo: PackageInfo? = getArchivePackageInfo(context, file),
+    ): Boolean {
+        val extension = packageInfo ?: return false
         val currentExtension = getExtensionPackageInfoFromPkgName(context, extension.packageName)
 
         if (currentExtension != null) {
@@ -415,9 +423,9 @@ internal object ExtensionLoader {
      * @param pkgInfo The package info of the application.
      * @return List SHA256 digest of the signatures
      */
-    private fun getSignatures(pkgInfo: PackageInfo): List<String>? {
+    fun getSignatures(pkgInfo: PackageInfo): List<String>? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val signingInfo = pkgInfo.signingInfo!!
+            val signingInfo = pkgInfo.signingInfo ?: return null
             if (signingInfo.hasMultipleSigners()) {
                 signingInfo.apkContentsSigners
             } else {

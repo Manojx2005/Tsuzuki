@@ -7,6 +7,21 @@ the boards show actually working.
 
 ## START HERE: latest checkpoint (2026-11-04, Codex)
 
+Installer compatibility group validated (evening): `ExtensionInstaller.kt` follows Mihon `8794e89a8` whole
+with small Injekt/IO/rate-limit/private-result/cancel-broadcast adapters. Cancellable downloads own/close their
+responses and reject APKs not signed with the listing store's key before invoking any installer. Loader helpers
+retain manga/novel recognition and existing private-update checks. All 640 app tests, debug and optimized builds,
+changed-file formatting and seven-library/profile/16 KB checks pass. Real copied-APK wrong-key rejection passes
+on BOTH optimized test copies (0.119 s tablet / 0.366 s phone), requiring the exact signature error. Direct target
+entry points need conditional instrumentation-only keep rules beside Trace; initial removed-method harness
+failure is saved separately. Ordinary daily preview rebuilt without those rules, installed on both; final Dot
+Home screenshots inspected, daily main-process crash logs empty, test companions and copied APK removed.
+No real source installed/uninstalled; original debug data untouched. Live successful system/private install/update
+matrix remains open (unit success/failure adapter tests pass). Logs `codex-installer-{final-debug,kept-instrumentation,daily}-validation.log`
+and `codex-installer-final-tests.log`; matching pair/SHA and device evidence in `app/build/codex-preview-20261104/`.
+Next: DownloadProvider compatibility (only inspected so far; synchronous callers, missing hash preference and
+novel ZIP support need adapters), then remaining runtime matrix. No push; owner-deferred decisions preserved.
+
 Header follow-up after `2510f09f6` validated: source lookup/header construction runs on IO in both WebView
 entry points; nullable readiness prevents premature loading, exceptions finish with empty headers,
 cancellation propagates, and each navigator browser has its own ViewModel key. Four new focused tests and

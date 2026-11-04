@@ -231,3 +231,35 @@ checks pass. Both devices returned Dot Home; test companions removed; original d
 Logs: `app/build/codex-webview-headers-{debug,preview,daily}-validation.log`; new device logs use
 `webview-headers-renderer-recovery.log`, with a separate matching instrumentation APK pair retained locally.
 Installer/provider work remains; the previous synchronous-header item is now done.
+
+### 2026-11-04: extension installer compatibility group
+
+`ExtensionInstaller.kt` follows fetched Mihon main `8794e89a8` whole, with these retained adapters:
+Injekt constructor defaults and app coroutine scope; explicit IO launch; rate-limit exemption for APKs;
+Tsundoku's Boolean private-install result; context-bearing cancellation broadcast. The download uses cancellable
+OkHttp await, response ownership, interruptible copy and an active-job check before installation. Job/step maps
+are concurrent. Downloaded APKs must be recognized extensions signed with the listing store's key before any
+installer is launched. Manager callers pass the available listing; no repository/model rewrite was needed.
+The loader exposes archive/signature helpers, accepts the already-read package info, and handles missing signing
+info safely; both manga and novel extension features and existing private update/downgrade checks remain.
+
+Debug build and all 640 app tests pass (six new installer cases: matching key/private success, private failure,
+wrong key, invalid archive, HTTP failure/response close, cancellation during body copy). Optimized instrumentation
+passes on Tab S11 (0.119 s) and S22 (0.366 s): read the copied real Asura APK's signing certificates, serve it over
+loopback, and require the exact wrong-store-key rejection plus removal of the downloaded temporary APK. No real
+source is installed or uninstalled. Successful in-app system/private installation/update on a device remains open;
+the success/failure adapter is covered by unit tests, not claimed as a completed live install matrix.
+
+Instrumentation directly calls target methods/constructors which R8 may remove. The existing conditional
+`src/androidTest/preview-target-rules.pro` now keeps those entry points and data constructors in addition to Trace.
+Initial device runs failed with a removed-helper NoSuchMethodError before exercising behavior; both pass after
+rebuilding/installing the matching target/test pair. These rules are excluded from the ordinary daily APK.
+Matching pair and hashes: `app/build/codex-preview-20261104/installer-instrumented-pair.json`; test logs per device
+are `installer-signature-test.log`. Initial harness failures are saved separately. Build logs:
+`codex-installer-final-debug-validation.log`, `codex-installer-kept-instrumentation-build.log`.
+
+Ordinary daily preview rebuilt without the conditional keep rules (configuration checked), installed on both.
+Final Dot Home screenshots inspected; daily main-process crash logs empty. Test companions and copied APK
+removed, original debug data untouched. Seven ARM64 ELF alignments, APK zip alignment and profile assets pass.
+Final build `codex-installer-daily-validation.log`; all 640 app tests also rerun successfully after test cleanup
+synchronization in `codex-installer-final-tests.log`. DownloadProvider and live successful install matrix remain.
