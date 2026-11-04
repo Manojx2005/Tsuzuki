@@ -701,9 +701,13 @@ class Downloader(
         val filename = "%0${digitCount}d".format(Locale.ENGLISH, page.number)
 
         // Try to find the image file
-        val imageFile = tmpDir.listFiles()?.firstOrNull {
-            isDownloadedPageImage(it.name ?: return@firstOrNull false, filename)
-        }
+        // A process death during splitting leaves both the original and partial split files.
+        // Prefer the original so the split can be regenerated instead of reusing an incomplete part.
+        val imageFile = tmpDir.listFiles()
+            ?.sortedBy { it.name.orEmpty().startsWith("${filename}__") }
+            ?.firstOrNull {
+                isDownloadedPageImage(it.name ?: return@firstOrNull false, filename)
+            }
 
         try {
             // If the image is already downloaded, do nothing. Otherwise download from network
@@ -722,7 +726,7 @@ class Downloader(
             }
 
             // When the page is ready, set page path, progress (just in case) and status
-            splitTallImageIfNeeded(page, tmpDir)
+            splitTallImageIfNeeded(page, tmpDir, filename)
 
             page.uri = file.uri
             page.progress = 100
@@ -816,16 +820,24 @@ class Downloader(
         return ImageUtil.getExtensionFromMimeType(mime) { file.openInputStream() }
     }
 
-    private fun splitTallImageIfNeeded(page: Page, tmpDir: UniFile) {
-        if (!downloadPreferences.splitTallImages.get()) return
-
+    private fun splitTallImageIfNeeded(page: Page, tmpDir: UniFile, filenamePrefix: String) {
         try {
-            val filenamePrefix = "%03d".format(Locale.ENGLISH, page.number)
-            val imageFile = tmpDir.listFiles()?.firstOrNull { it.name.orEmpty().startsWith(filenamePrefix) }
-                ?: error(context.stringResource(MR.strings.download_notifier_split_page_not_found, page.number))
+            val files = tmpDir.listFiles().orEmpty()
+            val imageFile =
+                files.firstOrNull {
+                    it.name.orEmpty().startsWith("$filenamePrefix.") &&
+                        !it.name.orEmpty().endsWith(".tmp")
+                }
+                    ?: files.firstOrNull { it.name.orEmpty().startsWith("${filenamePrefix}__001.") }
+                    ?: error(context.stringResource(MR.strings.download_notifier_split_page_not_found, page.number))
 
             // If the original page was previously split, then skip
             if (imageFile.name.orEmpty().startsWith("${filenamePrefix}__")) return
+
+            // The original is only deleted after every split is saved. If it still exists,
+            // any sibling splits are from an interrupted attempt (even if splitting is now off).
+            files.filter { it.name.orEmpty().startsWith("${filenamePrefix}__") }.forEach { it.delete() }
+            if (!downloadPreferences.splitTallImages.get()) return
 
             ImageUtil.splitTallImage(tmpDir, imageFile, filenamePrefix)
         } catch (e: Exception) {
