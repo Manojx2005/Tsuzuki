@@ -1268,6 +1268,12 @@ private fun SnippetEditDialog(
  */
 @Composable
 private fun ColumnScope.RegexReplacementSection(viewModel: ReaderSettingsViewModel) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.novel.TsuzukiReplaceRulesSection(viewModel.preferences.novelRegexReplacements)
+        return
+    }
     val regexJson by viewModel.preferences.novelRegexReplacements.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -1430,6 +1436,12 @@ private fun RegexEditDialog(
     onDismiss: () -> Unit,
     onConfirm: (RegexReplacement) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.novel.TsuzukiReplaceRuleDialog(initialRule, onDismiss, onConfirm)
+        return
+    }
     var title by remember { mutableStateOf(initialRule?.title ?: "") }
     var pattern by remember { mutableStateOf(initialRule?.pattern ?: "") }
     var replacement by remember { mutableStateOf(initialRule?.replacement ?: "") }
