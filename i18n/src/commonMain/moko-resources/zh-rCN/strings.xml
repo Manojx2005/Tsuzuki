@@ -1018,6 +1018,10 @@
     <string name="tsz_reader_marks">书签</string>
     <string name="tsz_reader_jump">跳转到章节…</string>
     <string name="tsz_reader_no_marks">没有已加书签的章节</string>
+    <string name="tsz_reader_panel_quotes">摘录</string>
+    <string name="tsz_reader_panel_notes">笔记</string>
+    <string name="tsz_reader_panel_no_quotes">此书还没有保存的摘录</string>
+    <string name="tsz_reader_panel_no_notes">此书还没有笔记</string>
     <string name="tsz_rs_look">外观</string>
     <string name="tsz_rs_layout">布局</string>
     <string name="tsz_rs_controls">操作</string>

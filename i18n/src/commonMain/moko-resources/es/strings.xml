@@ -1005,6 +1005,10 @@
     <string name="tsz_reader_marks">Marcadores</string>
     <string name="tsz_reader_jump">Ir al capítulo…</string>
     <string name="tsz_reader_no_marks">No hay capítulos marcados</string>
+    <string name="tsz_reader_panel_quotes">Citas</string>
+    <string name="tsz_reader_panel_notes">Notas</string>
+    <string name="tsz_reader_panel_no_quotes">No hay citas guardadas de este libro</string>
+    <string name="tsz_reader_panel_no_notes">Aún no hay notas de este libro</string>
     <string name="tsz_rs_look">Aspecto</string>
     <string name="tsz_rs_layout">Diseño</string>
     <string name="tsz_rs_controls">Controles</string>

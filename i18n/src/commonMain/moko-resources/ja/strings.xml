@@ -1015,6 +1015,10 @@
     <string name="tsz_reader_marks">しおり</string>
     <string name="tsz_reader_jump">章へ移動…</string>
     <string name="tsz_reader_no_marks">しおりを付けた章はありません</string>
+    <string name="tsz_reader_panel_quotes">引用</string>
+    <string name="tsz_reader_panel_notes">ノート</string>
+    <string name="tsz_reader_panel_no_quotes">この本の引用はまだありません</string>
+    <string name="tsz_reader_panel_no_notes">この本のノートはまだありません</string>
 
     <!-- Tsuzuki reader settings sheet -->
     <string name="tsz_rs_look">見た目</string>
