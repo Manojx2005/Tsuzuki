@@ -256,6 +256,17 @@ fun ChangeCategoryDialog(
     onEditCategories: () -> Unit,
     onConfirm: (List<Long>, List<Long>) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.category.TsuzukiChangeCategoryDialog(
+            initialSelection,
+            onDismissRequest,
+            onEditCategories,
+            onConfirm,
+        )
+        return
+    }
     if (initialSelection.isEmpty()) {
         AlertDialog(
             onDismissRequest = onDismissRequest,
