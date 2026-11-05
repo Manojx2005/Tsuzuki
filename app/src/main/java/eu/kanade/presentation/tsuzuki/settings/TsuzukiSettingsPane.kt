@@ -180,18 +180,44 @@ fun <T> TsuzukiPillPreference(
     entries: Map<out T, String>,
     enabled: Boolean,
     onValueChange: (T) -> Unit,
+    segmented: Boolean = false,
+    wrap: Boolean = false,
 ) {
     val keys = entries.keys.toList()
+    val labels = entries.values.toList()
+    val selected = keys.indexOf(value).coerceAtLeast(0)
+    val select: (Int) -> Unit = { index -> if (enabled) onValueChange(keys[index]) }
     Column(Modifier.padding(vertical = 12.dp)) {
         androidx.compose.material3.Text(
             tsuzukiCase(title) ?: title,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
             style = MaterialTheme.typography.titleMedium,
         )
-        eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
-            labels = entries.values.toList(),
-            selected = keys.indexOf(value).coerceAtLeast(0),
-            onClick = { if (enabled) onValueChange(keys[it]) },
-        )
+        when {
+            segmented -> eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments(
+                labels = labels,
+                selected = selected,
+                onClick = select,
+            )
+            wrap -> androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+            ) {
+                labels.forEachIndexed { index, label ->
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                        text = label,
+                        selected = index == selected,
+                        onClick = { select(index) },
+                        role = androidx.compose.ui.semantics.Role.RadioButton,
+                    )
+                }
+            }
+            else -> eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
+                labels = labels,
+                selected = selected,
+                onClick = select,
+            )
+        }
     }
 }

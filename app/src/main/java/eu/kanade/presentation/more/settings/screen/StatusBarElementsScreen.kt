@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,9 @@ import eu.kanade.presentation.reader.DefaultStatusBarOrder
 import eu.kanade.presentation.reader.StatusBarItem
 import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.serializeStatusBarOrder
+import eu.kanade.presentation.tsuzuki.settings.TsuzukiStatusBarElement
+import eu.kanade.presentation.tsuzuki.settings.TsuzukiStatusBarSettings
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -91,30 +95,14 @@ class StatusBarElementsScreen : Screen {
             rows.add(to.index, rows.removeAt(from.index))
         }
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(TDMR.strings.pref_novel_status_bar_customize)) },
-                    navigationIcon = {
-                        IconButton(onClick = navigator::pop) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                rows.clear()
-                                rows.addAll(DefaultStatusBarOrder.map { ElementRow(it, true) })
-                                persistOrder()
-                                DefaultStatusBarOrder.forEach { setItemEnabled(it, true) }
-                            },
-                        ) {
-                            Icon(Icons.Outlined.RestartAlt, contentDescription = null)
-                        }
-                    },
-                )
-            },
-        ) { paddingValues ->
+        val reset: () -> Unit = {
+            rows.clear()
+            rows.addAll(DefaultStatusBarOrder.map { ElementRow(it, true) })
+            persistOrder()
+            DefaultStatusBarOrder.forEach { setItemEnabled(it, true) }
+        }
+        val themed = isTsuzukiStyle()
+        val content: @Composable (PaddingValues) -> Unit = { paddingValues ->
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
@@ -123,6 +111,25 @@ class StatusBarElementsScreen : Screen {
                 items(rows, key = { it.item.id }) { row ->
                     ReorderableItem(reorderState, key = row.item.id) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
+                        val setChecked: (Boolean) -> Unit = { checked ->
+                            val idx = rows.indexOfFirst { it.item == row.item }
+                            if (idx != -1) {
+                                rows[idx] = row.copy(enabled = checked)
+                                setItemEnabled(row.item, checked)
+                            }
+                        }
+                        if (themed) {
+                            TsuzukiStatusBarElement(
+                                label = elementLabel(row.item),
+                                checked = row.enabled,
+                                onCheckedChange = setChecked,
+                                first = rows.firstOrNull()?.item == row.item,
+                                last = rows.lastOrNull()?.item == row.item,
+                                shadowElevation = elevation,
+                                dragHandle = Modifier.draggableHandle(onDragStopped = { persistOrder() }),
+                            )
+                            return@ReorderableItem
+                        }
                         Surface(shadowElevation = elevation) {
                             Row(
                                 modifier = Modifier
@@ -140,13 +147,7 @@ class StatusBarElementsScreen : Screen {
                                 Text(elementLabel(row.item), modifier = Modifier.weight(1f))
                                 Switch(
                                     checked = row.enabled,
-                                    onCheckedChange = { checked ->
-                                        val idx = rows.indexOfFirst { it.item == row.item }
-                                        if (idx != -1) {
-                                            rows[idx] = row.copy(enabled = checked)
-                                            setItemEnabled(row.item, checked)
-                                        }
-                                    },
+                                    onCheckedChange = setChecked,
                                 )
                             }
                         }
@@ -154,6 +155,30 @@ class StatusBarElementsScreen : Screen {
                 }
             }
         }
+        if (themed) {
+            TsuzukiStatusBarSettings(onBack = navigator::pop, onReset = reset, content = content)
+            return
+        }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(TDMR.strings.pref_novel_status_bar_customize)) },
+                    navigationIcon = {
+                        IconButton(onClick = navigator::pop) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = reset,
+                        ) {
+                            Icon(Icons.Outlined.RestartAlt, contentDescription = null)
+                        }
+                    },
+                )
+            },
+            content = content,
+        )
     }
 
     @Composable

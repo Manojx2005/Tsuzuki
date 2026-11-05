@@ -128,6 +128,7 @@ object SettingsTranslationScreen : SearchableSettings {
                         },
                     entries = engineEntries.mapKeys { it.key.toLong() }.toMap(),
                     enabled = enabled,
+                    tsuzukiWrapPills = true,
                 ),
                 Preference.PreferenceItem.BasicListPreference(
                     value = sourceLanguage,

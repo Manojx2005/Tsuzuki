@@ -104,12 +104,17 @@ internal fun PreferenceItem(
             }
             is Preference.PreferenceItem.ListPreference<*> -> {
                 val value by item.preference.collectAsState()
-                if (item.tsuzukiPills && eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                val useSegments = eu.kanade.presentation.tsuzuki.settings.isReaderSegmentedPreference(item.preference)
+                if ((item.tsuzukiPills || item.tsuzukiWrapPills || useSegments) &&
+                    eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
+                ) {
                     eu.kanade.presentation.tsuzuki.settings.TsuzukiPillPreference(
                         title = item.title,
                         value = value,
                         entries = item.entries,
                         enabled = item.enabled,
+                        segmented = useSegments,
+                        wrap = item.tsuzukiWrapPills,
                         onValueChange = { newValue ->
                             scope.launch {
                                 if (item.internalOnValueChanged(newValue!!)) item.internalSet(newValue)

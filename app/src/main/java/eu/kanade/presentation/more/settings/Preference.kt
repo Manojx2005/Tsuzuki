@@ -78,6 +78,7 @@ sealed class Preference {
             override val onValueChanged: suspend (value: T) -> Boolean = { true },
             /** Tsuzuki themes: show the entries as a pill row instead of a dialog (few, short entries only). */
             val tsuzukiPills: Boolean = false,
+            val tsuzukiWrapPills: Boolean = false,
         ) : PreferenceItem<T, Boolean>() {
             internal fun internalSet(value: Any) = preference.set(value as T)
             internal suspend fun internalOnValueChanged(value: Any) = onValueChanged(value as T)
