@@ -1102,4 +1102,7 @@
     <string name="tsz_onboarding_continue">Continuer</string>
     <string name="tsz_onboarding_finish">Commencer à lire</string>
     <string name="tsz_onboarding_granted">Accordée</string>
+    <!-- B1 -->
+    <string name="tsz_catalogue_filters">Filtres</string>
+    <string name="tsz_catalogue_filter_presets">Préréglages de filtres</string>
 </resources>
