@@ -329,7 +329,7 @@ in a small observable store, and add a Glance "Listening" widget next to `Tsuzuk
 the existing media session). Widget picker preview with neutral content.
 Result: _pending_
 
-#### N29 Library query builder (T3) — `ready`
+#### N29 Library query builder (T3) — `claude-working` (Claude agent, .worktrees/n29)
 Board `08-tools/LibraryQuery`. A Tsuzuki screen that combines existing library filters/sorts (status, unread,
 downloaded, source, category, tracker, content type) into saved "queries" shown as pills on the library header.
 Store queries in a preference (JSON). Real filters only.
