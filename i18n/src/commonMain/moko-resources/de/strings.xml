@@ -1153,4 +1153,6 @@
     <string name="tsz_source_wizard">Assistent</string>
     <string name="tsz_picker_title">Seiten-Auswahl</string>
     <string name="tsz_picker_step">Schritt %1$d von %2$d · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">Ab hier vorlesen</string>
 </resources>

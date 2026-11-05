@@ -76,6 +76,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.novel.TsuzukiTtsMiniPlayer
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
@@ -692,6 +695,18 @@ private fun NovelTtsControlsOverlay(
     onStartFromViewport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        TsuzukiTtsMiniPlayer(
+            isTtsActive = isTtsActive,
+            isTtsPaused = isTtsPaused,
+            onPauseResume = onPauseResume,
+            onPrevParagraph = onPrevParagraph,
+            onNextParagraph = onNextParagraph,
+            onStartFromViewport = onStartFromViewport,
+            modifier = modifier,
+        )
+        return
+    }
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(50))
