@@ -84,6 +84,7 @@ import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
 import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiReaderContents
+import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiReaderFind
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -933,6 +934,7 @@ class ReaderActivity : BaseActivity() {
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
             val contents = rememberTsuzukiReaderContents()
+            val find = rememberTsuzukiReaderFind()
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1221,8 +1223,10 @@ class ReaderActivity : BaseActivity() {
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
                 onOpenContents = contents.openAction(),
+                onFind = find.openAction(state.viewer) { viewModel.showMenus(false) },
             )
             contents.Drawer(this@ReaderActivity, viewModel, state)
+            find.Bar(state.viewer)
 
             androidx.activity.compose.BackHandler(enabled = isEditing && state.hasUnsavedChanges) {
                 showEditSaveDialog = true

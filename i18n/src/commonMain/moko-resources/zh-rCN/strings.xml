@@ -1235,4 +1235,10 @@
     <string name="tsz_query_delete">删除</string>
     <string name="tsz_query_move_up">上移</string>
     <string name="tsz_query_move_down">下移</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">在本章中查找</string>
+    <string name="tsz_find_hint">在本章中查找</string>
+    <string name="tsz_find_next">下一个匹配</string>
+    <string name="tsz_find_previous">上一个匹配</string>
+    <string name="tsz_find_close">关闭查找</string>
 </resources>

@@ -1599,4 +1599,10 @@
     <string name="tsz_query_delete">Delete</string>
     <string name="tsz_query_move_up">Move up</string>
     <string name="tsz_query_move_down">Move down</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">Find in chapter</string>
+    <string name="tsz_find_hint">Find in this chapter</string>
+    <string name="tsz_find_next">Next match</string>
+    <string name="tsz_find_previous">Previous match</string>
+    <string name="tsz_find_close">Close find</string>
 </resources>

@@ -173,6 +173,8 @@ fun NovelReaderAppBars(
     onBottomBarHeight: (Int) -> Unit = {},
     // Tsuzuki: opens the contents drawer.
     onOpenContents: (() -> Unit)? = null,
+    // Find in chapter (WebView renderer only; null hides the action).
+    onFind: (() -> Unit)? = null,
 ) {
     // Tsuzuki themes: solid bars (never see-through, no red tint in Dot).
     val tsuzukiBars = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
@@ -221,6 +223,7 @@ fun NovelReaderAppBars(
                     onEditBottomBar = onEditBottomBar,
                     onRetranslate = onRetranslate,
                     onOpenContents = onOpenContents,
+                    onFind = onFind,
                 )
             }
 
@@ -348,6 +351,7 @@ private fun NovelReaderTopBar(
     onRetranslate: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     onOpenContents: (() -> Unit)? = null,
+    onFind: (() -> Unit)? = null,
 ) {
     AppBar(
         modifier = modifier,
@@ -385,6 +389,15 @@ private fun NovelReaderTopBar(
                             onClick = onToggleBookmarked,
                         ),
                     )
+                    onFind?.let {
+                        add(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.tsz_find_action),
+                                onClick = it,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.searchChapters,
+                            ),
+                        )
+                    }
                     add(
                         AppBar.OverflowAction(
                             title = stringResource(TDMR.strings.action_reload_local),
