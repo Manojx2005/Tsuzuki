@@ -305,7 +305,7 @@ exist, and their licences/sizes. Write `docs/research/neural-tts.md` with a clea
 file paths, commit hashes). No code.
 Result: _pending_
 
-#### N25 Tablet reader side panel (T3) — `claude-working` (Claude agent, .worktrees/n25)
+#### N25 Tablet reader side panel (T3) — `done` (Claude agent `502896e0e`; docked on windows ≥ 900 dp, reader_container end padding; not device-checked)
 Board `11-tablet/TabletReaderPanel`. On tablet UI in Tsuzuki themes, the novel reader can show a side panel (contents
 / quotes / notes for this book) beside the text instead of the drawer, toggled from the existing contents action.
 Reuse `TsuzukiReaderContents`, quotes data and book notes; don't touch viewer internals.
