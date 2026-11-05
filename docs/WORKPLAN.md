@@ -205,6 +205,15 @@ estimates (words, speed, time left) · listen stats + TTS state (Listening widge
 (chapters/covers/DB sizes, download speed) · accent colour + reduce-motion settings · generated covers · manhwa
 classification · per-shelf counts · search timing. Parked by owner: in-app PIN lock, Support us screen.
 
+**Neural TTS voices (owner idea 2026-11-05, sherpa-onnx + Kokoro).** Optional second engine behind
+`TtsController` (system TTS stays default). Gate first (T3 research card, before any code): sherpa-onnx's
+Kokoro/VITS English phonemiser uses **espeak-ng (GPL-3.0)** — confirm whether it is compiled into the Android
+JNI library and whether an espeak-free build or lexicon-only voice pack exists; if not, don't ship (Apache-2.0,
+no GPL). If cleared: Kotlin API (the owner's draft was Flutter/Dart and doesn't apply), model download screen
+into app storage (not in the APK; zip on our own release), synthesis on a background thread one ~150–200-char
+sentence chunk ahead of playback, reuse `TtsTextUtils` chunking, voice picker (real speaker IDs from the pack),
+16 KB alignment check of the new native libs, licence texts in About.
+
 ---
 
 ## Phase 6 — anime integration (Aniyomi, Apache-2.0) — full plan
