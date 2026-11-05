@@ -1154,4 +1154,9 @@
     <string name="tsz_picker_step">%2$d단계 중 %1$d단계 · %3$s</string>
     <!-- c5 -->
     <string name="tsz_tts_read_from_here">여기부터 읽기</string>
+    <!-- d1 -->
+    <string name="tsz_updates_preview">미리보기 · %1$s</string>
+    <string name="tsz_updates_more_new">새 챕터 %1$d개 더</string>
+    <string name="tsz_updates_read_chapter">이 챕터 읽기</string>
+    <string name="tsz_updates_open_book">작품 열기</string>
 </resources>

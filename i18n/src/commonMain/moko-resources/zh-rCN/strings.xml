@@ -1155,4 +1155,9 @@
     <string name="tsz_picker_step">第 %1$d 步，共 %2$d 步 · %3$s</string>
     <!-- c5 -->
     <string name="tsz_tts_read_from_here">从此处朗读</string>
+    <!-- d1 -->
+    <string name="tsz_updates_preview">预览 · %1$s</string>
+    <string name="tsz_updates_more_new">另有 %1$d 个新章节</string>
+    <string name="tsz_updates_read_chapter">阅读本章</string>
+    <string name="tsz_updates_open_book">打开作品</string>
 </resources>

@@ -1154,4 +1154,9 @@
     <string name="tsz_picker_step">ステップ %1$d / %2$d · %3$s</string>
     <!-- c5 -->
     <string name="tsz_tts_read_from_here">ここから読み上げ</string>
+    <!-- d1 -->
+    <string name="tsz_updates_preview">プレビュー · %1$s</string>
+    <string name="tsz_updates_more_new">他に新着 %1$d 件</string>
+    <string name="tsz_updates_read_chapter">この章を読む</string>
+    <string name="tsz_updates_open_book">作品を開く</string>
 </resources>
