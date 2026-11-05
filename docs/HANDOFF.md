@@ -262,7 +262,7 @@ trust/repo changes without restart). Keep Tsundoku's novel-extension loader path
 existing Tsuzuki extension tiles.
 Result: _pending_
 
-#### N19 Mihon: content warnings instead of the NSFW toggle (T3) — `claude-working` (Claude agent, .worktrees/n19)
+#### N19 Mihon: content warnings instead of the NSFW toggle (T3) — `done` (Claude agent `3911523fb`; no DB/backup change; old show_nsfw value seeds the new default)
 Port Mihon #3951 (+ #3952 keep loading installed extensions regardless of warnings) if it applies cleanly to
 Tsundoku's extension model (the repo index already carries `contentWarning`); if it needs a DB/backup change, stop
 and mark `blocked` with the plan.
@@ -352,7 +352,7 @@ Every Tsuzuki-owned `LazyColumn/LazyRow/LazyGrid` (presentation/tsuzuki/**, them
 List each fix in Result. Behaviour unchanged; tests green.
 Result: _pending_
 
-#### N31 Accessibility audit of Tsuzuki UI (T2) — `claude-working` (Claude agent, .worktrees/n31)
+#### N31 Accessibility audit of Tsuzuki UI (T2) — `done` (Claude agent `f986b6aeb`; 54 fixes, docs/research/a11y-n31.md)
 All Tsuzuki composables: 48 dp touch targets, content descriptions for icon-only buttons (localised, 8 locales),
 `Role`s/toggleable semantics, no hardcoded English. List each fix in Result.
 Result: _pending_
