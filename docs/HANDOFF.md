@@ -268,14 +268,14 @@ Tsundoku's extension model (the repo index already carries `contentWarning`); if
 and mark `blocked` with the plan.
 Result: _pending_
 
-#### N20 Storage async migration (T4, last) — `claude-working` (Claude agent, .worktrees/n20)
+#### N20 Storage async migration (T4, last) — `done` (Claude agent `19d2b76a4`; all blocking storage probes moved to IO, sync wrappers kept for Downloader/cache; readers verified on tablet)
 WORKPLAN P1.11: move synchronous `DownloadProvider`/`DownloadManager` storage callers (reader loaders, download
 cache, EPUB export, translation) to the existing suspend APIs together, keeping thin synchronous wrappers only
 where Tsundoku merges need the old signatures. Write tests for each moved path. If the change grows past ~600
 lines or touches the novel viewer internals, stop at a clean intermediate commit and mark `blocked` with what's left.
 Result: _pending_
 
-#### N22b Anime: make the debug player render (T4) — `claude-working` (Claude agent + device tests, .worktrees/n22b)
+#### N22b Anime: make the debug player render (T4) — `done` (Claude agent `755f1aa62`; tablet plays a local 720p H.264/AAC file with mediacodec hwdec + audiotrack; the old Google/Blender sample URLs return 403/404)
 Tablet test 2026-11-06 05:51: `AnimeDebugPlayerActivity` (debug build) launches, libmpv loads (no
 UnsatisfiedLinkError, no crash), but the SurfaceView stays black for both https and http Big Buck Bunny URLs and
 mpv prints nothing. Steps: (1) wire mpv log messages (`MPVLib` event/log observer → logcat, `msg-level=all=v`);
@@ -295,7 +295,7 @@ file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), li
 `docs/licenses/` (LGPL FFmpeg/mpv notices + source offer note), module NOT yet a dependency of `:app` (no APK change).
 Result: _pending_
 
-#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `done (playback not yet working)` (Claude agent `d71870d01`, merged `e49c11127`; see N22b)
+#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `done` (Claude agent `d71870d01`, merged `e49c11127`; see N22b)
 Base on `tsuzuki/n21`. Port the MIT `MPVLib` wrapper (aniyomi-mpv-lib, pinned revision in docs/ANIME_SPIKE.md) into
 `anime-player`, plus a debug-build-only `AnimeDebugPlayerActivity` (surface, play/pause, seek, back) that plays a URL
 passed by intent. Wire `anime-player` into `:app` only for the debug build type (or behind a flag that is off in
@@ -402,6 +402,12 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-06 06:30 Claude — batch N complete.** N20 merged (blocking storage lookups → IO: chapter content
+  reader, DownloadPageLoader, `isChapterOnDisk` for skip-cache probes; 5 off-thread tests; novel + manga readers
+  open fine on the tablet). N22b merged: mpv logging (`TsuzukiMpv` tag) + Aniyomi init/surface sequence + CA
+  bundle → **anime stage 1 playback works** (debug build, local test video, hardware decode, audio). Build 846
+  tests green, pushed, preview on both devices, tablet on Dot Home. Next anime step: A1.5 (install one real anime
+  extension in the debug build and play an episode from it) — needs the owner to pick an extension/repo.
 - **2026-11-06 06:00 Claude — morning review.** Batch N status: N1–N19, N21–N32 done (N22 player loads but renders
   black → follow-up **N22b**); **N20** (storage async migration, T4) not started; **N22b** ready. Codex did N1–N12
   (00:00–01:37) and then stayed at its usage limit; Claude agents did N13–N19, N21, N23–N32. Final `main` =
