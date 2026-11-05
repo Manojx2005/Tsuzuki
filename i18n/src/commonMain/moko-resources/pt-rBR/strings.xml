@@ -1211,4 +1211,17 @@
     <string name="tsz_ext_failed_missing_class">A extensão não declara uma classe de fonte</string>
     <string name="tsz_ext_failed_class_not_found">Classe de fonte não encontrada</string>
     <string name="tsz_ext_failed_load_error">Não foi possível criar a fonte</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">Consultas salvas</string>
+    <string name="tsz_query_subtitle">Filtros e ordem que você recupera com um toque</string>
+    <string name="tsz_query_pill_clear">Limpar</string>
+    <string name="tsz_query_save_current">Salvar a visualização atual como consulta</string>
+    <string name="tsz_query_name_label">Nome da consulta</string>
+    <string name="tsz_query_empty">Ainda não há consultas salvas. Defina filtros e ordem na biblioteca e salve aqui.</string>
+    <string name="tsz_query_filters_count">%1$d filtros</string>
+    <string name="tsz_query_no_filters">Sem filtros</string>
+    <string name="tsz_query_rename">Renomear</string>
+    <string name="tsz_query_delete">Excluir</string>
+    <string name="tsz_query_move_up">Mover para cima</string>
+    <string name="tsz_query_move_down">Mover para baixo</string>
 </resources>

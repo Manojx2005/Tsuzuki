@@ -30,11 +30,15 @@ fun TsuzukiLibraryMediaSwitch(isManga: Boolean) {
     val basePreferences = remember { Injekt.get<BasePreferences>() }
     val joined by libraryPreferences.joinedLibrary.collectAsState()
     val hideMangaUi by basePreferences.hideMangaUi.collectAsState()
-    if (joined || hideMangaUi) return
     val tabNavigator = LocalTabNavigator.current
-    TsuzukiPillRow(
-        labels = listOf(stringResource(TDMR.strings.label_novels), stringResource(TDMR.strings.label_manga)),
-        selected = if (isManga) 1 else 0,
-        onClick = { tabNavigator.current = if (it == 1) LibraryTab else NovelsTab },
-    )
+    androidx.compose.foundation.layout.Column {
+        if (!joined && !hideMangaUi) {
+            TsuzukiPillRow(
+                labels = listOf(stringResource(TDMR.strings.label_novels), stringResource(TDMR.strings.label_manga)),
+                selected = if (isManga) 1 else 0,
+                onClick = { tabNavigator.current = if (it == 1) LibraryTab else NovelsTab },
+            )
+        }
+        if (!isManga) eu.kanade.presentation.tsuzuki.library.TsuzukiLibraryQueryPills()
+    }
 }

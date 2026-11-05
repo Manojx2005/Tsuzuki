@@ -49,17 +49,20 @@ fun TsuzukiMixedLibraryHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (!hideMangaUi) TsuzukiPillRow(
-            labels = listOf(
-                stringResource(MR.strings.tsz_library_all),
-                stringResource(TDMR.strings.label_novels),
-                stringResource(TDMR.strings.label_manga),
-            ),
-            selected = filters.indexOf(filter),
-            onClick = {
-                onFilterChanged()
-                preferences.filterNovel().set(filters[it])
-            },
-        )
+        if (!hideMangaUi) {
+            TsuzukiPillRow(
+                labels = listOf(
+                    stringResource(MR.strings.tsz_library_all),
+                    stringResource(TDMR.strings.label_novels),
+                    stringResource(TDMR.strings.label_manga),
+                ),
+                selected = filters.indexOf(filter),
+                onClick = {
+                    onFilterChanged()
+                    preferences.filterNovel().set(filters[it])
+                },
+            )
+        }
+        TsuzukiLibraryQueryPills(onApplied = onFilterChanged)
     }
 }

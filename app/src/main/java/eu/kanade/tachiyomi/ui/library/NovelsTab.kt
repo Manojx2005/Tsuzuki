@@ -213,6 +213,13 @@ data object NovelsTab : Tab {
                     onClickMassImport = viewModel::openMassImportDialog,
                     onClickImportEpub = { navigator.push(ImportEpubScreen()) },
                     onClickFindDuplicates = { navigator.push(DuplicateDetectionScreen()) },
+                    onClickQueries = if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                    ) {
+                        { navigator.push(eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryQueriesScreen()) }
+                    } else {
+                        null
+                    },
                     onClickCategoryActions = {
                         state.activeCategory?.let(viewModel::openCategoryActionsDialog)
                     },
