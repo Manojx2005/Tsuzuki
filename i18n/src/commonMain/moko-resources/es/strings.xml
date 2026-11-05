@@ -1121,4 +1121,11 @@
     <string name="tsz_migration_old">Antes · %1$s</string>
     <string name="tsz_migration_new">Ahora · %1$s</string>
     <string name="tsz_migration_searching">Buscando…</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">Crear una fuente</string>
+    <string name="tsz_source_subtitle">Sin código: toca y selecciona en el sitio</string>
+    <string name="tsz_source_address">Dirección del sitio</string>
+    <string name="tsz_source_wizard">Asistente</string>
+    <string name="tsz_picker_title">Selector del sitio</string>
+    <string name="tsz_picker_step">Paso %1$d de %2$d · %3$s</string>
 </resources>

@@ -1500,4 +1500,11 @@
     <string name="tsz_migration_old">Old · %1$s</string>
     <string name="tsz_migration_new">New · %1$s</string>
     <string name="tsz_migration_searching">Searching…</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">Make a source</string>
+    <string name="tsz_source_subtitle">No code — point and tap on the site</string>
+    <string name="tsz_source_address">Site address</string>
+    <string name="tsz_source_wizard">Wizard</string>
+    <string name="tsz_picker_title">Site picker</string>
+    <string name="tsz_picker_step">Step %1$d of %2$d · %3$s</string>
 </resources>

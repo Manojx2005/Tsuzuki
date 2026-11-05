@@ -82,7 +82,11 @@ import com.kevinnzou.web.WebView
 import com.kevinnzou.web.rememberWebViewNavigator
 import com.kevinnzou.web.rememberWebViewState
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.tsuzuki.customsource.TsuzukiPickerAppBar
+import eu.kanade.presentation.tsuzuki.customsource.TsuzukiPickerUrlBar
+import eu.kanade.presentation.tsuzuki.customsource.TsuzukiStepInstructionCard
+import eu.kanade.presentation.tsuzuki.customsource.TsuzukiStepNavigationBar
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.source.custom.SourceTestResult
 import eu.kanade.tachiyomi.source.custom.SourceTestSection
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
@@ -620,11 +624,14 @@ fun ElementSelectorScreen(
     TachiyomiScaffold(
         topBar = {
             Column {
-                AppBar(
+                TsuzukiPickerAppBar(
                     title = stringResource(TDMR.strings.selector_title_format, stringResource(currentStep.titleRes)),
                     subtitle = "${stepIndex + 1}/${steps.size}",
                     navigateUp = onNavigateUp,
                     navigationIcon = Icons.Outlined.Close,
+                    stepIndex = stepIndex,
+                    stepCount = steps.size,
+                    stepTitle = currentStep.titleRes,
                     // Save lives only on the final Review step's button — no duplicate top-bar save.
                     actions = {
                         IconButton(onClick = { navigator.reload() }) {
@@ -1010,6 +1017,13 @@ private fun StepInstructionCard(
     // Landscape: drop the description text and tighten padding so the WebView keeps usable height.
     compact: Boolean = false,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiStepInstructionCard(
+            step, selectedCount, searchStatus, onViewSelected, onTest, testEnabled, onSetupSearch, onAutoDetect,
+            paginationStatus, onReusePagination, compact,
+        )
+        return
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1295,6 +1309,10 @@ private fun NavigationBar(
     currentUrl: String,
     onUrlSubmit: (String) -> Unit,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiPickerUrlBar(canGoBack, canGoForward, onBack, onForward, currentUrl, onUrlSubmit)
+        return
+    }
     var urlText by remember(currentUrl) { mutableStateOf(currentUrl) }
 
     Row(
@@ -1401,6 +1419,19 @@ private fun StepNavigationBar(
     selectionModeEnabled: Boolean = false,
     onToggleSelection: (() -> Unit)? = null,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiStepNavigationBar(
+            isFirstStep,
+            isLastStep,
+            canProceed,
+            onPrevious,
+            onNext,
+            onComplete,
+            selectionModeEnabled,
+            onToggleSelection,
+        )
+        return
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()

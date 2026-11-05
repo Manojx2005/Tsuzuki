@@ -36,6 +36,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.tsuzuki.customsource.TsuzukiCustomSourceSetup
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -73,6 +75,17 @@ class WizardSetupScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        if (isTsuzukiStyle()) {
+            TsuzukiCustomSourceSetup(
+                initialUrl = initialUrl,
+                onBack = { navigator.pop() },
+                onStart = { url, selected ->
+                    val full = if (!url.startsWith("http")) "https://$url" else url
+                    navigator.push(ElementSelectorVoyagerScreen(initialUrl = full, features = selected))
+                },
+            )
+            return
+        }
         var websiteUrl by remember { mutableStateOf(initialUrl) }
         var features by remember { mutableStateOf(SourceFeatures()) }
         // At least one listing is required to reach novels in the browse UI.

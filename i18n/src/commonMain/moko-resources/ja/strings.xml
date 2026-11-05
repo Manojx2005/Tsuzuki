@@ -1133,4 +1133,11 @@
     <string name="tsz_migration_old">旧 · %1$s</string>
     <string name="tsz_migration_new">新 · %1$s</string>
     <string name="tsz_migration_searching">検索中…</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">ソースを作る</string>
+    <string name="tsz_source_subtitle">コード不要 — サイトをタップして選ぶ</string>
+    <string name="tsz_source_address">サイトのアドレス</string>
+    <string name="tsz_source_wizard">ウィザード</string>
+    <string name="tsz_picker_title">サイトピッカー</string>
+    <string name="tsz_picker_step">ステップ %1$d / %2$d · %3$s</string>
 </resources>

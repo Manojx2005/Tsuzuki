@@ -1134,4 +1134,11 @@
     <string name="tsz_migration_old">旧 · %1$s</string>
     <string name="tsz_migration_new">新 · %1$s</string>
     <string name="tsz_migration_searching">搜索中…</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">创建来源</string>
+    <string name="tsz_source_subtitle">无需代码——在网站上点选即可</string>
+    <string name="tsz_source_address">网站地址</string>
+    <string name="tsz_source_wizard">向导</string>
+    <string name="tsz_picker_title">网站选择器</string>
+    <string name="tsz_picker_step">第 %1$d 步，共 %2$d 步 · %3$s</string>
 </resources>
