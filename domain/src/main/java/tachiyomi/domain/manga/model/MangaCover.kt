@@ -9,6 +9,7 @@ data class MangaCover(
     val isMangaFavorite: Boolean,
     val url: String?,
     val lastModified: Long,
+    val title: String? = null,
 )
 
 fun Manga.asMangaCover(): MangaCover {
@@ -18,5 +19,6 @@ fun Manga.asMangaCover(): MangaCover {
         isMangaFavorite = favorite,
         url = thumbnailUrl,
         lastModified = coverLastModified,
+        title = title,
     )
 }

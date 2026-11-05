@@ -90,6 +90,7 @@ private fun BrowseSourceListItem(
             isMangaFavorite = manga.favorite,
             url = if (skipCoverLoading) "" else manga.thumbnailUrl,
             lastModified = manga.coverLastModified,
+            title = manga.title,
         ),
         coverAlpha = if (manga.favorite) CommonMangaItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         badge = {

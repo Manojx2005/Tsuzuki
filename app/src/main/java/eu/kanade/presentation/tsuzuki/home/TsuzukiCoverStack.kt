@@ -89,6 +89,7 @@ fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onAdvance: () -
             val flying = outgoing == book.mangaId
             MangaCover.Book(
                 data = book.cover,
+                generatedTitle = book.title,
                 contentDescription = book.title,
                 colorFilter = eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),

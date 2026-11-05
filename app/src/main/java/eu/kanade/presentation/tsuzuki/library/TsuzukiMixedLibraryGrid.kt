@@ -105,6 +105,7 @@ fun TsuzukiMixedLibraryGrid(
                             isMangaFavorite = manga.favorite,
                             url = manga.thumbnailUrl,
                             lastModified = manga.coverLastModified,
+                            title = manga.title,
                         ),
                         modifier = Modifier.fillMaxSize().tsuzukiSharedCover(manga.id).alpha(
                             if (manga.id in

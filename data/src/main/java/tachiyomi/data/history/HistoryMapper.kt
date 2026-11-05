@@ -50,6 +50,7 @@ object HistoryMapper {
             isMangaFavorite = isFavorite,
             url = thumbnailUrl,
             lastModified = coverLastModified,
+            title = title,
         ),
     )
 }

@@ -60,6 +60,7 @@ fun TsuzukiUpdatesGroupTile(group: UpdatesNovelGroup, onClick: () -> Unit, modif
     ) {
         MangaCover.Book(
             data = group.coverUrl,
+            generatedTitle = group.mangaTitle,
             modifier = Modifier.width(44.dp).height(62.dp),
         )
         Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {

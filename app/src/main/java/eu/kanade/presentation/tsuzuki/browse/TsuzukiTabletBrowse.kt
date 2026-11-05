@@ -189,6 +189,7 @@ private fun CataloguePreview(source: Source, contentPadding: PaddingValues, onOp
                                     isMangaFavorite = false,
                                     url = book.thumbnail_url,
                                     lastModified = 0L,
+                                    title = book.title,
                                 ),
                                 modifier = Modifier.fillMaxWidth(),
                             )

@@ -54,6 +54,7 @@ class HistoryRepositoryImpl(
             isMangaFavorite = favorite,
             url = thumbnailUrl,
             lastModified = coverLastModified,
+            title = title,
         ),
     )
 
