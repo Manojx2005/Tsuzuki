@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.reader
+package eu.kanade.presentation.tsuzuki.manga
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State

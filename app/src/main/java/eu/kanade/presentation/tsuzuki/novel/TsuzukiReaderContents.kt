@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.reader
+package eu.kanade.presentation.tsuzuki.novel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility

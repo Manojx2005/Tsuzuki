@@ -304,7 +304,7 @@ private fun UpdatesNovelGroupItem(
     if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     ) {
-        eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesGroupTile(group, onClick, modifier)
+        eu.kanade.presentation.tsuzuki.novel.TsuzukiUpdatesGroupTile(group, onClick, modifier)
         return
     }
     Row(

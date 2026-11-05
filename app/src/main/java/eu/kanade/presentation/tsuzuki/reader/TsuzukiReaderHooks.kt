@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiReaderTransition
+import eu.kanade.presentation.tsuzuki.novel.TsuzukiReaderContents
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity

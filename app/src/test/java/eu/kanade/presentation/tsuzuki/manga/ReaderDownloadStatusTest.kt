@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.reader
+package eu.kanade.presentation.tsuzuki.manga
 
 import android.os.Trace
 import androidx.compose.runtime.AbstractApplier
