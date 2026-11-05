@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -116,6 +117,7 @@ internal fun TsuzukiCatalogueFilters(
                     tsuzukiCase(stringResource(MR.strings.action_filter)).orEmpty(),
                     style = MaterialTheme.typography.labelLarge,
                     color = tokens.onAccent,
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
