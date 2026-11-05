@@ -341,7 +341,7 @@ Every Tsuzuki-owned `LazyColumn/LazyRow/LazyGrid` (presentation/tsuzuki/**, them
 List each fix in Result. Behaviour unchanged; tests green.
 Result: _pending_
 
-#### N31 Accessibility audit of Tsuzuki UI (T2) — `ready`
+#### N31 Accessibility audit of Tsuzuki UI (T2) — `claude-working` (Claude agent, .worktrees/n31)
 All Tsuzuki composables: 48 dp touch targets, content descriptions for icon-only buttons (localised, 8 locales),
 `Role`s/toggleable semantics, no hardcoded English. List each fix in Result.
 Result: _pending_
