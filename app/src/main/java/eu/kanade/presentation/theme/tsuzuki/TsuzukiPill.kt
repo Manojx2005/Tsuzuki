@@ -96,7 +96,7 @@ fun TsuzukiPillRow(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(labels.size) { index ->
+        items(labels.size, contentType = { "pill" }) { index ->
             TsuzukiPill(
                 text = labels[index],
                 selected = index == selected,

@@ -155,7 +155,9 @@ internal fun TsuzukiTrackerSearch(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            items(tracks, key = { it.hashCode() }) { track ->
+                            items(tracks, key = {
+                                "${it.tracker_id}-${it.remote_id}"
+                            }, contentType = { "track_result" }) { track ->
                                 TrackerSearchResult(track, selected = track == selected) {
                                     focusManager.clearFocus()
                                     onSelectedChange(track)

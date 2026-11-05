@@ -209,7 +209,7 @@ internal fun ContentsBody(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            items(shown, key = { it.chapter.id }) { entry ->
+            items(shown, key = { it.chapter.id }, contentType = { "chapter_row" }) { entry ->
                 ChapterRow(entry, current = entry.chapter.id == currentChapterId) { onOpenChapter(entry.chapter.id) }
             }
         }

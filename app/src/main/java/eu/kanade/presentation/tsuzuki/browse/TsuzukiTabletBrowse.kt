@@ -180,7 +180,7 @@ private fun CataloguePreview(source: Source, contentPadding: PaddingValues, onOp
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 12.dp),
                 ) {
-                    items(result.books) { book ->
+                    items(result.books, contentType = { "browse_book" }) { book ->
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             MangaCover.Book(
                                 data = CoverData(

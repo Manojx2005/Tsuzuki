@@ -118,7 +118,9 @@ internal fun TsuzukiScanlatorFilterDialog(
                 )
             } else {
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
-                    itemsIndexed(availableScanlators, key = { _, name -> name }) { index, name ->
+                    itemsIndexed(availableScanlators, key = { _, name ->
+                        name
+                    }, contentType = { _, _ -> "scanlator" }) { index, name ->
                         val excluded = name in excludedScanlators
                         Row(
                             modifier = tsuzukiGroupedTile(

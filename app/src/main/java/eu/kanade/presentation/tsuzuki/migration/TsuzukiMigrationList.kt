@@ -106,7 +106,7 @@ internal fun TsuzukiMigrationListContent(
         },
     ) { contentPadding ->
         FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues) {
-            items(items, key = { it.manga.id }) { item ->
+            items(items, key = { it.manga.id }, contentType = { "migration_item" }) { item ->
                 val result by item.searchResult.collectAsState()
                 TsuzukiMigrationRow(
                     item = item,

@@ -91,7 +91,7 @@ fun TsuzukiLibraryQueryPills(onApplied: () -> Unit = {}) {
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(list, key = { it.id }) { query ->
+        items(list, key = { it.id }, contentType = { "query" }) { query ->
             TsuzukiPill(
                 text = query.name,
                 selected = query.content() == current,
@@ -204,7 +204,7 @@ fun TsuzukiLibraryQueriesScreen(onBack: () -> Unit) {
                 )
             }
         }
-        items(list, key = { it.id }) { query ->
+        items(list, key = { it.id }, contentType = { "query" }) { query ->
             val index = list.indexOf(query)
             QueryRow(
                 query = query,

@@ -101,7 +101,9 @@ internal fun TsuzukiCatalogueFilters(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(filters) { filter -> TsuzukiCatalogueFilterItem(filter, revision, update) }
+                items(filters, contentType = {
+                    it::class
+                }) { filter -> TsuzukiCatalogueFilterItem(filter, revision, update) }
             }
             Button(
                 onClick = {

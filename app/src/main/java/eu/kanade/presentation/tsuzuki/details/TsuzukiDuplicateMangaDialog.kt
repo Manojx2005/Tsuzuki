@@ -113,7 +113,7 @@ internal fun TsuzukiDuplicateMangaDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                         ) {
-                            items(duplicates, key = { it.manga.id }) { duplicate ->
+                            items(duplicates, key = { it.manga.id }, contentType = { "duplicate_card" }) { duplicate ->
                                 val source = sourceManager.getOrStub(duplicate.manga.source)
                                 TsuzukiDuplicateCard(
                                     duplicate = duplicate,
