@@ -2,9 +2,7 @@ package eu.kanade.presentation.reader.settings
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
@@ -12,12 +10,13 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.SettingsChipRow
-import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingChoice as FilterChip
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingSlider as SliderItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingToggle as CheckboxItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingsChoices as SettingsChipRow
 
 private val themes = listOf(
     MR.strings.black_background to 1,
@@ -52,7 +51,7 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
             FilterChip(
                 selected = readerTheme == value,
                 onClick = { viewModel.preferences.readerTheme.set(value) },
-                label = { Text(stringResource(labelRes)) },
+                label = stringResource(labelRes),
             )
         }
     }
@@ -76,7 +75,7 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
                     }
                     viewModel.preferences.verticalNavigator.set(newModes)
                 },
-                label = { Text(stringResource(mode.stringRes)) },
+                label = stringResource(mode.stringRes),
             )
         }
     }
@@ -160,7 +159,7 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
                 FilterChip(
                     selected = flashColor == value,
                     onClick = { flashColorPref.set(value) },
-                    label = { Text(stringResource(labelRes)) },
+                    label = stringResource(labelRes),
                 )
             }
         }

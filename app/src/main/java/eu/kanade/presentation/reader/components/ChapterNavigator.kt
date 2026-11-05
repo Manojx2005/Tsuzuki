@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.util.isTabletUi
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -157,6 +159,16 @@ fun HorizontalChapterNavigator(
     buttonColor: IconButtonColors,
     modifier: Modifier = Modifier,
 ) {
+    val themed = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
+    val chapterButtonColor = if (themed) {
+        IconButtonDefaults.filledIconButtonColors(
+            containerColor = TsuzukiTheme.tokens.tile,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = TsuzukiTheme.tokens.tile,
+        )
+    } else {
+        buttonColor
+    }
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
 
     // We explicitly handle direction based on the reader viewer rather than the system direction
@@ -164,13 +176,13 @@ fun HorizontalChapterNavigator(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = mainAxisPadding),
+                .padding(horizontal = if (themed) 0.dp else mainAxisPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FilledIconButton(
                 enabled = if (isRtl) enabledNext else enabledPrevious,
                 onClick = if (isRtl) onNextChapter else onPreviousChapter,
-                colors = buttonColor,
+                colors = chapterButtonColor,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.SkipPrevious,
@@ -185,9 +197,16 @@ fun HorizontalChapterNavigator(
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(backgroundColor)
-                            .padding(horizontal = 16.dp),
+                            .then(
+                                if (themed) {
+                                    Modifier.padding(horizontal = 4.dp)
+                                } else {
+                                    Modifier
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(backgroundColor)
+                                        .padding(horizontal = 16.dp)
+                                },
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(contentAlignment = Alignment.CenterEnd) {
@@ -222,7 +241,7 @@ fun HorizontalChapterNavigator(
             FilledIconButton(
                 enabled = if (isRtl) enabledPrevious else enabledNext,
                 onClick = if (isRtl) onPreviousChapter else onNextChapter,
-                colors = buttonColor,
+                colors = chapterButtonColor,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.SkipNext,

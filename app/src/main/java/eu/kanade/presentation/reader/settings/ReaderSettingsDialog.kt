@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.Swipe
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +26,8 @@ import eu.kanade.presentation.components.TabTitle
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.components.toTabTitles
+import eu.kanade.presentation.tsuzuki.manga.LocalMangaReaderSettings
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -111,10 +114,12 @@ private fun MangaReaderSettingsDialog(
                     .padding(vertical = TabbedDialogPaddings.Vertical)
                     .verticalScroll(rememberScrollState()),
             ) {
-                when (page) {
-                    0 -> ReadingModePage(viewModel)
-                    1 -> GeneralPage(viewModel)
-                    2 -> ColorFilterPage(viewModel)
+                CompositionLocalProvider(LocalMangaReaderSettings provides isTsuzukiStyle()) {
+                    when (page) {
+                        0 -> ReadingModePage(viewModel)
+                        1 -> GeneralPage(viewModel)
+                        2 -> ColorFilterPage(viewModel)
+                    }
                 }
             }
         }

@@ -14,6 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaPageIndicator
 
 @Composable
 fun ReaderPageIndicator(
@@ -22,6 +25,11 @@ fun ReaderPageIndicator(
     modifier: Modifier = Modifier,
 ) {
     if (currentPage <= 0 || totalPages <= 0) return
+
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        TsuzukiMangaPageIndicator(currentPage, totalPages, modifier)
+        return
+    }
 
     val text = "$currentPage / $totalPages"
 
