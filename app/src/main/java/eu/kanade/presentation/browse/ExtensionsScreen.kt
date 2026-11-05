@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
@@ -47,6 +48,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.components.BaseBrowseItem
+import eu.kanade.presentation.browse.components.ExtensionFailedDialog
 import eu.kanade.presentation.browse.components.ExtensionIcon
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.manga.components.DotSeparatorNoSpaceText
@@ -152,6 +154,7 @@ private fun ExtensionContent(
     val context = LocalContext.current
     val navigator = LocalNavigator.currentOrThrow
     var trustState by remember { mutableStateOf<Extension.Untrusted?>(null) }
+    var failedState by remember { mutableStateOf<Extension.Failed?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
     // Tsuzuki themes: language pills over the list (board "Extensions")
     val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
@@ -236,6 +239,9 @@ private fun ExtensionContent(
                         is Extension.Untrusted -> {
                             "extension-untrusted-${extension.pkgName}-${extension.versionCode}-${extension.signatureHash}"
                         }
+                        is Extension.Failed -> {
+                            "extension-failed-${extension.pkgName}-${extension.versionCode}"
+                        }
                         is Extension.Installed -> {
                             "extension-installed-${extension.pkgName}-${extension.versionCode}-${extension.hasUpdate}-${extension.isObsolete}"
                         }
@@ -272,6 +278,7 @@ private fun ExtensionContent(
                             is Extension.Untrusted -> {
                                 trustState = it
                             }
+                            is Extension.Failed -> failedState = it
                             is Extension.JsPlugin -> {
                                 if (it.isInstalled) {
                                     onOpenExtension(it)
@@ -315,6 +322,7 @@ private fun ExtensionContent(
                             is Extension.Untrusted -> {
                                 trustState = it
                             }
+                            is Extension.Failed -> failedState = it
                             is Extension.JsPlugin -> {
                                 if (it.isInstalled && it.hasUpdate) {
                                     onUpdateExtension(it)
@@ -329,6 +337,17 @@ private fun ExtensionContent(
                 )
             }
         }
+    }
+    val currentFailedState = failedState
+    if (currentFailedState != null) {
+        ExtensionFailedDialog(
+            extension = currentFailedState,
+            onClickUninstall = {
+                onUninstallExtension(currentFailedState)
+                failedState = null
+            },
+            onDismissRequest = { failedState = null },
+        )
     }
     val currentTrustState = trustState
     if (currentTrustState != null) {
@@ -450,6 +469,7 @@ private fun ExtensionItemContent(
 
                 val warning = when {
                     extension is Extension.Untrusted -> MR.strings.ext_untrusted
+                    extension is Extension.Failed -> MR.strings.tsz_ext_failed
                     extension is Extension.Installed && extension.isObsolete -> MR.strings.ext_obsolete
                     extension.isNsfw -> MR.strings.ext_nsfw_short
                     else -> null
@@ -553,6 +573,14 @@ private fun ExtensionItemActions(
                             Icon(
                                 imageVector = Icons.Outlined.VerifiedUser,
                                 contentDescription = stringResource(MR.strings.ext_trust),
+                            )
+                        }
+                    }
+                    is Extension.Failed -> {
+                        IconButton(onClick = { onClickItemAction(extension) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = stringResource(MR.strings.tsz_ext_failed_title),
                             )
                         }
                     }

@@ -1195,4 +1195,14 @@
     <string name="tsz_appearance_accent_sub">在关闭“跟随书籍”或书籍没有配色时使用。Dot 主题始终为红色。</string>
     <string name="tsz_appearance_reduce_motion">减少动态效果</string>
     <string name="tsz_appearance_reduce_motion_sub">用快速淡入淡出替代动画</string>
+    <string name="tsz_ext_failed">加载失败</string>
+    <string name="tsz_ext_failed_title">扩展加载失败</string>
+    <string name="tsz_ext_failed_trace">堆栈跟踪</string>
+    <string name="tsz_ext_failed_missing_version">扩展没有版本名称</string>
+    <string name="tsz_ext_failed_unsupported_lib">不支持的扩展库版本</string>
+    <string name="tsz_ext_failed_not_signed">扩展未签名</string>
+    <string name="tsz_ext_failed_class_loader">无法打开扩展</string>
+    <string name="tsz_ext_failed_missing_class">扩展未声明来源类</string>
+    <string name="tsz_ext_failed_class_not_found">找不到来源类</string>
+    <string name="tsz_ext_failed_load_error">无法创建来源</string>
 </resources>

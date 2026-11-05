@@ -77,6 +77,38 @@ sealed class Extension {
         override val isNovel: Boolean = false,
     ) : Extension()
 
+    /**
+     * An installed extension that could not be loaded for a reason other than trust. Kept so the user
+     * can see why and copy the report, or uninstall it (Mihon #3953).
+     */
+    data class Failed(
+        override val name: String,
+        override val pkgName: String,
+        override val versionName: String,
+        override val versionCode: Long,
+        override val libVersion: Double,
+        val reason: Reason,
+        /** Reason specific text: the unsupported lib version, or the class that could not be loaded. */
+        val detail: String? = null,
+        val stackTrace: String? = null,
+        val icon: Drawable? = null,
+        val isShared: Boolean = true,
+        override val isNovel: Boolean = false,
+        override val lang: String? = null,
+        override val isNsfw: Boolean = false,
+    ) : Extension() {
+
+        enum class Reason {
+            MISSING_VERSION,
+            UNSUPPORTED_LIB_VERSION,
+            NOT_SIGNED,
+            CLASS_LOADER,
+            MISSING_SOURCE_CLASS,
+            SOURCE_CLASS_NOT_FOUND,
+            SOURCE_LOAD_ERROR,
+        }
+    }
+
     data class JsPlugin(
         override val name: String,
         override val pkgName: String,

@@ -85,6 +85,7 @@ class NovelExtensionsViewModel(
                                 extension.name.contains(input, ignoreCase = true)
                         }
                         is Extension.Untrusted -> extension.name.contains(input, ignoreCase = true)
+                        is Extension.Failed -> extension.name.contains(input, ignoreCase = true)
                         is Extension.JsPlugin ->
                             extension.name.contains(input, ignoreCase = true) ||
                                 extension.lang.contains(input, ignoreCase = true) ||
@@ -101,7 +102,7 @@ class NovelExtensionsViewModel(
                 getExtensions.subscribe(),
                 jsPluginManager.availablePlugins,
                 jsPluginManager.installedPlugins,
-            ) { query, downloads, (_updates, _installed, _available, _untrusted), jsAvailable, jsInstalled ->
+            ) { query, downloads, (_updates, _installed, _available, _untrusted, _failed), jsAvailable, jsInstalled ->
                 val searchQuery = query ?: ""
                 // Respect language filter for JS plugins (same as KT extensions)
                 val enabledLanguages = preferences.enabledLanguages.get()
@@ -191,8 +192,11 @@ class NovelExtensionsViewModel(
                     val untrusted = _untrusted.filter {
                         it.isNovel
                     }.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                    if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted)
+                    val failed = _failed.filter {
+                        it.isNovel
+                    }.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
+                    if (installed.isNotEmpty() || untrusted.isNotEmpty() || failed.isNotEmpty()) {
+                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted + failed)
                     }
 
                     val languagesWithExtensions = (

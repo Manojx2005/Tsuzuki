@@ -75,6 +75,9 @@ class ExtensionManager(
     private val untrustedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Untrusted>())
     val untrustedExtensionsFlow = untrustedExtensionMapFlow.mapExtensions(scope)
 
+    private val failedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Failed>())
+    val failedExtensionsFlow = failedExtensionMapFlow.mapExtensions(scope)
+
     init {
         // Load off the constructing thread: ExtensionLoader.loadExtensions does blocking package
         // manager and DB work, so doing it synchronously here froze startup when the manager was
@@ -134,6 +137,10 @@ class ExtensionManager(
 
         untrustedExtensionMapFlow.value = extensions
             .filterIsInstance<LoadResult.Untrusted>()
+            .associate { it.extension.pkgName to it.extension }
+
+        failedExtensionMapFlow.value = extensions
+            .filterIsInstance<LoadResult.Failed>()
             .associate { it.extension.pkgName to it.extension }
 
         _isInitialized.value = true
@@ -300,9 +307,11 @@ class ExtensionManager(
 
         untrustedExtensionMapFlow.value -= extension.pkgName
 
-        ExtensionLoader.loadExtensionFromPkgName(context, extension.pkgName)
-            .let { it as? LoadResult.Success }
-            ?.let { registerNewExtension(it.extension) }
+        when (val result = ExtensionLoader.loadExtensionFromPkgName(context, extension.pkgName)) {
+            is LoadResult.Success -> registerNewExtension(result.extension)
+            is LoadResult.Failed -> failedExtensionMapFlow.value += result.extension
+            else -> {}
+        }
     }
 
     /**
@@ -311,6 +320,7 @@ class ExtensionManager(
      * @param extension The extension to be registered.
      */
     private fun registerNewExtension(extension: Extension.Installed) {
+        failedExtensionMapFlow.value -= extension.pkgName
         installedExtensionMapFlow.value += extension
     }
 
@@ -321,6 +331,7 @@ class ExtensionManager(
      * @param extension The extension to be registered.
      */
     private fun registerUpdatedExtension(extension: Extension.Installed) {
+        failedExtensionMapFlow.value -= extension.pkgName
         installedExtensionMapFlow.value += extension
     }
 
@@ -333,6 +344,7 @@ class ExtensionManager(
     private fun unregisterExtension(pkgName: String) {
         installedExtensionMapFlow.value -= pkgName
         untrustedExtensionMapFlow.value -= pkgName
+        failedExtensionMapFlow.value -= pkgName
     }
 
     /**
@@ -352,7 +364,15 @@ class ExtensionManager(
 
         override fun onExtensionUntrusted(extension: Extension.Untrusted) {
             installedExtensionMapFlow.value -= extension.pkgName
+            failedExtensionMapFlow.value -= extension.pkgName
             untrustedExtensionMapFlow.value += extension
+            updatePendingUpdatesCount()
+        }
+
+        override fun onExtensionFailed(extension: Extension.Failed) {
+            installedExtensionMapFlow.value -= extension.pkgName
+            untrustedExtensionMapFlow.value -= extension.pkgName
+            failedExtensionMapFlow.value += extension
             updatePendingUpdatesCount()
         }
 

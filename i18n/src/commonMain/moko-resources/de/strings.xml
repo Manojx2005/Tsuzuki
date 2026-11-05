@@ -1195,4 +1195,14 @@
     <string name="tsz_appearance_accent_sub">Wird verwendet, wenn „Dem Buch folgen“ aus ist oder das Buch keine Farben hat. Dot bleibt rot.</string>
     <string name="tsz_appearance_reduce_motion">Bewegung reduzieren</string>
     <string name="tsz_appearance_reduce_motion_sub">Ersetzt Animationen durch kurze Überblendungen</string>
+    <string name="tsz_ext_failed">Fehlgeschlagen</string>
+    <string name="tsz_ext_failed_title">Erweiterung konnte nicht geladen werden</string>
+    <string name="tsz_ext_failed_trace">Stacktrace</string>
+    <string name="tsz_ext_failed_missing_version">Die Erweiterung hat keinen Versionsnamen</string>
+    <string name="tsz_ext_failed_unsupported_lib">Nicht unterstützte Bibliotheksversion der Erweiterung</string>
+    <string name="tsz_ext_failed_not_signed">Die Erweiterung ist nicht signiert</string>
+    <string name="tsz_ext_failed_class_loader">Die Erweiterung konnte nicht geöffnet werden</string>
+    <string name="tsz_ext_failed_missing_class">Die Erweiterung deklariert keine Quellklasse</string>
+    <string name="tsz_ext_failed_class_not_found">Quellklasse nicht gefunden</string>
+    <string name="tsz_ext_failed_load_error">Die Quelle konnte nicht erstellt werden</string>
 </resources>

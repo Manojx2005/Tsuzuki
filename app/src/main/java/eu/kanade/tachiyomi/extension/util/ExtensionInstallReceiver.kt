@@ -55,6 +55,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
                     when (val result = getExtensionFromIntent(context, intent)) {
                         is LoadResult.Success -> listener.onExtensionInstalled(result.extension)
                         is LoadResult.Untrusted -> listener.onExtensionUntrusted(result.extension)
+                        is LoadResult.Failed -> listener.onExtensionFailed(result.extension)
                         else -> {}
                     }
                 }
@@ -85,6 +86,10 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
                         is LoadResult.Untrusted -> {
                             logcat(LogPriority.WARN) { "Extension $pkgName is untrusted" }
                             listener.onExtensionUntrusted(result.extension)
+                        }
+                        is LoadResult.Failed -> {
+                            logcat(LogPriority.WARN) { "Extension $pkgName failed to load: ${result.extension.reason}" }
+                            listener.onExtensionFailed(result.extension)
                         }
                         else -> logcat(LogPriority.ERROR) {
                             "Failed to load extension $pkgName after REPLACED event (after $maxRetries retries)"
@@ -141,6 +146,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
         fun onExtensionInstalled(extension: Extension.Installed)
         fun onExtensionUpdated(extension: Extension.Installed)
         fun onExtensionUntrusted(extension: Extension.Untrusted)
+        fun onExtensionFailed(extension: Extension.Failed)
         fun onPackageUninstalled(pkgName: String)
     }
 

@@ -1188,4 +1188,14 @@
     <string name="tsz_appearance_accent_sub">Utilisée quand « Suivre le livre » est désactivé ou que le livre n\'a pas de couleurs. Dot reste rouge.</string>
     <string name="tsz_appearance_reduce_motion">Réduire les animations</string>
     <string name="tsz_appearance_reduce_motion_sub">Remplace les animations par de courts fondus</string>
+    <string name="tsz_ext_failed">Échec</string>
+    <string name="tsz_ext_failed_title">L\'extension n\'a pas pu être chargée</string>
+    <string name="tsz_ext_failed_trace">Trace de la pile</string>
+    <string name="tsz_ext_failed_missing_version">L\'extension n\'a pas de nom de version</string>
+    <string name="tsz_ext_failed_unsupported_lib">Version de bibliothèque de l\'extension non prise en charge</string>
+    <string name="tsz_ext_failed_not_signed">L\'extension n\'est pas signée</string>
+    <string name="tsz_ext_failed_class_loader">Impossible d\'ouvrir l\'extension</string>
+    <string name="tsz_ext_failed_missing_class">L\'extension ne déclare aucune classe de source</string>
+    <string name="tsz_ext_failed_class_not_found">Classe de source introuvable</string>
+    <string name="tsz_ext_failed_load_error">Impossible de créer la source</string>
 </resources>
