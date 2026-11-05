@@ -159,6 +159,10 @@ abstract class SearchViewModel(
             )
         }
 
+        val startNanos = System.nanoTime()
+        val anyLoading = state.value.items.values.any { it is SearchItemResult.Loading }
+        mutableState.update { it.copy(elapsedMillis = null) }
+
         searchJob = viewModelScope.launchIO {
             sources.map { source ->
                 async {
@@ -195,6 +199,10 @@ abstract class SearchViewModel(
                 }
             }
                 .awaitAll()
+            if (anyLoading) {
+                val elapsed = GlobalSearchStats.elapsedMillis(startNanos, System.nanoTime())
+                mutableState.update { it.copy(elapsedMillis = elapsed) }
+            }
         }
     }
 
@@ -235,7 +243,10 @@ abstract class SearchViewModel(
         val onlyShowHasResults: Boolean = false,
         val items: Map<Source, SearchItemResult> = mapOf(),
         val dialog: Dialog? = null,
+        /** Wall time of the last finished search (monotonic clock), null while one is running. */
+        val elapsedMillis: Long? = null,
     ) {
+        val resultCount: Int = GlobalSearchStats.resultCount(items.values)
         val progress: Int = items.count { it.value !is SearchItemResult.Loading }
         val total: Int = items.size
         val filteredItems = items.filter { (_, result) -> result.isVisible(onlyShowHasResults) }
@@ -269,4 +280,18 @@ sealed interface SearchItemResult {
     fun isVisible(onlyShowHasResults: Boolean): Boolean {
         return !onlyShowHasResults || (this is Success && !this.isEmpty)
     }
+}
+
+/** Pure helpers for the global search "N results · 0.6 s" line. */
+object GlobalSearchStats {
+    fun resultCount(results: Collection<SearchItemResult>): Int =
+        results.sumOf { (it as? SearchItemResult.Success)?.result?.size ?: 0 }
+
+    /** Elapsed milliseconds between two [System.nanoTime] readings; never negative. */
+    fun elapsedMillis(startNanos: Long, endNanos: Long): Long =
+        ((endNanos - startNanos) / 1_000_000L).coerceAtLeast(0L)
+
+    /** Seconds with one decimal using [locale]'s decimal separator. */
+    fun formatSeconds(millis: Long, locale: java.util.Locale = java.util.Locale.getDefault()): String =
+        String.format(locale, "%.1f", millis / 1000.0)
 }

@@ -1172,4 +1172,6 @@
     <!-- N9 -->
     <string name="tsz_browse_select_source">ソースを選択</string>
     <string name="tsz_browse_open_catalogue">カタログを開く</string>
+    <!-- N14 -->
+    <string name="tsz_search_results_time">%1$d 件 · %2$s 秒</string>
 </resources>

@@ -10,6 +10,9 @@ import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiGlobalSearchSummary
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.nameWithTypeTag
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
@@ -58,6 +61,11 @@ fun GlobalSearchScreen(
             onClickSource = onClickSource,
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
+            header = if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+                { TsuzukiGlobalSearchSummary(state.resultCount, state.elapsedMillis) }
+            } else {
+                null
+            },
         )
     }
 }
@@ -71,10 +79,12 @@ internal fun GlobalSearchContent(
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
     fromSourceId: Long? = null,
+    header: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
         contentPadding = contentPadding,
     ) {
+        header?.let { item(key = "tsz-summary") { it() } }
         items.forEach { (source, result) ->
             item(key = source.id) {
                 val name = source.nameWithTypeTag()

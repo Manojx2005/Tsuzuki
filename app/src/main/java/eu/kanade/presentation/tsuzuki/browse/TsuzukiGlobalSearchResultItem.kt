@@ -24,11 +24,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchStats
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * One source's results in global search, in the Tsuzuki themes (board 04-browse "GlobalSearch"): a tile with the
- * source name, its language line and an arrow, and the result covers inside. The board's "N results · 0.6 s" line is
- * left out: the stock screen doesn't measure search time.
+ * source name, its language line and an arrow, and the result covers inside. The board's results-and-time line is
+ * [TsuzukiGlobalSearchSummary], shown above the tiles.
  */
 @Composable
 fun TsuzukiGlobalSearchResultItem(
@@ -80,4 +83,22 @@ fun TsuzukiGlobalSearchResultItem(
         }
         content()
     }
+}
+
+/** results-and-time line of the board ("N results, 0.6 s"); shown once the search has finished timing. */
+@Composable
+fun TsuzukiGlobalSearchSummary(resultCount: Int, elapsedMillis: Long?) {
+    if (elapsedMillis == null) return
+    val t = TsuzukiTheme.tokens
+    val text = stringResource(
+        MR.strings.tsz_search_results_time,
+        resultCount,
+        GlobalSearchStats.formatSeconds(elapsedMillis),
+    )
+    Text(
+        if (t.isDot) text.uppercase() else text,
+        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+        color = if (t.isDot) Color(0xFF8A8A8A) else t.accent,
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp),
+    )
 }
