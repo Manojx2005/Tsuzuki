@@ -261,7 +261,7 @@ internal fun TsuzukiNotebook(
                 }
             }
             groups.forEach { group ->
-                items(group.quotes, key = { it.id }) { quote ->
+                items(group.quotes, key = { it.id }, contentType = { "quote" }) { quote ->
                     NotebookQuoteTile(
                         quote = quote,
                         chapterName = group.chapterName,

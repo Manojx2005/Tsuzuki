@@ -169,7 +169,7 @@ internal fun TsuzukiUpcomingScreen(
             FastScrollLazyColumn(contentPadding = paddingValues) {
                 item(key = "upcoming-calendar", content = { calendar() })
                 upcomingDayRows(selectedDate, books, onClickUpcoming)
-                item { Spacer(Modifier.height(12.dp)) }
+                item(key = "upcoming-spacer") { Spacer(Modifier.height(12.dp)) }
             }
         }
     }
@@ -321,7 +321,7 @@ private fun LazyListScope.upcomingDayRows(
             )
         }
     }
-    itemsIndexed(books, key = { _, book -> book.id }) { index, book ->
+    itemsIndexed(books, key = { _, book -> book.id }, contentType = { _, _ -> "upcoming_book" }) { index, book ->
         val tokens = TsuzukiTheme.tokens
         Column(
             tsuzukiGroupedTile(first = index == 0, last = index == books.lastIndex)

@@ -267,7 +267,9 @@ fun TsuzukiDuplicateFinderScreen(
                         AccentButton(stringResource(MR.strings.duplicate_reanalyze), screenModel::loadDuplicates)
                     }
                 }
-                else -> items(state.filteredDuplicateGroups.toList(), key = { it.first }) { (title, list) ->
+                else -> items(state.filteredDuplicateGroups.toList(), key = {
+                    it.first
+                }, contentType = { "duplicate_group" }) { (title, list) ->
                     val materialized = state.duplicateGroups[title]?.size ?: list.size
                     val scanFull = state.allGroupIds[title]?.size ?: materialized
                     GroupTile(
@@ -534,7 +536,7 @@ private fun QuickSelect(m: DuplicateDetectionViewModel) {
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(actions) { (label, action) ->
+        items(actions, key = { it.first }, contentType = { "action_pill" }) { (label, action) ->
             TsuzukiPill(text = label, selected = false, onClick = action, role = Role.Button)
         }
     }

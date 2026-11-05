@@ -74,7 +74,7 @@ fun TsuzukiMixedLibraryGrid(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         globalSearchItem(searchQuery, onGlobalSearch)
-        items(items = items, contentType = { "tsuzuki_mixed_book" }) { item ->
+        items(items = items, key = { it.libraryManga.manga.id }, contentType = { "tsuzuki_mixed_book" }) { item ->
             val book = item.libraryManga
             val manga = book.manga
             val tokens = TsuzukiTheme.tokens

@@ -145,7 +145,7 @@ private fun QuotesList(manga: Manga, loadQuotes: () -> List<Quote>) {
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(list, key = { it.id }) { quote ->
+        items(list, key = { it.id }, contentType = { "quote" }) { quote ->
             val shape = RoundedCornerShape(16.dp)
             Column(
                 Modifier.fillMaxWidth().clip(shape).background(tokens.tile)

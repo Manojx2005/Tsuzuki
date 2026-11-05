@@ -120,6 +120,9 @@ fun TsuzukiUpdatesTwoPane(
     val groups = remember(state.items, state.groupByNovel) {
         if (state.groupByNovel) state.getNovelGroups() else emptyList()
     }
+    val uiModels = remember(state.items, state.groupByNovel) {
+        if (state.groupByNovel) emptyList() else state.getUiModel()
+    }
     val selectedItem = if (state.groupByNovel) {
         null
     } else {
@@ -192,7 +195,7 @@ fun TsuzukiUpdatesTwoPane(
             if (state.items.isEmpty()) {
                 item(key = "empty") { EmptyUpdates(Modifier.fillMaxWidth().padding(vertical = 64.dp)) }
             } else if (state.groupByNovel) {
-                items(groups, key = { "group-${it.mangaId}" }) { group ->
+                items(groups, key = { "group-${it.mangaId}" }, contentType = { "novel_group" }) { group ->
                     UpdateRow(
                         title = group.mangaTitle,
                         subtitle = listOfNotNull(
@@ -210,11 +213,17 @@ fun TsuzukiUpdatesTwoPane(
                 }
             } else {
                 items(
-                    state.getUiModel(),
+                    uiModels,
                     key = {
                         when (it) {
-                            is UpdatesUiModel.Header -> "header-${it.hashCode()}"
+                            is UpdatesUiModel.Header -> "header-${it.date}"
                             is UpdatesUiModel.Item -> "update-${it.item.update.chapterId}-${it.item.update.dateFetch}"
+                        }
+                    },
+                    contentType = {
+                        when (it) {
+                            is UpdatesUiModel.Header -> "header"
+                            is UpdatesUiModel.Item -> "update"
                         }
                     },
                 ) { model ->

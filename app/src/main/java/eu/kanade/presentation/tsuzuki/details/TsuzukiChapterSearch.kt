@@ -125,7 +125,9 @@ internal fun TsuzukiChapterSearch(
                         item(key = "summary") {
                             ChapterSearchSummary(state, chapters.size)
                         }
-                        items(items = state.results, key = { it.chapter.id }) { result ->
+                        items(items = state.results, key = {
+                            it.chapter.id
+                        }, contentType = { "chapter_result" }) { result ->
                             ChapterSearchResultTile(result) { onResultClick(result.chapter) }
                         }
                     }
