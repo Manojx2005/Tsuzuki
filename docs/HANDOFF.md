@@ -277,7 +277,7 @@ Result: _pending_
 
 #### Wave 3 — N21 to N32 (same batch rules; continue here after N20, in order)
 
-#### N21 Anime A1.3: vendor the native player libraries (T3) — `ready` (partial uncommitted work may exist in `.worktrees/n21`: check `git status` there and continue it)
+#### N21 Anime A1.3: vendor the native player libraries (T3) — `done` (Claude `654e0dff6`; checksum tamper test passes; not an :app dependency yet)
 WORKPLAN §6.1 A1.3. New Android library module `anime-player` with `src/main/jniLibs/arm64-v8a/*.so` and headers
 copied from the archived artifact `app/build/anime-native-41645408336/anime-native-arm64-41645408336/` (verify every
 file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), licence texts from its `licenses/` into
