@@ -67,6 +67,79 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
   Spotless clean, `./gradlew :app:assembleDebug :app:testDebugUnitTest` green.
 Result: _pending_
 
+### Batch B — restyle upstream dialogs/screens to the boards (WORKPLAN Phase 4B)
+
+**Rules for every B card (read once):**
+- Tier T2 · Codex `gpt-6.1-sol` effort medium. All B cards are `parallel-ok` with each other and with P0.3, but
+  run **at most two at a time** (Gradle). One card per thread; claim it here first.
+- Worktree per card: `git -c core.longpaths=true worktree add -b tsuzuki/<card-id> .worktrees/<card-id> main`
+  (lower-case id, e.g. `b1`), copy `local.properties` from the repo root into it, work only there.
+- Before coding open the board PNGs **both themes**: `docs/design/boards/png/<page>/<Board>.png` and
+  `.../png/<page>/dot/<Board>.png` (if a Dot one exists), plus `docs/design/boards/html/<page>/<Board>.html`
+  (numbers are in `renderVals()` at the bottom of the last script) and the matching section of
+  `docs/design/specs.md`. Build **Dot first**, then Colour.
+- Pattern: new Tsuzuki composable(s) under `app/src/main/java/eu/kanade/presentation/tsuzuki/<area>/`; in the
+  upstream file add **only** an early-return dispatch at the top of the composable
+  (`if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) { Tsuzuki…(same params); return }`), no re-indent, no
+  other upstream edits. Stock themes must look exactly as before. Reuse `TsuzukiTile`, `TsuzukiPill`/`TsuzukiPillRow`,
+  `TsuzukiSectionLabel`, `tsuzukiGroupedTile`, `TsuzukiModalBottomSheet`/`TsuzukiAdaptiveSheet`, `tsuzukiClickable`,
+  `tsuzukiDialogColor`, `TsuzukiMenuItem`, `tsuzukiCase()`; colours only from `TsuzukiTheme.tokens`; fonts only
+  from `MaterialTheme.typography`; Dot = uppercase + red only + greyscale covers.
+- Real data only: if the board shows something the app doesn't have, leave it out and list it in Result.
+- Strings: reuse existing ones first. New ones as `tsz_<area>_*` in all 8 locales (base, ja, zh-rCN, ko, es,
+  pt-rBR, fr, de), appended just before `</resources>` under a comment `<!-- <card-id> -->`, apostrophes escaped.
+- Unit-test any pure logic you add (JUnit5 + kotest, under `app/src/test/java/eu/kanade/presentation/tsuzuki/`).
+- Verify: per-file `./gradlew :app:spotlessApply -PspotlessIdeHook=<abs path>` twice until IS CLEAN for each
+  edited file; `./gradlew :app:assembleDebug :app:testDebugUnitTest`. Don't commit, push or use adb.
+- Result: files + one line each, what you left out and why, test counts, what Claude should check on devices
+  (which screen, how to reach it). Then status `review`.
+
+#### B1 Catalogue filters sheet — `ready` · `parallel-ok`
+Board `04-browse/CatalogueFilters`. Upstream `app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/SourceFilterDialog.kt`
+(the source filter sheet opened from a catalogue's Filter chip). Restyle as a Tsuzuki sheet: section labels,
+select/sort filters as pills or segment rows, checkboxes/tri-state as tiles with accent states, text filters as
+tiles, Reset + Filter actions per board. Keep every filter type working (Header, Separator, Select, Text,
+CheckBox, TriState, Group, Sort) and filter presets if present. Reach: Browse → a source → Filter.
+Result: _pending_
+
+#### B2 Add-to-library category dialog + duplicate dialog — `ready` · `parallel-ok`
+Boards `05-novel/AddCategory`, `05-novel/Duplicate`. Upstream: the change-category dialog in
+`app/src/main/java/eu/kanade/presentation/category/components/CategoryDialogs.kt` (only the category-picker
+dialog used when adding to library / moving; leave create/rename/delete dialogs) and
+`app/src/main/java/eu/kanade/presentation/manga/DuplicateMangaDialog.kt`. Keep tri-state selection, "edit
+categories" action, and every duplicate action (add anyway, migrate, open existing). Reach: long-press a book
+→ Move to category; add a book already in library from a catalogue.
+Result: _pending_
+
+#### B3 Edit book info — `ready` · `parallel-ok`
+Board `05-novel/EditNovel`. Upstream `app/src/main/java/eu/kanade/presentation/manga/components/EditMangaDialog.kt`.
+Tiles for title/author/artist/description/status/genres (tags as removable pills + add), cover change and reset
+per board; keep every existing field and the reset behaviour. Reach: book details → overflow → Edit info.
+Result: _pending_
+
+#### B4 Tracking sheet + tracker search — `ready` · `parallel-ok`
+Boards `05-novel/Tracking`, `05-novel/TrackerSearch`. Upstream `app/src/main/java/eu/kanade/presentation/track/TrackInfoDialogHome.kt`
+and `.../track/TrackerSearch.kt`. One tile per tracker (logo, status, chapters, score, dates as tappable rows,
+accent states); search screen with search field tile, result tiles with cover (greyscale in Dot), selected
+result outlined in accent, Track action. No fake numbers. Reach: book details → Tracking.
+Result: _pending_
+
+#### B5 Quotes sheet + search inside chapters — `ready` · `parallel-ok`
+Boards `08-tools/Quotes`, `08-tools/ChapterSearch`. Upstream `app/src/main/java/eu/kanade/presentation/reader/appbars/QuotesSheet.kt`
+and `app/src/main/java/eu/kanade/presentation/manga/ChapterSearchScreen.kt`. Quote tiles (text in the reading
+face via typography, chapter label, share/copy/delete actions as in the stock sheet); chapter search with search
+tile, result tiles showing chapter + highlighted match in accent. Keep all existing actions. Reach: novel
+reader → quotes; book details → overflow → search in chapters.
+Result: _pending_
+
+#### B6 Export as EPUB + Upcoming — `ready` · `parallel-ok`
+Boards `08-tools/ExportEpub`, `08-tools/Upcoming`. Upstream `app/src/main/java/eu/kanade/presentation/manga/components/ExportEpubDialog.kt`
+and `app/src/main/java/mihon/feature/upcoming/UpcomingScreenContent.kt`. Export: option tiles/switches and
+chapter-range per board, accent primary action, all existing options kept. Upcoming: month calendar with accent
+day markers and day list tiles, per board; keep the existing data and navigation. Reach: book details →
+overflow → Export EPUB; Updates → overflow/calendar → Upcoming.
+Result: _pending_
+
 ## Open questions for the owner
 
 1. **Onboarding content step** (`09-manga/OnboardingContent`, "What do you read & watch?" Novels / Manga /
