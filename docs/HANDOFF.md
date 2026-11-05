@@ -323,7 +323,7 @@ Board `06-reader/Notes`. A Tsuzuki "Notebook" screen per book combining existing
 book note, reachable from details overflow and the reader. Real data only (no glossary — not stored).
 Result: _pending_
 
-#### N28 Listening widget + TTS state (T3) — `claude-working` (Claude agent, .worktrees/n28)
+#### N28 Listening widget + TTS state (T3) — `done` (Claude agent `0d7523a9c`; widget not yet placed/checked on a device)
 Board `07-system/Widgets` (Listening). Expose TTS playback state from `TtsPlaybackService` (book, chapter, playing)
 in a small observable store, and add a Glance "Listening" widget next to `TsuzukiReadingWidget` (play/pause via
 the existing media session). Widget picker preview with neutral content.
