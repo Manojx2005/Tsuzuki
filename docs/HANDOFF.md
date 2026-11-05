@@ -43,9 +43,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- **C1 — `claude-working` (2026-11-05):** review + device test P0.5 onboarding (`.worktrees/onboarding`) when it
-  finishes; phone runtime checks P1.9 (long-strip transition) and P1.1 (rotation / process death) on both
-  devices. No code files on `main`; devices busy.
+- Nothing right now. (Phone runtime checks P1.9 / P1.1 stopped by the owner on 2026-11-05; still open in WORKPLAN Phase 1.)
 
 ## Codex queue
 
