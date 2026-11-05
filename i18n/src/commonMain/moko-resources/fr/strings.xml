@@ -1105,4 +1105,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">Filtres</string>
     <string name="tsz_catalogue_filter_presets">Préréglages de filtres</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Modifier les informations</string>
+    <string name="tsz_edit_reset_cover">Rétablir la couverture source</string>
 </resources>

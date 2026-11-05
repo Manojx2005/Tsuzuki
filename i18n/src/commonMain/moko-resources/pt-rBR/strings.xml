@@ -1109,4 +1109,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">Filtros</string>
     <string name="tsz_catalogue_filter_presets">Predefinições de filtros</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Editar informações</string>
+    <string name="tsz_edit_reset_cover">Restaurar capa da fonte</string>
 </resources>

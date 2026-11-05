@@ -1112,4 +1112,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">Filter</string>
     <string name="tsz_catalogue_filter_presets">Filtervoreinstellungen</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Informationen bearbeiten</string>
+    <string name="tsz_edit_reset_cover">Quellcover wiederherstellen</string>
 </resources>

@@ -1112,4 +1112,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">筛选</string>
     <string name="tsz_catalogue_filter_presets">筛选预设</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">编辑信息</string>
+    <string name="tsz_edit_reset_cover">恢复来源封面</string>
 </resources>

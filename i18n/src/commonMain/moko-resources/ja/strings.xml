@@ -1111,4 +1111,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">フィルター</string>
     <string name="tsz_catalogue_filter_presets">フィルタープリセット</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">情報を編集</string>
+    <string name="tsz_edit_reset_cover">ソースの表紙に戻す</string>
 </resources>

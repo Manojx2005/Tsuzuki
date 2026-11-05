@@ -1478,4 +1478,7 @@
     <!-- B1 -->
     <string name="tsz_catalogue_filters">Filters</string>
     <string name="tsz_catalogue_filter_presets">Filter presets</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Edit info</string>
+    <string name="tsz_edit_reset_cover">Reset to source</string>
 </resources>

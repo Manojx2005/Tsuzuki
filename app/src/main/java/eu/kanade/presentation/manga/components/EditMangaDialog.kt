@@ -72,6 +72,24 @@ fun EditMangaDialog(
     ) -> Unit,
     onSwapMainTitle: ((newMainTitle: String, updatedAltTitles: List<String>) -> Unit)? = null,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiEditMangaDialog(
+            manga = manga,
+            onDismissRequest = onDismissRequest,
+            onSaveTitle = onSaveTitle,
+            onSaveUrl = onSaveUrl,
+            onSaveAltTitles = onSaveAltTitles,
+            onSaveInfo = onSaveInfo,
+            onSwapMainTitle = onSwapMainTitle,
+            sourceValues = { if (sourceInfo != null) SourceValuesSection(sourceInfo, manga) },
+            alternativeTitles = { title, altTitles, onAltTitlesChange, onSwap ->
+                EditAltTitlesTab(title, altTitles, onAltTitlesChange, onSwap)
+            },
+        )
+        return
+    }
     var title by remember { mutableStateOf(manga.title) }
     var description by remember { mutableStateOf(manga.description.orEmpty()) }
     var url by remember { mutableStateOf(manga.url) }
