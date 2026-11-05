@@ -47,7 +47,12 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Codex queue
 
-### P0.5 Onboarding redesign — `codex-working` (started 2026-11-05 via Claude, worktree `.worktrees/onboarding`)
+### P0.5 Onboarding redesign — `ready` · `parallel-ok` (worktree `.worktrees/onboarding` already exists)
+**Partial work present (Claude-launched Codex run stopped by the owner 2026-11-05):** new
+`presentation/tsuzuki/onboarding/` files + tests, `theme/tsuzuki/TsuzukiOnboardingPalette.kt`, edits to the upstream
+onboarding screens, `SettingsDataScreen.kt`, strings in 8 locales. Review it against this card, finish, verify.
+Delete stray `.gradle-user-home/`, `onboarding-cache-copy.log`, `onboarding-validation.log` from the worktree.
+Edits to `PermissionStep.kt`, `StorageStep.kt`, `SettingsDataScreen.kt` must be minimal hooks (no re-indent).
 Card: the full brief is the one Claude sent (summary): Tsuzuki onboarding behind a dispatch in
 `presentation/more/onboarding/OnboardingScreen.kt`, new files in `presentation/tsuzuki/onboarding/`; steps
 welcome (no fake covers or "300+") → languages (`SourcePreferences.enabledLanguages`) → pick a look
