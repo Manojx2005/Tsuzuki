@@ -130,8 +130,10 @@ class MangaScreen(
             }
         }
 
+        var showScanlatorsDialog by remember { mutableStateOf(false) }
         MangaScreen(
             state = successState,
+            onScanlatorFilterClicked = { showScanlatorsDialog = true },
             snackbarHostState = viewModel.snackbarHostState,
             nextUpdate = successState.manga.expectedNextUpdate,
             isTabletUi = isTabletUi(),
@@ -238,8 +240,6 @@ class MangaScreen(
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
         )
-
-        var showScanlatorsDialog by remember { mutableStateOf(false) }
 
         val onDismissRequest = { viewModel.dismissDialog() }
         when (val dialog = successState.dialog) {
