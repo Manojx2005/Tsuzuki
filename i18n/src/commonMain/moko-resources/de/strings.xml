@@ -568,6 +568,9 @@
     <string name="error_saving_picture">Fehler beim Speichern des Bildes</string>
     <string name="empty_backup_error">Keine zu sichernden Bibliothekseinträge verfügbar</string>
     <string name="update_check_open">Auf GitHub öffnen</string>
+    <string name="update_check_skip">Diese Version überspringen</string>
+    <string name="update_check_skip_title">%s überspringen?</string>
+    <string name="update_check_skip_message">Updates enthalten oft Fehlerbehebungen und Sicherheitsverbesserungen. Du wirst nicht mehr an diese Version erinnert, aber weiterhin benachrichtigt, sobald eine neuere erscheint.</string>
     <string name="pref_clear_webview_data">WebView-Daten löschen</string>
     <string name="webview_data_deleted">WebView-Daten gelöscht</string>
     <string name="action_close">Schließen</string>

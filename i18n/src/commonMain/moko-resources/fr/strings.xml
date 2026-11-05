@@ -568,6 +568,9 @@
     <string name="error_saving_picture">Erreur d\'enregistrement de l\'image</string>
     <string name="empty_backup_error">Aucune série à sauvegarder dans votre bibliothèque</string>
     <string name="update_check_open">Ouvrir sur GitHub</string>
+    <string name="update_check_skip">Ignorer cette version</string>
+    <string name="update_check_skip_title">Ignorer %s ?</string>
+    <string name="update_check_skip_message">Les mises à jour contiennent souvent des corrections de bugs et des améliorations de sécurité. Vous ne serez plus averti pour cette version, mais vous le serez toujours lors de la sortie d'une version plus récente.</string>
     <string name="pref_clear_webview_data">Effacer les données WebView</string>
     <string name="webview_data_deleted">Données WebView effacées</string>
     <string name="action_close">Fermer</string>

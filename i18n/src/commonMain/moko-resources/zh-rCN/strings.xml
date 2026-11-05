@@ -568,6 +568,9 @@
     <string name="error_saving_picture">保存图片出错</string>
     <string name="empty_backup_error">书架没有可备份的作品</string>
     <string name="update_check_open">打开 GitHub 页面</string>
+    <string name="update_check_skip">跳过此版本</string>
+    <string name="update_check_skip_title">跳过 %s？</string>
+    <string name="update_check_skip_message">更新通常包含错误修复和安全改进。您将不再收到此版本的提醒，但有更新版本发布时仍会通知您。</string>
     <string name="webview_data_deleted">已清除 WebView 数据</string>
     <string name="pref_clear_webview_data">清除 WebView 数据</string>
     <string name="action_close">关闭</string>

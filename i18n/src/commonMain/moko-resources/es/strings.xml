@@ -566,6 +566,9 @@
     <string name="error_saving_picture">No se ha podido guardar la imagen</string>
     <string name="empty_backup_error">No hay ningún elemento en la biblioteca que respaldar</string>
     <string name="update_check_open">Abrir en GitHub</string>
+    <string name="update_check_skip">Omitir esta versión</string>
+    <string name="update_check_skip_title">¿Omitir %s?</string>
+    <string name="update_check_skip_message">Las actualizaciones suelen incluir correcciones de errores y mejoras de seguridad. No se te volverá a avisar de esta versión, pero sí cuando se publique una más reciente.</string>
     <string name="webview_data_deleted">Se han limpiado los datos del WebView</string>
     <string name="pref_clear_webview_data">Limpiar datos del WebView</string>
     <string name="action_close">Cerrar</string>
