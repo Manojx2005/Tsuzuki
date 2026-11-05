@@ -234,12 +234,12 @@ Board `04-browse/ExtensionRepos` shows how many sources each repo provides. Comp
 lists already loaded (manga + novel) grouped by repo, show in `TsuzukiExtensionStoreItem`. Hide when unknown.
 Result: _pending_
 
-#### N14 Global search result count + time (T2) — `ready`
+#### N14 Global search result count + time (T2) — `claude-working` (Claude agent, .worktrees/n14)
 Board `04-browse/GlobalSearch`: "N results · 0.6 s". Measure elapsed time per search in the global search
 view models (manga + novel) and show results count + seconds in the Tsuzuki header/result tiles. Real measurements.
 Result: _pending_
 
-#### N15 Storage breakdown in Data and storage (T3) — `ready`
+#### N15 Storage breakdown in Data and storage (T3) — `claude-working` (Claude agent, .worktrees/n15)
 Board `08-tools/DataTools` storage breakdown + stat tiles. Measure on IO: downloaded chapters size (download dir),
 cover cache size, database size, plus counts (novels, chapters). Show in the Data and storage screen in Tsuzuki
 themes; refresh on open; never block the main thread. Unit-test any formatting/aggregation helpers.
