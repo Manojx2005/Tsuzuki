@@ -1530,4 +1530,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">Redact sensitive headers</string>
     <string name="tsz_network_redact_headers_summary">Hide authentication headers in verbose network logs.</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">Time format</string>
+    <string name="tsz_time_follow_language">Follow language</string>
+    <string name="tsz_time_follow_system">Follow system</string>
+    <string name="tsz_time_24_hours">24-hour</string>
+    <string name="tsz_time_12_hours">12-hour</string>
 </resources>

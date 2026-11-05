@@ -1164,4 +1164,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">隐藏敏感请求头</string>
     <string name="tsz_network_redact_headers_summary">在详细网络日志中隐藏身份验证标头。</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">时间格式</string>
+    <string name="tsz_time_follow_language">跟随应用语言</string>
+    <string name="tsz_time_follow_system">跟随系统</string>
+    <string name="tsz_time_24_hours">24 小时制</string>
+    <string name="tsz_time_12_hours">12 小时制</string>
 </resources>

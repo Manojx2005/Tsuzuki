@@ -1163,4 +1163,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">민감한 헤더 숨기기</string>
     <string name="tsz_network_redact_headers_summary">상세 네트워크 로그에서 인증 헤더를 숨깁니다.</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">시간 형식</string>
+    <string name="tsz_time_follow_language">앱 언어 따르기</string>
+    <string name="tsz_time_follow_system">시스템 설정 따르기</string>
+    <string name="tsz_time_24_hours">24시간제</string>
+    <string name="tsz_time_12_hours">12시간제</string>
 </resources>

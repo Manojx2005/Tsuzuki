@@ -27,6 +27,7 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.ui.history.HistoryFilter
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
@@ -178,6 +179,7 @@ private fun HistoryScreenContent(
     onClickFavorite: (HistoryWithRelations) -> Unit,
     onLoadNextPage: () -> Unit,
 ) {
+    val timeFormatter = rememberTimestampFormatter()
     val tsuzukiStats = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     FastScrollLazyColumn {
@@ -217,6 +219,7 @@ private fun HistoryScreenContent(
                     HistoryItem(
                         modifier = Modifier.animateItem(),
                         history = value,
+                        timeFormatter = timeFormatter,
                         onClickCover = { onClickCover(value) },
                         onClickResume = { onClickResume(value) },
                         onClickDelete = { onClickDelete(value) },

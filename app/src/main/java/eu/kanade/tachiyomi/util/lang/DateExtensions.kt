@@ -12,7 +12,6 @@ import kotlinx.datetime.toLocalDateTime
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
-import java.text.DateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Date
@@ -21,14 +20,12 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 fun LocalDateTime.toDateTimestampString(dateTimeFormatter: DateTimeFormatter): String {
-    val javaLocalDateTime = this.toJavaLocalDateTime()
-    val date = dateTimeFormatter.format(javaLocalDateTime)
-    val time = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(javaLocalDateTime)
-    return "$date $time"
+    return dateTimeFormatter.format(toJavaLocalDateTime())
 }
 
-fun Date.toTimestampString(): String {
-    return DateFormat.getTimeInstance(DateFormat.SHORT).format(this)
+fun Date.toTimestampString(timeFormatter: DateTimeFormatter): String {
+    val localDateTime = Instant.fromEpochMilliseconds(time).toLocalDateTime(TimeZone.currentSystemDefault())
+    return timeFormatter.format(localDateTime.toJavaLocalDateTime())
 }
 
 fun Long.convertEpochMillisZone(

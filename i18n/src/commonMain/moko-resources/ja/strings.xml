@@ -1163,4 +1163,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">機密性の高いヘッダーを伏せる</string>
     <string name="tsz_network_redact_headers_summary">詳細なネットワークログで認証ヘッダーを伏せます。</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">時刻の形式</string>
+    <string name="tsz_time_follow_language">アプリの言語に従う</string>
+    <string name="tsz_time_follow_system">システム設定に従う</string>
+    <string name="tsz_time_24_hours">24時間制</string>
+    <string name="tsz_time_12_hours">12時間制</string>
 </resources>

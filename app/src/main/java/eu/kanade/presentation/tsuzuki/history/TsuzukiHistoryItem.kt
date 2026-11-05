@@ -35,6 +35,7 @@ import eu.kanade.tachiyomi.util.lang.toTimestampString
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.format.DateTimeFormatter
 
 /**
  * History row in the Tsuzuki themes (design board "History"): a tile with the cover,
@@ -48,6 +49,7 @@ fun TsuzukiHistoryItem(
     onClickDelete: () -> Unit,
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    timeFormatter: DateTimeFormatter,
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
@@ -61,7 +63,9 @@ fun TsuzukiHistoryItem(
         history.isNovel && history.lastPageRead > 0 -> (history.lastPageRead / 100f).coerceIn(0f, 1f)
         else -> null
     }
-    val readAt = remember(history.readAt) { history.readAt?.toTimestampString() ?: "" }
+    val readAt = remember(history.readAt, timeFormatter) {
+        history.readAt?.toTimestampString(timeFormatter).orEmpty()
+    }
     val chapter = if (history.chapterNumber > -1) "Ch. ${formatChapterNumber(history.chapterNumber)}" else null
 
     Row(
