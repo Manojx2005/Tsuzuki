@@ -1246,4 +1246,15 @@
     <string name="tsz_a11y_increase">增加</string>
     <string name="tsz_a11y_clear">清除</string>
     <string name="tsz_a11y_startup">Tsuzuki 正在启动。点按可跳过</string>
+    <string name="pref_category_extensions">插件</string>
+    <string name="pref_allowed_content_warnings">允许的内容警告</string>
+    <string name="content_warnings_info">需要重启应用才能生效。未加载的插件不会在应用中的任何位置提供其图源。这无法阻止非官方或标记错误的插件在应用中展示 18+ 内容。</string>
+    <string name="ext_info_warning">警告</string>
+    <string name="ext_content_warning_safe">安全</string>
+    <string name="ext_content_warning_mixed">混合</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">此插件的图源可能同时包含安全内容和 18+ 内容。</string>
+    <string name="ext_content_warning_nsfw_description">此插件的图源主要提供 18+ 内容。</string>
+    <string name="pref_apply_content_warnings_to_installed">同时应用于已安装的插件</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">关闭后，已安装的插件无论警告级别如何都会继续加载和更新</string>
 </resources>

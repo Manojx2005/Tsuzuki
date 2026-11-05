@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.model
 
 import android.graphics.drawable.Drawable
 import eu.kanade.tachiyomi.source.Source
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.domain.source.model.StubSource
 
@@ -13,7 +14,7 @@ sealed class Extension {
     abstract val versionCode: Long
     abstract val libVersion: Double
     abstract val lang: String?
-    abstract val isNsfw: Boolean
+    abstract val contentWarning: ContentWarning
     abstract val isNovel: Boolean
 
     data class Installed(
@@ -23,7 +24,7 @@ sealed class Extension {
         override val versionCode: Long,
         override val libVersion: Double,
         override val lang: String,
-        override val isNsfw: Boolean,
+        override val contentWarning: ContentWarning,
         override val isNovel: Boolean,
         val pkgFactory: String?,
         val sources: List<Source>,
@@ -41,7 +42,7 @@ sealed class Extension {
         override val versionCode: Long,
         override val libVersion: Double,
         override val lang: String,
-        override val isNsfw: Boolean,
+        override val contentWarning: ContentWarning,
         override val isNovel: Boolean,
         val sources: List<Source>,
         val apkUrl: String,
@@ -73,7 +74,7 @@ sealed class Extension {
         override val libVersion: Double,
         val signatureHash: String,
         override val lang: String? = null,
-        override val isNsfw: Boolean = false,
+        override val contentWarning: ContentWarning = ContentWarning.SAFE,
         override val isNovel: Boolean = false,
     ) : Extension()
 
@@ -95,7 +96,7 @@ sealed class Extension {
         val isShared: Boolean = true,
         override val isNovel: Boolean = false,
         override val lang: String? = null,
-        override val isNsfw: Boolean = false,
+        override val contentWarning: ContentWarning = ContentWarning.SAFE,
     ) : Extension() {
 
         enum class Reason {
@@ -116,7 +117,7 @@ sealed class Extension {
         override val versionCode: Long,
         override val libVersion: Double,
         override val lang: String,
-        override val isNsfw: Boolean,
+        override val contentWarning: ContentWarning,
         override val isNovel: Boolean,
         val sources: List<Available.Source>,
         val iconUrl: String,

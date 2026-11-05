@@ -1246,4 +1246,15 @@
     <string name="tsz_a11y_increase">Erhöhen</string>
     <string name="tsz_a11y_clear">Löschen</string>
     <string name="tsz_a11y_startup">Tsuzuki startet. Zum Überspringen tippen.</string>
+    <string name="pref_category_extensions">Erweiterungen</string>
+    <string name="pref_allowed_content_warnings">Erlaubte Inhaltswarnungen</string>
+    <string name="content_warnings_info">Erfordert einen Neustart der App. Nicht geladene Erweiterungen stellen ihre Quellen nirgends in der App bereit. Das verhindert nicht, dass inoffizielle oder falsch eingestufte Erweiterungen 18+-Inhalte in der App anzeigen.</string>
+    <string name="ext_info_warning">Warnung</string>
+    <string name="ext_content_warning_safe">Sicher</string>
+    <string name="ext_content_warning_mixed">Gemischt</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">Quellen dieser Erweiterung können sowohl unbedenkliche als auch 18+-Inhalte enthalten.</string>
+    <string name="ext_content_warning_nsfw_description">Quellen dieser Erweiterung konzentrieren sich hauptsächlich auf 18+-Inhalte.</string>
+    <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihrer Warnung weiter geladen und aktualisiert</string>
 </resources>

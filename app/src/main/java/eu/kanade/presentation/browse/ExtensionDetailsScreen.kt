@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.extension.interactor.ExtensionSourceItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.label
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
@@ -56,6 +57,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsViewModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.domain.extension.model.ContentWarning
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -229,6 +231,7 @@ private fun ExtensionDetails(
     }
     if (showNsfwWarning) {
         NsfwWarningDialog(
+            warning = extension.contentWarning,
             onClickConfirm = {
                 showNsfwWarning = false
             },
@@ -262,7 +265,7 @@ private fun DetailsHeader(
                             """
                             Extension name: ${extension.name} (lang: ${extension.lang}; package: ${extension.pkgName})
                             Extension version: ${extension.versionName} (lib: ${extension.libVersion}; version code: ${extension.versionCode})
-                            NSFW: ${extension.isNsfw}
+                            Content warning: ${extension.contentWarning}
                             """.trimIndent(),
                         )
 
@@ -325,22 +328,23 @@ private fun DetailsHeader(
             InfoDivider()
 
             InfoText(
-                modifier = Modifier.weight(if (extension.isNsfw) 1.5f else 1f),
+                modifier = Modifier.weight(if (extension.contentWarning != ContentWarning.SAFE) 1.5f else 1f),
                 primaryText = LocaleHelper.getSourceDisplayName(extension.lang, context),
                 secondaryText = stringResource(MR.strings.ext_info_language),
             )
 
-            if (extension.isNsfw) {
+            val warningLabel = extension.contentWarning.label
+            if (warningLabel != null) {
                 InfoDivider()
 
                 InfoText(
                     modifier = Modifier.weight(1f),
-                    primaryText = stringResource(MR.strings.ext_nsfw_short),
+                    primaryText = stringResource(warningLabel.title),
                     primaryTextStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.error,
+                        color = warningLabel.color,
                         fontWeight = FontWeight.Medium,
                     ),
-                    secondaryText = stringResource(MR.strings.ext_info_age_rating),
+                    secondaryText = stringResource(MR.strings.ext_info_warning),
                     onClick = onClickAgeRating,
                 )
             }
@@ -478,11 +482,12 @@ private fun SourceSwitchPreference(
 
 @Composable
 private fun NsfwWarningDialog(
+    warning: ContentWarning,
     onClickConfirm: () -> Unit,
 ) {
     AlertDialog(
         text = {
-            Text(text = stringResource(MR.strings.ext_nsfw_warning))
+            warning.label?.let { Text(text = stringResource(it.description)) }
         },
         confirmButton = {
             TextButton(onClick = onClickConfirm) {

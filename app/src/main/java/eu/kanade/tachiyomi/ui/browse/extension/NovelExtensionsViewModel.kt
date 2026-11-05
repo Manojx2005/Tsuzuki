@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.viewmodel.StateViewModel
+import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
@@ -123,7 +124,7 @@ class NovelExtensionsViewModel(
                             versionCode = verCode,
                             libVersion = 0.0,
                             lang = langIso,
-                            isNsfw = false,
+                            contentWarning = ContentWarning.SAFE,
                             isNovel = true,
                             sources = listOf(
                                 Extension.Available.Source(
@@ -155,7 +156,7 @@ class NovelExtensionsViewModel(
                                 versionCode = verCode,
                                 libVersion = 0.0,
                                 lang = langIso,
-                                isNsfw = false,
+                                contentWarning = ContentWarning.SAFE,
                                 isNovel = true,
                                 sources = listOf(
                                     Extension.Available.Source(

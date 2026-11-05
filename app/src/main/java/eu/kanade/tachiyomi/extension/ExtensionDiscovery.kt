@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension
 
 import eu.kanade.tachiyomi.source.CatalogueSource
+import mihon.domain.extension.model.ContentWarning
 
 /**
  * Interface for discovering extensions at test time.
@@ -60,7 +61,7 @@ class RealExtensionDiscovery(
                 pkgName = ext.pkgName,
                 versionName = ext.versionName,
                 lang = ext.lang,
-                isNsfw = ext.isNsfw,
+                isNsfw = ext.contentWarning != ContentWarning.SAFE,
                 isNovel = ext.isNovel,
                 sources = ext.sources.map { source ->
                     SourceInfo(

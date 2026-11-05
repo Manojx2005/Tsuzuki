@@ -12,6 +12,7 @@ import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceFactory
+import eu.kanade.tachiyomi.extension.util.ContentWarningPolicy
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
 import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
@@ -19,6 +20,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
+import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import java.io.File
@@ -31,9 +33,6 @@ internal object AnimeExtensionLoader {
 
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustExtension by injectLazy()
-    private val loadNsfwSource by lazy {
-        preferences.showNsfwSource.get()
-    }
 
     private const val EXTENSION_FEATURE = "tachiyomi.animeextension"
     private const val METADATA_SOURCE_CLASS = "tachiyomi.animeextension.class"
@@ -285,10 +284,21 @@ internal object AnimeExtensionLoader {
             return AnimeLoadResult.Untrusted(extension)
         }
 
-        val isNsfw = metadata.getInt(METADATA_CONTENT_WARNING) > 0 ||
-            metadata.getInt(METADATA_NSFW) == 1
-        if (!loadNsfwSource && isNsfw) {
-            logcat(LogPriority.WARN) { "NSFW extension $pkgName not allowed" }
+        val contentWarning = ContentWarningPolicy.fromMetadata(
+            contentWarning = if (metadata.containsKey(METADATA_CONTENT_WARNING)) {
+                metadata.getInt(METADATA_CONTENT_WARNING)
+            } else {
+                null
+            },
+            legacyNsfw = metadata.getInt(METADATA_NSFW),
+        )
+        if (!ContentWarningPolicy.canLoadInstalled(
+                warning = contentWarning,
+                enabled = preferences.enabledContentWarnings.get(),
+                applyToInstalled = preferences.applyContentWarningsToInstalled.get(),
+            )
+        ) {
+            logcat(LogPriority.WARN) { "Extension $pkgName with $contentWarning not allowed" }
             return AnimeLoadResult.Error
         }
 
@@ -360,7 +370,7 @@ internal object AnimeExtensionLoader {
             versionCode = versionCode,
             libVersion = libVersion,
             lang = lang,
-            isNsfw = isNsfw,
+            isNsfw = contentWarning != ContentWarning.SAFE,
             isTorrent = isTorrent,
             sources = sources,
             pkgFactory = metadata.getString(METADATA_SOURCE_FACTORY),
