@@ -1539,4 +1539,6 @@
     <!-- N9 -->
     <string name="tsz_browse_select_source">Select a source</string>
     <string name="tsz_browse_open_catalogue">Open catalogue</string>
+    <!-- N14 -->
+    <string name="tsz_search_results_time">%1$d results · %2$s s</string>
 </resources>

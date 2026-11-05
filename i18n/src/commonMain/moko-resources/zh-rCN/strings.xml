@@ -1173,4 +1173,6 @@
     <!-- N9 -->
     <string name="tsz_browse_select_source">选择来源</string>
     <string name="tsz_browse_open_catalogue">打开目录</string>
+    <!-- N14 -->
+    <string name="tsz_search_results_time">%1$d 个结果 · %2$s 秒</string>
 </resources>
