@@ -1519,4 +1519,6 @@
     <string name="tsz_source_wizard">Wizard</string>
     <string name="tsz_picker_title">Site picker</string>
     <string name="tsz_picker_step">Step %1$d of %2$d · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">Read from here</string>
 </resources>

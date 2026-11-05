@@ -1152,4 +1152,6 @@
     <string name="tsz_source_wizard">마법사</string>
     <string name="tsz_picker_title">사이트 선택기</string>
     <string name="tsz_picker_step">%2$d단계 중 %1$d단계 · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">여기부터 읽기</string>
 </resources>

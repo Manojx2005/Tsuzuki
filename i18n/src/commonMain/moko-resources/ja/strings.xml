@@ -1152,4 +1152,6 @@
     <string name="tsz_source_wizard">ウィザード</string>
     <string name="tsz_picker_title">サイトピッカー</string>
     <string name="tsz_picker_step">ステップ %1$d / %2$d · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">ここから読み上げ</string>
 </resources>

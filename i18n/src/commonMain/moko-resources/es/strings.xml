@@ -1140,4 +1140,6 @@
     <string name="tsz_source_wizard">Asistente</string>
     <string name="tsz_picker_title">Selector del sitio</string>
     <string name="tsz_picker_step">Paso %1$d de %2$d · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">Leer desde aquí</string>
 </resources>

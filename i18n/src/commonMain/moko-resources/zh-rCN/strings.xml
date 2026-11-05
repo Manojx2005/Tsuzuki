@@ -1153,4 +1153,6 @@
     <string name="tsz_source_wizard">向导</string>
     <string name="tsz_picker_title">网站选择器</string>
     <string name="tsz_picker_step">第 %1$d 步，共 %2$d 步 · %3$s</string>
+    <!-- c5 -->
+    <string name="tsz_tts_read_from_here">从此处朗读</string>
 </resources>
