@@ -7,10 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiReaderTransition
 import eu.kanade.presentation.tsuzuki.novel.TsuzukiReaderContents
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -49,11 +51,31 @@ internal class TsuzukiReaderContentsHook {
     private var visible by mutableStateOf(false)
 
     @Composable
-    fun openAction(): (() -> Unit)? =
-        { visible = true }.takeIf { TsuzukiTheme.tokens.style != TsuzukiStyle.NONE }
+    private fun docked(): Boolean =
+        shouldDockReaderPanel(isTabletUi(), LocalConfiguration.current.screenWidthDp)
+
+    @Composable
+    fun openAction(): (() -> Unit)? {
+        // The docked panel toggles; the modal drawer only opens.
+        val toggle = docked()
+        return { visible = !toggle || !visible }.takeIf { TsuzukiTheme.tokens.style != TsuzukiStyle.NONE }
+    }
 
     @Composable
     fun Drawer(activity: ReaderActivity, viewModel: ReaderViewModel, state: ReaderViewModel.State) {
+        if (docked()) {
+            TsuzukiReaderPanel(
+                activity = activity,
+                visible = visible && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE,
+                widthDp = readerPanelWidthDp(LocalConfiguration.current.screenWidthDp),
+                manga = state.manga,
+                currentChapterId = state.contentsChapterId(),
+                loadQuotes = viewModel::getQuotes,
+                onDismissRequest = { visible = false },
+                onOpenChapter = { chapterId -> openChapter(activity, viewModel.state.value, chapterId) },
+            )
+            return
+        }
         TsuzukiReaderContents(
             visible = visible,
             manga = state.manga,

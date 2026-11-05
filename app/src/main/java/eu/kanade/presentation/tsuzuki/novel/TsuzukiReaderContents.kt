@@ -157,11 +157,12 @@ fun TsuzukiReaderContents(
 }
 
 @Composable
-private fun ContentsBody(
+internal fun ContentsBody(
     manga: Manga,
     entries: List<TsuzukiTocEntry>?,
     currentChapterId: Long?,
     onOpenChapter: (Long) -> Unit,
+    showHeading: Boolean = true,
 ) {
     val tokens = TsuzukiTheme.tokens
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -175,16 +176,18 @@ private fun ContentsBody(
         if (index > 0) listState.scrollToItem((index - 3).coerceAtLeast(0))
     }
 
-    TsuzukiSectionLabel(
-        manga.title,
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp),
-    )
-    Text(
-        stringResource(MR.strings.tsz_reader_contents).let { if (tokens.isDot) it.uppercase() else it },
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-        style = MaterialTheme.typography.headlineLarge,
-        fontSize = 34.sp,
-    )
+    if (showHeading) {
+        TsuzukiSectionLabel(
+            manga.title,
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp),
+        )
+        Text(
+            stringResource(MR.strings.tsz_reader_contents).let { if (tokens.isDot) it.uppercase() else it },
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.headlineLarge,
+            fontSize = 34.sp,
+        )
+    }
     TsuzukiSegments(
         labels = listOf(stringResource(MR.strings.tsz_reader_chapters), stringResource(MR.strings.tsz_reader_marks)),
         selected = tab,
@@ -300,7 +303,7 @@ private fun ChapterRow(entry: TsuzukiTocEntry, current: Boolean, onClick: () -> 
 }
 
 /** Every chapter in the book's own order (as on its details page), numbered by reading order. */
-private suspend fun loadToc(manga: Manga): List<TsuzukiTocEntry> {
+internal suspend fun loadToc(manga: Manga): List<TsuzukiTocEntry> {
     val chapters = Injekt.get<GetChaptersByMangaId>().await(manga.id, applyScanlatorFilter = true)
     val downloads = Injekt.get<DownloadManager>()
     val readingOrder = chapters.sortedWith(getChapterSort(manga, sortDescending = false))

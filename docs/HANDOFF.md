@@ -309,7 +309,7 @@ Result: _pending_
 Board `11-tablet/TabletReaderPanel`. On tablet UI in Tsuzuki themes, the novel reader can show a side panel (contents
 / quotes / notes for this book) beside the text instead of the drawer, toggled from the existing contents action.
 Reuse `TsuzukiReaderContents`, quotes data and book notes; don't touch viewer internals.
-Result: _pending_
+Result: done (`TsuzukiReaderPanel.kt`, hook in `TsuzukiReaderHooks.kt`; docked on tablet UI at >= 900 dp by padding `reader_container`; Contents / Quotes / Notes tabs; no Edit action since the notes screen is not reachable from the reader; not device-checked).
 
 #### N26 Find in chapter (T3) — `ready`
 Board `06-reader/ReaderFind`. In the novel reader, a find bar that searches the current chapter text (query, n of m,

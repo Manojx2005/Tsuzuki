@@ -1380,6 +1380,10 @@
     <string name="tsz_reader_marks">Marks</string>
     <string name="tsz_reader_jump">Jump to chapter…</string>
     <string name="tsz_reader_no_marks">No bookmarked chapters</string>
+    <string name="tsz_reader_panel_quotes">Quotes</string>
+    <string name="tsz_reader_panel_notes">Notes</string>
+    <string name="tsz_reader_panel_no_quotes">No quotes saved for this book</string>
+    <string name="tsz_reader_panel_no_notes">No notes for this book yet</string>
 
     <!-- Tsuzuki reader settings sheet -->
     <string name="tsz_rs_look">Look</string>

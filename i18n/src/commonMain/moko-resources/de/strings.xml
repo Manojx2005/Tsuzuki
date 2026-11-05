@@ -1018,6 +1018,10 @@
     <string name="tsz_reader_marks">Lesezeichen</string>
     <string name="tsz_reader_jump">Zu Kapitel springen…</string>
     <string name="tsz_reader_no_marks">Keine Kapitel mit Lesezeichen</string>
+    <string name="tsz_reader_panel_quotes">Zitate</string>
+    <string name="tsz_reader_panel_notes">Notizen</string>
+    <string name="tsz_reader_panel_no_quotes">Keine Zitate für dieses Buch gespeichert</string>
+    <string name="tsz_reader_panel_no_notes">Noch keine Notizen zu diesem Buch</string>
     <string name="tsz_rs_look">Aussehen</string>
     <string name="tsz_rs_layout">Layout</string>
     <string name="tsz_rs_controls">Steuerung</string>

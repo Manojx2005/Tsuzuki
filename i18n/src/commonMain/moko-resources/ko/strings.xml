@@ -1017,6 +1017,10 @@
     <string name="tsz_reader_marks">책갈피</string>
     <string name="tsz_reader_jump">챕터로 이동…</string>
     <string name="tsz_reader_no_marks">책갈피한 챕터가 없습니다</string>
+    <string name="tsz_reader_panel_quotes">인용구</string>
+    <string name="tsz_reader_panel_notes">노트</string>
+    <string name="tsz_reader_panel_no_quotes">이 책에 저장된 인용구가 없습니다</string>
+    <string name="tsz_reader_panel_no_notes">이 책에 노트가 아직 없습니다</string>
     <string name="tsz_rs_look">모양</string>
     <string name="tsz_rs_layout">레이아웃</string>
     <string name="tsz_rs_controls">조작</string>
