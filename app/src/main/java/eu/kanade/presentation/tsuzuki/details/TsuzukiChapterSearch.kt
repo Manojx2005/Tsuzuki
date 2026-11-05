@@ -50,7 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.UpIcon
 import eu.kanade.presentation.theme.tsuzuki.LocalTsuzukiTokens
@@ -367,7 +366,7 @@ private fun ChapterSearchResultTile(result: ChapterSearchResult, onClick: () -> 
             }
             result.snippets.forEach { snippet ->
                 Text(
-                    text = chapterSearchSnippetText(snippet, highlight, SpanStyle(color = tokens.dotOn.copy(alpha = 0.72f))),
+                    text = chapterSearchSnippetText(snippet, highlight),
                     color = tokens.dotOn.copy(alpha = 0.72f),
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -379,10 +378,9 @@ private fun ChapterSearchResultTile(result: ChapterSearchResult, onClick: () -> 
 internal fun chapterSearchSnippetText(
     snippet: ChapterSearchSnippet,
     highlight: SpanStyle,
-    suffix: SpanStyle = SpanStyle(),
 ): AnnotatedString =
     buildAnnotatedString {
         append(snippet.text)
         addStyle(highlight, snippet.matchStart, snippet.matchEnd)
-        withStyle(suffix) { append(" (%.1f%%)".format(snippet.position * 100)) }
+        append(" (%.1f%%)".format(snippet.position * 100))
     }

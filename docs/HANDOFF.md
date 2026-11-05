@@ -43,178 +43,22 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- Nothing right now. (Phone runtime checks P1.9 / P1.1 stopped by the owner on 2026-11-05; still open in WORKPLAN Phase 1.)
+- **P0.6 onboarding media-types step — `claude-working`** (`.worktrees/media-step`, Sonnet agent): "What do you
+  read?" cards (Light novels fixed on; Manga & manhwa toggles the existing `BasePreferences.hideMangaUi`), Tsuzuki
+  library pills/media switch respect `hideMangaUi`, shorter Japanese welcome heading.
 
 ## Codex queue
 
-### P0.3 Sort Tsuzuki-owned novel/manga code — `review` (2026-11-05, worktree `.worktrees/media-packages`) (P0.4 and P0.5 are merged into main)
-- Tier T1 · Codex `gpt-5.3-codex-spark`, effort low.
-- Worktree: `git -c core.longpaths=true worktree add -b tsuzuki/media-packages .worktrees/media-packages main`, copy `local.properties`.
-- `docs/ARCHITECTURE.md` §7 found only five media-specific Tsuzuki files; everything else is shared and stays.
-  Move with `git mv`, change only the `package` line, imports and fully-qualified call sites:
-  - → `app/src/main/java/eu/kanade/presentation/tsuzuki/novel/`: `reader/TsuzukiReaderSettingsSheet.kt`,
-    `reader/TsuzukiReaderContents.kt`, `updates/TsuzukiUpdatesGroupTile.kt`, `settings/TsuzukiSourcePriority.kt`
-    (package `eu.kanade.presentation.tsuzuki.novel`).
-  - → `app/src/main/java/eu/kanade/presentation/tsuzuki/manga/`: `reader/ReaderDownloadStatus.kt`
-    (package `eu.kanade.presentation.tsuzuki.manga`).
-  - Callers to fix (FQN or import only, no other edits): `P/reader/settings/ReaderSettingsDialog.kt`,
-    `A/ui/reader/ReaderActivity.kt`, `P/updates/UpdatesUiItem.kt`, `A/ui/library/duplicate/SourcePriorityScreen.kt`,
-    `A/ui/reader/viewer/ReaderTransitionView.kt`, and `P/tsuzuki/reader/TsuzukiReaderHooks.kt` (now calls
-    `TsuzukiReaderContents`; it stays in `reader/`); move the tests (`TsuzukiTocFilterTest`, `SourcePriorityStepTest`,
-    `ReaderDownloadStatusTest`) to the matching test packages. Keep `internal` visibility working.
-  - Update the paths in `docs/ARCHITECTURE.md` §7 is Claude's job; just list the moves in Result.
-- Done when: `git diff -M --stat` shows five renames (+ tests) with only package/import lines changed, per-file
-  Spotless clean, `./gradlew :app:assembleDebug :app:testDebugUnitTest` green.
-Result (Codex, 2026-11-05) — `.worktrees/media-packages` on `tsuzuki/media-packages` (base `0f62fca60`).
-
-- `TsuzukiReaderSettingsSheet.kt`, `TsuzukiReaderContents.kt`, `TsuzukiUpdatesGroupTile.kt`, and `TsuzukiSourcePriority.kt` moved to `presentation/tsuzuki/novel/`.
-- `ReaderDownloadStatus.kt` moved to `presentation/tsuzuki/manga/`.
-- `TsuzukiTocFilterTest.kt` and `SourcePriorityStepTest.kt` moved to the matching novel test package, and `ReaderDownloadStatusTest.kt` moved to the matching manga test package.
-- `ReaderSettingsDialog.kt`, `UpdatesUiItem.kt`, and `SourcePriorityScreen.kt` update their fully qualified calls. `TsuzukiReaderHooks.kt` imports the relocated contents drawer, and `ReaderTransitionView.kt` imports the relocated download-status helper. `ReaderActivity.kt` already goes through the shared hook.
-
-`git diff HEAD -M` shows eight renames and five caller files. Each renamed file differs only in its package declaration. The second scoped Spotless pass reported all 13 files clean. The debug build and all 663 app tests passed with zero failures or skips, including the three relocated test classes. Logs are in the worktree under `app/build/media-packages-format-second.log` and `app/build/media-packages-validation.log`.
-
-Integration follow-up for Claude. Update the architecture paths and the 11 baseline-profile rules referencing the old packages (nine for the contents drawer and two for the novel updates tile). The startup profile has no matches. Profile and documentation edits were outside this card's package and caller scope. For the device smoke check, open novel reader settings and contents, grouped novel Updates, Source priority, and a manga chapter transition. Review both the indexed moves and the working-tree edits before committing.
-
-### Batch B — restyle upstream dialogs/screens to the boards (WORKPLAN Phase 4B)
-
-**Rules for every B card (read once):**
-- Tier T2 · Codex `gpt-6.1-sol` effort medium. All B cards are `parallel-ok` with each other and with P0.3, but
-  run **at most two at a time** (Gradle). One card per thread; claim it here first.
-- Worktree per card: `git -c core.longpaths=true worktree add -b tsuzuki/<card-id> .worktrees/<card-id> main`
-  (lower-case id, e.g. `b1`), copy `local.properties` from the repo root into it, work only there.
-- Before coding open the board PNGs **both themes**: `docs/design/boards/png/<page>/<Board>.png` and
-  `.../png/<page>/dot/<Board>.png` (if a Dot one exists), plus `docs/design/boards/html/<page>/<Board>.html`
-  (numbers are in `renderVals()` at the bottom of the last script) and the matching section of
-  `docs/design/specs.md`. Build **Dot first**, then Colour.
-- Pattern: new Tsuzuki composable(s) under `app/src/main/java/eu/kanade/presentation/tsuzuki/<area>/`; in the
-  upstream file add **only** an early-return dispatch at the top of the composable
-  (`if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) { Tsuzuki…(same params); return }`), no re-indent, no
-  other upstream edits. Stock themes must look exactly as before. Reuse `TsuzukiTile`, `TsuzukiPill`/`TsuzukiPillRow`,
-  `TsuzukiSectionLabel`, `tsuzukiGroupedTile`, `TsuzukiModalBottomSheet`/`TsuzukiAdaptiveSheet`, `tsuzukiClickable`,
-  `tsuzukiDialogColor`, `TsuzukiMenuItem`, `tsuzukiCase()`; colours only from `TsuzukiTheme.tokens`; fonts only
-  from `MaterialTheme.typography`; Dot = uppercase + red only + greyscale covers.
-- Real data only: if the board shows something the app doesn't have, leave it out and list it in Result.
-- Strings: reuse existing ones first. New ones as `tsz_<area>_*` in all 8 locales (base, ja, zh-rCN, ko, es,
-  pt-rBR, fr, de), appended just before `</resources>` under a comment `<!-- <card-id> -->`, apostrophes escaped.
-- Unit-test any pure logic you add (JUnit5 + kotest, under `app/src/test/java/eu/kanade/presentation/tsuzuki/`).
-- Verify: per-file `./gradlew :app:spotlessApply -PspotlessIdeHook=<abs path>` twice until IS CLEAN for each
-  edited file; `./gradlew :app:assembleDebug :app:testDebugUnitTest`. Don't commit, push or use adb.
-- Result: files + one line each, what you left out and why, test counts, what Claude should check on devices
-  (which screen, how to reach it). Then status `review`.
-
-#### B1 Catalogue filters sheet — `review` · `parallel-ok` (2026-11-05, `.worktrees/b1`)
-Board `04-browse/CatalogueFilters`. Upstream `app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/SourceFilterDialog.kt`
-(the source filter sheet opened from a catalogue's Filter chip). Restyle as a Tsuzuki sheet: section labels,
-select/sort filters as pills or segment rows, checkboxes/tri-state as tiles with accent states, text filters as
-tiles, Reset + Filter actions per board. Keep every filter type working (Header, Separator, Select, Text,
-CheckBox, TriState, Group, Sort) and filter presets if present. Reach: Browse → a source → Filter.
-Result (Codex, 2026-11-05) — `.worktrees/b1`, `tsuzuki/b1` (base `0f62fca60`).
-
-- `SourceFilterDialog.kt` adds a Tsuzuki dispatch and passes through the existing preset-save dialog.
-- `TsuzukiCatalogueFilters.kt` owns the adaptive sheet, Reset, preset actions, and the pinned Filter action.
-- `TsuzukiCatalogueFilterItems.kt` renders all eight source filter types. Groups remain collapsible, sorts retain direction, and source-provided values populate the controls.
-- `CatalogueFilterItemsTest.kt` adds five tests for tri-state cycling and sort direction. `i18n/.../strings.xml` adds two labels in eight locales.
-
-Board sample genres, statuses and sorts were left out because these depend on the source. All 12 files reported `IS CLEAN` on the second scoped Spotless pass. `:app:assembleDebug :app:testDebugUnitTest` passed with 668 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log` in the worktree.
-
-Claude device review: Browse → a source → Filter in Dot, Colour, and a legacy theme. Exercise nested groups, selection, text, tri-state, repeated sort taps, Reset, Filter, and preset save/load on a phone and tablet.
-
-#### B2 Add-to-library category dialog + duplicate dialog — `review` · `parallel-ok` (2026-11-05, `.worktrees/b2`)
-Boards `05-novel/AddCategory`, `05-novel/Duplicate`. Upstream: the change-category dialog in
-`app/src/main/java/eu/kanade/presentation/category/components/CategoryDialogs.kt` (only the category-picker
-dialog used when adding to library / moving; leave create/rename/delete dialogs) and
-`app/src/main/java/eu/kanade/presentation/manga/DuplicateMangaDialog.kt`. Keep tri-state selection, "edit
-categories" action, and every duplicate action (add anyway, migrate, open existing). Reach: long-press a book
-→ Move to category; add a book already in library from a catalogue.
-Result (Codex, 2026-11-05) — `.worktrees/b2`, `tsuzuki/b2` (base `0f62fca60`).
-
-- `CategoryDialogs.kt` and `DuplicateMangaDialog.kt` add Tsuzuki dispatches to the two target dialogs.
-- `TsuzukiChangeCategoryDialog.kt` renders real categories with tri-state rows, an empty state, Edit categories, and the existing confirm and cancel actions.
-- `TsuzukiDuplicateMangaDialog.kt` uses real matching books and chapter counts. Select a match to use Open or Migrate, or long-press to open. Add anyway follows the existing permission and Cancel remains available.
-- `CategorySelectionChangesTest.kt` adds three tests for the stock add/remove contract. Both dialogs reuse existing strings.
-
-The category picker omits book-specific copy, shelf counts and the default-shelf switch because its inputs do not supply those. Edit categories leads to the existing management flow. The duplicate dialog omits the incoming cover and Merge action because it receives only existing matches and no merge callback. The second scoped Spotless pass reported all five files clean. `:app:assembleDebug :app:testDebugUnitTest` passed with 666 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log`.
-
-Claude device review: Library → long-press one or multiple books → Move to category. Check mixed selection, empty categories, Edit, Cancel and OK. Add a matching book from a catalogue, then check selection, Open, long-press Open, Migrate, Add anyway and Cancel. Check Find duplicates on a library book for hidden Add anyway, and compare both dialogs in Dot, Colour and a legacy theme.
-
-#### B3 Edit book info — `review` · `parallel-ok` (2026-11-05, `.worktrees/b3`)
-Board `05-novel/EditNovel`. Upstream `app/src/main/java/eu/kanade/presentation/manga/components/EditMangaDialog.kt`.
-Tiles for title/author/artist/description/status/genres (tags as removable pills + add), cover change and reset
-per board; keep every existing field and the reset behaviour. Reach: book details → overflow → Edit info.
-Result (Codex, 2026-11-05) — `.worktrees/b3`, `tsuzuki/b3` (base `0f62fca60`).
-
-- `EditMangaDialog.kt` adds a Tsuzuki dispatch and passes through the existing original-source and alternative-title sections.
-- `TsuzukiEditMangaDialog.kt` renders the board's metadata tiles and preserves artist, URL, all statuses, genres, and alternative titles. Save, Close and Back save through the existing callbacks. Title swaps use the existing atomic swap.
-- `TsuzukiEditCoverTile.kt` displays the live cover and uses the existing cover view model to pick a replacement or restore the source cover when a remote custom cover exists.
-- `i18n/.../strings.xml` adds the Edit info and Reset to source labels in eight locales.
-
-The manual book-colour swatches are omitted because the editor has no palette setting. Clear custom metadata remains available from the existing details overflow. No new standalone logic was added. The second scoped Spotless pass reported all 11 files clean. `:app:assembleDebug :app:testDebugUnitTest` passed with 663 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log`.
-
-Claude device review: book details → overflow → Edit info. Check keyboard and long text, edits to all fields, tags, alternative-title copy/delete/swap and Back autosave. On a favorited source book, change and reset a cover. Also check local cover replacement, existing Clear custom metadata and legacy fallback.
-
-#### B4 Tracking sheet + tracker search — `review` · `parallel-ok` (2026-11-05, `.worktrees/b4`)
-Boards `05-novel/Tracking`, `05-novel/TrackerSearch`. Upstream `app/src/main/java/eu/kanade/presentation/track/TrackInfoDialogHome.kt`
-and `.../track/TrackerSearch.kt`. One tile per tracker (logo, status, chapters, score, dates as tappable rows,
-accent states); search screen with search field tile, result tiles with cover (greyscale in Dot), selected
-result outlined in accent, Track action. No fake numbers. Reach: book details → Tracking.
-Result (Codex, 2026-11-05) — `.worktrees/b4`, `tsuzuki/b4` (base `0f62fca60`).
-
-- `TrackInfoDialogHome.kt` and `TrackerSearch.kt` add Tsuzuki dispatches and retain the legacy paths.
-- `TsuzukiTrackInfoDialogHome.kt` renders linked and unlinked trackers with real logos, status, chapters, supported score/dates, and existing add/change, browser, copy, privacy and remove actions.
-- `TsuzukiTrackerSearch.kt` renders the search field, real cover and metadata tiles, accent selection, and normal/private Track. It preserves alternate-title search, loading, empty and error states, and long-press copy/open.
-- `TrackerChapterProgressTest.kt` adds three cases for chapter-progress formatting. `i18n/.../strings.xml` adds the alternate-title accessibility label in eight locales.
-
-The tracker roster and numbers come from the app. Sample provider and book names, rankings and adaptation badges were omitted, as was the unconditional sync claim because sync is configurable. The second scoped Spotless pass reported all 13 files clean. `:app:assembleDebug :app:testDebugUnitTest` passed with 666 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log`.
-
-Claude device review: book details → Tracking in Dot, Colour, and a legacy theme. Exercise linked and unlinked providers, metrics, change/add, search with IME and alternate titles, private tracking, result long-press, and tracker browser/copy/remove actions. Check narrow-screen wrapping and greyscale covers.
-
-#### B5 Quotes sheet + search inside chapters — `review` · `parallel-ok` (2026-11-05, `.worktrees/b5`)
-Boards `08-tools/Quotes`, `08-tools/ChapterSearch`. Upstream `app/src/main/java/eu/kanade/presentation/reader/appbars/QuotesSheet.kt`
-and `app/src/main/java/eu/kanade/presentation/manga/ChapterSearchScreen.kt`. Quote tiles (text in the reading
-face via typography, chapter label, share/copy/delete actions as in the stock sheet); chapter search with search
-tile, result tiles showing chapter + highlighted match in accent. Keep all existing actions. Reach: novel
-reader → quotes; book details → overflow → search in chapters.
-Result (Codex, 2026-11-05) — `.worktrees/b5`, `tsuzuki/b5` (base `0f62fca60`).
-
-- `QuotesSheet.kt` dispatches quote rows in Tsuzuki themes and shares the existing sheet, quote details, edit, delete confirmation and reorder state.
-- `TsuzukiQuoteTile.kt` shows real chapter, paragraph and date metadata with direct Share, Copy and Delete and the existing reorder gesture.
-- `ChapterSearchScreen.kt` dispatches the themed search. `TsuzukiChapterSearch.kt` provides a search tile, option pills, real progress and error states, and result tiles with the original match offsets and reader navigation.
-- `TsuzukiReadingTypography.kt` provides scoped Literata typography with Japanese fallback for both excerpts.
-- `QuoteTileMetadataTest.kt` and `ChapterSearchSnippetTextTest.kt` add five tests. `i18n/.../strings.xml` adds the reorder accessibility label in eight locales.
-
-Cross-novel quotes, bulk export and board samples are omitted because the sheet receives only this book's quotes and no export callback. The existing sheet header and controls remain shared. The second scoped Spotless pass reported all 15 files clean. `:app:assembleDebug :app:testDebugUnitTest` passed with 668 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log`.
-
-Claude device review: novel reader → Quotes. Check empty and saved states, details/jump, editing and append, add, Share/Copy/Delete and drag reorder. Book details → overflow → Search chapters. Check keyboard, clear, regex/case/whole word, progress, errors, highlighted matches and reader jump in Dot, Colour and a legacy theme.
-
-#### B6 Export as EPUB + Upcoming — `review` · `parallel-ok` (2026-11-05, `.worktrees/b6`)
-Boards `08-tools/ExportEpub`, `08-tools/Upcoming`. Upstream `app/src/main/java/eu/kanade/presentation/manga/components/ExportEpubDialog.kt`
-and `app/src/main/java/mihon/feature/upcoming/UpcomingScreenContent.kt`. Export: option tiles/switches and
-chapter-range per board, accent primary action, all existing options kept. Upcoming: month calendar with accent
-day markers and day list tiles, per board; keep the existing data and navigation. Reach: book details →
-overflow → Export EPUB; Updates → overflow/calendar → Upcoming.
-Result (Codex, 2026-11-05) — `.worktrees/b6`, `tsuzuki/b6` (base `0f62fca60`).
-
-- `ExportEpubDialog.kt` dispatches the themed editor and shares the stock filename builder.
-- `TsuzukiExportEpubDialog.kt` renders option tiles, translation segments, chapter-range and filename controls, a live preview and the pinned Export action. It preserves the stock document picker and options.
-- `UpcomingScreenContent.kt` dispatches the themed calendar. `TsuzukiUpcomingScreen.kt` shows real forecast marks and selected-day books, with month navigation, filters, help, back and book links on phone and tablet.
-- `EpubExportContainerTest.kt` and `UpcomingCalendarTest.kt` add seven tests. `i18n/.../strings.xml` adds three labels in eight locales.
-
-The single-book export leaves out batch packaging and compression controls. Upcoming leaves out projected chapter numbers and cadence labels because its forecasts supply the book and expected date. The second scoped Spotless pass reported all 14 files clean. `:app:assembleDebug :app:testDebugUnitTest` passed with 670 tests and zero failures or skips. Logs are under `app/build/card-{format,validation}.log`.
-
-Claude device review: book details → overflow → Export EPUB. Check options, filename preview, range/count, EPUB/ZIP picker, cancellation and retry. Updates → Upcoming. Check month navigation across December/January, locale weekday alignment, marked and empty days, books, filters, help and back. Compare both surfaces in Dot, Colour and a legacy theme.
+_Empty — Codex is out of usage (owner, 2026-11-05). Claude works the plan directly with Claude agents until
+Codex is back; new cards will be written here when it is._
 
 ## Open questions for the owner
 
-1. **Onboarding content step** (`09-manga/OnboardingContent`, "What do you read & watch?" Novels / Manga /
-   Manhwa / Anime, "we only show what you use"): there's no preference behind it yet. Build it as a new
-   "media types I use" setting that hides tabs/filters for unused types (manhwa waits for classification, anime
-   for stage 2)? Or skip it?
-2. Anime spike WIP: commit the 31 uncommitted API-port paths on `codex/anime-spike` to preserve them, or keep
-   only the patch backup? (Plan re-ports onto current main either way.)
-3. Push: 49+ local commits are unpushed. Push `main` to `origin` now?
-4. Still parked from before: release v0.1 / signing / making the repo public; Firebase telemetry removal before
-   release; Support us screen; in-app PIN lock; Import EPUB "off" switch.
+- Still parked: release v0.1 / signing / making the repo public; Firebase telemetry removal before release;
+  Support us screen; in-app PIN lock; Import EPUB "off" switch.
+- Upcoming (B6) now lists only the selected day's books (board behaviour) instead of every date with "Today /
+  Tomorrow" headings; duplicate dialog (B2) taps select and Migrate is a separate button (board behaviour). Say
+  if you prefer the stock behaviour.
 
 ## Owner decisions in force
 
@@ -228,6 +72,8 @@ Claude device review: book details → overflow → Export EPUB. Check options, 
   untouched. Temporary EPUB / Royal Road imports allowed with cleanup.
 - Pushed screens follow the Settings boards, not the book palette. Dot "Colour covers" switch exists (default off).
 - Anime native builds via GitHub Actions only; must stay non-GPL (LGPL dynamic libs OK with licences).
+- Owner 2026-11-05 (before leaving): push `main` after review — allowed; build the media-types onboarding step
+  (novels + manga now); commit the anime spike WIP on its branch; Codex is out of usage, Claude continues alone.
 - AppLock PIN, Support us: parked. Release/signing/telemetry: owner-gated (WORKPLAN Phase 7).
 
 ## Device and data notes (things that bit us)
@@ -244,6 +90,19 @@ Claude device review: book details → overflow → Export EPUB. Check options, 
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — Codex P0.3 + B1–B6 reviewed and merged.** P0.3 (`ae1ecc6bd`, merge `5f2ff2a03`): five
+  media-specific files moved to `tsuzuki/novel/` and `tsuzuki/manga/`, package/import lines only. B1–B6
+  (merges `b2f863a4f`…`757642986`): catalogue filters, change-category + duplicate dialogs, edit info,
+  tracking + tracker search, quote tiles + chapter search, EPUB export + Upcoming — each behind an early-return
+  dispatch. Three Sonnet reviewers: all merge-with-fixes, no blockers; fixes applied (category selection uses
+  plain `remember`, duplicate summary restored, tracker search list keys, EPUB filename labels use the stock
+  `epub_include_*` keys, explicit translation-mode list, preview remember keys, pill index guard, muted match
+  suffix). Known exception: quotes use Literata via a direct `FontFamily` (commented; no shared reader-face helper).
+  `strings.xml` conflicts unioned. Onboarding device pass (tablet): welcome, languages (real list, current
+  selection), look (Colour ↔ Dot recreates and stays on the step), storage, permissions, import tiles, backup
+  handoff — all OK; tablet back on Dot Home, no crashes. Known pre-existing quirk: re-opening onboarding from
+  Settings on the tablet two-pane layout and using a backup tile pushes a second Settings into the detail pane
+  (stock onboarding does the same). Anime spike WIP committed on `codex/anime-spike` (`ad6442e1f`).
 - **2026-11-05 Claude — reviewed Codex P0.4 + P0.5, merged (`af8155b6c`, `c9e648a3b`).** P0.4 (`ff407d59c`):
   transitions, contents drawer and ReadingDays moved to `presentation/tsuzuki/reader/TsuzukiReaderHooks.kt`;
   ReaderActivity/ReaderViewModel keep one-line calls; behaviour identical on review. P0.5 (`b4532cf5b`): six-step
