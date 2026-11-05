@@ -277,7 +277,7 @@ Result: _pending_
 
 #### Wave 3 — N21 to N32 (same batch rules; continue here after N20, in order)
 
-#### N21 Anime A1.3: vendor the native player libraries (T3) — `claude-working` (Claude agent, .worktrees/n21)
+#### N21 Anime A1.3: vendor the native player libraries (T3) — `ready` (partial uncommitted work may exist in `.worktrees/n21`: check `git status` there and continue it)
 WORKPLAN §6.1 A1.3. New Android library module `anime-player` with `src/main/jniLibs/arm64-v8a/*.so` and headers
 copied from the archived artifact `app/build/anime-native-41645408336/anime-native-arm64-41645408336/` (verify every
 file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), licence texts from its `licenses/` into
@@ -291,7 +291,7 @@ passed by intent. Wire `anime-player` into `:app` only for the debug build type 
 preview/release). Re-run a 16 KB alignment check on the debug APK's anime libs and record sizes. No user-visible UI.
 Result: _pending_
 
-#### N23 Anime A2.1: schema design doc (T3, doc only) — `claude-working` (Claude agent, .worktrees/n23)
+#### N23 Anime A2.1: schema design doc (T3, doc only) — `ready` (partial work may exist in `.worktrees/n23`)
 Write `docs/ANIME_SCHEMA.md`: tables `animes`, `episodes`, `anime_history`, `anime_categories`, `anime_tracks` (Aniyomi
 Apache-2.0 schema as reference), SQLDelight migration numbering after the current latest migration in
 `data/src/main/sqldelight/tachiyomi/migrations/`, backup proto additions, how library/Home/Updates/History will read
@@ -390,6 +390,14 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-06 02:30–03:55 Claude — Codex paused at its limit since 01:37; Claude took over cards.** Merged N13
+  (repo source counts), N14 (global search count + time), N15 (storage breakdown; tablet shows real 1.7 GB /
+  4 novels / 1 manga / 4,158 chapters), N16 (accent swatches + Reduce motion; Dot Appearance checked), N17 (skip
+  update version + in-screen download; needs a public release to see), N18 (failed-to-load extensions; extensions
+  and sources still load after cold start), N24 research (`docs/research/neural-tts.md`: GO-WITH-CONDITIONS,
+  sherpa-onnx >= 2.0.1 has no espeak-ng). Build 766 tests green, pushed, installed on both devices. Claude hit its
+  5-hour limit at ~03:55 (resets 04:30); N21/N23 agents stopped mid-way and are back to `ready`. Remaining: N19-N23,
+  N25-N32. The 06:00 Claude review is still scheduled.
 - **2026-11-06 00:00–02:30 Claude — overnight batch N1–N12 reviewed and merged as they landed.** N1/N2 Mihon fix
   groups A/B (webtoon stutter b5856135c skipped: needs Mihon's pixel-buffer reader pipeline), N3 novel status bar
   (Tsundoku `NovelStatusBar.kt` body moved into a `themed`-flag content function: watch on Tsundoku merges), N4
