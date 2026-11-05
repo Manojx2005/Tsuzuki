@@ -245,13 +245,13 @@ cover cache size, database size, plus counts (novels, chapters). Show in the Dat
 themes; refresh on open; never block the main thread. Unit-test any formatting/aggregation helpers.
 Result: _pending_
 
-#### N16 Accent colour + Reduce motion settings (T3) — `claude-working` (Claude agent, .worktrees/n16)
+#### N16 Accent colour + Reduce motion settings (T3) — `done` (Claude agent `772656afa`, merged `2174782d3`)
 Board `07-system/Settings` rows. Add `UiPreferences` for (a) Colour theme accent choice (the board's swatches; Dot
 stays red) feeding `TsuzukiTokens`/`ProvideBookPalette` default accent, and (b) Reduce motion (app-level, OR-ed with
 the system animator scale inside `rememberReduceMotion()`). Rows in Appearance (Tsuzuki themes only).
 Result: _pending_
 
-#### N17 Mihon: skip an update version + download from update screen (T2/T3) — `claude-working` (Claude agent, .worktrees/n17)
+#### N17 Mihon: skip an update version + download from update screen (T2/T3) — `done` (Claude agent `5c66704ba`, merged `62896ccd9`; needs a public release to device-check)
 Port Mihon fc20410 (skip this version) and #3707 (download the app update from the update screen) onto
 `data/updater/**` and the Tsuzuki `TsuzukiNewUpdateScreen`. Find exact commits with `git log mihon/main --grep`.
 Result: _pending_
