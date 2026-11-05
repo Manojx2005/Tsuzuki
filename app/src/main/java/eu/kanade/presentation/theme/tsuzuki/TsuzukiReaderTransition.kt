@@ -16,9 +16,8 @@ fun tsuzukiReaderTransition(context: Context, opening: Boolean): Pair<Int, Int>?
         return R.anim.tsuzuki_reader_fade_in to R.anim.tsuzuki_reader_fade_out
     }
     return when {
-        opening && theme == AppTheme.DOT -> R.anim.tsuzuki_reader_enter_dot to R.anim.tsuzuki_reader_behind_dot
+        // Dot uses the smooth curve too; the stepped path looked like dropped frames (owner, 2026-11-06).
         opening -> R.anim.tsuzuki_reader_enter to R.anim.tsuzuki_reader_behind
-        theme == AppTheme.DOT -> R.anim.tsuzuki_reader_return_dot to R.anim.tsuzuki_reader_exit_dot
         else -> R.anim.tsuzuki_reader_return to R.anim.tsuzuki_reader_exit
     }
 }

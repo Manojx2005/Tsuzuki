@@ -25,13 +25,8 @@ private val LocalCoverVisibilityScope = staticCompositionLocalOf<AnimatedVisibil
 @Composable
 fun TsuzukiNavigatorTransition(navigator: Navigator, modifier: Modifier = Modifier) {
     val reduced = rememberReduceMotion()
-    val easing = if (TsuzukiTheme.tokens.isDot) {
-        TsuzukiMotion.stepped(
-            TsuzukiMotion.Standard,
-        )
-    } else {
-        TsuzukiMotion.Standard
-    }
+    // Full-screen fades stay smooth in Dot; stepping is kept for small UI (pills, toggles).
+    val easing = TsuzukiMotion.Standard
     val fade = tween<Float>(if (reduced) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHARED_MS, easing = easing)
     SharedTransitionLayout(modifier) {
         CompositionLocalProvider(LocalSharedCoverScope provides this) {
@@ -56,13 +51,8 @@ fun Modifier.tsuzukiSharedCover(mangaId: Long): Modifier {
     if (mangaId <= 0 || TsuzukiTheme.tokens.style == TsuzukiStyle.NONE || rememberReduceMotion()) return this
     val shared = LocalSharedCoverScope.current ?: return this
     val visibility = LocalCoverVisibilityScope.current ?: return this
-    val easing = if (TsuzukiTheme.tokens.isDot) {
-        TsuzukiMotion.stepped(
-            TsuzukiMotion.Standard,
-        )
-    } else {
-        TsuzukiMotion.Standard
-    }
+    // Movement stays smooth in Dot too: an 8-step path read as ~18 fps lag (owner, 2026-11-06).
+    val easing = TsuzukiMotion.Standard
     return with(shared) {
         this@tsuzukiSharedCover.sharedElement(
             sharedContentState = rememberSharedContentState("tsuzuki-cover-$mangaId"),
