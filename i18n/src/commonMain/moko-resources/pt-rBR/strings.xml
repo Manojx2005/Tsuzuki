@@ -1152,4 +1152,9 @@
     <string name="tsz_picker_step">Etapa %1$d de %2$d · %3$s</string>
     <!-- c5 -->
     <string name="tsz_tts_read_from_here">Ler a partir daqui</string>
+    <!-- d1 -->
+    <string name="tsz_updates_preview">Prévia · %1$s</string>
+    <string name="tsz_updates_more_new">mais %1$d capítulos novos</string>
+    <string name="tsz_updates_read_chapter">Ler capítulo</string>
+    <string name="tsz_updates_open_book">Abrir livro</string>
 </resources>

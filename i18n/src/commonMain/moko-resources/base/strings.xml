@@ -1521,4 +1521,9 @@
     <string name="tsz_picker_step">Step %1$d of %2$d · %3$s</string>
     <!-- c5 -->
     <string name="tsz_tts_read_from_here">Read from here</string>
+    <!-- d1 -->
+    <string name="tsz_updates_preview">Preview · %1$s</string>
+    <string name="tsz_updates_more_new">%1$d more new</string>
+    <string name="tsz_updates_read_chapter">Read chapter</string>
+    <string name="tsz_updates_open_book">Open book</string>
 </resources>

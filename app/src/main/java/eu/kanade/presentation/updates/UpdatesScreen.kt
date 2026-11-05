@@ -84,6 +84,8 @@ fun UpdateScreen(
         onSelectAll(false)
     }
 
+    val tsuzukiTwoPane = eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesTwoPaneEnabled()
+
     Scaffold(
         topBar = { scrollBehavior ->
             UpdatesAppBar(
@@ -113,6 +115,22 @@ fun UpdateScreen(
     ) { contentPadding ->
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+            tsuzukiTwoPane -> eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTwoPane(
+                state = state,
+                contentPadding = contentPadding,
+                lastUpdated = lastUpdated,
+                showFilterChips = showFilterChips,
+                showAllFilter = showAllFilter,
+                showMangaFilter = showMangaFilter,
+                onFilterSelected = onFilterSelected,
+                onClickCover = onClickCover,
+                onUpdateSelected = onUpdateSelected,
+                onOpenChapter = onOpenChapter,
+                onDownloadChapter = onDownloadChapter,
+                onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+                onClickNovelGroup = onClickNovelGroup,
+                onLoadMore = onLoadMore,
+            )
             else -> {
                 val scope = rememberCoroutineScope()
                 var isRefreshing by remember { mutableStateOf(false) }
