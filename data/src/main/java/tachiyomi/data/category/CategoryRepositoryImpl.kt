@@ -24,6 +24,12 @@ class CategoryRepositoryImpl(
         return database.categoriesQueries.getCategories(::mapCategory).subscribeToList()
     }
 
+    override fun getWithBookCountsAsFlow(): Flow<List<Pair<Category, Long>>> {
+        return database.categoriesQueries.getCategoriesWithBookCounts { id, name, order, flags, contentType, count ->
+            mapCategory(id, name, order, flags, contentType) to count
+        }.subscribeToList()
+    }
+
     override suspend fun getCategoriesByMangaId(mangaId: Long): List<Category> {
         return database.categoriesQueries.getCategoriesByMangaId(mangaId, ::mapCategory).awaitAsList()
     }

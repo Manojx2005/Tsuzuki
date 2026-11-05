@@ -67,6 +67,7 @@ fun CategoryScreen(
 
         CategoryContent(
             categories = state.categories,
+            bookCounts = state.bookCounts,
             lazyListState = lazyListState,
             paddingValues = paddingValues,
             onClickRename = onClickRename,
@@ -79,6 +80,7 @@ fun CategoryScreen(
 @Composable
 private fun CategoryContent(
     categories: List<Category>,
+    bookCounts: Map<Long, Long>,
     lazyListState: LazyListState,
     paddingValues: PaddingValues,
     onClickRename: (Category) -> Unit,
@@ -115,6 +117,7 @@ private fun CategoryContent(
                 CategoryListItem(
                     modifier = Modifier.animateItem(),
                     category = category,
+                    bookCount = bookCounts[category.id],
                     onRename = { onClickRename(category) },
                     onDelete = { onClickDelete(category) },
                 )
