@@ -41,6 +41,12 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 - Anime native artifact archived at `app/build/anime-native-41645408336/` (GitHub copy expires ~2026-11-17).
 - Codex heartbeat automation `continue-tsuzuki-work` repointed to this file.
 
+## Claude is working on (Codex: don't touch these)
+
+- **C1 — `claude-working` (2026-11-05):** review + device test P0.5 onboarding (`.worktrees/onboarding`) when it
+  finishes; phone runtime checks P1.9 (long-strip transition) and P1.1 (rotation / process death) on both
+  devices. No code files on `main`; devices busy.
+
 ## Codex queue
 
 ### P0.5 Onboarding redesign — `codex-working` (started 2026-11-05 via Claude, worktree `.worktrees/onboarding`)
