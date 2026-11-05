@@ -88,6 +88,7 @@ data object LibraryTab : Tab {
 
     @Composable
     override fun Content() {
+        if (eu.kanade.tachiyomi.tsuzuki.anime.library.AnimeLibraryUi.contentIfSelected()) return
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val scope = rememberCoroutineScope()

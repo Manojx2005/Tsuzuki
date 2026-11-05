@@ -92,6 +92,7 @@ data object NovelsTab : Tab {
 
     @Composable
     override fun Content() {
+        if (eu.kanade.tachiyomi.tsuzuki.anime.library.AnimeLibraryUi.contentIfSelected()) return
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
@@ -99,14 +100,16 @@ data object NovelsTab : Tab {
 
         val libraryPreferences = remember { Injekt.get<tachiyomi.domain.library.service.LibraryPreferences>() }
         val isJoined by libraryPreferences.joinedLibrary.collectAsState()
-        val libraryType = if (isJoined) LibraryViewModel.LibraryType.All else LibraryViewModel.LibraryType.Novel
+        val libraryType = eu.kanade.tachiyomi.tsuzuki.anime.library.AnimeLibraryUi.readerType(isJoined)
         val viewModel = viewModel<LibraryViewModel>(
+            key = "library-$libraryType",
             factory = LibraryViewModel.Factory,
             extras = CreationExtras {
                 set(LibraryViewModel.TYPE_KEY, libraryType)
             },
         )
         val settingsViewModel = viewModel<LibrarySettingsViewModel>(
+            key = "library-settings-$libraryType",
             factory = LibrarySettingsViewModel.Factory,
             extras = CreationExtras {
                 set(LibrarySettingsViewModel.TYPE_KEY, libraryType)

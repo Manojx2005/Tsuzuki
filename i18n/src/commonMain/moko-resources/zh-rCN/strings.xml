@@ -922,4 +922,10 @@
     <string name="downloading_with_progress">正在下载… (%d%%)</string>
     <string name="pref_filter_update_categories_details">同时属于包含和排除分类的作品更新将不予显示。</string>
     <string name="pref_filter_upcoming_categories_details">同时属于包含和排除分类的标题将不予显示。</string>
+    <string name="tsz_anime">动画</string>
+    <string name="tsz_anime_watching">在看</string>
+    <string name="tsz_anime_plan">想看</string>
+    <string name="tsz_anime_empty">此列表中还没有动画。</string>
+    <string name="tsz_anime_episode_progress">第 %1$d / %2$d 集</string>
+    <string name="tsz_anime_episodes_unknown">尚未获取剧集</string>
 </resources>

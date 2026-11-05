@@ -921,4 +921,10 @@
     <string name="theme_tokyonight">도쿄 나이트</string>
     <string name="downloading_with_progress">다운로드 중… (%d%%)</string>
     <string name="pref_filter_update_categories_details">제외된 카테고리 업데이트는 포함되는 카테고리가 있어도 표시되지 않습니다.</string>
+    <string name="tsz_anime">애니메이션</string>
+    <string name="tsz_anime_watching">시청 중</string>
+    <string name="tsz_anime_plan">보고 싶어요</string>
+    <string name="tsz_anime_empty">이 목록에는 아직 애니메이션이 없습니다.</string>
+    <string name="tsz_anime_episode_progress">에피소드 %1$d / %2$d</string>
+    <string name="tsz_anime_episodes_unknown">에피소드를 아직 가져오지 않았습니다</string>
 </resources>

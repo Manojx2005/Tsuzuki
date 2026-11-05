@@ -974,4 +974,10 @@
     <string name="tsz_theme_colour_sub">本ごとの色をまとう</string>
     <string name="tsz_theme_dot_sub">モノクロに赤ひとつ</string>
     <string name="tsz_settings">設定</string>
+    <string name="tsz_anime">アニメ</string>
+    <string name="tsz_anime_watching">視聴中</string>
+    <string name="tsz_anime_plan">見たい</string>
+    <string name="tsz_anime_empty">このリストにはまだアニメがありません。</string>
+    <string name="tsz_anime_episode_progress">%1$d / %2$d 話</string>
+    <string name="tsz_anime_episodes_unknown">エピソード未取得</string>
 </resources>

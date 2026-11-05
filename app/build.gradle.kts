@@ -40,6 +40,7 @@ android {
         buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
+        buildConfigField("boolean", "ANIME_SPIKE", "false")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -77,7 +78,9 @@ android {
 
     buildTypes {
         val debug = getByName("debug") {
-            applicationIdSuffix = ".dev"
+            buildConfigField("boolean", "ANIME_SPIKE", "${providers.gradleProperty("animeSpike").orNull == "true"}")
+            applicationIdSuffix =
+                if (providers.gradleProperty("animeSpike").orNull == "true") ".anime.spike" else ".dev"
             versionNameSuffix = "-${getLatestCommitCount()}"
             isPseudoLocalesEnabled = true
         }
@@ -138,6 +141,10 @@ android {
 
     sourceSets {
         getByName("benchmark").res.directories.add("src/debug/res")
+        if (providers.gradleProperty("animeSpike").orNull == "true") {
+            getByName("debug").jniLibs.srcDir("build/anime-stage1-20261104/audit-cfe06d3e/native-artifact/jniLibs")
+            getByName("debug").assets.srcDir("build/anime-stage1-20261104/assets")
+        }
     }
 
     splits {
@@ -294,7 +301,7 @@ dependencies {
 
     // JavaScript engine (for JS plugins)
     // implementation(libs.bundles.js.engine)
-    implementation("io.github.dokar3:quickjs-kt:1.0.0-alpha13")
+    implementation("io.github.dokar3:quickjs-kt:1.0.15")
 
     // Disk
     implementation(libs.diskLruCache)

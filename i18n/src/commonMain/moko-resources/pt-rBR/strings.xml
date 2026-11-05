@@ -919,4 +919,10 @@
     <string name="pref_vertical_navigator_height">Altura do navegador vertical</string>
     <string name="considering">Considerando</string>
     <string name="theme_tokyonight">Noite em Tóquio</string>
+    <string name="tsz_anime">Anime</string>
+    <string name="tsz_anime_watching">Assistindo</string>
+    <string name="tsz_anime_plan">Para assistir</string>
+    <string name="tsz_anime_empty">Ainda não há anime nesta lista.</string>
+    <string name="tsz_anime_episode_progress">Ep %1$d / %2$d</string>
+    <string name="tsz_anime_episodes_unknown">Episódios não obtidos</string>
 </resources>

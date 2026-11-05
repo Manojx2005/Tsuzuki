@@ -1340,4 +1340,10 @@
     <string name="tsz_theme_colour_sub">Takes each book\'s colours</string>
     <string name="tsz_theme_dot_sub">Monochrome, one red accent</string>
     <string name="tsz_settings">Settings</string>
+    <string name="tsz_anime">Anime</string>
+    <string name="tsz_anime_watching">Watching</string>
+    <string name="tsz_anime_plan">Plan to watch</string>
+    <string name="tsz_anime_empty">No anime in this list yet.</string>
+    <string name="tsz_anime_episode_progress">Ep %1$d / %2$d</string>
+    <string name="tsz_anime_episodes_unknown">Episodes not fetched</string>
 </resources>

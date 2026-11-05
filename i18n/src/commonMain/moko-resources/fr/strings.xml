@@ -915,4 +915,10 @@
     <string name="donationCampaign.paragraph3">Quoi qu\'il en soit, Mihon continuera d\'être maintenu par les contributeurs et moi-même, et restera open-source.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Faire disparaitre</string>
+    <string name="tsz_anime">Anime</string>
+    <string name="tsz_anime_watching">En cours</string>
+    <string name="tsz_anime_plan">À voir</string>
+    <string name="tsz_anime_empty">Aucun anime dans cette liste.</string>
+    <string name="tsz_anime_episode_progress">Ép %1$d / %2$d</string>
+    <string name="tsz_anime_episodes_unknown">Épisodes non récupérés</string>
 </resources>

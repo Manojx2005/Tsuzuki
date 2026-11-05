@@ -1,0 +1,89 @@
+CREATE TABLE tsuzuki_anime (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    thumbnail_url TEXT,
+    description TEXT,
+    genre TEXT,
+    status INTEGER NOT NULL DEFAULT 0,
+    favorite INTEGER NOT NULL DEFAULT 0 CHECK (favorite IN (0, 1)),
+    watch_status INTEGER NOT NULL DEFAULT 0 CHECK (watch_status IN (0, 1, 2)),
+    date_added INTEGER NOT NULL DEFAULT 0,
+    episodes_fetched INTEGER NOT NULL DEFAULT 0 CHECK (episodes_fetched IN (0, 1)),
+    UNIQUE (source, url)
+);
+
+CREATE TABLE tsuzuki_episodes (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL REFERENCES tsuzuki_anime(_id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    episode_number REAL NOT NULL DEFAULT -1,
+    source_order INTEGER NOT NULL DEFAULT 0,
+    date_upload INTEGER NOT NULL DEFAULT 0,
+    date_fetch INTEGER NOT NULL DEFAULT 0,
+    seen INTEGER NOT NULL DEFAULT 0 CHECK (seen IN (0, 1)),
+    bookmark INTEGER NOT NULL DEFAULT 0 CHECK (bookmark IN (0, 1)),
+    last_position_ms INTEGER NOT NULL DEFAULT 0 CHECK (last_position_ms >= 0),
+    duration_ms INTEGER NOT NULL DEFAULT 0 CHECK (duration_ms >= 0),
+    UNIQUE (anime_id, url)
+);
+
+CREATE INDEX tsuzuki_anime_library_index ON tsuzuki_anime(favorite, watch_status, title);
+CREATE INDEX tsuzuki_episode_order_index ON tsuzuki_episodes(anime_id, source_order);
+
+getAnimeById:
+SELECT * FROM tsuzuki_anime WHERE _id = :id;
+
+getAnimeIdBySourceUrl:
+SELECT _id FROM tsuzuki_anime WHERE source = :source AND url = :url;
+
+getAnimeLibrary:
+SELECT a._id AS id, a.source, a.url, a.title, a.thumbnail_url, a.watch_status, a.episodes_fetched,
+    (SELECT count(*) FROM tsuzuki_episodes e WHERE e.anime_id = a._id) AS episode_count,
+    (SELECT count(*) FROM tsuzuki_episodes e WHERE e.anime_id = a._id AND e.seen = 1) AS seen_count
+FROM tsuzuki_anime a
+WHERE a.favorite = 1
+ORDER BY a.title COLLATE NOCASE, a._id;
+
+getAnimeMediaCounts:
+SELECT
+    (SELECT count(*) FROM mangas WHERE favorite = 1 AND is_novel = 1) AS novels,
+    (SELECT count(*) FROM mangas WHERE favorite = 1 AND is_novel = 0) AS manga,
+    (SELECT count(*) FROM tsuzuki_anime WHERE favorite = 1) AS anime;
+
+addAnimeFavorite:
+INSERT INTO tsuzuki_anime(source, url, title, thumbnail_url, description, genre, status, favorite, date_added)
+VALUES (:source, :url, :title, :thumbnailUrl, :description, :genre, :status, 1, :dateAdded)
+ON CONFLICT(source, url) DO UPDATE SET
+    title = excluded.title,
+    thumbnail_url = excluded.thumbnail_url,
+    description = coalesce(excluded.description, tsuzuki_anime.description),
+    genre = coalesce(excluded.genre, tsuzuki_anime.genre),
+    status = excluded.status,
+    favorite = 1,
+    date_added = CASE WHEN tsuzuki_anime.favorite = 0 THEN excluded.date_added ELSE tsuzuki_anime.date_added END;
+
+removeAnimeFavorite:
+UPDATE tsuzuki_anime SET favorite = 0 WHERE _id = :id;
+
+setAnimeWatchStatus:
+UPDATE tsuzuki_anime SET watch_status = :watchStatus WHERE _id = :id;
+
+markAnimeEpisodesFetched:
+UPDATE tsuzuki_anime SET episodes_fetched = 1 WHERE _id = :id;
+
+getAnimeEpisodes:
+SELECT * FROM tsuzuki_episodes WHERE anime_id = :animeId ORDER BY source_order, _id;
+
+upsertAnimeEpisode:
+INSERT INTO tsuzuki_episodes(anime_id, url, name, scanlator, episode_number, source_order, date_upload, date_fetch)
+VALUES (:animeId, :url, :name, :scanlator, :episodeNumber, :sourceOrder, :dateUpload, :dateFetch)
+ON CONFLICT(anime_id, url) DO UPDATE SET
+    name = excluded.name,
+    scanlator = excluded.scanlator,
+    episode_number = excluded.episode_number,
+    source_order = excluded.source_order,
+    date_upload = CASE WHEN excluded.date_upload > 0 THEN excluded.date_upload ELSE tsuzuki_episodes.date_upload END;

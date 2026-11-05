@@ -922,4 +922,10 @@
     <string name="downloading_with_progress">Wird heruntergeladen… (%d%%)</string>
     <string name="pref_filter_update_categories_details">Aktualisierungen in ausgeschlossen Kategorien werden nicht angezeigt, selbst wenn sie in eingeschlossenen Kategorien vorkommen.</string>
     <string name="pref_filter_upcoming_categories_details">Titel in ausgeschlossen Kategorien werden nicht angezeigt, selbst wenn sie in eingeschlossenen Kategorien vorkommen.</string>
+    <string name="tsz_anime">Anime</string>
+    <string name="tsz_anime_watching">Wird angesehen</string>
+    <string name="tsz_anime_plan">Geplant</string>
+    <string name="tsz_anime_empty">Noch keine Anime in dieser Liste.</string>
+    <string name="tsz_anime_episode_progress">Folge %1$d / %2$d</string>
+    <string name="tsz_anime_episodes_unknown">Folgen noch nicht abgerufen</string>
 </resources>

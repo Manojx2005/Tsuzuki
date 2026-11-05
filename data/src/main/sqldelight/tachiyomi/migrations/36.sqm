@@ -1,0 +1,36 @@
+-- Additive Tsuzuki anime storage; existing reader tables and rows are untouched.
+CREATE TABLE tsuzuki_anime (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    thumbnail_url TEXT,
+    description TEXT,
+    genre TEXT,
+    status INTEGER NOT NULL DEFAULT 0,
+    favorite INTEGER NOT NULL DEFAULT 0 CHECK (favorite IN (0, 1)),
+    watch_status INTEGER NOT NULL DEFAULT 0 CHECK (watch_status IN (0, 1, 2)),
+    date_added INTEGER NOT NULL DEFAULT 0,
+    episodes_fetched INTEGER NOT NULL DEFAULT 0 CHECK (episodes_fetched IN (0, 1)),
+    UNIQUE (source, url)
+);
+
+CREATE TABLE tsuzuki_episodes (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL REFERENCES tsuzuki_anime(_id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    episode_number REAL NOT NULL DEFAULT -1,
+    source_order INTEGER NOT NULL DEFAULT 0,
+    date_upload INTEGER NOT NULL DEFAULT 0,
+    date_fetch INTEGER NOT NULL DEFAULT 0,
+    seen INTEGER NOT NULL DEFAULT 0 CHECK (seen IN (0, 1)),
+    bookmark INTEGER NOT NULL DEFAULT 0 CHECK (bookmark IN (0, 1)),
+    last_position_ms INTEGER NOT NULL DEFAULT 0 CHECK (last_position_ms >= 0),
+    duration_ms INTEGER NOT NULL DEFAULT 0 CHECK (duration_ms >= 0),
+    UNIQUE (anime_id, url)
+);
+
+CREATE INDEX tsuzuki_anime_library_index ON tsuzuki_anime(favorite, watch_status, title);
+CREATE INDEX tsuzuki_episode_order_index ON tsuzuki_episodes(anime_id, source_order);
