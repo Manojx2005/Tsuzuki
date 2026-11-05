@@ -53,7 +53,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 ### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
 
 **How to run the batch (overrides the usual rules where they differ):**
-- Do the cards **in order N1 → N8**, one at a time. Before each card re-read this file; skip any card not `ready`.
+- Do the cards **in order N1 → N20** (wave 1 N1–N8, then wave 2 N9–N20), one at a time. Before each card re-read this file; skip any card not `ready`.
 - Worktree per card from the current `main`:
   `git -c core.longpaths=true worktree add -b tsuzuki/<id> .worktrees/<id> main` (lower-case id), copy
   `local.properties` from the repo root. If a card touches files an **earlier card of this batch** already changed,
@@ -128,6 +128,82 @@ Result: _pending_
 Port Mihon #4118 (time format setting next to the existing Date format in Appearance; find the commit with
 `git log mihon/main --grep "time format" -i`). Apply it where upstream applies it (relative times / timestamps),
 keep Tsuzuki value labels (`tsuzukiValueLabel`) working, strings in 8 locales.
+Result: _pending_
+
+#### Wave 2 — N9 to N20 (same batch rules; continue here after N8, in order)
+
+#### N9 Tablet Browse two-pane (T3) — `ready`
+Board `11-tablet/TabletBrowse`. On tablet UI (`isTabletUi()`, as D1/TsuzukiUpdatesTwoPane uses) in Tsuzuki themes,
+Browse shows the sources list left and the selected source's catalogue right. Prefer hosting the existing catalogue
+content composable in the pane over re-implementing it; if the Voyager screen model makes that unsafe, build a
+read-only preview pane (popular list via the source's existing paging) with an "Open catalogue" action, and say so.
+Phones unchanged. Don't touch `.worktrees/anime-a12` files.
+Result: _pending_
+
+#### N10 Download queue manga rows in Compose (T3) — `ready`
+`docs/design/boards` `07-system/Downloads`. The manga queue is View-based (`ui/download/DownloadAdapter`,
+`DownloadHolder`, `DownloadHeaderHolder`, styled by `tsuzuki/TsuzukiViewStyle.kt`). In Tsuzuki themes render it in
+Compose (source group header + rows with cover, title, chapter, progress via `TsuzukiProgressBar`, menu actions
+move to top/bottom/cancel as stock, drag reorder if feasible with a maintained library already in the project —
+else keep stock reorder via menu and say so). Stock themes keep the RecyclerView.
+Result: _pending_
+
+#### N11 Generated covers for books without art (T3) — `ready`
+Board `14-components/Cover`. When a book has no cover URL / cover fails to load, draw a generated cover (title in
+the display face, deterministic colours from the title hash; Dot = black/grey with one red mark; Colour = palette
+like the board) instead of the empty placeholder, in `MangaCover` via a dispatch. Unit-test the deterministic
+colour/seed logic.
+Result: _pending_
+
+#### N12 Per-shelf book counts in Categories (T2) — `ready`
+Board `07-system/Categories` shows a count per shelf. Add a read-only count (books per category, respecting the
+category content type) to the Categories screen state and show it in `TsuzukiCategoryListItem`. Real data only.
+Result: _pending_
+
+#### N13 Source counts per extension repository (T2) — `ready`
+Board `04-browse/ExtensionRepos` shows how many sources each repo provides. Compute from the available-extension
+lists already loaded (manga + novel) grouped by repo, show in `TsuzukiExtensionStoreItem`. Hide when unknown.
+Result: _pending_
+
+#### N14 Global search result count + time (T2) — `ready`
+Board `04-browse/GlobalSearch`: "N results · 0.6 s". Measure elapsed time per search in the global search
+view models (manga + novel) and show results count + seconds in the Tsuzuki header/result tiles. Real measurements.
+Result: _pending_
+
+#### N15 Storage breakdown in Data and storage (T3) — `ready`
+Board `08-tools/DataTools` storage breakdown + stat tiles. Measure on IO: downloaded chapters size (download dir),
+cover cache size, database size, plus counts (novels, chapters). Show in the Data and storage screen in Tsuzuki
+themes; refresh on open; never block the main thread. Unit-test any formatting/aggregation helpers.
+Result: _pending_
+
+#### N16 Accent colour + Reduce motion settings (T3) — `ready`
+Board `07-system/Settings` rows. Add `UiPreferences` for (a) Colour theme accent choice (the board's swatches; Dot
+stays red) feeding `TsuzukiTokens`/`ProvideBookPalette` default accent, and (b) Reduce motion (app-level, OR-ed with
+the system animator scale inside `rememberReduceMotion()`). Rows in Appearance (Tsuzuki themes only).
+Result: _pending_
+
+#### N17 Mihon: skip an update version + download from update screen (T2/T3) — `ready`
+Port Mihon fc20410 (skip this version) and #3707 (download the app update from the update screen) onto
+`data/updater/**` and the Tsuzuki `TsuzukiNewUpdateScreen`. Find exact commits with `git log mihon/main --grep`.
+Result: _pending_
+
+#### N18 Mihon: failed-to-load extensions with reason (T3) — `ready`
+Port Mihon #3953 (list extensions that failed to load, with reason and stack trace) and, if cheap, #3954 (apply
+trust/repo changes without restart). Keep Tsundoku's novel-extension loader paths. Restyle the new rows with
+existing Tsuzuki extension tiles.
+Result: _pending_
+
+#### N19 Mihon: content warnings instead of the NSFW toggle (T3) — `ready`
+Port Mihon #3951 (+ #3952 keep loading installed extensions regardless of warnings) if it applies cleanly to
+Tsundoku's extension model (the repo index already carries `contentWarning`); if it needs a DB/backup change, stop
+and mark `blocked` with the plan.
+Result: _pending_
+
+#### N20 Storage async migration (T4, last) — `ready`
+WORKPLAN P1.11: move synchronous `DownloadProvider`/`DownloadManager` storage callers (reader loaders, download
+cache, EPUB export, translation) to the existing suspend APIs together, keeping thin synchronous wrappers only
+where Tsundoku merges need the old signatures. Write tests for each moved path. If the change grows past ~600
+lines or touches the novel viewer internals, stop at a clean intermediate commit and mark `blocked` with what's left.
 Result: _pending_
 
 ## Open questions for the owner
