@@ -1108,4 +1108,6 @@
     <string name="tsz_onboarding_continue">계속</string>
     <string name="tsz_onboarding_finish">읽기 시작</string>
     <string name="tsz_onboarding_granted">허용됨</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">드래그하여 순서 변경</string>
 </resources>

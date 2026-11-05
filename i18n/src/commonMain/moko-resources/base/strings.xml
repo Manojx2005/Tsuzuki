@@ -1475,4 +1475,6 @@
     <string name="tsz_onboarding_continue">Continue</string>
     <string name="tsz_onboarding_finish">Start reading</string>
     <string name="tsz_onboarding_granted">Granted</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">Drag to reorder</string>
 </resources>

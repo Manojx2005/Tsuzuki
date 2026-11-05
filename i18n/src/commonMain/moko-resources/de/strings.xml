@@ -1109,4 +1109,6 @@
     <string name="tsz_onboarding_continue">Weiter</string>
     <string name="tsz_onboarding_finish">Jetzt lesen</string>
     <string name="tsz_onboarding_granted">Erteilt</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">Zum Umsortieren ziehen</string>
 </resources>

@@ -1108,4 +1108,6 @@
     <string name="tsz_onboarding_continue">続ける</string>
     <string name="tsz_onboarding_finish">読書をはじめる</string>
     <string name="tsz_onboarding_granted">許可済み</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">ドラッグして並べ替え</string>
 </resources>

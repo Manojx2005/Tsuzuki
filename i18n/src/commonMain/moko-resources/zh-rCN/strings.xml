@@ -1109,4 +1109,6 @@
     <string name="tsz_onboarding_continue">继续</string>
     <string name="tsz_onboarding_finish">开始阅读</string>
     <string name="tsz_onboarding_granted">已授权</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">拖动以重新排序</string>
 </resources>
