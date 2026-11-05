@@ -1161,4 +1161,7 @@
     <string name="tsz_updates_read_chapter">阅读本章</string>
     <string name="tsz_updates_open_book">打开作品</string>
     <string name="tsz_updates_confirm_download">下载 %1$d 章？</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">隐藏敏感请求头</string>
+    <string name="tsz_network_redact_headers_summary">在详细网络日志中隐藏身份验证标头。</string>
 </resources>

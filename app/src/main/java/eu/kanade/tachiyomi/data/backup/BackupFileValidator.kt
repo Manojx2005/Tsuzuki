@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import eu.kanade.tachiyomi.data.backup.models.isBackupSourceName
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.serialization.protobuf.ProtoBuf
 import tachiyomi.domain.source.service.SourceManager
@@ -48,13 +49,8 @@ class BackupFileValidator(
         val sources = backupSources.associate { it.sourceId to it.name }
         val missingSources = sources
             .filter { sourceManager.get(it.key) == null }
-            .values.map {
-                val id = it.toLongOrNull()
-                if (id == null) {
-                    it
-                } else {
-                    sourceManager.getOrStub(id).toString()
-                }
+            .map { (id, name) ->
+                if (name.isBackupSourceName()) name else sourceManager.getOrStub(id).toString()
             }
             .distinct()
             .sorted()

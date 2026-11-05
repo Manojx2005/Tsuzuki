@@ -1160,4 +1160,7 @@
     <string name="tsz_updates_read_chapter">この章を読む</string>
     <string name="tsz_updates_open_book">作品を開く</string>
     <string name="tsz_updates_confirm_download">%1$d 話をダウンロードしますか？</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">機密性の高いヘッダーを伏せる</string>
+    <string name="tsz_network_redact_headers_summary">詳細なネットワークログで認証ヘッダーを伏せます。</string>
 </resources>

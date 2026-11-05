@@ -8,3 +8,5 @@ data class BackupSource(
     @ProtoNumber(1) var name: String = "",
     @ProtoNumber(2) var sourceId: Long,
 )
+
+internal fun String.isBackupSourceName(): Boolean = isNotBlank() && trim().toLongOrNull() == null

@@ -11,12 +11,14 @@ import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.models.isBackupSourceName
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
@@ -27,6 +29,8 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.domain.manga.interactor.GetLibraryManga
+import tachiyomi.domain.source.repository.StubSourceRepository
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -52,6 +56,8 @@ class BackupRestorer(
     private val mangaRestorer: MangaRestorer = MangaRestorer(),
     private val parser: ProtoBuf = Injekt.get(),
     private val getLibraryManga: GetLibraryManga = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
+    private val stubSourceRepository: StubSourceRepository = Injekt.get(),
 ) {
 
     companion object {
@@ -200,6 +206,7 @@ class BackupRestorer(
         options: RestoreOptions,
     ) = launch {
         val reader = BackupProtoReader(context)
+        val checkedSources = mutableSetOf<Long>()
         reader.read(uri) { fieldNumber, data ->
             if (fieldNumber != 1) return@read
             ensureActive()
@@ -211,6 +218,12 @@ class BackupRestorer(
             if ((!backupManga.isNovel && options.includeManga) || (backupManga.isNovel && options.includeNovels)) {
                 try {
                     restoredMangaIds.add(mangaRestorer.restore(backupManga, backupCategories))
+                    if (backupManga.source !in checkedSources) {
+                        restoreSourceName(backupManga)
+                        checkedSources.add(backupManga.source)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     val sourceName = sourceMapping[backupManga.source] ?: backupManga.source.toString()
                     errors.add(Date() to "${backupManga.title} [$sourceName]: ${e.message}")
@@ -222,6 +235,13 @@ class BackupRestorer(
                 notifier.showRestoreProgress(backupManga.title, progress, restoreAmount, isSync)
             }
         }
+    }
+
+    private suspend fun restoreSourceName(manga: BackupManga) {
+        val name = sourceMapping[manga.source]?.takeIf { it.isBackupSourceName() } ?: return
+        if (sourceManager.get(manga.source) != null || stubSourceRepository.getStubSource(manga.source) != null) return
+
+        stubSourceRepository.upsertStubSource(manga.source, lang = "", name = name, isNovel = manga.isNovel)
     }
 
     private data class BackupSummary(

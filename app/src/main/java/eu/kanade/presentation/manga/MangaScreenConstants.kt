@@ -10,6 +10,7 @@ enum class DownloadAction {
 }
 
 enum class EditCoverAction {
+    ADD_TO_LIBRARY,
     EDIT,
     DELETE,
     CLEAR,

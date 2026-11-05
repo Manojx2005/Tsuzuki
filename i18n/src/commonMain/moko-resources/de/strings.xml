@@ -1161,4 +1161,7 @@
     <string name="tsz_updates_read_chapter">Kapitel lesen</string>
     <string name="tsz_updates_open_book">Buch öffnen</string>
     <string name="tsz_updates_confirm_download">%1$d Kapitel herunterladen?</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">Vertrauliche Header ausblenden</string>
+    <string name="tsz_network_redact_headers_summary">Blendet Authentifizierungsheader in ausführlichen Netzwerkprotokollen aus.</string>
 </resources>

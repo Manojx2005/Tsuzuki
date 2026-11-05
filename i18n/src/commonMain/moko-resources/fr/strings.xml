@@ -1154,4 +1154,7 @@
     <string name="tsz_updates_read_chapter">Lire le chapitre</string>
     <string name="tsz_updates_open_book">Ouvrir le livre</string>
     <string name="tsz_updates_confirm_download">Télécharger %1$d chapitres ?</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">Masquer les en-têtes sensibles</string>
+    <string name="tsz_network_redact_headers_summary">Masque les en-têtes d\'authentification dans les journaux réseau détaillés.</string>
 </resources>

@@ -307,3 +307,17 @@ Final build log `codex-provider-daily-validation.log`; no live build/device proc
 | `e9234f205` | Hand-port: match, scroll to and highlight enabled group headings in both layouts. |
 | `07b9fb695`, `ae749bb4f` | Hand-port into the existing service/broadcast installer. The earlier installer sync did not change its queue. |
 | `cdc7d69c9` | Hand-port: stage the APK next to the target and rename only after the copy succeeds, preserving the old APK on failure. |
+
+### 2026-11-06: Mihon fixes group B (N2)
+
+| Mihon | Disposition |
+|---|---|
+| `b5856135c` | Skipped: the strip renderer relies on Mihon's native frame and pixel-buffer API. Tsundoku's decoder returns a whole Bitmap and also handles reader crop and display profiles. Porting the dependency and reader pipeline needs a separately tested card. |
+| `a42428284` | Hand-port: keep ordinary cover keys stable across unfavourite and read custom covers only for favourites. |
+| `0864ce0f4` | Hand-port: default-on redaction of Auth and Authorization in verbose network logs, with the upstream Advanced settings switch. |
+| `5910a51eb` | Hand-port: restore real source names as missing stubs when restoring entries, preserving novel classification and existing stub metadata. |
+| `0c1be369b` | Hand-port: show the existing add-to-library message in the cover dialog before opening the editor for remote books. |
+| `40f552981` | Hand-port the blank-title guard to Tsundoku's exact and alternate title lookup. Alternate titles can still match for books without a title. |
+| `c0c090999` | Already applied in Tsundoku's Algolia Kitsu search via the subtype filter. |
+| `ee5939454` | Hand-port: use the reading history instant directly for the tracker start date. |
+| `dd4e9f00f` | Hand-port: confirm unfavourite in both details layouts through their shared callback. The reused removal dialog follows the active theme. |
