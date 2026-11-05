@@ -1129,4 +1129,8 @@
     <string name="tsz_onboarding_media_manga">만화 &amp; 만화웹툰</string>
     <string name="tsz_onboarding_media_manga_body">페이지와 긴 세로 스크롤</string>
     <string name="tsz_onboarding_media_footnote">설정 &gt; 외관에서 언제든지 바꿀 수 있어요.</string>
+    <!-- c1 -->
+    <string name="tsz_migration_old">이전 · %1$s</string>
+    <string name="tsz_migration_new">새로운 · %1$s</string>
+    <string name="tsz_migration_searching">검색 중…</string>
 </resources>

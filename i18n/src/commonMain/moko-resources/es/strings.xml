@@ -1117,4 +1117,8 @@
     <string name="tsz_onboarding_media_manga">Manga y manhwa</string>
     <string name="tsz_onboarding_media_manga_body">Páginas y tiras largas</string>
     <string name="tsz_onboarding_media_footnote">Cámbialo cuando quieras en Ajustes &gt; Apariencia.</string>
+    <!-- c1 -->
+    <string name="tsz_migration_old">Antes · %1$s</string>
+    <string name="tsz_migration_new">Ahora · %1$s</string>
+    <string name="tsz_migration_searching">Buscando…</string>
 </resources>
