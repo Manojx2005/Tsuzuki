@@ -96,6 +96,7 @@ fun TsuzukiPinnedSources(
     onLongClick: (tachiyomi.domain.source.model.Source) -> Unit,
     onUnpin: (tachiyomi.domain.source.model.Source) -> Unit,
     modifier: Modifier = Modifier,
+    selectedId: Long? = null,
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(TileRadius)
@@ -114,6 +115,7 @@ fun TsuzukiPinnedSources(
                             .clip(shape)
                             .background(t.tile)
                             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
+                            .tsuzukiSelectedSource(source.id == selectedId, shape)
                             .tsuzukiClickable(
                                 onClick = { onClick(source) },
                                 onLongClick = { onLongClick(source) },

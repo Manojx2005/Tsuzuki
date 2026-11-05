@@ -1157,4 +1157,7 @@
     <string name="tsz_time_follow_system">Según el sistema</string>
     <string name="tsz_time_24_hours">24 horas</string>
     <string name="tsz_time_12_hours">12 horas</string>
+    <!-- N9 -->
+    <string name="tsz_browse_select_source">Selecciona una fuente</string>
+    <string name="tsz_browse_open_catalogue">Abrir catálogo</string>
 </resources>

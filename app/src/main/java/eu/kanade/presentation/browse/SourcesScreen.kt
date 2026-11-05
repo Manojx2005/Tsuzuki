@@ -40,6 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiTabletBrowse
+import eu.kanade.presentation.tsuzuki.browse.tsuzukiSelectedSource
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
@@ -69,6 +73,36 @@ fun SourcesScreen(
     onRemoveFromGroup: (Source, String) -> Unit,
     onLongClickItem: (Source) -> Unit,
     onClickGlobalSearch: (() -> Unit)? = null,
+) {
+    val sourceList: @Composable (Long?, (Source, Listing) -> Unit) -> Unit = { selectedId, onSelect ->
+        SourcesList(
+            state, contentPadding, onSelect, onClickPin, onLongClickPin,
+            onRemoveFromGroup, onLongClickItem, onClickGlobalSearch, selectedId,
+        )
+    }
+    if (isTsuzukiStyle() && isTabletUi()) {
+        TsuzukiTabletBrowse(
+            items = state.items,
+            contentPadding = contentPadding,
+            onOpen = onClickItem,
+            sourceList = sourceList,
+        )
+        return
+    }
+    sourceList(null, onClickItem)
+}
+
+@Composable
+private fun SourcesList(
+    state: SourcesViewModel.State,
+    contentPadding: PaddingValues,
+    onClickItem: (Source, Listing) -> Unit,
+    onClickPin: (Source) -> Unit,
+    onLongClickPin: (Source) -> Unit,
+    onRemoveFromGroup: (Source, String) -> Unit,
+    onLongClickItem: (Source) -> Unit,
+    onClickGlobalSearch: (() -> Unit)?,
+    selectedId: Long?,
 ) {
     val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
@@ -133,6 +167,7 @@ fun SourcesScreen(
                                         onClick = { onClickItem(it, Listing.Popular) },
                                         onLongClick = onLongClickItem,
                                         onUnpin = onClickPin,
+                                        selectedId = selectedId,
                                     )
                                 }
                             }
@@ -159,7 +194,8 @@ fun SourcesScreen(
                                         } else {
                                             Modifier
                                         },
-                                    ),
+                                    )
+                                    .tsuzukiSelectedSource(model.source.id == selectedId),
                                 source = model.source,
                                 hasDefaultPreset = model.hasDefaultPreset,
                                 groupSection = model.sectionKey.ifEmpty { null },
