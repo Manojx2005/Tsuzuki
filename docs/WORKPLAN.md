@@ -205,7 +205,7 @@ estimates (words, speed, time left) · listen stats + TTS state (Listening widge
 (chapters/covers/DB sizes, download speed) · accent colour + reduce-motion settings · generated covers · manhwa
 classification · per-shelf counts · search timing. Parked by owner: in-app PIN lock, Support us screen.
 
-**Neural TTS voices (owner idea 2026-11-05, sherpa-onnx + Kokoro).** Optional second engine behind
+**Neural TTS voices (owner idea 2026-11-05, sherpa-onnx + Kokoro). Research done 2026-11-06 → GO-WITH-CONDITIONS, see `docs/research/neural-tts.md`: sherpa-onnx ≥ v2.0.1 no longer contains espeak-ng (PR #4055); use lexicon voices (Kokoro int8 multi-lang v1.1), re-zip without `espeak-ng-data/`, keep system TTS default, and run a listening test on real novel text first (out-of-lexicon words are dropped).** Original note: Optional second engine behind
 `TtsController` (system TTS stays default). Gate first (T3 research card, before any code): sherpa-onnx's
 Kokoro/VITS English phonemiser uses **espeak-ng (GPL-3.0)** — confirm whether it is compiled into the Android
 JNI library and whether an espeak-free build or lexicon-only voice pack exists; if not, don't ship (Apache-2.0,
