@@ -262,7 +262,7 @@ trust/repo changes without restart). Keep Tsundoku's novel-extension loader path
 existing Tsuzuki extension tiles.
 Result: _pending_
 
-#### N19 Mihon: content warnings instead of the NSFW toggle (T3) — `ready`
+#### N19 Mihon: content warnings instead of the NSFW toggle (T3) — `claude-working` (Claude agent, .worktrees/n19)
 Port Mihon #3951 (+ #3952 keep loading installed extensions regardless of warnings) if it applies cleanly to
 Tsundoku's extension model (the repo index already carries `contentWarning`); if it needs a DB/backup change, stop
 and mark `blocked` with the plan.
