@@ -100,6 +100,22 @@ fun TrackerSearch(
     supportsPrivateTracking: Boolean,
     altTitles: List<String> = emptyList(),
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.track.TsuzukiTrackerSearch(
+            state,
+            onDispatchQuery,
+            queryResult,
+            selected,
+            onSelectedChange,
+            onConfirmSelection,
+            onDismissRequest,
+            supportsPrivateTracking,
+            altTitles,
+        )
+        return
+    }
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val dispatchQueryAndClearFocus: () -> Unit = {

@@ -1108,4 +1108,6 @@
     <string name="tsz_onboarding_continue">続ける</string>
     <string name="tsz_onboarding_finish">読書をはじめる</string>
     <string name="tsz_onboarding_granted">許可済み</string>
+    <!-- B4 -->
+    <string name="tsz_tracker_search_pick_title">別のタイトルを選択</string>
 </resources>

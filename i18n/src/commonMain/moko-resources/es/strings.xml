@@ -1096,4 +1096,6 @@
     <string name="tsz_onboarding_continue">Continuar</string>
     <string name="tsz_onboarding_finish">Empezar a leer</string>
     <string name="tsz_onboarding_granted">Concedido</string>
+    <!-- B4 -->
+    <string name="tsz_tracker_search_pick_title">Elegir un título alternativo</string>
 </resources>
