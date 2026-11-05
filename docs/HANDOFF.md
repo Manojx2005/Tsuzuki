@@ -43,8 +43,10 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- Nothing claimed right now. Next candidates (WORKPLAN 4B/4C): reader immersive + paged chrome, tablet layouts
-  (TabletUpdates, TabletBrowse), CatalogueFilters device check, device passes listed in the log below.
+- **Anime A1.2 — `claude-working`** (`.worktrees/anime-a12`, branch `tsuzuki/anime-a12`, Sonnet agent): re-port the
+  spike's animesource API + unregistered extension loader + native builder files onto current main. Files:
+  `source-api/**/animesource/**`, `app/**/tsuzuki/anime/**`, `scripts/anime-native/**`, `.github/workflows/anime-native.yml`,
+  `docs/licenses/*Aniyomi*`, build files (additions only). Overnight batch N does not touch these.
 
 ## Codex queue
 
