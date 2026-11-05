@@ -69,6 +69,26 @@ data class HomeState(
     val shelf get() = books.drop(1)
 }
 
+/** Chapter number as shown in the details pane: whole numbers without a decimal point. */
+internal fun homeChapterNumber(number: Double): String =
+    if (number >= 0 && number % 1.0 == 0.0) number.toLong().toString() else number.toString()
+
+/** "Ch. 12" label for a chapter without a name; null when the number is unknown (negative). */
+internal fun homeChapterLabel(number: Double): String? = when {
+    number < 0 -> null
+    number % 1.0 == 0.0 -> "Ch. ${number.toLong()}"
+    else -> "Ch. $number"
+}
+
+/** Status pill for a chapter row: read, started, fetched since the book was last read, or plain unread. */
+internal fun homeChapterStatus(read: Boolean, lastPageRead: Long, dateFetch: Long, lastReadAt: Long): ChapterStatus =
+    when {
+        read -> ChapterStatus.READ
+        lastPageRead > 0 -> ChapterStatus.IN_PROGRESS
+        dateFetch > lastReadAt -> ChapterStatus.NEW
+        else -> ChapterStatus.UNREAD
+    }
+
 class TsuzukiHomeViewModel(
     getHistory: GetHistory = Injekt.get(),
     getLibraryManga: GetLibraryManga = Injekt.get(),
@@ -123,7 +143,7 @@ class TsuzukiHomeViewModel(
                     chapterId = h.chapterId,
                     title = h.title,
                     cover = h.coverData,
-                    chapterLabel = current?.name?.takeIf { it.isNotBlank() } ?: formatChapter(h.chapterNumber),
+                    chapterLabel = current?.name?.takeIf { it.isNotBlank() } ?: homeChapterLabel(h.chapterNumber),
                     progress = lib?.progress(),
                     unread = chapters.count { !it.read && it.dateFetch > lastRead },
                     isNovel = h.isNovel,
@@ -189,29 +209,14 @@ class TsuzukiHomeViewModel(
             .map { c ->
                 HomeChapter(
                     id = c.id,
-                    number = if (c.chapterNumber >= 0 && c.chapterNumber % 1.0 == 0.0) {
-                        c.chapterNumber.toLong().toString()
-                    } else {
-                        c.chapterNumber.toString()
-                    },
+                    number = homeChapterNumber(c.chapterNumber),
                     name = c.name,
-                    status = when {
-                        c.read -> ChapterStatus.READ
-                        c.lastPageRead > 0 -> ChapterStatus.IN_PROGRESS
-                        c.dateFetch > lastRead -> ChapterStatus.NEW
-                        else -> ChapterStatus.UNREAD
-                    },
+                    status = homeChapterStatus(c.read, c.lastPageRead, c.dateFetch, lastRead),
                 )
             }
 
     private fun LibraryManga.progress(): Float? =
         if (totalChapters > 0) readCount.toFloat() / totalChapters else null
-
-    private fun formatChapter(number: Double): String? = when {
-        number < 0 -> null
-        number % 1.0 == 0.0 -> "Ch. ${number.toLong()}"
-        else -> "Ch. $number"
-    }
 
     companion object {
         private const val HISTORY_WINDOW = 500L

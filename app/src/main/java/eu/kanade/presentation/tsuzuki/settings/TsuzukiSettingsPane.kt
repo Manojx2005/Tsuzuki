@@ -35,6 +35,10 @@ fun settingsPaneSelection(selected: Boolean): Modifier {
     }
 }
 
+/** True when a list preference's subtitle is just its selected entry, in a Tsuzuki theme. */
+internal fun showsValueLabel(style: TsuzukiStyle, subtitle: String?, selectedEntry: String?): Boolean =
+    style != TsuzukiStyle.NONE && !subtitle.isNullOrBlank() && subtitle == selectedEntry
+
 /**
  * The boards' value rows: when a list preference's subtitle is just its selected entry, the Tsuzuki themes show
  * that entry on the right in the accent (uppercase in Dot). Returns null to keep the stock subtitle.
@@ -42,7 +46,8 @@ fun settingsPaneSelection(selected: Boolean): Modifier {
 @Composable
 fun tsuzukiValueLabel(subtitle: String?, selectedEntry: String?): (@Composable () -> Unit)? {
     val tokens = TsuzukiTheme.tokens
-    if (tokens.style == TsuzukiStyle.NONE || subtitle.isNullOrBlank() || subtitle != selectedEntry) return null
+    if (!showsValueLabel(tokens.style, subtitle, selectedEntry)) return null
+    if (subtitle == null) return null
     return {
         androidx.compose.material3.Text(
             if (tokens.isDot) subtitle.uppercase() else subtitle,
@@ -68,7 +73,9 @@ fun tsuzukiSectionIconTint(): Color? {
 
 /** Dot sets Latin labels in uppercase (boards); other themes and non-Latin text are unchanged. */
 @Composable
-fun tsuzukiCase(text: String?): String? = if (TsuzukiTheme.tokens.isDot) text?.uppercase() else text
+fun tsuzukiCase(text: String?): String? = applyDotCase(TsuzukiTheme.tokens.isDot, text)
+
+internal fun applyDotCase(isDot: Boolean, text: String?): String? = if (isDot) text?.uppercase() else text
 
 /** The app language row's value (Appearance boards): the chosen language, or "Default" when following the system. */
 @Composable
