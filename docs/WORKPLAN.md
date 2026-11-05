@@ -288,3 +288,31 @@ Verify:
   ./gradlew :app:assembleDebug :app:testDebugUnitTest
 Report: files + one line each, decisions, left out + why, test counts, device checks for Claude.
 ```
+
+## Appendix — standard rules for restyle cards (B, C, … batches)
+
+Every restyle card says "follow the standard restyle rules"; these are they.
+
+- Tier T2 Â· Codex `gpt-6.1-sol` effort medium. All B cards are `parallel-ok` with each other and with P0.3, but
+  run **at most two at a time** (Gradle). One card per thread; claim it here first.
+- Worktree per card: `git -c core.longpaths=true worktree add -b tsuzuki/<card-id> .worktrees/<card-id> main`
+  (lower-case id, e.g. `b1`), copy `local.properties` from the repo root into it, work only there.
+- Before coding open the board PNGs **both themes**: `docs/design/boards/png/<page>/<Board>.png` and
+  `.../png/<page>/dot/<Board>.png` (if a Dot one exists), plus `docs/design/boards/html/<page>/<Board>.html`
+  (numbers are in `renderVals()` at the bottom of the last script) and the matching section of
+  `docs/design/specs.md`. Build **Dot first**, then Colour.
+- Pattern: new Tsuzuki composable(s) under `app/src/main/java/eu/kanade/presentation/tsuzuki/<area>/`; in the
+  upstream file add **only** an early-return dispatch at the top of the composable
+  (`if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) { Tsuzukiâ€¦(same params); return }`), no re-indent, no
+  other upstream edits. Stock themes must look exactly as before. Reuse `TsuzukiTile`, `TsuzukiPill`/`TsuzukiPillRow`,
+  `TsuzukiSectionLabel`, `tsuzukiGroupedTile`, `TsuzukiModalBottomSheet`/`TsuzukiAdaptiveSheet`, `tsuzukiClickable`,
+  `tsuzukiDialogColor`, `TsuzukiMenuItem`, `tsuzukiCase()`; colours only from `TsuzukiTheme.tokens`; fonts only
+  from `MaterialTheme.typography`; Dot = uppercase + red only + greyscale covers.
+- Real data only: if the board shows something the app doesn't have, leave it out and list it in Result.
+- Strings: reuse existing ones first. New ones as `tsz_<area>_*` in all 8 locales (base, ja, zh-rCN, ko, es,
+  pt-rBR, fr, de), appended just before `</resources>` under a comment `<!-- <card-id> -->`, apostrophes escaped.
+- Unit-test any pure logic you add (JUnit5 + kotest, under `app/src/test/java/eu/kanade/presentation/tsuzuki/`).
+- Verify: per-file `./gradlew :app:spotlessApply -PspotlessIdeHook=<abs path>` twice until IS CLEAN for each
+  edited file; `./gradlew :app:assembleDebug :app:testDebugUnitTest`. Don't commit, push or use adb.
+- Result: files + one line each, what you left out and why, test counts, what Claude should check on devices
+  (which screen, how to reach it). Then status `review`.
