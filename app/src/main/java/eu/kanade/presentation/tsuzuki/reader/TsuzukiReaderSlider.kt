@@ -10,8 +10,10 @@ import androidx.compose.material3.SliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
@@ -21,7 +23,7 @@ import kotlin.math.roundToInt
 
 /** Keep Material's seeking and accessibility, with the reader boards' themed progress track. */
 @Composable
-fun TsuzukiReaderSliderTrack(state: SliderState) {
+fun TsuzukiReaderSliderTrack(state: SliderState, vertical: Boolean = false) {
     if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) {
         SliderDefaults.Track(sliderState = state)
         return
@@ -32,8 +34,9 @@ fun TsuzukiReaderSliderTrack(state: SliderState) {
     } else {
         0f
     }
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    BoxWithConstraints(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+    val rtl = !vertical && LocalLayoutDirection.current == LayoutDirection.Rtl
+    val orientation = if (vertical) Modifier.verticalReaderTrack() else Modifier
+    BoxWithConstraints(orientation.fillMaxWidth().clearAndSetSemantics {}) {
         TsuzukiProgressBar(
             progress = progress,
             dots = (maxWidth / 9.dp).roundToInt().coerceIn(2, 80),
@@ -44,11 +47,38 @@ fun TsuzukiReaderSliderTrack(state: SliderState) {
 }
 
 @Composable
-fun TsuzukiReaderSliderThumb(interactionSource: MutableInteractionSource) {
+fun TsuzukiReaderSliderThumb(interactionSource: MutableInteractionSource, vertical: Boolean = false) {
     if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) {
         SliderDefaults.Thumb(interactionSource = interactionSource)
     } else {
         // The current Dot marker / Colour fill already identifies the seek position.
-        Spacer(Modifier.size(width = 0.dp, height = 48.dp))
+        Spacer(
+            if (vertical) {
+                Modifier.size(width = 48.dp, height = 0.dp)
+            } else {
+                Modifier.size(width = 0.dp, height = 48.dp)
+            },
+        )
+    }
+}
+
+// Swap the measured axes as well as rotating the drawing. VerticalSlider still owns the
+// full-height track bounds used for seeking, with the minimum at the top.
+private fun Modifier.verticalReaderTrack(): Modifier = layout { measurable, constraints ->
+    val track = measurable.measure(
+        Constraints(
+            minWidth = constraints.minHeight,
+            maxWidth = constraints.maxHeight,
+            minHeight = constraints.minWidth,
+            maxHeight = constraints.maxWidth,
+        ),
+    )
+    layout(width = track.height, height = track.width) {
+        track.placeWithLayer(
+            x = (track.height - track.width) / 2,
+            y = (track.width - track.height) / 2,
+        ) {
+            rotationZ = 90f
+        }
     }
 }
