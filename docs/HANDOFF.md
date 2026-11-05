@@ -65,7 +65,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
   can't be made green, set `blocked` with the reason, `git checkout` the card's worktree clean, and move on.
 - At most one Gradle build at a time. Don't touch devices, `main`, release/signing/telemetry files.
 
-#### N1 Mihon fixes, group A (T3) — `review`
+#### N1 Mihon fixes, group A (T3) — `done` (merged overnight)
 Port from remote `mihon` (already fetched; `git show <sha>`): 1e471a414 (updates show finished chapter as still
 downloading), 287cbbb98 (keep last update time on empty Updates), 8457fb91e (chapter refresh with non-ASCII
 digits), c9e1b6e96 (invalid extension filters instead of crashing), 4c88f0264 (SearchViewModel race),
@@ -84,7 +84,7 @@ Result: `tsuzuki/n1` at `96e8b11b0` (base `main`). Per-file Spotless twice, debu
 
 Device review: Finish a chapter download from Updates, clear Updates on tablet, search a local manga and novel with the Other language disabled, open an invalid source filter, and jump to a setting group from search. In an approved extension test, cancel one of two installs and verify a failed replacement leaves the original installed.
 
-#### N2 Mihon fixes, group B (T3) — `review`
+#### N2 Mihon fixes, group B (T3) — `done` (merged overnight)
 Same method for: b5856135c (webtoon scroll stutter), a42428284 (covers reloading when removing from library),
 0864ce0f4 (redact sensitive headers in logcat), 5910a51eb (keep uninstalled source names across restores),
 0c1be369b (ask to add to library before editing cover), 40f552981 (blank title duplicates), c0c090999 (Kitsu
@@ -102,7 +102,7 @@ Result: `tsuzuki/n2` at `ae1c4a430`, based on `tsuzuki/n1` for the shared upstre
 
 Device review: Check remove/cancel and cover editing on stock and Tsuzuki details, confirm ordinary covers stay stable when removing a favourite, round-trip a backup with an uninstalled novel source, check first-read tracker dates across a date boundary, and verify redaction with synthetic headers.
 
-#### N3 Novel reader immersive + paged chrome (T3) — `review`
+#### N3 Novel reader immersive + paged chrome (T3) — `done` (merged overnight)
 Boards `06-reader/ReaderImmersive`, `06-reader/ReaderPaged` (PNG both themes + HTML). Restyle the existing
 immersive (bars hidden, text selection toolbar if a composable exists) and WebView paged-mode chrome (page
 indicator / page footer / any paged-mode controls) in `presentation/reader/**` via dispatches; new code in
@@ -116,7 +116,7 @@ Result: `tsuzuki/n3` at `6446abef0`, from current `main` (`159eafd73`). Per-file
 
 Device review: In Dot and Colour open a novel, enable the status bar, then hide the menu. Check the footer in both continuous and WebView paged mode, rotate, change pages and chapters, move the status bar to the top, collapse and expand it, and check text selection still works. Smoke-test the stock status bar.
 
-#### N4 Manga reader chrome (T3) — `review`
+#### N4 Manga reader chrome (T3) — `done` (merged overnight)
 Boards `09-manga/MangaReader`, `09-manga/MangaPaged`, `09-manga/MangaReaderSettings`. The manga reader top bar
 already uses `TsuzukiReaderTitle` and the Tsuzuki slider; restyle the rest of the manga chrome in
 `presentation/reader/appbars/{ReaderAppBars,ReaderBottomBar,ReaderTopBar}.kt`, page indicator, and the manga
@@ -131,7 +131,7 @@ Result: `tsuzuki/n4` at `26f678af0`, based on current `main` (`56fc27d2f`). N3 c
 
 Device review: On phone and tablet in Dot and Colour, open RTL, LTR and Webtoon readers. Check seeking, chapter changes, all header/footer actions, the hidden-menu indicator, switching settings tabs and live filter preview. Check the stock reader and novel settings for regressions.
 
-#### N5 Manga details (T2) — `review`
+#### N5 Manga details (T2) — `done` (merged overnight)
 Board `09-manga/MangaDetails` (scanlators, auto webtoon). Details already has Tsuzuki header/tiles/resume; add
 the board's manga-specific parts that have real data (scanlator filter entry → existing excluded-scanlators
 dialog, reading-mode/webtoon indicator from the book's viewer flags) and restyle the scanlator dialog. Hooks in
@@ -144,7 +144,7 @@ Result: `tsuzuki/n5` at `bebf5b200`, based on `tsuzuki/n2` for the shared detail
 
 Device review: On phone and tablet in Dot and Colour, open manga details with several scanlators. Check applying and clearing exclusions, cancel, the count, and the change in the chapter list. Verify Webtoon, an explicit paged mode and Default, then check stock and novel details.
 
-#### N6 Vertical reader progress (T2) — `review`
+#### N6 Vertical reader progress (T2) — `done` (merged overnight)
 "Vertical progress presentation remains stock" (`docs/RUNTIME_QA.md`). The vertical chapter navigator
 (`presentation/reader/components/ChapterNavigator.kt`, vertical variant) should use the Tsuzuki slider look
 (Dot dots / Colour thin track, 48 dp touch area, same semantics) like the horizontal one already does
@@ -156,7 +156,7 @@ Result: `tsuzuki/n6` at `c26770738`, based on `tsuzuki/n4` for the shared chapte
 
 Device review: Enable the vertical navigator on the left and right in Dot and Colour. Tap and drag near both ends, check label and track alignment, use an accessibility increment, and verify horizontal/stock sliders still work.
 
-#### N7 Settings screens vs boards (T2) — `review`
+#### N7 Settings screens vs boards (T2) — `done` (merged overnight)
 Boards `07-system/SettingsReader`, `08-tools/ReaderBars`, `08-tools/ReaderEngine`, `08-tools/SettingsTranslation`.
 These are `PreferenceScreen`-based and already get Tsuzuki tiles. Compare each board with the current screen
 (`SettingsReaderScreen.kt`, `SettingsNovelReaderScreen.kt`, `StatusBarElementsScreen.kt`,
@@ -173,7 +173,7 @@ Result: `tsuzuki/n7` at `903b72b27`, based on current `main` (`e5ed33e07`). Per-
 
 Device review: In Dot and Colour check reader settings, novel renderer and bar position/size, drag/reorder/reset of status-bar items, and translation engine selection without invoking a paid test. Check a legacy theme for stock controls.
 
-#### N8 Time format setting (T2) — `review`
+#### N8 Time format setting (T2) — `done` (merged overnight)
 Port Mihon #4118 (time format setting next to the existing Date format in Appearance; find the commit with
 `git log mihon/main --grep "time format" -i`). Apply it where upstream applies it (relative times / timestamps),
 keep Tsuzuki value labels (`tsuzukiValueLabel`) working, strings in 8 locales.
@@ -189,7 +189,7 @@ Device review: In Appearance switch between all four formats in both Tsuzuki the
 
 #### Wave 2 — N9 to N20 (same batch rules; continue here after N8, in order)
 
-#### N9 Tablet Browse two-pane (T3) — `review`
+#### N9 Tablet Browse two-pane (T3) — `done` (merged overnight)
 Board `11-tablet/TabletBrowse`. On tablet UI (`isTabletUi()`, as D1/TsuzukiUpdatesTwoPane uses) in Tsuzuki themes,
 Browse shows the sources list left and the selected source's catalogue right. Prefer hosting the existing catalogue
 content composable in the pane over re-implementing it; if the Voyager screen model makes that unsafe, build a
@@ -203,7 +203,7 @@ Result: `tsuzuki/n9` at `cd94f45f8`, based on `tsuzuki/n8` for shared locale fil
 
 Device review: In portrait and landscape tablet Dot and Colour, select a novel source, switch sources while loading, use retry, and open the full catalogue. Repeat in manga Browse, test pin and latest actions, and verify a phone and a legacy theme still open the catalogue directly.
 
-#### N10 Download queue manga rows in Compose (T3) — `review`
+#### N10 Download queue manga rows in Compose (T3) — `done` (merged overnight)
 `docs/design/boards` `07-system/Downloads`. The manga queue is View-based (`ui/download/DownloadAdapter`,
 `DownloadHolder`, `DownloadHeaderHolder`, styled by `tsuzuki/TsuzukiViewStyle.kt`). In Tsuzuki themes render it in
 Compose (source group header + rows with cover, title, chapter, progress via `TsuzukiProgressBar`, menu actions
@@ -217,14 +217,14 @@ Result: `tsuzuki/n10` at `a63179f8b`, based on current `main` (`a567c86e5`). Per
 
 Device review: Queue manga from multiple sources alongside novels. Check Dot/Colour progress, covers, drag within a source, chapter and series moves, toolbar sort, filters, error copy, and cancellation. Verify the stock RecyclerView and novel/translation tabs.
 
-#### N11 Generated covers for books without art (T3) — `review`
+#### N11 Generated covers for books without art (T3) — `done` (merged overnight)
 Board `14-components/Cover`. When a book has no cover URL / cover fails to load, draw a generated cover (title in
 the display face, deterministic colours from the title hash; Dot = black/grey with one red mark; Colour = palette
 like the board) instead of the empty placeholder, in `MangaCover` via a dispatch. Unit-test the deterministic
 colour/seed logic.
 Result: `tsuzuki/n11` at `a699ba338`, based on `tsuzuki/n9` for the tablet browse cover and its N1 ancestor for the updates pane. The shared `MangaCover` dispatch draws deterministic display-face covers for missing or failed art, with six motifs, the board’s ten Colour palettes and one red marker on greyscale Dot art. Passed real title metadata through browse, library, home, history and updates. URL-only callers without a supplied title use the existing placeholder, and no author is fabricated. Two deterministic tests cover palette/motif and the minimum signed hash. Both Spotless passes on 19 files, debug assemble and all 736 app unit tests passed. Device review: verify title sizing and clipping in grids, missing and broken URLs, and custom covers on books with no remote URL in Dot and Colour.
 
-#### N12 Per-shelf book counts in Categories (T2) — `review`
+#### N12 Per-shelf book counts in Categories (T2) — `done` (merged overnight)
 Board `07-system/Categories` shows a count per shelf. Add a read-only count (books per category, respecting the
 category content type) to the Categories screen state and show it in `TsuzukiCategoryListItem`. Real data only.
 Result: `tsuzuki/n12` at `47c2be4f2`, based on main `5f9c354df`. Categories now observes one grouped SQL query for live shelf counts. It counts saved library entries that match each shelf’s manga/novel/all type, including zero for empty shelves. The Tsuzuki row adds a localized numeric count alongside existing content type and default indicators. The automatic system shelf remains outside the editable shelf list. The in-memory SQLite fixture checked mixed and incompatible memberships, empty shelves and removal from the library. Both per-file Spotless passes, debug assemble and all 737 app unit tests passed. Device review: check count placement in both themes and updates after moving a book between typed shelves.
