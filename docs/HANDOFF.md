@@ -43,9 +43,10 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- **P0.6 onboarding media-types step — `claude-working`** (`.worktrees/media-step`, Sonnet agent): "What do you
-  read?" cards (Light novels fixed on; Manga & manhwa toggles the existing `BasePreferences.hideMangaUi`), Tsuzuki
-  library pills/media switch respect `hideMangaUi`, shorter Japanese welcome heading.
+- **Batch C restyles — `claude-working`** with Sonnet agents, each in `.worktrees/cN`, standard restyle rules
+  (WORKPLAN appendix): C3 custom source setup + site picker chrome (`ui/customsource/*`), C4 text replacement rules
+  (`presentation/reader/settings/NovelPage.kt` dispatch). Next candidates: TTS full player + ListenMini, reader
+  immersive/paged chrome, tablet layouts (WORKPLAN 4C).
 
 ## Codex queue
 
@@ -90,6 +91,14 @@ Codex is back; new cards will be written here when it is._
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — P0.6 + C1 + C2 merged and pushed.** P0.6 media-types onboarding step (`b0c041128`,
+  `10dec7ac3`): Light novels fixed on, Manga toggles `hideMangaUi`; mixed-library pills hide in novel-only mode;
+  phone Dot check found the stripe art spilling over the card (fixed with clipToBounds) and a wrapping Japanese
+  title (shortened). C1 migration list (`4e742d0bd`): old/new tiles side by side, all row actions; not device-run
+  (needs a real migration). C2 duplicate finder (`e0b70b185` merge): pills, group tiles, bottom action bar;
+  tablet Dot idle + empty states checked, no crashes. Build 692 tests green. `main` pushed to origin (CI only;
+  preview release workflow is manual). Restored the restyle card rules into WORKPLAN (they had been dropped from
+  this file when the Codex queue was emptied).
 - **2026-11-05 Claude — Codex P0.3 + B1–B6 reviewed and merged.** P0.3 (`ae1ecc6bd`, merge `5f2ff2a03`): five
   media-specific files moved to `tsuzuki/novel/` and `tsuzuki/manga/`, package/import lines only. B1–B6
   (merges `b2f863a4f`…`757642986`): catalogue filters, change-category + duplicate dialogs, edit info,
