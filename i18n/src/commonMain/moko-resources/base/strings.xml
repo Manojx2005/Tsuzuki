@@ -1500,4 +1500,16 @@
     <string name="tsz_migration_old">Old · %1$s</string>
     <string name="tsz_migration_new">New · %1$s</string>
     <string name="tsz_migration_searching">Searching…</string>
+    <!-- c2 -->
+    <string name="tsz_duplicates_subtitle">%1$d groups · %2$d books</string>
+    <string name="tsz_duplicates_copies">%d copies</string>
+    <string name="tsz_duplicates_quick_select">Quick select</string>
+    <string name="tsz_duplicates_move">Move</string>
+    <string name="tsz_duplicates_remove">Remove</string>
+    <string name="tsz_duplicates_options">Options</string>
+    <string name="tsz_duplicates_type">Type</string>
+    <string name="tsz_duplicates_blank">Blank titles</string>
+    <string name="tsz_duplicates_sort">Sort</string>
+    <string name="tsz_duplicates_category">Category</string>
+    <string name="tsz_duplicates_sort_pinned">Pinned</string>
 </resources>

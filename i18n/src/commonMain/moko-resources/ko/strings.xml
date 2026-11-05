@@ -1133,4 +1133,16 @@
     <string name="tsz_migration_old">이전 · %1$s</string>
     <string name="tsz_migration_new">새로운 · %1$s</string>
     <string name="tsz_migration_searching">검색 중…</string>
+    <!-- c2 -->
+    <string name="tsz_duplicates_subtitle">%1$d개 그룹 · %2$d권</string>
+    <string name="tsz_duplicates_copies">사본 %d개</string>
+    <string name="tsz_duplicates_quick_select">빠른 선택</string>
+    <string name="tsz_duplicates_move">이동</string>
+    <string name="tsz_duplicates_remove">제거</string>
+    <string name="tsz_duplicates_options">옵션</string>
+    <string name="tsz_duplicates_type">유형</string>
+    <string name="tsz_duplicates_blank">빈 제목</string>
+    <string name="tsz_duplicates_sort">정렬</string>
+    <string name="tsz_duplicates_category">카테고리</string>
+    <string name="tsz_duplicates_sort_pinned">고정됨</string>
 </resources>

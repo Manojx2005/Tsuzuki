@@ -1134,4 +1134,16 @@
     <string name="tsz_migration_old">Alt · %1$s</string>
     <string name="tsz_migration_new">Neu · %1$s</string>
     <string name="tsz_migration_searching">Suche …</string>
+    <!-- c2 -->
+    <string name="tsz_duplicates_subtitle">%1$d Gruppen · %2$d Bücher</string>
+    <string name="tsz_duplicates_copies">%d Kopien</string>
+    <string name="tsz_duplicates_quick_select">Schnellauswahl</string>
+    <string name="tsz_duplicates_move">Verschieben</string>
+    <string name="tsz_duplicates_remove">Entfernen</string>
+    <string name="tsz_duplicates_options">Optionen</string>
+    <string name="tsz_duplicates_type">Typ</string>
+    <string name="tsz_duplicates_blank">Leere Titel</string>
+    <string name="tsz_duplicates_sort">Sortieren</string>
+    <string name="tsz_duplicates_category">Kategorie</string>
+    <string name="tsz_duplicates_sort_pinned">Angepinnt</string>
 </resources>

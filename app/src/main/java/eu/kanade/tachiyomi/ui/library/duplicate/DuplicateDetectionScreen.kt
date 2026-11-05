@@ -115,6 +115,17 @@ class DuplicateDetectionScreen : Screen {
         val screenModel = viewModel<DuplicateDetectionViewModel>()
         val state by screenModel.state.collectAsState()
 
+        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            eu.kanade.presentation.tsuzuki.novel.TsuzukiDuplicateFinderScreen(
+                screenModel = screenModel,
+                onBack = { navigator.pop() },
+                onOpenSourcePriority = { navigator.push(SourcePriorityScreen) },
+                onOpenManga = { navigator.push(MangaScreen(it)) },
+                onEditCategories = { navigator.push(CategoryScreen()) },
+            )
+            return
+        }
+
         // Preserve scroll position across navigation
         val listState = rememberLazyListState()
 
@@ -1064,7 +1075,7 @@ class DuplicateDetectionScreen : Screen {
     }
 }
 
-private fun categorySelectionFor(
+internal fun categorySelectionFor(
     state: DuplicateDetectionViewModel.State,
 ): List<CheckboxState<CategoryModel>> {
     val selectedIds = state.selection
@@ -1327,4 +1338,3 @@ private fun DuplicateItem(
         }
     }
 }
-
