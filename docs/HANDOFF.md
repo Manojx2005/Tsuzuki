@@ -318,7 +318,7 @@ renderer only if it can be done through a public hook of `NovelViewer` without c
 hide the action there and say so.
 Result: _pending_
 
-#### N27 Notebook: quotes + notes for a book (T3) — `claude-working` (Claude agent, .worktrees/n27)
+#### N27 Notebook: quotes + notes for a book (T3) — `done` (Claude agent `ecd4993c1`; details overflow, novels)
 Board `06-reader/Notes`. A Tsuzuki "Notebook" screen per book combining existing quotes (highlights) and the
 book note, reachable from details overflow and the reader. Real data only (no glossary — not stored).
 Result: _pending_
