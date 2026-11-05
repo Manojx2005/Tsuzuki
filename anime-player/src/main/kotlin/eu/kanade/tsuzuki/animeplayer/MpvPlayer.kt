@@ -21,11 +21,24 @@ object MpvPlayer {
         }
     }
 
-    fun create(context: Context, logLevel: String = "warn") = MPVLib.create(context.applicationContext, logLevel)
+    fun create(context: Context, logLevel: String = "v") = MPVLib.create(context.applicationContext, logLevel)
 
     fun option(name: String, value: String) {
         check(MPVLib.setOptionString(name, value) >= 0) { "mpv rejected option: $name" }
     }
+
+    /** Sets an option without throwing; returns false (mpv error code < 0) when mpv rejects it. */
+    fun optionOrFalse(name: String, value: String): Boolean = MPVLib.setOptionString(name, value) >= 0
+
+    fun property(name: String, value: String) = MPVLib.setPropertyString(name, value)
+
+    fun observeProperty(property: String, format: Int) = MPVLib.observeProperty(property, format)
+
+    fun addLogObserver(observer: MPVLib.LogObserver) = MPVLib.addLogObserver(observer)
+
+    fun removeLogObserver(observer: MPVLib.LogObserver) = MPVLib.removeLogObserver(observer)
+
+    fun addObserver(observer: MPVLib.EventObserver) = MPVLib.addObserver(observer)
 
     fun init() = MPVLib.init()
 
