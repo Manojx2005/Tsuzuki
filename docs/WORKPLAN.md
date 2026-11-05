@@ -49,7 +49,9 @@ Rule of thumb: if the card needs judgement about *what* to build, Claude writes 
 4. **Upstream merges and anything touching shared upstream hook files are serial on `main`**, done by Claude.
 5. Tasks that touch the same files are never parallel. File-overlap check before launch:
    `git diff --name-only` of open branches.
-6. Cost guard: parallel runs only when the tasks are independent *and* each is ≥ T2. T1 work is batched into one
+6. Owner-run Codex threads follow the same limits: one card per thread, named explicitly when more than one
+   thread is open, claimed in `HANDOFF.md` first; Claude marks cards that may run together `parallel-ok`.
+7. Cost guard: parallel runs only when the tasks are independent *and* each is ≥ T2. T1 work is batched into one
    cheap run.
 
 ### 0.4 Task card format (Claude writes; Codex receives verbatim)

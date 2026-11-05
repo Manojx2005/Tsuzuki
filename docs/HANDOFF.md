@@ -18,6 +18,11 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 - **Claude:** reviews `review` cards (checklist in WORKPLAN §0.5), tests on devices, commits as the owner, moves
   the card to the log, writes the next cards. Claude also owns upstream merges and everything on devices.
 - Statuses: `ready` · `codex-working` · `claude-working` · `review` · `blocked` · `done`.
+- **Several Codex threads at once (owner may open more than one):** give each thread a card explicitly, e.g.
+  `Read AGENTS.md and docs/HANDOFF.md, then do card P0.4 only.` A thread must re-read this file and claim its card
+  (status `codex-working` + worktree path) *before* any other work, and must skip any card already claimed.
+  Only cards marked `parallel-ok` may run beside another card; never run two cards that list the same files.
+  At most two threads build with Gradle at the same time.
 - Log entries: newest first, one short paragraph, with commit hashes and evidence paths.
 
 ---
@@ -48,7 +53,7 @@ another app (LNReader backup, Mihon/Tsundoku backup; no Google Drive). Boards `0
 `tsz_onboarding_*` in 8 locales, unit tests for skip/selection logic.
 Result: _pending_
 
-### P0.4 Reader hook consolidation — `ready`
+### P0.4 Reader hook consolidation — `codex-working` (2026-11-05, worktree `.worktrees/reader-hooks`)
 - Tier T3 · Codex `gpt-6.1-sol` effort high.
 - Worktree: create `git -c core.longpaths=true worktree add -b tsuzuki/reader-hooks .worktrees/reader-hooks main`
   (after the P0.1 commit lands; check `git log -1 main`), copy `local.properties` into it.
