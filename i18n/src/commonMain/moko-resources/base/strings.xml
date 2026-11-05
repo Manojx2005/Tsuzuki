@@ -1475,4 +1475,7 @@
     <string name="tsz_onboarding_continue">Continue</string>
     <string name="tsz_onboarding_finish">Start reading</string>
     <string name="tsz_onboarding_granted">Granted</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Edit info</string>
+    <string name="tsz_edit_reset_cover">Reset to source</string>
 </resources>

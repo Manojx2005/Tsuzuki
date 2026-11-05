@@ -1108,4 +1108,7 @@
     <string name="tsz_onboarding_continue">계속</string>
     <string name="tsz_onboarding_finish">읽기 시작</string>
     <string name="tsz_onboarding_granted">허용됨</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">정보 편집</string>
+    <string name="tsz_edit_reset_cover">소스 표지로 되돌리기</string>
 </resources>

@@ -1108,4 +1108,7 @@
     <string name="tsz_onboarding_continue">続ける</string>
     <string name="tsz_onboarding_finish">読書をはじめる</string>
     <string name="tsz_onboarding_granted">許可済み</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">情報を編集</string>
+    <string name="tsz_edit_reset_cover">ソースの表紙に戻す</string>
 </resources>

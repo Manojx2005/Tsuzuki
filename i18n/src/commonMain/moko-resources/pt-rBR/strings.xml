@@ -1106,4 +1106,7 @@
     <string name="tsz_onboarding_continue">Continuar</string>
     <string name="tsz_onboarding_finish">Começar a ler</string>
     <string name="tsz_onboarding_granted">Concedida</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Editar informações</string>
+    <string name="tsz_edit_reset_cover">Restaurar capa da fonte</string>
 </resources>

@@ -1102,4 +1102,7 @@
     <string name="tsz_onboarding_continue">Continuer</string>
     <string name="tsz_onboarding_finish">Commencer à lire</string>
     <string name="tsz_onboarding_granted">Accordée</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Modifier les informations</string>
+    <string name="tsz_edit_reset_cover">Rétablir la couverture source</string>
 </resources>

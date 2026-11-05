@@ -1109,4 +1109,7 @@
     <string name="tsz_onboarding_continue">Weiter</string>
     <string name="tsz_onboarding_finish">Jetzt lesen</string>
     <string name="tsz_onboarding_granted">Erteilt</string>
+    <!-- B3 -->
+    <string name="tsz_edit_info">Informationen bearbeiten</string>
+    <string name="tsz_edit_reset_cover">Quellcover wiederherstellen</string>
 </resources>
