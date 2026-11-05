@@ -291,7 +291,7 @@ passed by intent. Wire `anime-player` into `:app` only for the debug build type 
 preview/release). Re-run a 16 KB alignment check on the debug APK's anime libs and record sizes. No user-visible UI.
 Result: _pending_
 
-#### N23 Anime A2.1: schema design doc (T3, doc only) — `claude-working` (Claude agent, .worktrees/n23)
+#### N23 Anime A2.1: schema design doc (T3, doc only) — `done` (`ec00d9a0b`, docs/ANIME_SCHEMA.md; owner questions Q1–Q8 inside)
 Write `docs/ANIME_SCHEMA.md`: tables `animes`, `episodes`, `anime_history`, `anime_categories`, `anime_tracks` (Aniyomi
 Apache-2.0 schema as reference), SQLDelight migration numbering after the current latest migration in
 `data/src/main/sqldelight/tachiyomi/migrations/`, backup proto additions, how library/Home/Updates/History will read
@@ -354,6 +354,7 @@ Result: _pending_
 
 ## Open questions for the owner
 
+- Anime schema (docs/ANIME_SCHEMA.md Q1–Q8): share `categories` with content_type 3? Aniyomi-compatible backups (proto 500/501)? season columns? watch time in the reading streak? table naming; discard the spike's 36.sqm.
 - Still parked: release v0.1 / signing / making the repo public; Firebase telemetry removal before release;
   Support us screen; in-app PIN lock; Import EPUB "off" switch.
 - Upcoming (B6) now lists only the selected day's books (board behaviour) instead of every date with "Today /
