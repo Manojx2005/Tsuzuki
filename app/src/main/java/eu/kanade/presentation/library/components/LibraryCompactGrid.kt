@@ -52,6 +52,7 @@ internal fun LibraryCompactGrid(
                         isMangaFavorite = manga.favorite,
                         url = manga.thumbnailUrl,
                         lastModified = manga.coverLastModified,
+                        title = manga.title,
                     ),
                     coverBadgeStart = {
                         DownloadsBadge(count = libraryItem.badges.downloadCount)

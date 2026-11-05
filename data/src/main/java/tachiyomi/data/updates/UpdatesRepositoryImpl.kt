@@ -105,6 +105,7 @@ class UpdatesRepositoryImpl(
             isMangaFavorite = favorite,
             url = thumbnailUrl,
             lastModified = coverLastModified,
+            title = mangaTitle,
         ),
     )
 }

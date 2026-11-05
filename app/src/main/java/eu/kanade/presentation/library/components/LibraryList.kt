@@ -56,6 +56,7 @@ internal fun LibraryList(
                     isMangaFavorite = manga.favorite,
                     url = manga.thumbnailUrl,
                     lastModified = manga.coverLastModified,
+                    title = manga.title,
                 ),
                 badge = {
                     DownloadsBadge(count = libraryItem.badges.downloadCount)

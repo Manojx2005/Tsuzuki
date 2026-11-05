@@ -991,6 +991,7 @@ private fun Cover(book: HomeBook, modifier: Modifier) {
     val t = TsuzukiTheme.tokens
     MangaCover.Book(
         data = book.cover,
+        generatedTitle = book.title,
         modifier = modifier,
         contentDescription = book.title,
         shape = RoundedCornerShape(8.dp),

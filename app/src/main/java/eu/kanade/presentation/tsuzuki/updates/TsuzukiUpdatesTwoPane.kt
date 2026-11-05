@@ -379,7 +379,7 @@ private fun UpdateRow(
             .alpha(if (read && !saved) 0.55f else 1f),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MangaCover.Book(data = cover, modifier = Modifier.width(44.dp).height(62.dp))
+        MangaCover.Book(data = cover, modifier = Modifier.width(44.dp).height(62.dp), generatedTitle = title)
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(
                 up(title),
@@ -551,7 +551,12 @@ private fun GroupPreview(
                 .padding(horizontal = 24.dp, vertical = 24.dp),
         ) {
             Row(verticalAlignment = Alignment.Top) {
-                MangaCover.Book(data = group.coverUrl, modifier = Modifier.width(96.dp), onClick = onOpenBook)
+                MangaCover.Book(
+                    data = group.coverUrl,
+                    modifier = Modifier.width(96.dp),
+                    onClick = onOpenBook,
+                    generatedTitle = group.mangaTitle,
+                )
                 Column(Modifier.weight(1f).padding(start = 16.dp)) {
                     PreviewLabel(up(stringResource(MR.strings.tsz_updates_preview, group.mangaTitle)))
                     Spacer(Modifier.height(8.dp))

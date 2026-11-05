@@ -12,8 +12,13 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import eu.kanade.presentation.tsuzuki.details.rememberTsuzukiGeneratedCover
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
+import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.manga.model.MangaCover as CoverData
 
 enum class MangaCover(val ratio: Float) {
     Square(1f / 1f),
@@ -28,12 +33,36 @@ enum class MangaCover(val ratio: Float) {
         shape: Shape = MaterialTheme.shapes.extraSmall,
         onClick: (() -> Unit)? = null,
         colorFilter: androidx.compose.ui.graphics.ColorFilter? = null,
+        generatedTitle: String? = null,
     ) {
+        val model = (data as? ImageRequest)?.data ?: data
+        val title = generatedTitle ?: when (model) {
+            is CoverData -> model.title
+            is Manga -> model.title
+            else -> null
+        }
+        val generatedCover = if (isTsuzukiStyle() && !title.isNullOrBlank()) {
+            rememberTsuzukiGeneratedCover(title)
+        } else {
+            null
+        }
+        val missingUrl = when (model) {
+            is CoverData -> model.url.isNullOrBlank()
+            is Manga -> model.thumbnailUrl.isNullOrBlank()
+            is String -> model.isBlank()
+            else -> model == null
+        }
         AsyncImage(
             model = data,
-            placeholder = ColorPainter(CoverPlaceholderColor),
-            error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
-            fallback = rememberResourceBitmapPainter(id = R.drawable.cover_default),
+            placeholder = if (missingUrl &&
+                generatedCover != null
+            ) {
+                generatedCover
+            } else {
+                ColorPainter(CoverPlaceholderColor)
+            },
+            error = generatedCover ?: rememberResourceBitmapPainter(id = R.drawable.cover_error),
+            fallback = generatedCover ?: rememberResourceBitmapPainter(id = R.drawable.cover_default),
             contentDescription = contentDescription,
             modifier = modifier
                 .aspectRatio(ratio)
