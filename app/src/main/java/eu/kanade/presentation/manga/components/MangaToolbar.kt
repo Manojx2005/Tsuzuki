@@ -54,6 +54,7 @@ fun MangaToolbar(
     onClickExportEpub: (() -> Unit)? = null,
     onClickSearchChapters: (() -> Unit)? = null,
     onClickWordCount: (() -> Unit)? = null,
+    onClickNotebook: (() -> Unit)? = null,
     onClickScrollToTop: (() -> Unit)? = null,
     onClickScrollToLastRead: (() -> Unit)? = null,
     onClickScrollToBottom: (() -> Unit)? = null,
@@ -280,6 +281,15 @@ fun MangaToolbar(
                                 title = stringResource(TDMR.strings.action_word_count),
                                 onClick = onClickWordCount,
                                 icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.wordCount,
+                            ),
+                        )
+                    }
+                    if (onClickNotebook != null) {
+                        add(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.tsz_notebook_title),
+                                onClick = onClickNotebook,
+                                icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.notebook,
                             ),
                         )
                     }

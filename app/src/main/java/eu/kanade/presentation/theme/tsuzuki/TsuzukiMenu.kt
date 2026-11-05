@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.ManageSearch
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.Ballot
 import androidx.compose.material.icons.outlined.Close
@@ -188,6 +189,7 @@ object TsuzukiMenuIcons {
     val exportEpub = Icons.Outlined.FileOpen
     val wordCount = Icons.Outlined.Ballot
     val notes = Icons.AutoMirrored.Outlined.Notes
+    val notebook = Icons.AutoMirrored.Outlined.MenuBook
 
     // Novel reader overflow
     val webView = Icons.Outlined.Public

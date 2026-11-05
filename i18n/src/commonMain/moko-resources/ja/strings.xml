@@ -1208,4 +1208,12 @@
     <string name="tsz_ext_failed_missing_class">拡張機能がソースクラスを宣言していません</string>
     <string name="tsz_ext_failed_class_not_found">ソースクラスが見つかりません</string>
     <string name="tsz_ext_failed_load_error">ソースを作成できませんでした</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">ノートブック</string>
+    <string name="tsz_notebook_note">メモ</string>
+    <string name="tsz_notebook_edit">編集</string>
+    <string name="tsz_notebook_no_note">メモはまだありません。編集をタップして書き始めましょう。</string>
+    <string name="tsz_notebook_highlights">ハイライト</string>
+    <string name="tsz_notebook_newest">新しい順</string>
+    <string name="tsz_notebook_no_quotes">この本のハイライトはまだありません。</string>
 </resources>

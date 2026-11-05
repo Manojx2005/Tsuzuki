@@ -221,6 +221,13 @@ class MangaScreen(
                 navigator.push(ChapterSearchScreen(successState.manga.id))
             }.takeIf { successState.isNovel || successState.manga.isLocalNovel() },
             onWordCountClicked = viewModel::showWordCountDialog.takeIf { successState.isNovel },
+            onNotebookClicked = {
+                navigator.push(eu.kanade.tachiyomi.ui.tsuzuki.notebook.TsuzukiNotebookScreen(successState.manga.id))
+            }.takeIf {
+                successState.isNovel &&
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+            },
             showSourceName = successState.showSourceName,
             onToggleSourceNameVisibility = viewModel::toggleSourceNameVisibility,
             onMultiBookmarkClicked = viewModel::bookmarkChapters,
