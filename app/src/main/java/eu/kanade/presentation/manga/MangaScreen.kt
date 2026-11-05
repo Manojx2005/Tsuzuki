@@ -61,6 +61,8 @@ import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.tsuzuki.details.TsuzukiResumeTile
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReadingMode
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaScanlatorFilter
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
@@ -153,6 +155,7 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    onScanlatorFilterClicked: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -212,6 +215,7 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            onScanlatorFilterClicked = onScanlatorFilterClicked,
         )
     } else {
         MangaScreenLargeImpl(
@@ -264,6 +268,7 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            onScanlatorFilterClicked = onScanlatorFilterClicked,
         )
     }
 }
@@ -332,6 +337,7 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    onScanlatorFilterClicked: (() -> Unit)? = null,
 ) {
     val (chapters, listItem, isAnySelected) = remember(state) {
         Triple(
@@ -524,6 +530,7 @@ private fun MangaScreenSmallImpl(
                                     nextChapter = state.chapters.getNextUnread(state.manga)?.name,
                                     onClick = onContinueReading,
                                 )
+                                if (!state.isNovel) TsuzukiMangaReadingMode(state.manga)
                             }
                         }
                     }
@@ -570,6 +577,10 @@ private fun MangaScreenSmallImpl(
                             chapterCount = chapters.size,
                             missingChapterCount = missingChapterCount,
                             onClick = onFilterClicked,
+                        )
+                        TsuzukiMangaScanlatorFilter(
+                            state = state,
+                            onClick = onScanlatorFilterClicked,
                         )
                     }
 
@@ -655,6 +666,7 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    onScanlatorFilterClicked: (() -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -831,6 +843,7 @@ fun MangaScreenLargeImpl(
                                 nextChapter = state.chapters.getNextUnread(state.manga)?.name,
                                 onClick = onContinueReading,
                             )
+                            if (!state.isNovel) TsuzukiMangaReadingMode(state.manga)
                         }
                         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
                         val sortMangaTags by libraryPreferences.sortMangaTags.changes().collectAsState(
@@ -883,6 +896,10 @@ fun MangaScreenLargeImpl(
                                     chapterCount = chapters.size,
                                     missingChapterCount = missingChapterCount,
                                     onClick = onFilterButtonClicked,
+                                )
+                                TsuzukiMangaScanlatorFilter(
+                                    state = state,
+                                    onClick = onScanlatorFilterClicked,
                                 )
                             }
 

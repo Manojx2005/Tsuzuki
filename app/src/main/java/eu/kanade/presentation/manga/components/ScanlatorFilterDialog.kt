@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiScanlatorFilterDialog
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
@@ -43,6 +45,15 @@ fun ScanlatorFilterDialog(
         availableScanlators.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
     }
     val mutableExcludedScanlators = remember(excludedScanlators) { excludedScanlators.toMutableStateList() }
+    if (isTsuzukiStyle()) {
+        TsuzukiScanlatorFilterDialog(
+            availableScanlators = sortedAvailableScanlators,
+            excludedScanlators = mutableExcludedScanlators,
+            onDismissRequest = onDismissRequest,
+            onConfirm = onConfirm,
+        )
+        return
+    }
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(text = stringResource(MR.strings.exclude_scanlators)) },
