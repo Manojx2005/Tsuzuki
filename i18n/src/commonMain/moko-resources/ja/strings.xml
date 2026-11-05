@@ -1221,4 +1221,17 @@
     <string name="tsz_notebook_highlights">ハイライト</string>
     <string name="tsz_notebook_newest">新しい順</string>
     <string name="tsz_notebook_no_quotes">この本のハイライトはまだありません。</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">保存したクエリ</string>
+    <string name="tsz_query_subtitle">フィルターと並び順をワンタップで呼び出せます</string>
+    <string name="tsz_query_pill_clear">クリア</string>
+    <string name="tsz_query_save_current">現在の表示をクエリとして保存</string>
+    <string name="tsz_query_name_label">クエリ名</string>
+    <string name="tsz_query_empty">保存したクエリはまだありません。ライブラリでフィルターと並び順を設定して、ここに保存してください。</string>
+    <string name="tsz_query_filters_count">フィルター %1$d 件</string>
+    <string name="tsz_query_no_filters">フィルターなし</string>
+    <string name="tsz_query_rename">名前を変更</string>
+    <string name="tsz_query_delete">削除</string>
+    <string name="tsz_query_move_up">上へ移動</string>
+    <string name="tsz_query_move_down">下へ移動</string>
 </resources>

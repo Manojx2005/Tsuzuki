@@ -45,6 +45,7 @@ fun LibraryToolbar(
     onClickMassImport: (() -> Unit)? = null,
     onClickImportEpub: (() -> Unit)? = null,
     onClickFindDuplicates: (() -> Unit)? = null,
+    onClickQueries: (() -> Unit)? = null,
     onClickCategoryActions: (() -> Unit)? = null,
     /** Tsuzuki themes: shown under the bar (Novels / Manga switch, board "LibraryList"). */
     below: (@Composable () -> Unit)? = null,
@@ -69,6 +70,7 @@ fun LibraryToolbar(
             onClickMassImport = onClickMassImport,
             onClickImportEpub = onClickImportEpub,
             onClickFindDuplicates = onClickFindDuplicates,
+            onClickQueries = onClickQueries,
             onClickCategoryActions = onClickCategoryActions,
         )
     } else {
@@ -92,6 +94,7 @@ fun LibraryToolbar(
                 onClickMassImport = onClickMassImport,
                 onClickImportEpub = onClickImportEpub,
                 onClickFindDuplicates = onClickFindDuplicates,
+                onClickQueries = onClickQueries,
                 onClickCategoryActions = onClickCategoryActions,
             )
             below()
@@ -119,6 +122,7 @@ private fun LibraryToolbarBar(
     onClickMassImport: (() -> Unit)? = null,
     onClickImportEpub: (() -> Unit)? = null,
     onClickFindDuplicates: (() -> Unit)? = null,
+    onClickQueries: (() -> Unit)? = null,
     onClickCategoryActions: (() -> Unit)? = null,
 ) = when {
     selectedCount > 0 -> LibrarySelectionToolbar(
@@ -142,6 +146,7 @@ private fun LibraryToolbarBar(
         onClickMassImport = onClickMassImport,
         onClickImportEpub = onClickImportEpub,
         onClickFindDuplicates = onClickFindDuplicates,
+        onClickQueries = onClickQueries,
         onClickCategoryActions = onClickCategoryActions,
     )
 }
@@ -162,6 +167,7 @@ private fun LibraryRegularToolbar(
     onClickMassImport: (() -> Unit)? = null,
     onClickImportEpub: (() -> Unit)? = null,
     onClickFindDuplicates: (() -> Unit)? = null,
+    onClickQueries: (() -> Unit)? = null,
     onClickCategoryActions: (() -> Unit)? = null,
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
@@ -238,6 +244,16 @@ private fun LibraryRegularToolbar(
                         title = "Find Duplicates",
                         onClick = onClickFindDuplicates,
                         icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.duplicates,
+                    ),
+                )
+            }
+
+            if (onClickQueries != null) {
+                actions.add(
+                    AppBar.OverflowAction(
+                        title = stringResource(MR.strings.tsz_query_title),
+                        onClick = onClickQueries,
+                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.queries,
                     ),
                 )
             }

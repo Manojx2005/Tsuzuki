@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.Ballot
+import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Cookie
@@ -175,6 +176,7 @@ object TsuzukiMenuIcons {
     val importEpub = Icons.Outlined.FileOpen
     val duplicates = Icons.Outlined.ContentCopy
     val delete = Icons.Outlined.Delete
+    val queries = Icons.Outlined.Bookmarks
 
     // Book details overflow
     val refresh = Icons.Outlined.Refresh

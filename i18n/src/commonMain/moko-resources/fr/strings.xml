@@ -1215,4 +1215,17 @@
     <string name="tsz_notebook_highlights">Passages favoris</string>
     <string name="tsz_notebook_newest">Plus récents</string>
     <string name="tsz_notebook_no_quotes">Aucun passage enregistré pour ce livre.</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">Requêtes enregistrées</string>
+    <string name="tsz_query_subtitle">Filtres et tri à retrouver en un toucher</string>
+    <string name="tsz_query_pill_clear">Effacer</string>
+    <string name="tsz_query_save_current">Enregistrer la vue actuelle comme requête</string>
+    <string name="tsz_query_name_label">Nom de la requête</string>
+    <string name="tsz_query_empty">Aucune requête enregistrée. Réglez filtres et tri dans la bibliothèque, puis enregistrez-les ici.</string>
+    <string name="tsz_query_filters_count">%1$d filtres</string>
+    <string name="tsz_query_no_filters">Aucun filtre</string>
+    <string name="tsz_query_rename">Renommer</string>
+    <string name="tsz_query_delete">Supprimer</string>
+    <string name="tsz_query_move_up">Monter</string>
+    <string name="tsz_query_move_down">Descendre</string>
 </resources>

@@ -1221,4 +1221,17 @@
     <string name="tsz_notebook_highlights">하이라이트</string>
     <string name="tsz_notebook_newest">최신순</string>
     <string name="tsz_notebook_no_quotes">이 책에 저장된 하이라이트가 없습니다.</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">저장된 쿼리</string>
+    <string name="tsz_query_subtitle">필터와 정렬을 한 번에 불러옵니다</string>
+    <string name="tsz_query_pill_clear">지우기</string>
+    <string name="tsz_query_save_current">현재 보기를 쿼리로 저장</string>
+    <string name="tsz_query_name_label">쿼리 이름</string>
+    <string name="tsz_query_empty">저장된 쿼리가 아직 없습니다. 라이브러리에서 필터와 정렬을 설정한 뒤 여기에 저장하세요.</string>
+    <string name="tsz_query_filters_count">필터 %1$d개</string>
+    <string name="tsz_query_no_filters">필터 없음</string>
+    <string name="tsz_query_rename">이름 바꾸기</string>
+    <string name="tsz_query_delete">삭제</string>
+    <string name="tsz_query_move_up">위로 이동</string>
+    <string name="tsz_query_move_down">아래로 이동</string>
 </resources>

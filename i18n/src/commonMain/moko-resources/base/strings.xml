@@ -1586,4 +1586,17 @@
     <string name="tsz_notebook_highlights">Highlights</string>
     <string name="tsz_notebook_newest">Newest</string>
     <string name="tsz_notebook_no_quotes">No highlights saved for this book yet.</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">Saved queries</string>
+    <string name="tsz_query_subtitle">Filters and sort you can bring back with one tap</string>
+    <string name="tsz_query_pill_clear">Clear</string>
+    <string name="tsz_query_save_current">Save current view as query</string>
+    <string name="tsz_query_name_label">Query name</string>
+    <string name="tsz_query_empty">No saved queries yet. Set filters and sort in the library, then save them here.</string>
+    <string name="tsz_query_filters_count">%1$d filters</string>
+    <string name="tsz_query_no_filters">No filters</string>
+    <string name="tsz_query_rename">Rename</string>
+    <string name="tsz_query_delete">Delete</string>
+    <string name="tsz_query_move_up">Move up</string>
+    <string name="tsz_query_move_down">Move down</string>
 </resources>

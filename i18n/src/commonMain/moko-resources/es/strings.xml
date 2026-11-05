@@ -1209,4 +1209,17 @@
     <string name="tsz_notebook_highlights">Destacados</string>
     <string name="tsz_notebook_newest">Más recientes</string>
     <string name="tsz_notebook_no_quotes">Aún no hay destacados guardados para este libro.</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">Consultas guardadas</string>
+    <string name="tsz_query_subtitle">Filtros y orden que puedes recuperar con un toque</string>
+    <string name="tsz_query_pill_clear">Borrar</string>
+    <string name="tsz_query_save_current">Guardar la vista actual como consulta</string>
+    <string name="tsz_query_name_label">Nombre de la consulta</string>
+    <string name="tsz_query_empty">Aún no hay consultas guardadas. Ajusta filtros y orden en la biblioteca y guárdalos aquí.</string>
+    <string name="tsz_query_filters_count">%1$d filtros</string>
+    <string name="tsz_query_no_filters">Sin filtros</string>
+    <string name="tsz_query_rename">Renombrar</string>
+    <string name="tsz_query_delete">Eliminar</string>
+    <string name="tsz_query_move_up">Subir</string>
+    <string name="tsz_query_move_down">Bajar</string>
 </resources>

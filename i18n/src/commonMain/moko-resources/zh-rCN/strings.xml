@@ -1222,4 +1222,17 @@
     <string name="tsz_notebook_highlights">高亮</string>
     <string name="tsz_notebook_newest">最新</string>
     <string name="tsz_notebook_no_quotes">这本书还没有保存任何高亮。</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">已保存的查询</string>
+    <string name="tsz_query_subtitle">一键恢复筛选和排序</string>
+    <string name="tsz_query_pill_clear">清除</string>
+    <string name="tsz_query_save_current">将当前视图保存为查询</string>
+    <string name="tsz_query_name_label">查询名称</string>
+    <string name="tsz_query_empty">还没有已保存的查询。在书库中设置筛选和排序，然后在此保存。</string>
+    <string name="tsz_query_filters_count">%1$d 个筛选</string>
+    <string name="tsz_query_no_filters">无筛选</string>
+    <string name="tsz_query_rename">重命名</string>
+    <string name="tsz_query_delete">删除</string>
+    <string name="tsz_query_move_up">上移</string>
+    <string name="tsz_query_move_down">下移</string>
 </resources>

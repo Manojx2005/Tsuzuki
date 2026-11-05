@@ -1222,4 +1222,17 @@
     <string name="tsz_notebook_highlights">Markierungen</string>
     <string name="tsz_notebook_newest">Neueste</string>
     <string name="tsz_notebook_no_quotes">Für dieses Buch sind noch keine Markierungen gespeichert.</string>
+    <!-- N29 -->
+    <string name="tsz_query_title">Gespeicherte Abfragen</string>
+    <string name="tsz_query_subtitle">Filter und Sortierung mit einem Tipp wiederherstellen</string>
+    <string name="tsz_query_pill_clear">Zurücksetzen</string>
+    <string name="tsz_query_save_current">Aktuelle Ansicht als Abfrage speichern</string>
+    <string name="tsz_query_name_label">Name der Abfrage</string>
+    <string name="tsz_query_empty">Noch keine gespeicherten Abfragen. Lege in der Bibliothek Filter und Sortierung fest und speichere sie hier.</string>
+    <string name="tsz_query_filters_count">%1$d Filter</string>
+    <string name="tsz_query_no_filters">Keine Filter</string>
+    <string name="tsz_query_rename">Umbenennen</string>
+    <string name="tsz_query_delete">Löschen</string>
+    <string name="tsz_query_move_up">Nach oben</string>
+    <string name="tsz_query_move_down">Nach unten</string>
 </resources>
