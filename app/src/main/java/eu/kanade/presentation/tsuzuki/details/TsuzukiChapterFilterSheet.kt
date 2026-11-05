@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.state.ToggleableState
@@ -117,7 +118,7 @@ fun TsuzukiChapterFilterSheet(
             ) {
                 Text(
                     text = themedText(stringResource(MR.strings.chapters)),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).semantics { heading() },
                     style = MaterialTheme.typography.headlineLarge,
                     fontSize = 30.sp,
                 )
@@ -187,7 +188,7 @@ fun TsuzukiChapterFilterSheet(
                     onChange = onBookmarkedFilterChanged,
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable(onClick = onScanlatorFilterClicked)
+                    modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onScanlatorFilterClicked)
                         .heightIn(min = 50.dp).padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),

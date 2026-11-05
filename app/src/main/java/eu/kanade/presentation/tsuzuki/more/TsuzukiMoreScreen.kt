@@ -40,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -98,7 +100,7 @@ fun TsuzukiMoreScreen(
             text = t.case(stringResource(MR.strings.label_more)),
             style = MaterialTheme.typography.displaySmall.copy(fontSize = 44.sp, lineHeight = 46.sp),
             color = Color.White,
-            modifier = Modifier.padding(start = 4.dp, bottom = 14.dp, top = 4.dp),
+            modifier = Modifier.padding(start = 4.dp, bottom = 14.dp, top = 4.dp).semantics { heading() },
         )
         Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

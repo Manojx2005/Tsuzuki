@@ -1241,4 +1241,9 @@
     <string name="tsz_find_next">Nächster Treffer</string>
     <string name="tsz_find_previous">Vorheriger Treffer</string>
     <string name="tsz_find_close">Suche schließen</string>
+    <string name="tsz_a11y_back">Zurück</string>
+    <string name="tsz_a11y_decrease">Verringern</string>
+    <string name="tsz_a11y_increase">Erhöhen</string>
+    <string name="tsz_a11y_clear">Löschen</string>
+    <string name="tsz_a11y_startup">Tsuzuki startet. Zum Überspringen tippen.</string>
 </resources>

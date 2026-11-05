@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -154,10 +155,18 @@ class TsuzukiStatsScreen : Screen() {
                                 )
                             }
                             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                RoundButton(Icons.Outlined.Remove, goal > 5) {
+                                RoundButton(
+                                    Icons.Outlined.Remove,
+                                    stringResource(MR.strings.tsz_a11y_decrease),
+                                    goal > 5,
+                                ) {
                                     readingDays.dailyGoalMinutes.set((goal - 5).coerceIn(5, 240))
                                 }
-                                RoundButton(Icons.Outlined.Add, goal < 240) {
+                                RoundButton(
+                                    Icons.Outlined.Add,
+                                    stringResource(MR.strings.tsz_a11y_increase),
+                                    goal < 240,
+                                ) {
                                     readingDays.dailyGoalMinutes.set((goal + 5).coerceIn(5, 240))
                                 }
                             }
@@ -228,14 +237,23 @@ private fun Tile(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RoundButton(icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
+private fun RoundButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
     Box(
-        Modifier.size(44.dp).clip(CircleShape)
+        Modifier.minimumInteractiveComponentSize().size(44.dp).clip(CircleShape)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             .tsuzukiClickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
+        Icon(
+            icon,
+            description,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
+        )
     }
 }
 

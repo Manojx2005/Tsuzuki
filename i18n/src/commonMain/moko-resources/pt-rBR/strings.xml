@@ -1238,4 +1238,9 @@
     <string name="tsz_find_next">Próxima ocorrência</string>
     <string name="tsz_find_previous">Ocorrência anterior</string>
     <string name="tsz_find_close">Fechar busca</string>
+    <string name="tsz_a11y_back">Voltar</string>
+    <string name="tsz_a11y_decrease">Diminuir</string>
+    <string name="tsz_a11y_increase">Aumentar</string>
+    <string name="tsz_a11y_clear">Limpar</string>
+    <string name="tsz_a11y_startup">O Tsuzuki está iniciando. Toque para pular.</string>
 </resources>

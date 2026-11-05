@@ -43,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -177,6 +179,7 @@ internal fun TsuzukiNotebook(
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(
                     tsuzukiCase(stringResource(MR.strings.tsz_notebook_title)).orEmpty(),
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 36.sp, lineHeight = 40.sp),
                     color = t.dotOn,
                 )

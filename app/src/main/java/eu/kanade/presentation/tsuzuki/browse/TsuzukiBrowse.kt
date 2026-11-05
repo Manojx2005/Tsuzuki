@@ -117,6 +117,7 @@ fun TsuzukiPinnedSources(
                             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
                             .tsuzukiSelectedSource(source.id == selectedId, shape)
                             .tsuzukiClickable(
+                                role = Role.Button,
                                 onClick = { onClick(source) },
                                 onLongClick = { onLongClick(source) },
                             )

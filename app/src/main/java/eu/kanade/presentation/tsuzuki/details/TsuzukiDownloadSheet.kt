@@ -46,6 +46,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -131,7 +133,7 @@ private fun TsuzukiDownloadSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         case(stringResource(MR.strings.tsz_download_title)),
-                        Modifier.weight(1f),
+                        Modifier.weight(1f).semantics { heading() },
                         style = MaterialTheme.typography.headlineLarge,
                         fontSize = 30.sp,
                     )
@@ -331,6 +333,7 @@ private fun DownloadPreferenceRow(label: String, checked: Boolean, onCheckedChan
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.semantics { contentDescription = label },
             colors = SwitchDefaults.colors(checkedTrackColor = tokens.accent, checkedThumbColor = tokens.onAccent),
         )
     }

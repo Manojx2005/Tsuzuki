@@ -40,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -164,6 +166,7 @@ fun TsuzukiLibraryQueriesScreen(onBack: () -> Unit) {
                 Column(Modifier.padding(start = 12.dp)) {
                     Text(
                         t.case(stringResource(MR.strings.tsz_query_title)),
+                        modifier = Modifier.semantics { heading() },
                         style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp, lineHeight = 36.sp),
                         color = MaterialTheme.colorScheme.onSurface,
                     )

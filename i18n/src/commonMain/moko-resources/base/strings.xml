@@ -1605,4 +1605,9 @@
     <string name="tsz_find_next">Next match</string>
     <string name="tsz_find_previous">Previous match</string>
     <string name="tsz_find_close">Close find</string>
+    <string name="tsz_a11y_back">Back</string>
+    <string name="tsz_a11y_decrease">Decrease</string>
+    <string name="tsz_a11y_increase">Increase</string>
+    <string name="tsz_a11y_clear">Clear</string>
+    <string name="tsz_a11y_startup">Tsuzuki is starting. Tap to skip.</string>
 </resources>

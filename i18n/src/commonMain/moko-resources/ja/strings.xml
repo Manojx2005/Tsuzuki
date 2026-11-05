@@ -1240,4 +1240,9 @@
     <string name="tsz_find_next">次の一致</string>
     <string name="tsz_find_previous">前の一致</string>
     <string name="tsz_find_close">検索を閉じる</string>
+    <string name="tsz_a11y_back">戻る</string>
+    <string name="tsz_a11y_decrease">減らす</string>
+    <string name="tsz_a11y_increase">増やす</string>
+    <string name="tsz_a11y_clear">クリア</string>
+    <string name="tsz_a11y_startup">Tsuzukiを起動しています。タップでスキップ</string>
 </resources>
