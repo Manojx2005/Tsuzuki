@@ -189,6 +189,7 @@ fun AppBarTitle(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.basicMarquee(
                     repeatDelayMillis = 2_000,
+                    velocity = 75.dp,
                 ),
             )
         }
