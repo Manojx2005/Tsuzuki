@@ -27,9 +27,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -114,6 +116,7 @@ fun TsuzukiUpdatesTwoPane(
     val t = TsuzukiTheme.tokens
     // Item rows are keyed by chapter id, grouped rows by manga id.
     var selectedKey by rememberSaveable { mutableStateOf<Long?>(null) }
+    var pendingSave by remember { mutableStateOf<List<UpdatesItem>?>(null) }
     val groups = remember(state.items, state.groupByNovel) {
         if (state.groupByNovel) state.getNovelGroups() else emptyList()
     }
@@ -279,19 +282,41 @@ fun TsuzukiUpdatesTwoPane(
                     onOpenBook = { onClickNovelGroup(selectedGroup.mangaId) },
                     onMarkAllRead = { onMultiMarkAsReadClicked(selectedGroup.chapters, true) },
                     onSaveAll = {
-                        onDownloadChapter(
-                            selectedGroup.chapters.filter {
-                                it.downloadStateProvider() == Download.State.NOT_DOWNLOADED
-                            },
-                            ChapterDownloadAction.START,
-                        )
+                        val toSave = selectedGroup.chapters.filter {
+                            it.downloadStateProvider() == Download.State.NOT_DOWNLOADED
+                        }
+                        // One tap shouldn't silently queue hundreds of chapters.
+                        if (toSave.size > LARGE_DOWNLOAD_CONFIRM) {
+                            pendingSave = toSave
+                        } else {
+                            onDownloadChapter(toSave, ChapterDownloadAction.START)
+                        }
                     },
                 )
                 else -> EmptyUpdates(Modifier.fillMaxSize())
             }
         }
     }
+    pendingSave?.let { chapters ->
+        AlertDialog(
+            onDismissRequest = { pendingSave = null },
+            text = { Text(stringResource(MR.strings.tsz_updates_confirm_download, chapters.size)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingSave = null
+                        onDownloadChapter(chapters, ChapterDownloadAction.START)
+                    },
+                ) { Text(stringResource(MR.strings.action_download)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingSave = null }) { Text(stringResource(MR.strings.action_cancel)) }
+            },
+        )
+    }
 }
+
+private const val LARGE_DOWNLOAD_CONFIRM = 25
 
 @Composable
 private fun EmptyUpdates(modifier: Modifier = Modifier) {

@@ -1157,4 +1157,5 @@
     <string name="tsz_updates_more_new">mais %1$d capítulos novos</string>
     <string name="tsz_updates_read_chapter">Ler capítulo</string>
     <string name="tsz_updates_open_book">Abrir livro</string>
+    <string name="tsz_updates_confirm_download">Baixar %1$d capítulos?</string>
 </resources>

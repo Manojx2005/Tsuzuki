@@ -1160,4 +1160,5 @@
     <string name="tsz_updates_more_new">另有 %1$d 个新章节</string>
     <string name="tsz_updates_read_chapter">阅读本章</string>
     <string name="tsz_updates_open_book">打开作品</string>
+    <string name="tsz_updates_confirm_download">下载 %1$d 章？</string>
 </resources>

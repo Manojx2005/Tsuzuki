@@ -1526,4 +1526,5 @@
     <string name="tsz_updates_more_new">%1$d more new</string>
     <string name="tsz_updates_read_chapter">Read chapter</string>
     <string name="tsz_updates_open_book">Open book</string>
+    <string name="tsz_updates_confirm_download">Download %1$d chapters?</string>
 </resources>

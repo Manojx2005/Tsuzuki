@@ -1159,4 +1159,5 @@
     <string name="tsz_updates_more_new">새 챕터 %1$d개 더</string>
     <string name="tsz_updates_read_chapter">이 챕터 읽기</string>
     <string name="tsz_updates_open_book">작품 열기</string>
+    <string name="tsz_updates_confirm_download">%1$d개 챕터를 다운로드할까요?</string>
 </resources>
