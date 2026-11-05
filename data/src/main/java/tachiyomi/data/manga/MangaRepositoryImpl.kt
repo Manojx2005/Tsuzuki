@@ -471,6 +471,12 @@ class MangaRepositoryImpl(
         return database.mangasQueries.getFavoritesCount().awaitAsOne()
     }
 
+    override suspend fun getFavoritesCountByType(): Pair<Long, Long> {
+        val rows = database.mangasQueries.getFavoritesCountByType { isNovel, count -> isNovel to count }
+            .awaitAsList()
+        return rows.filter { it.first }.sumOf { it.second } to rows.filterNot { it.first }.sumOf { it.second }
+    }
+
     override suspend fun getFavoritesEntry(): List<Manga> {
         return database.mangasQueries.getFavoritesEntry {
                 id,

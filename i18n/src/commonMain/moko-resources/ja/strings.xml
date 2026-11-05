@@ -1174,4 +1174,14 @@
     <string name="tsz_browse_open_catalogue">カタログを開く</string>
     <!-- N14 -->
     <string name="tsz_search_results_time">%1$d 件 · %2$s 秒</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">ストレージ</string>
+    <string name="tsz_storage_calculating">計算中…</string>
+    <string name="tsz_storage_downloads">ダウンロード</string>
+    <string name="tsz_storage_covers">カバー</string>
+    <string name="tsz_storage_database">データベース</string>
+    <string name="tsz_storage_cache">キャッシュ</string>
+    <string name="tsz_storage_novels">小説</string>
+    <string name="tsz_storage_manga">マンガ</string>
+    <string name="tsz_storage_chapters">チャプター</string>
 </resources>

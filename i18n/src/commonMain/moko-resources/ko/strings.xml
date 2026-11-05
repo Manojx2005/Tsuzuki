@@ -1174,4 +1174,14 @@
     <string name="tsz_browse_open_catalogue">카탈로그 열기</string>
     <!-- N14 -->
     <string name="tsz_search_results_time">결과 %1$d개 · %2$s초</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">저장공간</string>
+    <string name="tsz_storage_calculating">계산 중…</string>
+    <string name="tsz_storage_downloads">다운로드</string>
+    <string name="tsz_storage_covers">표지</string>
+    <string name="tsz_storage_database">데이터베이스</string>
+    <string name="tsz_storage_cache">캐시</string>
+    <string name="tsz_storage_novels">소설</string>
+    <string name="tsz_storage_manga">만화</string>
+    <string name="tsz_storage_chapters">챕터</string>
 </resources>

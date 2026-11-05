@@ -1541,4 +1541,14 @@
     <string name="tsz_browse_open_catalogue">Open catalogue</string>
     <!-- N14 -->
     <string name="tsz_search_results_time">%1$d results · %2$s s</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">Storage</string>
+    <string name="tsz_storage_calculating">Calculating…</string>
+    <string name="tsz_storage_downloads">Downloads</string>
+    <string name="tsz_storage_covers">Covers</string>
+    <string name="tsz_storage_database">Database</string>
+    <string name="tsz_storage_cache">Cache</string>
+    <string name="tsz_storage_novels">Novels</string>
+    <string name="tsz_storage_manga">Manga</string>
+    <string name="tsz_storage_chapters">Chapters</string>
 </resources>

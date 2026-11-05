@@ -1175,4 +1175,14 @@
     <string name="tsz_browse_open_catalogue">打开目录</string>
     <!-- N14 -->
     <string name="tsz_search_results_time">%1$d 个结果 · %2$s 秒</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">存储</string>
+    <string name="tsz_storage_calculating">计算中…</string>
+    <string name="tsz_storage_downloads">下载</string>
+    <string name="tsz_storage_covers">封面</string>
+    <string name="tsz_storage_database">数据库</string>
+    <string name="tsz_storage_cache">缓存</string>
+    <string name="tsz_storage_novels">小说</string>
+    <string name="tsz_storage_manga">漫画</string>
+    <string name="tsz_storage_chapters">章节</string>
 </resources>

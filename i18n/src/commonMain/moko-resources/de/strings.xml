@@ -1175,4 +1175,14 @@
     <string name="tsz_browse_open_catalogue">Katalog öffnen</string>
     <!-- N14 -->
     <string name="tsz_search_results_time">%1$d Ergebnisse · %2$s s</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">Speicher</string>
+    <string name="tsz_storage_calculating">Wird berechnet…</string>
+    <string name="tsz_storage_downloads">Downloads</string>
+    <string name="tsz_storage_covers">Cover</string>
+    <string name="tsz_storage_database">Datenbank</string>
+    <string name="tsz_storage_cache">Cache</string>
+    <string name="tsz_storage_novels">Romane</string>
+    <string name="tsz_storage_manga">Manga</string>
+    <string name="tsz_storage_chapters">Kapitel</string>
 </resources>
