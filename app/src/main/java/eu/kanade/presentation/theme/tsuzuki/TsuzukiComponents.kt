@@ -55,6 +55,7 @@ fun TsuzukiProgressBar(
     thickness: Dp = 6.dp,
     fill: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
     track: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
+    spreadDots: Boolean = false,
 ) {
     val t = TsuzukiTheme.tokens
     val p = progress.coerceIn(0f, 1f)
@@ -76,7 +77,12 @@ fun TsuzukiProgressBar(
             val here = hereDotIndex(p, dots)
             // Spread across the width, but never further apart than the design's dot pitch
             // (gap = half a dot), so wide rows keep a compact, left-aligned bar.
-            val step = if (dots > 1) minOf((size.width - h) / (dots - 1), h * 2.2f) else 0f
+            val step = if (dots > 1) {
+                val availableStep = (size.width - h) / (dots - 1)
+                if (spreadDots) availableStep else minOf(availableStep, h * 2.2f)
+            } else {
+                0f
+            }
             for (k in 0 until dots) {
                 val color = when {
                     k == here -> t.dotHere

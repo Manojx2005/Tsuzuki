@@ -28,6 +28,8 @@ import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -50,6 +52,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.novel.TsuzukiNovelStatusBar
+import eu.kanade.presentation.tsuzuki.novel.novelPageNumber
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -104,12 +111,68 @@ fun NovelStatusBar(
     size: String = "small",
     onHeightChanged: (Int) -> Unit = {},
 ) {
+    val renderStatus: @Composable (Modifier, Boolean, (Int) -> Unit) -> Unit = { barModifier, themed, onHeight ->
+        NovelStatusBarContent(
+            chapterText, progressPercent, pagedPageIndex, pagedPageCount, order,
+            showTime, showChapter, showProgress, showBattery, showCharging, backgroundColor, textColor,
+            isCollapsed, onToggleCollapse, barModifier, size, onHeight, themed,
+        )
+    }
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        TsuzukiNovelStatusBar(
+            progressPercent = progressPercent,
+            pageIndex = pagedPageIndex,
+            pageCount = pagedPageCount,
+            showTrack = showProgress && !isCollapsed,
+            backgroundColor = backgroundColor,
+            textColor = textColor,
+            modifier = modifier,
+            onHeightChanged = onHeightChanged,
+        ) {
+            renderStatus(Modifier, true) {}
+        }
+        return
+    }
+    renderStatus(modifier, false, onHeightChanged)
+}
+
+@Composable
+private fun NovelStatusBarContent(
+    chapterText: String?,
+    progressPercent: Int,
+    pagedPageIndex: Int,
+    pagedPageCount: Int,
+    order: List<StatusBarItem>,
+    showTime: Boolean,
+    showChapter: Boolean,
+    showProgress: Boolean,
+    showBattery: Boolean,
+    showCharging: Boolean,
+    backgroundColor: Color,
+    textColor: Color,
+    isCollapsed: Boolean,
+    onToggleCollapse: () -> Unit,
+    modifier: Modifier,
+    size: String,
+    onHeightChanged: (Int) -> Unit,
+    themed: Boolean,
+) {
     val medium = size == "medium"
     val fontSize = if (medium) 14.sp else 11.sp
     val iconSize = if (medium) 18.dp else 14.dp
     val toggleSize = if (medium) 20.dp else 16.dp
-    val verticalPadding = if (medium) 10.dp else 6.dp
-    val labelStyle = TextStyle(fontSize = fontSize, fontWeight = FontWeight.Normal, letterSpacing = 0.sp)
+    val verticalPadding = when {
+        themed -> 0.dp
+        medium -> 10.dp
+        else -> 6.dp
+    }
+    val toggleIcon = if (isCollapsed) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore
+    val toggleLabel = if (isCollapsed) "Expand status bar" else "Collapse status bar"
+    val labelStyle = if (themed) {
+        MaterialTheme.typography.labelSmall.copy(fontSize = fontSize)
+    } else {
+        TextStyle(fontSize = fontSize, fontWeight = FontWeight.Normal, letterSpacing = 0.sp)
+    }
     val contentColor = textColor
     val dimColor = textColor.copy(alpha = 0.45f)
 
@@ -160,7 +223,7 @@ fun NovelStatusBar(
             .fillMaxWidth()
             .background(backgroundColor)
             .onSizeChanged { onHeightChanged(it.height) }
-            .padding(horizontal = 12.dp, vertical = verticalPadding),
+            .padding(horizontal = if (themed) 26.dp else 12.dp, vertical = verticalPadding),
     ) {
         // Cap chapter width so a long title ellipsizes instead of crowding fixed elements
         val chapterMaxWidth = maxWidth * 0.55f
@@ -169,7 +232,7 @@ fun NovelStatusBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 22.dp)
+                    .padding(end = if (themed) 48.dp else 22.dp)
                     .align(Alignment.Center),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -182,7 +245,7 @@ fun NovelStatusBar(
 
                         StatusBarItem.CHAPTER -> if (showChapter && chapterText != null) {
                             Text(
-                                text = chapterText,
+                                text = if (themed) tsuzukiCase(chapterText).orEmpty() else chapterText,
                                 style = labelStyle,
                                 color = contentColor,
                                 maxLines = 1,
@@ -193,11 +256,17 @@ fun NovelStatusBar(
 
                         StatusBarItem.PROGRESS -> if (showProgress) {
                             val text = if (pagedPageCount > 0) {
-                                "${(pagedPageIndex + 1).coerceAtMost(pagedPageCount)}/$pagedPageCount"
+                                val page = novelPageNumber(pagedPageIndex, pagedPageCount)
+                                if (themed) "$page / $pagedPageCount" else "$page/$pagedPageCount"
                             } else {
                                 "$progressPercent%"
                             }
-                            Text(text = text, style = labelStyle, color = contentColor)
+                            val style = if (themed && pagedPageCount > 0 && TsuzukiTheme.tokens.isDot) {
+                                MaterialTheme.typography.displaySmall.copy(fontSize = 15.sp, lineHeight = 18.sp)
+                            } else {
+                                labelStyle
+                            }
+                            Text(text = text, style = style, color = contentColor)
                         }
 
                         StatusBarItem.BATTERY -> if (showBattery && batteryPercent >= 0) {
@@ -218,9 +287,23 @@ fun NovelStatusBar(
         }
 
         // Collapse/expand toggle, always visible, pinned to the right
+        if (themed) {
+            IconButton(
+                onClick = onToggleCollapse,
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
+                Icon(
+                    imageVector = toggleIcon,
+                    contentDescription = toggleLabel,
+                    tint = contentColor,
+                    modifier = Modifier.size(toggleSize),
+                )
+            }
+            return@BoxWithConstraints
+        }
         Icon(
-            imageVector = if (isCollapsed) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-            contentDescription = if (isCollapsed) "Expand status bar" else "Collapse status bar",
+            imageVector = toggleIcon,
+            contentDescription = toggleLabel,
             tint = dimColor,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
