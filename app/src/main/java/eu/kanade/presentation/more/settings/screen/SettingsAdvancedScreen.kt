@@ -159,6 +159,15 @@ object SettingsAdvancedScreen : SearchableSettings {
                 },
             ),
             Preference.PreferenceItem.SwitchPreference(
+                preference = networkPreferences.redactSensitiveHeaders,
+                title = stringResource(MR.strings.tsz_network_redact_headers),
+                subtitle = stringResource(MR.strings.tsz_network_redact_headers_summary),
+                onValueChanged = {
+                    context.toast(MR.strings.requires_app_restart)
+                    true
+                },
+            ),
+            Preference.PreferenceItem.SwitchPreference(
                 preference = libraryPreferences.showMangaSourceName,
                 title = stringResource(TDMR.strings.pref_show_manga_source_name),
                 subtitle = stringResource(TDMR.strings.pref_show_manga_source_name_summary),

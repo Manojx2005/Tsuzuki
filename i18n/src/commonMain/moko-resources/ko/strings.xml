@@ -1160,4 +1160,7 @@
     <string name="tsz_updates_read_chapter">이 챕터 읽기</string>
     <string name="tsz_updates_open_book">작품 열기</string>
     <string name="tsz_updates_confirm_download">%1$d개 챕터를 다운로드할까요?</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">민감한 헤더 숨기기</string>
+    <string name="tsz_network_redact_headers_summary">상세 네트워크 로그에서 인증 헤더를 숨깁니다.</string>
 </resources>

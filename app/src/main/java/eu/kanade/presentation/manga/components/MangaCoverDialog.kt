@@ -54,6 +54,7 @@ import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
+import tachiyomi.source.local.isLocal
 
 @Composable
 fun MangaCoverDialog(
@@ -110,7 +111,13 @@ fun MangaCoverDialog(
                             Box {
                                 var expanded by remember { mutableStateOf(false) }
                                 IconButton(
-                                    onClick = { expanded = true },
+                                    onClick = {
+                                        if (!manga.favorite && !manga.isLocal()) {
+                                            onEditClick(EditCoverAction.ADD_TO_LIBRARY)
+                                        } else {
+                                            expanded = true
+                                        }
+                                    },
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Edit,

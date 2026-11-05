@@ -451,10 +451,7 @@ class MangaViewModel(
             if (isFavorited) {
                 // Remove from library
                 if (updateManga.awaitUpdateFavorite(manga.id, false)) {
-                    // Remove covers and update last modified in db
-                    if (manga.removeCovers() != manga) {
-                        updateManga.awaitUpdateCoverLastModified(manga.id)
-                    }
+                    manga.removeCovers()
                     withUIContext { onRemoved() }
                 }
             } else {
@@ -511,6 +508,12 @@ class MangaViewModel(
                 // Finally match with enhanced tracking when available
                 addTracks.bindEnhancedTrackers(manga, state.source)
             }
+        }
+    }
+
+    fun showRemoveFromLibraryDialog() {
+        updateSuccessState { state ->
+            if (state.manga.favorite) state.copy(dialog = Dialog.RemoveFromLibrary) else state
         }
     }
 
@@ -1355,6 +1358,7 @@ class MangaViewModel(
     // Track sheet - end
 
     sealed interface Dialog {
+        data object RemoveFromLibrary : Dialog
         data class ChangeCategory(
             val manga: Manga,
             val initialSelection: List<CheckboxState<Category>>,

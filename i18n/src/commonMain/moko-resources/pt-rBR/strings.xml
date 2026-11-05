@@ -1158,4 +1158,7 @@
     <string name="tsz_updates_read_chapter">Ler capítulo</string>
     <string name="tsz_updates_open_book">Abrir livro</string>
     <string name="tsz_updates_confirm_download">Baixar %1$d capítulos?</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">Ocultar cabeçalhos confidenciais</string>
+    <string name="tsz_network_redact_headers_summary">Oculta cabeçalhos de autenticação nos registros detalhados de rede.</string>
 </resources>

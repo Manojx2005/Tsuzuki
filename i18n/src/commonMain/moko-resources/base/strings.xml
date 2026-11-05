@@ -1527,4 +1527,7 @@
     <string name="tsz_updates_read_chapter">Read chapter</string>
     <string name="tsz_updates_open_book">Open book</string>
     <string name="tsz_updates_confirm_download">Download %1$d chapters?</string>
+    <!-- N2 -->
+    <string name="tsz_network_redact_headers">Redact sensitive headers</string>
+    <string name="tsz_network_redact_headers_summary">Hide authentication headers in verbose network logs.</string>
 </resources>
