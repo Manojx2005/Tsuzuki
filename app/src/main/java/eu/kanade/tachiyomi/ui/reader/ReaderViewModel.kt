@@ -21,6 +21,7 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.reader.appbars.BottomBarItemState
 import eu.kanade.presentation.reader.appbars.deserializeBottomBarItems
 import eu.kanade.presentation.reader.appbars.serialize
+import eu.kanade.presentation.tsuzuki.reader.recordTsuzukiReadingTime
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -1065,8 +1066,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val chapterId = readerChapter.chapter.id!!
         val endTime = Date()
         val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
-        // Tsuzuki: per-day reading for the streak (history keeps only each chapter's last read).
-        Injekt.get<eu.kanade.tachiyomi.tsuzuki.ReadingDays>().add(java.time.LocalDate.now(), sessionReadDuration)
+        recordTsuzukiReadingTime(sessionReadDuration)
 
         // Novels stamp last_read on chapter entry via setNovelVisibleChapter, which owns recency.
         // Re-stamping it here (on a chapter switch or pause flush) can push the just-left chapter's
