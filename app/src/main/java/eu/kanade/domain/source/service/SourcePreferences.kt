@@ -2,12 +2,15 @@ package eu.kanade.domain.source.service
 
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.domain.source.model.FilterPresetList
+import eu.kanade.tachiyomi.extension.util.ContentWarningPolicy
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.serialization.json.Json
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.migration.models.MigrationFlag
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
+import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.core.common.preference.getLongArray
 import tachiyomi.domain.library.model.LibraryDisplayMode
 
@@ -47,7 +50,22 @@ class SourcePreferences(
         -1,
     )
 
-    val showNsfwSource: Preference<Boolean> = preferenceStore.getBoolean("show_nsfw_source", true)
+    /**
+     * Allowed content warnings (Mihon #3951). Replaces the old `show_nsfw_source` switch: its value is
+     * read here once as the default, so users who turned it off keep only Safe until they pick otherwise.
+     */
+    val enabledContentWarnings: Preference<Set<ContentWarning>> = preferenceStore.getEnumSet(
+        "enabled_content_warnings",
+        preferenceStore.getBoolean("show_nsfw_source", true).let { legacy ->
+            ContentWarningPolicy.defaultAllowed(legacy.isSet(), legacy.get())
+        },
+    )
+
+    /** Mihon #3952: when off, installed extensions load whatever their warning is. */
+    val applyContentWarningsToInstalled: Preference<Boolean> = preferenceStore.getBoolean(
+        "apply_content_warnings_to_installed",
+        true,
+    )
 
     val migrationSortingMode: Preference<SetMigrateSorting.Mode> = preferenceStore.getEnum(
         "pref_migration_sorting",

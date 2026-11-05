@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.label
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -95,9 +96,10 @@ fun TsuzukiExtensionDetailsHeader(
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                     color = muted,
                 )
-                if (extension.isNsfw) {
+                val warningLabel = extension.contentWarning.label
+                if (warningLabel != null) {
                     Text(
-                        up(stringResource(MR.strings.ext_nsfw_short)) + " ⓘ",
+                        up(stringResource(warningLabel.title)) + " ⓘ",
                         modifier = Modifier.clickable(role = Role.Button, onClick = onClickAgeRating),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
@@ -143,7 +145,7 @@ private fun extensionDebugInfo(extension: Extension): String = buildString {
         """
         Extension name: ${extension.name} (lang: ${extension.lang}; package: ${extension.pkgName})
         Extension version: ${extension.versionName} (lib: ${extension.libVersion}; version code: ${extension.versionCode})
-        NSFW: ${extension.isNsfw}
+        Content warning: ${extension.contentWarning}
         """.trimIndent(),
     )
     if (extension is Extension.Installed) {

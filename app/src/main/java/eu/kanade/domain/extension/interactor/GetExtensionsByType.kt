@@ -4,6 +4,7 @@ import eu.kanade.domain.extension.model.Extensions
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.util.ContentWarningPolicy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -13,8 +14,6 @@ class GetExtensionsByType(
 ) {
 
     fun subscribe(): Flow<Extensions> {
-        val showNsfwSources = preferences.showNsfwSource.get()
-
         return combine(
             preferences.enabledLanguages.changes(),
             extensionManager.installedExtensionsFlow,
@@ -22,8 +21,9 @@ class GetExtensionsByType(
             extensionManager.availableExtensionsFlow,
             extensionManager.failedExtensionsFlow,
         ) { enabledLanguages, _installed, _untrusted, _available, _failed ->
+            val enabledContentWarnings = preferences.enabledContentWarnings.get()
+
             val (updates, installed) = _installed
-                .filter { (showNsfwSources || !it.isNsfw) }
                 .sortedWith(
                     compareBy<Extension.Installed> { !it.isObsolete }
                         .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name },
@@ -41,7 +41,7 @@ class GetExtensionsByType(
                     _installed.none { it.pkgName == extension.pkgName } &&
                         _untrusted.none { it.pkgName == extension.pkgName } &&
                         _failed.none { it.pkgName == extension.pkgName } &&
-                        (showNsfwSources || !extension.isNsfw)
+                        ContentWarningPolicy.isListed(extension.contentWarning, enabledContentWarnings)
                 }
                 .flatMap { ext ->
                     ext.sources.filter { it.lang in enabledLanguages }

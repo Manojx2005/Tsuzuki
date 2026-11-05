@@ -1240,4 +1240,15 @@
     <string name="tsz_find_next">다음 결과</string>
     <string name="tsz_find_previous">이전 결과</string>
     <string name="tsz_find_close">찾기 닫기</string>
+    <string name="pref_category_extensions">확장 프로그램</string>
+    <string name="pref_allowed_content_warnings">허용할 콘텐츠 경고</string>
+    <string name="content_warnings_info">적용하려면 앱을 다시 시작해야 합니다. 로드되지 않은 확장 프로그램의 소스는 앱 어디에도 표시되지 않습니다. 비공식이거나 잘못 분류된 확장 프로그램이 앱 안에서 18+ 콘텐츠를 보여주는 것을 막지는 못합니다.</string>
+    <string name="ext_info_warning">경고</string>
+    <string name="ext_content_warning_safe">안전</string>
+    <string name="ext_content_warning_mixed">혼합</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">이 확장 프로그램의 소스에는 안전한 콘텐츠와 18+ 콘텐츠가 함께 있을 수 있습니다.</string>
+    <string name="ext_content_warning_nsfw_description">이 확장 프로그램의 소스는 주로 18+ 콘텐츠를 다룹니다.</string>
+    <string name="pref_apply_content_warnings_to_installed">설치된 확장 프로그램에도 적용</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">끄면 이미 설치한 확장 프로그램은 경고와 관계없이 계속 로드되고 업데이트됩니다</string>
 </resources>

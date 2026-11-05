@@ -20,6 +20,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
+import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import java.io.File
@@ -42,9 +43,6 @@ internal object ExtensionLoader {
 
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustExtension by injectLazy()
-    private val loadNsfwSource by lazy {
-        preferences.showNsfwSource.get()
-    }
 
     private const val EXTENSION_FEATURE = "tachiyomi.extension"
     private const val EXTENSION_FEATURE_NOVEL = "tachiyomi.novelextension"
@@ -321,10 +319,19 @@ internal object ExtensionLoader {
             return LoadResult.Untrusted(extension)
         }
 
-        val isNsfw = appInfo.metaData.getInt(METADATA_CONTENT_WARNING) > 0 ||
-            appInfo.metaData.getInt("$metaNs.nsfw") == 1
-        if (!loadNsfwSource && isNsfw) {
-            logcat(LogPriority.WARN) { "NSFW extension $pkgName not allowed" }
+        val contentWarning = ContentWarningPolicy.fromMetadata(
+            contentWarning = appInfo.metaData
+                .takeIf { it.containsKey(METADATA_CONTENT_WARNING) }
+                ?.getInt(METADATA_CONTENT_WARNING),
+            legacyNsfw = appInfo.metaData.getInt("$metaNs.nsfw"),
+        )
+        if (!ContentWarningPolicy.canLoadInstalled(
+                warning = contentWarning,
+                enabled = preferences.enabledContentWarnings.get(),
+                applyToInstalled = preferences.applyContentWarningsToInstalled.get(),
+            )
+        ) {
+            logcat(LogPriority.WARN) { "Extension $pkgName with $contentWarning not allowed" }
             return LoadResult.Error
         }
 
@@ -398,7 +405,7 @@ internal object ExtensionLoader {
             versionCode = versionCode,
             libVersion = libVersion,
             lang = lang,
-            isNsfw = isNsfw,
+            contentWarning = contentWarning,
             isNovel = appInfo.metaData.getInt("$metaNs.novel") == 1,
             sources = sources,
             pkgFactory = appInfo.metaData.getString("$metaNs.factory"),

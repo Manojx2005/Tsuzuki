@@ -8,6 +8,7 @@ import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
 import mihon.data.extension.model.NetworkExtensionStore.ExtensionList
 import mihon.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension as TachiyomiExtension
+import mihon.domain.extension.model.ContentWarning as DomainContentWarning
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
@@ -106,7 +107,11 @@ fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<TachiyomiEx
             versionCode = extension.versionCode,
             versionName = extension.versionName,
             lang = if (lang.size == 1) lang.first() else "all",
-            isNsfw = extension.contentWarning >= ContentWarning.MIXED,
+            contentWarning = when (extension.contentWarning) {
+                ContentWarning.MIXED -> DomainContentWarning.MIXED
+                ContentWarning.NSFW -> DomainContentWarning.NSFW
+                else -> DomainContentWarning.SAFE
+            },
             // The real isNovel field is authoritative; the package-prefix check is only a
             // fallback for stores whose index predates it (or don't bother setting it at all).
             isNovel = extension.isNovel || extension.packageName.startsWith("eu.kanade.tachiyomi.novelextension"),

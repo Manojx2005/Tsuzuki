@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -19,7 +20,7 @@ class NovelExtensionsUpdateAllTest {
         versionCode = 101L,
         libVersion = 0.0,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         isNovel = true,
         sources = listOf(
             Extension.Available.Source(
@@ -42,7 +43,7 @@ class NovelExtensionsUpdateAllTest {
         versionCode = 2L,
         libVersion = 1.5,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         isNovel = true,
         pkgFactory = null,
         sources = emptyList(),
@@ -66,7 +67,7 @@ class NovelExtensionsUpdateAllTest {
         versionCode = 1L,
         libVersion = 1.5,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         isNovel = true,
         sources = emptyList(),
         apkUrl = "https://example.com/ext.apk",

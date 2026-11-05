@@ -1605,4 +1605,15 @@
     <string name="tsz_find_next">Next match</string>
     <string name="tsz_find_previous">Previous match</string>
     <string name="tsz_find_close">Close find</string>
+    <string name="pref_category_extensions">Extensions</string>
+    <string name="pref_allowed_content_warnings">Allowed content warnings</string>
+    <string name="content_warnings_info">Requires app restart to take effect. Extensions that aren't loaded won't provide their sources anywhere in the app. This does not prevent unofficial or potentially incorrectly flagged extensions from surfacing 18+ content within the app.</string>
+    <string name="ext_info_warning">Warning</string>
+    <string name="ext_content_warning_safe">Safe</string>
+    <string name="ext_content_warning_mixed">Mixed</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">Sources from this extension might contain both safe and 18+ content.</string>
+    <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
+    <string name="pref_apply_content_warnings_to_installed">Also apply to installed extensions</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">When off, extensions you already installed keep loading and updating regardless of their warning</string>
 </resources>

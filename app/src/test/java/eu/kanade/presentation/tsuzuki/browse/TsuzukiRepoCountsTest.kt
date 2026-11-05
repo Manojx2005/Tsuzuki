@@ -1,6 +1,7 @@
 package eu.kanade.presentation.tsuzuki.browse
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -25,7 +26,7 @@ class TsuzukiRepoCountsTest {
         versionCode = 1,
         libVersion = 1.4,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         isNovel = false,
         sources = List(sources) { Extension.Available.Source(it.toLong(), "en", "s$it", "https://x") },
         apkUrl = "",
