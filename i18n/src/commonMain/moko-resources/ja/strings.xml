@@ -1067,6 +1067,8 @@
     <string name="tsz_about_source_code">ソースコード</string>
     <string name="tsz_about_built_on">ベースにしたプロジェクト</string>
     <string name="tsz_category_new_shelf">棚を追加</string>
+    <string name="tsz_repo_sources">%1$d 件のソース</string>
+    <string name="tsz_repo_extensions">%1$d 件の拡張機能</string>
     <string name="tsz_source_priority_subtitle">重複と移行でどの版を優先するか</string>
     <string name="tsz_source_priority_by_type">種類別</string>
     <string name="tsz_source_priority_specific">ソース別</string>

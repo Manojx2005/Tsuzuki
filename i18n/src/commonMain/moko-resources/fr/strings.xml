@@ -1061,6 +1061,8 @@
     <string name="tsz_about_source_code">Code source</string>
     <string name="tsz_about_built_on">Basé sur</string>
     <string name="tsz_category_new_shelf">Nouvelle étagère</string>
+    <string name="tsz_repo_sources">%1$d sources</string>
+    <string name="tsz_repo_extensions">%1$d extensions</string>
     <string name="tsz_source_priority_subtitle">Quelle copie l\'emporte pour les doublons et les migrations</string>
     <string name="tsz_source_priority_by_type">Par type</string>
     <string name="tsz_source_priority_specific">Sources précises</string>

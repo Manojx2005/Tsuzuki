@@ -69,6 +69,7 @@ fun ExtensionStoresScreen(
         ExtensionStoresContent(
             repos = state.stores,
             disabledRepos = state.disabledRepos,
+            repoCounts = state.repoCounts,
             lazyListState = lazyListState,
             paddingValues = paddingValues + topSmallPaddingValues +
                 PaddingValues(horizontal = MaterialTheme.padding.medium),

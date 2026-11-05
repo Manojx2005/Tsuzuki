@@ -1067,6 +1067,8 @@
     <string name="tsz_about_source_code">소스 코드</string>
     <string name="tsz_about_built_on">기반 프로젝트</string>
     <string name="tsz_category_new_shelf">새 책장</string>
+    <string name="tsz_repo_sources">소스 %1$d개</string>
+    <string name="tsz_repo_extensions">확장 프로그램 %1$d개</string>
     <string name="tsz_source_priority_subtitle">중복과 이전에서 어느 쪽을 우선할지 정합니다</string>
     <string name="tsz_source_priority_by_type">유형별</string>
     <string name="tsz_source_priority_specific">소스별</string>
