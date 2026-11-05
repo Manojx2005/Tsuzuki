@@ -1088,4 +1088,25 @@
     <string name="tsz_mass_import_in_library">%1$d in der Bibliothek</string>
     <string name="tsz_mass_import_unsupported">%1$d nicht unterstützt</string>
     <string name="information_webview_crashed">WebView funktioniert nicht mehr und die Seite wurde geschlossen</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">Light Novels, Webromane, Manga und Manhwa. Eine Bibliothek.</string>
+    <string name="tsz_onboarding_welcome_body">Offline lesen oder dir Romane vorlesen lassen. Kostenlos, quelloffen und ohne Werbung.</string>
+    <string name="tsz_onboarding_languages">In welchen Sprachen liest du?</string>
+    <string name="tsz_onboarding_languages_body">Wir zeigen dir Quellen in den ausgewählten Sprachen.</string>
+    <string name="tsz_onboarding_look">Wähle ein Design</string>
+    <string name="tsz_onboarding_look_body">Du kannst es jederzeit in den Einstellungen ändern.</string>
+    <string name="tsz_onboarding_storage">Wähle deinen Speicherordner</string>
+    <string name="tsz_onboarding_permissions">Ein paar Berechtigungen</string>
+    <string name="tsz_onboarding_permissions_body">Mit diesen Berechtigungen kannst du Quellen installieren, Benachrichtigungen erhalten und Downloads im Hintergrund fortsetzen. Du kannst auch ohne sie fortfahren.</string>
+    <string name="tsz_onboarding_import">Kommst du von einer anderen App?</string>
+    <string name="tsz_onboarding_import_body">Importiere ein Backup, um deine Bibliothek und deinen Lesefortschritt zu übernehmen.</string>
+    <string name="tsz_onboarding_lnreader">LNReader-Backup</string>
+    <string name="tsz_onboarding_mihon">Mihon- / Tsundoku-Backup</string>
+    <string name="tsz_onboarding_skip">Überspringen</string>
+    <string name="tsz_onboarding_back">Zurück</string>
+    <string name="tsz_onboarding_start">Los geht’s</string>
+    <string name="tsz_onboarding_continue">Weiter</string>
+    <string name="tsz_onboarding_finish">Jetzt lesen</string>
+    <string name="tsz_onboarding_granted">Erteilt</string>
 </resources>

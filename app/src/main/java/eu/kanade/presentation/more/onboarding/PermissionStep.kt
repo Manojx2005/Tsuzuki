@@ -167,6 +167,18 @@ internal class PermissionStep : OnboardingStep {
         modifier: Modifier = Modifier,
         onButtonClick: () -> Unit,
     ) {
+        if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+        ) {
+            eu.kanade.presentation.tsuzuki.onboarding.TsuzukiPermissionTile(
+                title,
+                subtitle,
+                granted,
+                onButtonClick,
+                modifier,
+            )
+            return
+        }
         ListItem(
             modifier = modifier,
             trailingContent = {

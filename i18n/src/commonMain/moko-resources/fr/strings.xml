@@ -1081,4 +1081,25 @@
     <string name="tsz_mass_import_in_library">%1$d dans la bibliothèque</string>
     <string name="tsz_mass_import_unsupported">%1$d non pris en charge</string>
     <string name="information_webview_crashed">WebView a cessé de fonctionner et la page a été fermée</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">Light novels, romans web, mangas et manhwas. Une seule bibliothèque.</string>
+    <string name="tsz_onboarding_welcome_body">Lisez hors ligne ou écoutez des romans grâce à la lecture à voix haute. Gratuit, open source et sans publicité.</string>
+    <string name="tsz_onboarding_languages">Dans quelles langues lisez-vous ?</string>
+    <string name="tsz_onboarding_languages_body">Nous afficherons des sources dans les langues choisies.</string>
+    <string name="tsz_onboarding_look">Choisissez un style</string>
+    <string name="tsz_onboarding_look_body">Vous pouvez le modifier à tout moment dans les paramètres.</string>
+    <string name="tsz_onboarding_storage">Choisissez le dossier de stockage</string>
+    <string name="tsz_onboarding_permissions">Quelques autorisations</string>
+    <string name="tsz_onboarding_permissions_body">Ces autorisations permettent d’installer des sources, de recevoir des notifications et de poursuivre les téléchargements en arrière-plan. Vous pouvez continuer sans les accorder.</string>
+    <string name="tsz_onboarding_import">Vous venez d’une autre appli ?</string>
+    <string name="tsz_onboarding_import_body">Importez une sauvegarde pour retrouver votre bibliothèque et votre progression de lecture.</string>
+    <string name="tsz_onboarding_lnreader">Sauvegarde LNReader</string>
+    <string name="tsz_onboarding_mihon">Sauvegarde Mihon / Tsundoku</string>
+    <string name="tsz_onboarding_skip">Passer</string>
+    <string name="tsz_onboarding_back">Retour</string>
+    <string name="tsz_onboarding_start">Commencer</string>
+    <string name="tsz_onboarding_continue">Continuer</string>
+    <string name="tsz_onboarding_finish">Commencer à lire</string>
+    <string name="tsz_onboarding_granted">Accordée</string>
 </resources>

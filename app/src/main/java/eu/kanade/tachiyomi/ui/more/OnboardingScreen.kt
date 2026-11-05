@@ -32,6 +32,7 @@ class OnboardingScreen : Screen() {
         }
 
         val restoreSettingKey = stringResource(SettingsDataScreen.restorePreferenceKeyString)
+        val lnReaderSettingKey = stringResource(SettingsDataScreen.lnReaderImportPreferenceKeyString)
 
         BackHandler(enabled = !shownOnboardingFlow) {
             // Prevent exiting if onboarding hasn't been completed
@@ -39,6 +40,11 @@ class OnboardingScreen : Screen() {
 
         OnboardingScreen(
             onComplete = finishOnboarding,
+            onImportLNReader = {
+                finishOnboarding()
+                SearchableSettings.highlightKey = lnReaderSettingKey
+                navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage))
+            },
             onRestoreBackup = {
                 finishOnboarding()
                 SearchableSettings.highlightKey = restoreSettingKey

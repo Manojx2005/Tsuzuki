@@ -1087,4 +1087,25 @@
     <string name="tsz_mass_import_in_library">서재에 있음 %1$d</string>
     <string name="tsz_mass_import_unsupported">지원 안 됨 %1$d</string>
     <string name="information_webview_crashed">WebView가 정지되어 페이지가 닫혔습니다</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">라이트 노벨, 웹소설, 만화와 웹툰을 하나의 서재에.</string>
+    <string name="tsz_onboarding_welcome_body">오프라인으로 읽거나 소설을 음성으로 들어 보세요. 무료, 오픈 소스, 광고 없음.</string>
+    <string name="tsz_onboarding_languages">어떤 언어로 읽으시나요?</string>
+    <string name="tsz_onboarding_languages_body">선택한 언어의 소스를 보여 드립니다.</string>
+    <string name="tsz_onboarding_look">테마 선택</string>
+    <string name="tsz_onboarding_look_body">언제든지 설정에서 변경할 수 있습니다.</string>
+    <string name="tsz_onboarding_storage">저장 폴더 선택</string>
+    <string name="tsz_onboarding_permissions">권한 설정</string>
+    <string name="tsz_onboarding_permissions_body">소스 설치, 알림 수신, 백그라운드 다운로드를 위한 권한입니다. 허용하지 않고 계속할 수도 있습니다.</string>
+    <string name="tsz_onboarding_import">다른 앱에서 오셨나요?</string>
+    <string name="tsz_onboarding_import_body">백업을 가져와 서재와 읽기 진행 상황을 이어가세요.</string>
+    <string name="tsz_onboarding_lnreader">LNReader 백업</string>
+    <string name="tsz_onboarding_mihon">Mihon / Tsundoku 백업</string>
+    <string name="tsz_onboarding_skip">건너뛰기</string>
+    <string name="tsz_onboarding_back">뒤로</string>
+    <string name="tsz_onboarding_start">시작하기</string>
+    <string name="tsz_onboarding_continue">계속</string>
+    <string name="tsz_onboarding_finish">읽기 시작</string>
+    <string name="tsz_onboarding_granted">허용됨</string>
 </resources>

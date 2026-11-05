@@ -1088,4 +1088,25 @@
     <string name="tsz_mass_import_in_library">已在书库 %1$d</string>
     <string name="tsz_mass_import_unsupported">不支持 %1$d</string>
     <string name="information_webview_crashed">WebView 已停止工作，页面已关闭</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">轻小说、网络小说、日漫与韩漫，尽在一个书库。</string>
+    <string name="tsz_onboarding_welcome_body">支持离线阅读和小说朗读。免费、开源、无广告。</string>
+    <string name="tsz_onboarding_languages">你用什么语言阅读？</string>
+    <string name="tsz_onboarding_languages_body">将显示所选语言的书源。</string>
+    <string name="tsz_onboarding_look">选择外观</string>
+    <string name="tsz_onboarding_look_body">你可以随时在设置中更改。</string>
+    <string name="tsz_onboarding_storage">选择存储文件夹</string>
+    <string name="tsz_onboarding_permissions">设置权限</string>
+    <string name="tsz_onboarding_permissions_body">这些权限用于安装书源、接收通知和在后台继续下载。你也可以不授权直接继续。</string>
+    <string name="tsz_onboarding_import">从其他应用迁移？</string>
+    <string name="tsz_onboarding_import_body">导入备份，保留你的书库和阅读进度。</string>
+    <string name="tsz_onboarding_lnreader">LNReader 备份</string>
+    <string name="tsz_onboarding_mihon">Mihon / Tsundoku 备份</string>
+    <string name="tsz_onboarding_skip">跳过</string>
+    <string name="tsz_onboarding_back">返回</string>
+    <string name="tsz_onboarding_start">开始设置</string>
+    <string name="tsz_onboarding_continue">继续</string>
+    <string name="tsz_onboarding_finish">开始阅读</string>
+    <string name="tsz_onboarding_granted">已授权</string>
 </resources>
