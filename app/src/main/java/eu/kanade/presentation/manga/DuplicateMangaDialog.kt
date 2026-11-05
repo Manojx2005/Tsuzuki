@@ -87,6 +87,18 @@ fun DuplicateMangaDialog(
     modifier: Modifier = Modifier,
     canAddAnyway: Boolean = true,
 ) {
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiDuplicateMangaDialog(
+            duplicates,
+            onDismissRequest,
+            onConfirm,
+            onOpenManga,
+            onMigrate,
+            modifier,
+            canAddAnyway,
+        )
+        return
+    }
     val sourceManager = remember { Injekt.get<SourceManager>() }
     val minHeight = LocalPreferenceMinHeight.current
     val horizontalPadding = PaddingValues(horizontal = TabbedDialogPaddings.Horizontal)
