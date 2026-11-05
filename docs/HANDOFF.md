@@ -65,8 +65,24 @@ Result: _pending_
   saved, ReadingDays minutes, contents drawer jump, manga paged + long strip.
 Result: _pending_
 
-### P0.3 Sort Tsuzuki-owned novel/manga code — `blocked` (waits for `docs/ARCHITECTURE.md`, P0.4 and P0.5 merged)
-- Tier T1 · Codex `gpt-5.3-codex-spark`, effort low. Card details in WORKPLAN Phase 0.
+### P0.3 Sort Tsuzuki-owned novel/manga code — `blocked` (start after P0.4 and P0.5 are committed; they touch the same reader package)
+- Tier T1 · Codex `gpt-5.3-codex-spark`, effort low.
+- Worktree: `git -c core.longpaths=true worktree add -b tsuzuki/media-packages .worktrees/media-packages main`, copy `local.properties`.
+- `docs/ARCHITECTURE.md` §7 found only five media-specific Tsuzuki files; everything else is shared and stays.
+  Move with `git mv`, change only the `package` line, imports and fully-qualified call sites:
+  - → `app/src/main/java/eu/kanade/presentation/tsuzuki/novel/`: `reader/TsuzukiReaderSettingsSheet.kt`,
+    `reader/TsuzukiReaderContents.kt`, `updates/TsuzukiUpdatesGroupTile.kt`, `settings/TsuzukiSourcePriority.kt`
+    (package `eu.kanade.presentation.tsuzuki.novel`).
+  - → `app/src/main/java/eu/kanade/presentation/tsuzuki/manga/`: `reader/ReaderDownloadStatus.kt`
+    (package `eu.kanade.presentation.tsuzuki.manga`).
+  - Callers to fix (FQN or import only, no other edits): `P/reader/settings/ReaderSettingsDialog.kt`,
+    `A/ui/reader/ReaderActivity.kt`, `P/updates/UpdatesUiItem.kt`, `A/ui/library/duplicate/SourcePriorityScreen.kt`,
+    `A/ui/reader/viewer/ReaderTransitionView.kt`; move the tests (`TsuzukiTocFilterTest`, `SourcePriorityStepTest`,
+    `ReaderDownloadStatusTest`) to the matching test packages. Keep `internal` visibility working.
+  - Update the paths in `docs/ARCHITECTURE.md` §7 is Claude's job; just list the moves in Result.
+- Done when: `git diff -M --stat` shows five renames (+ tests) with only package/import lines changed, per-file
+  Spotless clean, `./gradlew :app:assembleDebug :app:testDebugUnitTest` green.
+Result: _pending_
 
 ## Open questions for the owner
 
