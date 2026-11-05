@@ -43,10 +43,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- **Anime A1.2 — `claude-working`** (`.worktrees/anime-a12`, branch `tsuzuki/anime-a12`, Sonnet agent): re-port the
-  spike's animesource API + unregistered extension loader + native builder files onto current main. Files:
-  `source-api/**/animesource/**`, `app/**/tsuzuki/anime/**`, `scripts/anime-native/**`, `.github/workflows/anime-native.yml`,
-  `docs/licenses/*Aniyomi*`, build files (additions only). Overnight batch N does not touch these.
+- Nothing until the 06:00 review of batch N.
 
 ## Codex queue
 
@@ -244,6 +241,9 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-06 00:xx Claude — anime A1.2 merged (`bb18e65a7`).** 26 animesource API files, NanoHTTPD 2.3.1
+  (BSD-3, credit still to add), keep rule, unregistered loader, native builder + licences, ANIME_SPIKE.md. Spike UI/
+  schema/player left for A1.3+/A2. Build 730 tests green. E2 range selection checked on tablet (4 selected, no crash).
 - **2026-11-05 Claude — E1 + E2 Mihon fixes merged (`8cafe3b13`, `32f4570c3`).** E1: 88d4071cc (disk index
   can't overwrite a startup rescan, atomic index file), f28b2d887 (cancel queued downloads of chapters the source
   removed), f82a7a68f (fresh error notifications); f0f1e4de5 + a5d584eeb already in via the DownloadProvider sync,
