@@ -335,7 +335,7 @@ downloaded, source, category, tracker, content type) into saved "queries" shown 
 Store queries in a preference (JSON). Real filters only.
 Result: _pending_
 
-#### N30 Performance audit of Tsuzuki lazy lists (T2) — `claude-working` (Claude agent, .worktrees/n30)
+#### N30 Performance audit of Tsuzuki lazy lists (T2) — `done` (Claude agent `422bd3ec0`; ~24 key/contentType fixes, docs/research/compose-perf-n30.md)
 Every Tsuzuki-owned `LazyColumn/LazyRow/LazyGrid` (presentation/tsuzuki/**, theme/tsuzuki/**): stable `key`s,
 `contentType`, no heavy work in item composition (move to `remember`/view model), Coil image sizes for covers.
 List each fix in Result. Behaviour unchanged; tests green.
