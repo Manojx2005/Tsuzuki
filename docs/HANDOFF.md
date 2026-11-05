@@ -346,7 +346,7 @@ All Tsuzuki composables: 48 dp touch targets, content descriptions for icon-only
 `Role`s/toggleable semantics, no hardcoded English. List each fix in Result.
 Result: _pending_
 
-#### N32 Unit tests for Tsuzuki logic (T2) — `claude-working` (Claude agent, .worktrees/n32)
+#### N32 Unit tests for Tsuzuki logic (T2) — `done` (Claude agent `3c71b8dc1`; 56 new cases)
 Add JVM tests for untested pure logic in `ui/tsuzuki/**`, `tachiyomi/tsuzuki/**` and `presentation/tsuzuki/**`
 (e.g. home view-model mapping, updates summary, palette/tint math, value labels). Extract tiny pure helpers only
 where needed (no behaviour change).
