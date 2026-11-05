@@ -1133,4 +1133,11 @@
     <string name="tsz_duplicates_sort">Ordenar</string>
     <string name="tsz_duplicates_category">Categoría</string>
     <string name="tsz_duplicates_sort_pinned">Fijadas</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">Crear una fuente</string>
+    <string name="tsz_source_subtitle">Sin código: toca y selecciona en el sitio</string>
+    <string name="tsz_source_address">Dirección del sitio</string>
+    <string name="tsz_source_wizard">Asistente</string>
+    <string name="tsz_picker_title">Selector del sitio</string>
+    <string name="tsz_picker_step">Paso %1$d de %2$d · %3$s</string>
 </resources>

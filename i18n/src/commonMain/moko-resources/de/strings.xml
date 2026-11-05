@@ -1146,4 +1146,11 @@
     <string name="tsz_duplicates_sort">Sortieren</string>
     <string name="tsz_duplicates_category">Kategorie</string>
     <string name="tsz_duplicates_sort_pinned">Angepinnt</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">Quelle erstellen</string>
+    <string name="tsz_source_subtitle">Ohne Code — auf der Seite antippen und auswählen</string>
+    <string name="tsz_source_address">Website-Adresse</string>
+    <string name="tsz_source_wizard">Assistent</string>
+    <string name="tsz_picker_title">Seiten-Auswahl</string>
+    <string name="tsz_picker_step">Schritt %1$d von %2$d · %3$s</string>
 </resources>

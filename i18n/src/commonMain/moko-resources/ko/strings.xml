@@ -1145,4 +1145,11 @@
     <string name="tsz_duplicates_sort">정렬</string>
     <string name="tsz_duplicates_category">카테고리</string>
     <string name="tsz_duplicates_sort_pinned">고정됨</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">소스 만들기</string>
+    <string name="tsz_source_subtitle">코드 없이 — 사이트를 탭해서 선택</string>
+    <string name="tsz_source_address">사이트 주소</string>
+    <string name="tsz_source_wizard">마법사</string>
+    <string name="tsz_picker_title">사이트 선택기</string>
+    <string name="tsz_picker_step">%2$d단계 중 %1$d단계 · %3$s</string>
 </resources>

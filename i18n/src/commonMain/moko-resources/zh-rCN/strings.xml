@@ -1146,4 +1146,11 @@
     <string name="tsz_duplicates_sort">排序</string>
     <string name="tsz_duplicates_category">分类</string>
     <string name="tsz_duplicates_sort_pinned">已固定</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">创建来源</string>
+    <string name="tsz_source_subtitle">无需代码——在网站上点选即可</string>
+    <string name="tsz_source_address">网站地址</string>
+    <string name="tsz_source_wizard">向导</string>
+    <string name="tsz_picker_title">网站选择器</string>
+    <string name="tsz_picker_step">第 %1$d 步，共 %2$d 步 · %3$s</string>
 </resources>

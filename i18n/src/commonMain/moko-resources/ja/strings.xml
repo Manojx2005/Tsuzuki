@@ -1145,4 +1145,11 @@
     <string name="tsz_duplicates_sort">並び替え</string>
     <string name="tsz_duplicates_category">カテゴリ</string>
     <string name="tsz_duplicates_sort_pinned">ピン留め</string>
+    <!-- c3 -->
+    <string name="tsz_source_title">ソースを作る</string>
+    <string name="tsz_source_subtitle">コード不要 — サイトをタップして選ぶ</string>
+    <string name="tsz_source_address">サイトのアドレス</string>
+    <string name="tsz_source_wizard">ウィザード</string>
+    <string name="tsz_picker_title">サイトピッカー</string>
+    <string name="tsz_picker_step">ステップ %1$d / %2$d · %3$s</string>
 </resources>
