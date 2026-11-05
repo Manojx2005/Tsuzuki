@@ -1089,7 +1089,7 @@
     <string name="information_webview_crashed">WebView が動作を停止し、ページが閉じられました</string>
 
     <!-- First-run Tsuzuki onboarding -->
-    <string name="tsz_onboarding_welcome">ライトノベルも、ウェブ小説も、マンガも、マンファも。ひとつのライブラリに。</string>
+    <string name="tsz_onboarding_welcome">小説もマンガも、ひとつの本棚に。</string>
     <string name="tsz_onboarding_welcome_body">オフラインで読んだり、小説を読み上げで聴いたりできます。無料・オープンソース・広告なし。</string>
     <string name="tsz_onboarding_languages">どの言語で読みますか？</string>
     <string name="tsz_onboarding_languages_body">選んだ言語のソースが表示されます。</string>
@@ -1121,4 +1121,12 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">ライブラリの更新予定</string>
     <string name="tsz_upcoming_no_updates">更新予定はありません</string>
+    <!-- media step -->
+    <string name="tsz_onboarding_media">何を読みますか？</string>
+    <string name="tsz_onboarding_media_body">使うものだけを表示します。</string>
+    <string name="tsz_onboarding_media_novels">ライトノベル</string>
+    <string name="tsz_onboarding_media_novels_body">テキストリーダー、読み上げ、翻訳</string>
+    <string name="tsz_onboarding_media_manga">マンガ・マンファ</string>
+    <string name="tsz_onboarding_media_manga_body">ページ表示と縦スクロール</string>
+    <string name="tsz_onboarding_media_footnote">設定 &gt; 外観でいつでも変更できます。</string>
 </resources>

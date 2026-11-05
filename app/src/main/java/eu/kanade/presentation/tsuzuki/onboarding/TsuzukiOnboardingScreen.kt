@@ -167,6 +167,12 @@ fun TsuzukiOnboardingScreen(
                             Heading(stringResource(MR.strings.tsz_onboarding_welcome), welcome = true)
                             Muted(stringResource(MR.strings.tsz_onboarding_welcome_body))
                         }
+                        OnboardingPage.MEDIA -> {
+                            Heading(stringResource(MR.strings.tsz_onboarding_media))
+                            Muted(stringResource(MR.strings.tsz_onboarding_media_body))
+                            TsuzukiMediaTypeCards()
+                            Muted(stringResource(MR.strings.tsz_onboarding_media_footnote))
+                        }
                         OnboardingPage.LANGUAGES -> {
                             Heading(stringResource(MR.strings.tsz_onboarding_languages))
                             Muted(stringResource(MR.strings.tsz_onboarding_languages_body))

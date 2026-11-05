@@ -5,9 +5,10 @@ import org.junit.jupiter.api.Test
 
 class OnboardingFlowTest {
     @Test
-    fun `six real steps keep required setup before optional import`() {
+    fun `seven real steps keep required setup before optional import`() {
         OnboardingPage.entries.toList() shouldBe listOf(
             OnboardingPage.WELCOME,
+            OnboardingPage.MEDIA,
             OnboardingPage.LANGUAGES,
             OnboardingPage.LOOK,
             OnboardingPage.STORAGE,
