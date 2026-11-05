@@ -98,15 +98,15 @@ abstract class Installer(private val service: Service) {
         if (!ready) {
             return
         }
-        if (queue.isEmpty()) {
-            service.stopSelf()
-            return
-        }
-        val nextEntry = queue.first()
-        if (waitingInstall.compareAndSet(null, nextEntry)) {
+        val nextEntry = synchronized(queue) {
+            if (queue.isEmpty()) {
+                service.stopSelf()
+                return
+            }
+            if (!waitingInstall.compareAndSet(null, queue.first())) return
             queue.removeAt(0)
-            processEntry(nextEntry)
         }
+        processEntry(nextEntry)
     }
 
     /**
@@ -115,8 +115,8 @@ abstract class Installer(private val service: Service) {
     @CallSuper
     open fun onDestroy() {
         LocalBroadcastManager.getInstance(service).unregisterReceiver(cancelReceiver)
-        queue.forEach { extensionManager.updateInstallStep(it.downloadId, InstallStep.Error) }
-        queue.clear()
+        val remaining = synchronized(queue) { queue.toList().also { queue.clear() } }
+        remaining.forEach { extensionManager.updateInstallStep(it.downloadId, InstallStep.Error) }
         waitingInstall.store(null)
     }
 
@@ -129,12 +129,13 @@ abstract class Installer(private val service: Service) {
      */
     private fun cancelQueue(downloadId: Long) {
         val waitingInstall = this.waitingInstall.load()
-        val toCancel = queue.find { it.downloadId == downloadId } ?: waitingInstall ?: return
+        val toCancel = synchronized(queue) { queue.find { it.downloadId == downloadId } }
+            ?: waitingInstall?.takeIf { it.downloadId == downloadId }
+            ?: return
         if (cancelEntry(toCancel)) {
             queue.remove(toCancel)
-            if (waitingInstall == toCancel) {
+            if (this.waitingInstall.compareAndSet(toCancel, null)) {
                 // Currently processing removed entry, continue queue
-                this.waitingInstall.store(null)
                 checkQueue()
             }
             extensionManager.updateInstallStep(downloadId, InstallStep.Idle)
