@@ -1157,4 +1157,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">Masquer les en-têtes sensibles</string>
     <string name="tsz_network_redact_headers_summary">Masque les en-têtes d\'authentification dans les journaux réseau détaillés.</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">Format de l\'heure</string>
+    <string name="tsz_time_follow_language">Suivre la langue</string>
+    <string name="tsz_time_follow_system">Suivre le système</string>
+    <string name="tsz_time_24_hours">24 heures</string>
+    <string name="tsz_time_12_hours">12 heures</string>
 </resources>

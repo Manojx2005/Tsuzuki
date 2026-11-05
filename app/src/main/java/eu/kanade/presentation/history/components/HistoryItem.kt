@@ -31,6 +31,8 @@ import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 private val HistoryItemHeight = 96.dp
 
@@ -42,6 +44,7 @@ fun HistoryItem(
     onClickDelete: () -> Unit,
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    timeFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT),
 ) {
     if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
@@ -53,6 +56,7 @@ fun HistoryItem(
             onClickDelete,
             onClickFavorite,
             modifier,
+            timeFormatter,
         )
         return
     }
@@ -81,7 +85,9 @@ fun HistoryItem(
                 overflow = TextOverflow.Ellipsis,
                 style = textStyle,
             )
-            val readAt = remember { history.readAt?.toTimestampString() ?: "" }
+            val readAt = remember(history.readAt, timeFormatter) {
+                history.readAt?.toTimestampString(timeFormatter).orEmpty()
+            }
             val progress = history.lastPageRead
             val progressSuffix = when {
                 history.chapterRead -> " - 100%"

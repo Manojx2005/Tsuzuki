@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.about
 
 import android.content.Context
+import android.text.format.DateFormat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +30,7 @@ import eu.kanade.presentation.more.LogoHeader
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
@@ -58,6 +60,7 @@ import tachiyomi.presentation.core.icons.Discord
 import tachiyomi.presentation.core.icons.Github
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 
 object AboutScreen : Screen() {
@@ -101,6 +104,7 @@ object AboutScreen : Screen() {
             return
         }
 
+        val buildTimeFormatter = rememberTimestampFormatter(includeDate = true)
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
@@ -122,7 +126,9 @@ object AboutScreen : Screen() {
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
-                        subtitle = getVersionName(withBuildDate = true),
+                        subtitle = remember(buildTimeFormatter) {
+                            getVersionName(withBuildDate = true, buildTimeFormatter = buildTimeFormatter)
+                        },
                         onPreferenceClick = {
                             val deviceInfo = CrashLogUtil(context).getDebugInfo()
                             context.copyToClipboard("Debug information", deviceInfo)
@@ -273,12 +279,12 @@ object AboutScreen : Screen() {
         }
     }
 
-    fun getVersionName(withBuildDate: Boolean): String {
+    fun getVersionName(withBuildDate: Boolean, buildTimeFormatter: DateTimeFormatter? = null): String {
         return when {
             BuildConfig.DEBUG -> {
                 "Debug ${BuildConfig.COMMIT_SHA}".let {
                     if (withBuildDate) {
-                        "$it (${getFormattedBuildTime()})"
+                        "$it (${getFormattedBuildTime(buildTimeFormatter)})"
                     } else {
                         it
                     }
@@ -287,7 +293,7 @@ object AboutScreen : Screen() {
             isNightlyBuildType -> {
                 "Nightly r${BuildConfig.COMMIT_COUNT}".let {
                     if (withBuildDate) {
-                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime()})"
+                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime(buildTimeFormatter)})"
                     } else {
                         "$it (${BuildConfig.COMMIT_SHA})"
                     }
@@ -296,7 +302,7 @@ object AboutScreen : Screen() {
             isPreviewBuildType -> {
                 "Beta r${BuildConfig.COMMIT_COUNT}".let {
                     if (withBuildDate) {
-                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime()})"
+                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime(buildTimeFormatter)})"
                     } else {
                         "$it (${BuildConfig.COMMIT_SHA})"
                     }
@@ -305,7 +311,7 @@ object AboutScreen : Screen() {
             else -> {
                 "Stable ${BuildConfig.VERSION_NAME}".let {
                     if (withBuildDate) {
-                        "$it (${getFormattedBuildTime()})"
+                        "$it (${getFormattedBuildTime(buildTimeFormatter)})"
                     } else {
                         it
                     }
@@ -314,15 +320,21 @@ object AboutScreen : Screen() {
         }
     }
 
-    internal fun getFormattedBuildTime(): String {
+    internal fun getFormattedBuildTime(formatter: DateTimeFormatter? = null): String {
         return try {
+            val dateTimeFormatter = formatter ?: run {
+                val context = Injekt.get<Context>()
+                val preferences = Injekt.get<UiPreferences>()
+                UiPreferences.dateTimeFormat(
+                    preferences.dateFormat.get(),
+                    preferences.timeFormat.get(),
+                    context.resources.configuration.locales[0],
+                    DateFormat.is24HourFormat(context),
+                )
+            }
             Instant.parse(BuildConfig.BUILD_TIME)
                 .toLocalDateTime(TimeZone.currentSystemDefault())
-                .toDateTimestampString(
-                    UiPreferences.dateFormat(
-                        Injekt.get<UiPreferences>().dateFormat.get(),
-                    ),
-                )
+                .toDateTimestampString(dateTimeFormatter)
         } catch (_: Exception) {
             BuildConfig.BUILD_TIME
         }

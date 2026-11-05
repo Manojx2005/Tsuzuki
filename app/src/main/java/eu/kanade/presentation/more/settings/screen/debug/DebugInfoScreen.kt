@@ -21,6 +21,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
+import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -62,6 +63,7 @@ class DebugInfoScreen : Screen() {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
+        val buildTimeFormatter = rememberTimestampFormatter(includeDate = true)
         val installationIdPref = remember { Injekt.get<BasePreferences>().installationId }
         val installationId by installationIdPref.collectAsState()
 
@@ -74,7 +76,7 @@ class DebugInfoScreen : Screen() {
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Build time",
-                    subtitle = AboutScreen.getFormattedBuildTime(),
+                    subtitle = remember(buildTimeFormatter) { AboutScreen.getFormattedBuildTime(buildTimeFormatter) },
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Installation ID",

@@ -1,13 +1,16 @@
 package eu.kanade.domain.ui
 
+import android.text.format.DateFormat
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
+import eu.kanade.domain.ui.model.TimeFormat
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.time.format.FormatStyle
 import java.util.Locale
 
@@ -34,6 +37,8 @@ class UiPreferences(
 
     val dateFormat: Preference<String> = preferenceStore.getString("app_date_format", "")
 
+    val timeFormat: Preference<TimeFormat> = preferenceStore.getEnum("app_time_format", TimeFormat.FOLLOW_LANGUAGE)
+
     val tabletUiMode: Preference<TabletUiMode> = preferenceStore.getEnum("tablet_ui_mode", TabletUiMode.AUTOMATIC)
 
     val imagesInDescription: Preference<Boolean> = preferenceStore.getBoolean("pref_render_images_description", true)
@@ -42,9 +47,32 @@ class UiPreferences(
         preferenceStore.getBoolean("pref_manga_scroll_actions_in_overflow", false)
 
     companion object {
-        fun dateFormat(format: String): DateTimeFormatter = when (format) {
-            "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
-            else -> DateTimeFormatter.ofPattern(format, Locale.getDefault())
+        fun dateFormat(format: String, locale: Locale = Locale.getDefault()): DateTimeFormatter = when (format) {
+            "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
+            else -> DateTimeFormatter.ofPattern(format, locale)
         }
+
+        fun timeFormat(format: TimeFormat, locale: Locale, is24HourSystem: Boolean): DateTimeFormatter {
+            val use24Hours = format.uses24HourClock(is24HourSystem)
+                ?: return DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+            val skeleton = if (use24Hours) "Hm" else "hm"
+            val pattern = DateFormat.getBestDateTimePattern(locale, skeleton)
+            return try {
+                DateTimeFormatter.ofPattern(pattern, locale)
+            } catch (_: IllegalArgumentException) {
+                DateTimeFormatter.ofPattern(if (use24Hours) "HH:mm" else "h:mm a", locale)
+            }
+        }
+
+        fun dateTimeFormat(
+            dateFormat: String,
+            timeFormat: TimeFormat,
+            locale: Locale,
+            is24HourSystem: Boolean,
+        ): DateTimeFormatter = DateTimeFormatterBuilder()
+            .append(dateFormat(dateFormat, locale))
+            .appendLiteral(' ')
+            .append(timeFormat(timeFormat, locale, is24HourSystem))
+            .toFormatter(locale)
     }
 }

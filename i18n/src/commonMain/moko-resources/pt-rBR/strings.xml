@@ -1161,4 +1161,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">Ocultar cabeçalhos confidenciais</string>
     <string name="tsz_network_redact_headers_summary">Oculta cabeçalhos de autenticação nos registros detalhados de rede.</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">Formato de hora</string>
+    <string name="tsz_time_follow_language">Seguir idioma</string>
+    <string name="tsz_time_follow_system">Seguir sistema</string>
+    <string name="tsz_time_24_hours">24 horas</string>
+    <string name="tsz_time_12_hours">12 horas</string>
 </resources>

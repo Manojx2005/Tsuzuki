@@ -1164,4 +1164,10 @@
     <!-- N2 -->
     <string name="tsz_network_redact_headers">Vertrauliche Header ausblenden</string>
     <string name="tsz_network_redact_headers_summary">Blendet Authentifizierungsheader in ausführlichen Netzwerkprotokollen aus.</string>
+    <!-- N8 -->
+    <string name="tsz_time_format">Uhrzeitformat</string>
+    <string name="tsz_time_follow_language">Spracheinstellung folgen</string>
+    <string name="tsz_time_follow_system">Systemeinstellung folgen</string>
+    <string name="tsz_time_24_hours">24-Stunden-Format</string>
+    <string name="tsz_time_12_hours">12-Stunden-Format</string>
 </resources>
