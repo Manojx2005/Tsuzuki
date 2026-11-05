@@ -84,8 +84,12 @@ val NeutralTokens = ColourTokens.copy(
     background = Color.Unspecified,
 )
 
-fun tsuzukiTokensFor(appTheme: AppTheme): TsuzukiTokens = when (appTheme) {
-    AppTheme.COLOUR -> ColourTokens
+fun tsuzukiTokensFor(appTheme: AppTheme, colourAccent: Color? = null): TsuzukiTokens = when (appTheme) {
+    AppTheme.COLOUR -> if (colourAccent == null || colourAccent == ColourTokens.accent) {
+        ColourTokens
+    } else {
+        ColourTokens.copy(accent = colourAccent, dotHere = colourAccent)
+    }
     AppTheme.DOT -> DotTokens
     else -> NeutralTokens
 }
@@ -117,7 +121,9 @@ fun ProvideBookPalette(palette: BookPalette?, content: @Composable () -> Unit) {
         spec,
         label = "bookAccent",
     )
-    if (!active) {
+    // A chosen Colour accent (no book palette) still needs MaterialTheme's primary to follow it.
+    val customAccent = base.style == TsuzukiStyle.COLOUR && base.accent != ColourTokens.accent
+    if (!active && !customAccent) {
         CompositionLocalProvider(LocalTsuzukiTokens provides base, content = content)
         return
     }

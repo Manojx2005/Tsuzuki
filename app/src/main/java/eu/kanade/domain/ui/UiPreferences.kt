@@ -33,6 +33,12 @@ class UiPreferences(
     // Tsuzuki Dot: keep manga and novel covers in colour instead of greyscale.
     val tsuzukiDotColourCovers: Preference<Boolean> = preferenceStore.getBoolean("tsz_dot_colour_covers", false)
 
+    // Tsuzuki Colour: accent (ARGB) used when no book palette applies. Default = the original gold.
+    val tsuzukiColourAccent: Preference<Int> = preferenceStore.getInt("tsz_colour_accent", 0xFFE9B44C.toInt())
+
+    // Tsuzuki: app-level "Reduce motion", OR-ed with the system animator scale.
+    val tsuzukiReduceMotion: Preference<Boolean> = preferenceStore.getBoolean("tsz_reduce_motion", false)
+
     val relativeTime: Preference<Boolean> = preferenceStore.getBoolean("relative_time_v2", true)
 
     val dateFormat: Preference<String> = preferenceStore.getString("app_date_format", "")

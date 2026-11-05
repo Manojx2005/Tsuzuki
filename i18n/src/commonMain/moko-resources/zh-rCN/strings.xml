@@ -1188,4 +1188,9 @@
     <string name="tsz_storage_novels">小说</string>
     <string name="tsz_storage_manga">漫画</string>
     <string name="tsz_storage_chapters">章节</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">强调色</string>
+    <string name="tsz_appearance_accent_sub">在关闭“跟随书籍”或书籍没有配色时使用。Dot 主题始终为红色。</string>
+    <string name="tsz_appearance_reduce_motion">减少动态效果</string>
+    <string name="tsz_appearance_reduce_motion_sub">用快速淡入淡出替代动画</string>
 </resources>
