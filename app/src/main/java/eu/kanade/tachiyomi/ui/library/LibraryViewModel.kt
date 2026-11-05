@@ -1355,10 +1355,12 @@ class LibraryViewModel(
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }
 
-    private var lastSelectionCategory: Long? = null
+    private data class LastSelection(val categoryId: Long, val mangaId: Long)
+
+    private var lastSelection: LastSelection? = null
 
     fun clearSelection() {
-        lastSelectionCategory = null
+        lastSelection = null
         mutableState.update { it.copy(selection = setOf()) }
     }
 
@@ -1367,7 +1369,7 @@ class LibraryViewModel(
             val newSelection = state.selection.mutate { set ->
                 if (!set.remove(manga.id)) set.add(manga.id)
             }
-            lastSelectionCategory = category.id.takeIf { newSelection.isNotEmpty() }
+            lastSelection = LastSelection(category.id, manga.id).takeIf { manga.id in newSelection }
             state.copy(selection = newSelection)
         }
     }
@@ -1379,31 +1381,19 @@ class LibraryViewModel(
     fun toggleRangeSelection(category: Category, manga: LibraryManga) {
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
-                val lastSelected = list.lastOrNull()
-                if (lastSelectionCategory != category.id) {
-                    list.add(manga.id)
-                    return@mutate
-                }
-
                 val items = state.getItemsForCategoryId(category.id).fastMap { it.id }
-                val lastMangaIndex = items.indexOf(lastSelected)
-                val curMangaIndex = items.indexOf(manga.id)
-
-                val selectionRange = when {
-                    lastMangaIndex < curMangaIndex -> lastMangaIndex..curMangaIndex
-                    curMangaIndex < lastMangaIndex -> curMangaIndex..lastMangaIndex
-                    // We shouldn't reach this point
-                    else -> return@mutate
-                }
-                selectionRange.mapNotNull { items[it] }.let(list::addAll)
+                val lastMangaId = lastSelection
+                    ?.takeIf { it.categoryId == category.id && it.mangaId in list }
+                    ?.mangaId
+                list.addAll(libraryRangeSelection(items, lastMangaId, manga.id))
             }
-            lastSelectionCategory = category.id
+            lastSelection = LastSelection(category.id, manga.id)
             state.copy(selection = newSelection)
         }
     }
 
     fun selectAll() {
-        lastSelectionCategory = null
+        lastSelection = null
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
                 state.getItemsForCategoryId(state.activeCategory?.id).map { it.id }.let(list::addAll)
@@ -1413,7 +1403,7 @@ class LibraryViewModel(
     }
 
     fun invertSelection() {
-        lastSelectionCategory = null
+        lastSelection = null
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
                 val itemIds = state.getItemsForCategoryId(state.activeCategory?.id).fastMap { it.id }
@@ -2169,4 +2159,16 @@ class LibraryViewModel(
             return LibraryToolbarTitle(title, count)
         }
     }
+}
+
+/**
+ * Ids to select when range-selecting [currentId] after [lastId] in [items] (one category's displayed
+ * order). Falls back to just [currentId] when either is not in [items], e.g. the last selection was in
+ * another category or has since been filtered out.
+ */
+internal fun libraryRangeSelection(items: List<Long>, lastId: Long?, currentId: Long): List<Long> {
+    val lastIndex = lastId?.let(items::indexOf) ?: -1
+    val currentIndex = items.indexOf(currentId)
+    if (lastIndex == -1 || currentIndex == -1) return listOf(currentId)
+    return items.subList(minOf(lastIndex, currentIndex), maxOf(lastIndex, currentIndex) + 1)
 }
