@@ -79,6 +79,25 @@ fun TrackInfoDialogHome(
     onCopyLink: (TrackItem) -> Unit,
     onTogglePrivate: (TrackItem) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.track.TsuzukiTrackInfoDialogHome(
+            trackItems = trackItems,
+            dateFormat = dateFormat,
+            onStatusClick = onStatusClick,
+            onChapterClick = onChapterClick,
+            onScoreClick = onScoreClick,
+            onStartDateEdit = onStartDateEdit,
+            onEndDateEdit = onEndDateEdit,
+            onNewSearch = onNewSearch,
+            onOpenInBrowser = onOpenInBrowser,
+            onRemoved = onRemoved,
+            onCopyLink = onCopyLink,
+            onTogglePrivate = onTogglePrivate,
+        )
+        return
+    }
     Column(
         modifier = Modifier
             .animateContentSize()

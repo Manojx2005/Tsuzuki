@@ -1115,4 +1115,6 @@
     <!-- B3 -->
     <string name="tsz_edit_info">编辑信息</string>
     <string name="tsz_edit_reset_cover">恢复来源封面</string>
+    <!-- B4 -->
+    <string name="tsz_tracker_search_pick_title">选择其他标题</string>
 </resources>

@@ -1481,4 +1481,6 @@
     <!-- B3 -->
     <string name="tsz_edit_info">Edit info</string>
     <string name="tsz_edit_reset_cover">Reset to source</string>
+    <!-- B4 -->
+    <string name="tsz_tracker_search_pick_title">Pick an alternative title</string>
 </resources>
