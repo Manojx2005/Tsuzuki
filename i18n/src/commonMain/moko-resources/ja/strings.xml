@@ -1192,4 +1192,14 @@
     <string name="tsz_appearance_accent_sub">「作品の色に合わせる」がオフ、または作品に色がないときに使われます。Dotは赤のままです。</string>
     <string name="tsz_appearance_reduce_motion">動きを減らす</string>
     <string name="tsz_appearance_reduce_motion_sub">アニメーションを短いフェードに置き換えます</string>
+    <string name="tsz_ext_failed">読み込み失敗</string>
+    <string name="tsz_ext_failed_title">拡張機能を読み込めませんでした</string>
+    <string name="tsz_ext_failed_trace">スタックトレース</string>
+    <string name="tsz_ext_failed_missing_version">拡張機能にバージョン名がありません</string>
+    <string name="tsz_ext_failed_unsupported_lib">未対応の拡張機能ライブラリのバージョンです</string>
+    <string name="tsz_ext_failed_not_signed">拡張機能が署名されていません</string>
+    <string name="tsz_ext_failed_class_loader">拡張機能を開けませんでした</string>
+    <string name="tsz_ext_failed_missing_class">拡張機能がソースクラスを宣言していません</string>
+    <string name="tsz_ext_failed_class_not_found">ソースクラスが見つかりません</string>
+    <string name="tsz_ext_failed_load_error">ソースを作成できませんでした</string>
 </resources>

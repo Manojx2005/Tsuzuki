@@ -20,7 +20,8 @@ class GetExtensionsByType(
             extensionManager.installedExtensionsFlow,
             extensionManager.untrustedExtensionsFlow,
             extensionManager.availableExtensionsFlow,
-        ) { enabledLanguages, _installed, _untrusted, _available ->
+            extensionManager.failedExtensionsFlow,
+        ) { enabledLanguages, _installed, _untrusted, _available, _failed ->
             val (updates, installed) = _installed
                 .filter { (showNsfwSources || !it.isNsfw) }
                 .sortedWith(
@@ -32,10 +33,14 @@ class GetExtensionsByType(
             val untrusted = _untrusted
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
+            val failed = _failed
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+
             val available = _available
                 .filter { extension ->
                     _installed.none { it.pkgName == extension.pkgName } &&
                         _untrusted.none { it.pkgName == extension.pkgName } &&
+                        _failed.none { it.pkgName == extension.pkgName } &&
                         (showNsfwSources || !extension.isNsfw)
                 }
                 .flatMap { ext ->
@@ -51,7 +56,7 @@ class GetExtensionsByType(
                 }
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
-            Extensions(updates, installed, available, untrusted)
+            Extensions(updates, installed, available, untrusted, failed)
         }
     }
 }

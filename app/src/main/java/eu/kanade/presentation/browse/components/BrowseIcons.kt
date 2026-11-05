@@ -133,7 +133,7 @@ fun ExtensionIcon(
                 )
             }
         }
-        is Extension.Untrusted -> Image(
+        is Extension.Untrusted, is Extension.Failed -> Image(
             imageVector = Icons.Filled.Dangerous,
             contentDescription = null,
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error),

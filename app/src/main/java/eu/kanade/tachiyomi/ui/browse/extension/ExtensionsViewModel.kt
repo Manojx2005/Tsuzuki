@@ -59,7 +59,7 @@ class ExtensionsViewModel(
                     .map { searchQueryPredicate(it ?: "") },
                 currentDownloads,
                 getExtensions.subscribe(),
-            ) { predicate, downloads, (_updates, _installed, _available, _untrusted) ->
+            ) { predicate, downloads, (_updates, _installed, _available, _untrusted, _failed) ->
                 val updates = _updates.filter {
                     !it.isNovel
                 }.filter(predicate).map(extensionMapper(downloads))
@@ -74,8 +74,11 @@ class ExtensionsViewModel(
                     val untrusted = _untrusted.filter {
                         !it.isNovel
                     }.filter(predicate).map(extensionMapper(downloads))
-                    if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted)
+                    val failed = _failed.filter {
+                        !it.isNovel
+                    }.filter(predicate).map(extensionMapper(downloads))
+                    if (installed.isNotEmpty() || untrusted.isNotEmpty() || failed.isNotEmpty()) {
+                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted + failed)
                     }
 
                     val languagesWithExtensions = _available

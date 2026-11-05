@@ -258,34 +258,54 @@ internal object ExtensionLoader {
                     else -> appLabel
                 }
             }
-        val versionName = pkgInfo.versionName
+        val versionName = pkgInfo.versionName.orEmpty()
         val versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
 
-        if (versionName.isNullOrEmpty()) {
-            logcat(LogPriority.WARN) { "Missing versionName for extension $extName" }
-            return LoadResult.Error
-        }
+        val isNovelExtension = pkgInfo.reqFeatures.orEmpty().any { it.name == EXTENSION_FEATURE_NOVEL }
+        val metaNs = if (isNovelExtension) "tachiyomi.novelextension" else "tachiyomi.extension"
 
-        // Validate lib version
         val libVersion = appInfo.metaData.getFloat(METADATA_EXTENSION_LIB)
             .takeUnless { it == 0.0f }
             ?.toString()
             ?.toDouble()
             ?: versionName.substringBeforeLast('.').toDoubleOrNull()
-        if (libVersion == null || libVersion !in SUPPORTED_LIB_VERSIONS) {
-            logcat(LogPriority.WARN) {
-                "Lib version is $libVersion, while only version(s) ${SUPPORTED_LIB_VERSIONS.joinToString()} are supported"
-            }
-            return LoadResult.Error
+
+        fun fail(
+            reason: Extension.Failed.Reason,
+            detail: String? = null,
+            error: Throwable? = null,
+        ): LoadResult {
+            logcat(LogPriority.WARN, error) { "Extension $extName ($pkgName) failed to load: $reason $detail" }
+            return LoadResult.Failed(
+                Extension.Failed(
+                    name = extName,
+                    pkgName = pkgName,
+                    versionName = versionName,
+                    versionCode = versionCode,
+                    libVersion = libVersion ?: 0.0,
+                    reason = reason,
+                    detail = detail,
+                    stackTrace = error?.stackTraceToString(),
+                    icon = appInfo.loadIcon(pkgManager),
+                    isShared = extensionInfo.isShared,
+                    isNovel = appInfo.metaData.getInt("$metaNs.novel") == 1,
+                ),
+            )
         }
 
-        val isNovelExtension = pkgInfo.reqFeatures.orEmpty().any { it.name == EXTENSION_FEATURE_NOVEL }
-        val metaNs = if (isNovelExtension) "tachiyomi.novelextension" else "tachiyomi.extension"
+        if (versionName.isEmpty()) return fail(Extension.Failed.Reason.MISSING_VERSION)
+
+        // Validate lib version
+        if (libVersion == null || libVersion !in SUPPORTED_LIB_VERSIONS) {
+            return fail(
+                Extension.Failed.Reason.UNSUPPORTED_LIB_VERSION,
+                libVersion?.toString() ?: "?",
+            )
+        }
 
         val signatures = getSignatures(pkgInfo)
         if (signatures.isNullOrEmpty()) {
-            logcat(LogPriority.WARN) { "Package $pkgName isn't signed" }
-            return LoadResult.Error
+            return fail(Extension.Failed.Reason.NOT_SIGNED)
         } else if (!trustExtension.isTrusted(pkgInfo, signatures)) {
             val isNovelExt = appInfo.metaData.getInt("$metaNs.novel") == 1
             val extension = Extension.Untrusted(
@@ -311,14 +331,12 @@ internal object ExtensionLoader {
         val classLoader = try {
             ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }
-            return LoadResult.Error
+            return fail(Extension.Failed.Reason.CLASS_LOADER, error = e)
         }
 
         val sources = (
             appInfo.metaData.getString("$metaNs.class") ?: run {
-                logcat(LogPriority.WARN) { "Missing source class for extension $extName ($pkgName)" }
-                return LoadResult.Error
+                return fail(Extension.Failed.Reason.MISSING_SOURCE_CLASS)
             }
             )
             .split(";")
@@ -355,15 +373,15 @@ internal object ExtensionLoader {
                         lastError = e
                         // Try next class name
                     } catch (e: Throwable) {
-                        logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($classToTry)" }
-                        return LoadResult.Error
+                        return fail(Extension.Failed.Reason.SOURCE_LOAD_ERROR, classToTry, e)
                     }
                 }
 
-                logcat(LogPriority.ERROR, lastError) {
-                    "Extension load error: $extName - class not found in any namespace: $classesToTry"
-                }
-                return LoadResult.Error
+                return fail(
+                    Extension.Failed.Reason.SOURCE_CLASS_NOT_FOUND,
+                    classesToTry.joinToString(),
+                    lastError,
+                )
             }
 
         val langs = sources.map { it.lang }.toSet()

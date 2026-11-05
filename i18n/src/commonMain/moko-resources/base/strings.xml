@@ -1557,4 +1557,14 @@
     <string name="tsz_appearance_accent_sub">Used when Follow the book is off or the book has no colours. Dot stays red.</string>
     <string name="tsz_appearance_reduce_motion">Reduce motion</string>
     <string name="tsz_appearance_reduce_motion_sub">Replace animations with quick fades</string>
+    <string name="tsz_ext_failed">Failed</string>
+    <string name="tsz_ext_failed_title">Extension failed to load</string>
+    <string name="tsz_ext_failed_trace">Stack trace</string>
+    <string name="tsz_ext_failed_missing_version">The extension has no version name</string>
+    <string name="tsz_ext_failed_unsupported_lib">Unsupported extension library version</string>
+    <string name="tsz_ext_failed_not_signed">The extension is not signed</string>
+    <string name="tsz_ext_failed_class_loader">The extension could not be opened</string>
+    <string name="tsz_ext_failed_missing_class">The extension does not declare a source class</string>
+    <string name="tsz_ext_failed_class_not_found">Source class not found</string>
+    <string name="tsz_ext_failed_load_error">The source could not be created</string>
 </resources>
