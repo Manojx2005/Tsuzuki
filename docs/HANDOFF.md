@@ -311,7 +311,7 @@ Board `11-tablet/TabletReaderPanel`. On tablet UI in Tsuzuki themes, the novel r
 Reuse `TsuzukiReaderContents`, quotes data and book notes; don't touch viewer internals.
 Result: done (`TsuzukiReaderPanel.kt`, hook in `TsuzukiReaderHooks.kt`; docked on tablet UI at >= 900 dp by padding `reader_container`; Contents / Quotes / Notes tabs; no Edit action since the notes screen is not reachable from the reader; not device-checked).
 
-#### N26 Find in chapter (T3) — `ready`
+#### N26 Find in chapter (T3) — `claude-working` (Claude agent, .worktrees/n26)
 Board `06-reader/ReaderFind`. In the novel reader, a find bar that searches the current chapter text (query, n of m,
 next/prev). Implement for the WebView renderer via its existing JS bridge / `findAllAsync`; for the TextView
 renderer only if it can be done through a public hook of `NovelViewer` without changing its internals; otherwise
@@ -346,7 +346,7 @@ All Tsuzuki composables: 48 dp touch targets, content descriptions for icon-only
 `Role`s/toggleable semantics, no hardcoded English. List each fix in Result.
 Result: _pending_
 
-#### N32 Unit tests for Tsuzuki logic (T2) — `ready`
+#### N32 Unit tests for Tsuzuki logic (T2) — `claude-working` (Claude agent, .worktrees/n32)
 Add JVM tests for untested pure logic in `ui/tsuzuki/**`, `tachiyomi/tsuzuki/**` and `presentation/tsuzuki/**`
 (e.g. home view-model mapping, updates summary, palette/tint math, value labels). Extract tiny pure helpers only
 where needed (no behaviour change).
