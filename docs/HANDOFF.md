@@ -89,6 +89,12 @@ Codex is back; new cards will be written here when it is._
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — D1 tablet Updates + device passes.** D1 (`2e0451bb4` merge): on tablet UI (sw ≥ 720 dp)
+  Updates shows list + preview; tablet portrait Dot checked (row select switches preview without opening the
+  reader). Added a confirm dialog before a group preview downloads > 25 chapters (Shadow Slave group had 1,911;
+  `93f36e6cd`). Device-checked: C4 replacement rules section + add dialog (tablet Dot, cancelled), B1 filter sheet
+  (Filter label was thin on red → bold, `onAccent`). Builds 708 tests green. Still unchecked on device: C1, C3,
+  C5 (see entry below), B2–B6 screens.
 - **2026-11-05 Claude — C3, C4, C5 merged (Sonnet agents, reviewed by Claude).** C3 custom source setup +
   site-picker chrome (WebView untouched); C4 replacement rules (same JSON pref, live test line, regex validation,
   accent delete); C5 TTS mini player (accent play, 48 dp targets; no timer/speed/progress — no data). Build 706
