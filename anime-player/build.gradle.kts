@@ -38,3 +38,7 @@ val verifyNativeChecksums = tasks.register("verifyNativeChecksums") {
 }
 
 tasks.named("preBuild") { dependsOn(verifyNativeChecksums) }
+
+dependencies {
+    implementation(libs.androidx.annotation)
+}

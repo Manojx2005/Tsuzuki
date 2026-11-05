@@ -260,6 +260,7 @@ dependencies {
     implementation(libs.androidx.palette)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
+    debugImplementation(projects.animePlayer)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
 
