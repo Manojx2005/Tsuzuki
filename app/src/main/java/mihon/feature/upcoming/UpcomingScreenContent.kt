@@ -50,6 +50,19 @@ fun UpcomingScreenContent(
     hasActiveFilters: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.upcoming.TsuzukiUpcomingScreen(
+            state = state,
+            setSelectedYearMonth = setSelectedYearMonth,
+            onClickUpcoming = onClickUpcoming,
+            onClickFilter = onClickFilter,
+            hasActiveFilters = hasActiveFilters,
+            modifier = modifier,
+        )
+        return
+    }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val onClickDay: (LocalDate, Int) -> Unit = { date, offset ->

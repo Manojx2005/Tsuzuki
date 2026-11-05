@@ -1108,4 +1108,7 @@
     <string name="tsz_onboarding_continue">続ける</string>
     <string name="tsz_onboarding_finish">読書をはじめる</string>
     <string name="tsz_onboarding_granted">許可済み</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">ライブラリの更新予定</string>
+    <string name="tsz_upcoming_no_updates">更新予定はありません</string>
 </resources>

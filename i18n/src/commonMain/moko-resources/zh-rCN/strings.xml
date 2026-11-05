@@ -1109,4 +1109,7 @@
     <string name="tsz_onboarding_continue">继续</string>
     <string name="tsz_onboarding_finish">开始阅读</string>
     <string name="tsz_onboarding_granted">已授权</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">书库的预计更新</string>
+    <string name="tsz_upcoming_no_updates">没有预计更新</string>
 </resources>

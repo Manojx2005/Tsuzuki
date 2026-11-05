@@ -1475,4 +1475,7 @@
     <string name="tsz_onboarding_continue">Continue</string>
     <string name="tsz_onboarding_finish">Start reading</string>
     <string name="tsz_onboarding_granted">Granted</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">Expected updates for your library</string>
+    <string name="tsz_upcoming_no_updates">No expected updates</string>
 </resources>

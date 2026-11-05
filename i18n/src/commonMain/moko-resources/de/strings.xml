@@ -1109,4 +1109,7 @@
     <string name="tsz_onboarding_continue">Weiter</string>
     <string name="tsz_onboarding_finish">Jetzt lesen</string>
     <string name="tsz_onboarding_granted">Erteilt</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">Erwartete Updates für deine Bibliothek</string>
+    <string name="tsz_upcoming_no_updates">Keine Updates erwartet</string>
 </resources>

@@ -1108,4 +1108,7 @@
     <string name="tsz_onboarding_continue">계속</string>
     <string name="tsz_onboarding_finish">읽기 시작</string>
     <string name="tsz_onboarding_granted">허용됨</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">라이브러리의 업데이트 예정</string>
+    <string name="tsz_upcoming_no_updates">예정된 업데이트 없음</string>
 </resources>

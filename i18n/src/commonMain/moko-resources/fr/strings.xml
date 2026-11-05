@@ -1102,4 +1102,7 @@
     <string name="tsz_onboarding_continue">Continuer</string>
     <string name="tsz_onboarding_finish">Commencer à lire</string>
     <string name="tsz_onboarding_granted">Accordée</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">Mises à jour prévues pour votre bibliothèque</string>
+    <string name="tsz_upcoming_no_updates">Aucune mise à jour prévue</string>
 </resources>
