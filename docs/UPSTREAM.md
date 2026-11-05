@@ -293,3 +293,17 @@ Ordinary daily preview excludes instrumentation keeps (configuration checked), i
 both Dot Home with final screenshots inspected and current main-process crash logs empty. Companions removed;
 original debug data untouched. Seven ARM64 ELF alignments, zipalign and baseline.prof/profm packaging pass.
 Final build log `codex-provider-daily-validation.log`; no live build/device process remains.
+
+### 2026-11-06: Mihon fixes group A (N1)
+
+| Mihon | Disposition |
+|---|---|
+| `1e471a414` | Hand-port: ignore download events for entries no longer in the queue; the existing queue/cache refresh resolves the completed status. |
+| `287cbbb98` | Phone already shows the last update on an empty list. Hand-port to the Tsuzuki tablet list. |
+| `8457fb91e` | Inapplicable: Tsundoku's chapter recognizer parses ASCII matches directly and has no locale-dependent formatter. |
+| `c9e1b6e96` | Hand-port the unknown tri-state fallback. The stock select widget already guards empty options and bounds its selection; Tsuzuki iterates the available options. |
+| `4c88f0264` | Hand-port: update each result from the state inside the atomic update and retain the source filter. |
+| `d3f10772f` | Hand-port: include local manga and novels independently of enabled languages, still respecting disabled sources and the selected source filter. |
+| `e9234f205` | Hand-port: match, scroll to and highlight enabled group headings in both layouts. |
+| `07b9fb695`, `ae749bb4f` | Hand-port into the existing service/broadcast installer. The earlier installer sync did not change its queue. |
+| `cdc7d69c9` | Hand-port: stage the APK next to the target and rename only after the copy succeeds, preserving the old APK on failure. |

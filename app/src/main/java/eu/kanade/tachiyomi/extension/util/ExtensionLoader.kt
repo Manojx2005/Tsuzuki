@@ -101,8 +101,13 @@ internal object ExtensionLoader {
 
         val target = File(getPrivateExtensionDir(context), "${extension.packageName}.$PRIVATE_EXTENSION_EXTENSION")
         return try {
-            target.delete()
-            file.copyAndSetReadOnlyTo(target, overwrite = true)
+            val staged = File.createTempFile(target.name, ".part", target.parentFile)
+            try {
+                file.copyAndSetReadOnlyTo(staged, overwrite = true)
+                check(staged.renameTo(target)) { "Unable to replace ${target.name}" }
+            } finally {
+                staged.delete()
+            }
             if (currentExtension != null) {
                 ExtensionInstallReceiver.notifyReplaced(context, extension.packageName)
             } else {
@@ -111,7 +116,6 @@ internal object ExtensionLoader {
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to copy extension file." }
-            target.delete()
             false
         }
     }

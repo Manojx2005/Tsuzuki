@@ -292,6 +292,8 @@ class UpdatesViewModel(
      */
     private fun updateDownloadState(download: Download) {
         mutableState.update { state ->
+            // Once the chapter leaves the queue, the cache-backed refresh owns its status.
+            if (download !in downloadManager.queueState.value) return@update state
             val modifiedIndex = state.items.indexOfFirst { it.update.chapterId == download.chapterId }
             if (modifiedIndex < 0) return@update state
             val newItems = state.items.toMutableList()

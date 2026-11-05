@@ -26,6 +26,8 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.source.local.LocalNovelSource
+import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
@@ -88,7 +90,10 @@ abstract class SearchViewModel(
 
     open fun getEnabledSources(): List<Source> {
         return sourceManager.getAll()
-            .filter { it.lang in enabledLanguages && "${it.id}" !in disabledSources }
+            .filter {
+                (it.lang in enabledLanguages || it.isLocal() || it.id == LocalNovelSource.ID) &&
+                    "${it.id}" !in disabledSources
+            }
             .sortedWith(
                 compareBy(
                     { "${it.id}" !in pinnedSources },
@@ -204,7 +209,10 @@ abstract class SearchViewModel(
 
     private fun updateItem(source: Source, result: SearchItemResult) {
         if (source !in getSelectedSources()) return
-        updateItems(state.value.items + (source to result))
+        mutableState.update { current ->
+            val items = current.items + (source to result)
+            current.copy(items = items.toSortedMap(sortComparator(items)))
+        }
     }
 
     fun setMigrateDialog(currentId: Long, target: Manga) {

@@ -246,14 +246,14 @@ fun TsuzukiUpdatesTwoPane(
                         }
                     }
                 }
-                item(key = "last-updated") {
-                    Text(
-                        stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            }
+            item(key = "last-updated") {
+                Text(
+                    stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
