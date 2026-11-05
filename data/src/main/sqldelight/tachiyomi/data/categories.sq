@@ -33,6 +33,23 @@ content_type
 FROM categories
 ORDER BY sort;
 
+getCategoriesWithBookCounts:
+SELECT
+    C._id AS id,
+    C.name,
+    C.sort AS `order`,
+    C.flags,
+    C.content_type,
+    count(M._id) AS book_count
+FROM categories C
+LEFT JOIN mangas_categories MC ON MC.category_id = C._id
+LEFT JOIN mangas M ON M._id = MC.manga_id
+    AND M.favorite = 1
+    AND (C.content_type = 0 OR (C.content_type = 1 AND M.is_novel = 0) OR (C.content_type = 2 AND M.is_novel = 1))
+WHERE C._id > 0
+GROUP BY C._id
+ORDER BY C.sort;
+
 getCategoriesByMangaId:
 SELECT
 C._id AS id,

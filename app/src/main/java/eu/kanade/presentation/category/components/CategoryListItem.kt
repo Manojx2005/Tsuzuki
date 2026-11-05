@@ -31,10 +31,11 @@ fun ReorderableCollectionItemScope.CategoryListItem(
     onRename: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    bookCount: Long? = null,
 ) {
     // Tsuzuki themes: shelf tile (board 07-system "Categories")
     if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
-        TsuzukiCategoryListItem(category, onRename, onDelete, modifier)
+        TsuzukiCategoryListItem(category, onRename, onDelete, modifier, bookCount = bookCount)
         return
     }
     ElevatedCard(modifier = modifier) {

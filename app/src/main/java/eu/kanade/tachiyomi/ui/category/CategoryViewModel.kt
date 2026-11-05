@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
 import tachiyomi.domain.category.interactor.DeleteCategory
-import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.RenameCategory
 import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.model.Category
@@ -22,7 +21,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class CategoryViewModel(
-    private val getCategories: GetCategories = Injekt.get(),
     private val createCategoryWithName: CreateCategoryWithName = Injekt.get(),
     private val deleteCategory: DeleteCategory = Injekt.get(),
     private val reorderCategory: ReorderCategory = Injekt.get(),
@@ -36,12 +34,15 @@ class CategoryViewModel(
 
     init {
         viewModelScope.launch {
-            getCategories.subscribe()
-                .collectLatest { categories ->
-                    mutableState.update {
+            categoryRepository.getWithBookCountsAsFlow()
+                .collectLatest { shelves ->
+                    val categories = shelves.map { (category, _) -> category }
+                    val counts = shelves.associate { (category, count) -> category.id to count }
+                    mutableState.update { state ->
                         CategoryScreenState.Success(
-                            categories = categories
-                                .filterNot(Category::isSystemCategory),
+                            categories = categories,
+                            bookCounts = counts,
+                            dialog = (state as? CategoryScreenState.Success)?.dialog,
                         )
                     }
                 }
@@ -138,6 +139,7 @@ sealed interface CategoryScreenState {
     @Immutable
     data class Success(
         val categories: List<Category>,
+        val bookCounts: Map<Long, Long> = emptyMap(),
         val dialog: CategoryDialog? = null,
     ) : CategoryScreenState {
 

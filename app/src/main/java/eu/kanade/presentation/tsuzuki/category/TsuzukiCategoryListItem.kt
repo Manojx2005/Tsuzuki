@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DragIndicator
@@ -30,10 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,11 +53,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.text.NumberFormat
 
 /**
  * A shelf in the Tsuzuki themes (board 07-system "Categories"): drag handle, name, content type (and "Default
  * category" for the one new books go to), the include-in-global-update switch, and a menu with rename / delete.
- * Tapping the row renames, as in the stock list. The board's per-shelf book count is left out: there's no count query.
+ * The count reflects saved books compatible with this shelf. Tapping the row renames it.
  */
 @Composable
 fun ReorderableCollectionItemScope.TsuzukiCategoryListItem(
@@ -62,6 +66,7 @@ fun ReorderableCollectionItemScope.TsuzukiCategoryListItem(
     onRename: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    bookCount: Long? = null,
     libraryPreferences: LibraryPreferences = remember { Injekt.get() },
 ) {
     val t = TsuzukiTheme.tokens
@@ -93,6 +98,19 @@ fun ReorderableCollectionItemScope.TsuzukiCategoryListItem(
             tint = muted,
             modifier = Modifier.padding(10.dp).size(22.dp).draggableHandle(),
         )
+        if (bookCount != null) {
+            val locale = LocalConfiguration.current.locales[0]
+            val label = remember(locale, bookCount) { NumberFormat.getIntegerInstance(locale).format(bookCount) }
+            Text(
+                label,
+                modifier = Modifier.padding(end = 8.dp).widthIn(min = 30.dp, max = 64.dp),
+                style = MaterialTheme.typography.displaySmall.copy(fontSize = 20.sp),
+                color = t.dotOn,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+        }
         Column(Modifier.weight(1f).padding(start = 4.dp, end = 8.dp)) {
             Text(
                 up(category.name),

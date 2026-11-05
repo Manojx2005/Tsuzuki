@@ -11,6 +11,8 @@ interface CategoryRepository {
 
     fun getAllAsFlow(): Flow<List<Category>>
 
+    fun getWithBookCountsAsFlow(): Flow<List<Pair<Category, Long>>>
+
     suspend fun getCategoriesByMangaId(mangaId: Long): List<Category>
 
     fun getCategoriesByMangaIdAsFlow(mangaId: Long): Flow<List<Category>>
