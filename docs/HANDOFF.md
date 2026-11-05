@@ -291,7 +291,7 @@ passed by intent. Wire `anime-player` into `:app` only for the debug build type 
 preview/release). Re-run a 16 KB alignment check on the debug APK's anime libs and record sizes. No user-visible UI.
 Result: _pending_
 
-#### N23 Anime A2.1: schema design doc (T3, doc only) — `ready` (partial work may exist in `.worktrees/n23`)
+#### N23 Anime A2.1: schema design doc (T3, doc only) — `claude-working` (Claude agent, .worktrees/n23)
 Write `docs/ANIME_SCHEMA.md`: tables `animes`, `episodes`, `anime_history`, `anime_categories`, `anime_tracks` (Aniyomi
 Apache-2.0 schema as reference), SQLDelight migration numbering after the current latest migration in
 `data/src/main/sqldelight/tachiyomi/migrations/`, backup proto additions, how library/Home/Updates/History will read
@@ -305,7 +305,7 @@ exist, and their licences/sizes. Write `docs/research/neural-tts.md` with a clea
 file paths, commit hashes). No code.
 Result: _pending_
 
-#### N25 Tablet reader side panel (T3) — `ready`
+#### N25 Tablet reader side panel (T3) — `claude-working` (Claude agent, .worktrees/n25)
 Board `11-tablet/TabletReaderPanel`. On tablet UI in Tsuzuki themes, the novel reader can show a side panel (contents
 / quotes / notes for this book) beside the text instead of the drawer, toggled from the existing contents action.
 Reuse `TsuzukiReaderContents`, quotes data and book notes; don't touch viewer internals.
