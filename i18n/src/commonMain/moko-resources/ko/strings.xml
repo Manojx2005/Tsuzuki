@@ -1234,4 +1234,10 @@
     <string name="tsz_query_delete">삭제</string>
     <string name="tsz_query_move_up">위로 이동</string>
     <string name="tsz_query_move_down">아래로 이동</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">챕터에서 찾기</string>
+    <string name="tsz_find_hint">이 챕터에서 찾기</string>
+    <string name="tsz_find_next">다음 결과</string>
+    <string name="tsz_find_previous">이전 결과</string>
+    <string name="tsz_find_close">찾기 닫기</string>
 </resources>

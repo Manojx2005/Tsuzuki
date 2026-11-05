@@ -1235,4 +1235,10 @@
     <string name="tsz_query_delete">Löschen</string>
     <string name="tsz_query_move_up">Nach oben</string>
     <string name="tsz_query_move_down">Nach unten</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">Im Kapitel suchen</string>
+    <string name="tsz_find_hint">In diesem Kapitel suchen</string>
+    <string name="tsz_find_next">Nächster Treffer</string>
+    <string name="tsz_find_previous">Vorheriger Treffer</string>
+    <string name="tsz_find_close">Suche schließen</string>
 </resources>

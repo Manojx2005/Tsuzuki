@@ -1232,4 +1232,10 @@
     <string name="tsz_query_delete">Excluir</string>
     <string name="tsz_query_move_up">Mover para cima</string>
     <string name="tsz_query_move_down">Mover para baixo</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">Buscar no capítulo</string>
+    <string name="tsz_find_hint">Buscar neste capítulo</string>
+    <string name="tsz_find_next">Próxima ocorrência</string>
+    <string name="tsz_find_previous">Ocorrência anterior</string>
+    <string name="tsz_find_close">Fechar busca</string>
 </resources>

@@ -1228,4 +1228,10 @@
     <string name="tsz_query_delete">Supprimer</string>
     <string name="tsz_query_move_up">Monter</string>
     <string name="tsz_query_move_down">Descendre</string>
+    <!-- n26 -->
+    <string name="tsz_find_action">Rechercher dans le chapitre</string>
+    <string name="tsz_find_hint">Rechercher dans ce chapitre</string>
+    <string name="tsz_find_next">Résultat suivant</string>
+    <string name="tsz_find_previous">Résultat précédent</string>
+    <string name="tsz_find_close">Fermer la recherche</string>
 </resources>
