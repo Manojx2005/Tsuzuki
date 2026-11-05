@@ -36,13 +36,6 @@ internal class DownloadNotifier(private val context: Context) {
         }
     }
 
-    private val errorNotificationBuilder by lazy {
-        context.notificationBuilder(Notifications.CHANNEL_DOWNLOADER_ERROR) {
-            setAutoCancel(false)
-            setOnlyAlertOnce(true)
-        }
-    }
-
     /**
      * Status of download. Used for correct notification icon.
      */
@@ -178,12 +171,14 @@ internal class DownloadNotifier(private val context: Context) {
      * Only works on Android 8+.
      */
     fun onWarning(reason: String, timeout: Long? = null, contentIntent: PendingIntent? = null, mangaId: Long? = null) {
-        with(errorNotificationBuilder) {
+        context.notify(
+            Notifications.ID_DOWNLOAD_CHAPTER_ERROR,
+            Notifications.CHANNEL_DOWNLOADER_ERROR,
+        ) {
             setContentTitle(context.stringResource(MR.strings.download_notifier_downloader_title))
             setStyle(NotificationCompat.BigTextStyle().bigText(reason))
             setSmallIcon(R.drawable.ic_warning_white_24dp)
             setAutoCancel(true)
-            clearActions()
             setContentIntent(NotificationHandler.openDownloadManagerPendingActivity(context))
             if (mangaId != null) {
                 addAction(
@@ -192,11 +187,8 @@ internal class DownloadNotifier(private val context: Context) {
                     NotificationReceiver.openEntryPendingActivity(context, mangaId),
                 )
             }
-            setProgress(0, 0, false)
             timeout?.let { setTimeoutAfter(it) }
             contentIntent?.let { setContentIntent(it) }
-
-            show(Notifications.ID_DOWNLOAD_CHAPTER_ERROR)
         }
 
         // Reset download information
@@ -217,13 +209,15 @@ internal class DownloadNotifier(private val context: Context) {
         isDownloading = false
         return
         // Create notification
-        with(errorNotificationBuilder) {
+        context.notify(
+            Notifications.ID_DOWNLOAD_CHAPTER_ERROR,
+            Notifications.CHANNEL_DOWNLOADER_ERROR,
+        ) {
             setContentTitle(
                 mangaTitle?.plus(": $chapter") ?: context.stringResource(MR.strings.download_notifier_downloader_title),
             )
             setContentText(error ?: context.stringResource(MR.strings.download_notifier_unknown_error))
             setSmallIcon(R.drawable.ic_warning_white_24dp)
-            clearActions()
             setContentIntent(NotificationHandler.openDownloadManagerPendingActivity(context))
             if (mangaId != null) {
                 addAction(
@@ -232,9 +226,6 @@ internal class DownloadNotifier(private val context: Context) {
                     NotificationReceiver.openEntryPendingActivity(context, mangaId),
                 )
             }
-            setProgress(0, 0, false)
-
-            show(Notifications.ID_DOWNLOAD_CHAPTER_ERROR)
         }
 
         // Reset download information
