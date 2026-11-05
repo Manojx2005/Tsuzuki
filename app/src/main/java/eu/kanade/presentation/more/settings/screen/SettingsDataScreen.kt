@@ -105,6 +105,14 @@ object SettingsDataScreen : SearchableSettings {
         return listOfNotNull(
             getStorageLocationPref(storagePreferences = storagePreferences),
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
+            // Tsuzuki (board 08-tools "DataTools"): storage breakdown card and library stat tiles.
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.pref_storage_usage)) {
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiStorageBreakdown()
+                }
+            } else {
+                null
+            },
 
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             getDataGroup(),

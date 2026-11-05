@@ -169,6 +169,12 @@ SELECT COUNT(*)
 FROM mangas
 WHERE favorite = 1;
 
+getFavoritesCountByType:
+SELECT is_novel, COUNT(*)
+FROM mangas
+WHERE favorite = 1
+GROUP BY is_novel;
+
 getFavoritesEntry:
 SELECT _id, source, url, title, artist, author, thumbnail_url, cover_last_modified, favorite, is_novel
 FROM mangas

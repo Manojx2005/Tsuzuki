@@ -18,6 +18,10 @@ class ChapterRepositoryImpl(
     private val database: Database,
 ) : ChapterRepository {
 
+    override suspend fun getFavoriteChaptersCount(): Long {
+        return database.chaptersQueries.countFavoriteChapters().awaitAsOne()
+    }
+
     override suspend fun addAll(chapters: List<Chapter>): List<Chapter> {
         return try {
             database.transactionWithResult {

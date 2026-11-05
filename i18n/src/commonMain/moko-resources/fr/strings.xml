@@ -1166,4 +1166,14 @@
     <!-- N9 -->
     <string name="tsz_browse_select_source">Choisir une source</string>
     <string name="tsz_browse_open_catalogue">Ouvrir le catalogue</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">Stockage</string>
+    <string name="tsz_storage_calculating">Calcul en cours…</string>
+    <string name="tsz_storage_downloads">Téléchargements</string>
+    <string name="tsz_storage_covers">Couvertures</string>
+    <string name="tsz_storage_database">Base de données</string>
+    <string name="tsz_storage_cache">Cache</string>
+    <string name="tsz_storage_novels">Romans</string>
+    <string name="tsz_storage_manga">Mangas</string>
+    <string name="tsz_storage_chapters">Chapitres</string>
 </resources>

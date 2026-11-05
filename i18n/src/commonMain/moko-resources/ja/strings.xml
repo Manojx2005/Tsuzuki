@@ -1172,4 +1172,14 @@
     <!-- N9 -->
     <string name="tsz_browse_select_source">ソースを選択</string>
     <string name="tsz_browse_open_catalogue">カタログを開く</string>
+    <!-- N15 -->
+    <string name="tsz_storage_title">ストレージ</string>
+    <string name="tsz_storage_calculating">計算中…</string>
+    <string name="tsz_storage_downloads">ダウンロード</string>
+    <string name="tsz_storage_covers">カバー</string>
+    <string name="tsz_storage_database">データベース</string>
+    <string name="tsz_storage_cache">キャッシュ</string>
+    <string name="tsz_storage_novels">小説</string>
+    <string name="tsz_storage_manga">マンガ</string>
+    <string name="tsz_storage_chapters">チャプター</string>
 </resources>

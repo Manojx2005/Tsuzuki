@@ -8,6 +8,9 @@ interface ChapterRepository {
 
     suspend fun addAll(chapters: List<Chapter>): List<Chapter>
 
+    /** Chapters belonging to library entries. */
+    suspend fun getFavoriteChaptersCount(): Long
+
     suspend fun update(chapterUpdate: ChapterUpdate)
 
     suspend fun updateAll(chapterUpdates: List<ChapterUpdate>)
