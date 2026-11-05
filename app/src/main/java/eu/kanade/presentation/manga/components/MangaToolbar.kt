@@ -296,6 +296,7 @@ fun MangaToolbar(
                                 AppBar.OverflowAction(
                                     title = stringResource(TDMR.strings.action_scroll_to_top),
                                     onClick = onClickScrollToTop,
+                                    icon = Icons.Outlined.ArrowUpward,
                                 ),
                             )
                         }
@@ -304,6 +305,7 @@ fun MangaToolbar(
                                 AppBar.OverflowAction(
                                     title = stringResource(TDMR.strings.action_scroll_to_next_unread),
                                     onClick = onClickScrollToLastRead,
+                                    icon = Icons.Outlined.Bookmark,
                                 ),
                             )
                         }
@@ -312,6 +314,7 @@ fun MangaToolbar(
                                 AppBar.OverflowAction(
                                     title = stringResource(TDMR.strings.action_scroll_to_bottom),
                                     onClick = onClickScrollToBottom,
+                                    icon = Icons.Outlined.ArrowDownward,
                                 ),
                             )
                         }
