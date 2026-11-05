@@ -22,3 +22,6 @@
 *.woff binary
 *.pyc binary
 *.swp binary
+
+# Prebuilt native libraries (anime player)
+*.so binary
