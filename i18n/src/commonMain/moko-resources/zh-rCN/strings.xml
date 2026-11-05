@@ -1170,4 +1170,7 @@
     <string name="tsz_time_follow_system">跟随系统</string>
     <string name="tsz_time_24_hours">24 小时制</string>
     <string name="tsz_time_12_hours">12 小时制</string>
+    <!-- N9 -->
+    <string name="tsz_browse_select_source">选择来源</string>
+    <string name="tsz_browse_open_catalogue">打开目录</string>
 </resources>

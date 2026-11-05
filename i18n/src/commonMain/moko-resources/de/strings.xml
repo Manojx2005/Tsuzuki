@@ -1170,4 +1170,7 @@
     <string name="tsz_time_follow_system">Systemeinstellung folgen</string>
     <string name="tsz_time_24_hours">24-Stunden-Format</string>
     <string name="tsz_time_12_hours">12-Stunden-Format</string>
+    <!-- N9 -->
+    <string name="tsz_browse_select_source">Quelle auswählen</string>
+    <string name="tsz_browse_open_catalogue">Katalog öffnen</string>
 </resources>

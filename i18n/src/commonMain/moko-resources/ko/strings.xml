@@ -1169,4 +1169,7 @@
     <string name="tsz_time_follow_system">시스템 설정 따르기</string>
     <string name="tsz_time_24_hours">24시간제</string>
     <string name="tsz_time_12_hours">12시간제</string>
+    <!-- N9 -->
+    <string name="tsz_browse_select_source">소스 선택</string>
+    <string name="tsz_browse_open_catalogue">카탈로그 열기</string>
 </resources>
