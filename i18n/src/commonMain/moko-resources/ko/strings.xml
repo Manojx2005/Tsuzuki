@@ -1118,4 +1118,7 @@
     <string name="tsz_tracker_search_pick_title">대체 제목 선택</string>
     <!-- B5 -->
     <string name="tsz_quotes_drag_to_reorder">드래그하여 순서 변경</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">라이브러리의 업데이트 예정</string>
+    <string name="tsz_upcoming_no_updates">예정된 업데이트 없음</string>
 </resources>

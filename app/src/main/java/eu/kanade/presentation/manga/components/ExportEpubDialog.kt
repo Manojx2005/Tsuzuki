@@ -40,6 +40,28 @@ fun ExportEpubDialog(
     onDismissRequest: () -> Unit,
     onExport: (Uri, EpubExportOptions) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiExportEpubDialog(
+            manga = manga,
+            chapters = chapters,
+            onDismissRequest = onDismissRequest,
+            onExport = onExport,
+            documentName = { name, options, asZip ->
+                buildExportDocumentName(
+                    inputName = name,
+                    manga = manga,
+                    chapters = chapters,
+                    includeChapterCount = options.includeChapterCount,
+                    includeChapterRange = options.includeChapterRange,
+                    includeStatus = options.includeStatus,
+                    asZip = asZip,
+                )
+            },
+        )
+        return
+    }
     var filename by remember { mutableStateOf(EpubExportNaming.sanitizeFilename(manga.title) + ".epub") }
     var downloadedOnly by remember { mutableStateOf(true) }
     var translationMode by remember { mutableStateOf(TranslationMode.ORIGINAL) }

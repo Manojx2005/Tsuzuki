@@ -1106,4 +1106,7 @@
     <string name="tsz_tracker_search_pick_title">Elegir un título alternativo</string>
     <!-- B5 -->
     <string name="tsz_quotes_drag_to_reorder">Arrastra para reordenar</string>
+    <!-- B6 -->
+    <string name="tsz_upcoming_subtitle">Actualizaciones previstas para tu biblioteca</string>
+    <string name="tsz_upcoming_no_updates">No hay actualizaciones previstas</string>
 </resources>
