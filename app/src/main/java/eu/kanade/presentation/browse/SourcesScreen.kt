@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.browse.components.BaseSourceItem
@@ -80,7 +81,8 @@ fun SourcesScreen(
             onRemoveFromGroup, onLongClickItem, onClickGlobalSearch, selectedId,
         )
     }
-    if (isTsuzukiStyle() && isTabletUi()) {
+    // Two panes only when the window is wide enough for source names beside the preview (tablet landscape).
+    if (isTsuzukiStyle() && isTabletUi() && LocalConfiguration.current.screenWidthDp >= 900) {
         TsuzukiTabletBrowse(
             items = state.items,
             contentPadding = contentPadding,
