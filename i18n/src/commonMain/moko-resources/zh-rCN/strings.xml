@@ -1090,6 +1090,11 @@
     <string name="tsz_data_cleanup">清理</string>
     <string name="tsz_widget_reading">阅读</string>
     <string name="tsz_widget_reading_desc">继续阅读、连续天数和新章节</string>
+    <string name="tsz_widget_listening">收听</string>
+    <string name="tsz_widget_listening_desc">语音朗读正在播放</string>
+    <string name="tsz_widget_listening_nothing">暂无播放</string>
+    <string name="tsz_widget_listening_play">播放</string>
+    <string name="tsz_widget_listening_pause">暂停</string>
     <string name="tsz_downloads_queued">排队中</string>
     <string name="tsz_epub_volume_line">%1$d 章 · %2$s</string>
     <string name="tsz_epub_summary">%1$d 个文件 · %2$d 部小说</string>

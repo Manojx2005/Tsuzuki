@@ -1087,6 +1087,11 @@
     <string name="tsz_data_cleanup">Limpeza</string>
     <string name="tsz_widget_reading">Leitura</string>
     <string name="tsz_widget_reading_desc">Continuar, sequência e capítulos novos</string>
+    <string name="tsz_widget_listening">Ouvindo</string>
+    <string name="tsz_widget_listening_desc">Reprodução de leitura em voz alta</string>
+    <string name="tsz_widget_listening_nothing">Nada em reprodução</string>
+    <string name="tsz_widget_listening_play">Reproduzir</string>
+    <string name="tsz_widget_listening_pause">Pausar</string>
     <string name="tsz_downloads_queued">Na fila</string>
     <string name="tsz_epub_volume_line">%1$d capítulos · %2$s</string>
     <string name="tsz_epub_summary">%1$d arquivos · %2$d novels</string>

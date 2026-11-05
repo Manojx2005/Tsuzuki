@@ -1089,6 +1089,11 @@
     <string name="tsz_data_cleanup">정리</string>
     <string name="tsz_widget_reading">독서</string>
     <string name="tsz_widget_reading_desc">이어 읽기, 연속 기록, 새 챕터</string>
+    <string name="tsz_widget_listening">듣기</string>
+    <string name="tsz_widget_listening_desc">음성 읽기 재생 중</string>
+    <string name="tsz_widget_listening_nothing">재생 중인 항목 없음</string>
+    <string name="tsz_widget_listening_play">재생</string>
+    <string name="tsz_widget_listening_pause">일시중지</string>
     <string name="tsz_downloads_queued">대기 중</string>
     <string name="tsz_epub_volume_line">%1$d개 챕터 · %2$s</string>
     <string name="tsz_epub_summary">파일 %1$d개 · 소설 %2$d개</string>

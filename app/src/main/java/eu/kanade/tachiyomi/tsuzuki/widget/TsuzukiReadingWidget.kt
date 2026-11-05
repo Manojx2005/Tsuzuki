@@ -284,9 +284,13 @@ private fun label(color: Color, face: FontFamily) =
     TextStyle(color = ColorProvider(color), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = face)
 
 /** The last book's cover, sized for the widget; greyscale in Dot unless covers keep their colours. */
-private fun loadCover(context: Context, item: HistoryWithRelations, grey: Boolean): Bitmap? = runCatching {
+private fun loadCover(context: Context, item: HistoryWithRelations, grey: Boolean): Bitmap? =
+    loadWidgetCover(context, item.coverData, grey)
+
+/** The cover, sized for a widget; greyscale in Dot unless covers keep their colours. Shared with the Listening widget. */
+internal fun loadWidgetCover(context: Context, data: Any?, grey: Boolean): Bitmap? = runCatching {
     val request = coil3.request.ImageRequest.Builder(context)
-        .data(item.coverData)
+        .data(data)
         .size(168, 252)
         // Widgets parcel their bitmaps to the launcher; hardware bitmaps can't be parcelled.
         .allowHardware(false)
