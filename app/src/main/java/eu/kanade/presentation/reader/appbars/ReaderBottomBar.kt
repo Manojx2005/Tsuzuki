@@ -11,6 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReaderActions
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
@@ -28,6 +31,19 @@ fun ReaderBottomBar(
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        TsuzukiMangaReaderActions(
+            readingMode,
+            onClickReadingMode,
+            orientation,
+            onClickOrientation,
+            cropEnabled,
+            onClickCropBorder,
+            onClickSettings,
+            modifier,
+        )
+        return
+    }
     Row(
         modifier = modifier
             .pointerInput(Unit) {},

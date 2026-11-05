@@ -1,9 +1,7 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.core.graphics.alpha
@@ -14,11 +12,12 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences.Companion.ColorFi
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.SettingsChipRow
-import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingChoice as FilterChip
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingSlider as SliderItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingToggle as CheckboxItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingsChoices as SettingsChipRow
 
 @Composable
 internal fun ColumnScope.ColorFilterPage(viewModel: ReaderSettingsViewModel) {
@@ -108,7 +107,7 @@ internal fun ColumnScope.ColorFilterPage(viewModel: ReaderSettingsViewModel) {
                 FilterChip(
                     selected = colorFilterMode == index,
                     onClick = { viewModel.preferences.colorFilterMode.set(index) },
-                    label = { Text(stringResource(it.first)) },
+                    label = stringResource(it.first),
                 )
             }
         }

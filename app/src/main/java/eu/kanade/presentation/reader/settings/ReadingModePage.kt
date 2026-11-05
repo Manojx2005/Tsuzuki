@@ -1,15 +1,15 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.domain.manga.model.readerOrientation
 import eu.kanade.domain.manga.model.readingMode
+import eu.kanade.presentation.tsuzuki.manga.LocalMangaReaderSettings
+import eu.kanade.presentation.tsuzuki.manga.TsuzukiReadingModeGrid
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
@@ -19,28 +19,34 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SettingsChipRow
-import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import java.text.NumberFormat
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingChoice as FilterChip
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingHeading as HeadingItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingSlider as SliderItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingToggle as CheckboxItem
+import eu.kanade.presentation.tsuzuki.manga.MangaReaderSettingsChoices as SettingsChipRow
 
 @Composable
 internal fun ColumnScope.ReadingModePage(viewModel: ReaderSettingsViewModel) {
-    HeadingItem(MR.strings.pref_category_for_this_series)
+    val themed = LocalMangaReaderSettings.current
+    if (!themed) HeadingItem(MR.strings.pref_category_for_this_series)
     val manga by viewModel.mangaFlow.collectAsState()
 
     val readingMode = remember(manga) { ReadingMode.fromPreference(manga?.readingMode?.toInt()) }
-    SettingsChipRow(MR.strings.pref_category_reading_mode) {
-        // NOVEL is auto-assigned for novel sources, not a manual manga reading mode.
-        (ReadingMode.entries - ReadingMode.NOVEL).map {
-            FilterChip(
-                selected = it == readingMode,
-                onClick = { viewModel.onChangeReadingMode(it) },
-                label = { Text(stringResource(it.stringRes)) },
-            )
+    if (themed) {
+        TsuzukiReadingModeGrid(readingMode, viewModel.onChangeReadingMode)
+    } else {
+        SettingsChipRow(MR.strings.pref_category_reading_mode) {
+            // NOVEL is auto-assigned for novel sources, not a manual manga reading mode.
+            (ReadingMode.entries - ReadingMode.NOVEL).map {
+                FilterChip(
+                    selected = it == readingMode,
+                    onClick = { viewModel.onChangeReadingMode(it) },
+                    label = stringResource(it.stringRes),
+                )
+            }
         }
     }
 
@@ -50,7 +56,7 @@ internal fun ColumnScope.ReadingModePage(viewModel: ReaderSettingsViewModel) {
             FilterChip(
                 selected = it == orientation,
                 onClick = { viewModel.onChangeOrientation(it) },
-                label = { Text(stringResource(it.stringRes)) },
+                label = stringResource(it.stringRes),
             )
         }
     }
@@ -84,7 +90,7 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
             FilterChip(
                 selected = imageScaleType == index + 1,
                 onClick = { viewModel.preferences.imageScaleType.set(index + 1) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -95,7 +101,7 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
             FilterChip(
                 selected = zoomStart == index + 1,
                 onClick = { viewModel.preferences.zoomStart.set(index + 1) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -236,7 +242,7 @@ private fun ColumnScope.TapZonesItems(
             FilterChip(
                 selected = selected == index,
                 onClick = { onSelect(index) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -247,7 +253,7 @@ private fun ColumnScope.TapZonesItems(
                 FilterChip(
                     selected = it == invertMode,
                     onClick = { onSelectInvertMode(it) },
-                    label = { Text(stringResource(it.titleRes)) },
+                    label = stringResource(it.titleRes),
                 )
             }
         }
