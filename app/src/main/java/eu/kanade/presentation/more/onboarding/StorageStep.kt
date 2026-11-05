@@ -44,6 +44,27 @@ internal class StorageStep : OnboardingStep {
 
         val pickStorageLocation = SettingsDataScreen.storageLocationPicker(storagePref)
 
+        if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+        ) {
+            LaunchedEffect(Unit) {
+                storagePref.changes()
+                    .collectLatest { _isComplete = storagePref.isSet() }
+            }
+            eu.kanade.presentation.tsuzuki.onboarding.TsuzukiStorageContent(
+                location = SettingsDataScreen.storageLocationText(storagePref),
+                onSelect = {
+                    try {
+                        pickStorageLocation.launch(null)
+                    } catch (e: ActivityNotFoundException) {
+                        context.toast(MR.strings.file_picker_error)
+                    }
+                },
+                onHelp = { handler.openUri(SettingsDataScreen.HELP_URL) },
+            )
+            return
+        }
+
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),

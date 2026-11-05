@@ -1085,4 +1085,25 @@
     <string name="tsz_mass_import_in_library">%1$d na biblioteca</string>
     <string name="tsz_mass_import_unsupported">%1$d sem suporte</string>
     <string name="information_webview_crashed">WebView parou de funcionar e a página foi fechada</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">Light novels, web novels, mangás e manhwas. Uma só biblioteca.</string>
+    <string name="tsz_onboarding_welcome_body">Leia offline ou ouça romances com a leitura em voz alta. Grátis, de código aberto e sem anúncios.</string>
+    <string name="tsz_onboarding_languages">Em quais idiomas você lê?</string>
+    <string name="tsz_onboarding_languages_body">Vamos mostrar fontes nos idiomas que você escolher.</string>
+    <string name="tsz_onboarding_look">Escolha um visual</string>
+    <string name="tsz_onboarding_look_body">Você pode mudar quando quiser nas Configurações.</string>
+    <string name="tsz_onboarding_storage">Escolha a pasta de armazenamento</string>
+    <string name="tsz_onboarding_permissions">Algumas permissões</string>
+    <string name="tsz_onboarding_permissions_body">Essas permissões ajudam a instalar fontes, receber notificações e manter os downloads em segundo plano. Você pode continuar sem concedê-las.</string>
+    <string name="tsz_onboarding_import">Vindo de outro app?</string>
+    <string name="tsz_onboarding_import_body">Importe um backup para trazer sua biblioteca e seu progresso de leitura.</string>
+    <string name="tsz_onboarding_lnreader">Backup do LNReader</string>
+    <string name="tsz_onboarding_mihon">Backup do Mihon / Tsundoku</string>
+    <string name="tsz_onboarding_skip">Pular</string>
+    <string name="tsz_onboarding_back">Voltar</string>
+    <string name="tsz_onboarding_start">Começar</string>
+    <string name="tsz_onboarding_continue">Continuar</string>
+    <string name="tsz_onboarding_finish">Começar a ler</string>
+    <string name="tsz_onboarding_granted">Concedida</string>
 </resources>

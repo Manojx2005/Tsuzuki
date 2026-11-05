@@ -28,7 +28,18 @@ import tachiyomi.presentation.core.screens.InfoScreen
 fun OnboardingScreen(
     onComplete: () -> Unit,
     onRestoreBackup: () -> Unit,
+    onImportLNReader: () -> Unit = onRestoreBackup,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.onboarding.TsuzukiOnboardingScreen(
+            onComplete,
+            onRestoreBackup,
+            onImportLNReader,
+        )
+        return
+    }
     val slideDistance = rememberSlideDistance()
 
     var currentStep by rememberSaveable { mutableIntStateOf(0) }

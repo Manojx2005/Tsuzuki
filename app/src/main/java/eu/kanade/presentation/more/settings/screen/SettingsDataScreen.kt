@@ -79,6 +79,7 @@ import uy.kohesive.injekt.api.get
 object SettingsDataScreen : SearchableSettings {
 
     val restorePreferenceKeyString = MR.strings.label_backup
+    val lnReaderImportPreferenceKeyString = MR.strings.tsz_onboarding_lnreader
     const val HELP_URL = "https://tsundoku-otaku.github.io/docs/faq/storage"
 
     @ReadOnlyComposable
@@ -365,7 +366,11 @@ object SettingsDataScreen : SearchableSettings {
                 },
 
                 Preference.PreferenceItem.TextPreference(
-                    title = "Import LNReader backup",
+                    title = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                        stringResource(lnReaderImportPreferenceKeyString)
+                    } else {
+                        "Import LNReader backup"
+                    },
                     subtitle = lnReaderImportStatus ?: "Import novels from an LNReader backup file (.zip)",
                     onClick = {
                         chooseLNReaderBackup.launch("application/zip")

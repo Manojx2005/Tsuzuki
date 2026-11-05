@@ -1075,4 +1075,25 @@
     <string name="tsz_mass_import_in_library">%1$d en la biblioteca</string>
     <string name="tsz_mass_import_unsupported">%1$d no compatibles</string>
     <string name="information_webview_crashed">WebView dejó de funcionar y la página se cerró</string>
+
+    <!-- First-run Tsuzuki onboarding -->
+    <string name="tsz_onboarding_welcome">Novelas ligeras, novelas web, manga y manhwa. Una sola biblioteca.</string>
+    <string name="tsz_onboarding_welcome_body">Lee sin conexión o escucha novelas con la función de lectura en voz alta. Gratis, de código abierto y sin anuncios.</string>
+    <string name="tsz_onboarding_languages">¿En qué idiomas lees?</string>
+    <string name="tsz_onboarding_languages_body">Te mostraremos fuentes en los idiomas que elijas.</string>
+    <string name="tsz_onboarding_look">Elige un estilo</string>
+    <string name="tsz_onboarding_look_body">Puedes cambiarlo cuando quieras en Ajustes.</string>
+    <string name="tsz_onboarding_storage">Elige tu carpeta de almacenamiento</string>
+    <string name="tsz_onboarding_permissions">Algunos permisos</string>
+    <string name="tsz_onboarding_permissions_body">Estos permisos te permiten instalar fuentes, recibir notificaciones y mantener las descargas en segundo plano. Puedes continuar sin concederlos.</string>
+    <string name="tsz_onboarding_import">¿Vienes de otra app?</string>
+    <string name="tsz_onboarding_import_body">Importa una copia de seguridad para conservar tu biblioteca y tu progreso de lectura.</string>
+    <string name="tsz_onboarding_lnreader">Copia de LNReader</string>
+    <string name="tsz_onboarding_mihon">Copia de Mihon / Tsundoku</string>
+    <string name="tsz_onboarding_skip">Omitir</string>
+    <string name="tsz_onboarding_back">Atrás</string>
+    <string name="tsz_onboarding_start">Empezar</string>
+    <string name="tsz_onboarding_continue">Continuar</string>
+    <string name="tsz_onboarding_finish">Empezar a leer</string>
+    <string name="tsz_onboarding_granted">Concedido</string>
 </resources>
