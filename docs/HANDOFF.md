@@ -166,6 +166,12 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — E1 + E2 Mihon fixes merged (`8cafe3b13`, `32f4570c3`).** E1: 88d4071cc (disk index
+  can't overwrite a startup rescan, atomic index file), f28b2d887 (cancel queued downloads of chapters the source
+  removed), f82a7a68f (fresh error notifications); f0f1e4de5 + a5d584eeb already in via the DownloadProvider sync,
+  Mihon's `DownloadProviderTest` added. E2: c279291e2 (tablet FAB above the taskbar), a6ee4bc59 (library range
+  selection across categories; pure helper + 6 tests). Build 730 tests green; preview on both devices; pushed.
+  Overnight Codex batch N1–N8 queued; Claude review scheduled 06:00 2026-11-06.
 - **2026-11-05 Claude — D1 tablet Updates + device passes.** D1 (`2e0451bb4` merge): on tablet UI (sw ≥ 720 dp)
   Updates shows list + preview; tablet portrait Dot checked (row select switches preview without opening the
   reader). Added a confirm dialog before a group preview downloads > 25 chapters (Shadow Slave group had 1,911;
