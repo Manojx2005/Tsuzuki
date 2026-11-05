@@ -2,6 +2,7 @@ package eu.kanade.presentation.tsuzuki.onboarding
 
 internal enum class OnboardingPage {
     WELCOME,
+    MEDIA,
     LANGUAGES,
     LOOK,
     STORAGE,
@@ -9,7 +10,6 @@ internal enum class OnboardingPage {
     IMPORT,
 }
 
-// TODO: 09-manga/OnboardingContent needs real content-type preferences before it can become a step.
 internal fun onboardingSkipTarget(storageConfigured: Boolean): OnboardingPage? =
     if (storageConfigured) null else OnboardingPage.STORAGE
 

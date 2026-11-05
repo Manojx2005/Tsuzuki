@@ -1109,4 +1109,12 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">Actualizaciones previstas para tu biblioteca</string>
     <string name="tsz_upcoming_no_updates">No hay actualizaciones previstas</string>
+    <!-- media step -->
+    <string name="tsz_onboarding_media">¿Qué lees?</string>
+    <string name="tsz_onboarding_media_body">Elige lo que quieras. Solo mostramos lo que usas.</string>
+    <string name="tsz_onboarding_media_novels">Novelas ligeras</string>
+    <string name="tsz_onboarding_media_novels_body">Lector de texto, escucha y traducción</string>
+    <string name="tsz_onboarding_media_manga">Manga y manhwa</string>
+    <string name="tsz_onboarding_media_manga_body">Páginas y tiras largas</string>
+    <string name="tsz_onboarding_media_footnote">Cámbialo cuando quieras en Ajustes &gt; Apariencia.</string>
 </resources>

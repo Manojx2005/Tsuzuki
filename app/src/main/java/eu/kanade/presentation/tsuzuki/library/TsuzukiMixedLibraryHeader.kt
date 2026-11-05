@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import tachiyomi.core.common.preference.TriState
@@ -32,6 +33,7 @@ fun TsuzukiMixedLibraryHeader(
     val preferences = remember { Injekt.get<LibraryPreferences>() }
     val filter by preferences.filterNovel().collectAsState()
     val filters = listOf(TriState.DISABLED, TriState.ENABLED_IS, TriState.ENABLED_NOT)
+    val hideMangaUi by remember { Injekt.get<BasePreferences>().hideMangaUi }.collectAsState()
     val tokens = TsuzukiTheme.tokens
     Column {
         if (showCounts && novelCount + mangaCount > 0) {
@@ -47,7 +49,7 @@ fun TsuzukiMixedLibraryHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        TsuzukiPillRow(
+        if (!hideMangaUi) TsuzukiPillRow(
             labels = listOf(
                 stringResource(MR.strings.tsz_library_all),
                 stringResource(TDMR.strings.label_novels),
