@@ -277,7 +277,7 @@ Result: _pending_
 
 #### Wave 3 — N21 to N32 (same batch rules; continue here after N20, in order)
 
-#### N21 Anime A1.3: vendor the native player libraries (T3) — `ready`
+#### N21 Anime A1.3: vendor the native player libraries (T3) — `claude-working` (Claude agent, .worktrees/n21)
 WORKPLAN §6.1 A1.3. New Android library module `anime-player` with `src/main/jniLibs/arm64-v8a/*.so` and headers
 copied from the archived artifact `app/build/anime-native-41645408336/anime-native-arm64-41645408336/` (verify every
 file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), licence texts from its `licenses/` into
@@ -291,7 +291,7 @@ passed by intent. Wire `anime-player` into `:app` only for the debug build type 
 preview/release). Re-run a 16 KB alignment check on the debug APK's anime libs and record sizes. No user-visible UI.
 Result: _pending_
 
-#### N23 Anime A2.1: schema design doc (T3, doc only) — `ready`
+#### N23 Anime A2.1: schema design doc (T3, doc only) — `claude-working` (Claude agent, .worktrees/n23)
 Write `docs/ANIME_SCHEMA.md`: tables `animes`, `episodes`, `anime_history`, `anime_categories`, `anime_tracks` (Aniyomi
 Apache-2.0 schema as reference), SQLDelight migration numbering after the current latest migration in
 `data/src/main/sqldelight/tachiyomi/migrations/`, backup proto additions, how library/Home/Updates/History will read
