@@ -256,7 +256,7 @@ Port Mihon fc20410 (skip this version) and #3707 (download the app update from t
 `data/updater/**` and the Tsuzuki `TsuzukiNewUpdateScreen`. Find exact commits with `git log mihon/main --grep`.
 Result: _pending_
 
-#### N18 Mihon: failed-to-load extensions with reason (T3) — `claude-working` (Claude agent, .worktrees/n18)
+#### N18 Mihon: failed-to-load extensions with reason (T3) — `done` (Claude agent `ef061ce14`, merged `3419ae572`; #3954 skipped, see UPSTREAM.md)
 Port Mihon #3953 (list extensions that failed to load, with reason and stack trace) and, if cheap, #3954 (apply
 trust/repo changes without restart). Keep Tsundoku's novel-extension loader paths. Restyle the new rows with
 existing Tsuzuki extension tiles.
