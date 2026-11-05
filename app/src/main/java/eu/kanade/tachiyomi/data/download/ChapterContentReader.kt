@@ -5,6 +5,7 @@ import com.hippo.unifile.UniFile
 import logcat.LogPriority
 import mihon.core.archive.ArchiveReader
 import mihon.core.archive.rewriteResolvedAssetRefs
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
@@ -34,12 +35,12 @@ class ChapterContentReader(
      *
      * @return the concatenated content, or `null` if nothing was found.
      */
-    fun readDownloadedContent(
+    suspend fun readDownloadedContent(
         manga: Manga,
         chapter: Chapter,
         source: eu.kanade.tachiyomi.source.Source,
-    ): String? {
-        return try {
+    ): String? = withIOContext {
+        try {
             readFromChapterDir(manga, chapter, source)
                 ?: readFromMangaDirCbz(manga, chapter, source)
         } catch (e: Exception) {
@@ -106,12 +107,12 @@ class ChapterContentReader(
      * Read all embedded images for [chapter] from its downloaded files.
      * Returns a map of filename → bytes, e.g. `"image_0.jpg" → ByteArray`.
      */
-    fun readChapterImages(
+    suspend fun readChapterImages(
         manga: Manga,
         chapter: Chapter,
         source: eu.kanade.tachiyomi.source.Source,
-    ): Map<String, ByteArray> {
-        return try {
+    ): Map<String, ByteArray> = withIOContext {
+        try {
             readImagesFromChapterDir(manga, chapter, source)
                 ?: readImagesFromMangaDirCbz(manga, chapter, source)
                 ?: emptyMap()

@@ -110,6 +110,7 @@ done
   (see `LibraryToolbar(below = ...)`).
 - **Additional already touched file:** `presentation/reader/components/ChapterNavigator.kt` (exclude the invisible width-reserving label from accessibility; layout unchanged).
 - **Additional already touched file:** `ui/reader/viewer/ReaderTransitionView.kt` (next-chapter download lookup passed as a lambda to `presentation/tsuzuki/reader/ReaderDownloadStatus.kt`, which runs it on IO).
+- **Storage off the caller thread (N20):** `data/download/ChapterContentReader.kt` (public reads are `suspend`, on IO), `data/epub/EpubExportJob.kt` (`readOriginalImages` is `suspend`), `ui/reader/loader/DownloadPageLoader.kt` (`getPages` / `getPageDataStream` on IO), `ui/reader/loader/ChapterLoader.kt` and `ui/reader/ReaderViewModel.kt` (one-line swap to `DownloadManager.isChapterOnDisk`, `tsuzuki/download/ChapterOnDisk.kt`). The synchronous `DownloadProvider` / `DownloadCache` / `DownloadManager` lookups stay for Tsundoku-shared callers.
 - **Additional upstream WebView files:** `core/common/.../network/NetworkHelper.kt`, `network/interceptor/CloudflareInterceptor.kt`, `network/interceptor/WebViewInterceptor.kt`, `util/system/WebViewUtil.kt`, `app/.../di/AppModule.kt`, `ui/webview/WebViewActivity.kt`, `ui/webview/WebViewViewModel.kt` (Mihon robustness group; existing rate limiting and Injekt retained).
 - **Additional WebView screen adapter:** `ui/webview/WebViewScreen.kt` (header readiness and a separate ViewModel key for each browser route).
 - **Restoring a file:** use `git show HEAD:<file> > <file>`.

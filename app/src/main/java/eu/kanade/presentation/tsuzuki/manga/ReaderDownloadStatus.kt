@@ -15,7 +15,7 @@ import tachiyomi.core.common.util.system.logcat
 internal fun rememberReaderDownloadStatus(
     requestKey: Any,
     initiallyDownloaded: Boolean,
-    lookup: (() -> Boolean)?,
+    lookup: (suspend () -> Boolean)?,
 ): State<Boolean> = key(requestKey) {
     produceState(initiallyDownloaded) {
         if (lookup != null) {

@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.core.archive.archiveReader
 import mihon.core.archive.rewriteResolvedAssetRefs
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.manga.model.Manga
 import uy.kohesive.injekt.injectLazy
@@ -33,7 +34,7 @@ internal class DownloadPageLoader(
 
     override var isLocal: Boolean = true
 
-    override suspend fun getPages(): List<ReaderPage> {
+    override suspend fun getPages(): List<ReaderPage> = withIOContext {
         val dbChapter = chapter.chapter
         logcat { "DownloadPageLoader.getPages: chapter=${dbChapter.name}, url=${dbChapter.url}" }
 
@@ -48,7 +49,7 @@ internal class DownloadPageLoader(
             "DownloadPageLoader.getPages: chapterPath=$chapterPath, exists=${chapterPath?.exists()}, isFile=${chapterPath?.isFile}"
         }
 
-        return if (chapterPath?.isFile == true) {
+        if (chapterPath?.isFile == true) {
             logcat { "DownloadPageLoader.getPages: Loading from archive" }
             getPagesFromArchive(chapterPath)
         } else {
@@ -64,7 +65,9 @@ internal class DownloadPageLoader(
 
     private suspend fun getPagesFromArchive(file: UniFile): List<ReaderPage> {
         val entryNames = file.archiveReader(context).use { reader ->
-            reader.useEntries { entries -> entries.filter { it.isFile }.map { it.name.substringAfterLast('/') }.toSet() }
+            reader.useEntries { entries ->
+                entries.filter { it.isFile }.map { it.name.substringAfterLast('/') }.toSet()
+            }
         }
         val loader = ArchivePageLoader(file.archiveReader(context)).also { archivePageLoader = it }
         return loader.getPages().onEach { page ->
@@ -100,9 +103,9 @@ internal class DownloadPageLoader(
         }
     }
 
-    override suspend fun getPageDataStream(url: String): java.io.InputStream? {
+    override suspend fun getPageDataStream(url: String): java.io.InputStream? = withIOContext {
         // 1. Try archive (for normal downloaded CBZ)
-        archivePageLoader?.getPageDataStream(url)?.let { return it }
+        archivePageLoader?.getPageDataStream(url)?.let { return@withIOContext it }
 
         // 2. Try directory (for normal downloaded directories)
         val dbChapter = chapter.chapter
@@ -116,12 +119,12 @@ internal class DownloadPageLoader(
         if (chapterPath?.isDirectory == true) {
             val file = chapterPath.findFile(url)
             if (file != null && file.exists()) {
-                context.contentResolver.openInputStream(file.uri)?.let { return it }
+                context.contentResolver.openInputStream(file.uri)?.let { return@withIOContext it }
             }
         }
 
         // 3. Fallback to source (critical for edited EPUB chapters where the custom `.cbz` only contains 001.html)
-        return (source as? tachiyomi.source.local.LocalNovelSource)?.getChapterImage(dbChapter, url)
+        (source as? tachiyomi.source.local.LocalNovelSource)?.getChapterImage(dbChapter, url)
     }
 
     override suspend fun loadPage(page: ReaderPage) {

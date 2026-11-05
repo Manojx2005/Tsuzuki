@@ -38,6 +38,7 @@ import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
+import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.DownloadPageLoader
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -681,13 +682,12 @@ class ReaderViewModel @JvmOverloads constructor(
         if (chapter.pageLoader?.isLocal == false) {
             val manga = manga ?: return
             val dbChapter = chapter.chapter
-            val isDownloaded = downloadManager.isChapterDownloaded(
+            val isDownloaded = downloadManager.isChapterOnDisk(
                 dbChapter.name,
                 dbChapter.scanlator,
                 dbChapter.url,
                 manga.title,
                 manga.source,
-                skipCache = true,
             )
             if (isDownloaded) {
                 chapter.state = ReaderChapter.State.Wait
