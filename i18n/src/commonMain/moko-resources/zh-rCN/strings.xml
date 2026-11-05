@@ -1109,4 +1109,7 @@
     <string name="tsz_onboarding_continue">继续</string>
     <string name="tsz_onboarding_finish">开始阅读</string>
     <string name="tsz_onboarding_granted">已授权</string>
+    <!-- B1 -->
+    <string name="tsz_catalogue_filters">筛选</string>
+    <string name="tsz_catalogue_filter_presets">筛选预设</string>
 </resources>

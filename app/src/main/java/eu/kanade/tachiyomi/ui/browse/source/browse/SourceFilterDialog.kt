@@ -58,6 +58,20 @@ fun SourceFilterDialog(
     @Suppress("UNUSED_PARAMETER") onLoadPreset: (Long) -> Unit,
     @Suppress("UNUSED_PARAMETER") onDeletePreset: (Long) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.browse.TsuzukiCatalogueFilters(
+            onDismissRequest,
+            filters,
+            onReset,
+            onFilter,
+            onUpdate,
+            onOpenPresets,
+            onSavePreset,
+        ) { onDismiss, onSave -> SavePresetDialog(onDismiss, onSave) }
+        return
+    }
     val updateFilters = { onUpdate(filters) }
     var showSaveDialog by remember { mutableStateOf(false) }
 
