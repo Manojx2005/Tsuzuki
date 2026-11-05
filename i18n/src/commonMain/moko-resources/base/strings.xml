@@ -1578,4 +1578,12 @@
     <string name="tsz_ext_failed_missing_class">The extension does not declare a source class</string>
     <string name="tsz_ext_failed_class_not_found">Source class not found</string>
     <string name="tsz_ext_failed_load_error">The source could not be created</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">Notebook</string>
+    <string name="tsz_notebook_note">Note</string>
+    <string name="tsz_notebook_edit">Edit</string>
+    <string name="tsz_notebook_no_note">No note yet. Tap Edit to write one.</string>
+    <string name="tsz_notebook_highlights">Highlights</string>
+    <string name="tsz_notebook_newest">Newest</string>
+    <string name="tsz_notebook_no_quotes">No highlights saved for this book yet.</string>
 </resources>

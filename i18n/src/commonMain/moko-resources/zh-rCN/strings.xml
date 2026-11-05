@@ -1214,4 +1214,12 @@
     <string name="tsz_ext_failed_missing_class">扩展未声明来源类</string>
     <string name="tsz_ext_failed_class_not_found">找不到来源类</string>
     <string name="tsz_ext_failed_load_error">无法创建来源</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">笔记本</string>
+    <string name="tsz_notebook_note">笔记</string>
+    <string name="tsz_notebook_edit">编辑</string>
+    <string name="tsz_notebook_no_note">还没有笔记。点按“编辑”开始书写。</string>
+    <string name="tsz_notebook_highlights">高亮</string>
+    <string name="tsz_notebook_newest">最新</string>
+    <string name="tsz_notebook_no_quotes">这本书还没有保存任何高亮。</string>
 </resources>

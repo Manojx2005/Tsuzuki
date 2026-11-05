@@ -1214,4 +1214,12 @@
     <string name="tsz_ext_failed_missing_class">Die Erweiterung deklariert keine Quellklasse</string>
     <string name="tsz_ext_failed_class_not_found">Quellklasse nicht gefunden</string>
     <string name="tsz_ext_failed_load_error">Die Quelle konnte nicht erstellt werden</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">Notizbuch</string>
+    <string name="tsz_notebook_note">Notiz</string>
+    <string name="tsz_notebook_edit">Bearbeiten</string>
+    <string name="tsz_notebook_no_note">Noch keine Notiz. Tippe auf Bearbeiten, um eine zu schreiben.</string>
+    <string name="tsz_notebook_highlights">Markierungen</string>
+    <string name="tsz_notebook_newest">Neueste</string>
+    <string name="tsz_notebook_no_quotes">Für dieses Buch sind noch keine Markierungen gespeichert.</string>
 </resources>

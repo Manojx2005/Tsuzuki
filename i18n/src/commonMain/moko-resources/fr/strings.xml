@@ -1207,4 +1207,12 @@
     <string name="tsz_ext_failed_missing_class">L\'extension ne déclare aucune classe de source</string>
     <string name="tsz_ext_failed_class_not_found">Classe de source introuvable</string>
     <string name="tsz_ext_failed_load_error">Impossible de créer la source</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">Carnet</string>
+    <string name="tsz_notebook_note">Note</string>
+    <string name="tsz_notebook_edit">Modifier</string>
+    <string name="tsz_notebook_no_note">Pas encore de note. Touchez Modifier pour en écrire une.</string>
+    <string name="tsz_notebook_highlights">Passages favoris</string>
+    <string name="tsz_notebook_newest">Plus récents</string>
+    <string name="tsz_notebook_no_quotes">Aucun passage enregistré pour ce livre.</string>
 </resources>

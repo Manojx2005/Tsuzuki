@@ -1211,4 +1211,12 @@
     <string name="tsz_ext_failed_missing_class">A extensão não declara uma classe de fonte</string>
     <string name="tsz_ext_failed_class_not_found">Classe de fonte não encontrada</string>
     <string name="tsz_ext_failed_load_error">Não foi possível criar a fonte</string>
+    <!-- n27 -->
+    <string name="tsz_notebook_title">Caderno</string>
+    <string name="tsz_notebook_note">Nota</string>
+    <string name="tsz_notebook_edit">Editar</string>
+    <string name="tsz_notebook_no_note">Ainda não há nota. Toque em Editar para escrever uma.</string>
+    <string name="tsz_notebook_highlights">Destaques</string>
+    <string name="tsz_notebook_newest">Mais recentes</string>
+    <string name="tsz_notebook_no_quotes">Ainda não há destaques salvos para este livro.</string>
 </resources>
