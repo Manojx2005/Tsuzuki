@@ -43,10 +43,8 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- **Batch C restyles — `claude-working`** with Sonnet agents, each in `.worktrees/cN`, standard restyle rules
-  (WORKPLAN appendix): C3 custom source setup + site picker chrome (`ui/customsource/*`), C4 text replacement rules
-  (`presentation/reader/settings/NovelPage.kt` dispatch). Next candidates: TTS full player + ListenMini, reader
-  immersive/paged chrome, tablet layouts (WORKPLAN 4C).
+- Nothing claimed right now. Next candidates (WORKPLAN 4B/4C): reader immersive + paged chrome, tablet layouts
+  (TabletUpdates, TabletBrowse), CatalogueFilters device check, device passes listed in the log below.
 
 ## Codex queue
 
@@ -91,6 +89,12 @@ Codex is back; new cards will be written here when it is._
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — C3, C4, C5 merged (Sonnet agents, reviewed by Claude).** C3 custom source setup +
+  site-picker chrome (WebView untouched); C4 replacement rules (same JSON pref, live test line, regex validation,
+  accent delete); C5 TTS mini player (accent play, 48 dp targets; no timer/speed/progress — no data). Build 706
+  tests green, preview installed on both devices. **Not yet seen on a device:** C1 migration list (needs a real
+  migration run), C3 setup + picker (Browse → custom source), C4 (novel reader → All settings → Advanced), C5 (needs
+  "TTS controls visible" on, which is off in the preview copy). Do these in the next device pass.
 - **2026-11-05 Claude — P0.6 + C1 + C2 merged and pushed.** P0.6 media-types onboarding step (`b0c041128`,
   `10dec7ac3`): Light novels fixed on, Manga toggles `hideMangaUi`; mixed-library pills hide in novel-only mode;
   phone Dot check found the stripe art spilling over the card (fixed with clipToBounds) and a wrapping Japanese
