@@ -115,6 +115,7 @@ internal fun TsuzukiCatalogueFilters(
                 Text(
                     tsuzukiCase(stringResource(MR.strings.action_filter)).orEmpty(),
                     style = MaterialTheme.typography.labelLarge,
+                    color = tokens.onAccent,
                 )
             }
         }
