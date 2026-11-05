@@ -5,7 +5,25 @@ You are continuing work on **Tsuzuki**, an Android reader for light novels, web 
 **complete match of the design boards**: every board built, in both themes (Colour and Dot), with the features
 the boards show actually working.
 
-## START HERE: latest checkpoint (2026-11-04, Codex)
+## START HERE: latest checkpoint (2026-11-05, Claude)
+
+Reader transition download-status fix finished on the tablet and committed. Installed preview APK hash-matched the
+build; Nano Machine long strip (Dot) showed the 335 -> 336 transition with "always show chapter transition" on,
+then scrolled back and forth across it repeatedly to recycle the view: correct labels, no lookup error, crash
+buffer empty. Restored chapter 336 to page 2 and marked chapter 335 unread again (reaching its end had marked it
+read); Home Continue in the preview copy now shows chapter 336. Phone was not connected, so phone transition
+check remains open. Update checker logs HTTP 404 while the repo is private and has no releases (expected).
+
+Earlier note (Codex, 2026-11-04): reader transition download-status work in progress: thin change to ReaderTransitionView defers its uncached
+filesystem lookup to own `presentation/tsuzuki/reader/ReaderDownloadStatus.kt` Compose helper on IO. Keyed state
+and cancellation discard old/recycled requests; known-local/missing-next remain immediate; storage exceptions
+log and resolve false. Layout and uncached semantics retained. Four real Compose-runtime unit tests pass:
+blocked off-composing-thread lookup, immediate reset, stale completion discard and storage errors. Per-file
+formatting/full app tests/debug build, then ordinary optimized preview build running in session 30237; logs
+`codex-reader-download-status-{debug,preview}.log`. No device changes yet; both remain Dot Home. Next install
+ordinary preview on both, exercise real manga transition/recycle flow, preserve/restore copied positions and Dot,
+check packaging/crashes, then update docs and commit as owner. Full async storage API migration remains open;
+this targets the demonstrated binding call only, with no blanket frame-smoothness gain claim.
 
 Novel renderer coverage corrected and expanded after provider commit `7636bd698` (no app-code changes):
 earlier checks used native TextView, not WebView. Saved UI trees/profile audit confirm it; RUNTIME_QA and

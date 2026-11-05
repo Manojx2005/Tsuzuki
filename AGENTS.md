@@ -105,6 +105,7 @@ done
 - **Small upstream diffs:** don't wrap and re-indent upstream code. Add a slot parameter or a thin wrapper instead
   (see `LibraryToolbar(below = ...)`).
 - **Additional already touched file:** `presentation/reader/components/ChapterNavigator.kt` (exclude the invisible width-reserving label from accessibility; layout unchanged).
+- **Additional already touched file:** `ui/reader/viewer/ReaderTransitionView.kt` (next-chapter download lookup passed as a lambda to `presentation/tsuzuki/reader/ReaderDownloadStatus.kt`, which runs it on IO).
 - **Additional upstream WebView files:** `core/common/.../network/NetworkHelper.kt`, `network/interceptor/CloudflareInterceptor.kt`, `network/interceptor/WebViewInterceptor.kt`, `util/system/WebViewUtil.kt`, `app/.../di/AppModule.kt`, `ui/webview/WebViewActivity.kt`, `ui/webview/WebViewViewModel.kt` (Mihon robustness group; existing rate limiting and Injekt retained).
 - **Additional WebView screen adapter:** `ui/webview/WebViewScreen.kt` (header readiness and a separate ViewModel key for each browser route).
 - **Restoring a file:** use `git show HEAD:<file> > <file>`.
