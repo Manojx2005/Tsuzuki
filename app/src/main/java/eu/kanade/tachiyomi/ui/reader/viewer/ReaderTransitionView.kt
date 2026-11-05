@@ -15,6 +15,7 @@ import eu.kanade.presentation.reader.ChapterTransition
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.tsuzuki.manga.rememberReaderDownloadStatus
 import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.source.local.isLocal
@@ -39,13 +40,12 @@ class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: At
                 } else {
                     transition.to?.chapter?.let { goingToChapter ->
                         {
-                            downloadManager.isChapterDownloaded(
+                            downloadManager.isChapterOnDisk(
                                 chapterName = goingToChapter.name,
                                 chapterScanlator = goingToChapter.scanlator,
                                 chapterUrl = goingToChapter.url,
                                 mangaTitle = manga.title,
                                 sourceId = manga.source,
-                                skipCache = true,
                             )
                         }
                     }
@@ -79,6 +79,6 @@ class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: At
         val transition: ChapterTransition,
         val currChapterDownloaded: Boolean,
         val goingToChapterDownloaded: Boolean,
-        val downloadedLookup: (() -> Boolean)?,
+        val downloadedLookup: (suspend () -> Boolean)?,
     )
 }

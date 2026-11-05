@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.jsplugin.JsPluginManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -85,13 +86,12 @@ class ChapterLoader(
      */
     private suspend fun getPageLoader(chapter: ReaderChapter, forceFromSource: Boolean = false): PageLoader {
         val dbChapter = chapter.chapter
-        val isDownloaded = !forceFromSource && downloadManager.isChapterDownloaded(
+        val isDownloaded = !forceFromSource && downloadManager.isChapterOnDisk(
             dbChapter.name,
             dbChapter.scanlator,
             dbChapter.url,
             manga.title,
             manga.source,
-            skipCache = true,
         )
         return when {
             isDownloaded -> DownloadPageLoader(

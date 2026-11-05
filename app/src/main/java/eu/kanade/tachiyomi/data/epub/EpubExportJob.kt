@@ -1070,7 +1070,7 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
         return filenameBuilder.toString()
     }
 
-    private fun readOriginalImages(
+    private suspend fun readOriginalImages(
         manga: Manga,
         chapter: Chapter,
         source: eu.kanade.tachiyomi.source.Source,

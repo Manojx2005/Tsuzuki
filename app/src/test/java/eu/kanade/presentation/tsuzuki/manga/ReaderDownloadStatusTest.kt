@@ -152,7 +152,7 @@ class ReaderDownloadStatusTest {
             scope.launch { recomposer.runRecomposeAndApplyChanges() }
         }
 
-        fun render(key: String, initial: Boolean, lookup: (() -> Boolean)?) {
+        fun render(key: String, initial: Boolean, lookup: (suspend () -> Boolean)?) {
             composition.setContent {
                 state = rememberReaderDownloadStatus(key, initial, lookup)
             }
