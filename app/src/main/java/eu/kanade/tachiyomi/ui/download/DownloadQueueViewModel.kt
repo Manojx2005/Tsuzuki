@@ -27,7 +27,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.manga.interactor.GetManga
+import tachiyomi.domain.manga.model.asMangaCover
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
@@ -81,6 +84,7 @@ data class NovelDownloadItem(
 class DownloadQueueViewModel(
     private val downloadManager: DownloadManager = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val getManga: GetManga = Injekt.get(),
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(emptyList<DownloadHeaderItem>())
@@ -284,40 +288,21 @@ class DownloadQueueViewModel(
     }
 
     private fun reorderSubsetKeepingOthers(downloads: List<Download>) {
-        if (downloads.isEmpty()) return
-
-        // Reorder only the provided downloads, while keeping everything else in-place.
-        // This prevents, for example, sorting the Manga tab from dropping Novel downloads.
         val current = downloadManager.queueState.value
-        val chapterIds = downloads.asSequence().map { it.chapterId }.toSet()
-        val iterator = downloads.iterator()
-
-        val merged = current.map { existing ->
-            if (chapterIds.contains(existing.chapterId) && iterator.hasNext()) {
-                iterator.next()
-            } else {
-                existing
-            }
-        }
-
-        downloadManager.reorderQueue(merged)
+        val merged = reorderDownloadSubset(current, downloads)
+        if (merged != current) downloadManager.reorderQueue(merged)
     }
 
     fun cancel(downloads: List<Download>) {
         downloadManager.cancelQueuedDownloads(downloads)
     }
 
+    suspend fun coverFor(mangaId: Long) = withIOContext { getManga.await(mangaId)?.asMangaCover() }
+
     fun <R : Comparable<R>> reorderQueue(selector: (DownloadItem) -> R, reverse: Boolean = false) {
-        val adapter = adapter ?: return
-        val newDownloads = mutableListOf<Download>()
-        adapter.headerItems.forEach { headerItem ->
-            headerItem as DownloadHeaderItem
-            headerItem.subItems = headerItem.subItems.sortedBy(selector).toMutableList().apply {
-                if (reverse) {
-                    reverse()
-                }
-            }
-            newDownloads.addAll(headerItem.subItems.map { it.download })
+        val newDownloads = state.value.flatMap { header ->
+            val sorted = header.subItems.sortedBy(selector)
+            (if (reverse) sorted.asReversed() else sorted).map(DownloadItem::download)
         }
         reorderSubsetKeepingOthers(newDownloads)
     }
@@ -419,4 +404,14 @@ class DownloadQueueViewModel(
     private fun getHolder(download: Download): DownloadHolder? {
         return controllerBinding.root.findViewHolderForItemId(download.chapterId) as? DownloadHolder
     }
+}
+
+// Apply a visible subset to the current queue. Completed entries can disappear while a
+// user drags, and other media or newly queued chapters must stay in their existing slots.
+internal fun reorderDownloadSubset(current: List<Download>, requested: List<Download>): List<Download> {
+    val byId = current.associateBy { it.chapterId }
+    val liveOrder = requested.distinctBy { it.chapterId }.mapNotNull { byId[it.chapterId] }
+    val ids = liveOrder.mapTo(HashSet()) { it.chapterId }
+    val iterator = liveOrder.iterator()
+    return current.map { existing -> if (existing.chapterId in ids) iterator.next() else existing }
 }

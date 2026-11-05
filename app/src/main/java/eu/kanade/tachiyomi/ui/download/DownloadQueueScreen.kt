@@ -72,6 +72,9 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
+import eu.kanade.presentation.tsuzuki.download.TsuzukiMangaDownloadQueue
+import eu.kanade.presentation.tsuzuki.download.rememberMangaQueueStatuses
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.translation.TranslationService
@@ -114,8 +117,10 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
         var selectedTab by remember { mutableStateOf(initialTab.coerceIn(0, 2)) }
         var filterMode by remember { mutableStateOf(DownloadQueueFilter.All) }
         val canReorder = filterMode == DownloadQueueFilter.All
+        val themed = isTsuzukiStyle()
+        val mangaStatuses = rememberMangaQueueStatuses(mangaList, themed && selectedTab == 1 && !canReorder)
 
-        val filteredMangaList by remember(mangaList, filterMode) {
+        val filteredMangaList by remember(mangaList, filterMode, mangaStatuses) {
             derivedStateOf {
                 if (filterMode == DownloadQueueFilter.All) return@derivedStateOf mangaList
 
@@ -123,11 +128,11 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                     val filteredDownloads = header.subItems
                         .map { it.download }
                         .filter {
+                            val status = mangaStatuses[it.chapterId] ?: it.status
                             when (filterMode) {
                                 DownloadQueueFilter.Active ->
-                                    it.status == Download.State.DOWNLOADING ||
-                                        it.status == Download.State.QUEUE
-                                DownloadQueueFilter.Errors -> it.status == Download.State.ERROR
+                                    status == Download.State.DOWNLOADING || status == Download.State.QUEUE
+                                DownloadQueueFilter.Errors -> status == Download.State.ERROR
                                 DownloadQueueFilter.All -> true
                             }
                         }
@@ -515,7 +520,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
         ) { contentPadding ->
             Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
                 // Tsuzuki (board 07-system "Downloads"): queued tile, Wi-Fi chip and pill tabs instead of the TabRow.
-                if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                if (themed) {
                     eu.kanade.presentation.tsuzuki.settings.TsuzukiDownloadQueueHeader(
                         labels = listOf(
                             stringResource(TDMR.strings.label_novels),
@@ -570,6 +575,15 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                 onMoveMangaToTop = translationService::moveMangaToFront,
                                 onRemoveAllForManga = translationService::dequeueAllForManga,
                                 onRemoveTask = translationService::dequeue,
+                            )
+                        } else if (selectedTab == 1 && themed) {
+                            TsuzukiMangaDownloadQueue(
+                                groups = filteredMangaList,
+                                canReorder = canReorder,
+                                contentPadding = contentPadding,
+                                onReorder = viewModel::reorder,
+                                onCancel = viewModel::cancel,
+                                coverFor = viewModel::coverFor,
                             )
                         } else if (selectedTab == 1) {
                             AndroidView(
