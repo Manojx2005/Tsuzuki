@@ -21,6 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat.MediaStyle
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.tsuzuki.tts.TtsNowPlaying
+import eu.kanade.tachiyomi.tsuzuki.widget.TsuzukiListeningWidgetUpdater
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.system.notificationBuilder
@@ -50,6 +52,7 @@ class TtsPlaybackService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        TsuzukiListeningWidgetUpdater.start(applicationContext)
         mediaSession = MediaSessionCompat(this, "TsundokuTTS").apply {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() = sendControlBroadcast(COMMAND_RESUME)
@@ -79,10 +82,12 @@ class TtsPlaybackService : Service() {
         var startedPlaying = false
         when (intent.action) {
             ACTION_PAUSE -> {
+                TtsNowPlaying.onPausedChanged(true)
                 sendControlBroadcast(COMMAND_PAUSE)
             }
 
             ACTION_RESUME -> {
+                TtsNowPlaying.onPausedChanged(false)
                 sendControlBroadcast(COMMAND_RESUME)
             }
 
@@ -109,6 +114,7 @@ class TtsPlaybackService : Service() {
                 mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1L)
                 chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L)
                 startedPlaying = wasPaused && !isPaused
+                TtsNowPlaying.onSync(isPaused, novelTitle, chapterTitle, mangaId, chapterId)
             }
         }
 
@@ -118,6 +124,7 @@ class TtsPlaybackService : Service() {
     }
 
     override fun onDestroy() {
+        TtsNowPlaying.onStopped()
         mainHandler.removeCallbacksAndMessages(null)
         releaseSilenceTrack()
         mediaSession.isActive = false
@@ -135,6 +142,7 @@ class TtsPlaybackService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun handleStopPlayback() {
+        TtsNowPlaying.onStopped()
         sendControlBroadcast(COMMAND_STOP)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()

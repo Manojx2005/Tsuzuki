@@ -300,6 +300,19 @@
                 android:resource="@xml/tsz_reading_widget_info" />
         </receiver>
 
+        <!-- Tsuzuki: "Listening" home-screen widget (TTS now playing) -->
+        <receiver
+            android:name="eu.kanade.tachiyomi.tsuzuki.widget.TsuzukiListeningWidgetReceiver"
+            android:exported="false"
+            android:label="@string/tsz_widget_listening">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tsz_listening_widget_info" />
+        </receiver>
+
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />

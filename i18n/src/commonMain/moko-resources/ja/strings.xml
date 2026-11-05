@@ -1085,6 +1085,11 @@
     <string name="tsz_data_cleanup">整理</string>
     <string name="tsz_widget_reading">読書</string>
     <string name="tsz_widget_reading_desc">続きを読む・連続日数・新着章</string>
+    <string name="tsz_widget_listening">リスニング</string>
+    <string name="tsz_widget_listening_desc">音声読み上げの再生中</string>
+    <string name="tsz_widget_listening_nothing">再生中のものはありません</string>
+    <string name="tsz_widget_listening_play">再生</string>
+    <string name="tsz_widget_listening_pause">一時停止</string>
     <string name="tsz_downloads_queued">待機中</string>
     <string name="tsz_epub_volume_line">%1$d 章 · %2$s</string>
     <string name="tsz_epub_summary">%1$d ファイル · %2$d 作品</string>
