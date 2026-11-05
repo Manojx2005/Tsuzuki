@@ -1,0 +1,98 @@
+{
+  "libavcodec.so": {
+    "sha256": "fdc52f8ab2bc4ae1f34d04bea2778445f07e098d9d4de102d33d813114b6d855",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libavdevice.so": {
+    "sha256": "4b1b6910db56ae2de28d4ee2a906f678262cdf07199bf1ca9aa065335cc1a6ee",
+    "load_alignments": [
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libavfilter.so": {
+    "sha256": "c8178eb2264abe3fc4b91f91d578762749a1e311d6f840e8670bc9ac87d75500",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libavformat.so": {
+    "sha256": "96b3120b792dd2e7f2fa85c25b0a6a2ff1c2c1d380c338835cf5fdfe5f145142",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libavutil.so": {
+    "sha256": "7251f7b2665c0720133bb2a6d5c25e5ea06f4070ba1d595eaab81a1090d6d035",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libc++_shared.so": {
+    "sha256": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libmpv.so": {
+    "sha256": "35db74a4e4b63b8cf9015a1b963cc9b3ea75048ab47631f20e789bf9d2a35285",
+    "load_alignments": [
+      65536,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libplayer.so": {
+    "sha256": "07bab9a16eb42830cb2d0f836781ed1fb8c7f5af5c290fd2ac8bdc8c61cbd37e",
+    "load_alignments": [
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libswresample.so": {
+    "sha256": "ed260bac843b4892d830a2c4d4738323651d9c2ebf76038ec98014a8b481cd89",
+    "load_alignments": [
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libswscale.so": {
+    "sha256": "a7f6ebedd09bc08dcbc01849417ae4d629a2194600f953968acb3058cb8efca0",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  },
+  "libxml2.so": {
+    "sha256": "3973baa357f6d343b074ab26a4f0ef67ae9a1d19bbc374be71dd05e6a88363b0",
+    "load_alignments": [
+      16384,
+      16384,
+      16384,
+      16384
+    ]
+  }
+}

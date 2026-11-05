@@ -29,6 +29,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Tsuzuki"
+include(":anime-player")
 include(":app")
 include(":baseline-profile")
 include(":core-metadata")
