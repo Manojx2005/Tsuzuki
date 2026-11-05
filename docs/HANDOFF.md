@@ -284,7 +284,7 @@ file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), li
 `docs/licenses/` (LGPL FFmpeg/mpv notices + source offer note), module NOT yet a dependency of `:app` (no APK change).
 Result: _pending_
 
-#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `ready`
+#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `claude-working` (Claude agent, .worktrees/n22)
 Base on `tsuzuki/n21`. Port the MIT `MPVLib` wrapper (aniyomi-mpv-lib, pinned revision in docs/ANIME_SPIKE.md) into
 `anime-player`, plus a debug-build-only `AnimeDebugPlayerActivity` (surface, play/pause, seek, back) that plays a URL
 passed by intent. Wire `anime-player` into `:app` only for the debug build type (or behind a flag that is off in
@@ -335,7 +335,7 @@ downloaded, source, category, tracker, content type) into saved "queries" shown 
 Store queries in a preference (JSON). Real filters only.
 Result: _pending_
 
-#### N30 Performance audit of Tsuzuki lazy lists (T2) — `ready`
+#### N30 Performance audit of Tsuzuki lazy lists (T2) — `claude-working` (Claude agent, .worktrees/n30)
 Every Tsuzuki-owned `LazyColumn/LazyRow/LazyGrid` (presentation/tsuzuki/**, theme/tsuzuki/**): stable `key`s,
 `contentType`, no heavy work in item composition (move to `remember`/view model), Coil image sizes for covers.
 List each fix in Result. Behaviour unchanged; tests green.
