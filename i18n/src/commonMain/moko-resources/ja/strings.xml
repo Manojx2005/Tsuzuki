@@ -1126,7 +1126,7 @@
     <string name="tsz_onboarding_media_body">使うものだけを表示します。</string>
     <string name="tsz_onboarding_media_novels">ライトノベル</string>
     <string name="tsz_onboarding_media_novels_body">テキストリーダー、読み上げ、翻訳</string>
-    <string name="tsz_onboarding_media_manga">マンガ・マンファ</string>
+    <string name="tsz_onboarding_media_manga">マンガ</string>
     <string name="tsz_onboarding_media_manga_body">ページ表示と縦スクロール</string>
     <string name="tsz_onboarding_media_footnote">設定 &gt; 外観でいつでも変更できます。</string>
 </resources>

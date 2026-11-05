@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -137,7 +138,7 @@ private fun CheckMark(selected: Boolean, modifier: Modifier = Modifier) {
 @Composable
 private fun MediaArtBlock(art: MediaArt, modifier: Modifier = Modifier) {
     val tokens = TsuzukiTheme.tokens
-    Canvas(modifier.clearAndSetSemantics { }) {
+    Canvas(modifier.clipToBounds().clearAndSetSemantics { }) {
         when (art) {
             MediaArt.NOVELS -> {
                 // Colour: navy depth. Dot: dark greys only.
@@ -152,7 +153,12 @@ private fun MediaArtBlock(art: MediaArt, modifier: Modifier = Modifier) {
                 val width = 3.dp.toPx()
                 var x = -size.height
                 while (x < size.width) {
-                    drawLine(Color(0xFFD2D2D2), Offset(x, size.height), Offset(x + size.height, 0f), strokeWidth = width)
+                    drawLine(
+                        Color(0xFFD2D2D2),
+                        Offset(x, size.height),
+                        Offset(x + size.height, 0f),
+                        strokeWidth = width,
+                    )
                     x += step
                 }
             }
