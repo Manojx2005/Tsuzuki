@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.SkipNext
@@ -48,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderThumb
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSliderTrack
 import eu.kanade.presentation.util.isTabletUi
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -298,13 +301,22 @@ fun VerticalChapterNavigator(
             ) {
                 Text(text = currentPage.toString())
 
-                VerticalSlider(
-                    state = state,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 8.dp),
-                    interactionSource = interactionSource,
-                )
+                val sliderModifier = Modifier.weight(1f).padding(vertical = 8.dp)
+                if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+                    VerticalSlider(
+                        state = state,
+                        modifier = sliderModifier.widthIn(min = 48.dp),
+                        interactionSource = interactionSource,
+                        track = { TsuzukiReaderSliderTrack(it, vertical = true) },
+                        thumb = { TsuzukiReaderSliderThumb(interactionSource, vertical = true) },
+                    )
+                } else {
+                    VerticalSlider(
+                        state = state,
+                        modifier = sliderModifier,
+                        interactionSource = interactionSource,
+                    )
+                }
 
                 Text(text = totalPages.toString())
             }
