@@ -268,14 +268,14 @@ Tsundoku's extension model (the repo index already carries `contentWarning`); if
 and mark `blocked` with the plan.
 Result: _pending_
 
-#### N20 Storage async migration (T4, last) — `ready`
+#### N20 Storage async migration (T4, last) — `claude-working` (Claude agent, .worktrees/n20)
 WORKPLAN P1.11: move synchronous `DownloadProvider`/`DownloadManager` storage callers (reader loaders, download
 cache, EPUB export, translation) to the existing suspend APIs together, keeping thin synchronous wrappers only
 where Tsundoku merges need the old signatures. Write tests for each moved path. If the change grows past ~600
 lines or touches the novel viewer internals, stop at a clean intermediate commit and mark `blocked` with what's left.
 Result: _pending_
 
-#### N22b Anime: make the debug player render (T4) — `ready`
+#### N22b Anime: make the debug player render (T4) — `claude-working` (Claude agent + device tests, .worktrees/n22b)
 Tablet test 2026-11-06 05:51: `AnimeDebugPlayerActivity` (debug build) launches, libmpv loads (no
 UnsatisfiedLinkError, no crash), but the SurfaceView stays black for both https and http Big Buck Bunny URLs and
 mpv prints nothing. Steps: (1) wire mpv log messages (`MPVLib` event/log observer → logcat, `msg-level=all=v`);
