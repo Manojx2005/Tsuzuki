@@ -44,7 +44,7 @@ fun ReaderSettingsDialog(
         eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     ) {
-        eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderSettingsSheet(
+        eu.kanade.presentation.tsuzuki.novel.TsuzukiReaderSettingsSheet(
             preferences = viewModel.preferences,
             onDismissRequest = {
                 onDismissRequest()

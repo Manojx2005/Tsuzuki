@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import eu.kanade.presentation.reader.ChapterTransition
 import eu.kanade.presentation.theme.TachiyomiTheme
-import eu.kanade.presentation.tsuzuki.reader.rememberReaderDownloadStatus
+import eu.kanade.presentation.tsuzuki.manga.rememberReaderDownloadStatus
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import tachiyomi.domain.manga.model.Manga

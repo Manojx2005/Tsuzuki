@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.updates
+package eu.kanade.presentation.tsuzuki.novel
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.settings
+package eu.kanade.presentation.tsuzuki.novel
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

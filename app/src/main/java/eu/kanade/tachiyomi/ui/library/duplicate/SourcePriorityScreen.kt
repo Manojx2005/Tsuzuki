@@ -61,7 +61,7 @@ object SourcePriorityScreen : Screen {
         val state by screenModel.state.collectAsState()
 
         if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
-            eu.kanade.presentation.tsuzuki.settings.TsuzukiSourcePriorityScreen(
+            eu.kanade.presentation.tsuzuki.novel.TsuzukiSourcePriorityScreen(
                 typePriorities = state.typePriorities,
                 sourcePriorities = state.sourcePriorities,
                 sources = state.sourceItems,
