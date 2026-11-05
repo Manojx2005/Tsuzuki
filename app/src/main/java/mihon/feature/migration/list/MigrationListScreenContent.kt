@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationListContent
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
@@ -78,6 +80,20 @@ fun MigrationListScreenContent(
     onCopy: (Long) -> Unit,
     openMigrationDialog: (Boolean) -> Unit,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiMigrationListContent(
+            items = items,
+            migrationComplete = migrationComplete,
+            finishedCount = finishedCount,
+            onItemClick = onItemClick,
+            onSearchManually = onSearchManually,
+            onSkip = onSkip,
+            onMigrate = onMigrate,
+            onCopy = onCopy,
+            openMigrationDialog = openMigrationDialog,
+        )
+        return
+    }
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(

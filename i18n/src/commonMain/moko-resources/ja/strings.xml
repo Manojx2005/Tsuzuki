@@ -1129,4 +1129,8 @@
     <string name="tsz_onboarding_media_manga">マンガ・マンファ</string>
     <string name="tsz_onboarding_media_manga_body">ページ表示と縦スクロール</string>
     <string name="tsz_onboarding_media_footnote">設定 &gt; 外観でいつでも変更できます。</string>
+    <!-- c1 -->
+    <string name="tsz_migration_old">旧 · %1$s</string>
+    <string name="tsz_migration_new">新 · %1$s</string>
+    <string name="tsz_migration_searching">検索中…</string>
 </resources>

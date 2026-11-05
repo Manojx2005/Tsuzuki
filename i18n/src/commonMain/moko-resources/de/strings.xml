@@ -1130,4 +1130,8 @@
     <string name="tsz_onboarding_media_manga">Manga &amp; Manhwa</string>
     <string name="tsz_onboarding_media_manga_body">Seiten und lange Streifen</string>
     <string name="tsz_onboarding_media_footnote">Jederzeit änderbar unter Einstellungen &gt; Darstellung.</string>
+    <!-- c1 -->
+    <string name="tsz_migration_old">Alt · %1$s</string>
+    <string name="tsz_migration_new">Neu · %1$s</string>
+    <string name="tsz_migration_searching">Suche …</string>
 </resources>
