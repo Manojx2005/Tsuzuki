@@ -229,7 +229,7 @@ Board `07-system/Categories` shows a count per shelf. Add a read-only count (boo
 category content type) to the Categories screen state and show it in `TsuzukiCategoryListItem`. Real data only.
 Result: `tsuzuki/n12` at `47c2be4f2`, based on main `5f9c354df`. Categories now observes one grouped SQL query for live shelf counts. It counts saved library entries that match each shelf’s manga/novel/all type, including zero for empty shelves. The Tsuzuki row adds a localized numeric count alongside existing content type and default indicators. The automatic system shelf remains outside the editable shelf list. The in-memory SQLite fixture checked mixed and incompatible memberships, empty shelves and removal from the library. Both per-file Spotless passes, debug assemble and all 737 app unit tests passed. Device review: check count placement in both themes and updates after moving a book between typed shelves.
 
-#### N13 Source counts per extension repository (T2) — `codex-working` (.worktrees/n13, 2026-11-06)
+#### N13 Source counts per extension repository (T2) — `claude-working` (Claude agent, .worktrees/n13c; Codex claim was stale since 01:37, no worktree)
 Board `04-browse/ExtensionRepos` shows how many sources each repo provides. Compute from the available-extension
 lists already loaded (manga + novel) grouped by repo, show in `TsuzukiExtensionStoreItem`. Hide when unknown.
 Result: _pending_
@@ -256,7 +256,7 @@ Port Mihon fc20410 (skip this version) and #3707 (download the app update from t
 `data/updater/**` and the Tsuzuki `TsuzukiNewUpdateScreen`. Find exact commits with `git log mihon/main --grep`.
 Result: _pending_
 
-#### N18 Mihon: failed-to-load extensions with reason (T3) — `ready`
+#### N18 Mihon: failed-to-load extensions with reason (T3) — `claude-working` (Claude agent, .worktrees/n18)
 Port Mihon #3953 (list extensions that failed to load, with reason and stack trace) and, if cheap, #3954 (apply
 trust/repo changes without restart). Keep Tsundoku's novel-extension loader paths. Restyle the new rows with
 existing Tsuzuki extension tiles.
@@ -298,7 +298,7 @@ Apache-2.0 schema as reference), SQLDelight migration numbering after the curren
 them, rollback/upgrade test plan. No code changes.
 Result: _pending_
 
-#### N24 Neural TTS licence research (T3, doc only) — `ready`
+#### N24 Neural TTS licence research (T3, doc only) — `claude-working` (Claude agent, .worktrees/n24)
 WORKPLAN Phase 5 "Neural TTS voices". Determine from sherpa-onnx sources/build scripts whether its Android JNI
 library links espeak-ng (GPL-3.0) for Kokoro/VITS, whether an espeak-free build option or lexicon-only voice packs
 exist, and their licences/sizes. Write `docs/research/neural-tts.md` with a clear go/no-go and sources (URLs,
