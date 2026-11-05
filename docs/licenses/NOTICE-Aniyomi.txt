@@ -1,0 +1,15 @@
+Aniyomi source API and extension loader
+Copyright 2024 Aniyomi Open Source Project
+Licensed under the Apache License, Version 2.0.
+
+Source: https://github.com/aniyomiorg/aniyomi
+Revision: 97414446b8a95994c72dd33c41c971a89d4d25b8
+
+Imported: source-api/.../animesource, AnimeExtensionLoader, AnimeLoadResult,
+and Installed/Untrusted portions of AnimeExtension.
+
+Tsuzuki spike changes: Android-only PreferenceScreen typealias; loader/models
+moved into a Tsuzuki package; existing host TrustExtension reused; separate
+private anime directory and install callback; malformed package metadata and
+missing signing information rejected; catalog/database model dependencies
+omitted from the initial spike. See docs/ANIME_SPIKE.md.
