@@ -52,6 +52,20 @@ fun ChapterSearchScreenContent(
     onOptionsChange: (ChapterSearchOptions) -> Unit,
     onResultClick: (Chapter) -> Unit,
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.details.TsuzukiChapterSearch(
+            state = state,
+            navigateUp = navigateUp,
+            onQueryChange = onQueryChange,
+            onSearch = onSearch,
+            onOptionsChange = onOptionsChange,
+            onResultClick = onResultClick,
+        )
+        return
+    }
+
     Scaffold(
         topBar = { scrollBehavior ->
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {

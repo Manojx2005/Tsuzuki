@@ -1114,4 +1114,6 @@
     <string name="tsz_edit_reset_cover">Restaurar capa da fonte</string>
     <!-- B4 -->
     <string name="tsz_tracker_search_pick_title">Escolher um título alternativo</string>
+    <!-- B5 -->
+    <string name="tsz_quotes_drag_to_reorder">Arraste para reordenar</string>
 </resources>

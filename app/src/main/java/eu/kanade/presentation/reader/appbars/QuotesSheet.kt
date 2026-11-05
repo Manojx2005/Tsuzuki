@@ -618,6 +618,22 @@ private fun QuoteItem(
     onDrag: (Float) -> Unit = {},
     onItemHeightMeasured: (Float) -> Unit = {},
 ) {
+    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    ) {
+        eu.kanade.presentation.tsuzuki.reader.TsuzukiQuoteTile(
+            quote = quote,
+            onOpen = { selectedQuote.value = quote },
+            onDelete = { quoteToDelete.value = quote },
+            isReorderMode = isReorderMode,
+            isBeingDragged = draggedIndex == index,
+            onDragStart = onDragStart,
+            onDragEnd = onDragEnd,
+            onDrag = onDrag,
+            onItemHeightMeasured = onItemHeightMeasured,
+        )
+        return
+    }
     val isBeingDragged = draggedIndex == index
     val elevation by animateDpAsState(
         targetValue = if (isBeingDragged) 16.dp else 0.dp,
