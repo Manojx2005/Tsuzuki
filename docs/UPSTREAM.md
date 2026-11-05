@@ -321,3 +321,14 @@ Final build log `codex-provider-daily-validation.log`; no live build/device proc
 | `c0c090999` | Already applied in Tsundoku's Algolia Kitsu search via the subtype filter. |
 | `ee5939454` | Hand-port: use the reading history instant directly for the tracker start date. |
 | `dd4e9f00f` | Hand-port: confirm unfavourite in both details layouts through their shared callback. The reused removal dialog follows the active theme. |
+
+## N17: skip an app update version, download in the update screen (2026-11-06)
+
+Hand-ported (Tsuzuki's updater still uses Injekt, not Mihon's Metro DI, so neither commit cherry-picks).
+
+| Mihon commit | Disposition |
+|---|---|
+| `fc20410ce` Allow skipping an app update version | Hand-ported. `BasePreferences.skippedAppUpdate`, `NewUpdateScreenModel.skipUpdate`, `MainActivity` hides the exact skipped version (`isAppUpdateSkipped`, unit-tested), `CrashLogUtil` line, `InfoScreen.rejectAction` slot, confirm dialog + skip button in stock `NewUpdateScreen`, "Skip this version" link in `TsuzukiNewUpdateScreen` (dialog shared with stock). Strings `update_check_skip*` in base + 7 locales. Skipped: Mihon's `update_disabled.svg` MaterialSymbols icon (Tsuzuki uses `Icons.Outlined.UpdateDisabled`). |
+| `aa25b3a14` Download app update without WorkManager (#3707) | Hand-ported. `NewUpdateScreenModel` downloads in `viewModelScope`; `AppUpdateDownloadJob` deleted, with the dead NotificationReceiver start/cancel actions, the `app_apk_update_channel` channel (now in the deprecated list) and strings `update_check_notification_download_in_progress` / `channel_app_updates` (base only, as Mihon). Tsundoku's `rateLimitExempt()` kept on the APK request. |
+
+Repo is private, so the live update check 404s; check on a device by temporarily pointing `GITHUB_REPO` at a public repo with a newer release (or lowering `versionName`).

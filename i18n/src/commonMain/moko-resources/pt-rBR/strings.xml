@@ -568,6 +568,9 @@
     <string name="error_saving_picture">Erro ao salvar a imagem</string>
     <string name="empty_backup_error">Nenhuma entrada na biblioteca para fazer backup</string>
     <string name="update_check_open">Abrir no GitHub</string>
+    <string name="update_check_skip">Ignorar esta versão</string>
+    <string name="update_check_skip_title">Ignorar %s?</string>
+    <string name="update_check_skip_message">As atualizações costumam trazer correções de bugs e melhorias de segurança. Você não será lembrado desta versão novamente, mas ainda será avisado quando uma mais recente for lançada.</string>
     <string name="pref_clear_webview_data">Limpar os dados da WebView</string>
     <string name="webview_data_deleted">Dados da WebView limpos</string>
     <string name="action_close">Fechar</string>

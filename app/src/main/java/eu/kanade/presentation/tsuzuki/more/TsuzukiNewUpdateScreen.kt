@@ -49,7 +49,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * "Update ready" in the Tsuzuki themes (board 17-drafts "NewUpdate", owner-approved 2026-11-04): close button, accent
  * download block, display title, "Version X · you have Y", the release notes in a What's new tile, then Download (which
- * shows progress, Install and Retry like stock), Not now, and Open on GitHub. The release has no size, so none is shown.
+ * shows progress, Install and Retry like stock), Not now, and Open on GitHub / Skip this version. The release has no size, so none is shown.
  */
 @Composable
 fun TsuzukiNewUpdateScreen(
@@ -61,6 +61,7 @@ fun TsuzukiNewUpdateScreen(
     onOpenInBrowser: () -> Unit,
     onAcceptUpdate: () -> Unit,
     onRejectUpdate: () -> Unit,
+    onSkipUpdate: () -> Unit,
 ) {
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
@@ -189,15 +190,27 @@ fun TsuzukiNewUpdateScreen(
                     color = Color.White,
                 )
             }
-            Text(
-                t.case(stringResource(MR.strings.update_check_open)),
-                style = body(13.sp, FontWeight.Medium),
-                color = muted,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clickable(role = Role.Button, onClick = onOpenInBrowser)
-                    .padding(8.dp),
-            )
+            Row(
+                Modifier.align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    t.case(stringResource(MR.strings.update_check_open)),
+                    style = body(13.sp, FontWeight.Medium),
+                    color = muted,
+                    modifier = Modifier
+                        .clickable(role = Role.Button, onClick = onOpenInBrowser)
+                        .padding(8.dp),
+                )
+                Text(
+                    t.case(stringResource(MR.strings.update_check_skip)),
+                    style = body(13.sp, FontWeight.Medium),
+                    color = muted,
+                    modifier = Modifier
+                        .clickable(role = Role.Button, onClick = onSkipUpdate)
+                        .padding(8.dp),
+                )
+            }
         }
     }
 }

@@ -1045,12 +1045,14 @@
     <!--UpdateCheck-->
     <string name="update_check_confirm">Download</string>
     <string name="update_check_open">Open on GitHub</string>
+    <string name="update_check_skip">Skip this version</string>
+    <string name="update_check_skip_title">Skip %s?</string>
+    <string name="update_check_skip_message">Updates often contain bug fixes and security improvements. You won't be reminded about this version again, but you'll still be notified when a newer one is released.</string>
     <!-- reserved for future use -->
     <string name="update_check_eol">This Android version is no longer supported</string>
     <string name="update_check_no_new_updates">No new updates available</string>
 
     <!--UpdateCheck Notifications-->
-    <string name="update_check_notification_download_in_progress">Downloading…</string>
     <string name="update_check_notification_update_available">New version available!</string>
 
     <!-- Information Text -->
@@ -1089,7 +1091,6 @@
     <string name="channel_complete">Complete</string>
     <string name="channel_errors">Errors</string>
     <string name="channel_new_chapters">Chapter updates</string>
-    <string name="channel_app_updates">App updates</string>
     <string name="channel_ext_updates">Extension updates</string>
 
     <!-- S Pen actions -->

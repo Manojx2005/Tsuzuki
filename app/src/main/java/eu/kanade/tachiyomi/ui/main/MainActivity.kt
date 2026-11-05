@@ -69,6 +69,7 @@ import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
+import eu.kanade.tachiyomi.data.updater.isAppUpdateSkipped
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.api.ExtensionApi
 import eu.kanade.tachiyomi.source.isNovelSource
@@ -339,7 +340,10 @@ class MainActivity : BaseActivity() {
             if (updaterEnabled) {
                 try {
                     val result = AppUpdateChecker().checkForUpdate()
-                    if (result is GetApplicationRelease.Result.NewUpdate) {
+                    if (
+                        result is GetApplicationRelease.Result.NewUpdate &&
+                        !isAppUpdateSkipped(result.release.version, preferences.skippedAppUpdate.get())
+                    ) {
                         val updateScreen = NewUpdateScreen(
                             versionName = result.release.version,
                             changelogInfo = result.release.info,
