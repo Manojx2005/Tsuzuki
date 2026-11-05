@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,7 @@ fun TsuzukiHistoryItem(
             .clip(shape)
             .background(t.tile)
             .then(if (t.tileBorder != null) Modifier.border(1.dp, t.tileBorder, shape) else Modifier)
-            .clickable(onClick = onClickResume)
+            .clickable(role = Role.Button, onClick = onClickResume)
             .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

@@ -1228,4 +1228,9 @@
     <string name="tsz_find_next">Siguiente coincidencia</string>
     <string name="tsz_find_previous">Coincidencia anterior</string>
     <string name="tsz_find_close">Cerrar búsqueda</string>
+    <string name="tsz_a11y_back">Atrás</string>
+    <string name="tsz_a11y_decrease">Disminuir</string>
+    <string name="tsz_a11y_increase">Aumentar</string>
+    <string name="tsz_a11y_clear">Borrar</string>
+    <string name="tsz_a11y_startup">Tsuzuki se está iniciando. Toca para omitir.</string>
 </resources>

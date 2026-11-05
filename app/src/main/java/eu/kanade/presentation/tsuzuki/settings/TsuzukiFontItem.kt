@@ -26,6 +26,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A reader font row in the Tsuzuki themes (board 08-tools "FontManager"): tile, name, kind line, accent check when
@@ -71,7 +73,7 @@ fun TsuzukiFontItem(name: String, kind: String, isSelected: Boolean, onClick: ()
         }
         if (onDelete != null) {
             IconButton(onClick = onDelete) {
-                Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = muted)
+                Icon(Icons.Outlined.Delete, contentDescription = stringResource(MR.strings.action_delete), tint = muted)
             }
         }
     }

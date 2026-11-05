@@ -31,6 +31,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -129,13 +132,18 @@ fun TsuzukiAboutScreen(
         if (onBack != null) {
             Box(
                 Modifier
+                    .minimumInteractiveComponentSize()
                     .size(44.dp)
                     .clip(CircleShape)
                     .then(tileFill(t, CircleShape))
                     .clickable(role = Role.Button, onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, tint = Color.White)
+                Icon(
+                    Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = stringResource(MR.strings.tsz_a11y_back),
+                    tint = Color.White,
+                )
             }
         }
         Box(
@@ -157,7 +165,7 @@ fun TsuzukiAboutScreen(
             t.case("Tsuzuki"),
             style = MaterialTheme.typography.displaySmall.copy(fontSize = 52.sp, lineHeight = 56.sp),
             color = Color.White,
-            modifier = Modifier.padding(start = 4.dp, top = 14.dp),
+            modifier = Modifier.padding(start = 4.dp, top = 14.dp).semantics { heading() },
         )
         Text(
             t.case(version),
@@ -165,7 +173,7 @@ fun TsuzukiAboutScreen(
             color = muted,
             modifier = Modifier
                 .padding(start = 4.dp, top = 4.dp, bottom = 18.dp)
-                .clickable(onClick = onVersionClick),
+                .clickable(role = Role.Button, onClick = onVersionClick),
         )
 
         Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -240,7 +248,7 @@ fun TsuzukiAboutScreen(
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .align(Alignment.CenterHorizontally)
-                    .clickable(onClick = onPrivacyPolicy)
+                    .clickable(role = Role.Button, onClick = onPrivacyPolicy)
                     .padding(8.dp),
             )
         }

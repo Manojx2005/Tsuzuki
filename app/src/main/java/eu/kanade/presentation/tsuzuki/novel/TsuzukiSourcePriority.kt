@@ -32,6 +32,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,6 +41,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -133,17 +136,23 @@ fun TsuzukiSourcePriorityScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier
+                            .minimumInteractiveComponentSize()
                             .size(44.dp)
                             .clip(CircleShape)
                             .then(tileFill(t, CircleShape))
                             .clickable(role = Role.Button, onClick = onBack),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = stringResource(MR.strings.tsz_a11y_back),
+                            tint = Color.White,
+                        )
                     }
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(
                             t.case(stringResource(MR.strings.duplicate_source_priority)),
+                            modifier = Modifier.semantics { heading() },
                             style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp, lineHeight = 36.sp),
                             color = Color.White,
                         )
@@ -327,25 +336,36 @@ private fun PriorityRow(
                     )
                 }
             }
-            StepButton(Icons.Outlined.Remove, enabled = value > PriorityRange.first) { onChange(value - 1) }
+            StepButton(
+                Icons.Outlined.Remove,
+                stringResource(MR.strings.tsz_a11y_decrease),
+                enabled =
+                value > PriorityRange.first,
+            ) { onChange(value - 1) }
             Spacer(Modifier.width(8.dp))
-            StepButton(Icons.Outlined.Add, enabled = value < PriorityRange.last) { onChange(value + 1) }
+            StepButton(
+                Icons.Outlined.Add,
+                stringResource(MR.strings.tsz_a11y_increase),
+                enabled =
+                value < PriorityRange.last,
+            ) { onChange(value + 1) }
         }
         if (!last) HorizontalDivider(color = Color.White.copy(alpha = if (t.isDot) 0.14f else 0.08f))
     }
 }
 
 @Composable
-private fun StepButton(icon: ImageVector, enabled: Boolean, onClick: () -> Unit) {
+private fun StepButton(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
+            .minimumInteractiveComponentSize()
             .size(40.dp)
             .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.08f))
             .tsuzukiClickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = if (enabled) 1f else 0.38f))
+        Icon(icon, contentDescription = description, tint = Color.White.copy(alpha = if (enabled) 1f else 0.38f))
     }
 }
 

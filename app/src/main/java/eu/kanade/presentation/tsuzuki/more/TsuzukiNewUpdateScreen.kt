@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,6 +34,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -93,13 +96,18 @@ fun TsuzukiNewUpdateScreen(
             Box(
                 Modifier
                     .padding(top = 16.dp)
+                    .minimumInteractiveComponentSize()
                     .size(44.dp)
                     .clip(CircleShape)
                     .then(tileFill(t, CircleShape))
                     .clickable(role = Role.Button, onClick = onRejectUpdate),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = null, tint = Color.White)
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = stringResource(MR.strings.action_close),
+                    tint = Color.White,
+                )
             }
             Box(
                 Modifier
@@ -120,7 +128,7 @@ fun TsuzukiNewUpdateScreen(
                 t.case(stringResource(MR.strings.tsz_update_ready)),
                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 52.sp, lineHeight = 56.sp),
                 color = Color.White,
-                modifier = Modifier.padding(top = 14.dp),
+                modifier = Modifier.padding(top = 14.dp).semantics { heading() },
             )
             Text(
                 t.case(stringResource(MR.strings.tsz_update_versions, versionName, currentVersion)),

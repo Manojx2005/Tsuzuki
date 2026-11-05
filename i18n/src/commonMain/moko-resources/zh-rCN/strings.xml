@@ -1241,4 +1241,9 @@
     <string name="tsz_find_next">下一个匹配</string>
     <string name="tsz_find_previous">上一个匹配</string>
     <string name="tsz_find_close">关闭查找</string>
+    <string name="tsz_a11y_back">返回</string>
+    <string name="tsz_a11y_decrease">减少</string>
+    <string name="tsz_a11y_increase">增加</string>
+    <string name="tsz_a11y_clear">清除</string>
+    <string name="tsz_a11y_startup">Tsuzuki 正在启动。点按可跳过</string>
 </resources>

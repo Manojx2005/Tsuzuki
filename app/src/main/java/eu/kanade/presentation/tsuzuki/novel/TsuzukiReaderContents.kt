@@ -51,6 +51,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -183,7 +186,7 @@ internal fun ContentsBody(
         )
         Text(
             stringResource(MR.strings.tsz_reader_contents).let { if (tokens.isDot) it.uppercase() else it },
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp).semantics { heading() },
             style = MaterialTheme.typography.headlineLarge,
             fontSize = 34.sp,
         )
@@ -258,7 +261,7 @@ private fun ChapterRow(entry: TsuzukiTocEntry, current: Boolean, onClick: () -> 
     Row(
         Modifier.fillMaxWidth().height(46.dp).clip(RoundedCornerShape(14.dp))
             .then(if (current) Modifier.background(tokens.accent) else Modifier)
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .alpha(if (read) 0.5f else 1f)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

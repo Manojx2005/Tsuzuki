@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.FormatUnderlined
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +44,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -113,17 +116,23 @@ fun TsuzukiBookNotesScreen(
         Row(Modifier.padding(top = 16.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier
+                    .minimumInteractiveComponentSize()
                     .size(44.dp)
                     .clip(CircleShape)
                     .then(tileFill(t, CircleShape))
                     .clickable(role = Role.Button, onClick = navigateUp),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, tint = Color.White)
+                Icon(
+                    Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = stringResource(MR.strings.tsz_a11y_back),
+                    tint = Color.White,
+                )
             }
             Column(Modifier.padding(start = 12.dp)) {
                 Text(
                     t.case(stringResource(MR.strings.action_notes)),
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 36.sp, lineHeight = 40.sp),
                     color = Color.White,
                 )

@@ -1240,4 +1240,9 @@
     <string name="tsz_find_next">다음 결과</string>
     <string name="tsz_find_previous">이전 결과</string>
     <string name="tsz_find_close">찾기 닫기</string>
+    <string name="tsz_a11y_back">뒤로</string>
+    <string name="tsz_a11y_decrease">줄이기</string>
+    <string name="tsz_a11y_increase">늘리기</string>
+    <string name="tsz_a11y_clear">지우기</string>
+    <string name="tsz_a11y_startup">Tsuzuki를 시작하는 중입니다. 탭하면 건너뜁니다</string>
 </resources>

@@ -452,6 +452,7 @@ private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.semantics { contentDescription = label },
             colors = SwitchDefaults.colors(checkedTrackColor = tokens.accent, checkedThumbColor = tokens.onAccent),
         )
     }

@@ -45,6 +45,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +63,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -389,6 +392,7 @@ private fun Header(subtitle: String?, filtersOpen: Boolean, onBack: () -> Unit, 
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(
                 t.case(stringResource(MR.strings.duplicate_find_duplicates)),
+                modifier = Modifier.semantics { heading() },
                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp, lineHeight = 36.sp),
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -417,6 +421,7 @@ private fun RoundButton(icon: ImageVector, description: String, onClick: () -> U
     val border = t.tileBorder
     Box(
         Modifier
+            .minimumInteractiveComponentSize()
             .size(44.dp)
             .clip(CircleShape)
             .background(if (active) t.accent else t.tile)
@@ -496,7 +501,7 @@ private fun SearchField(query: String, onChange: (String) -> Unit) {
                     Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.Button) { onChange("") },
                     Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Close, contentDescription = null)
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(MR.strings.tsz_a11y_clear))
                 }
             }
         },

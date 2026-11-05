@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -92,6 +93,7 @@ fun TsuzukiMixedLibraryGrid(
                         },
                     )
                     .tsuzukiClickable(
+                        role = Role.Button,
                         onClick = { onClick(book) },
                         onLongClick = { onLongClick(book) },
                     ),

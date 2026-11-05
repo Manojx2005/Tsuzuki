@@ -30,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
@@ -106,19 +109,24 @@ fun TsuzukiAppLanguageScreen(
             Column(Modifier.statusBarsPadding().padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
                 Box(
                     Modifier
+                        .minimumInteractiveComponentSize()
                         .size(44.dp)
                         .clip(CircleShape)
                         .then(tileFill(t, CircleShape))
                         .clickable(role = Role.Button, onClick = onBack),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, tint = Color.White)
+                    Icon(
+                        Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = stringResource(MR.strings.tsz_a11y_back),
+                        tint = Color.White,
+                    )
                 }
                 Text(
                     t.case(stringResource(MR.strings.pref_app_language)),
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 44.sp, lineHeight = 48.sp),
                     color = Color.White,
-                    modifier = Modifier.padding(top = 14.dp),
+                    modifier = Modifier.padding(top = 14.dp).semantics { heading() },
                 )
                 Text(
                     t.case(stringResource(MR.strings.tsz_language_subtitle)),

@@ -52,6 +52,8 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -178,13 +180,14 @@ fun TsuzukiStartupOverlay(
     val statusTop = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
     val navBottom = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
 
+    val startingLabel = stringResource(MR.strings.tsz_a11y_startup)
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .graphicsLayer { alpha = fade.value }
             .tsuzukiBackground(t)
             .pointerInput(Unit) { detectTapGestures { skip = true } }
-            .semantics { contentDescription = "Tsuzuki is starting. Tap to skip." },
+            .semantics { contentDescription = startingLabel },
     ) {
         val w = maxWidth
         val h = maxHeight
