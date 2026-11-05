@@ -1130,4 +1130,16 @@
     <string name="tsz_onboarding_media_manga">漫画与条漫</string>
     <string name="tsz_onboarding_media_manga_body">分页与长条阅读</string>
     <string name="tsz_onboarding_media_footnote">可随时在“设置 &gt; 外观”中更改。</string>
+    <!-- c2 -->
+    <string name="tsz_duplicates_subtitle">%1$d 组 · %2$d 本</string>
+    <string name="tsz_duplicates_copies">%d 个副本</string>
+    <string name="tsz_duplicates_quick_select">快速选择</string>
+    <string name="tsz_duplicates_move">移动</string>
+    <string name="tsz_duplicates_remove">移除</string>
+    <string name="tsz_duplicates_options">选项</string>
+    <string name="tsz_duplicates_type">类型</string>
+    <string name="tsz_duplicates_blank">空标题</string>
+    <string name="tsz_duplicates_sort">排序</string>
+    <string name="tsz_duplicates_category">分类</string>
+    <string name="tsz_duplicates_sort_pinned">已固定</string>
 </resources>

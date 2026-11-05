@@ -1129,4 +1129,16 @@
     <string name="tsz_onboarding_media_manga">マンガ・マンファ</string>
     <string name="tsz_onboarding_media_manga_body">ページ表示と縦スクロール</string>
     <string name="tsz_onboarding_media_footnote">設定 &gt; 外観でいつでも変更できます。</string>
+    <!-- c2 -->
+    <string name="tsz_duplicates_subtitle">%1$d グループ · %2$d 冊</string>
+    <string name="tsz_duplicates_copies">%d 件のコピー</string>
+    <string name="tsz_duplicates_quick_select">クイック選択</string>
+    <string name="tsz_duplicates_move">移動</string>
+    <string name="tsz_duplicates_remove">削除</string>
+    <string name="tsz_duplicates_options">オプション</string>
+    <string name="tsz_duplicates_type">種類</string>
+    <string name="tsz_duplicates_blank">空のタイトル</string>
+    <string name="tsz_duplicates_sort">並び替え</string>
+    <string name="tsz_duplicates_category">カテゴリ</string>
+    <string name="tsz_duplicates_sort_pinned">ピン留め</string>
 </resources>
