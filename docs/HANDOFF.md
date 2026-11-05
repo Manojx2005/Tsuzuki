@@ -48,8 +48,85 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Codex queue
 
-_Empty — Codex is out of usage (owner, 2026-11-05). Claude works the plan directly with Claude agents until
-Codex is back; new cards will be written here when it is._
+### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
+
+**How to run the batch (overrides the usual rules where they differ):**
+- Do the cards **in order N1 → N8**, one at a time. Before each card re-read this file; skip any card not `ready`.
+- Worktree per card from the current `main`:
+  `git -c core.longpaths=true worktree add -b tsuzuki/<id> .worktrees/<id> main` (lower-case id), copy
+  `local.properties` from the repo root. If a card touches files an **earlier card of this batch** already changed,
+  base it on that card's branch instead (`... .worktrees/<id> tsuzuki/<earlier-id>`) and say so in Result.
+- **Overnight exception: commit your finished work on the card's own branch** (`git add -A app i18n` + a clear
+  message; owner is the author, no co-author trailers). Never commit to `main`, never merge, never push.
+- Follow `AGENTS.md` Rules and `docs/WORKPLAN.md` → "Appendix — standard rules for restyle cards" (early-return
+  dispatch in upstream files, tokens/typography only, Dot uppercase + red, real data only, 8 locales, tests,
+  per-file Spotless twice, `./gradlew :app:assembleDebug :app:testDebugUnitTest` green). No adb/devices.
+- Card status: `codex-working` when you start, then `review` with **Result** filled (branch + commit hash, files,
+  what you left out and why, test counts, what Claude must check on a device). If stuck > ~45 min or a build
+  can't be made green, set `blocked` with the reason, `git checkout` the card's worktree clean, and move on.
+- At most one Gradle build at a time. Don't touch devices, `main`, release/signing/telemetry files.
+
+#### N1 Mihon fixes, group A (T3) — `ready`
+Port from remote `mihon` (already fetched; `git show <sha>`): 1e471a414 (updates show finished chapter as still
+downloading), 287cbbb98 (keep last update time on empty Updates), 8457fb91e (chapter refresh with non-ASCII
+digits), c9e1b6e96 (invalid extension filters instead of crashing), 4c88f0264 (SearchViewModel race),
+d3f10772f (local source in global search), e9234f205 (settings search matches group headings). Also check
+07b9fb695, ae749bb4f, cdc7d69c9 (installer) — probably already in via `2c7bcae9a`; mark "already applied" if so.
+Per commit: already applied / `git cherry-pick -x -n` / hand-port preserving Tsundoku novel paths and Tsuzuki
+hooks / skip with reason. Add tests where the logic is pure. Log each in `docs/UPSTREAM.md` (new dated section).
+Result: _pending_
+
+#### N2 Mihon fixes, group B (T3) — `ready`
+Same method for: b5856135c (webtoon scroll stutter), a42428284 (covers reloading when removing from library),
+0864ce0f4 (redact sensitive headers in logcat), 5910a51eb (keep uninstalled source names across restores),
+0c1be369b (ask to add to library before editing cover), 40f552981 (blank title duplicates), c0c090999 (Kitsu
+novels in search), ee5939454 (tracker start date UTC shift), dd4e9f00f (confirm unfavourite on manga screen —
+must also work with the Tsuzuki details screen; keep the dialog themed via existing Tsuzuki dialog colours).
+Result: _pending_
+
+#### N3 Novel reader immersive + paged chrome (T3) — `ready`
+Boards `06-reader/ReaderImmersive`, `06-reader/ReaderPaged` (PNG both themes + HTML). Restyle the existing
+immersive (bars hidden, text selection toolbar if a composable exists) and WebView paged-mode chrome (page
+indicator / page footer / any paged-mode controls) in `presentation/reader/**` via dispatches; new code in
+`presentation/tsuzuki/novel/`. Don't touch viewer internals (`ui/reader/viewer/text/**`). Real data only.
+Result: _pending_
+
+#### N4 Manga reader chrome (T3) — `ready`
+Boards `09-manga/MangaReader`, `09-manga/MangaPaged`, `09-manga/MangaReaderSettings`. The manga reader top bar
+already uses `TsuzukiReaderTitle` and the Tsuzuki slider; restyle the rest of the manga chrome in
+`presentation/reader/appbars/{ReaderAppBars,ReaderBottomBar,ReaderTopBar}.kt`, page indicator, and the manga
+reader settings dialog pages (reading mode / general / colour filter) via dispatches, new code in
+`presentation/tsuzuki/manga/`. Keep every action. If N3 touched the same files, base on `tsuzuki/n3`.
+Result: _pending_
+
+#### N5 Manga details (T2) — `ready`
+Board `09-manga/MangaDetails` (scanlators, auto webtoon). Details already has Tsuzuki header/tiles/resume; add
+the board's manga-specific parts that have real data (scanlator filter entry → existing excluded-scanlators
+dialog, reading-mode/webtoon indicator from the book's viewer flags) and restyle the scanlator dialog. Hooks in
+`presentation/manga/**` only as dispatches.
+Result: _pending_
+
+#### N6 Vertical reader progress (T2) — `ready`
+"Vertical progress presentation remains stock" (`docs/RUNTIME_QA.md`). The vertical chapter navigator
+(`presentation/reader/components/ChapterNavigator.kt`, vertical variant) should use the Tsuzuki slider look
+(Dot dots / Colour thin track, 48 dp touch area, same semantics) like the horizontal one already does
+(`presentation/tsuzuki/reader/TsuzukiReaderSlider.kt`). If N3/N4 touched these files, base on that branch.
+Result: _pending_
+
+#### N7 Settings screens vs boards (T2) — `ready`
+Boards `07-system/SettingsReader`, `08-tools/ReaderBars`, `08-tools/ReaderEngine`, `08-tools/SettingsTranslation`.
+These are `PreferenceScreen`-based and already get Tsuzuki tiles. Compare each board with the current screen
+(`SettingsReaderScreen.kt`, `SettingsNovelReaderScreen.kt`, `StatusBarElementsScreen.kt`,
+`SettingsTranslationScreen.kt`) and fix the differences that are presentation-only (grouping/section labels,
+value labels in accent, segmented choices as pills via existing preference widgets/Tsuzuki widgets). List the
+rest as left out. Note: `SettingsNovelReaderScreen.kt` has an old upstream lint error — don't "fix" unrelated code.
+Result: _pending_
+
+#### N8 Time format setting (T2) — `ready`
+Port Mihon #4118 (time format setting next to the existing Date format in Appearance; find the commit with
+`git log mihon/main --grep "time format" -i`). Apply it where upstream applies it (relative times / timestamps),
+keep Tsuzuki value labels (`tsuzukiValueLabel`) working, strings in 8 locales.
+Result: _pending_
 
 ## Open questions for the owner
 
