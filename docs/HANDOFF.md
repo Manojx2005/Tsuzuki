@@ -402,6 +402,14 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-06 06:00 Claude — morning review.** Batch N status: N1–N19, N21–N32 done (N22 player loads but renders
+  black → follow-up **N22b**); **N20** (storage async migration, T4) not started; **N22b** ready. Codex did N1–N12
+  (00:00–01:37) and then stayed at its usage limit; Claude agents did N13–N19, N21, N23–N32. Final `main` =
+  `aab2aff6a`: debug + preview build, **841 unit tests green**, pushed; preview installed on tablet + phone, tablet on
+  Dot Home, both crash buffers empty, extensions still load. Merged worktrees removed (only `anime-spike` left).
+  Owner decisions waiting: anime schema questions (docs/ANIME_SCHEMA.md Q1–Q8); B2/B6 behaviour changes (duplicate
+  dialog select-then-migrate, Upcoming per-day list); repo now carries ~30 MB of anime `.so` files in
+  `anime-player/` (fine without LFS, but say if you'd rather use releases/LFS).
 - **2026-11-06 02:30–03:55 Claude — Codex paused at its limit since 01:37; Claude took over cards.** Merged N13
   (repo source counts), N14 (global search count + time), N15 (storage breakdown; tablet shows real 1.7 GB /
   4 novels / 1 manga / 4,158 chapters), N16 (accent swatches + Reduce motion; Dot Appearance checked), N17 (skip
