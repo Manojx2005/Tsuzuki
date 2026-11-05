@@ -275,6 +275,17 @@ where Tsundoku merges need the old signatures. Write tests for each moved path. 
 lines or touches the novel viewer internals, stop at a clean intermediate commit and mark `blocked` with what's left.
 Result: _pending_
 
+#### N22b Anime: make the debug player render (T4) — `ready`
+Tablet test 2026-11-06 05:51: `AnimeDebugPlayerActivity` (debug build) launches, libmpv loads (no
+UnsatisfiedLinkError, no crash), but the SurfaceView stays black for both https and http Big Buck Bunny URLs and
+mpv prints nothing. Steps: (1) wire mpv log messages (`MPVLib` event/log observer → logcat, `msg-level=all=v`);
+(2) compare option order/values with Aniyomi's `PlayerActivity`/`MPVView` at the pinned revision (vo/gpu-context,
+`android-surface-size`, hwdec, attach surface before/after `init`, `wid`); (3) for https provide a CA bundle
+(`tls-ca-file`) like Aniyomi; (4) verify audio track via `ao=audiotrack`. Launch:
+`adb shell am start -n io.github.manojx2005.tsuzuki.dev/eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugPlayerActivity --es url <url>`.
+Done when Big Buck Bunny plays with sound on the tablet.
+Result: _pending_
+
 #### Wave 3 — N21 to N32 (same batch rules; continue here after N20, in order)
 
 #### N21 Anime A1.3: vendor the native player libraries (T3) — `done` (Claude `654e0dff6`; checksum tamper test passes; not an :app dependency yet)
@@ -284,7 +295,7 @@ file against its `SHA256SUMS.txt`; add a Gradle check task that re-verifies), li
 `docs/licenses/` (LGPL FFmpeg/mpv notices + source offer note), module NOT yet a dependency of `:app` (no APK change).
 Result: _pending_
 
-#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `claude-working` (Claude agent, .worktrees/n22)
+#### N22 Anime A1.4: MPV wrapper + debug player (T4) — `done (playback not yet working)` (Claude agent `d71870d01`, merged `e49c11127`; see N22b)
 Base on `tsuzuki/n21`. Port the MIT `MPVLib` wrapper (aniyomi-mpv-lib, pinned revision in docs/ANIME_SPIKE.md) into
 `anime-player`, plus a debug-build-only `AnimeDebugPlayerActivity` (surface, play/pause, seek, back) that plays a URL
 passed by intent. Wire `anime-player` into `:app` only for the debug build type (or behind a flag that is off in
