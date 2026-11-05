@@ -1551,4 +1551,9 @@
     <string name="tsz_storage_novels">Novels</string>
     <string name="tsz_storage_manga">Manga</string>
     <string name="tsz_storage_chapters">Chapters</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">Accent colour</string>
+    <string name="tsz_appearance_accent_sub">Used when Follow the book is off or the book has no colours. Dot stays red.</string>
+    <string name="tsz_appearance_reduce_motion">Reduce motion</string>
+    <string name="tsz_appearance_reduce_motion_sub">Replace animations with quick fades</string>
 </resources>

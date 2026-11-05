@@ -1182,4 +1182,9 @@
     <string name="tsz_storage_novels">Novels</string>
     <string name="tsz_storage_manga">Mangá</string>
     <string name="tsz_storage_chapters">Capítulos</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">Cor de destaque</string>
+    <string name="tsz_appearance_accent_sub">Usada quando “Seguir o livro” está desligado ou o livro não tem cores. O Dot continua vermelho.</string>
+    <string name="tsz_appearance_reduce_motion">Reduzir movimento</string>
+    <string name="tsz_appearance_reduce_motion_sub">Substitui as animações por fades rápidos</string>
 </resources>

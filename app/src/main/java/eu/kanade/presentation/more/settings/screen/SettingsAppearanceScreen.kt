@@ -113,6 +113,21 @@ object SettingsAppearanceScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.tsz_follow_book_sub),
                     enabled = appTheme == AppTheme.COLOUR,
                 ),
+                // Tsuzuki Colour: accent swatches (used when no book palette applies). Colour only, like the row above.
+                Preference.PreferenceItem.CustomPreference(
+                    title = stringResource(MR.strings.tsz_appearance_accent),
+                ) {
+                    if (appTheme == AppTheme.COLOUR) {
+                        eu.kanade.presentation.tsuzuki.settings.TsuzukiAccentPicker(uiPreferences)
+                    }
+                },
+                // Tsuzuki: app-level Reduce motion (both Tsuzuki themes), on top of the system animation setting.
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.tsuzukiReduceMotion,
+                    title = stringResource(MR.strings.tsz_appearance_reduce_motion),
+                    subtitle = stringResource(MR.strings.tsz_appearance_reduce_motion_sub),
+                    enabled = appTheme == AppTheme.COLOUR || appTheme == AppTheme.DOT,
+                ),
                 // Tsuzuki Dot: covers keep their colours (owner request 2026-11-04); Dot only, like Follow the book.
                 Preference.PreferenceItem.SwitchPreference(
                     preference = uiPreferences.tsuzukiDotColourCovers,

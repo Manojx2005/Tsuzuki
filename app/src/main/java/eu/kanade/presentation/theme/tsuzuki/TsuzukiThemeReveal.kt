@@ -10,7 +10,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -41,11 +40,7 @@ object TsuzukiThemeReveal {
     private fun prepare(context: Context, from: AppTheme, to: AppTheme, origin: Offset) {
         if (from == to || from !in themes || to !in themes || !origin.isSpecified) return
         val activity = context.activity() ?: return
-        if (Settings.Global.getFloat(activity.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) ==
-            0f
-        ) {
-            return
-        }
+        if (tsuzukiMotionReduced(activity)) return
         val decor = activity.window.decorView
         if (!decor.isLaidOut || decor.width == 0 || decor.height == 0) return
         val bitmap = try {

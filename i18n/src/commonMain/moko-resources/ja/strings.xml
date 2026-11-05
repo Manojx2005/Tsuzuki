@@ -1184,4 +1184,9 @@
     <string name="tsz_storage_novels">小説</string>
     <string name="tsz_storage_manga">マンガ</string>
     <string name="tsz_storage_chapters">チャプター</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">アクセントカラー</string>
+    <string name="tsz_appearance_accent_sub">「作品の色に合わせる」がオフ、または作品に色がないときに使われます。Dotは赤のままです。</string>
+    <string name="tsz_appearance_reduce_motion">動きを減らす</string>
+    <string name="tsz_appearance_reduce_motion_sub">アニメーションを短いフェードに置き換えます</string>
 </resources>

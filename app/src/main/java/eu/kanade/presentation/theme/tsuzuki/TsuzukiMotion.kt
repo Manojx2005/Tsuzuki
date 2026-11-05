@@ -13,6 +13,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import kotlin.math.ceil
 
 /**
@@ -52,17 +55,30 @@ object TsuzukiMotion {
     }
 }
 
-/** True when the system's animator scale is 0 (Developer options or Accessibility "Remove animations"). */
+/** Reduced when the system animator scale is 0 or the app-level "Reduce motion" setting is on. */
+internal fun isMotionReduced(systemScaleIsZero: Boolean, appPreference: Boolean): Boolean =
+    systemScaleIsZero || appPreference
+
+private fun systemScaleIsZero(resolver: android.content.ContentResolver) =
+    Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+
+private fun appReduceMotionPref() =
+    runCatching { Injekt.get<eu.kanade.domain.ui.UiPreferences>().tsuzukiReduceMotion }.getOrNull()
+
+/** Non-composable check for Activity transitions and the theme reveal. */
+fun tsuzukiMotionReduced(context: android.content.Context): Boolean =
+    isMotionReduced(systemScaleIsZero(context.contentResolver), appReduceMotionPref()?.get() ?: false)
+
+/** True when motion is reduced: the system's animator scale is 0 (Developer options or Accessibility) or the app setting is on. */
 @Composable
 fun rememberReduceMotion(): Boolean {
     val context = LocalContext.current
     val resolver = context.contentResolver
-    fun isReduced() = Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    var reduced by remember(resolver) { mutableStateOf(isReduced()) }
+    var systemReduced by remember(resolver) { mutableStateOf(systemScaleIsZero(resolver)) }
     DisposableEffect(resolver) {
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
-                reduced = isReduced()
+                systemReduced = systemScaleIsZero(resolver)
             }
         }
         resolver.registerContentObserver(
@@ -72,7 +88,14 @@ fun rememberReduceMotion(): Boolean {
         )
         onDispose { resolver.unregisterContentObserver(observer) }
     }
-    return reduced
+    val pref = remember { appReduceMotionPref() }
+    val app = if (pref != null) {
+        val state by remember(pref) { pref.changes() }.collectAsState(initial = pref.get())
+        state
+    } else {
+        false
+    }
+    return isMotionReduced(systemReduced, app)
 }
 
 /**

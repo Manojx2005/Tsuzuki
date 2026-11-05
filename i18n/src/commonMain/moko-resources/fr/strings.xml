@@ -1178,4 +1178,9 @@
     <string name="tsz_storage_novels">Romans</string>
     <string name="tsz_storage_manga">Mangas</string>
     <string name="tsz_storage_chapters">Chapitres</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">Couleur d\'accent</string>
+    <string name="tsz_appearance_accent_sub">Utilisée quand « Suivre le livre » est désactivé ou que le livre n\'a pas de couleurs. Dot reste rouge.</string>
+    <string name="tsz_appearance_reduce_motion">Réduire les animations</string>
+    <string name="tsz_appearance_reduce_motion_sub">Remplace les animations par de courts fondus</string>
 </resources>

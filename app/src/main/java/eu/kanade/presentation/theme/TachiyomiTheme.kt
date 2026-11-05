@@ -75,7 +75,8 @@ private fun BaseTachiyomiTheme(
         },
         typography = lnrTypography(appTheme, context.resources) ?: MaterialTheme.typography,
     ) {
-        val tokens = tsuzukiTokensFor(appTheme)
+        val colourAccent = eu.kanade.presentation.theme.tsuzuki.rememberColourAccent()
+        val tokens = remember(appTheme, colourAccent) { tsuzukiTokensFor(appTheme, colourAccent) }
         CompositionLocalProvider(
             LocalTsuzukiTokens provides tokens,
             tachiyomi.presentation.core.theme.LocalActiveColor provides tokens.activeColor,

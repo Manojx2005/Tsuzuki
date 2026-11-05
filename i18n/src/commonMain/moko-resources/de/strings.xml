@@ -1185,4 +1185,9 @@
     <string name="tsz_storage_novels">Romane</string>
     <string name="tsz_storage_manga">Manga</string>
     <string name="tsz_storage_chapters">Kapitel</string>
+    <!-- N16 -->
+    <string name="tsz_appearance_accent">Akzentfarbe</string>
+    <string name="tsz_appearance_accent_sub">Wird verwendet, wenn „Dem Buch folgen“ aus ist oder das Buch keine Farben hat. Dot bleibt rot.</string>
+    <string name="tsz_appearance_reduce_motion">Bewegung reduzieren</string>
+    <string name="tsz_appearance_reduce_motion_sub">Ersetzt Animationen durch kurze Überblendungen</string>
 </resources>
