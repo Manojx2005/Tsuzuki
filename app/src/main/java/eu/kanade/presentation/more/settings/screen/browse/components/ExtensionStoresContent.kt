@@ -32,6 +32,7 @@ import tachiyomi.presentation.core.icons.Discord
 fun ExtensionStoresContent(
     repos: List<ExtensionStore>,
     disabledRepos: Set<String>,
+    repoCounts: Map<String, eu.kanade.presentation.tsuzuki.browse.TsuzukiRepoCounts>,
     lazyListState: LazyListState,
     paddingValues: PaddingValues,
     onCopy: (ExtensionStore) -> Unit,
@@ -53,6 +54,7 @@ fun ExtensionStoresContent(
                     modifier = Modifier.animateItem(),
                     store = it,
                     enabled = it.indexUrl !in disabledRepos,
+                    counts = repoCounts[it.indexUrl],
                     onSetEnabled = { enabled -> onSetEnabled(it, enabled) },
                     onOpenWebsite = { onOpenWebsite(it) },
                     onOpenDiscord = { onOpenDiscord(it) },
@@ -68,6 +70,7 @@ fun ExtensionStoresContent(
 private fun ExtensionStoresListItem(
     store: ExtensionStore,
     enabled: Boolean,
+    counts: eu.kanade.presentation.tsuzuki.browse.TsuzukiRepoCounts?,
     onSetEnabled: (Boolean) -> Unit,
     onOpenWebsite: () -> Unit,
     onOpenDiscord: () -> Unit,
@@ -86,6 +89,7 @@ private fun ExtensionStoresListItem(
             onCopy,
             onDelete,
             modifier,
+            counts,
         )
         return
     }

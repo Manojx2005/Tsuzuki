@@ -1055,6 +1055,8 @@
     <string name="tsz_about_source_code">Código fuente</string>
     <string name="tsz_about_built_on">Basado en</string>
     <string name="tsz_category_new_shelf">Nueva estantería</string>
+    <string name="tsz_repo_sources">%1$d fuentes</string>
+    <string name="tsz_repo_extensions">%1$d extensiones</string>
     <string name="tsz_source_priority_subtitle">Qué copia gana en duplicados y migraciones</string>
     <string name="tsz_source_priority_by_type">Por tipo</string>
     <string name="tsz_source_priority_specific">Fuentes concretas</string>

@@ -1432,6 +1432,8 @@
     <string name="tsz_about_source_code">Source code</string>
     <string name="tsz_about_built_on">Built on</string>
     <string name="tsz_category_new_shelf">New shelf</string>
+    <string name="tsz_repo_sources">%1$d sources</string>
+    <string name="tsz_repo_extensions">%1$d extensions</string>
     <string name="tsz_source_priority_subtitle">Which copy wins in duplicates and migration</string>
     <string name="tsz_source_priority_by_type">By type</string>
     <string name="tsz_source_priority_specific">Specific sources</string>

@@ -3,6 +3,8 @@ package eu.kanade.presentation.more.settings.screen.browse
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiRepoCounts
+import eu.kanade.presentation.tsuzuki.browse.tsuzukiRepoCounts
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -43,14 +45,19 @@ class ExtensionStoresViewModel(
             combine(
                 getExtensionStores.subscribe(isNovel = false),
                 sourcePreferences.disabledExtensionRepos.changes(),
-            ) { stores, disabled -> stores to disabled }
-                .collectLatest { (stores, disabled) ->
+                extensionManager.availableExtensionsFlow,
+            ) { stores, disabled, available -> Triple(stores, disabled, tsuzukiRepoCounts(available)) }
+                .collectLatest { (stores, disabled, counts) ->
                     mutableState.update {
                         when (it) {
                             ExtensionStoreScreenState.Loading ->
-                                ExtensionStoreScreenState.Success(stores = stores, disabledRepos = disabled)
+                                ExtensionStoreScreenState.Success(
+                                    stores = stores,
+                                    disabledRepos = disabled,
+                                    repoCounts = counts,
+                                )
                             is ExtensionStoreScreenState.Success ->
-                                it.copy(stores = stores, disabledRepos = disabled)
+                                it.copy(stores = stores, disabledRepos = disabled, repoCounts = counts)
                         }
                     }
                 }
@@ -182,6 +189,7 @@ sealed class ExtensionStoreScreenState {
     data class Success(
         val stores: List<ExtensionStore>,
         val disabledRepos: Set<String> = emptySet(),
+        val repoCounts: Map<String, TsuzukiRepoCounts> = emptyMap(),
         val dialog: ExtensionStoreDialog? = null,
     ) : ExtensionStoreScreenState() {
 

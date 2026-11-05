@@ -42,8 +42,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * An extension repository in the Tsuzuki themes (board 04-browse "ExtensionRepos"): icon (accent while enabled),
- * name, index URL, badge and novel / manga pills, the enable switch, and a menu with the stock actions. Left out from
- * the board: source counts (not stored per repository) and the signed / unsigned pill (no label for it yet).
+ * name, index URL, badge and novel / manga pills, the enable switch, and a menu with the stock actions. Source (or extension)
+ * counts come from the loaded available-extension lists and stay hidden until known. Left out from
+ * the board: the signed / unsigned pill (no label for it yet).
  */
 @Composable
 fun TsuzukiExtensionStoreItem(
@@ -55,6 +56,7 @@ fun TsuzukiExtensionStoreItem(
     onCopy: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    counts: TsuzukiRepoCounts? = null,
 ) {
     val t = TsuzukiTheme.tokens
     val up: (String) -> String = { if (t.isDot) it.uppercase() else it }
@@ -149,6 +151,14 @@ fun TsuzukiExtensionStoreItem(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             store.badgeLabel.takeIf { it.isNotBlank() }?.let { StorePill(up(it)) }
             StorePill(up(stringResource(if (store.isNovel) TDMR.strings.label_novels else TDMR.strings.label_manga)))
+            // Unknown until the index has loaded (or while the repository is disabled): show nothing.
+            counts?.let {
+                if (it.sources > 0) {
+                    StorePill(up(stringResource(MR.strings.tsz_repo_sources, it.sources)))
+                } else if (it.extensions > 0) {
+                    StorePill(up(stringResource(MR.strings.tsz_repo_extensions, it.extensions)))
+                }
+            }
         }
     }
 }
