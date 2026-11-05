@@ -47,39 +47,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Codex queue
 
-### P0.5 Onboarding redesign — `ready` · `parallel-ok` (worktree `.worktrees/onboarding` already exists)
-**Partial work present (Claude-launched Codex run stopped by the owner 2026-11-05):** new
-`presentation/tsuzuki/onboarding/` files + tests, `theme/tsuzuki/TsuzukiOnboardingPalette.kt`, edits to the upstream
-onboarding screens, `SettingsDataScreen.kt`, strings in 8 locales. Review it against this card, finish, verify.
-Delete stray `.gradle-user-home/`, `onboarding-cache-copy.log`, `onboarding-validation.log` from the worktree.
-Edits to `PermissionStep.kt`, `StorageStep.kt`, `SettingsDataScreen.kt` must be minimal hooks (no re-indent).
-Card: the full brief is the one Claude sent (summary): Tsuzuki onboarding behind a dispatch in
-`presentation/more/onboarding/OnboardingScreen.kt`, new files in `presentation/tsuzuki/onboarding/`; steps
-welcome (no fake covers or "300+") → languages (`SourcePreferences.enabledLanguages`) → pick a look
-(`TsuzukiThemeCards`, step index must survive the Activity recreation) → storage → permissions → coming from
-another app (LNReader backup, Mihon/Tsundoku backup; no Google Drive). Boards `07-system/Onboarding` (+dot);
-`09-manga/OnboardingContent` content-type step is out of scope (owner question below). Strings
-`tsz_onboarding_*` in 8 locales, unit tests for skip/selection logic.
-Result: _pending_
-
-### P0.4 Reader hook consolidation — `codex-working` (2026-11-05, worktree `.worktrees/reader-hooks`)
-- Tier T3 · Codex `gpt-6.1-sol` effort high.
-- Worktree: create `git -c core.longpaths=true worktree add -b tsuzuki/reader-hooks .worktrees/reader-hooks main`
-  (after the P0.1 commit lands; check `git log -1 main`), copy `local.properties` into it.
-- Goal: every Tsuzuki addition inside `app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt` (≈44
-  lines) and `ReaderViewModel.kt` (2 lines) moves into Tsuzuki-owned functions under
-  `app/src/main/java/eu/kanade/presentation/tsuzuki/reader/` (e.g. `TsuzukiReaderHooks.kt`); the upstream files
-  keep one-line calls. Tsundoku's own novel branches stay exactly where they are. Behaviour identical.
-- Find our lines: `git diff $(git merge-base HEAD tsundoku/main) HEAD -- app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderViewModel.kt`.
-- May edit: those two files (hook lines only, no re-indent), new files in `presentation/tsuzuki/reader/`, tests.
-  Must not edit anything else.
-- Tests: unit-test any pure logic you extract (e.g. the transition-animation choice).
-- Verify: per-file Spotless twice until IS CLEAN; `./gradlew :app:assembleDebug :app:testDebugUnitTest`.
-- Report in Result; Claude checks on devices: novel TextView + WebView open/close animation, progress/history
-  saved, ReadingDays minutes, contents drawer jump, manga paged + long strip.
-Result: _pending_
-
-### P0.3 Sort Tsuzuki-owned novel/manga code — `blocked` (start after P0.4 and P0.5 are committed; they touch the same reader package)
+### P0.3 Sort Tsuzuki-owned novel/manga code — `ready` (P0.4 and P0.5 are merged into main)
 - Tier T1 · Codex `gpt-5.3-codex-spark`, effort low.
 - Worktree: `git -c core.longpaths=true worktree add -b tsuzuki/media-packages .worktrees/media-packages main`, copy `local.properties`.
 - `docs/ARCHITECTURE.md` §7 found only five media-specific Tsuzuki files; everything else is shared and stays.
@@ -91,7 +59,8 @@ Result: _pending_
     (package `eu.kanade.presentation.tsuzuki.manga`).
   - Callers to fix (FQN or import only, no other edits): `P/reader/settings/ReaderSettingsDialog.kt`,
     `A/ui/reader/ReaderActivity.kt`, `P/updates/UpdatesUiItem.kt`, `A/ui/library/duplicate/SourcePriorityScreen.kt`,
-    `A/ui/reader/viewer/ReaderTransitionView.kt`; move the tests (`TsuzukiTocFilterTest`, `SourcePriorityStepTest`,
+    `A/ui/reader/viewer/ReaderTransitionView.kt`, and `P/tsuzuki/reader/TsuzukiReaderHooks.kt` (now calls
+    `TsuzukiReaderContents`; it stays in `reader/`); move the tests (`TsuzukiTocFilterTest`, `SourcePriorityStepTest`,
     `ReaderDownloadStatusTest`) to the matching test packages. Keep `internal` visibility working.
   - Update the paths in `docs/ARCHITECTURE.md` §7 is Claude's job; just list the moves in Result.
 - Done when: `git diff -M --stat` shows five renames (+ tests) with only package/import lines changed, per-file
@@ -138,6 +107,13 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-05 Claude — reviewed Codex P0.4 + P0.5, merged (`af8155b6c`, `c9e648a3b`).** P0.4 (`ff407d59c`):
+  transitions, contents drawer and ReadingDays moved to `presentation/tsuzuki/reader/TsuzukiReaderHooks.kt`;
+  ReaderActivity/ReaderViewModel keep one-line calls; behaviour identical on review. P0.5 (`b4532cf5b`): six-step
+  Tsuzuki onboarding (welcome → languages → look → storage → permissions → import), stock flow for legacy
+  themes, 19 strings × 8 locales, 9 tests. Claude change in review: `StorageStep.kt` hook made purely additive
+  (early-return block with its own picker/effect) instead of restructuring upstream lines. Device check: see
+  next entry when done.
 - **2026-11-05 Claude:** merged Tsundoku main (`c26dfc13a`, clean: TTS headset buttons, scroll actions into the
   overflow, faster title marquee, source memo fix, Based on Mihon link — our Tsuzuki About already credits Mihon
   under "Built on"). Added icons to the three new overflow scroll actions. Archived anime native artifact (LGPLv3
