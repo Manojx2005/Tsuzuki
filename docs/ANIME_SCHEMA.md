@@ -391,7 +391,28 @@ Gate for A2.2 and A2.5. "Owner data" = the 12-file copy of each device.
 8. **Device runbook**: backup 12 files per device first (AGENTS.md routine), apply, run 1+2 on the copies, never on
    the live profile; restore after. Evidence under `app/build/anime-schema-<date>/`.
 
-## 9. Open questions for the owner
+## 9. Owner decisions (2026-11-06) — these override the recommendations above
+
+- **Q1 Categories → option B, separate.** New `anime_categories` table (own ids, own order, own flags) and join
+  `animes_categories(anime_id → animes CASCADE, category_id → anime_categories CASCADE)`. Anime never appears in
+  book shelves and book "All" shelves never appear in the Anime library. Anime keeps its own system/default
+  category row (`_id 0` inside `anime_categories`, not deletable). Own CRUD interactors + an anime shelf screen
+  (reuse the Tsuzuki category UI components with an anime repository). `getCategoriesWithBookCounts` is untouched.
+- **Q2 Aniyomi interop → import only.** Tsuzuki reads Aniyomi backups (anime fields 500–503); our own backups store
+  anime in the 8000 range and need not open in Aniyomi.
+- **Q3 Seasons → keep the four columns, ignore them in the UI** (every season is a normal entry in v1).
+- **Q4 Watch time → separate.** Reading streak/goal stay reading-only; watch minutes go to their own stats.
+- **Q5 Fansub exclusion → left out of v1.**
+- **Q6 Repo media flag → separate small migration** shipped with the anime extension-repo UI card, not in the
+  anime-tables migration.
+- **Q7 Table name → `anime_sync`** (Claude's call: Aniyomi/mapper-friendly; domain model `AnimeTrack`).
+- **Q8 Spike → discarded.** `codex/anime-spike` worktree + local branch deleted 2026-11-06; remote kept as backup.
+- **Migration merge:** owner allows Claude to merge the anime-tables migration into main overnight **only if** the
+  line-by-line review, the in-memory upgrade test and a scratch-install upgrade test all pass.
+- **Test extension repos (owner-approved, debug builds only):** `https://github.com/yuzono/anime-extensions` and
+  `https://github.com/Secozzi/aniyomi-extensions`. Install one extension at a time into the private extension dir.
+
+## 10. Original open questions (answered in §9)
 
 - **Q1 Categories.** Share `categories` (new `content_type = 3`, recommended) or separate anime categories? And do
   existing "All" shelves (type 0) appear in the Anime library (recommended: yes)?

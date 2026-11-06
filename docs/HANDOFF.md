@@ -33,7 +33,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
   Tablet `R52Y90HA77L` + S22 `RZCWA139X1X` connected; owner's phone `R5GL23ZYE1V` is not (it's on the laptop).
 - `main` = docs batch Q (`f832df96a`) + this plan. Q1 is being reviewed by Claude now, then merged into main;
   `tsuzuki/q5` gets rebased onto it. Codex runs **Overnight batch Q** below in one thread.
-- Old worktree `.worktrees/anime-spike` still exists (untouched).
+- Anime spike worktree + local branch deleted (owner, 2026-11-06); `origin/codex/anime-spike` kept as backup.
 
 ## Claude is working on (Codex: don't touch these)
 
@@ -96,7 +96,7 @@ blocked card: record it and move on to the next one.
 | # | Card | Needs (merge first if not in main) | Why here |
 |---|---|---|---|
 | 1 | Q2 Novel reader next chapter | — | Only broken-function bug; doesn't overlap Q1, so it starts before Q1 is merged |
-| 2 | Q5 Navigation Library tab | Q1 | Continue Codex's own work on `tsuzuki/q5` — **not** a new branch: Claude rebases it onto main and sets it `ready`; use `git -c core.longpaths=true worktree add .worktrees/q5 tsuzuki/q5`. If not `ready` yet, skip and come back after Q4 |
+| 2 | Q5 Navigation Library tab | — (Q1 merged) | Continue on the existing `.worktrees/q5` (`tsuzuki/q5`, rebased by Claude); commit there on top of the wip commit |
 | 3 | Q3 Save chapters number range | — | Details download sheet + chapter-list range select |
 | 4 | Q6 Book details header | Q3 | Same details screen files as Q3 |
 | 5 | Q4 Two Default shelves | — | Import fix + one-time data migration (Claude runs it on a device only after a backup) |
@@ -106,9 +106,25 @@ blocked card: record it and move on to the next one.
 | 9 | Q9 Accessibility + QoL | Q3, Q5 | Range select (Q3) and nav labels (Q5) |
 | 10 | Q8 Overflow + large-font sweep | Q2, Q3, Q5, Q6, Q7, Q11 | Touches every screen — last of batch Q |
 | 11 | X1 Reader hook consolidation | Q2 | Extra wave |
-| 12 | X2 Tablet Updates two-pane | Q5 | Extra wave |
-| 13 | X3 Restyle check: ReplaceRules + SettingsTranslation | Q11 | Extra wave |
-| 14 | X4 Restyle check: DuplicateFinder + Migration | — | Extra wave |
+| 12 | X3 Restyle check: ReplaceRules + SettingsTranslation | Q11 | Extra wave |
+| 13 | X4 Restyle check: DuplicateFinder + Migration | — | Extra wave |
+| 14 | A1.5 Anime: debug extension install → play | — | Anime lane (owner asked tonight); only new files + a debug entry |
+| 15 | A2.2 Anime tables + data layer (migration 36) | — | T4; schema exception for this card only (rule 9) |
+| 16 | A2.3 Anime sources + browse catalogue | A1.5, A2.2 | |
+| 17 | A2.4 Anime library + Watch tab + anime shelves | A2.3 | |
+| 18 | Y1 Mihon skipped fixes, top group | — | Wave Y |
+| 19 | Y2 Tablet manga two-page spread | — | Wave Y |
+| 20 | Y3 Manga details + Browse manga boards | Q6 | Wave Y |
+| 21 | Y4 Synthetic 500-book backup generator | — | Wave Y, no app code |
+| 22 | Y5 Restyle checks: Tracking, Quotes, ExportEpub, Upcoming, EditNovel | Q6 | Wave Y |
+| 23 | Y6 Tablet TTS panel + foldable | Q11 | Wave Y |
+
+X2 (tablet Updates two-pane) was dropped: Claude saw it already built on the tablet 2026-11-06.
+
+**Optional second Codex thread (anime lane):** the anime rows (14–17) touch only new anime files, a debug entry
+and the new migration, so the owner may run them in a **second** thread at the same time. Prompt: same as above
+but "do only rows 14–17 of the table, in order". Thread 1 then skips rows 14–17 if they're claimed. Both threads:
+one Gradle build each at most.
 
 Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build + device table).
 
@@ -238,7 +254,7 @@ LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN categor
 - Display: if two pills would still render the same label, never show duplicates (append the content type).
 - Pills show their book count (N12 already has the query).
 
-#### Q5 Navigation: Library tab + real labels (T3) — `blocked` (waiting for Claude: rebase `tsuzuki/q5` @ 4345fc994 onto main after Q1 merges, then Claude sets `ready`; Codex continues on that branch) (owner approved 2026-11-06)
+#### Q5 Navigation: Library tab + real labels (T3) — `ready` (Claude rebased onto main 2026-11-06: `tsuzuki/q5` @ 6612e1f1b, worktree **already exists** at `.worktrees/q5` — use it, don't create a new one. Code is nearly done; what's left: build + tests green, check the items in Codex's earlier Result (`git show 4345fc994:docs/HANDOFF.md`, card Q5), commit, fill Result) (owner approved 2026-11-06)
 Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
 Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
 `Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
@@ -352,7 +368,7 @@ branches stay where they are. Tests for any pure helper you extract. Result list
 progress/history saved, `ReadingDays` minutes increase, contents drawer jump, manga paged + long strip.
 Result: _pending_
 
-#### X2 Tablet Updates: list + chapter preview (T3) — `ready`
+#### X2 Tablet Updates: list + chapter preview (T3) — `done` (already built: Claude saw list + preview pane on the tablet 2026-11-06; card kept for reference)
 Board `docs/design/boards/png/11-tablet/TabletUpdates.png` (+ `dot/`), HTML `html/11-tablet/TabletUpdates.html`.
 On windows ≥ 900 dp wide (same breakpoint helper as N9 Tablet Browse / N25 side panel — reuse it), Updates
 becomes two panes: the existing Tsuzuki updates list on the left, the selected chapter's book card on the right
@@ -374,6 +390,107 @@ Result: _pending_
 Boards `png/08-tools/DuplicateFinder.png`, `png/04-browse/Migration.png`, `png/04-browse/MigrationCompare.png`
 (+ `dot/`). `presentation/tsuzuki/migration/` exists: compare it to the boards first and fix only what differs
 (list the differences in Result). DuplicateFinder: restyle if stock. No change to migration logic.
+Result: _pending_
+
+### Anime lane A (owner approved 2026-11-06) — read `docs/ANIME_SCHEMA.md` §9 decisions first
+
+Common rules: new code under `app/.../tsuzuki/anime/`, `domain/.../anime/`, `data/.../anime/` (packages per
+ANIME_SCHEMA §7); Apache-2.0 only — Aniyomi files may be ported only if their header is Apache-2.0, note each
+ported file + upstream revision in Result; nothing visible to normal users in release builds until A2.4 (Watch
+tab already exists as a placeholder). No GPL. Never download or install anything yourself — no network in tests.
+
+#### A1.5 Anime: debug extension install → list sources → play (T3) — `ready`
+Goal: from a **debug-only** developer screen, add an Aniyomi-format extension repo URL, list its extensions, install
+one into the private dir (`files/anime-exts`, via the loader ported in `9b2a924de` with the host's trust/signature
+check), list the installed sources, fetch Popular for one source, open one entry's episode list, resolve the video
+list of the first episode and play it in the N22 debug player (`anime-player` module, debug only).
+- Repo index: Aniyomi repos publish `index.min.json` (+ `apk/` and `icon/`); parse it with a pure parser
+  (`AnimeRepoIndexParser`) + tests from a checked-in fixture file. Accept a GitHub repo URL and map it to the raw
+  `repo` branch URL the way the manga repo code does (look at `DefaultSourceRepos.kt` / manga repo handling).
+- Owner-approved test repos (Claude tests with these, Codex only writes code): `https://github.com/yuzono/anime-extensions`,
+  `https://github.com/Secozzi/aniyomi-extensions`. Store added repos in a debug preference, not the DB (Q6 later).
+- Network calls go through the existing `NetworkHelper` client; all work off the main thread; errors shown as text
+  on the screen (not swallowed).
+- Entry point: a row in the existing debug/developer settings screen (find where N22's debug player is launched).
+- Tests: index parser, URL mapping, install-state model. Result: what Claude must tap to play an episode.
+Result: _pending_
+
+#### A2.2 Anime tables + data layer — migration 36 (T4) — `ready`
+Implement ANIME_SCHEMA §2–§3 and §7 **with the §9 decisions** (separate `anime_categories`; `anime_sync`; season
+columns kept; no fansub exclusion; no `extension_store` column).
+- `ls data/src/main/sqldelight/tachiyomi/migrations | sort -n | tail -1` → use latest + 1 (35 → `36.sqm`). One
+  file, additive only: never alter `mangas`, `chapters`, `history`, `categories`, `mangas_categories`.
+  `.sq` files for `animes`, `episodes`, `anime_history` (with the `ifnull` guard trigger), `anime_categories`,
+  `animes_categories`, `anime_sync`, `anime_sources`. Seed `anime_categories` row `_id 0` in the migration.
+- Domain models + repositories + interactors (get/insert/update anime, episodes by anime, history upsert, anime
+  categories CRUD + reorder, set anime categories, tracks), Injekt registration next to the manga ones.
+- **Tests (must all pass):** (1) in-memory SQLite: create the DB at version 35 with fixture rows in
+  mangas/chapters/history/categories, run the migration, assert every old row unchanged and new tables empty
+  except `anime_categories` `_id 0`; (2) fresh-install schema equals migrated schema (compare `sqlite_master`);
+  (3) repository round-trips; (4) history trigger with NULL `last_seen`. Write the rollback note (ANIME_SCHEMA §3.4)
+  into Result.
+- Backup proto: **not in this card** (A2.5 later).
+- Claude: line-by-line review + kotlin-reviewer agent, then scratch-install upgrade test on the tablet (a second
+  install of an older build, never the owner's apps), then merge (owner allowed if all pass).
+Result: _pending_
+
+#### A2.3 Anime sources + browse catalogue (T3) — `ready` (needs A1.5, A2.2)
+Register installed anime extensions as sources in an `AnimeSourceManager` (stub via `anime_sources` when the
+extension is gone). Browse → a WATCH/ANIME media pill alongside novels/manga only when ≥ 1 anime extension is
+installed (stays hidden otherwise; release users see nothing new). Catalogue screen: Popular / Latest / Search +
+filters using the existing Tsuzuki browse grid components, cover → anime details stub (title, cover, description,
+episode list from the source, PLAY first/next episode in the player). Boards: `docs/design/boards/png/10-anime/`
+(BrowseAnime, AnimeDetails; Dot + Colour). Tests: source registration + stub fallback.
+Result: _pending_
+
+#### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `ready` (needs A2.3)
+Add to library from anime details (writes `animes.favorite`, anime categories picker using `anime_categories`).
+Home's Watch tab becomes real: Continue watching (from `anime_history`), shelf row; Library gets the anime media
+switch (board `LibraryMixed`, `AnimeLibrary`, `AnimeHome`) showing anime shelves only. Anime shelf management
+screen reusing the Tsuzuki category components with the anime repository. Episode progress saved from the
+player (position, seen at ≥ 85 %). Watch minutes recorded separately (not in `ReadingDays`). Boards in
+`png/10-anime/`. Tests: progress threshold, continue-watching ordering, shelf CRUD.
+Result: _pending_
+
+### Wave Y (owner approved 2026-11-06; after the anime lane)
+
+Same general rule as wave X: check first whether it already exists; if done, set `done` with where.
+
+#### Y1 Mihon skipped fixes, top group (T3) — `ready`
+`docs/UPSTREAM.md` "Skipped for conflicts": take the most valuable group (downloads, tablet FAB, range-selection
+crash, WebView) that is still missing. Port each fix with the smallest diff, cite the Mihon commit hash per fix in
+Result, skip any that conflicts with Tsuzuki hooks and say why. Tests where Mihon had them.
+Result: _pending_
+
+#### Y2 Tablet manga two-page spread (T3) — `ready`
+Board `png/11-tablet/TabletReader.png` / `TabletMangaSpread` (+ `dot/`). Paged manga reader on landscape windows
+≥ 900 dp: optional two-page spread (setting in the manga reader settings, default off), first page single,
+wide pages shown alone, RTL order follows reading direction. Hook in the viewer with a small Tsuzuki helper.
+Tests: page-pairing logic (odd counts, wide pages, RTL).
+Result: _pending_
+
+#### Y3 Manga details + Browse manga boards (T2/T3) — `ready` (needs Q6)
+Boards `png/09-manga/MangaDetails.png`, `BrowseManga.png` (+ `dot/`): scanlator filter entry, auto-webtoon hint,
+manga-specific tiles; compare with what N5 built and fix only differences (list them).
+Result: _pending_
+
+#### Y4 Synthetic 500-book backup generator (T2) — `ready`
+WORKPLAN P2.2: a script in `scripts/` (Kotlin script or Python, no app code) that writes a valid Tsuzuki
+`.tachibk` with 500 books (novels + manga mix), 30 shelves, 50 k chapters, history, using the backup proto in
+the repo. Fake titles clearly marked `[synthetic]`; no real source data. Claude restores it only into a scratch
+install. Test: the script output parses with the app's backup decoder (unit test that decodes a small generated file).
+Result: _pending_
+
+#### Y5 Restyle checks: Tracking, Quotes, ExportEpub, Upcoming, EditNovel (T2) — `ready` (needs Q6)
+Boards in `docs/design/boards/INDEX.md` (05-novel, 08-tools). For each: Tsuzuki version exists? compare to board,
+fix differences; stock → restyle with a dispatch hook. List per screen in Result.
+Result: _pending_
+
+#### Y6 Tablet TTS panel + foldable (T3) — `ready` (needs Q11)
+Boards `png/11-tablet/TabletTTS.png`, `Foldable.png` (+ `dot/`). Tablet novel reader with TTS active: the N25
+side panel shows the listen controls (play/pause, speed, voice, sleep timer, paragraph list) using existing
+`TtsController` state; foldable half-open posture keeps text on top, controls on the bottom half. Tests: panel
+state mapping.
 Result: _pending_
 
 ### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
@@ -734,6 +851,13 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-06 23:50 Claude — Q1 merged, Q5 rebased, anime + wave Y planned.** Q1 reviewed (diff, 862 tests,
+  tablet Dot rail + S22 Colour pill: indicator slides, dot grid ok, no crashes) → merged `7aad35150`; also removed
+  the unused `tsuzuki_standard_steps` interpolator. `tsuzuki/q5` rebased onto it (`6612e1f1b`, Q1 part dropped
+  cleanly). Owner answered the anime schema questions (ANIME_SCHEMA §9: separate anime shelves, import-only
+  Aniyomi, seasons kept inert, separate watch stats, no fansub filter; Claude may merge migration 36 if all tests
+  pass; test repos yuzono + Secozzi). Added anime lane A1.5–A2.4 and wave Y1–Y6; X2 dropped (already built).
 
 - **2026-11-06 evening Claude — overnight plan.** Back on the desktop (JDK 21 = AS jbr). Owner approved for
   tonight: Codex commits on card branches; Claude reviews + merges Q1 now, then reviews/merges cards about every
