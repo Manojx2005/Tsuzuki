@@ -89,7 +89,7 @@ time; put the rest in an overflow menu or a "More" sheet; never let a row scroll
 tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
 case, Doto only for short headings and numbers.
 
-#### Q1 Smooth motion in Dot (T3) — `ready`
+#### Q1 Smooth motion in Dot (T3) — `review` (Codex done; branch `tsuzuki/q1` @ 1d8fe9074, pushed; Result is in that branch's HANDOFF.md; 862 tests green; Claude review + phone check pending)
 Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
 p50 5 ms at 120 Hz) — the lag is **designed in**:
 1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible
@@ -173,7 +173,7 @@ LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN categor
 - Display: if two pills would still render the same label, never show duplicates (append the content type).
 - Pills show their book count (N12 already has the query).
 
-#### Q5 Navigation: Library tab + real labels (T3) — `ready` (owner approved 2026-11-06; after Q1)
+#### Q5 Navigation: Library tab + real labels (T3) — `codex-working`, paused by owner 2026-11-06 (branch `tsuzuki/q5` @ 4345fc994, pushed; contains the Q1 diff as a prerequisite, so review it against `tsuzuki/q1`; tests/review pending) (owner approved 2026-11-06; after Q1)
 Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
 Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
 `Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
@@ -628,6 +628,14 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-06 Claude — owner switching computers; everything pushed.** Codex finished Q1 (`review`) and started Q5
+  (paused) in uncommitted worktrees; each was committed as a `wip(...)` commit on its own branch and pushed:
+  `tsuzuki/q1` (final Q1), `tsuzuki/q5` (Q1 + Q5 so far), and Codex's partial pieces `tsuzuki/q1-motion`,
+  `q1-nav` (older drafts, superseded by q1), `q1-nav-fix`, `q1-review` (already in q1), `q5-more`, `q5-settings`
+  (already in q5). Nothing merged into main. **Resume on the new computer:** `git fetch`, then
+  `git -c core.longpaths=true worktree add .worktrees/q1 tsuzuki/q1` (same for q5), copy `local.properties`;
+  Claude reviews `tsuzuki/q1`, Codex continues Q5 from `tsuzuki/q5`. The draft branches can be deleted after review.
 
 - **2026-11-06 15:20 Claude — new machine set up + device pass → batch Q.** Installed Android Studio 2026.2.2,
   Temurin JDK 21, SDK 37.0/36, build-tools 37/36, NDK 29.0.14206865, platform-tools; `:app:compileDebugKotlin`
