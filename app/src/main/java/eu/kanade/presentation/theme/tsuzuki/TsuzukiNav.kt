@@ -72,7 +72,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * One destination in the Tsuzuki nav bar / rail (design boards: Nav, Rail).
  *
  * @param label full label (Colour theme, rail, accessibility).
- * @param shortLabel Dot bottom-bar label (HOME / NEW / PAST / FIND / •••).
+ * @param shortLabel Dot bottom-bar label.
  */
 data class TsuzukiNavItem(
     val key: String,
