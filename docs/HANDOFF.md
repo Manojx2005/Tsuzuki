@@ -1062,6 +1062,15 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-07 07:25 Claude — cut letters at the page edge fixed (`9ed457af5`).** Owner screenshot (Lord of the
+  Mysteries ch. 40, Sepia, Literata, justify): the "f" of "patrol of" lost its tip. TextView clips text to its
+  padded area; overhanging glyphs at the end of justified lines were cut. Fix: transparent zero-offset shadow
+  (`tsuzuki/reader/NovelGlyphOverhang.kt`, one call in `NovelViewer.applyTextViewStyles`), which widens the clip.
+  Tested by adding Lord of the Mysteries from **AllNovelFull** on the tablet (TextView, Sepia, justify): italic
+  "off!" at the right edge now whole. Same test showed that the earlier blank-line removal left **no** paragraph
+  gap when paragraph spacing is 0 (tablet's setting, `<br><br>` source) → blank lines are now removed only when
+  spacing > 0. Tablet preview library now has LotM (AllNovelFull) opened at ch. 1 (test data, not favourited).
+
 - **2026-11-07 06:52 Claude — morning report, overnight batch Q.** **Done + merged into main (pushed):**
   Q1 `7aad35150`; Q2, Q3, Q4, Q5, Q6, Q7, Q12 via `review/night1` `52ac6a536`; Q8, Q9, Q11, X1, X3, X4 via
   `review/night2` `6af172281`; Q10 docs; Claude fixes Browse pills `277130bd3`, paragraph gaps `8582f16a5`, Q2
