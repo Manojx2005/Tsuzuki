@@ -5,9 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,13 +14,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -48,42 +42,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiModalBottomSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
-import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import java.util.Locale
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 private data class FontChoice(val value: String, val label: StringResource, val preview: FontFamily)
 
 private val literataFamily = FontFamily(Font(R.font.lnr_literata))
 
-/** Margins from the board: Narrow 14 / Medium 26 / Wide 44, applied to both sides. */
-private val marginChoices = listOf(
-    14 to MR.strings.tsz_rs_narrow,
-    26 to MR.strings.tsz_rs_medium,
-    44 to MR.strings.tsz_rs_wide,
-)
-
-/**
- * The ReaderSettings board: Look / Layout / Controls over the live page. Every control writes the same
- * [ReaderPreferences] the stock novel sheet uses, so the page updates as you change things; [onAllSettings]
- * opens the full stock sheet for everything the board leaves out.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TsuzukiReaderSettingsSheet(
@@ -92,6 +68,7 @@ fun TsuzukiReaderSettingsSheet(
     onAllSettings: () -> Unit,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    var reset by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     TsuzukiModalBottomSheet(
         onDismissRequest = onDismissRequest,
         // Keep the page visible behind the sheet, so changes can be judged live.
@@ -100,8 +77,8 @@ fun TsuzukiReaderSettingsSheet(
         Column(Modifier.fillMaxWidth().heightIn(max = 560.dp)) {
             TsuzukiSegments(
                 labels = listOf(
-                    stringResource(MR.strings.tsz_rs_look),
-                    stringResource(MR.strings.tsz_rs_layout),
+                    stringResource(MR.strings.tsz_q11_text),
+                    stringResource(MR.strings.tsz_q11_page),
                     stringResource(MR.strings.tsz_rs_controls),
                 ),
                 selected = tab,
@@ -116,24 +93,28 @@ fun TsuzukiReaderSettingsSheet(
                     else -> ControlsTab(preferences)
                 }
             }
-            TextButton(
-                onClick = { close(onAllSettings) },
-                modifier = Modifier.align(Alignment.End).padding(horizontal = 8.dp, vertical = 4.dp),
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 8.dp).size(18.dp))
-                Text(cased(stringResource(MR.strings.tsz_rs_all_settings)))
+                TextButton(onClick = { reset = true }) {
+                    Text(cased(stringResource(MR.strings.action_reset)))
+                }
+                TextButton(onClick = { close(onAllSettings) }, modifier = Modifier.weight(1f, fill = false)) {
+                    Text(cased(stringResource(MR.strings.tsz_q11_all)))
+                    Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, Modifier.size(18.dp))
+                }
             }
         }
     }
+    if (reset) ReaderSettingsResetDialog(preferences) { reset = false }
 }
 
 @Composable
 private fun LookTab(preferences: ReaderPreferences) {
     val font by preferences.novelFontFamily.collectAsState()
-    val size by preferences.novelFontSize.collectAsState()
-    val lines by preferences.novelLineHeight.collectAsState()
-
-    TsuzukiPageColourPicker(preferences)
+    TsuzukiPageColourPicker(preferences, includeCustom = false, columns = 6)
 
     // Only faces the app has: Literata is bundled, the rest are system families.
     val fonts = listOf(
@@ -154,40 +135,14 @@ private fun LookTab(preferences: ReaderPreferences) {
         }
     }
     Spacer(Modifier.height(12.dp))
-    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Stepper(
-            label = stringResource(MR.strings.tsz_rs_size),
-            value = size.toString(),
-            canDecrease = size > 13,
-            canIncrease = size < 28,
-            onDecrease = { preferences.novelFontSize.set((size - 1).coerceIn(13, 28)) },
-            onIncrease = { preferences.novelFontSize.set((size + 1).coerceIn(13, 28)) },
-            modifier = Modifier.weight(1f),
-        )
-        // Line height in tenths so repeated steps don't drift (1.6 + 0.1 + 0.1 …).
-        val tenths = (lines * 10).roundToInt()
-        Stepper(
-            label = stringResource(MR.strings.tsz_rs_lines),
-            value = String.format(Locale.ROOT, "%.1f", tenths / 10f),
-            canDecrease = tenths > 12,
-            canIncrease = tenths < 22,
-            onDecrease = { preferences.novelLineHeight.set((tenths - 1).coerceIn(12, 22) / 10f) },
-            onIncrease = { preferences.novelLineHeight.set((tenths + 1).coerceIn(12, 22) / 10f) },
-            modifier = Modifier.weight(1f),
-        )
-    }
+    ReaderTextMetrics(preferences, quick = true)
 }
 
 @Composable
 private fun LayoutTab(preferences: ReaderPreferences) {
     val renderingMode by preferences.novelRenderingMode.collectAsState()
     val paged by preferences.novelPagedMode.collectAsState()
-    val marginLeft by preferences.novelMarginLeft.collectAsState()
-    val marginRight by preferences.novelMarginRight.collectAsState()
-    val align by preferences.novelTextAlign.collectAsState()
-    val keepOn by preferences.novelKeepScreenOn.collectAsState()
 
-    // Paged mode exists only in the WebView renderer, as in the stock sheet.
     if (renderingMode == "webview") {
         TsuzukiSectionLabel(stringResource(MR.strings.tsz_rs_reading_mode))
         TsuzukiSegments(
@@ -196,29 +151,7 @@ private fun LayoutTab(preferences: ReaderPreferences) {
             onClick = { preferences.novelPagedMode.set(it == 1) },
         )
     }
-    TsuzukiSectionLabel(stringResource(MR.strings.tsz_rs_margins))
-    // Custom margins from "All settings" (e.g. the default 16) light up the nearest preset.
-    val currentMargin = (marginLeft + marginRight) / 2
-    val nearestMargin = marginChoices.minBy { (value, _) -> abs(value - currentMargin) }.first
-    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        marginChoices.forEach { (value, label) ->
-            ChoiceTile(
-                label = stringResource(label),
-                selected = value == nearestMargin,
-                modifier = Modifier.weight(1f),
-            ) {
-                preferences.novelMarginLeft.set(value)
-                preferences.novelMarginRight.set(value)
-            }
-        }
-    }
-    Spacer(Modifier.height(12.dp))
-    TsuzukiTile(modifier = Modifier.padding(horizontal = 16.dp), padding = 14.dp) {
-        SwitchRow(stringResource(MR.strings.tsz_rs_justify), align == "justify") {
-            preferences.novelTextAlign.set(if (it) "justify" else "left")
-        }
-        SwitchRow(stringResource(MR.strings.tsz_rs_keep_screen_on), keepOn) { preferences.novelKeepScreenOn.set(it) }
-    }
+    ReaderPageBasics(preferences)
 }
 
 @Composable
@@ -275,7 +208,7 @@ private fun ChoiceTile(
     val shape = RoundedCornerShape(14.dp)
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Box(
-        Modifier.tsuzukiPress(press).then(modifier).height(44.dp).clip(shape)
+        Modifier.tsuzukiPress(press).then(modifier).heightIn(min = 48.dp).clip(shape)
             .background(if (selected) tokens.dotOn else tokens.tile)
             .then(
                 if (!selected &&
@@ -296,7 +229,7 @@ private fun ChoiceTile(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            label,
+            cased(label),
             // The font tiles preview their own face; the rest follow the theme.
             style = if (fontFamily != null) {
                 MaterialTheme.typography.bodyMedium.copy(fontFamily = fontFamily)
@@ -311,86 +244,9 @@ private fun ChoiceTile(
 }
 
 @Composable
-private fun Stepper(
-    label: String,
-    value: String,
-    canDecrease: Boolean,
-    canIncrease: Boolean,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     val tokens = TsuzukiTheme.tokens
-    TsuzukiTile(modifier = modifier, padding = 8.dp) {
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val compact = maxWidth < 180.dp * LocalDensity.current.fontScale
-            Column {
-                if (compact) {
-                    Text(
-                        cased(label),
-                        Modifier.fillMaxWidth().padding(start = 6.dp, bottom = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (!compact) {
-                        Text(
-                            cased(label),
-                            Modifier.padding(start = 6.dp).weight(1f),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                        )
-                    }
-                    StepButton(Icons.Outlined.Remove, "$label −", canDecrease, onDecrease)
-                    Text(
-                        value,
-                        (if (compact) Modifier.weight(1f) else Modifier)
-                            .padding(horizontal = if (compact) 0.dp else 8.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = tokens.accent,
-                        textAlign = TextAlign.Center,
-                    )
-                    StepButton(Icons.Outlined.Add, "$label +", canIncrease, onIncrease)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StepButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    description: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        Modifier.size(48.dp)
-            .semantics { contentDescription = description }
-            .tsuzukiClickable(enabled = enabled, role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            Modifier.size(40.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                icon,
-                null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    val tokens = TsuzukiTheme.tokens
-    Row(Modifier.fillMaxWidth().heightIn(min = 50.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             cased(label),
             Modifier.weight(1f).padding(end = 8.dp),

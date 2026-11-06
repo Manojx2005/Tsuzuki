@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -49,6 +50,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +67,7 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.toggle
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.Slider
 import tachiyomi.presentation.core.components.material.padding
@@ -77,6 +80,9 @@ object SettingsItemsPaddings {
     val Horizontal = 24.dp
     val Vertical = 10.dp
 }
+
+/** Non-null for settings pages that place labels above their controls. */
+val LocalStackedSettingsLabel = staticCompositionLocalOf<((String) -> String)?> { null }
 
 @Composable
 fun HeadingItem(labelRes: StringResource) {
@@ -235,15 +241,34 @@ fun <T> RadioSelectItem(
                             onSelect(defaultValue)
                             showDialog = false
                         }) {
-                            Text("Default")
+                            Text(stringResource(MR.strings.label_default))
                         }
                     }
                     TextButton(onClick = { showDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(MR.strings.action_cancel))
                     }
                 }
             },
         )
+    }
+
+    val selectedLabel = options.firstOrNull { it.second == selected }?.first.orEmpty()
+    val stackedLabel = LocalStackedSettingsLabel.current
+    if (stackedLabel != null) {
+        Column(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                .clickable { showDialog = true }
+                .padding(horizontal = SettingsItemsPaddings.Horizontal, vertical = SettingsItemsPaddings.Vertical),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(stackedLabel(label), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                selectedLabel,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        return
     }
 
     Row(
@@ -263,7 +288,7 @@ fun <T> RadioSelectItem(
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = options.find { it.second == selected }?.first ?: "",
+            text = selectedLabel,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.End,
@@ -285,14 +310,19 @@ fun StepperItem(
     step: Int = 1,
     defaultValue: Int? = null,
     verticalPadOverride: Int = 8,
+    displayValue: String = value.toString(),
+    decimalInput: Boolean = false,
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    val stackedLabel = LocalStackedSettingsLabel.current
 
     if (showDialog) {
         StepperInputDialog(
             value = value,
             valueRange = valueRange,
             defaultValue = defaultValue,
+            title = stackedLabel?.invoke(label),
+            decimalInput = decimalInput,
             onDismiss = { showDialog = false },
             onConfirm = {
                 onChange(it)
@@ -301,6 +331,41 @@ fun StepperItem(
         )
     }
 
+    val controls: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { if (value - step >= valueRange.first) onChange(value - step) },
+                enabled = value > valueRange.first,
+            ) {
+                Icon(Icons.Outlined.Remove, contentDescription = stringResource(MR.strings.tsz_a11y_decrease))
+            }
+            Text(
+                text = displayValue,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .widthIn(min = 32.dp)
+                    .clickable { showDialog = true },
+                textAlign = TextAlign.Center,
+            )
+            IconButton(
+                onClick = { if (value + step <= valueRange.last) onChange(value + step) },
+                enabled = value < valueRange.last,
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(MR.strings.tsz_a11y_increase))
+            }
+        }
+    }
+    if (stackedLabel != null) {
+        Column(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                .padding(horizontal = SettingsItemsPaddings.Horizontal),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(stackedLabel(label), style = MaterialTheme.typography.bodyMedium)
+            controls()
+        }
+        return
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -316,28 +381,7 @@ fun StepperItem(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f),
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = { if (value - step >= valueRange.first) onChange(value - step) },
-                enabled = value > valueRange.first,
-            ) {
-                Icon(Icons.Outlined.Remove, contentDescription = "Decrease")
-            }
-            Text(
-                text = value.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .widthIn(min = 32.dp)
-                    .clickable { showDialog = true },
-                textAlign = TextAlign.Center,
-            )
-            IconButton(
-                onClick = { if (value + step <= valueRange.last) onChange(value + step) },
-                enabled = value < valueRange.last,
-            ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Increase")
-            }
-        }
+        controls()
     }
 }
 
@@ -389,26 +433,49 @@ private fun StepperInputDialog(
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit,
     defaultValue: Int? = null,
+    title: String? = null,
+    decimalInput: Boolean = false,
 ) {
-    var input by remember { mutableStateOf(value.toString()) }
-    val parsed = input.toIntOrNull()
+    val decimalSeparator = java.text.DecimalFormatSymbols.getInstance().decimalSeparator
+    fun format(number: Int): String = if (decimalInput) {
+        java.math.BigDecimal.valueOf(number.toLong(), 1).toPlainString().replace('.', decimalSeparator)
+    } else {
+        number.toString()
+    }
+
+    var input by remember { mutableStateOf(format(value)) }
+    val parsed = if (decimalInput) {
+        val decimal = input.replace(decimalSeparator, '.').replace(',', '.').toBigDecimalOrNull()
+        decimal?.let { runCatching { it.movePointRight(1).intValueExact() }.getOrNull() }
+    } else {
+        input.toIntOrNull()
+    }
+    val range = "${format(valueRange.first)}–${format(valueRange.last)}"
     val isValid = parsed != null && parsed in valueRange
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Enter value (${valueRange.first}–${valueRange.last})") },
+        title = { Text(title ?: "Enter value ($range)") },
         text = {
             OutlinedTextField(
                 value = input,
-                onValueChange = { input = it.filter { c -> c.isDigit() } },
+                onValueChange = { changed ->
+                    input = changed.filter { c ->
+                        c.isDigit() || (decimalInput && (c == '.' || c == ',' || c == decimalSeparator))
+                    }
+                },
                 singleLine = true,
                 isError = !isValid,
-                supportingText = if (!isValid) {
+                supportingText = if (title != null) {
+                    { Text(range) }
+                } else if (!isValid) {
                     { Text("Must be between ${valueRange.first} and ${valueRange.last}") }
                 } else {
                     null
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (decimalInput) KeyboardType.Decimal else KeyboardType.Number,
+                ),
             )
         },
         confirmButton = {
@@ -416,18 +483,18 @@ private fun StepperInputDialog(
                 onClick = { if (isValid) onConfirm(parsed!!) },
                 enabled = isValid,
             ) {
-                Text("OK")
+                Text(stringResource(MR.strings.action_ok))
             }
         },
         dismissButton = {
             Row {
                 if (defaultValue != null) {
                     TextButton(onClick = { onConfirm(defaultValue) }) {
-                        Text("Default")
+                        Text(stringResource(MR.strings.label_default))
                     }
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(MR.strings.action_cancel))
                 }
             }
         },
@@ -476,9 +543,11 @@ fun BaseSliderItem(
     pillColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     val haptic = LocalHapticFeedback.current
+    val stackedLabel = LocalStackedSettingsLabel.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (stackedLabel != null) Modifier.heightIn(min = 56.dp) else Modifier)
             .then(modifier),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -488,7 +557,7 @@ fun BaseSliderItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
+                    text = stackedLabel?.invoke(title) ?: title,
                     style = titleStyle,
                 )
                 if (subtitle != null) {
@@ -689,6 +758,12 @@ fun InlineSettingsChipRow(labelRes: StringResource, content: @Composable FlowRow
 
 @Composable
 fun InlineSettingsChipRow(label: String, content: @Composable FlowRowScope.() -> Unit) {
+    LocalStackedSettingsLabel.current?.let { labelText ->
+        Column(Modifier.heightIn(min = 56.dp)) {
+            SettingsChipRow(labelText(label), content)
+        }
+        return
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -734,6 +809,18 @@ private fun BaseSettingsItem(
     widget: @Composable RowScope.() -> Unit,
     onClick: () -> Unit,
 ) {
+    LocalStackedSettingsLabel.current?.let { labelText ->
+        Column(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                .clickable(onClick = onClick)
+                .padding(horizontal = SettingsItemsPaddings.Horizontal, vertical = SettingsItemsPaddings.Vertical),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(labelText(label), style = MaterialTheme.typography.bodyMedium)
+            Row { widget(this) }
+        }
+        return
+    }
     Row(
         modifier = Modifier
             .clickable(onClick = onClick)

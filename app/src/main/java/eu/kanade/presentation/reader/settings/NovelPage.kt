@@ -166,21 +166,7 @@ private val backgroundColors = listOf(
 
 @Composable
 internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, renderingMode: String) {
-    val context = LocalContext.current
-    val fontFamily by viewModel.preferences.novelFontFamily.collectAsState()
     val textAlign by viewModel.preferences.novelTextAlign.collectAsState()
-    val autoSplitEnabled by viewModel.preferences.novelAutoSplitText.collectAsState()
-    val autoSplitWordCount by viewModel.preferences.novelAutoSplitWordCount.collectAsState()
-
-    // Load custom fonts from FontManager
-    val fontManager = remember { FontManager(context) }
-    val resolvedSystemFonts = systemFonts.map { (labelRes, value) -> stringResource(labelRes) to value }
-    val allFonts by produceState(initialValue = resolvedSystemFonts) {
-        val customFonts = fontManager.getInstalledFonts().map { font ->
-            font.name to font.path
-        }
-        value = resolvedSystemFonts + customFonts
-    }
 
     // Rendering Mode
     InlineSettingsChipRow(TDMR.strings.pref_novel_rendering_mode) {
@@ -193,14 +179,7 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
         }
     }
 
-    // Font Family
-    RadioSelectItem(
-        label = stringResource(TDMR.strings.pref_font_family),
-        options = allFonts,
-        selected = fontFamily,
-        onSelect = { viewModel.preferences.novelFontFamily.set(it) },
-        defaultValue = viewModel.preferences.novelFontFamily.defaultValue(),
-    )
+    NovelFontSetting(viewModel)
 
     // Use Original Fonts (WebView mode only)
     if (renderingMode == "webview") {
@@ -243,6 +222,38 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
         multiplier = 10,
     )
 
+    NovelParagraphSettings(viewModel)
+    NovelIndividualMargins(viewModel)
+    HorizontalDivider()
+    NovelAutoSplitSettings(viewModel)
+}
+
+@Composable
+internal fun NovelFontSetting(viewModel: ReaderSettingsViewModel) {
+    val context = LocalContext.current
+    val fontFamily by viewModel.preferences.novelFontFamily.collectAsState()
+    // Load custom fonts from FontManager
+    val fontManager = remember { FontManager(context) }
+    val resolvedSystemFonts = systemFonts.map { (labelRes, value) -> stringResource(labelRes) to value }
+    val allFonts by produceState(initialValue = resolvedSystemFonts) {
+        val customFonts = fontManager.getInstalledFonts().map { font ->
+            font.name to font.path
+        }
+        value = resolvedSystemFonts + customFonts
+    }
+
+    // Font Family
+    RadioSelectItem(
+        label = stringResource(TDMR.strings.pref_font_family),
+        options = allFonts,
+        selected = fontFamily,
+        onSelect = { viewModel.preferences.novelFontFamily.set(it) },
+        defaultValue = viewModel.preferences.novelFontFamily.defaultValue(),
+    )
+}
+
+@Composable
+internal fun NovelParagraphSettings(viewModel: ReaderSettingsViewModel) {
     // Paragraph Indentation
     StepperItem(
         label = stringResource(TDMR.strings.pref_novel_paragraph_indent),
@@ -258,7 +269,10 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
         valueRange = 0..30,
         multiplier = 10,
     )
+}
 
+@Composable
+internal fun NovelIndividualMargins(viewModel: ReaderSettingsViewModel) {
     // Margins
     StepperItem(
         label = stringResource(TDMR.strings.pref_novel_margin_left),
@@ -280,8 +294,12 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
         pref = viewModel.preferences.novelMarginBottom,
         valueRange = 0..300,
     )
+}
 
-    HorizontalDivider()
+@Composable
+internal fun NovelAutoSplitSettings(viewModel: ReaderSettingsViewModel) {
+    val autoSplitEnabled by viewModel.preferences.novelAutoSplitText.collectAsState()
+    val autoSplitWordCount by viewModel.preferences.novelAutoSplitWordCount.collectAsState()
 
     // Auto-split paragraphs
     CheckboxItem(
@@ -303,7 +321,15 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
 @Composable
 internal fun ColumnScope.NovelAppearanceTab(viewModel: ReaderSettingsViewModel, renderingMode: String) {
     eu.kanade.presentation.tsuzuki.novel.TsuzukiPageColourPicker(viewModel.preferences)
+    NovelAppearanceOptions(viewModel, renderingMode)
+}
 
+@Composable
+internal fun NovelAppearanceOptions(
+    viewModel: ReaderSettingsViewModel,
+    renderingMode: String,
+    includeKeepScreenOn: Boolean = true,
+) {
     // Hide Chapter Title in Content
     CheckboxItem(
         label = stringResource(TDMR.strings.pref_novel_hide_chapter_title),
@@ -351,11 +377,12 @@ internal fun ColumnScope.NovelAppearanceTab(viewModel: ReaderSettingsViewModel, 
         )
     }
 
-    // Keep Screen On
-    CheckboxItem(
-        label = stringResource(TDMR.strings.pref_novel_keep_screen_on),
-        pref = viewModel.preferences.novelKeepScreenOn,
-    )
+    if (includeKeepScreenOn) {
+        CheckboxItem(
+            label = stringResource(TDMR.strings.pref_novel_keep_screen_on),
+            pref = viewModel.preferences.novelKeepScreenOn,
+        )
+    }
 
     // Block Media (images, videos, audio)
     CheckboxItem(
@@ -373,7 +400,11 @@ internal fun ColumnScope.NovelAppearanceTab(viewModel: ReaderSettingsViewModel, 
 }
 
 @Composable
-internal fun ColumnScope.NovelControlsTab(viewModel: ReaderSettingsViewModel, renderingMode: String) {
+internal fun ColumnScope.NovelControlsTab(
+    viewModel: ReaderSettingsViewModel,
+    renderingMode: String,
+    includeStatusBar: Boolean = true,
+) {
     val autoScrollSpeed by viewModel.preferences.novelAutoScrollSpeed.collectAsState()
     val pagedMode by viewModel.preferences.novelPagedMode.collectAsState()
     val isWebviewPaged = renderingMode == "webview" && pagedMode
@@ -603,24 +634,34 @@ internal fun ColumnScope.NovelControlsTab(viewModel: ReaderSettingsViewModel, re
         }
     }
 
-    // Status Bar
-    HorizontalDivider()
+    if (includeStatusBar) {
+        HorizontalDivider()
+        NovelStatusBarSettings(viewModel)
+    }
+}
+
+@Composable
+internal fun NovelStatusBarSettings(viewModel: ReaderSettingsViewModel, includeBasics: Boolean = true) {
     val statusBarEnabled by viewModel.preferences.novelStatusBarEnabled.collectAsState()
-    CheckboxItem(
-        label = stringResource(TDMR.strings.pref_novel_status_bar),
-        pref = viewModel.preferences.novelStatusBarEnabled,
-    )
-    if (statusBarEnabled) {
-        val statusBarPosition by viewModel.preferences.novelStatusBarPosition.collectAsState()
+    if (includeBasics) {
         CheckboxItem(
-            label = stringResource(TDMR.strings.pref_novel_status_bar_at_top),
-            checked = statusBarPosition == "top",
-            onClick = {
-                viewModel.preferences.novelStatusBarPosition.set(
-                    if (statusBarPosition == "top") "bottom" else "top",
-                )
-            },
+            label = stringResource(TDMR.strings.pref_novel_status_bar),
+            pref = viewModel.preferences.novelStatusBarEnabled,
         )
+    }
+    if (statusBarEnabled) {
+        if (includeBasics) {
+            val statusBarPosition by viewModel.preferences.novelStatusBarPosition.collectAsState()
+            CheckboxItem(
+                label = stringResource(TDMR.strings.pref_novel_status_bar_at_top),
+                checked = statusBarPosition == "top",
+                onClick = {
+                    viewModel.preferences.novelStatusBarPosition.set(
+                        if (statusBarPosition == "top") "bottom" else "top",
+                    )
+                },
+            )
+        }
         CheckboxItem(
             label = stringResource(TDMR.strings.pref_novel_status_bar_show_time),
             pref = viewModel.preferences.novelStatusBarShowTime,
@@ -1514,41 +1555,15 @@ private fun RegexEditDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ColumnScope.NovelTtsTab(viewModel: ReaderSettingsViewModel) {
+internal fun ColumnScope.NovelTtsTab(
+    viewModel: ReaderSettingsViewModel,
+    highlightLayout: @Composable (@Composable () -> Unit) -> Unit = { it() },
+) {
     val context = LocalContext.current
     val ttsSpeed by viewModel.preferences.novelTtsSpeed.collectAsState()
     val ttsPitch by viewModel.preferences.novelTtsPitch.collectAsState()
     val ttsVoice by viewModel.preferences.novelTtsVoice.collectAsState()
     val ttsEnableHighlight by viewModel.preferences.novelTtsEnableHighlight.collectAsState()
-    val ttsHighlightStyle by viewModel.preferences.novelTtsHighlightStyle.collectAsState()
-    val ttsHighlightColor by viewModel.preferences.novelTtsHighlightColor.collectAsState()
-    val ttsHighlightTextColor by viewModel.preferences.novelTtsHighlightTextColor.collectAsState()
-    var showHighlightBgColorPicker by remember { mutableStateOf(false) }
-    var showHighlightTextColorPicker by remember { mutableStateOf(false) }
-
-    if (showHighlightBgColorPicker) {
-        ColorPickerDialog(
-            title = "TTS Highlight Background",
-            initialColor = ttsHighlightColor,
-            onDismiss = { showHighlightBgColorPicker = false },
-            onConfirm = { color ->
-                viewModel.preferences.novelTtsHighlightColor.set(color)
-                showHighlightBgColorPicker = false
-            },
-        )
-    }
-
-    if (showHighlightTextColorPicker) {
-        ColorPickerDialog(
-            title = "TTS Highlight Text",
-            initialColor = ttsHighlightTextColor,
-            onDismiss = { showHighlightTextColorPicker = false },
-            onConfirm = { color ->
-                viewModel.preferences.novelTtsHighlightTextColor.set(color)
-                showHighlightTextColorPicker = false
-            },
-        )
-    }
 
     // Load available voices using TTS
     val availableVoices = remember { mutableStateListOf<Pair<String, String>>() }
@@ -1656,86 +1671,8 @@ internal fun ColumnScope.NovelTtsTab(viewModel: ReaderSettingsViewModel) {
         pref = viewModel.preferences.novelTtsEnableHighlight,
     )
 
-    // Highlight style selector (pill chips)
     if (ttsEnableHighlight) {
-        SettingsChipRow("Highlight style") {
-            listOf(
-                "background" to "Background",
-                "underline" to "Underline",
-                "outline" to "Outline",
-            ).forEach { (value, label) ->
-                FilterChip(
-                    selected = ttsHighlightStyle == value,
-                    onClick = { viewModel.preferences.novelTtsHighlightStyle.set(value) },
-                    label = { Text(label) },
-                )
-            }
-        }
-
-        SettingsChipRow(TDMR.strings.pref_novel_background_color) {
-            listOf(
-                0xFFFFD54F.toInt() to "Amber",
-                0xFF90CAF9.toInt() to "Blue",
-                0xFFA5D6A7.toInt() to "Green",
-                0xFFF48FB1.toInt() to "Pink",
-                Int.MIN_VALUE to "Custom",
-            ).forEach { (colorValue, label) ->
-                val selected = if (colorValue == Int.MIN_VALUE) {
-                    listOf(0xFFFFD54F.toInt(), 0xFF90CAF9.toInt(), 0xFFA5D6A7.toInt(), 0xFFF48FB1.toInt()).none {
-                        it ==
-                            ttsHighlightColor
-                    }
-                } else {
-                    ttsHighlightColor == colorValue
-                }
-                FilterChip(
-                    selected = selected,
-                    onClick = {
-                        if (colorValue == Int.MIN_VALUE) {
-                            showHighlightBgColorPicker = true
-                        } else {
-                            viewModel.preferences.novelTtsHighlightColor.set(colorValue)
-                        }
-                    },
-                    label = { Text(label) },
-                )
-            }
-        }
-
-        SettingsChipRow(TDMR.strings.pref_novel_font_color) {
-            listOf(
-                0xFF111111.toInt() to "Dark",
-                0xFFFFFFFF.toInt() to "White",
-                0xFF1E3A8A.toInt() to "Navy",
-                0xFF7F1D1D.toInt() to "Maroon",
-                Int.MIN_VALUE to "Custom",
-            ).forEach { (colorValue, label) ->
-                val selected = if (colorValue == Int.MIN_VALUE) {
-                    listOf(0xFF111111.toInt(), 0xFFFFFFFF.toInt(), 0xFF1E3A8A.toInt(), 0xFF7F1D1D.toInt()).none {
-                        it ==
-                            ttsHighlightTextColor
-                    }
-                } else {
-                    ttsHighlightTextColor == colorValue
-                }
-                FilterChip(
-                    selected = selected,
-                    onClick = {
-                        if (colorValue == Int.MIN_VALUE) {
-                            showHighlightTextColorPicker = true
-                        } else {
-                            viewModel.preferences.novelTtsHighlightTextColor.set(colorValue)
-                        }
-                    },
-                    label = { Text(label) },
-                )
-            }
-        }
-
-        CheckboxItem(
-            label = "Keep highlighted paragraph in view",
-            pref = viewModel.preferences.novelTtsKeepHighlightInView,
-        )
+        highlightLayout { NovelHighlightSettings(viewModel) }
     }
 
     CheckboxItem(
@@ -1746,6 +1683,118 @@ internal fun ColumnScope.NovelTtsTab(viewModel: ReaderSettingsViewModel) {
     CheckboxItem(
         label = "Keep TTS running in background",
         pref = viewModel.preferences.novelTtsBackgroundPlayback,
+    )
+}
+
+@Composable
+private fun NovelHighlightSettings(viewModel: ReaderSettingsViewModel) {
+    val ttsHighlightStyle by viewModel.preferences.novelTtsHighlightStyle.collectAsState()
+    val ttsHighlightColor by viewModel.preferences.novelTtsHighlightColor.collectAsState()
+    val ttsHighlightTextColor by viewModel.preferences.novelTtsHighlightTextColor.collectAsState()
+    var showHighlightBgColorPicker by remember { mutableStateOf(false) }
+    var showHighlightTextColorPicker by remember { mutableStateOf(false) }
+
+    if (showHighlightBgColorPicker) {
+        ColorPickerDialog(
+            title = "TTS Highlight Background",
+            initialColor = ttsHighlightColor,
+            onDismiss = { showHighlightBgColorPicker = false },
+            onConfirm = { color ->
+                viewModel.preferences.novelTtsHighlightColor.set(color)
+                showHighlightBgColorPicker = false
+            },
+        )
+    }
+
+    if (showHighlightTextColorPicker) {
+        ColorPickerDialog(
+            title = "TTS Highlight Text",
+            initialColor = ttsHighlightTextColor,
+            onDismiss = { showHighlightTextColorPicker = false },
+            onConfirm = { color ->
+                viewModel.preferences.novelTtsHighlightTextColor.set(color)
+                showHighlightTextColorPicker = false
+            },
+        )
+    }
+
+    SettingsChipRow("Highlight style") {
+        listOf(
+            "background" to "Background",
+            "underline" to "Underline",
+            "outline" to "Outline",
+        ).forEach { (value, label) ->
+            FilterChip(
+                selected = ttsHighlightStyle == value,
+                onClick = { viewModel.preferences.novelTtsHighlightStyle.set(value) },
+                label = { Text(label) },
+            )
+        }
+    }
+
+    SettingsChipRow(TDMR.strings.pref_novel_background_color) {
+        listOf(
+            0xFFFFD54F.toInt() to "Amber",
+            0xFF90CAF9.toInt() to "Blue",
+            0xFFA5D6A7.toInt() to "Green",
+            0xFFF48FB1.toInt() to "Pink",
+            Int.MIN_VALUE to "Custom",
+        ).forEach { (colorValue, label) ->
+            val selected = if (colorValue == Int.MIN_VALUE) {
+                listOf(0xFFFFD54F.toInt(), 0xFF90CAF9.toInt(), 0xFFA5D6A7.toInt(), 0xFFF48FB1.toInt()).none {
+                    it ==
+                        ttsHighlightColor
+                }
+            } else {
+                ttsHighlightColor == colorValue
+            }
+            FilterChip(
+                selected = selected,
+                onClick = {
+                    if (colorValue == Int.MIN_VALUE) {
+                        showHighlightBgColorPicker = true
+                    } else {
+                        viewModel.preferences.novelTtsHighlightColor.set(colorValue)
+                    }
+                },
+                label = { Text(label) },
+            )
+        }
+    }
+
+    SettingsChipRow(TDMR.strings.pref_novel_font_color) {
+        listOf(
+            0xFF111111.toInt() to "Dark",
+            0xFFFFFFFF.toInt() to "White",
+            0xFF1E3A8A.toInt() to "Navy",
+            0xFF7F1D1D.toInt() to "Maroon",
+            Int.MIN_VALUE to "Custom",
+        ).forEach { (colorValue, label) ->
+            val selected = if (colorValue == Int.MIN_VALUE) {
+                listOf(0xFF111111.toInt(), 0xFFFFFFFF.toInt(), 0xFF1E3A8A.toInt(), 0xFF7F1D1D.toInt()).none {
+                    it ==
+                        ttsHighlightTextColor
+                }
+            } else {
+                ttsHighlightTextColor == colorValue
+            }
+            FilterChip(
+                selected = selected,
+                onClick = {
+                    if (colorValue == Int.MIN_VALUE) {
+                        showHighlightTextColorPicker = true
+                    } else {
+                        viewModel.preferences.novelTtsHighlightTextColor.set(colorValue)
+                    }
+                },
+                label = { Text(label) },
+            )
+        }
+    }
+
+    CheckboxItem(
+        label = "Keep highlighted paragraph in view",
+        pref = viewModel.preferences.novelTtsKeepHighlightInView,
     )
 }
 

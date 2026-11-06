@@ -1288,4 +1288,25 @@
     <string name="tsz_appearance_dot_covers">Dot의 표지</string>
     <string name="tsz_appearance_covers_colour">컬러</string>
     <string name="tsz_appearance_legacy_themes">이전 Mihon 및 Tsundoku 테마는 이제 Colour를 사용합니다.</string>
+    <!-- Q11 -->
+    <string name="tsz_q11_text">텍스트</string>
+    <string name="tsz_q11_page">페이지</string>
+    <string name="tsz_q11_listen">듣기</string>
+    <string name="tsz_q11_more">더보기</string>
+    <string name="tsz_q11_all">전체 리더 설정</string>
+    <string name="tsz_q11_size">글자 크기</string>
+    <string name="tsz_q11_spacing">줄 간격</string>
+    <string name="tsz_q11_fine_tune">세부 조정</string>
+    <string name="tsz_q11_side_margins">좌우 여백</string>
+    <string name="tsz_q11_vertical_margins">위아래 여백</string>
+    <string name="tsz_q11_preview">미리보기</string>
+    <string name="tsz_q11_sample">아침 햇살이 펼쳐진 책에 비쳤다. 그녀는 책장을 넘기고 계속 읽었다.</string>
+    <string name="tsz_q11_reset_body">소설 리더 설정을 기본값으로 되돌릴까요?</string>
+    <string name="tsz_q11_left">왼쪽</string>
+    <string name="tsz_q11_centre">가운데</string>
+    <string name="tsz_q11_right">오른쪽</string>
+    <string name="tsz_q11_justify">양쪽 맞춤</string>
+    <string name="tsz_q11_top">상단</string>
+    <string name="tsz_q11_bottom">하단</string>
+    <string name="tsz_q11_status_position">상태 표시줄 위치</string>
 </resources>

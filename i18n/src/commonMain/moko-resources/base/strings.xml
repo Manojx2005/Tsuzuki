@@ -1653,4 +1653,25 @@
     <string name="tsz_appearance_dot_covers">Covers in Dot</string>
     <string name="tsz_appearance_covers_colour">In colour</string>
     <string name="tsz_appearance_legacy_themes">Earlier Mihon and Tsundoku themes now use Colour.</string>
+    <!-- Q11 -->
+    <string name="tsz_q11_text">Text</string>
+    <string name="tsz_q11_page">Page</string>
+    <string name="tsz_q11_listen">Listen</string>
+    <string name="tsz_q11_more">More</string>
+    <string name="tsz_q11_all">All reader settings</string>
+    <string name="tsz_q11_size">Text size</string>
+    <string name="tsz_q11_spacing">Line spacing</string>
+    <string name="tsz_q11_fine_tune">Fine-tune</string>
+    <string name="tsz_q11_side_margins">Side margins</string>
+    <string name="tsz_q11_vertical_margins">Top / bottom</string>
+    <string name="tsz_q11_preview">Preview</string>
+    <string name="tsz_q11_sample">Morning light fell across the open book. She turned the page and kept reading.</string>
+    <string name="tsz_q11_reset_body">Restore the novel reader settings to their defaults?</string>
+    <string name="tsz_q11_left">Left</string>
+    <string name="tsz_q11_centre">Centre</string>
+    <string name="tsz_q11_right">Right</string>
+    <string name="tsz_q11_justify">Justify</string>
+    <string name="tsz_q11_top">Top</string>
+    <string name="tsz_q11_bottom">Bottom</string>
+    <string name="tsz_q11_status_position">Status bar position</string>
 </resources>

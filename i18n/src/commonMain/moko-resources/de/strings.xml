@@ -1289,4 +1289,25 @@
     <string name="tsz_appearance_dot_covers">Cover in Dot</string>
     <string name="tsz_appearance_covers_colour">Farbig</string>
     <string name="tsz_appearance_legacy_themes">Ältere Mihon- und Tsundoku-Themen verwenden jetzt Colour.</string>
+    <!-- Q11 -->
+    <string name="tsz_q11_text">Text</string>
+    <string name="tsz_q11_page">Seite</string>
+    <string name="tsz_q11_listen">Hören</string>
+    <string name="tsz_q11_more">Mehr</string>
+    <string name="tsz_q11_all">Alle Leseeinstellungen</string>
+    <string name="tsz_q11_size">Schriftgröße</string>
+    <string name="tsz_q11_spacing">Zeilenabstand</string>
+    <string name="tsz_q11_fine_tune">Feineinstellungen</string>
+    <string name="tsz_q11_side_margins">Seitenränder</string>
+    <string name="tsz_q11_vertical_margins">Oben / unten</string>
+    <string name="tsz_q11_preview">Vorschau</string>
+    <string name="tsz_q11_sample">Morgenlicht fiel auf das aufgeschlagene Buch. Sie blätterte um und las weiter.</string>
+    <string name="tsz_q11_reset_body">Die Einstellungen des Romanlesers zurücksetzen?</string>
+    <string name="tsz_q11_left">Links</string>
+    <string name="tsz_q11_centre">Mittig</string>
+    <string name="tsz_q11_right">Rechts</string>
+    <string name="tsz_q11_justify">Blocksatz</string>
+    <string name="tsz_q11_top">Oben</string>
+    <string name="tsz_q11_bottom">Unten</string>
+    <string name="tsz_q11_status_position">Position der Statusleiste</string>
 </resources>

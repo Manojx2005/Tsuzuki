@@ -1289,4 +1289,25 @@
     <string name="tsz_appearance_dot_covers">Dot 主题封面</string>
     <string name="tsz_appearance_covers_colour">彩色</string>
     <string name="tsz_appearance_legacy_themes">旧版 Mihon 和 Tsundoku 主题现已切换为 Colour。</string>
+    <!-- Q11 -->
+    <string name="tsz_q11_text">文字</string>
+    <string name="tsz_q11_page">页面</string>
+    <string name="tsz_q11_listen">朗读</string>
+    <string name="tsz_q11_more">更多</string>
+    <string name="tsz_q11_all">全部阅读设置</string>
+    <string name="tsz_q11_size">字号</string>
+    <string name="tsz_q11_spacing">行距</string>
+    <string name="tsz_q11_fine_tune">细调</string>
+    <string name="tsz_q11_side_margins">左右边距</string>
+    <string name="tsz_q11_vertical_margins">上下边距</string>
+    <string name="tsz_q11_preview">预览</string>
+    <string name="tsz_q11_sample">晨光落在摊开的书上。她翻过一页，继续阅读。</string>
+    <string name="tsz_q11_reset_body">将小说阅读设置恢复为默认值？</string>
+    <string name="tsz_q11_left">左对齐</string>
+    <string name="tsz_q11_centre">居中</string>
+    <string name="tsz_q11_right">右对齐</string>
+    <string name="tsz_q11_justify">两端对齐</string>
+    <string name="tsz_q11_top">顶部</string>
+    <string name="tsz_q11_bottom">底部</string>
+    <string name="tsz_q11_status_position">状态栏位置</string>
 </resources>

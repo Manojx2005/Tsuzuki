@@ -61,6 +61,7 @@ internal fun TsuzukiPageColourPicker(
     preferences: ReaderPreferences,
     modifier: Modifier = Modifier,
     includeCustom: Boolean = true,
+    columns: Int = 4,
 ) {
     val tokens = TsuzukiTheme.tokens
     val theme by preferences.novelTheme.collectAsState()
@@ -74,7 +75,7 @@ internal fun TsuzukiPageColourPicker(
             Modifier.fillMaxWidth().selectableGroup().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            options.chunked(4).forEach { row ->
+            options.chunked(columns).forEach { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -110,7 +111,7 @@ internal fun TsuzukiPageColourPicker(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Box(
-                                Modifier.size(54.dp)
+                                Modifier.size(if (columns == 6) 46.dp else 54.dp)
                                     .then(
                                         if (selectedOption) {
                                             Modifier.border(
@@ -141,7 +142,7 @@ internal fun TsuzukiPageColourPicker(
                             )
                         }
                     }
-                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

@@ -27,6 +27,8 @@ import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.components.toTabTitles
 import eu.kanade.presentation.tsuzuki.manga.LocalMangaReaderSettings
+import eu.kanade.presentation.tsuzuki.novel.TsuzukiAllReaderSettings
+import eu.kanade.presentation.tsuzuki.novel.TsuzukiReaderSettingsSheet
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
 import tachiyomi.i18n.MR
@@ -41,20 +43,20 @@ fun ReaderSettingsDialog(
     viewModel: ReaderSettingsViewModel,
     isNovelMode: Boolean = false,
 ) {
-    // Tsuzuki: the ReaderSettings board, with "All settings" opening the stock sheet below.
     var showAllNovelSettings by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    if (isNovelMode && !showAllNovelSettings &&
-        eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
-        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
-    ) {
-        eu.kanade.presentation.tsuzuki.novel.TsuzukiReaderSettingsSheet(
-            preferences = viewModel.preferences,
-            onDismissRequest = {
-                onDismissRequest()
-                onShowMenus()
-            },
-            onAllSettings = { showAllNovelSettings = true },
-        )
+    if (isNovelMode && isTsuzukiStyle()) {
+        if (showAllNovelSettings) {
+            TsuzukiAllReaderSettings(viewModel, onBack = { showAllNovelSettings = false })
+        } else {
+            TsuzukiReaderSettingsSheet(
+                preferences = viewModel.preferences,
+                onDismissRequest = {
+                    onDismissRequest()
+                    onShowMenus()
+                },
+                onAllSettings = { showAllNovelSettings = true },
+            )
+        }
         return
     }
     if (isNovelMode) {
@@ -80,11 +82,19 @@ private fun MangaReaderSettingsDialog(
     onHideMenus: () -> Unit,
     viewModel: ReaderSettingsViewModel,
 ) {
-    val tabTitles = listOf(
-        stringResource(MR.strings.pref_category_reading_mode),
-        stringResource(MR.strings.pref_category_general),
-        stringResource(MR.strings.custom_filter),
-    ).toTabTitles()
+    val tabTitles = if (isTsuzukiStyle()) {
+        listOf(
+            stringResource(MR.strings.pref_category_reading),
+            stringResource(MR.strings.tsz_q11_page),
+            stringResource(MR.strings.action_filter),
+        )
+    } else {
+        listOf(
+            stringResource(MR.strings.pref_category_reading_mode),
+            stringResource(MR.strings.pref_category_general),
+            stringResource(MR.strings.custom_filter),
+        )
+    }.toTabTitles()
     val pagerState = rememberPagerState { tabTitles.size }
 
     BoxWithConstraints {

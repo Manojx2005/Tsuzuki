@@ -1282,4 +1282,25 @@
     <string name="tsz_appearance_dot_covers">Couvertures dans Dot</string>
     <string name="tsz_appearance_covers_colour">En couleur</string>
     <string name="tsz_appearance_legacy_themes">Les anciens thèmes de Mihon et Tsundoku utilisent désormais Colour.</string>
+    <!-- Q11 -->
+    <string name="tsz_q11_text">Texte</string>
+    <string name="tsz_q11_page">Page</string>
+    <string name="tsz_q11_listen">Écouter</string>
+    <string name="tsz_q11_more">Plus</string>
+    <string name="tsz_q11_all">Tous les réglages de lecture</string>
+    <string name="tsz_q11_size">Taille du texte</string>
+    <string name="tsz_q11_spacing">Interligne</string>
+    <string name="tsz_q11_fine_tune">Réglages fins</string>
+    <string name="tsz_q11_side_margins">Marges latérales</string>
+    <string name="tsz_q11_vertical_margins">Haut / bas</string>
+    <string name="tsz_q11_preview">Aperçu</string>
+    <string name="tsz_q11_sample">La lumière du matin éclairait le livre ouvert. Elle tourna la page et poursuivit sa lecture.</string>
+    <string name="tsz_q11_reset_body">Rétablir les réglages par défaut du lecteur de romans ?</string>
+    <string name="tsz_q11_left">Gauche</string>
+    <string name="tsz_q11_centre">Centre</string>
+    <string name="tsz_q11_right">Droite</string>
+    <string name="tsz_q11_justify">Justifier</string>
+    <string name="tsz_q11_top">Haut</string>
+    <string name="tsz_q11_bottom">Bas</string>
+    <string name="tsz_q11_status_position">Position de la barre d’état</string>
 </resources>
