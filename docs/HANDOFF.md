@@ -154,7 +154,7 @@ time; put the rest in an overflow menu or a "More" sheet; never let a row scroll
 tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
 case, Doto only for short headings and numbers.
 
-#### Q1 Smooth motion in Dot (T3) — `claude-working` (Claude reviewing `tsuzuki/q1` @ 1d8fe9074, then merging into main; Codex's Result is in that branch's HANDOFF.md)
+#### Q1 Smooth motion in Dot (T3) — `done` (Claude merged `tsuzuki/q1` @ 1d8fe9074 into main 2026-11-06; 862 tests green; tablet Dot rail + S22 Colour pill indicator slide checked, crash buffers empty; owner-phone gfxinfo/recording still to do on the laptop. Codex's full Result: `git show 1d8fe9074:docs/HANDOFF.md`)
 Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
 p50 5 ms at 120 Hz) — the lag is **designed in**:
 1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible

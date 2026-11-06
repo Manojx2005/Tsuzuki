@@ -25,7 +25,7 @@ private val LocalCoverVisibilityScope = staticCompositionLocalOf<AnimatedVisibil
 @Composable
 fun TsuzukiNavigatorTransition(navigator: Navigator, modifier: Modifier = Modifier) {
     val reduced = rememberReduceMotion()
-    // Full-screen fades stay smooth in Dot; stepping is kept for small UI (pills, toggles).
+    // Full-screen fades use the same smooth curve in both themes.
     val easing = TsuzukiMotion.Standard
     val fade = tween<Float>(if (reduced) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHARED_MS, easing = easing)
     SharedTransitionLayout(modifier) {

@@ -38,13 +38,13 @@ private class SheetMotionScheme(
 ) : MotionScheme by base {
     override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = when {
         reduced -> snap()
-        dot -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.stepped(TsuzukiMotion.Enter))
+        dot -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.Enter)
         else -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.Spring)
     }
 
     override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = when {
         reduced -> snap()
-        dot -> tween(200, easing = TsuzukiMotion.stepped(TsuzukiMotion.Exit))
+        dot -> tween(200, easing = TsuzukiMotion.Exit)
         else -> tween(200, easing = TsuzukiMotion.Exit)
     }
 }

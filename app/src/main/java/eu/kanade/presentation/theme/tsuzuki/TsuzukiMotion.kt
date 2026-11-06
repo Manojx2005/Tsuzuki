@@ -7,6 +7,8 @@ import android.provider.Settings
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -27,7 +29,7 @@ import kotlin.math.ceil
 
 /**
  * The MotionSpec board: curves, durations, and how Colour and Dot differ.
- * - Colour is smooth. Dot keeps the same timings but advances in [DOT_STEPS] steps ("dot by dot").
+ * - Colour and Dot use smooth curves with the same timings.
  * - With animations turned off in the system (reduce motion), every transition is a [REDUCED_MS] fade.
  * - Nothing runs longer than [THEME_MS].
  */
@@ -47,11 +49,12 @@ object TsuzukiMotion {
     const val THEME_MS = 600
     const val REDUCED_MS = 150
 
-    const val DOT_STEPS = 8
-
-    /** Quantises [easing] into [steps] equal jumps, for Dot's dot-by-dot fills. */
-    fun stepped(easing: Easing, steps: Int = DOT_STEPS): Easing = Easing { fraction ->
-        if (fraction >= 1f) 1f else ceil(easing.transform(fraction) * steps) / steps
+    /** For discrete fills only; [steps] is the number of dots being lit. */
+    fun stepped(easing: Easing, steps: Int): Easing {
+        require(steps > 0) { "A discrete fill needs at least one dot" }
+        return Easing { fraction ->
+            if (fraction >= 1f) 1f else ceil(easing.transform(fraction).coerceIn(0f, 1f) * steps) / steps
+        }
     }
 }
 
@@ -98,21 +101,14 @@ fun rememberReduceMotion(): Boolean {
     return isMotionReduced(systemReduced, app)
 }
 
-/**
- * A tween following the MotionSpec rules for the current theme: [durationMs] with [easing] in Colour, stepped in
- * Dot, and a short linear fade when motion is reduced.
- */
+/** Smooth in both themes; reduced motion uses the existing short linear fade. */
+internal fun <T> motionTween(durationMs: Int, easing: Easing, reduced: Boolean): TweenSpec<T> =
+    if (reduced) tween(TsuzukiMotion.REDUCED_MS, easing = LinearEasing) else tween(durationMs, easing = easing)
+
 @Composable
 fun <T> tsuzukiTween(durationMs: Int, easing: Easing = TsuzukiMotion.Standard): AnimationSpec<T> {
-    val dot = TsuzukiTheme.tokens.isDot
     val reduced = rememberReduceMotion()
-    return remember(durationMs, easing, dot, reduced) {
-        when {
-            reduced -> tween(TsuzukiMotion.REDUCED_MS)
-            dot -> tween(durationMs, easing = TsuzukiMotion.stepped(easing))
-            else -> tween(durationMs, easing = easing)
-        }
-    }
+    return remember(durationMs, easing, reduced) { motionTween(durationMs, easing, reduced) }
 }
 
 /**

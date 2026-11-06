@@ -1,9 +1,7 @@
 package eu.kanade.presentation.tsuzuki.startup
 
-import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -40,7 +38,6 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -49,13 +46,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.rememberReduceMotion
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.abs
-import kotlin.math.floor
 
 /*
  * Startup animation (design board "MotionSplash", Motion page).
@@ -74,17 +71,9 @@ private val Emphasized = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
 private val EmphasizedAccel = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
 private val Overshoot = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
 
-/** Stepped easing for the Dot theme: moves in hard jumps like a dot-matrix display. */
-private fun steps(n: Int) = Easing { t -> floor(t * n).coerceAtMost(n.toFloat()) / n }
-
-/** True when the user turned animations off (Developer options / Accessibility). */
+/** Observes both the system and in-app reduced-motion setting. */
 @Composable
-fun rememberAnimationsEnabled(): Boolean {
-    val context = LocalContext.current
-    return remember {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
-    }
-}
+fun rememberAnimationsEnabled(): Boolean = !rememberReduceMotion()
 
 /**
  * @param isReady whether the app has finished loading; the "…" loop repeats until it is.
@@ -172,7 +161,7 @@ fun TsuzukiStartupOverlay(
             delay(200)
             fade.animateTo(0f, tween(320, easing = Emphasized))
         }
-        exit.animateTo(1f, tween(450, easing = if (dot) steps(5) else EmphasizedAccel))
+        exit.animateTo(1f, tween(450, easing = EmphasizedAccel))
         onFinished()
     }
 
