@@ -17,6 +17,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.updates.UpdateScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
@@ -70,6 +71,7 @@ data object UpdatesTab : Tab {
             viewModel.syncFilterWithHideManga(hideMangaUi)
         }
 
+        val tsuzuki = isTsuzukiStyle()
         UpdateScreen(
             state = state,
             snackbarHostState = viewModel.snackbarHostState,
@@ -81,8 +83,12 @@ data object UpdatesTab : Tab {
             onUpdateLibrary = viewModel::updateLibrary,
             onDownloadChapter = viewModel::downloadChapters,
             onMultiBookmarkClicked = viewModel::bookmarkUpdates,
-            onMultiMarkAsReadClicked = viewModel::markUpdatesRead,
-            onMultiDeleteClicked = viewModel::showConfirmDeleteChapters,
+            onMultiMarkAsReadClicked = { items, read -> viewModel.markUpdatesRead(items, read, offerUndo = tsuzuki) },
+            onMultiDeleteClicked = if (tsuzuki) {
+                viewModel::deleteSelectionWithUndo
+            } else {
+                viewModel::showConfirmDeleteChapters
+            },
             onUpdateSelected = viewModel::toggleSelection,
             onOpenChapter = {
                 val intent = ReaderActivity.newIntent(context, it.update.mangaId, it.update.chapterId)

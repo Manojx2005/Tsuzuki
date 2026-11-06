@@ -1310,4 +1310,12 @@
     <string name="tsz_q11_top">Oben</string>
     <string name="tsz_q11_bottom">Unten</string>
     <string name="tsz_q11_status_position">Position der Statusleiste</string>
+    <string name="tsz_q9_loading_updates">Updates werden geladen…</string>
+    <string name="tsz_q9_shelf">Regal</string>
+    <string name="tsz_q9_advanced_options">Erweiterte Optionen</string>
+    <string name="tsz_q9_pending_mark_read">Die Kapitel werden als gelesen markiert</string>
+    <string name="tsz_q9_pending_delete_downloads">Die Downloads werden gelöscht</string>
+    <string name="tsz_q9_pending_history_remove">Der ausgewählte Verlauf wird entfernt</string>
+    <string name="tsz_q9_selection_count">%d ausgewählt</string>
+    <string name="tsz_q9_mark_read">Gelesen</string>
 </resources>

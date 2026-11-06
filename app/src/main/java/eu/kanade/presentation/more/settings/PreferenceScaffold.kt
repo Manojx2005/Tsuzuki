@@ -31,6 +31,7 @@ fun PreferenceScaffold(
             PreferenceScreen(
                 items = itemsProvider(),
                 contentPadding = contentPadding,
+                settingsTitle = titleRes,
             )
         },
     )

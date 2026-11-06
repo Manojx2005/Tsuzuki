@@ -10,12 +10,20 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import eu.kanade.presentation.more.settings.widget.highlightBackground
+import eu.kanade.presentation.tsuzuki.settings.advancedPreferenceToggle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiAdvancedPreferences
 import kotlinx.coroutines.delay
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import kotlin.time.Duration.Companion.seconds
@@ -30,12 +38,22 @@ fun PreferenceScreen(
     items: List<Preference>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    settingsTitle: StringResource? = null,
 ) {
     val state = rememberLazyListState()
-    val highlightKey = SearchableSettings.highlightKey
+    val highlightKey = remember { SearchableSettings.highlightKey }
+    val groups = tsuzukiAdvancedPreferences(items, settingsTitle)
+    var showAdvanced by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val expanded = showAdvanced ?: groups.containsHighlight(highlightKey)
+    val visibleItems = if (groups.advanced.isEmpty()) {
+        items
+    } else {
+        groups.primary + advancedPreferenceToggle(expanded) { showAdvanced = !expanded } +
+            if (expanded) groups.advanced else emptyList()
+    }
     if (highlightKey != null) {
         LaunchedEffect(Unit) {
-            val i = items.findHighlightedIndex(highlightKey)
+            val i = visibleItems.findHighlightedIndex(highlightKey)
             if (i >= 0) {
                 delay(0.5.seconds)
                 state.animateScrollToItem(i)
@@ -52,7 +70,7 @@ fun PreferenceScreen(
         state = state,
         contentPadding = contentPadding,
     ) {
-        items.fastForEachIndexed { i, preference ->
+        visibleItems.fastForEachIndexed { i, preference ->
             when (preference) {
                 // Create Preference Group
                 is Preference.PreferenceGroup -> {
@@ -88,7 +106,7 @@ fun PreferenceScreen(
                         }
                     }
                     item {
-                        if (i < items.lastIndex) {
+                        if (i < visibleItems.lastIndex) {
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }

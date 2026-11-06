@@ -58,6 +58,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiChapterSelectionBar
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiLibrarySelectionBar
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -85,6 +88,25 @@ fun MangaBottomActionMenu(
     onTranslateClicked: (() -> Unit)? = null,
     onRetranslateClicked: (() -> Unit)? = null,
 ) {
+    if (isTsuzukiStyle()) {
+        if (!visible) return
+        TsuzukiChapterSelectionBar(
+            modifier = modifier,
+            onBookmarkClicked = onBookmarkClicked,
+            onRemoveBookmarkClicked = onRemoveBookmarkClicked,
+            onMarkAsReadClicked = onMarkAsReadClicked,
+            onMarkAsUnreadClicked = onMarkAsUnreadClicked,
+            onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+            onDownloadClicked = onDownloadClicked,
+            onDeleteClicked = onDeleteClicked,
+            onRemoveFromDbClicked = onRemoveFromDbClicked,
+            onDeleteRangeClicked = onDeleteRangeClicked,
+            onDeleteTranslationClicked = onDeleteTranslationClicked,
+            onTranslateClicked = onTranslateClicked,
+            onRetranslateClicked = onRetranslateClicked,
+        )
+        return
+    }
     AnimatedVisibility(
         visible = visible,
         enter = expandVertically(expandFrom = Alignment.Bottom),
@@ -314,7 +336,26 @@ fun LibraryBottomActionMenu(
     onUpdateClicked: (() -> Unit)? = null,
     onTranslateClicked: (() -> Unit)? = null,
     onExportEpubClicked: (() -> Unit)? = null,
+    onRemoveFromLibraryClicked: (() -> Unit)? = null,
 ) {
+    if (isTsuzukiStyle()) {
+        if (!visible) return
+        TsuzukiLibrarySelectionBar(
+            onChangeCategoryClicked = onChangeCategoryClicked,
+            onMarkAsReadClicked = onMarkAsReadClicked,
+            onMarkAsUnreadClicked = onMarkAsUnreadClicked,
+            onDownloadClicked = onDownloadClicked,
+            onDeleteClicked = onDeleteClicked,
+            onMigrateClicked = onMigrateClicked,
+            modifier = modifier,
+            onCopyLinksClicked = onCopyLinksClicked,
+            onUpdateClicked = onUpdateClicked,
+            onTranslateClicked = onTranslateClicked,
+            onExportEpubClicked = onExportEpubClicked,
+            onRemoveFromLibraryClicked = onRemoveFromLibraryClicked,
+        )
+        return
+    }
     AnimatedVisibility(
         visible = visible,
         enter = expandVertically(animationSpec = tween(delayMillis = 300)),

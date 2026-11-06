@@ -42,6 +42,7 @@ import eu.kanade.presentation.manga.components.MangaCoverDialog
 import eu.kanade.presentation.manga.components.RemoveChaptersFromDbDialog
 import eu.kanade.presentation.manga.components.ScanlatorFilterDialog
 import eu.kanade.presentation.manga.components.SetIntervalDialog
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
@@ -231,9 +232,17 @@ class MangaScreen(
             showSourceName = successState.showSourceName,
             onToggleSourceNameVisibility = viewModel::toggleSourceNameVisibility,
             onMultiBookmarkClicked = viewModel::bookmarkChapters,
-            onMultiMarkAsReadClicked = viewModel::markChaptersRead,
+            onMultiMarkAsReadClicked = if (isTsuzukiStyle()) {
+                viewModel::markSelectionReadWithUndo
+            } else {
+                viewModel::markChaptersRead
+            },
             onMarkPreviousAsReadClicked = viewModel::markPreviousChapterRead,
-            onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
+            onMultiDeleteClicked = if (isTsuzukiStyle()) {
+                viewModel::deleteSelectedDownloadsWithUndo
+            } else {
+                viewModel::showDeleteChapterDialog
+            },
             onMultiRemoveFromDbClicked = viewModel::showRemoveChaptersFromDbDialog,
             onMultiDeleteTranslationClicked = viewModel::deleteTranslations,
             onTranslateSelectedClicked = { chapters ->

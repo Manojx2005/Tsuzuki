@@ -1309,4 +1309,12 @@
     <string name="tsz_q11_top">상단</string>
     <string name="tsz_q11_bottom">하단</string>
     <string name="tsz_q11_status_position">상태 표시줄 위치</string>
+    <string name="tsz_q9_loading_updates">업데이트를 불러오는 중…</string>
+    <string name="tsz_q9_shelf">책장</string>
+    <string name="tsz_q9_advanced_options">고급 옵션</string>
+    <string name="tsz_q9_pending_mark_read">챕터를 읽음으로 표시합니다</string>
+    <string name="tsz_q9_pending_delete_downloads">다운로드를 삭제합니다</string>
+    <string name="tsz_q9_pending_history_remove">선택한 기록을 삭제합니다</string>
+    <string name="tsz_q9_selection_count">%d개 선택됨</string>
+    <string name="tsz_q9_mark_read">읽음 표시</string>
 </resources>

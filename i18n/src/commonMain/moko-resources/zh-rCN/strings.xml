@@ -1310,4 +1310,12 @@
     <string name="tsz_q11_top">顶部</string>
     <string name="tsz_q11_bottom">底部</string>
     <string name="tsz_q11_status_position">状态栏位置</string>
+    <string name="tsz_q9_loading_updates">正在加载更新…</string>
+    <string name="tsz_q9_shelf">书架</string>
+    <string name="tsz_q9_advanced_options">高级选项</string>
+    <string name="tsz_q9_pending_mark_read">章节将标为已读</string>
+    <string name="tsz_q9_pending_delete_downloads">将删除下载内容</string>
+    <string name="tsz_q9_pending_history_remove">将删除选中的历史记录</string>
+    <string name="tsz_q9_selection_count">已选 %d 项</string>
+    <string name="tsz_q9_mark_read">标为已读</string>
 </resources>

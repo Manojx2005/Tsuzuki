@@ -1307,4 +1307,12 @@
     <string name="tsz_q11_top">Superior</string>
     <string name="tsz_q11_bottom">Inferior</string>
     <string name="tsz_q11_status_position">Posição da barra de status</string>
+    <string name="tsz_q9_loading_updates">Carregando atualizações…</string>
+    <string name="tsz_q9_shelf">Estante</string>
+    <string name="tsz_q9_advanced_options">Opções avançadas</string>
+    <string name="tsz_q9_pending_mark_read">Os capítulos serão marcados como lidos</string>
+    <string name="tsz_q9_pending_delete_downloads">Os downloads serão excluídos</string>
+    <string name="tsz_q9_pending_history_remove">O histórico selecionado será removido</string>
+    <string name="tsz_q9_selection_count">%d selecionados</string>
+    <string name="tsz_q9_mark_read">Marcar lido</string>
 </resources>

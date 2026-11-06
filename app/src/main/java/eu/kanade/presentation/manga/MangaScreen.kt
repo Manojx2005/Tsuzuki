@@ -68,6 +68,8 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.details.TsuzukiResumeTile
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReadingMode
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaScanlatorFilter
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
@@ -457,7 +459,9 @@ private fun MangaScreenSmallImpl(
                 fillFraction = 1f,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            if (isTsuzukiStyle()) TsuzukiUndoSnackbarHost(snackbarHostState) else SnackbarHost(snackbarHostState)
+        },
         floatingActionButton = {
             val hasUnread = remember(chapters) { chapters.fastAny { !it.chapter.read } }
             val isFABVisible = hasUnread && !isAnySelected && (!hasResumeTile || !resumeTileVisible)
@@ -788,7 +792,9 @@ fun MangaScreenLargeImpl(
                     .wrapContentWidth(Alignment.End),
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            if (isTsuzukiStyle()) TsuzukiUndoSnackbarHost(snackbarHostState) else SnackbarHost(snackbarHostState)
+        },
         floatingActionButton = {
             val hasUnread = remember(chapters) { chapters.fastAny { !it.chapter.read } }
             val isFABVisible = hasUnread && !isAnySelected && (!hasResumeTile || !resumeTileVisible)

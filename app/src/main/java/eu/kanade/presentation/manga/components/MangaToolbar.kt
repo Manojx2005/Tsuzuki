@@ -80,7 +80,7 @@ fun MangaToolbar(
     AppBar(
         titleContent = {
             if (isActionMode) {
-                AppBarTitle(actionModeCounter.toString())
+                AppBarTitle(eu.kanade.presentation.tsuzuki.selection.selectionCountLabel(actionModeCounter))
             } else {
                 AppBarTitle(title, modifier = Modifier.alpha(titleAlphaProvider()))
             }
