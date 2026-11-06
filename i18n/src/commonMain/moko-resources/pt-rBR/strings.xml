@@ -1307,4 +1307,6 @@
     <string name="tsz_q11_top">Superior</string>
     <string name="tsz_q11_bottom">Inferior</string>
     <string name="tsz_q11_status_position">Posição da barra de status</string>
+    <string name="tsz_x3_test_passed">Teste concluído com sucesso</string>
+    <string name="tsz_x3_test_failed">O teste falhou</string>
 </resources>

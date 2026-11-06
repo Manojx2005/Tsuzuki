@@ -1674,4 +1674,6 @@
     <string name="tsz_q11_top">Top</string>
     <string name="tsz_q11_bottom">Bottom</string>
     <string name="tsz_q11_status_position">Status bar position</string>
+    <string name="tsz_x3_test_passed">Test passed</string>
+    <string name="tsz_x3_test_failed">Test failed</string>
 </resources>

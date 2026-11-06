@@ -1297,4 +1297,6 @@
     <string name="tsz_q11_top">Arriba</string>
     <string name="tsz_q11_bottom">Abajo</string>
     <string name="tsz_q11_status_position">Posición de la barra de estado</string>
+    <string name="tsz_x3_test_passed">Prueba superada</string>
+    <string name="tsz_x3_test_failed">Prueba fallida</string>
 </resources>

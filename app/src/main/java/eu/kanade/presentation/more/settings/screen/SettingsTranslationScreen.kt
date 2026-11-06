@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.data.translation.TranslationEngineManager
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import tachiyomi.domain.translation.model.TranslationResult
 import tachiyomi.domain.translation.service.TranslationPreferences
@@ -268,22 +269,13 @@ object SettingsTranslationScreen : SearchableSettings {
         var testingEngineId by remember { mutableStateOf<Long?>(null) }
 
         // Collect all preference states
-        val openAiKey by prefs.openAiApiKey().collectAsState()
         val nvidiaNimBaseUrl by prefs.nvidiaNimBaseUrl().collectAsState()
-        val nvidiaNimApiKey by prefs.nvidiaNimApiKey().collectAsState()
         val nvidiaNimModel by prefs.nvidiaNimModel().collectAsState()
-        val deepSeekKey by prefs.deepSeekApiKey().collectAsState()
-        val systranKey by prefs.systranApiKey().collectAsState()
-        val deepLKey by prefs.deepLApiKey().collectAsState()
-        val googleKey by prefs.googleApiKey().collectAsState()
         val libreTranslateUrl by prefs.libreTranslateUrl().collectAsState()
-        val libreTranslateKey by prefs.libreTranslateApiKey().collectAsState()
         val ollamaUrl by prefs.ollamaUrl().collectAsState()
         val ollamaModel by prefs.ollamaModel().collectAsState()
         val customHttpUrl by prefs.customHttpUrl().collectAsState()
-        val customHttpApiKey by prefs.customHttpApiKey().collectAsState()
         val customHttpResponsePath by prefs.customHttpResponsePath().collectAsState()
-        val geminiKey by prefs.geminiApiKey().collectAsState()
         val geminiModel by prefs.geminiModel().collectAsState()
 
         // Pre-resolve strings for non-composable testButton function
@@ -291,6 +283,9 @@ object SettingsTranslationScreen : SearchableSettings {
         val testingStr = stringResource(MR.strings.pref_translation_testing)
         val testSendStr = stringResource(MR.strings.pref_translation_test_send)
         val testTextStr = stringResource(MR.strings.pref_translation_test_text)
+        val testPassed = stringResource(MR.strings.tsz_x3_test_passed)
+        val testFailed = stringResource(MR.strings.tsz_x3_test_failed)
+        val notConfigured = stringResource(TDMR.strings.not_configured)
 
         fun testButton(engine: tachiyomi.domain.translation.model.TranslationEngine): Preference.PreferenceItem.TextPreference {
             val engineId = engine.id
@@ -300,7 +295,7 @@ object SettingsTranslationScreen : SearchableSettings {
                 subtitle = when {
                     testingEngineId == engineId -> testingStr
                     testResults.containsKey(engineId) -> testResults[engineId]!!
-                    !engineConfigured -> "Not configured"
+                    !engineConfigured -> notConfigured
                     else -> testSendStr
                 },
                 enabled = testingEngineId == null && engineConfigured,
@@ -316,13 +311,13 @@ object SettingsTranslationScreen : SearchableSettings {
                                     targetLanguage,
                                 )
                                 testResults[engineId] = when (result) {
-                                    is TranslationResult.Success ->
-                                        "✓ ${result.translatedTexts.joinToString(" | ")}"
-                                    is TranslationResult.Error ->
-                                        "✗ ${result.message}"
+                                    is TranslationResult.Success -> testPassed
+                                    is TranslationResult.Error -> testFailed
                                 }
-                            } catch (e: Exception) {
-                                testResults[engineId] = "✗ ${e.message ?: e.javaClass.simpleName}"
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                testResults[engineId] = testFailed
                             } finally {
                                 testingEngineId = null
                             }
@@ -340,7 +335,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.openAiApiKey(),
                         title = stringResource(TDMR.strings.pref_translation_openai_key),
-                        subtitle = if (openAiKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.PromptPreference(
                         preference = prefs.openAiSystemPrompt(),
@@ -375,13 +370,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.nvidiaNimApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (nvidiaNimApiKey.isNotBlank()) {
-                            "••••••••"
-                        } else {
-                            stringResource(
-                                TDMR.strings.not_set,
-                            )
-                        },
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.nvidiaNimModel(),
@@ -410,7 +399,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.deepSeekApiKey(),
                         title = stringResource(TDMR.strings.pref_translation_deepseek_key),
-                        subtitle = if (deepSeekKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.PromptPreference(
                         preference = prefs.deepSeekSystemPrompt(),
@@ -434,7 +423,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.deepLApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (deepLKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     testButton(engineManager.engines.first { it.name.contains("DeepL") }),
                 ),
@@ -446,7 +435,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.systranApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (systranKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     testButton(engineManager.engines.first { it.name.contains("SYSTRAN") }),
                 ),
@@ -458,7 +447,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.googleApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (googleKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     testButton(engineManager.engines.first { it.name == "Google Translate" }),
                 ),
@@ -477,7 +466,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.geminiApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (geminiKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.geminiModel(),
@@ -505,13 +494,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.libreTranslateApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (libreTranslateKey.isNotBlank()) {
-                            "••••••••"
-                        } else {
-                            stringResource(
-                                TDMR.strings.not_set,
-                            )
-                        },
+                        sensitive = true,
                     ),
                     testButton(engineManager.engines.first { it.name.contains("Libre") }),
                 ),
@@ -564,13 +547,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.customHttpApiKey(),
                         title = stringResource(MR.strings.pref_translation_api_key),
-                        subtitle = if (customHttpApiKey.isNotBlank()) {
-                            "••••••••"
-                        } else {
-                            stringResource(
-                                TDMR.strings.not_set,
-                            )
-                        },
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = prefs.customHttpMethod(),
@@ -583,7 +560,7 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.customHttpHeaders(),
                         title = stringResource(MR.strings.pref_translation_custom_headers),
-                        subtitle = stringResource(MR.strings.pref_translation_custom_headers_desc),
+                        sensitive = true,
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = prefs.customHttpRequestTemplate(),

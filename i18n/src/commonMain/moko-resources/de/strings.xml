@@ -1310,4 +1310,6 @@
     <string name="tsz_q11_top">Oben</string>
     <string name="tsz_q11_bottom">Unten</string>
     <string name="tsz_q11_status_position">Position der Statusleiste</string>
+    <string name="tsz_x3_test_passed">Test erfolgreich</string>
+    <string name="tsz_x3_test_failed">Test fehlgeschlagen</string>
 </resources>

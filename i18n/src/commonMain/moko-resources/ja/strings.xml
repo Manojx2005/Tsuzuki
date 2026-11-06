@@ -1309,4 +1309,6 @@
     <string name="tsz_q11_top">上</string>
     <string name="tsz_q11_bottom">下</string>
     <string name="tsz_q11_status_position">ステータスバーの位置</string>
+    <string name="tsz_x3_test_passed">テストに成功しました</string>
+    <string name="tsz_x3_test_failed">テストに失敗しました</string>
 </resources>

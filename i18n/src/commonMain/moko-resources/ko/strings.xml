@@ -1309,4 +1309,6 @@
     <string name="tsz_q11_top">상단</string>
     <string name="tsz_q11_bottom">하단</string>
     <string name="tsz_q11_status_position">상태 표시줄 위치</string>
+    <string name="tsz_x3_test_passed">테스트 성공</string>
+    <string name="tsz_x3_test_failed">테스트 실패</string>
 </resources>

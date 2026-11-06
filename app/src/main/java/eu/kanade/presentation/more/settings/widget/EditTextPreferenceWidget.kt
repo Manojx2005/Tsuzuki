@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.DialogProperties
+import eu.kanade.presentation.tsuzuki.settings.SensitiveEditTextPreference
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,8 +32,13 @@ fun EditTextPreferenceWidget(
     subtitle: String?,
     icon: ImageVector?,
     value: String,
+    sensitive: Boolean = false,
     onConfirm: suspend (String) -> Boolean,
 ) {
+    if (sensitive) {
+        SensitiveEditTextPreference(title, value.isNotBlank(), onConfirm)
+        return
+    }
     var isDialogShown by remember { mutableStateOf(false) }
 
     TextPreferenceWidget(
