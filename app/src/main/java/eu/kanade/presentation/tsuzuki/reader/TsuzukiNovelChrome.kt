@@ -153,7 +153,9 @@ private fun NovelActionButton(action: NovelChromeAction, modifier: Modifier = Mo
             style = MaterialTheme.typography.labelSmall,
             color = color,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            // One line per action: two-line labels collided with their neighbours at 360 dp (S22, 2026-11-07).
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
         )
     }
