@@ -33,6 +33,11 @@ import androidx.compose.ui.util.fastForEach
 import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationPrimaryAction
+import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationToggle
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import mihon.domain.migration.models.MigrationFlag
 import mihon.feature.common.utils.getLabel
 import tachiyomi.core.common.preference.Preference
@@ -54,6 +59,7 @@ fun MigrationConfigScreenSheet(
 ) {
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     val migrationFlags by preferences.migrationFlags.collectAsState()
+    val tsuzuki = isTsuzukiStyle()
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -64,7 +70,7 @@ fun MigrationConfigScreenSheet(
                     .padding(top = MaterialTheme.padding.medium),
             ) {
                 Text(
-                    text = stringResource(MR.strings.migrationConfigScreen_dataToMigrateHeader),
+                    text = tsuzukiMenuLabel(stringResource(MR.strings.migrationConfigScreen_dataToMigrateHeader)),
                     style = MaterialTheme.typography.header,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -83,27 +89,30 @@ fun MigrationConfigScreenSheet(
                         .fastFilterNot { it == MigrationFlag.REMOVE_DOWNLOAD }
                         .fastForEach { flag ->
                             val selected = flag in migrationFlags
-                            FilterChip(
-                                selected = selected,
-                                onClick = {
-                                    preferences.migrationFlags.getAndSet { currentFlags ->
-                                        if (flag in currentFlags) {
-                                            currentFlags - flag
-                                        } else {
-                                            currentFlags + flag
-                                        }
-                                    }
-                                },
-                                label = { Text(stringResource(flag.getLabel())) },
-                                leadingIcon = {
-                                    if (selected) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Check,
-                                            contentDescription = null,
-                                        )
-                                    }
-                                },
-                            )
+                            val toggleFlag = {
+                                preferences.migrationFlags.getAndSet { currentFlags ->
+                                    if (flag in currentFlags) currentFlags - flag else currentFlags + flag
+                                }
+                                Unit
+                            }
+                            val label = stringResource(flag.getLabel())
+                            if (tsuzuki) {
+                                TsuzukiPill(
+                                    label,
+                                    selected,
+                                    toggleFlag,
+                                    role = androidx.compose.ui.semantics.Role.Checkbox,
+                                )
+                            } else {
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = toggleFlag,
+                                    label = { Text(label) },
+                                    leadingIcon = {
+                                        if (selected) Icon(Icons.Outlined.Check, contentDescription = null)
+                                    },
+                                )
+                            }
                         }
                 }
                 val removeDownloads = MigrationFlag.REMOVE_DOWNLOAD in migrationFlags
@@ -161,19 +170,18 @@ fun MigrationConfigScreenSheet(
                 )
             }
             HorizontalDivider()
-            Button(
-                onClick = {
-                    val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
-                    onStartMigration(cleanedExtraSearchQuery)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.small,
-                    ),
-            ) {
-                Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText))
+            val startMigration = { onStartMigration(extraSearchQuery.trim().ifBlank { null }) }
+            val buttonModifier = Modifier.padding(
+                horizontal = MaterialTheme.padding.medium,
+                vertical = MaterialTheme.padding.small,
+            )
+            val continueLabel = stringResource(MR.strings.migrationConfigScreen_continueButtonText)
+            if (tsuzuki) {
+                TsuzukiMigrationPrimaryAction(continueLabel, startMigration, buttonModifier)
+            } else {
+                Button(onClick = startMigration, modifier = buttonModifier.fillMaxWidth()) {
+                    Text(continueLabel)
+                }
             }
         }
     }
@@ -200,6 +208,10 @@ private fun MigrationSheetSwitchItem(
     checked: Boolean,
     onClick: () -> Unit,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiMigrationToggle(title, subtitle, checked, onClick)
+        return
+    }
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
         trailingContent = {

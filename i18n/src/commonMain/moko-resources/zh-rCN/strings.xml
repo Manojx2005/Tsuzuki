@@ -1320,4 +1320,8 @@
     <string name="tsz_q9_mark_read">标为已读</string>
     <string name="tsz_x3_test_passed">测试通过</string>
     <string name="tsz_x3_test_failed">测试失败</string>
+    <string name="tsz_x4_books_to_move">待迁移书籍 · %d</string>
+    <string name="tsz_x4_more_books">另有 %d 本</string>
+    <string name="tsz_x4_search_sources">搜索来源 · 已选 %d 个</string>
+    <string name="tsz_x4_find_matches">查找匹配 · %d</string>
 </resources>

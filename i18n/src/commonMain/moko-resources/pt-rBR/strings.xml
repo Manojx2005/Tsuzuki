@@ -1317,4 +1317,8 @@
     <string name="tsz_q9_mark_read">Marcar lido</string>
     <string name="tsz_x3_test_passed">Teste concluído com sucesso</string>
     <string name="tsz_x3_test_failed">O teste falhou</string>
+    <string name="tsz_x4_books_to_move">Livros para migrar · %d</string>
+    <string name="tsz_x4_more_books">Mais %d livros</string>
+    <string name="tsz_x4_search_sources">Fontes de busca · %d selecionadas</string>
+    <string name="tsz_x4_find_matches">Encontrar correspondências · %d</string>
 </resources>

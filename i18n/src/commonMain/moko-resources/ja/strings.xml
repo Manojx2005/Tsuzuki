@@ -1319,4 +1319,8 @@
     <string name="tsz_q9_mark_read">既読にする</string>
     <string name="tsz_x3_test_passed">テストに成功しました</string>
     <string name="tsz_x3_test_failed">テストに失敗しました</string>
+    <string name="tsz_x4_books_to_move">移行する本 · %d冊</string>
+    <string name="tsz_x4_more_books">ほか%d冊</string>
+    <string name="tsz_x4_search_sources">検索元 · %d件選択</string>
+    <string name="tsz_x4_find_matches">候補を探す · %d冊</string>
 </resources>

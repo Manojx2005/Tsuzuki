@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +47,14 @@ import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.browse.components.SourceTypeBadge
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationSetupFooter
+import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationSetupSummary
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsBackground
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsContainer
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -110,10 +119,13 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
         }
 
         val lazyListState = rememberLazyListState()
+        val tsuzuki = isTsuzukiStyle()
         Scaffold(
+            modifier = tsuzukiSettingsBackground(),
+            containerColor = tsuzukiSettingsContainer() ?: MaterialTheme.colorScheme.background,
             topBar = {
                 AppBar(
-                    title = null,
+                    title = if (tsuzuki) stringResource(MR.strings.migrate) else null,
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                     actions = {
@@ -144,7 +156,16 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                     },
                 )
             },
+            bottomBar = {
+                if (tsuzuki) {
+                    TsuzukiMigrationSetupFooter(mangaIds.size) {
+                        viewModel.saveSources()
+                        continueMigration(openSheet = true, extraSearchQuery = null)
+                    }
+                }
+            },
             floatingActionButton = {
+                if (tsuzuki) return@Scaffold
                 SmallExtendedFloatingActionButton(
                     text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
                     icon = { Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null) },
@@ -168,24 +189,32 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                 state = lazyListState,
                 contentPadding = contentPadding,
             ) {
+                if (tsuzuki) {
+                    item(key = "tsuzuki-migration-summary") {
+                        TsuzukiMigrationSetupSummary(mangaIds, selectedSources.size)
+                    }
+                }
                 listOf(selectedSources, availableSources).fastForEachIndexed { listIndex, sources ->
                     val selectedSourceList = listIndex == 0
                     if (sources.isNotEmpty()) {
                         val headerPrefix = if (selectedSourceList) "selected" else "available"
                         item("$headerPrefix-header") {
-                            Text(
-                                text = stringResource(
-                                    resource = if (selectedSourceList) {
-                                        MR.strings.migrationConfigScreen_selectedHeader
-                                    } else {
-                                        MR.strings.migrationConfigScreen_availableHeader
-                                    },
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .padding(MaterialTheme.padding.medium)
-                                    .animateItem(),
+                            val title = stringResource(
+                                if (selectedSourceList) {
+                                    MR.strings.migrationConfigScreen_selectedHeader
+                                } else {
+                                    MR.strings.migrationConfigScreen_availableHeader
+                                },
                             )
+                            if (tsuzuki) {
+                                TsuzukiSectionLabel(title, Modifier.animateItem())
+                            } else {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(MaterialTheme.padding.medium).animateItem(),
+                                )
+                            }
                         }
                     }
                     itemsIndexed(
@@ -243,6 +272,11 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
         ) { _ ->
             ElevatedCard(
                 shape = shape,
+                colors = if (isTsuzukiStyle()) {
+                    CardDefaults.elevatedCardColors(containerColor = TsuzukiTheme.tokens.tile)
+                } else {
+                    CardDefaults.elevatedCardColors()
+                },
                 modifier = Modifier
                     .padding(horizontal = MaterialTheme.padding.medium)
                     .animateItem(),
@@ -293,8 +327,8 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
             ) {
                 SourceIcon(source = source.source)
                 Text(
-                    text = source.name,
-                    maxLines = 1,
+                    text = tsuzukiMenuLabel(source.name),
+                    maxLines = if (isTsuzukiStyle()) 2 else 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f, fill = false),

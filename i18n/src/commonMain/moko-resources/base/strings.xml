@@ -1684,4 +1684,8 @@
     <string name="tsz_q9_mark_read">Mark read</string>
     <string name="tsz_x3_test_passed">Test passed</string>
     <string name="tsz_x3_test_failed">Test failed</string>
+    <string name="tsz_x4_books_to_move">Books to move · %d</string>
+    <string name="tsz_x4_more_books">+%d more books</string>
+    <string name="tsz_x4_search_sources">Search sources · %d selected</string>
+    <string name="tsz_x4_find_matches">Find matches · %d</string>
 </resources>
