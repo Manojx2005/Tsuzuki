@@ -718,7 +718,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     // into the page container by this point, leaving the button appended outside
                     // it and clipped by body's paged overflow:hidden.
                     if (!preferences.novelInfiniteScroll.get() && !isPagedModeActive()) {
-                        styler.injectNextChapterButton(currentChapters?.nextChapter != null)
+                        styler.injectNextChapterButton(currentChapters)
                     }
                     if (isEditingMode) {
                         toggleEditMode(true)
@@ -1877,6 +1877,20 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun moveToPage(page: ReaderPage) {
+        if (isPagedModeActive() || !preferences.novelInfiniteScroll.get() || loadedChapters.size < 2) return
+        val id = page.chapter.chapter.id ?: return
+        if (!loadedChapterIds.contains(id)) return
+        evaluateJavascriptSafe(
+            """
+            (function () {
+                var chapter = document.querySelector('$CHAPTER_TAG_NAME[$CHAPTER_ID_ATTR="$id"]');
+                if (!chapter) return;
+                chapter.scrollIntoView({block: 'start'});
+                window.dispatchEvent(new Event('scroll'));
+            })();
+            """.trimIndent(),
+            null,
+        )
     }
 
     override fun handleKeyEvent(event: KeyEvent): Boolean {
@@ -2088,6 +2102,25 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     @Keep
     @Suppress("unused")
     inner class WebViewInterface {
+        @JavascriptInterface
+        fun markChapterEndRead(chapterId: String) {
+            activity.runOnUiThread {
+                val chapter = currentChapters?.currChapter ?: return@runOnUiThread
+                if (chapter.chapter.id.toString() == chapterId) {
+                    activity.viewModel.markNovelChapterRead(chapter)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun openChapterEndContents(chapterId: String) {
+            activity.runOnUiThread {
+                if (currentChapters?.currChapter?.chapter?.id.toString() == chapterId) {
+                    activity.openNovelContentsFromPage()
+                }
+            }
+        }
+
         @JavascriptInterface
         fun onContentEdited() {
             activity.runOnUiThread {

@@ -3,9 +3,13 @@ package eu.kanade.tachiyomi.ui.reader.viewer.text.webview
 import android.view.View
 import android.webkit.WebView
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import eu.kanade.presentation.reader.settings.CodeSnippet
 import eu.kanade.presentation.reader.settings.safeTitle
+import eu.kanade.presentation.tsuzuki.reader.chapterEndDownloaded
+import eu.kanade.presentation.tsuzuki.reader.webChapterEndPayload
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.NovelProgress
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ThemeUtils
@@ -17,6 +21,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta.TSUNDOKU_CHAPTERS_CONTAINER_ID
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta.TSUNDOKU_OBJECT_NAME
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta.quoteForJson
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import logcat.logcat
@@ -271,8 +276,37 @@ internal class NovelWebViewStyler(
         """.trimIndent()
     }
 
-    fun injectNextChapterButton(hasNextChapter: Boolean) {
-        if (!hasNextChapter) return
+    fun injectNextChapterButton(chapters: ViewerChapters?) {
+        val next = chapters?.nextChapter ?: return
+        val payload = activity.webChapterEndPayload(next)
+        if (payload != null) {
+            val chapterId = chapters.currChapter.chapter.id.toString()
+            val js = NovelWebViewJsAssets.loadWith(
+                activity,
+                "chapter-end-card.js",
+                mapOf(
+                    "BTN_CONTAINER_ID" to ID_NEXT_CHAPTER_BTN_CONTAINER,
+                    "SAFE_BOTTOM_VAR" to NovelWebViewChapterMeta.CSS_VAR_SAFE_BOTTOM,
+                    "CARD" to payload.put("chapterId", chapterId).toString(),
+                ),
+            )
+            evaluateJs(js)
+            activity.lifecycleScope.launch {
+                if (activity.chapterEndDownloaded(next)) {
+                    evaluateJs(
+                        """
+                        (function () {
+                            var card = document.getElementById('$ID_NEXT_CHAPTER_BTN_CONTAINER');
+                            if (card && card.dataset.chapterId === '$chapterId') {
+                                card.querySelector('[data-downloaded]').hidden = false;
+                            }
+                        })();
+                        """.trimIndent(),
+                    )
+                }
+            }
+            return
+        }
         val js = NovelWebViewJsAssets.loadWith(
             activity,
             "next-chapter-button.js",

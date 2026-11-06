@@ -23,7 +23,11 @@ import kotlin.math.roundToInt
 
 /** Keep Material's seeking and accessibility, with the reader boards' themed progress track. */
 @Composable
-fun TsuzukiReaderSliderTrack(state: SliderState, vertical: Boolean = false) {
+fun TsuzukiReaderSliderTrack(
+    state: SliderState,
+    vertical: Boolean = false,
+    showDots: Boolean = TsuzukiTheme.tokens.isDot,
+) {
     if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) {
         SliderDefaults.Track(sliderState = state)
         return
@@ -41,6 +45,7 @@ fun TsuzukiReaderSliderTrack(state: SliderState, vertical: Boolean = false) {
             progress = progress,
             dots = (maxWidth / 9.dp).roundToInt().coerceIn(2, 80),
             thickness = 6.dp,
+            showDots = showDots,
             modifier = Modifier.graphicsLayer { scaleX = if (rtl) -1f else 1f },
         )
     }

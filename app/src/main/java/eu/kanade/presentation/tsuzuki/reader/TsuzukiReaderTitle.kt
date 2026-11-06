@@ -44,7 +44,7 @@ fun TsuzukiReaderTitle(title: String?, subtitle: String?, novel: Boolean = false
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee(repeatDelayMillis = 2_000),
+                modifier = if (novel) Modifier else Modifier.basicMarquee(repeatDelayMillis = 2_000),
             )
         }
     }

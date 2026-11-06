@@ -1254,4 +1254,12 @@
     <string name="ext_content_warning_nsfw_description">As fontes desta extensão são focadas principalmente em conteúdo +18.</string>
     <string name="pref_apply_content_warnings_to_installed">Aplicar também às extensões instaladas</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Quando desativado, as extensões já instaladas continuam sendo carregadas e atualizadas, independentemente do aviso</string>
+    <!-- Q2 -->
+    <string name="tsz_reader_listen">Ouvir</string>
+    <string name="tsz_reader_listen_here">Ouvir a partir daqui</string>
+    <string name="tsz_reader_action_options">Opções de %1$s</string>
+    <string name="tsz_reader_page_position">Página %1$s</string>
+    <string name="tsz_reader_up_next">A seguir</string>
+    <string name="tsz_reader_chapter_position">Capítulo %1$s</string>
+    <string name="tsz_reader_chapter_end">Fim do capítulo</string>
 </resources>

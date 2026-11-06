@@ -1257,4 +1257,12 @@
     <string name="ext_content_warning_nsfw_description">此插件的图源主要提供 18+ 内容。</string>
     <string name="pref_apply_content_warnings_to_installed">同时应用于已安装的插件</string>
     <string name="pref_apply_content_warnings_to_installed_summary">关闭后，已安装的插件无论警告级别如何都会继续加载和更新</string>
+    <!-- Q2 -->
+    <string name="tsz_reader_listen">朗读</string>
+    <string name="tsz_reader_listen_here">从此处朗读</string>
+    <string name="tsz_reader_action_options">%1$s选项</string>
+    <string name="tsz_reader_page_position">第%1$s页</string>
+    <string name="tsz_reader_up_next">即将阅读</string>
+    <string name="tsz_reader_chapter_position">第%1$s章</string>
+    <string name="tsz_reader_chapter_end">本章结束</string>
 </resources>

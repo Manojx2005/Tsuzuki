@@ -1257,4 +1257,12 @@
     <string name="ext_content_warning_nsfw_description">Quellen dieser Erweiterung konzentrieren sich hauptsächlich auf 18+-Inhalte.</string>
     <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihrer Warnung weiter geladen und aktualisiert</string>
+    <!-- Q2 -->
+    <string name="tsz_reader_listen">Anhören</string>
+    <string name="tsz_reader_listen_here">Ab hier anhören</string>
+    <string name="tsz_reader_action_options">Optionen für %1$s</string>
+    <string name="tsz_reader_page_position">Seite %1$s</string>
+    <string name="tsz_reader_up_next">Als Nächstes</string>
+    <string name="tsz_reader_chapter_position">Kapitel %1$s</string>
+    <string name="tsz_reader_chapter_end">Kapitelende</string>
 </resources>

@@ -39,6 +39,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
 import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
+import eu.kanade.tachiyomi.tsuzuki.reader.adjacentNovelChapter
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.DownloadPageLoader
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -439,6 +440,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 chapterToDownload = cancelQueuedDownloads(newChapters.currChapter)
                 it.copy(
                     viewerChapters = newChapters,
+                    novelVisibleChapter = null,
                     bookmarked = newChapters.currChapter.chapter.bookmark,
                 )
             }
@@ -868,6 +870,16 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(novelPageIndex = pageIndex, novelPageCount = pageCount) }
     }
 
+    internal suspend fun isNovelChapterDownloaded(readerChapter: ReaderChapter): Boolean {
+        val manga = manga ?: return false
+        val chapter = readerChapter.chapter
+        return downloadManager.isChapterOnDisk(chapter.name, chapter.scanlator, chapter.url, manga.title, manga.source)
+    }
+
+    internal fun markNovelChapterRead(chapter: ReaderChapter) {
+        chapter.pages?.firstOrNull()?.let { saveNovelProgress(it, 100) }
+    }
+
     private fun downloadNextChapters() {
         if (downloadAheadAmount == 0) return
         val manga = manga ?: return
@@ -1085,7 +1097,7 @@ class ReaderViewModel @JvmOverloads constructor(
      * Called from the activity to load and set the next chapter as active.
      */
     suspend fun loadNextChapter(): Boolean {
-        val nextChapter = state.value.viewerChapters?.nextChapter ?: return false
+        val nextChapter = adjacentChapter(state.value, forward = true) ?: return false
         return loadAdjacent(nextChapter)
     }
 
@@ -1093,8 +1105,23 @@ class ReaderViewModel @JvmOverloads constructor(
      * Called from the activity to load and set the previous chapter as active.
      */
     suspend fun loadPreviousChapter(): Boolean {
-        val prevChapter = state.value.viewerChapters?.prevChapter ?: return false
+        val prevChapter = adjacentChapter(state.value, forward = false) ?: return false
         return loadAdjacent(prevChapter)
+    }
+
+    internal fun adjacentChapter(readerState: State, forward: Boolean): ReaderChapter? {
+        val chapters = readerState.viewerChapters ?: return null
+        val viewer = readerState.viewer
+        val isNovel = viewer is NovelViewer || viewer is NovelWebViewViewer
+        return adjacentNovelChapter(
+            active = chapters,
+            ordered = chapterList,
+            visibleId = readerState.novelVisibleChapter?.id,
+            forward = forward,
+            infiniteScroll =
+            isNovel && readerPreferences.novelInfiniteScroll.get() && !readerState.isLoadingAdjacentChapter,
+            paged = (viewer as? NovelWebViewViewer)?.isPagedModeActive() == true,
+        )
     }
 
     /**

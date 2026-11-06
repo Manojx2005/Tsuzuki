@@ -1621,4 +1621,12 @@
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
     <string name="pref_apply_content_warnings_to_installed">Also apply to installed extensions</string>
     <string name="pref_apply_content_warnings_to_installed_summary">When off, extensions you already installed keep loading and updating regardless of their warning</string>
+    <!-- Q2 -->
+    <string name="tsz_reader_listen">Listen</string>
+    <string name="tsz_reader_listen_here">Listen from here</string>
+    <string name="tsz_reader_action_options">%1$s options</string>
+    <string name="tsz_reader_page_position">Page %1$s</string>
+    <string name="tsz_reader_up_next">Up next</string>
+    <string name="tsz_reader_chapter_position">Chapter %1$s</string>
+    <string name="tsz_reader_chapter_end">End of chapter</string>
 </resources>

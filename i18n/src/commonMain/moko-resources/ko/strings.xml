@@ -1256,4 +1256,12 @@
     <string name="ext_content_warning_nsfw_description">이 확장 프로그램의 소스는 주로 18+ 콘텐츠를 다룹니다.</string>
     <string name="pref_apply_content_warnings_to_installed">설치된 확장 프로그램에도 적용</string>
     <string name="pref_apply_content_warnings_to_installed_summary">끄면 이미 설치한 확장 프로그램은 경고와 관계없이 계속 로드되고 업데이트됩니다</string>
+    <!-- Q2 -->
+    <string name="tsz_reader_listen">듣기</string>
+    <string name="tsz_reader_listen_here">여기서부터 듣기</string>
+    <string name="tsz_reader_action_options">%1$s 옵션</string>
+    <string name="tsz_reader_page_position">%1$s 페이지</string>
+    <string name="tsz_reader_up_next">다음 읽을 장</string>
+    <string name="tsz_reader_chapter_position">%1$s장</string>
+    <string name="tsz_reader_chapter_end">장 끝</string>
 </resources>

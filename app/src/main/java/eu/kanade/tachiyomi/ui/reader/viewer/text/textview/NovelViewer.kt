@@ -24,6 +24,7 @@ import androidx.core.net.toUri
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -1650,9 +1651,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
 
         val chapters = currentChapters ?: return
-        val hasNext = chapters.nextChapter != null
+        if (chapters.nextChapter == null) return
 
-        if (!hasNext) return
+        activity.createChapterEndCard(chapters, preferences, NEXT_CHAPTER_BUTTON_TAG)?.let {
+            contentContainer.addView(it)
+            return
+        }
 
         val buttonContainer = LinearLayout(activity).apply {
             tag = NEXT_CHAPTER_BUTTON_TAG
@@ -2104,6 +2108,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun moveToPage(page: ReaderPage) {
+        if (!preferences.novelInfiniteScroll.get() || loadedChapters.size < 2) return
+        val chapter = loadedChapters.firstOrNull { it.chapter.chapter.id == page.chapter.chapter.id } ?: return
+        scrollView.scrollTo(0, chapter.headerView.top)
     }
 
     override fun handleKeyEvent(event: KeyEvent): Boolean {

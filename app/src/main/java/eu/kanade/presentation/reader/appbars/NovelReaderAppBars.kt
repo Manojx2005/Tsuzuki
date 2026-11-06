@@ -79,6 +79,9 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.novel.TsuzukiTtsMiniPlayer
+import eu.kanade.presentation.tsuzuki.reader.NovelChromeAction
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiNovelActions
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiNovelNavigation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
@@ -131,6 +134,11 @@ fun NovelReaderAppBars(
     enabledNext: Boolean,
     onPreviousChapter: () -> Unit,
     enabledPrevious: Boolean,
+
+    onNextNovelChapter: () -> Unit = onNextChapter,
+    onPreviousNovelChapter: () -> Unit = onPreviousChapter,
+    hasNextNovelChapter: Boolean = enabledNext,
+    hasPreviousNovelChapter: Boolean = enabledPrevious,
 
     // Bottom bar - actions
     orientation: ReaderOrientation,
@@ -288,7 +296,26 @@ fun NovelReaderAppBars(
                         .background(backgroundColor)
                         .windowInsetsPadding(WindowInsets.navigationBars),
                 ) {
-                    if (showProgressSlider && progressSliderMode == PROGRESS_SLIDER_MODE_HORIZONTAL) {
+                    if (tsuzukiBars) {
+                        TsuzukiNovelNavigation(
+                            enabledPrevious = hasPreviousNovelChapter,
+                            onPrevious = onPreviousNovelChapter,
+                            enabledNext = hasNextNovelChapter,
+                            onNext = onNextNovelChapter,
+                        ) {
+                            if (showProgressSlider && progressSliderMode == PROGRESS_SLIDER_MODE_HORIZONTAL) {
+                                NovelProgressSlider(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    currentProgress = currentProgress,
+                                    onProgressChange = onProgressChange,
+                                    backgroundColor = backgroundColor,
+                                    pagedPageIndex = pagedPageIndex,
+                                    pagedPageCount = pagedPageCount,
+                                    compact = true,
+                                )
+                            }
+                        }
+                    } else if (showProgressSlider && progressSliderMode == PROGRESS_SLIDER_MODE_HORIZONTAL) {
                         NovelProgressSlider(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -328,6 +355,9 @@ fun NovelReaderAppBars(
                         isWebView = isWebView,
                         onToggleEdit = onToggleEdit,
                         onQuotes = onQuotes,
+                        onTtsStartFromViewport = onTtsStartFromViewport,
+                        onTtsPreviousParagraph = onTtsPreviousParagraph,
+                        onTtsNextParagraph = onTtsNextParagraph,
                     )
                 }
             }
@@ -487,6 +517,9 @@ private fun NovelReaderBottomBar(
     isWebView: Boolean,
     onToggleEdit: () -> Unit,
     onQuotes: () -> Unit,
+    onTtsStartFromViewport: () -> Unit,
+    onTtsPreviousParagraph: () -> Unit,
+    onTtsNextParagraph: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val enabledItems = remember(items, isWebView, hideAutoScroll) {
@@ -494,6 +527,49 @@ private fun NovelReaderBottomBar(
             it.enabled && (isWebView || it.item != BottomBarItem.EDIT) &&
                 (!hideAutoScroll || it.item != BottomBarItem.AUTO_SCROLL)
         }
+    }
+
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        val actions = enabledItems.mapNotNull { (item) ->
+            val (icon, label) = bottomBarItemInfo(item, orientation, isAutoScrolling, isTtsActive, false)
+            when (item) {
+                BottomBarItem.PREV_CHAPTER, BottomBarItem.NEXT_CHAPTER -> null
+                BottomBarItem.SCROLL_TO_TOP -> NovelChromeAction(icon, label, onScrollToTop)
+                BottomBarItem.TRANSLATE -> NovelChromeAction(
+                    icon,
+                    label,
+                    onToggleTranslation,
+                    onLongPressTranslation,
+                    isTranslating,
+                )
+                BottomBarItem.AUTO_SCROLL -> NovelChromeAction(
+                    if (isAutoScrolling) Icons.Outlined.Stop else icon,
+                    if (isAutoScrolling) stringResource(TDMR.strings.action_stop_auto_scroll) else label,
+                    onToggleAutoScroll,
+                    active = isAutoScrolling,
+                )
+                BottomBarItem.TTS -> NovelChromeAction(
+                    Icons.Outlined.VolumeUp,
+                    stringResource(MR.strings.tsz_reader_listen),
+                    onToggleTtsControls,
+                    onLongPressTts,
+                    ttsControlsVisible,
+                )
+                BottomBarItem.TTS_PREV_PARAGRAPH -> NovelChromeAction(icon, label, onTtsPreviousParagraph)
+                BottomBarItem.TTS_NEXT_PARAGRAPH -> NovelChromeAction(icon, label, onTtsNextParagraph)
+                BottomBarItem.TTS_VIEWPORT -> NovelChromeAction(
+                    icon,
+                    stringResource(MR.strings.tsz_reader_listen_here),
+                    onTtsStartFromViewport,
+                )
+                BottomBarItem.ORIENTATION -> NovelChromeAction(icon, label, onClickOrientation)
+                BottomBarItem.SETTINGS -> NovelChromeAction(icon, label, onClickSettings)
+                BottomBarItem.QUOTES -> NovelChromeAction(icon, label, onQuotes)
+                BottomBarItem.EDIT -> NovelChromeAction(icon, label, onToggleEdit, active = isEditing)
+            }
+        }
+        TsuzukiNovelActions(actions, modifier)
+        return
     }
 
     Box(modifier = modifier) {
@@ -795,6 +871,7 @@ private fun NovelProgressSlider(
     modifier: Modifier = Modifier,
     pagedPageIndex: Int = 0,
     pagedPageCount: Int = 0,
+    compact: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -807,6 +884,17 @@ private fun NovelProgressSlider(
         if (sliderDragged) {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
+    }
+
+    if (compact) {
+        eu.kanade.presentation.tsuzuki.reader.TsuzukiNovelProgress(
+            modifier = modifier,
+            currentProgress = currentProgress,
+            pageLabel = pageLabel.takeIf { isPaged },
+            onProgressChange = onProgressChange,
+            interactionSource = interactionSource,
+        )
+        return
     }
 
     Row(

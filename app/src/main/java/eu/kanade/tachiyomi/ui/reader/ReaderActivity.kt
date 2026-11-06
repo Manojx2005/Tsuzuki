@@ -93,6 +93,7 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.tsuzuki.reader.PendingAdjacentNavigation
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.AddToLibraryFirst
@@ -163,6 +164,7 @@ class ReaderActivity : BaseActivity() {
     lateinit var binding: ReaderActivityBinding
 
     val viewModel by viewModels<ReaderViewModel>()
+    private var openNovelContentsRequested by mutableStateOf(false)
     private var assistUrl: String? = null
 
     /**
@@ -319,10 +321,8 @@ class ReaderActivity : BaseActivity() {
             .map { it.isLoadingAdjacentChapter }
             .distinctUntilChanged()
             .onEach { isLoading ->
-                if (isLoading || pendingAdjacentNavDirection == 0) return@onEach
-                val direction = pendingAdjacentNavDirection
-                pendingAdjacentNavDirection = 0
-                if (direction > 0) loadNextChapterInternal() else loadPreviousChapterInternal()
+                val forward = pendingAdjacentNavigation.takeWhenIdle(isLoading) ?: return@onEach
+                if (forward) loadNextChapterInternal() else loadPreviousChapterInternal()
             }
             .launchIn(lifecycleScope)
 
@@ -934,7 +934,16 @@ class ReaderActivity : BaseActivity() {
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
             val contents = rememberTsuzukiReaderContents()
+            val openContents = contents.openAction()
+            LaunchedEffect(openNovelContentsRequested) {
+                if (openNovelContentsRequested) {
+                    openNovelContentsRequested = false
+                    openContents?.invoke()
+                }
+            }
             val find = rememberTsuzukiReaderFind()
+            val hasNextChapter = viewModel.adjacentChapter(state, forward = true) != null
+            val hasPreviousChapter = viewModel.adjacentChapter(state, forward = false) != null
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1009,13 +1018,17 @@ class ReaderActivity : BaseActivity() {
                         }
                     }
                 },
+                onNextNovelChapter = ::loadNextChapter,
+                onPreviousNovelChapter = ::loadPreviousChapter,
+                hasNextNovelChapter = hasNextChapter,
+                hasPreviousNovelChapter = hasPreviousChapter,
                 // In paged mode the arrows turn a page first, only falling through to a chapter
                 // change once the current chapter's last/first page is reached - so they must stay
                 // enabled while pages remain, even with no next/previous chapter to fall through to.
                 // effectivePagedPageCount(state) == 0 means onPageInfoChanged hasn't reported yet
                 // (right after a chapter switch) - assume enabled rather than flashing disabled on
                 // a true last/first chapter for the moment before the real page count arrives.
-                enabledNext = state.viewerChapters?.nextChapter != null ||
+                enabledNext = hasNextChapter ||
                     (
                         isPagedActive(state) &&
                             (
@@ -1045,7 +1058,7 @@ class ReaderActivity : BaseActivity() {
                         }
                     }
                 },
-                enabledPrevious = state.viewerChapters?.prevChapter != null ||
+                enabledPrevious = hasPreviousChapter ||
                     (
                         isPagedActive(state) &&
                             (effectivePagedPageCount(state) == 0 || effectivePagedPageIndex(state) > 0)
@@ -1222,7 +1235,7 @@ class ReaderActivity : BaseActivity() {
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
-                onOpenContents = contents.openAction(),
+                onOpenContents = openContents,
                 onFind = find.openAction(state.viewer) { viewModel.showMenus(false) },
             )
             contents.Drawer(this@ReaderActivity, viewModel, state)
@@ -1610,6 +1623,10 @@ class ReaderActivity : BaseActivity() {
         }
     }
 
+    internal fun openNovelContentsFromPage() {
+        openNovelContentsRequested = true
+    }
+
     private fun openChapterInWebView() {
         val manga = viewModel.manga ?: return
         assistUrl?.let {
@@ -1719,24 +1736,17 @@ class ReaderActivity : BaseActivity() {
 
     private fun loadNextChapterInternal() {
         lifecycleScope.launch {
-            if (viewModel.state.value.isLoadingAdjacentChapter) {
-                // Don't drop this navigation silently - a paged-mode edge-crossing swipe (or the
-                // toolbar button) racing an in-flight adjacent-chapter load (e.g. TTS auto-play's
-                // own handoff) would otherwise be swallowed with no feedback and leave a paged
-                // edge-crossing latch pending on the unrelated load's completion.
-                pendingAdjacentNavDirection = 1
+            if (pendingAdjacentNavigation.deferIfLoading(
+                    viewModel.state.value.isLoadingAdjacentChapter,
+                    forward = true,
+                )
+            ) {
                 return@launch
             }
             resetNovelPageInfoIfPaged()
             if (!viewModel.loadNextChapter()) return@launch
             (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("next")
-            // Only reset to page 0 if NOT using infinite scroll for novel viewers
-            val isNovelViewer = viewModel.state.value.viewer is NovelViewer ||
-                viewModel.state.value.viewer is NovelWebViewViewer
-            val infiniteScrollEnabled = readerPreferences.novelInfiniteScroll.get()
-            if (!(isNovelViewer && infiniteScrollEnabled)) {
-                moveToPageIndex(0)
-            }
+            moveToPageIndex(0)
         }
     }
 
@@ -1749,27 +1759,21 @@ class ReaderActivity : BaseActivity() {
         loadPreviousChapterInternal()
     }
 
-    // Tracks a nav request dropped because isLoadingAdjacentChapter was already true: 1 = next,
-    // -1 = previous, 0 = none pending. Replayed once that in-flight load finishes (see the
-    // isLoadingAdjacentChapter collector in onCreate).
-    private var pendingAdjacentNavDirection = 0
+    private val pendingAdjacentNavigation = PendingAdjacentNavigation()
 
     private fun loadPreviousChapterInternal() {
         lifecycleScope.launch {
-            if (viewModel.state.value.isLoadingAdjacentChapter) {
-                pendingAdjacentNavDirection = -1
+            if (pendingAdjacentNavigation.deferIfLoading(
+                    viewModel.state.value.isLoadingAdjacentChapter,
+                    forward = false,
+                )
+            ) {
                 return@launch
             }
             resetNovelPageInfoIfPaged()
             if (!viewModel.loadPreviousChapter()) return@launch
             (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("prev")
-            // Only reset to page 0 if NOT using infinite scroll for novel viewers
-            val isNovelViewer = viewModel.state.value.viewer is NovelViewer ||
-                viewModel.state.value.viewer is NovelWebViewViewer
-            val infiniteScrollEnabled = readerPreferences.novelInfiniteScroll.get()
-            if (!(isNovelViewer && infiniteScrollEnabled)) {
-                moveToPageIndex(0)
-            }
+            moveToPageIndex(0)
         }
     }
 

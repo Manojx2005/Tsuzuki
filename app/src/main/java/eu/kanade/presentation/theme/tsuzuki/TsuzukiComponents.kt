@@ -61,6 +61,7 @@ fun TsuzukiProgressBar(
     fill: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
     track: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
     spreadDots: Boolean = false,
+    showDots: Boolean = TsuzukiTheme.tokens.isDot,
 ) {
     val t = TsuzukiTheme.tokens
     val p = progress.coerceIn(0f, 1f)
@@ -73,7 +74,7 @@ fun TsuzukiProgressBar(
             .semantics { progressBarRangeInfo = ProgressBarRangeInfo(p, 0f..1f) },
     ) {
         val h = size.height
-        if (!t.isDot) {
+        if (!showDots) {
             val r = CornerRadius(h / 2, h / 2)
             drawRoundRect(trackColor, cornerRadius = r)
             if (p > 0f) drawRoundRect(fillColor, size = Size(size.width * p, h), cornerRadius = r)
