@@ -2,10 +2,11 @@ package eu.kanade.presentation.tsuzuki.novel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -58,10 +60,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.rememberReduceMotion
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
@@ -104,6 +108,8 @@ fun TsuzukiReaderContents(
     val tokens = TsuzukiTheme.tokens
     if (tokens.style == TsuzukiStyle.NONE || manga == null) return
 
+    val reduced = rememberReduceMotion()
+    val fade = tween<Float>(if (reduced) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHEET_MS)
     BackHandler(enabled = visible, onBack = onDismissRequest)
 
     // Reloaded each time the drawer opens, so read/downloaded marks are current.
@@ -113,7 +119,7 @@ fun TsuzukiReaderContents(
     }
 
     Box(Modifier.fillMaxSize()) {
-        AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(visible, enter = fadeIn(fade), exit = fadeOut(fade)) {
             Box(
                 Modifier.fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.55f))
@@ -126,15 +132,25 @@ fun TsuzukiReaderContents(
         }
         AnimatedVisibility(
             visible,
-            enter = slideInHorizontally { -it },
-            exit = slideOutHorizontally { -it },
+            enter = fadeIn(fade),
+            exit = fadeOut(fade),
         ) {
+            val position = transition.animateFloat(
+                transitionSpec = {
+                    tween(
+                        if (reduced) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHEET_MS,
+                        easing = TsuzukiMotion.Standard,
+                    )
+                },
+                label = "contentsSlide",
+            ) { state -> if (state == EnterExitState.Visible) 0f else -1f }
             BoxWithConstraints {
                 val shape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
                 Column(
                     Modifier
                         .width(minOf(336.dp, maxWidth * 0.88f))
                         .fillMaxHeight()
+                        .graphicsLayer { translationX = if (reduced) 0f else position.value * size.width }
                         .clip(shape)
                         .background(MaterialTheme.colorScheme.surfaceContainerLow)
                         .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)

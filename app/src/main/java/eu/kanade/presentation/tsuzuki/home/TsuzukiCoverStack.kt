@@ -15,9 +15,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.rememberReduceMotion
@@ -94,7 +94,13 @@ fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onAdvance: () -
                 colorFilter = eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
                 modifier = Modifier.width(142.dp)
-                    .zIndex(if (flying && progress.value < .65f) 10f else (books.size - slot).toFloat())
+                    .layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width, placeable.height) {
+                            val depth = if (flying && progress.value < .65f) 10f else (books.size - slot).toFloat()
+                            placeable.placeRelative(0, 0, zIndex = depth)
+                        }
+                    }
                     .graphicsLayer {
                         val p = progress.value
                         transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .5f)

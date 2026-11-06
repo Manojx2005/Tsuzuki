@@ -1,11 +1,13 @@
 package eu.kanade.presentation.theme.tsuzuki
 
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.floats.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -15,14 +17,14 @@ class TsuzukiMotionTest {
 
     @Test
     fun `stepped starts at zero and ends at one`() {
-        val e = TsuzukiMotion.stepped(linear)
+        val e = TsuzukiMotion.stepped(linear, steps = 8)
         e.transform(0f) shouldBe 0f
         e.transform(1f) shouldBe 1f
     }
 
     @Test
     fun `stepped quantises a linear easing into eight equal jumps`() {
-        val e = TsuzukiMotion.stepped(linear)
+        val e = TsuzukiMotion.stepped(linear, steps = 8)
         e.transform(0.01f) shouldBe 0.125f
         e.transform(0.125f) shouldBe 0.125f
         e.transform(0.13f) shouldBe 0.25f
@@ -39,16 +41,43 @@ class TsuzukiMotionTest {
 
     @Test
     fun `stepped output only takes multiples of one over steps and never decreases`() {
-        val e = TsuzukiMotion.stepped(TsuzukiMotion.Standard)
+        val e = TsuzukiMotion.stepped(TsuzukiMotion.Standard, steps = 8)
         var previous = 0f
         for (i in 0..100) {
             val v = e.transform(i / 100f)
             v shouldBeGreaterThanOrEqual previous
             v shouldBeLessThanOrEqual 1f
-            val scaled = v * TsuzukiMotion.DOT_STEPS
+            val scaled = v * 8
             abs(scaled - scaled.roundToInt()) shouldBeLessThanOrEqual 1e-4f
             previous = v
         }
+    }
+
+    @Test
+    fun `stepped rejects missing dots`() {
+        assertThrows<IllegalArgumentException> { TsuzukiMotion.stepped(linear, steps = 0) }
+        assertThrows<IllegalArgumentException> { TsuzukiMotion.stepped(linear, steps = -1) }
+    }
+
+    @Test
+    fun `discrete fill clamps an overshooting curve`() {
+        val easing = TsuzukiMotion.stepped(TsuzukiMotion.Spring, steps = 3)
+        (0..100).forEach { easing.transform(it / 100f) shouldBeLessThanOrEqual 1f }
+    }
+
+    @Test
+    fun `normal motion preserves smooth easing and requested duration`() {
+        val spec = motionTween<Float>(320, TsuzukiMotion.Standard, reduced = false)
+        spec.durationMillis shouldBe 320
+        spec.easing shouldBe TsuzukiMotion.Standard
+        spec.easing.transform(0.13f) shouldBe TsuzukiMotion.Standard.transform(0.13f)
+    }
+
+    @Test
+    fun `reduced motion uses the short linear fade`() {
+        val spec = motionTween<Float>(320, TsuzukiMotion.Standard, reduced = true)
+        spec.durationMillis shouldBe TsuzukiMotion.REDUCED_MS
+        spec.easing shouldBe LinearEasing
     }
 
     @Test

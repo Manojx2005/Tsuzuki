@@ -89,7 +89,7 @@ time; put the rest in an overflow menu or a "More" sheet; never let a row scroll
 tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
 case, Doto only for short headings and numbers.
 
-#### Q1 Smooth motion in Dot (T3) — `ready`
+#### Q1 Smooth motion in Dot (T3) — `review` (C:/Users/Manoj/Tsuzuki/.worktrees/q1, 2026-11-06)
 Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
 p50 5 ms at 120 Hz) — the lag is **designed in**:
 1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible
@@ -110,6 +110,39 @@ p50 5 ms at 120 Hz) — the lag is **designed in**:
 Keep Reduce motion behaviour. Tests: `stepped` / motion-spec selection unit tests updated.
 Device check (Claude): record `dumpsys gfxinfo framestats` + screen recording for sheet open/close, tab switch,
 home stack swipe, book open, before/after.
+
+
+**Result (2026-11-06, Codex; worktree `.worktrees/q1`):**
+- `theme/tsuzuki/TsuzukiMotion.kt`: smooth shared tween; discrete fills require their dot count; reduced motion stays short.
+- `theme/tsuzuki/TsuzukiModalBottomSheet.kt`: smooth Dot enter/exit curves, existing reduced fade retained.
+- `theme/tsuzuki/TsuzukiNav.kt`: equal fixed phone cells and one spring-translated indicator per bar/rail; token colours, RTL, reduced snap, badge overlays.
+- `theme/tsuzuki/TsuzukiComponents.kt`: cache one density-sized dot tile and repeat its ImageShader on redraw.
+- `theme/tsuzuki/TsuzukiSegments.kt`: defer indicator position to graphicsLayer; derived midpoint changes preserve text contrast without per-frame recomposition.
+- `theme/tsuzuki/TsuzukiSharedCover.kt`: correct stale stepped-motion comment; existing smooth layer implementation retained.
+- `tsuzuki/home/TsuzukiCoverStack.kt`: defer animated depth to placement instead of recomposition.
+- `tsuzuki/novel/TsuzukiReaderContents.kt`: drawer translation in graphicsLayer; short fade without translation when reduced.
+- `tsuzuki/onboarding/TsuzukiOnboardingScreen.kt`: smooth Dot step transitions.
+- `tsuzuki/startup/TsuzukiStartup.kt`: smooth logo flight and observe app/system Reduce motion.
+- `res/anim/tsuzuki_reader_behind_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_enter_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_exit_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_return_dot.xml`: removed unreferenced stepped animation.
+- `TsuzukiMotionTest.kt`: 12 cases (4 added), covering explicit dot counts, easing bounds, smooth spec and reduced spec.
+- `TsuzukiNavIndicatorTest.kt`: 8 new cases for cell offsets, rail gaps, RTL, invalid selection, reduced spec, scaled rail height and animated tint midpoint.
+- `TsuzukiSegmentsTest.kt`: 4 cases for midpoint tint, reverse travel, overshoot and empty labels.
+- `NovelWebViewImageCacheTest.kt`: close intercepted response streams; fixes 7 pre-existing Windows temp-directory cleanup failures.
+- `app/src/test/java/android/webkit/WebResourceResponse.java`: JVM fixture retains the response stream instead of discarding it like the Android stub, enabling real cleanup.
+- `docs/design/README.md`: implementation status updated for Q1 review.
+Validation: per-file Spotless twice on all 14 Kotlin files (second pass all IS CLEAN); hook also run twice for the Java fixture (no Java formatter configured). Requested JDK 21; `:app:assembleDebug :app:testDebugUnitTest` green, 862 tests, 0 failures/errors/skips. Log: `app/build/q1-final-validation.log`.
+Left out: Q5 destination/label changes remain for Q5; no new strings or data (existing translations reused).
+AdaptiveSheet and SharedCover were already layer-based. Discrete progress dots already use their actual count;
+no artificial 8-step animation remains in UI callers. No adb, commits or pushes; no measured performance claim.
+**Claude device check:** on owner phone `R5GL23ZYE1V`, Dot then Colour: record before/after screen video and
+`dumpsys gfxinfo framestats` for details filter/download sheet open/close, every nav tab (rapid reversals too),
+Home cover-stack advance and book open/back. Verify pill stays under equal cells, labels/badge fit at 384 dp,
+contents drawer closes cleanly, dot-grid pitch/radius unchanged, startup logo smooth. Repeat app Reduce motion
+and system animator scale 0: no nav/rail sliding, sheets/contents fade. Check tablet rail indicator against every
+icon in Dot and Colour, and RTL bar direction. Device evidence remains Claude-owned.
 
 #### Q2 Novel reader: next chapter always reachable (T3) — `ready`
 Owner: "the continue button on the novel reader doesn't go to the next chapter." Found on the phone
@@ -173,16 +206,46 @@ LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN categor
 - Display: if two pills would still render the same label, never show duplicates (append the content type).
 - Pills show their book count (N12 already has the query).
 
-#### Q5 Navigation: Library tab + real labels (T3) — `ready` (owner approved 2026-11-06; after Q1)
+#### Q5 Navigation: Library tab + real labels (T3) — `codex-working` (paused by owner 2026-11-06; C:/Users/Manoj/Tsuzuki/.worktrees/q5; tests/review pending) (owner approved 2026-11-06; after Q1)
 Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
 Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
 `Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
 Uses Q1's sliding indicator. Tablet rail gets the same items. TalkBack labels unchanged words.
+Worktree note: owner requested Q5 after Q1 was finished, without committing. Based on main `1cdd2ce78`,
+with the complete reviewed Q1 working diff copied as an uncommitted prerequisite; review Q5 relative to `.worktrees/q1`.
 - History stays reachable: a HISTORY tile/row in More (top group) and Home's recent row opens it; deep links and
   shortcuts that targeted the History tab still land on History. Library tab opens the existing library screen
   (the one behind Home's ALL BOOKS →), keeps its state across tab switches, and Home's ALL BOOKS → selects the tab.
 - Badges: Updates keeps its unread badge. Back from any tab returns to Home (as now).
 - Tests: nav item list per layout, History routing. Device check (Claude): phone pill + tablet rail, Dot + Colour.
+
+
+**Result (2026-11-06, Codex; worktree `.worktrees/q5`):**
+Q5 files below are the delta from Q1; Q1's complete working diff is an uncommitted prerequisite in this
+worktree because the owner requested Q5 next and prohibited commits. Review/merge Q1 first, then this delta.
+- `ui/tsuzuki/navigation/TsuzukiNavigation.kt`: shared phone/rail destinations, retained visible/hidden tabs, History shortcut routing and last library media policy.
+- `ui/home/HomeScreen.kt`: Library replaces History in main nav; localized real-word labels; last novel/manga library retained across tab changes; external shortcut side effects and Back Home preserved.
+- `ui/more/MoreTab.kt`: History callback selects existing HistoryTab.
+- `presentation/more/MoreScreen.kt`: two-line callback slot/dispatch; stock More UI unchanged.
+- `presentation/tsuzuki/more/TsuzukiMoreScreen.kt`: History tile immediately below top toggle group, reusing the existing translated label.
+- `presentation/tsuzuki/settings/TsuzukiSettingsMain.kt`: tablet settings rail uses the same five labels/order and Library destination.
+- `TsuzukiNavigationTest.kt`: 7 cases covering board tab order, both library types, retained media, hidden History/shortcut routing, restore and other destinations.
+- `docs/design/README.md`: navigation/More status and device-review state.
+Validation: per-file Spotless twice on all 7 Q5 Kotlin files; second pass all IS CLEAN. Final build/test result pending. Owner stopped work on 2026-11-06 and will perform tests/review later; do not treat Q5 as validated. APK assembly reached success during the last run; final unit results were not checked. Work is saved, no further cards started.
+No new strings: reused `tsz_home`, `label_library`, `label_recent_updates`, `browse`, `label_more`,
+`label_recent_manga` from the existing 8 locale resources. Dot labels uppercase; Colour sentence case.
+Left out: no new library screen/state holder, no History rewrite, no preference/data migration. Home's All Books
+already selects NovelsTab; Home's recent row and MainActivity's History shortcut already open HistoryTab, so those
+callers are retained. Updates badge continues reading the existing unread count. Q1 contrast review follow-up
+is included in both worktrees: visual tint follows the sliding pill midpoint, selection semantics stay immediate.
+**Claude phone check (`R5GL23ZYE1V`, ~384 dp, then tablet rail):** Dot then Colour, verify five full-word labels in
+order Home / Library / Updates / Browse / More. Swipe Library, change shelf/filter, open a book/back, switch
+Browse and return Library: position/filter persist; separate library mode Manga → Browse → Library stays Manga.
+Home All Books selects Library. Open History from More's top tile, Home's recent row, and the launcher History
+shortcut: all reach actual History, More stays selected, tapping More returns to More. Back from every tab and
+History returns Home. Check Updates unread badge with count >0 and all indicator positions/rapid reversals;
+Reduce motion, font scale 1.3/2 and Japanese/English label fit. Tablet Settings rail must show the same five items
+and leave settings for Library correctly. Check legacy theme navigation unchanged. No adb/device work performed.
 
 #### Q6 Book details header (T2) — `ready`
 `evidence/details-header.png`, board `Details.dc.html`:
