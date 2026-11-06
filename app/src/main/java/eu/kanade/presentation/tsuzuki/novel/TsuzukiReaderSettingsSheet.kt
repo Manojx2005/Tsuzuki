@@ -3,7 +3,6 @@ package eu.kanade.presentation.tsuzuki.novel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -69,14 +68,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** A page colour on the sheet: the theme id stored in `novelTheme`, and its page / ink for the swatch. */
-private data class PageSwatch(
-    val theme: String,
-    val label: StringResource,
-    val page: Color,
-    val ink: Color,
-)
-
 private data class FontChoice(val value: String, val label: StringResource, val preview: FontFamily)
 
 private val literataFamily = FontFamily(Font(R.font.lnr_literata))
@@ -138,54 +129,11 @@ fun TsuzukiReaderSettingsSheet(
 
 @Composable
 private fun LookTab(preferences: ReaderPreferences) {
-    val tokens = TsuzukiTheme.tokens
-    val theme by preferences.novelTheme.collectAsState()
     val font by preferences.novelFontFamily.collectAsState()
     val size by preferences.novelFontSize.collectAsState()
     val lines by preferences.novelLineHeight.collectAsState()
 
-    // "Book" is the app theme, which reads on the current book's tint (BookTint).
-    val pages = listOf(
-        PageSwatch("app", MR.strings.tsz_rs_page_book, tokens.background, MaterialTheme.colorScheme.onSurface),
-        PageSwatch("paper", MR.strings.tsz_rs_page_paper, Color(0xFFFAFAF7), Color(0xFF1F2024)),
-        PageSwatch("sepia", MR.strings.tsz_rs_page_sepia, Color(0xFFF4ECD8), Color(0xFF5B4636)),
-        PageSwatch("sage", MR.strings.tsz_rs_page_sage, Color(0xFFDDE5D6), Color(0xFF25301F)),
-        PageSwatch("night", MR.strings.tsz_rs_page_night, Color(0xFF15140F), Color(0xFFDED7C9)),
-        PageSwatch("black", MR.strings.tsz_rs_page_black, Color.Black, Color(0xFFCCCCCC)),
-    )
-    TsuzukiSectionLabel(stringResource(MR.strings.tsz_rs_page_colour))
-    Row(
-        Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        pages.forEach { swatch ->
-            val selected = theme == swatch.theme
-            val label = stringResource(swatch.label)
-            Box(
-                Modifier.size(54.dp)
-                    // Selected: a 2 dp gap in the sheet colour, then a 2 dp ring.
-                    .then(if (selected) Modifier.border(2.dp, tokens.dotOn, CircleShape) else Modifier)
-                    .padding(4.dp)
-                    .clip(CircleShape)
-                    .background(swatch.page)
-                    .border(1.dp, Color.White.copy(alpha = 0.16f), CircleShape)
-                    .semantics {
-                        this.selected = selected
-                        contentDescription = label
-                    }
-                    .tsuzukiClickable(role = Role.RadioButton) { preferences.novelTheme.set(swatch.theme) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "Aa",
-                    color = swatch.ink,
-                    fontFamily = literataFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        }
-    }
+    TsuzukiPageColourPicker(preferences)
 
     // Only faces the app has: Literata is bundled, the rest are system families.
     val fonts = listOf(

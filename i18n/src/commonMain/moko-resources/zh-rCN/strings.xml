@@ -1282,4 +1282,11 @@
     <string name="tsz_download_increase">增大%1$s章号</string>
     <string name="tsz_download_all_eligible">“全部”将可下载的章节加入队列。</string>
     <string name="tsz_download_filtered">下载遵循当前章节筛选条件。</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">自定义</string>
+    <string name="tsz_rs_custom_ink">文字颜色</string>
+    <string name="tsz_rs_custom_page">背景颜色</string>
+    <string name="tsz_appearance_dot_covers">Dot 主题封面</string>
+    <string name="tsz_appearance_covers_colour">彩色</string>
+    <string name="tsz_appearance_legacy_themes">旧版 Mihon 和 Tsundoku 主题现已切换为 Colour。</string>
 </resources>

@@ -23,13 +23,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAccentSwatch
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -44,15 +45,14 @@ fun TsuzukiAccentPicker(uiPreferences: UiPreferences) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text(
-            stringResource(MR.strings.tsz_appearance_accent),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
+            tsuzukiMenuLabel(stringResource(MR.strings.tsz_appearance_accent)),
+            color = tokens.dotOn,
+            style = MaterialTheme.typography.titleSmall,
         )
         Text(
-            stringResource(MR.strings.tsz_appearance_accent_sub),
+            tsuzukiMenuLabel(stringResource(MR.strings.tsz_appearance_accent_sub)),
             color = muted,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 2.dp),
         )
         FlowRow(
@@ -90,5 +90,28 @@ fun TsuzukiAccentPicker(uiPreferences: UiPreferences) {
                 }
             }
         }
+    }
+}
+
+@Composable
+internal fun TsuzukiDotCoverPicker(uiPreferences: UiPreferences) {
+    val preference = uiPreferences.tsuzukiDotColourCovers
+    val useColour by preference.collectAsState()
+    Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+        TsuzukiSectionLabel(stringResource(MR.strings.tsz_appearance_dot_covers))
+        TsuzukiSegments(
+            labels = listOf(
+                stringResource(MR.strings.pref_grayscale),
+                stringResource(MR.strings.tsz_appearance_covers_colour),
+            ),
+            selected = if (useColour) 1 else 0,
+            onClick = { preference.set(it == 1) },
+        )
+        Text(
+            tsuzukiMenuLabel(stringResource(MR.strings.tsz_appearance_legacy_themes)),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
     }
 }

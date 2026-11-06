@@ -124,6 +124,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(AppModule(this))
         Injekt.importModule(DomainModule())
+        eu.kanade.tachiyomi.tsuzuki.migrateStoredThemes(Injekt.get<PreferenceStore>())
 
         // Asynchronously init expensive components for a faster cold start. Must run after all
         // modules are imported

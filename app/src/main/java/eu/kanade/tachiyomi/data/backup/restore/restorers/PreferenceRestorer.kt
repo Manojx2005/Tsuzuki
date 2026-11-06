@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.sourcePreferences
+import eu.kanade.tachiyomi.tsuzuki.normalizeBackupThemePreference
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
@@ -34,7 +35,7 @@ class PreferenceRestorer(
         backupCategories: List<BackupCategory>?,
     ) {
         restorePreferences(
-            preferences,
+            preferences.map(::normalizeBackupThemePreference),
             preferenceStore,
             backupCategories,
         )

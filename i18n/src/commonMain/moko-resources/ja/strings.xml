@@ -1281,4 +1281,11 @@
     <string name="tsz_download_increase">%1$sの番号を増やす</string>
     <string name="tsz_download_all_eligible">「すべて」ではダウンロード可能な章をキューに追加します。</string>
     <string name="tsz_download_filtered">現在の章フィルターがダウンロードに適用されます。</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">カスタム</string>
+    <string name="tsz_rs_custom_ink">文字色</string>
+    <string name="tsz_rs_custom_page">背景色</string>
+    <string name="tsz_appearance_dot_covers">Dotの表紙</string>
+    <string name="tsz_appearance_covers_colour">カラー</string>
+    <string name="tsz_appearance_legacy_themes">従来のMihonとTsundokuのテーマはColourに切り替わります。</string>
 </resources>

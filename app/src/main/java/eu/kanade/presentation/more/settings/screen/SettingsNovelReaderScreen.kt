@@ -136,19 +136,11 @@ object SettingsNovelReaderScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems = listOf(
-                Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.novelTheme,
-                    entries = mapOf(
-                        "app" to "App",
-                        "light" to "Light",
-                        "dark" to "Dark",
-                        "sepia" to "Sepia",
-                        "black" to "Black",
-                        "grey" to "Grey",
-                        "custom" to "Custom",
-                    ).toMap(),
-                    title = stringResource(TDMR.strings.pref_novel_theme),
-                ),
+                Preference.PreferenceItem.CustomPreference(
+                    title = stringResource(MR.strings.tsz_rs_page_colour),
+                ) {
+                    eu.kanade.presentation.tsuzuki.novel.TsuzukiPageColourPicker(readerPreferences)
+                },
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.novelRenderingMode,
                     entries = mapOf(
@@ -378,7 +370,8 @@ object SettingsNovelReaderScreen : SearchableSettings {
                     Preference.PreferenceItem.SwitchPreference(
                         preference = readerPreferences.novelPagedMode,
                         title = "Paged mode (WebView only, experimental)",
-                        subtitle = "Swipe/tap turns a page instead of scrolling; chapter changes only past the first/last page",
+                        subtitle = "Swipe/tap turns a page instead of scrolling; " +
+                            "chapter changes only past the first/last page",
                     ),
                 )
                 if (pagedModeEnabled) {

@@ -1282,4 +1282,11 @@
     <string name="tsz_download_increase">%1$s erhöhen</string>
     <string name="tsz_download_all_eligible">Alle stellt verfügbare Kapitel zum Download in die Warteschlange.</string>
     <string name="tsz_download_filtered">Aktuelle Kapitelfilter gelten auch für Downloads.</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Benutzerdefiniert</string>
+    <string name="tsz_rs_custom_ink">Textfarbe</string>
+    <string name="tsz_rs_custom_page">Hintergrundfarbe</string>
+    <string name="tsz_appearance_dot_covers">Cover in Dot</string>
+    <string name="tsz_appearance_covers_colour">Farbig</string>
+    <string name="tsz_appearance_legacy_themes">Ältere Mihon- und Tsundoku-Themen verwenden jetzt Colour.</string>
 </resources>

@@ -1281,4 +1281,11 @@
     <string name="tsz_download_increase">%1$s 번호 늘리기</string>
     <string name="tsz_download_all_eligible">전체를 선택하면 다운로드 가능한 장이 대기열에 추가됩니다.</string>
     <string name="tsz_download_filtered">현재 장 필터가 다운로드에 적용됩니다.</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">사용자 지정</string>
+    <string name="tsz_rs_custom_ink">글자 색상</string>
+    <string name="tsz_rs_custom_page">배경 색상</string>
+    <string name="tsz_appearance_dot_covers">Dot의 표지</string>
+    <string name="tsz_appearance_covers_colour">컬러</string>
+    <string name="tsz_appearance_legacy_themes">이전 Mihon 및 Tsundoku 테마는 이제 Colour를 사용합니다.</string>
 </resources>

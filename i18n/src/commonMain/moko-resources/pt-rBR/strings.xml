@@ -1279,4 +1279,11 @@
     <string name="tsz_download_increase">Aumentar: %1$s</string>
     <string name="tsz_download_all_eligible">Todos adiciona à fila os capítulos disponíveis para download.</string>
     <string name="tsz_download_filtered">Os filtros de capítulos atuais se aplicam aos downloads.</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Personalizado</string>
+    <string name="tsz_rs_custom_ink">Cor do texto</string>
+    <string name="tsz_rs_custom_page">Cor de fundo</string>
+    <string name="tsz_appearance_dot_covers">Capas no Dot</string>
+    <string name="tsz_appearance_covers_colour">Em cores</string>
+    <string name="tsz_appearance_legacy_themes">Os temas antigos do Mihon e do Tsundoku agora usam Colour.</string>
 </resources>

@@ -1646,4 +1646,11 @@
     <string name="tsz_download_increase">Increase %1$s</string>
     <string name="tsz_download_all_eligible">All queues chapters that are available to download.</string>
     <string name="tsz_download_filtered">Current chapter filters apply to downloads.</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Custom</string>
+    <string name="tsz_rs_custom_ink">Text colour</string>
+    <string name="tsz_rs_custom_page">Background colour</string>
+    <string name="tsz_appearance_dot_covers">Covers in Dot</string>
+    <string name="tsz_appearance_covers_colour">In colour</string>
+    <string name="tsz_appearance_legacy_themes">Earlier Mihon and Tsundoku themes now use Colour.</string>
 </resources>

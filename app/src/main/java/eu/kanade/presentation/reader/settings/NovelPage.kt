@@ -115,16 +115,6 @@ data class RegexReplacement(
     val id: String = java.util.UUID.randomUUID().toString(),
 )
 
-private val novelThemes = listOf(
-    TDMR.strings.novel_theme_app to "app",
-    TDMR.strings.novel_theme_light to "light",
-    TDMR.strings.novel_theme_dark to "dark",
-    TDMR.strings.novel_theme_sepia to "sepia",
-    TDMR.strings.novel_theme_black to "black",
-    TDMR.strings.novel_theme_grey to "grey",
-    TDMR.strings.novel_theme_custom to "custom",
-)
-
 // System fonts - always available
 private val systemFonts = listOf(
     MR.strings.tsz_font_literata to "literata",
@@ -312,169 +302,7 @@ internal fun ColumnScope.NovelReadingTab(viewModel: ReaderSettingsViewModel, ren
 
 @Composable
 internal fun ColumnScope.NovelAppearanceTab(viewModel: ReaderSettingsViewModel, renderingMode: String) {
-    val theme by viewModel.preferences.novelTheme.collectAsState()
-    val fontColor by viewModel.preferences.novelFontColor.collectAsState()
-    val backgroundColor by viewModel.preferences.novelBackgroundColor.collectAsState()
-    var showFontColorPicker by remember { mutableStateOf(false) }
-    var showBgColorPicker by remember { mutableStateOf(false) }
-
-    // Color picker dialogs
-    if (showFontColorPicker) {
-        ColorPickerDialog(
-            title = stringResource(TDMR.strings.pref_novel_font_color),
-            initialColor = if (fontColor != 0) fontColor else 0xFF000000.toInt(),
-            onDismiss = { showFontColorPicker = false },
-            onConfirm = { color ->
-                viewModel.preferences.novelFontColor.set(color)
-                showFontColorPicker = false
-            },
-        )
-    }
-
-    if (showBgColorPicker) {
-        ColorPickerDialog(
-            title = stringResource(TDMR.strings.pref_novel_background_color),
-            initialColor = if (backgroundColor != 0) backgroundColor else 0xFFFFFFFF.toInt(),
-            onDismiss = { showBgColorPicker = false },
-            onConfirm = { color ->
-                viewModel.preferences.novelBackgroundColor.set(color)
-                viewModel.preferences.novelTheme.set("custom")
-                showBgColorPicker = false
-            },
-        )
-    }
-
-    // Theme
-    SettingsChipRow(TDMR.strings.pref_novel_theme) {
-        novelThemes.forEach { (labelRes, value) ->
-            FilterChip(
-                selected = theme == value,
-                onClick = { viewModel.preferences.novelTheme.set(value) },
-                label = { Text(stringResource(labelRes)) },
-            )
-        }
-    }
-
-    // Font Color
-    SettingsChipRow(TDMR.strings.pref_novel_font_color) {
-        fontColors.forEach { (labelRes, colorValue) ->
-            val isCustom = colorValue == Int.MIN_VALUE
-            val isSelected = if (isCustom) {
-                fontColors.none { it.second == fontColor } && fontColor != 0
-            } else {
-                fontColor == colorValue
-            }
-            FilterChip(
-                selected = isSelected,
-                onClick = {
-                    if (isCustom) {
-                        showFontColorPicker = true
-                    } else {
-                        viewModel.preferences.novelFontColor.set(colorValue)
-                    }
-                },
-                label = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val displayColor = when {
-                            isCustom && isSelected && fontColor != 0 -> Color(fontColor)
-                            !isCustom && colorValue != 0 -> Color(colorValue)
-                            else -> null
-                        }
-                        if (displayColor != null) {
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(displayColor)
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-                            )
-                        }
-                        if (isCustom) {
-                            Icon(
-                                Icons.Outlined.Palette,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                        Text(
-                            stringResource(labelRes),
-                            modifier = Modifier.padding(
-                                start = if (displayColor != null ||
-                                    isCustom
-                                ) {
-                                    4.dp
-                                } else {
-                                    0.dp
-                                },
-                            ),
-                        )
-                    }
-                },
-            )
-        }
-    }
-
-    // Background Color
-    SettingsChipRow(TDMR.strings.pref_novel_background_color) {
-        backgroundColors.forEach { (labelRes, colorValue) ->
-            val isCustom = colorValue == Int.MIN_VALUE
-            val isSelected = if (isCustom) {
-                backgroundColors.none { it.second == backgroundColor } && backgroundColor != 0
-            } else {
-                backgroundColor == colorValue
-            }
-            FilterChip(
-                selected = isSelected,
-                onClick = {
-                    if (isCustom) {
-                        showBgColorPicker = true
-                    } else {
-                        viewModel.preferences.novelBackgroundColor.set(colorValue)
-                        if (colorValue != 0) {
-                            viewModel.preferences.novelTheme.set("custom")
-                        }
-                    }
-                },
-                label = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val displayColor = when {
-                            isCustom && isSelected && backgroundColor != 0 -> Color(backgroundColor)
-                            !isCustom && colorValue != 0 -> Color(colorValue)
-                            else -> null
-                        }
-                        if (displayColor != null) {
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(displayColor)
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-                            )
-                        }
-                        if (isCustom) {
-                            Icon(
-                                Icons.Outlined.Palette,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                        Text(
-                            stringResource(labelRes),
-                            modifier = Modifier.padding(
-                                start = if (displayColor != null ||
-                                    isCustom
-                                ) {
-                                    4.dp
-                                } else {
-                                    0.dp
-                                },
-                            ),
-                        )
-                    }
-                },
-            )
-        }
-    }
+    eu.kanade.presentation.tsuzuki.novel.TsuzukiPageColourPicker(viewModel.preferences)
 
     // Hide Chapter Title in Content
     CheckboxItem(
@@ -1925,7 +1753,7 @@ internal fun ColumnScope.NovelTtsTab(viewModel: ReaderSettingsViewModel) {
  * A simple RGB color picker dialog with sliders.
  */
 @Composable
-private fun ColorPickerDialog(
+internal fun ColorPickerDialog(
     title: String,
     initialColor: Int,
     onDismiss: () -> Unit,
