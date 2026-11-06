@@ -21,11 +21,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -189,30 +189,33 @@ fun TsuzukiSettingsTwoPane(
         onLeave()
         launchUI { HomeScreen.openTab(tab) }
     }
+    val homeLabel = stringResource(MR.strings.tsz_home)
+    val libraryLabel = stringResource(MR.strings.label_library)
+    val updatesLabel = stringResource(MR.strings.label_recent_updates)
+    val browseLabel = stringResource(MR.strings.browse)
+    val moreLabel = stringResource(MR.strings.label_more)
     val items = listOf(
-        TsuzukiNavItem("home", stringResource(MR.strings.tsz_home), "HOME", Icons.Outlined.GridView, false) {
+        TsuzukiNavItem("home", homeLabel, homeLabel.uppercase(), Icons.Outlined.GridView, false) {
             open(HomeScreen.Tab.Home)
         },
         TsuzukiNavItem(
+            "library",
+            libraryLabel,
+            libraryLabel.uppercase(),
+            Icons.AutoMirrored.Outlined.MenuBook,
+            false,
+        ) { open(HomeScreen.Tab.Library()) },
+        TsuzukiNavItem(
             "updates",
-            stringResource(MR.strings.label_recent_updates),
-            "NEW",
+            updatesLabel,
+            updatesLabel.uppercase(),
             Icons.Outlined.NotificationsNone,
             false,
         ) { open(HomeScreen.Tab.Updates) },
-        TsuzukiNavItem(
-            "history",
-            stringResource(MR.strings.label_recent_manga),
-            "PAST",
-            Icons.Outlined.Schedule,
-            false,
-        ) {
-            open(HomeScreen.Tab.History)
-        },
-        TsuzukiNavItem("browse", stringResource(MR.strings.browse), "FIND", Icons.Outlined.Explore, false) {
+        TsuzukiNavItem("browse", browseLabel, browseLabel.uppercase(), Icons.Outlined.Explore, false) {
             open(HomeScreen.Tab.Browse())
         },
-        TsuzukiNavItem("more", stringResource(MR.strings.label_more), "•••", Icons.Outlined.MoreHoriz, true) {
+        TsuzukiNavItem("more", moreLabel, moreLabel.uppercase(), Icons.Outlined.MoreHoriz, true) {
             onLeave()
         },
     )

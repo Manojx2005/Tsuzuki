@@ -19,6 +19,7 @@ import eu.kanade.presentation.tsuzuki.home.TsuzukiHomeScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.history.HistoryTab
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.ImportEpubScreen
 import eu.kanade.tachiyomi.ui.library.NovelsTab
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
@@ -65,7 +66,7 @@ data object TsuzukiHomeTab : Tab {
                     }
                 },
                 onOpenBook = { navigator.push(MangaScreen(it.mangaId)) },
-                onAllBooks = { tabNavigator.current = NovelsTab },
+                onAllBooks = { scope.launch { HomeScreen.openTab(HomeScreen.Tab.Library()) } },
                 onUpdates = { tabNavigator.current = UpdatesTab },
                 onHistory = { tabNavigator.current = HistoryTab },
                 onSearch = { tabNavigator.current = NovelsTab },

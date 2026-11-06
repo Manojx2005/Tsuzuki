@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.QueryStats
@@ -58,7 +59,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * More in the Tsuzuki themes (design board "More"): two toggle tiles, then a bento of
- * destinations. Same inputs as Tsundoku's MoreScreen, so MoreTab wiring is unchanged.
+ * destinations. History stays reachable here when Library takes its place in the main navigation.
  */
 @Composable
 fun TsuzukiMoreScreen(
@@ -67,6 +68,7 @@ fun TsuzukiMoreScreen(
     onDownloadedOnlyChange: (Boolean) -> Unit,
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
+    onClickHistory: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -121,6 +123,15 @@ fun TsuzukiMoreScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
+            NavTile(
+                Icons.Outlined.History,
+                stringResource(MR.strings.label_recent_manga),
+                null,
+                null,
+                Modifier.fillMaxWidth(),
+                onClickHistory,
+                height = 96.dp,
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 NavTile(
                     Icons.Outlined.GetApp,

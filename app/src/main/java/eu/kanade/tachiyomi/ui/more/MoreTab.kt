@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
+import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,7 @@ data object MoreTab : Tab {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val tabNavigator = LocalTabNavigator.current
         val viewModel = viewModel<MoreViewModel>()
         val tsuzukiStats = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
             eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
@@ -67,6 +69,7 @@ data object MoreTab : Tab {
             onDownloadedOnlyChange = { viewModel.downloadedOnly = it },
             incognitoMode = viewModel.incognitoMode,
             onIncognitoModeChange = { viewModel.incognitoMode = it },
+            onClickHistory = { tabNavigator.current = HistoryTab },
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen()) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             // Tsuzuki: the "Stats & goals" board, which links on to these library statistics.
