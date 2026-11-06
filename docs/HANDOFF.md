@@ -114,6 +114,8 @@ set it `blocked` ("needs a board") and move on — Claude draws it.
 | 11 | X1 Reader hook consolidation | Q2 | Extra wave |
 | 12 | X3 Restyle check: ReplaceRules + SettingsTranslation | Q11 | Extra wave |
 | 13 | X4 Restyle check: DuplicateFinder + Migration | — | Extra wave |
+| 13a | Q13 Novel next chapter: instant, never a blank page | — | Owner report 2026-11-07 (lag before next chapter) |
+| 13b | Q14 Design fixes from Claude's 2026-11-07 device pass | — | Owner asked for a bug pass of everything built overnight |
 | 14 | A1.5 Anime: debug extension install → play | — | Anime lane (owner asked tonight); only new files + a debug entry |
 | 15 | A2.2 Anime tables + data layer (migration 36) | — | T4; schema exception for this card only (rule 9) |
 | 16 | A2.3 Anime sources + browse catalogue | A1.5, A2.2 | |
@@ -373,7 +375,7 @@ Verification: per-file Spotless twice and JDK 21 `:app:assembleDebug :app:testDe
 
 Claude device check: Dot then Colour on S22 and Tab S11. Exercise both media pills, both segments, swipes, update counts, the extension shortcut and both migration routes. Switch to hidden manga mode and repeat the novel flow. Check long source names, Latest, preset, pin and long-press pin actions at phone width and in the tablet’s two-pane layout.
 
-#### Q8 Overflow and large-font sweep (T3) — `ready`
+#### Q8 Overflow and large-font sweep (T3) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 **From Claude's 2026-11-07 device pass (include these):** reader action row needs short labels (SCROLL TO TOP / START AUTO-SCROLL ellipsize now; board `Main` uses one word each); More tiles `DATA AND STOR…`, `DOWNLOADED ON…`; details `131 chapters` heading not uppercased in Dot.
 Every Tsuzuki screen at **360 dp width** and **font scale 1.0 / 1.3 / 2.0**, Dot + Colour, EN + JA. Known on the
 phone now: More "DATA AND STORA…", reader title hard-cut, genre chips, Browse pills, source names, Home hero title
@@ -381,7 +383,21 @@ phone now: More "DATA AND STORA…", reader title hard-cut, genre chips, Browse 
 (`widthDp = 360, fontScale = 1.3f/2f`) for each Tsuzuki screen and fix: no clipped text without ellipsis, rows that
 wrap instead of scroll, min 48 dp targets, no fixed heights around text. List every fix in Result.
 
-#### Q9 Accessibility + quality of life, Mihon parity (T3) — `ready`
+**Result (Codex, 2026-11-07):** `tsuzuki/q8` @ `e6a34735b`. **893 tests, 0 failures.** Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21.
+- `TsuzukiPill.kt` / `TsuzukiSegments.kt` — 48 dp controls, wrapping rows and labels, shelf/tab overflow with active choice retained, measured indicator height and a wrapped high-font-scale layout.
+- `TsuzukiNav.kt` — taller bottom cells and two-line ellipsis for large text while retaining the sliding indicator and spoken labels.
+- `TsuzukiHomeScreen.kt` — two-line ellipsized title, independent cover stack height, stacked hero and stat tiles at large font scales, a growing Resume row, and 48 dp Read/Watch controls.
+- `TsuzukiMoreScreen.kt` — growing tile heights and multiline labels/subtitles. Phone tiles stack at large font scales.
+- `TsuzukiBrowse.kt` / `TsuzukiSourceRow.kt` — multiline search and pinned labels, source names with ellipsis, wrapping metadata, and Latest under the title at large font scales.
+- `TsuzukiNovelChrome.kt` / `NovelReaderAppBars.kt` — short labels for Top, Scroll/Stop, Rotate and paragraph actions, with full TalkBack/overflow descriptions. Fewer primary actions at larger scales, and progress labels can wrap. Q2 already ellipsizes novel titles and keeps fixed Previous and Next controls.
+- `TsuzukiPageColours.kt` / `TsuzukiReaderSettingsSheet.kt` — quick swatches stay six across at the standard scale and wrap to three with large type. Font tiles grow and wrap. Full settings already has wrapping choices from Q11.
+- `ChapterHeader.kt` — Dot chapter count uses uppercase, with a taller target. Existing Q6 genre rows fit two measured lines and keep extra tags in the overflow.
+- `TsuzukiHistoryStats.kt` / `TsuzukiUpdatesTiles.kt` / `TsuzukiSettingsMain.kt` — growing stat tiles and wrapping units; settings titles and subtitles allow two lines.
+- `TsuzukiNarrowPreviews.kt` — 360 dp English/Japanese previews at 1.0, 1.3 and 2.0 for Dot and Colour. Covers Home, Library/nav, Browse, Details, More, novel and manga reader chrome, reader settings, Settings, Updates and History. Previews use real composables with sample data. Separate previews for secondary screens were left out.
+- `TsuzukiNarrowLayoutTest.kt` — checks shelf overflow and reader action capacity. Eight locale files add short reader labels. Upstream files touched: `ChapterHeader.kt` and `NovelReaderAppBars.kt`.
+- Claude device checks: at 360 dp across the preview matrix, check More's Data and Storage and Downloaded only, Home long title and cover shuffle, Library selected shelf from More, Browse Latest and long source names, Details chapter count and genre overflow, reader short action labels and More, quick sheet swatches and font rows, and History/Updates stat tiles. Confirm long labels wrap or ellipsize and all actions stay reachable. Actual visual previews and device checks remain pending.
+
+#### Q9 Accessibility + quality of life, Mihon parity (T3) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 Boards (fixes-2026-11): `Q9Selection`, `Q9Undo`, `Q9UpdatesLoading`, `Q9SettingsAdvanced` + `Colour*` twins (static `.html` + `png/`).
 - Nav and tab labels are spoken as real words (already true for content descriptions — keep it when Q5 lands).
 - Contrast: check every muted/disabled colour on tile/background (e.g. `#8A8A8A` on `#0D0D0D`, dim read-chapter rows
@@ -394,7 +410,18 @@ Boards (fixes-2026-11): `Q9Selection`, `Q9Undo`, `Q9UpdatesLoading`, `Q9Settings
   profile the load and move mapping off the main thread if needed.
 Each item is optional if it turns out already done — say so in Result.
 
-#### Q11 Reader settings redesign: quick sheet + All reader settings (T4) — `codex-working` (.worktrees/q11, 2026-11-06)
+**Result (Codex, 2026-11-07):** `tsuzuki/q9` @ `11efb24f4`. **892 tests, 0 failures.** Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21.
+- `TsuzukiSelectionBar.kt`, `TsuzukiSelectionActions.kt`, `TsuzukiSelectedCover.kt` — labeled, font-scale-aware selection actions with overflow, localized counts, and checked grid covers. Existing Q3 chapter, Library and Updates long-press ranges remain in use.
+- `TsuzukiHistorySelection.kt`, `TsuzukiHistoryItem.kt` — History range selection over visible rows, accent selection, and bulk removal of the selected entries.
+- `TsuzukiUndoSnackbar.kt` — six-second Undo window and progress bar, with explicit dismissal under TalkBack. Library removal updates favorites immediately and restores them on Undo. Mark read and file deletion are staged until the window closes because they also delete files or translations and may notify trackers. Existing advanced destructive Library operations remain in the explicit Delete menu.
+- `TsuzukiUpdatesLoading.kt` — static first-load skeleton with a localized loading label and no invented count. `UpdatesViewModel.kt` already maps fetched rows on IO. Grouped mode now publishes the first page while it prefetches. The 100 ms board target still needs a device trace.
+- `TsuzukiAdvancedPreferences.kt` — search expands and scrolls to rare options. Folded groups/options: Library behavior, update metadata and recent-update interval; Manga Reader E-Ink and actions; Novel Reader formatting, content and auto-scroll; Downloads deletion rules; Novel Downloads throttling, mass import and per-extension overrides; Browse delay, cover skipping and back confirmation; Tracking chapter thresholds; Data cleanup. Search and reset still see the original preference tree.
+- `TsuzukiTokens.kt`, `TsuzukiNav.kt`, `TsuzukiHomeScreen.kt` — shared muted text ink for read labels, nav and the low-contrast Home label. Q5 already supplies spoken nav labels. `TsuzukiSelectionTest.kt` covers action capacity, History ranges, search reveal and 4.5:1 contrast on the default Dot and Colour surfaces.
+- `i18n/src/commonMain/moko-resources/{base,ja,zh-rCN,ko,es,pt-rBR,fr,de}/strings.xml` — new selection, Undo, loading and settings copy.
+- Upstream files: `AppBar.kt`, `LibraryToolbar.kt`, `MangaToolbar.kt` (selection count); `CommonMangaItem.kt`, `MangaBottomActionMenu.kt`, `MangaChapterListItem.kt`, `UpdatesUiItem.kt` (selection/contrast hooks); `HistoryScreen.kt`, `HistoryItem.kt`, `HistoryTab.kt` (selection wiring); `PreferenceScreen.kt`, `PreferenceScaffold.kt` (Advanced render hook); `LibraryTab.kt`, `NovelsTab.kt`, `LibraryViewModel.kt` (library undo); both `MangaScreen.kt` files and `MangaViewModel.kt` (chapter undo); `UpdatesScreen.kt`, `UpdatesTab.kt`, `UpdatesViewModel.kt` (loading, actions and undo).
+- Claude device checks: on 360–384 dp phone and tablet in Dot and Colour, long-press two entries in Library, chapter list, Updates and History, then check the range, count, cover check, Back and all More actions. At 200% font scale confirm all actions remain reachable. For disposable entries, remove from Library and undo, and cancel then repeat mark-read and delete-download through expiry. Enable TalkBack and verify announcement, persistence and dismiss behavior. Open Settings Search to a folded option and verify it expands and scrolls. Capture first-frame timing on the large Updates dataset, with grouped mode and Reduce motion both on and off.
+
+#### Q11 Reader settings redesign: quick sheet + All reader settings (T4) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 Owner: "redesign the reader settings … the all settings panel too." Boards (Dot + Colour pages of the canvas;
 offline `fixes-2026-11/ReaderQuick`, `ReaderAll`, `ReaderAllPage` and their `Colour*` twins). Found on the phone:
 - Quick sheet (`presentation/tsuzuki/novel/TsuzukiReaderSettingsSheet.kt`): 6 page-colour circles overflow 384 dp
@@ -420,6 +447,15 @@ Do:
 3. Same treatment for the manga reader settings dialog tabs (`ReaderSettingsDialog.kt`, N4's Tsuzuki pages): labelled
    tabs, no mid-word wraps. Small.
 Tests: pure mapping of tab → preference groups, unit formatter, margin linking. Strings in 8 locales.
+
+**Result (Codex, 2026-11-07):** `tsuzuki/q11` @ `34ff66af1`. Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21. **891 tests, 0 failures**.
+- `TsuzukiReaderSettingsSheet.kt` / `TsuzukiPageColours.kt` — Text, Page and Controls tabs, six named swatches in the quick row, shared reader controls and reset/full-settings actions.
+- `TsuzukiAllReaderSettings.kt` — full-screen dialog with five labeled tabs, live text preview, linked side/vertical margins, custom colours and Fine-tune sections for paragraph, page and highlight controls.
+- `TsuzukiReaderSettingsLogic.kt` / `TsuzukiReaderSettingsLogicTest.kt` — tab-to-group mapping, locale-aware spacing, linked margin midpoint and reset to existing defaults, with three tests.
+- `i18n/src/commonMain/moko-resources/{base,ja,zh-rCN,ko,es,pt-rBR,fr,de}/strings.xml` — translated new settings labels, sample text and reset prompt.
+- Upstream files: `ReaderSettingsDialog.kt` dispatches the Tsuzuki page and gives the manga sheet compact labeled tabs; `NovelPage.kt` exposes the existing settings groups and highlight controls; `presentation-core/.../SettingsItems.kt` gives the Tsuzuki page stacked labels, unit displays and decimal entry while retaining the default layout for other callers.
+- Reset is confirmed, novel-only and preserves authored CSS/JS snippets and replacement rules. When the two individual margins differ, both are shown and the first linked edit starts from the rounded midpoint. The preview uses sample text and the selected font, spacing and palette. Site-supplied WebView fonts and authored CSS are left to the actual chapter. Existing Tsundoku English-only advanced/TTS labels were carried forward.
+- Claude device checks: at 360–384 dp in Dot and Colour, check six named swatches, both quick metric values and the full-screen open/back path. Test decimal entry in a comma locale, Text preview with custom font and Book/Night page colours, Page custom ink/background, independently set margins then relink, status bar position, native/WebView switching, highlight Fine-tune, and Reset after adding a disposable replacement rule. On tablet verify insets, landscape scrolling and all five tabs, then check the three labeled manga tabs in both themes.
 
 #### Q12 Remove the themes we didn't make (T3) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night1` → `52ac6a536`)
 Owner: "remove themes that we did not make" (2026-11-06). **This overrides the AGENTS.md rule "Legacy themes must
@@ -470,7 +506,7 @@ General: each X card first checks whether the work already exists (grep `present
 table in `docs/design/README.md`). If it is already done, set `done` with a one-line Result saying where, and
 move on.
 
-#### X1 Reader hook consolidation (T3) — `ready`
+#### X1 Reader hook consolidation (T3) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 WORKPLAN P0.4. Start from `git diff $(git merge-base HEAD tsundoku/main) HEAD -- app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderViewModel.kt`
 (includes Q2's additions once merged). Move every Tsuzuki addition (reader transition animation selection,
 `ReadingDays` recording, contents drawer relaunch, Tsuzuki chrome, Q2's next-chapter hooks) into
@@ -480,6 +516,13 @@ branches stay where they are. Tests for any pure helper you extract. Result list
 (upstream line → new function) so Claude can verify on devices: novel TextView + WebView open/close animation,
 progress/history saved, `ReadingDays` minutes increase, contents drawer jump, manga paged + long strip.
 Result: _pending_
+
+**Result (Codex, 2026-11-07):** `tsuzuki/x1` @ `c54d8fba3`. **890 tests, 0 failures.** Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21.
+- `ReaderActivity.kt` pre-card lines 167, 936–946, 1238–1242 and 1626–1628 → `TsuzukiReaderHooks.kt`, `TsuzukiReaderChromeRequests.bind/openContents` and `TsuzukiReaderChrome.Overlay`. The activity owns the request lifetime, with the drawer and find state still scoped to the novel composition. The chrome binding provides contents, find and adjacent-button availability.
+- `ReaderActivity.kt` pre-card lines 320–327 and 1734–1779 → `TsuzukiAdjacentChapterHooks.kt`, `TsuzukiAdjacentNavigation.observe/navigate`. Preserves the last pending direction, paged reset before load, WebView direction notification on success, and then page reset. Tsundoku manual versus TTS entry points keep their existing TTS behavior.
+- `ReaderViewModel.kt` pre-card lines 873–881 and 1112–1125 → `isTsuzukiChapterOnDisk`, `markTsuzukiChapterRead`, and `State.resolveTsuzukiAdjacentChapter`. The last still checks for a viewer chapter before evaluating the lazy chapter list. The transition choice and ReadingDays write were already delegated through `applyTsuzukiReaderTransition` and `recordTsuzukiReadingTime`. The N20 disk helper and Q2 visible-chapter reset remain one-line hooks.
+- `TsuzukiReaderHooksTest.kt` — adds lazy adjacency and chapter-end mark-read coverage. Existing transition, contents and Q2 pending/paged navigation tests still pass. Upstream touched: `ReaderActivity.kt` and `ReaderViewModel.kt` only.
+- Claude device checks: on tablet and phone, open and close a novel in TextView and WebView, save progress, verify History and ReadingDays minutes, open Contents from the chrome and the end card, and jump to another chapter. Check find in WebView, infinite-scroll visible-chapter navigation, a second tap during a pending load, paged WebView edges, TTS handoff, and manga paged and long strip.
 
 #### X2 Tablet Updates: list + chapter preview (T3) — `done` (already built: Claude saw list + preview pane on the tablet 2026-11-06; card kept for reference)
 Board `docs/design/boards/png/11-tablet/TabletUpdates.png` (+ `dot/`), HTML `html/11-tablet/TabletUpdates.html`.
@@ -491,19 +534,32 @@ cheap and real — otherwise leave it out and say so. Upstream `UpdatesScreen.kt
 Tests: pane/selection logic.
 Result: _pending_
 
-#### X3 Restyle check: ReplaceRules + SettingsTranslation (T2) — `ready`
+#### X3 Restyle check: ReplaceRules + SettingsTranslation (T2) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 Boards `png/06-reader/ReplaceRules.png`, `png/08-tools/SettingsTranslation.png` (+ `dot/`, HTML alongside).
 Find the screens (Tsundoku text replacement rules, translation engine settings). If they are stock in Tsuzuki
 themes, restyle with `PreferenceScreen` / `tsuzukiGroupedTile` / `TsuzukiPill` per the boards (dispatch at the
 top of the upstream composable). Never show an API key in clear text; add no network calls. Leave out any board
 stat without backing data.
-Result: _pending_
 
-#### X4 Restyle check: DuplicateFinder + Migration (T2) — `ready`
+**Result (Codex, 2026-11-07):** `tsuzuki/x3` @ `09c787c50`. **891 tests, 0 failures.** Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21.
+- Replacement Rules already dispatches to `TsuzukiReplaceRulesSection` from Q11 More. Verified its themed rule tiles, toggles, live test input, regex validation and add/delete actions against both boards. Chapter excerpts, match counts and per-book/per-source scopes have no backing data here and were left out.
+- Translation already uses themed `PreferenceScreen` groups and wrapped engine pills. `SettingsTranslationScreen.kt` now routes nine API keys and Custom HTTP headers through a sensitive preference and displays localized pass/fail for the existing Test action. Provider responses and exception messages stay out of the UI. The existing Test request still runs only when explicitly tapped.
+- `TsuzukiSensitivePreference.kt` — fixed mask on configured rows, blank replacement editor with fully obscured typing and a secure window. The saved value is never prefilled or copied into dialog state. Custom headers are replaced as a whole because they can contain credentials.
+- Upstream `Preference.kt`, `PreferenceItem.kt` and `EditTextPreferenceWidget.kt` carry the sensitive flag and dispatch. `SettingsTranslationScreen.kt` opts in credential fields and uses the safe test copy. The eight locale files add two test status labels. No new pure logic warranted a unit test.
+- Claude device checks: in Dot and Colour on phone and tablet, open Q11 More → Replacement Rules, toggle a rule, enter valid and invalid regex in a disposable draft and compare the live test result. In Translation switch engines, open a disposable saved credential and Custom HTTP headers, verify blank/masked entry, rotation and cancel, and check that Test shows only pass/fail or not configured. Use a fixture for any provider error that echoes credentials.
+
+#### X4 Restyle check: DuplicateFinder + Migration (T2) — `done` (Claude reviewed + device-checked, merged into main 2026-11-07 via `review/night2` → `6af172281`; follow-ups in Q14)
 Boards `png/08-tools/DuplicateFinder.png`, `png/04-browse/Migration.png`, `png/04-browse/MigrationCompare.png`
 (+ `dot/`). `presentation/tsuzuki/migration/` exists: compare it to the boards first and fix only what differs
 (list the differences in Result). DuplicateFinder: restyle if stock. No change to migration logic.
-Result: _pending_
+
+**Result (Codex, 2026-11-07):** `tsuzuki/x4` @ `7ce6588b0`. **888 tests, 0 failures.** Per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green with JDK 21.
+- Duplicate Finder already dispatches to `TsuzukiDuplicateFinderScreen`. Verified its matching modes, keep-one pills, grouped tiles, selection counts and actions against Dot and Colour. No second layout was needed.
+- `TsuzukiMigrationSetup.kt` adds the selected-book summary and a full-width Find matches action. It reads up to five real book titles/covers off the main thread and uses the actual selected book/source counts.
+- `MigrationConfigScreen.kt` supplies the setup summary and footer, themed header/rows and Dot source casing. `MigrationConfigScreenSheet.kt` uses themed flag pills, switches and the primary button while retaining the existing options sheet and the same flag preference callbacks. These two are the upstream files touched.
+- `TsuzukiMigrationList.kt` keeps OLD/NEW cards with an accent outline, adds available author metadata, omits unknown latest-chapter filler and uses a Back affordance routed to the existing exit flow. Skip and Migrate remain prominent on successful matches. Copy and Search manually move to More and still use the existing callbacks.
+- The eight locale files add setup count labels. The board's confidence score, candidate list, retained highlights/download estimates, and per-book chapter progress were left out because those values are unavailable to these UI routes. The setup retains the reorderable source list and the separate options sheet. Migration flags, matching, transfer and skip logic stay in their existing implementation.
+- Claude device checks: in Dot and Colour, open Duplicate Finder and exercise selection without deleting real entries. Select one and several disposable books for Migration, check setup book names and source count, source order, flags and the primary footer. Run a disposable search to see successful/unmatched rows, ensure Back still opens the exit dialog, and check Skip, Migrate, Copy and Search manually in their expected positions.
 
 ### Anime lane A (owner approved 2026-11-06) — read `docs/ANIME_SCHEMA.md` §9 decisions first
 
@@ -512,7 +568,7 @@ ANIME_SCHEMA §7); Apache-2.0 only — Aniyomi files may be ported only if their
 ported file + upstream revision in Result; nothing visible to normal users in release builds until A2.4 (Watch
 tab already exists as a placeholder). No GPL. Never download or install anything yourself — no network in tests.
 
-#### A1.5 Anime: debug extension install → list sources → play (T3) — `ready`
+#### A1.5 Anime: debug extension install → list sources → play (T3) — `codex-working` (.worktrees/a1.5, 2026-11-06)
 Board: `docs/design/boards/fixes-2026-11/AnimeDebug.html` / `png/AnimeDebug.png` (Dot only).
 Goal: from a **debug-only** developer screen, add an Aniyomi-format extension repo URL, list its extensions, install
 one into the private dir (`files/anime-exts`, via the loader ported in `9b2a924de` with the host's trust/signature
@@ -606,6 +662,45 @@ Boards `png/11-tablet/TabletTTS.png`, `Foldable.png` (+ `dot/`). Tablet novel re
 side panel shows the listen controls (play/pause, speed, voice, sleep timer, paragraph list) using existing
 `TtsController` state; foldable half-open posture keeps text on top, controls on the bottom half. Tests: panel
 state mapping.
+Result: _pending_
+
+#### Q13 Novel next chapter: instant, never a blank page (T3) — `ready`
+Owner 2026-11-07: "sometimes the novel reader lags before going to the next chapter." Measured on the S22
+(preview, Royal Road, TextView, infinite scroll off): tapping › Next shows a **blank black page for ~1.2 s**
+(`app/build/night3-evidence/next.mp4`, `next-strip.png`) while the chapter text is fetched from the network.
+`NovelViewer` already prefetches the next chapter, but only for infinite scroll and TTS
+(`preFetchNextChapterForTts`, `prepareNextChapterForInfiniteScroll`); the button path loads on demand.
+- Prefetch the next chapter's text (network or disk) when the reader passes ~75 % of the current chapter or the
+  chapter-end card appears, for TextView and WebView, infinite scroll off as well as on. Reuse the existing
+  prefetch helpers; one in-flight prefetch at a time; cancel on chapter change; never download (no files).
+- Next uses the prefetched text when present (no network wait). If it isn't ready, keep the current page visible
+  with a small themed loading state (Tsuzuki progress dots in the bottom bar / end card) instead of a blank page,
+  and show a retry message on failure (no silent swallow).
+- Respect data saver / Wi-Fi-only download prefs if they exist for reading; no prefetch while TTS already does it.
+- Tests: prefetch trigger threshold + cancellation logic as pure helpers. Device check (Claude): Next is instant
+  after scrolling past 75 %, loading dots when tapping early, airplane mode → retry message.
+Hooks in `NovelViewer.kt` / `NovelWebViewViewer.kt` stay small (call into `tsuzuki/reader/`).
+Result: _pending_
+
+#### Q14 Design fixes from Claude's 2026-11-07 device pass (T2) — `ready`
+Boards: `fixes-2026-11/` (ReaderQuick, ReaderAll, Q9Selection) and `INDEX.md` SettingsTranslation. Evidence:
+`app/build/night3-evidence/` (`reader-quick.png`, `reader-all.png`, `q9-selection.png`, `x3-translation.png`).
+Fix each, Dot then Colour, at 360 dp and font scale 1.3:
+1. Quick reader sheet: the **LITERATA** font chip text touches both chip edges (chip too narrow) — size chips to
+   content or shrink the label; no clipping.
+2. All reader settings: the five tabs wrap (**MORE** drops to a second line) — one row (equal-width segment or
+   horizontally fitted pills per board `ReaderAll`); title "ALL READER SETTINGS" wraps to two lines — one line
+   with ellipsis or a shorter title ("READER SETTINGS").
+3. All reader settings › Fine-tune: **paragraph spacing shows `5`** (it is 0.5 em ×10) and indent `0` without a unit
+   — show `0.5 em` / `0 em` with the shared unit formatter (Q11's `1.6×` style).
+4. Library selection (board `Q9Selection`): selected covers get the **accent outline + check badge**, unselected
+   covers dim to ~55 % (now: dark red tinted card, no dimming); action labels white (now grey); `MARK AS READ`
+   wraps — use the short label `MARK READ` (8 locales) and one line.
+5. Settings › Translation (Dot): slider rows ("Translation chunk size", "Delay between requests", "Request
+   timeout", "Max parallel translations") are not uppercased like the other rows; the GENERAL tile's bottom
+   corners are square (the slider row breaks the grouped-tile rounding).
+6. Tablet novel reader: left text margin is only ~6 dp (looks cramped at the edge) — check the default margins for
+   wide windows against board `TabletNovel` and use the board's side margin when the user hasn't changed it.
 Result: _pending_
 
 ### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
@@ -966,6 +1061,46 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-07 06:20–06:55 Claude — owner awake: memory fix, review/night2 merged, three reader/Browse fixes.**
+  Builds were being killed because `~/.gradle/gradle.properties` set `org.gradle.jvmargs` without `-Xmx` (it
+  overrides the project's `-Xmx4g`), so the Gradle and Kotlin daemons each took ~8 GB (15.4 GB together). Owner
+  approved: user file now `-Xmx4g` + `kotlin.daemon.jvmargs=-Xmx3g` (backup `gradle.properties.bak-20261107`),
+  daemons stopped (free RAM 3.6 → 19 GB; new daemons confirmed at 4 g / 3 g). Fixes on main: **Browse pills
+  flicker** (header followed `currentPage` while the pager slid Novel sources → Manga sources → Novel extensions;
+  now follows `targetPage` and skips jump, `277130bd3`, `TsuzukiPagerHeader.kt`, test); **paragraph gaps** (legacy
+  `Html.fromHtml` adds an empty line per paragraph that also got the spacing span; blank lines removed after
+  parsing, `8582f16a5`, `tsuzuki/reader/NovelBlankLines.kt`, one-line hook in `NovelTextRenderer.kt`, 4 tests).
+  `review/night2` (Q8, Q9, Q11, X1, X3, X4 + fixes) built: **901 tests, 0 failures**; preview on tablet + S22,
+  checked Browse (pills steady, recorded), reader paragraphs, reader row labels TOP/TRANSLATE/SCROLL/LISTEN/MORE,
+  quick sheet, All reader settings, Q9 selection bar, `131 CHAPTERS`, X3 translation (API key hidden), crash
+  buffers empty → main fast-forwarded to `6af172281`. Design bugs found → **Q14**; next-chapter lag measured
+  (~1.2 s blank page, no prefetch on the button path) → **Q13**. "Letters half cut at the page edges" not
+  reproduced on S22 (margins 48/55 px) or tablet (left margin ~6 dp, tight but not cut) — asked owner where.
+
+- **2026-11-07 05:47 Claude — overnight tick 3: Q8, Q9, Q11, X1, X3, X4 merged on `review/night2`, not on main.**
+  All six merged onto main in `.worktrees/rv2` (string files: union; real conflict Q8 × Q9 in `TsuzukiNav.kt`
+  and `TsuzukiHomeScreen.kt` resolved by keeping Q8's narrow/large-font layout with Q9's `t.mutedText` contrast
+  colour). Diff scan clean (only hex is the `TsuzukiTokens.mutedText` definition; no schema/telemetry files). X1
+  read: faithful move of ReaderActivity/ViewModel blocks into `presentation/tsuzuki/reader/`. **Build not run:**
+  the preview build + tests (`--max-workers=2`) were stopped by the system for low memory a second time while
+  Codex works on A1.5. **Morning, with Codex idle:** build `review/night2` (`:app:assemblePreview
+  :app:testDebugUnitTest`), device-check Q11 quick sheet + full settings, Q9 selection/undo/Updates loading/
+  Advanced, Q8 at font scale 1.3/2.0 on the S22, X1 reader open/close + next/prev + contents jump, X3
+  translation settings (keys hidden), X4 migration screens; then fast-forward main. Upstream files to add to
+  AGENTS.md then: Q9's 21 (AppBar, HistoryScreen/Item/Tab, CommonMangaItem, LibraryToolbar, MangaScreen ×2,
+  MangaBottomActionMenu, MangaChapterListItem, MangaToolbar, PreferenceScaffold, PreferenceScreen,
+  UpdatesScreen/UiItem/Tab/ViewModel, LibraryTab/ViewModel, NovelsTab, MangaViewModel), Q8 `ChapterHeader.kt`,
+  Q11 `NovelPage.kt`, `ReaderSettingsDialog.kt`, presentation-core `SettingsItems.kt`, X3 `Preference.kt`,
+  `PreferenceItem.kt`, `SettingsTranslationScreen.kt`, `EditTextPreferenceWidget.kt`, X4
+  `MigrationConfigScreen.kt`, `MigrationConfigScreenSheet.kt`.
+
+- **2026-11-07 03:47 Claude — overnight tick 2: Q11 reviewed, not merged yet.** Diff review OK (tokens/typography;
+  `fontFamily` only for the live preview of the reader's chosen font; `SettingsItems.kt` change is an opt-in
+  `LocalStackedSettingsLabel`, default layout unchanged; `ReaderSettingsDialog.kt` dispatch). Merged cleanly onto
+  main in `.worktrees/rv2` (`review/night2`), but the preview build + tests were stopped by the system for low
+  memory (Codex building Q9 at the same time). Q11 stays `review`; build, device check (quick sheet + full page,
+  Dot + Colour, phone + tablet) and merge at the next tick or in the morning.
 
 - **2026-11-07 01:47–02:05 Claude — overnight tick 1: Q2, Q3, Q4, Q5, Q6, Q7, Q12 merged.** Merged the seven
   `review` branches in table order into `review/night1` (only string-file conflicts: each card appended strings;
