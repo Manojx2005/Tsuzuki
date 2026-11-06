@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceRow
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiTabletBrowse
 import eu.kanade.presentation.tsuzuki.browse.tsuzukiSelectedSource
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
@@ -222,11 +225,12 @@ private fun SourceHeader(
     isGroup: Boolean = false,
 ) {
     val context = LocalContext.current
+    val title = if (isGroup) language else LocaleHelper.getSourceDisplayName(language, context)
     Text(
-        text = if (isGroup) language else LocaleHelper.getSourceDisplayName(language, context),
+        text = tsuzukiMenuLabel(title),
         modifier = modifier
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        style = MaterialTheme.typography.header,
+        style = if (isTsuzukiStyle()) MaterialTheme.typography.labelMedium else MaterialTheme.typography.header,
     )
 }
 
@@ -242,6 +246,36 @@ private fun SourceItem(
     onRemoveFromGroup: (Source, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiSourceRow(
+            source = source,
+            showLanguage = groupSection != null,
+            onOpen = { onClickItem(source, Listing.Popular) },
+            onOptions = { onLongClickItem(source) },
+            onPreset = if (hasDefaultPreset) {
+                { onClickItem(source, Listing.Search(query = null, filters = FilterList())) }
+            } else {
+                null
+            },
+            onLatest = if (source.supportsLatest) {
+                { onClickItem(source, Listing.Latest) }
+            } else {
+                null
+            },
+            pin = {
+                SourcePinButton(
+                    source = source,
+                    groupSection = groupSection,
+                    onClickPin = onClickPin,
+                    onLongClickPin = onLongClickPin,
+                    onRemoveFromGroup = onRemoveFromGroup,
+                    modifier = Modifier.size(48.dp),
+                )
+            },
+            modifier = modifier,
+        )
+        return
+    }
     BaseSourceItem(
         modifier = modifier,
         source = source,
@@ -285,6 +319,7 @@ private fun SourcePinButton(
     onClickPin: (Source) -> Unit,
     onLongClickPin: (Source) -> Unit,
     onRemoveFromGroup: (Source, String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val isPinned = Pin.Pinned in source.pin
     val isInGroup = source.pinnedGroups.isNotEmpty()
@@ -320,7 +355,7 @@ private fun SourcePinButton(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .minimumInteractiveComponentSize()
             .combinedClickable(
                 onClick = onClick,

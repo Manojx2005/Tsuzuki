@@ -34,14 +34,19 @@ fun TabbedScreen(
     tabs: List<TabContent>,
     state: PagerState = rememberPagerState { tabs.size },
     searchQuery: String? = null,
+    tabsHeader: (@Composable (currentPage: Int, onSelectPage: (Int) -> Unit) -> Unit)? = null,
     onChangeSearchQuery: (String?) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val currentPage = state.currentPage.coerceIn(0, tabs.lastIndex)
+    val onSelectPage: (Int) -> Unit = { index ->
+        if (index in tabs.indices) scope.launch { state.animateScrollToPage(index) }
+    }
 
     Scaffold(
         topBar = {
-            val tab = tabs[state.currentPage]
+            val tab = tabs[currentPage]
             val searchEnabled = tab.searchEnabled
 
             SearchToolbar(
@@ -61,26 +66,28 @@ fun TabbedScreen(
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
             ),
         ) {
-            if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+            if (tabsHeader != null) {
+                tabsHeader(currentPage, onSelectPage)
+            } else if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
                 eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
             ) {
                 // Tsuzuki themes: tabs as pills (board "Browse").
                 eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
                     labels = tabs.map { stringResource(it.titleRes) },
                     counts = tabs.map { it.badgeNumber },
-                    selected = state.currentPage,
-                    onClick = { index -> scope.launch { state.animateScrollToPage(index) } },
+                    selected = currentPage,
+                    onClick = onSelectPage,
                 )
             } else {
                 PrimaryScrollableTabRow(
-                    selectedTabIndex = state.currentPage,
+                    selectedTabIndex = currentPage,
                     edgePadding = 0.dp,
                     modifier = Modifier.zIndex(1f),
                 ) {
                     tabs.forEachIndexed { index, tab ->
                         Tab(
-                            selected = state.currentPage == index,
-                            onClick = { scope.launch { state.animateScrollToPage(index) } },
+                            selected = currentPage == index,
+                            onClick = { onSelectPage(index) },
                             text = { TabText(text = stringResource(tab.titleRes), badgeCount = tab.badgeNumber) },
                             unselectedContentColor = MaterialTheme.colorScheme.onSurface,
                         )

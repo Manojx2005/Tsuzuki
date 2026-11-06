@@ -9,13 +9,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabbedScreen
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons
+import eu.kanade.presentation.tsuzuki.browse.BrowseMedia
+import eu.kanade.presentation.tsuzuki.browse.BrowsePage
+import eu.kanade.presentation.tsuzuki.browse.BrowseSection
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiBrowseHeader
+import eu.kanade.presentation.tsuzuki.browse.browsePages
+import eu.kanade.presentation.tsuzuki.browse.pageIndex
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
@@ -33,6 +43,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -69,7 +80,7 @@ data object BrowseTab : Tab {
         val context = LocalContext.current
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val hideMangaUi by basePreferences.hideMangaUi.collectAsState()
-        val hideMangaBrowseTabs = hideMangaUi
+        val themed = isTsuzukiStyle()
 
         // Hoisted for extensions tab's search bar
         val extensionsViewModel = viewModel<ExtensionsViewModel>()
@@ -78,32 +89,46 @@ data object BrowseTab : Tab {
         val novelExtensionsViewModel = viewModel<NovelExtensionsViewModel>()
         val novelExtensionsState by novelExtensionsViewModel.state.collectAsState()
 
-        val tabs = if (hideMangaBrowseTabs) {
-            listOf(
-                novelSourcesTab(),
-                novelExtensionsTab(novelExtensionsViewModel),
-                novelMigrateSourceTab(),
-            )
-        } else {
-            listOf(
-                novelSourcesTab(),
-                sourcesTab(),
-                novelExtensionsTab(novelExtensionsViewModel),
-                extensionsTab(extensionsViewModel),
-                novelMigrateSourceTab(),
-                migrateSourceTab(),
-            )
+        val pages = remember(hideMangaUi) { browsePages(hideMangaUi) }
+        val state = rememberPagerState { pages.size }
+        val scope = rememberCoroutineScope()
+        val migrationLabel = stringResource(MR.strings.label_migration)
+        val tabs = pages.map { page ->
+            val tab = when (page) {
+                BrowsePage.NOVEL_SOURCES -> novelSourcesTab()
+                BrowsePage.MANGA_SOURCES -> sourcesTab()
+                BrowsePage.NOVEL_EXTENSIONS -> novelExtensionsTab(novelExtensionsViewModel)
+                BrowsePage.MANGA_EXTENSIONS -> extensionsTab(extensionsViewModel)
+                BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()
+                BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
+            }
+            if (themed && page.section != BrowseSection.MIGRATION) {
+                val migrationPage = pages.pageIndex(page.media, BrowseSection.MIGRATION)
+                tab.copy(
+                    actions = tab.actions + AppBar.OverflowAction(
+                        title = migrationLabel,
+                        icon = TsuzukiMenuIcons.migrate,
+                        onClick = { scope.launch { state.animateScrollToPage(migrationPage) } },
+                    ),
+                )
+            } else {
+                tab
+            }
         }
-
-        val novelExtensionsTabIndex = if (hideMangaBrowseTabs) 1 else 2
-        val mangaExtensionsTabIndex = if (hideMangaBrowseTabs) null else 3
-
-        val state = rememberPagerState { tabs.size }
+        val novelExtensionsTabIndex = pages.indexOf(BrowsePage.NOVEL_EXTENSIONS)
+        val mangaExtensionsTabIndex = pages.indexOf(BrowsePage.MANGA_EXTENSIONS)
 
         TabbedScreen(
             titleRes = MR.strings.browse,
             tabs = tabs,
             state = state,
+            tabsHeader = if (themed) {
+                { currentPage, onSelectPage ->
+                    TsuzukiBrowseHeader(pages, currentPage, tabs.map { it.badgeNumber }, onSelectPage)
+                }
+            } else {
+                null
+            },
             searchQuery = when (state.currentPage) {
                 novelExtensionsTabIndex -> novelExtensionsState.searchQuery
                 mangaExtensionsTabIndex -> extensionsState.searchQuery
@@ -116,11 +141,11 @@ data object BrowseTab : Tab {
                 }
             },
         )
-        LaunchedEffect(Unit) {
-            switchToExtensionTabChannel.receiveAsFlow()
-                .collectLatest {
-                    state.scrollToPage(if (hideMangaBrowseTabs) novelExtensionsTabIndex else 3)
-                }
+        LaunchedEffect(hideMangaUi) {
+            switchToExtensionTabChannel.receiveAsFlow().collectLatest {
+                val media = if (hideMangaUi) BrowseMedia.NOVELS else BrowseMedia.MANGA
+                state.scrollToPage(pages.pageIndex(media, BrowseSection.EXTENSIONS))
+            }
         }
 
         LaunchedEffect(Unit) {
