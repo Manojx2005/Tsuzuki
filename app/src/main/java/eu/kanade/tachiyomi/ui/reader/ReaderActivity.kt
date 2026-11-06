@@ -82,9 +82,9 @@ import eu.kanade.presentation.reader.appbars.bottomBarItemInfo
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
-import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiReaderContents
-import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiReaderFind
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -93,7 +93,6 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.tsuzuki.reader.PendingAdjacentNavigation
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.AddToLibraryFirst
@@ -164,7 +163,8 @@ class ReaderActivity : BaseActivity() {
     lateinit var binding: ReaderActivityBinding
 
     val viewModel by viewModels<ReaderViewModel>()
-    private var openNovelContentsRequested by mutableStateOf(false)
+    private val tsuzukiChromeRequests = TsuzukiReaderChromeRequests()
+    private val tsuzukiAdjacentNavigation = TsuzukiAdjacentNavigation()
     private var assistUrl: String? = null
 
     /**
@@ -317,14 +317,7 @@ class ReaderActivity : BaseActivity() {
             }
             .launchIn(lifecycleScope)
 
-        viewModel.state
-            .map { it.isLoadingAdjacentChapter }
-            .distinctUntilChanged()
-            .onEach { isLoading ->
-                val forward = pendingAdjacentNavigation.takeWhenIdle(isLoading) ?: return@onEach
-                if (forward) loadNextChapterInternal() else loadPreviousChapterInternal()
-            }
-            .launchIn(lifecycleScope)
+        tsuzukiAdjacentNavigation.observe(viewModel, lifecycleScope, ::loadAdjacentChapter)
 
         viewModel.state
             .map { it.manga }
@@ -933,17 +926,7 @@ class ReaderActivity : BaseActivity() {
             var showBottomBarEditor by remember { mutableStateOf(false) }
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
-            val contents = rememberTsuzukiReaderContents()
-            val openContents = contents.openAction()
-            LaunchedEffect(openNovelContentsRequested) {
-                if (openNovelContentsRequested) {
-                    openNovelContentsRequested = false
-                    openContents?.invoke()
-                }
-            }
-            val find = rememberTsuzukiReaderFind()
-            val hasNextChapter = viewModel.adjacentChapter(state, forward = true) != null
-            val hasPreviousChapter = viewModel.adjacentChapter(state, forward = false) != null
+            val chrome = tsuzukiChromeRequests.bind(viewModel, state)
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1020,15 +1003,15 @@ class ReaderActivity : BaseActivity() {
                 },
                 onNextNovelChapter = ::loadNextChapter,
                 onPreviousNovelChapter = ::loadPreviousChapter,
-                hasNextNovelChapter = hasNextChapter,
-                hasPreviousNovelChapter = hasPreviousChapter,
+                hasNextNovelChapter = chrome.hasNextChapter,
+                hasPreviousNovelChapter = chrome.hasPreviousChapter,
                 // In paged mode the arrows turn a page first, only falling through to a chapter
                 // change once the current chapter's last/first page is reached - so they must stay
                 // enabled while pages remain, even with no next/previous chapter to fall through to.
                 // effectivePagedPageCount(state) == 0 means onPageInfoChanged hasn't reported yet
                 // (right after a chapter switch) - assume enabled rather than flashing disabled on
                 // a true last/first chapter for the moment before the real page count arrives.
-                enabledNext = hasNextChapter ||
+                enabledNext = chrome.hasNextChapter ||
                     (
                         isPagedActive(state) &&
                             (
@@ -1058,7 +1041,7 @@ class ReaderActivity : BaseActivity() {
                         }
                     }
                 },
-                enabledPrevious = hasPreviousChapter ||
+                enabledPrevious = chrome.hasPreviousChapter ||
                     (
                         isPagedActive(state) &&
                             (effectivePagedPageCount(state) == 0 || effectivePagedPageIndex(state) > 0)
@@ -1235,11 +1218,10 @@ class ReaderActivity : BaseActivity() {
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
-                onOpenContents = openContents,
-                onFind = find.openAction(state.viewer) { viewModel.showMenus(false) },
+                onOpenContents = chrome.onOpenContents,
+                onFind = chrome.onFind,
             )
-            contents.Drawer(this@ReaderActivity, viewModel, state)
-            find.Bar(state.viewer)
+            chrome.Overlay(this@ReaderActivity)
 
             androidx.activity.compose.BackHandler(enabled = isEditing && state.hasUnsavedChanges) {
                 showEditSaveDialog = true
@@ -1623,9 +1605,7 @@ class ReaderActivity : BaseActivity() {
         }
     }
 
-    internal fun openNovelContentsFromPage() {
-        openNovelContentsRequested = true
-    }
+    internal fun openNovelContentsFromPage() = tsuzukiChromeRequests.openContents()
 
     private fun openChapterInWebView() {
         val manga = viewModel.manga ?: return
@@ -1722,7 +1702,7 @@ class ReaderActivity : BaseActivity() {
      */
     internal fun loadNextChapter() {
         stopNovelTtsForManualNav()
-        loadNextChapterInternal()
+        loadAdjacentChapter(forward = true)
     }
 
     /**
@@ -1731,23 +1711,7 @@ class ReaderActivity : BaseActivity() {
      * resumes; [loadNextChapter] would clear it via [stopNovelTtsForManualNav].
      */
     internal fun loadNextChapterForTtsHandoff() {
-        loadNextChapterInternal()
-    }
-
-    private fun loadNextChapterInternal() {
-        lifecycleScope.launch {
-            if (pendingAdjacentNavigation.deferIfLoading(
-                    viewModel.state.value.isLoadingAdjacentChapter,
-                    forward = true,
-                )
-            ) {
-                return@launch
-            }
-            resetNovelPageInfoIfPaged()
-            if (!viewModel.loadNextChapter()) return@launch
-            (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("next")
-            moveToPageIndex(0)
-        }
+        loadAdjacentChapter(forward = true)
     }
 
     /**
@@ -1756,26 +1720,13 @@ class ReaderActivity : BaseActivity() {
      */
     internal fun loadPreviousChapter() {
         stopNovelTtsForManualNav()
-        loadPreviousChapterInternal()
+        loadAdjacentChapter(forward = false)
     }
 
-    private val pendingAdjacentNavigation = PendingAdjacentNavigation()
-
-    private fun loadPreviousChapterInternal() {
-        lifecycleScope.launch {
-            if (pendingAdjacentNavigation.deferIfLoading(
-                    viewModel.state.value.isLoadingAdjacentChapter,
-                    forward = false,
-                )
-            ) {
-                return@launch
-            }
-            resetNovelPageInfoIfPaged()
-            if (!viewModel.loadPreviousChapter()) return@launch
-            (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("prev")
+    private fun loadAdjacentChapter(forward: Boolean) =
+        tsuzukiAdjacentNavigation.navigate(viewModel, lifecycleScope, forward, ::resetNovelPageInfoIfPaged) {
             moveToPageIndex(0)
         }
-    }
 
     /**
      * Stops any in-flight TTS session before a user-driven prev/next chapter

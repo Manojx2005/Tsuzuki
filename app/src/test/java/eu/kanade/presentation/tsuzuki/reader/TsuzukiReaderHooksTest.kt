@@ -3,6 +3,7 @@ package eu.kanade.presentation.tsuzuki.reader
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -33,5 +34,28 @@ class TsuzukiReaderHooksTest {
         state.copy(novelVisibleChapter = visible).contentsChapterId() shouldBe 11L
         state.contentsChapterId() shouldBe 10L
         ReaderViewModel.State().contentsChapterId() shouldBe null
+    }
+
+    @Test
+    fun `adjacency does not read the ordered list before the viewer chapter is ready`() {
+        ReaderViewModel.State().resolveTsuzukiAdjacentChapter(
+            forward = true,
+            ordered = { error("Chapter list should be lazy") },
+            infiniteScrollEnabled = { error("Preference should be lazy") },
+        ) shouldBe null
+    }
+
+    @Test
+    fun `chapter end marks the loaded first page complete`() {
+        val chapter = ReaderChapter(Chapter.create())
+        val saved = mutableListOf<Pair<ReaderPage, Int>>()
+        val saveProgress: (ReaderPage, Int) -> Unit = { page, progress -> saved.add(page to progress) }
+        markTsuzukiChapterRead(chapter, saveProgress)
+        saved shouldBe emptyList()
+
+        val first = ReaderPage(0)
+        chapter.state = ReaderChapter.State.Loaded(listOf(first, ReaderPage(1)))
+        markTsuzukiChapterRead(chapter, saveProgress)
+        saved shouldBe listOf(first to 100)
     }
 }

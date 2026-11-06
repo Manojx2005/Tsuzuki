@@ -21,7 +21,10 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.reader.appbars.BottomBarItemState
 import eu.kanade.presentation.reader.appbars.deserializeBottomBarItems
 import eu.kanade.presentation.reader.appbars.serialize
+import eu.kanade.presentation.tsuzuki.reader.isTsuzukiChapterOnDisk
+import eu.kanade.presentation.tsuzuki.reader.markTsuzukiChapterRead
 import eu.kanade.presentation.tsuzuki.reader.recordTsuzukiReadingTime
+import eu.kanade.presentation.tsuzuki.reader.resolveTsuzukiAdjacentChapter
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -39,7 +42,6 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
 import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
-import eu.kanade.tachiyomi.tsuzuki.reader.adjacentNovelChapter
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.DownloadPageLoader
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -870,15 +872,10 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(novelPageIndex = pageIndex, novelPageCount = pageCount) }
     }
 
-    internal suspend fun isNovelChapterDownloaded(readerChapter: ReaderChapter): Boolean {
-        val manga = manga ?: return false
-        val chapter = readerChapter.chapter
-        return downloadManager.isChapterOnDisk(chapter.name, chapter.scanlator, chapter.url, manga.title, manga.source)
-    }
+    internal suspend fun isNovelChapterDownloaded(readerChapter: ReaderChapter): Boolean =
+        isTsuzukiChapterOnDisk(downloadManager, manga, readerChapter)
 
-    internal fun markNovelChapterRead(chapter: ReaderChapter) {
-        chapter.pages?.firstOrNull()?.let { saveNovelProgress(it, 100) }
-    }
+    internal fun markNovelChapterRead(chapter: ReaderChapter) = markTsuzukiChapterRead(chapter, ::saveNovelProgress)
 
     private fun downloadNextChapters() {
         if (downloadAheadAmount == 0) return
@@ -1109,20 +1106,8 @@ class ReaderViewModel @JvmOverloads constructor(
         return loadAdjacent(prevChapter)
     }
 
-    internal fun adjacentChapter(readerState: State, forward: Boolean): ReaderChapter? {
-        val chapters = readerState.viewerChapters ?: return null
-        val viewer = readerState.viewer
-        val isNovel = viewer is NovelViewer || viewer is NovelWebViewViewer
-        return adjacentNovelChapter(
-            active = chapters,
-            ordered = chapterList,
-            visibleId = readerState.novelVisibleChapter?.id,
-            forward = forward,
-            infiniteScroll =
-            isNovel && readerPreferences.novelInfiniteScroll.get() && !readerState.isLoadingAdjacentChapter,
-            paged = (viewer as? NovelWebViewViewer)?.isPagedModeActive() == true,
-        )
-    }
+    internal fun adjacentChapter(readerState: State, forward: Boolean): ReaderChapter? =
+        readerState.resolveTsuzukiAdjacentChapter(forward, { chapterList }, readerPreferences.novelInfiniteScroll::get)
 
     /**
      * Returns the currently active chapter.

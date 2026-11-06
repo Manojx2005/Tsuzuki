@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +54,49 @@ internal fun readerTransitionAnimations(opening: Boolean, themedAnimations: Pair
         R.anim.shared_axis_x_pop_enter to R.anim.shared_axis_x_pop_exit
     }
 
-@Composable
-internal fun rememberTsuzukiReaderContents() = remember { TsuzukiReaderContentsHook() }
+/** Activity-owned requests survive a composition change. Drawer and find state stay in the reader composition. */
+internal class TsuzukiReaderChromeRequests {
+    private var openContentsRequested by mutableStateOf(false)
 
-internal class TsuzukiReaderContentsHook {
+    fun openContents() {
+        openContentsRequested = true
+    }
+
+    @Composable
+    fun bind(viewModel: ReaderViewModel, state: ReaderViewModel.State): TsuzukiReaderChrome {
+        val contents = remember { TsuzukiReaderContentsHook() }
+        val openContents = contents.openAction()
+        LaunchedEffect(openContentsRequested) {
+            if (openContentsRequested) {
+                openContentsRequested = false
+                openContents?.invoke()
+            }
+        }
+        val find = remember { TsuzukiReaderFindHook() }
+        return TsuzukiReaderChrome(
+            onOpenContents = openContents,
+            onFind = find.openAction(state.viewer) { viewModel.showMenus(false) },
+            hasNextChapter = viewModel.adjacentChapter(state, forward = true) != null,
+            hasPreviousChapter = viewModel.adjacentChapter(state, forward = false) != null,
+        ) { activity ->
+            contents.Drawer(activity, viewModel, state)
+            find.Bar(state.viewer)
+        }
+    }
+}
+
+internal class TsuzukiReaderChrome(
+    val onOpenContents: (() -> Unit)?,
+    val onFind: (() -> Unit)?,
+    val hasNextChapter: Boolean,
+    val hasPreviousChapter: Boolean,
+    private val overlay: @Composable (ReaderActivity) -> Unit,
+) {
+    @Composable
+    fun Overlay(activity: ReaderActivity) = overlay(activity)
+}
+
+private class TsuzukiReaderContentsHook {
     private var visible by mutableStateOf(false)
 
     @Composable
@@ -103,11 +143,8 @@ internal class TsuzukiReaderContentsHook {
     }
 }
 
-@Composable
-internal fun rememberTsuzukiReaderFind() = remember { TsuzukiReaderFindHook() }
-
 /** Find in chapter: only the WebView renderer can search (WebView.findAllAsync); the action is hidden otherwise. */
-internal class TsuzukiReaderFindHook {
+private class TsuzukiReaderFindHook {
     private var visible by mutableStateOf(false)
     private val result = FindResultState()
 
