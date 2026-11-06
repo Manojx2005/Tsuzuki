@@ -38,8 +38,11 @@ It is a fork of Tsundoku (itself a Mihon fork). Read these before changing anyth
 Windows machine, Git Bash or PowerShell.
 
 ```sh
-# JDK 21 from Android Studio. The `java` on PATH is JDK 24, which this Gradle setup doesn't support.
+# JDK 21 is required (the `java` on PATH is JDK 24/25, which this Gradle setup doesn't support).
+# Desktop (this repo's usual machine): Android Studio's bundled jbr is 21.0.10.
+# Second machine (Android Studio 2026.2 bundles JDK 25 there): Temurin 21.
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+[ -x "$JAVA_HOME/bin/java" ] && "$JAVA_HOME/bin/java" -version 2>&1 | grep -q '"21'   || export JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.13.9-hotspot"
 ./gradlew :app:compileDebugKotlin     # fast check
 ./gradlew :app:assembleDebug          # APKs in app/build/outputs/apk/debug/
 ./gradlew :app:spotlessApply          # format (ktlint) before finishing a task
@@ -61,6 +64,7 @@ adb: `$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe` (not on PATH).
 |---|---|---|
 | `R52Y90HA77L` | Galaxy Tab S11 (SM-X730) | 1600×2560 @ 340 dpi, about 753×1205 dp, so it gets the **rail** and tablet-portrait layout |
 | `RZCWA139X1X` | Galaxy S22 (SM-S901E) | 1080×2340, phone layout with the **bottom pill nav** |
+| `R5GL23ZYE1V` | Owner's own phone (SM-S948Q) | 1080×2340 @ 450 dpi ≈ 384×832 dp, 120 Hz; runs the **release** app `io.github.manojx2005.tsuzuki` with the owner's real data. Only connected to the second machine; never install debug builds on it without asking |
 
 ```sh
 ADB="$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"

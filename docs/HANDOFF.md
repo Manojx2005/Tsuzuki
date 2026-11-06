@@ -27,25 +27,90 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ---
 
-## Current state (2026-11-05, Claude)
+## Current state (2026-11-06 evening, Claude — desktop machine)
 
-- `main` = `1f2b79255`: Tsundoku main merged (`c26dfc13a`, 5 commits) + icons for the new overflow scroll actions,
-  on top of `8f7f12e3b` (reader transition download check off the main thread). Debug + preview builds and all
-  651 unit tests pass (`app/build/claude-merge-validation.log`). New preview installed on both devices; cold
-  launch to Dot Home on both, crash buffers empty. Nothing pushed (51 local commits ahead of `origin/main`).
-- Worktrees: `.worktrees/onboarding` (`tsuzuki/onboarding`, Codex working on P0.5),
-  `.worktrees/anime-spike` (`codex/anime-spike`, old base, 31 uncommitted paths — backed up, see WORKPLAN §6.0).
-- Devices: tablet `R52Y90HA77L` and phone `RZCWA139X1X` both connected. Tablet preview app on Dot Home; preview
-  Continue now = Nano Machine ch. 336 (test reading); ch. 335 restored to unread, ch. 336 at page 2. Owner's
-  debug app (`.dev`) untouched. Phone not yet tested this session.
-- Anime native artifact archived at `app/build/anime-native-41645408336/` (GitHub copy expires ~2026-11-17).
-- Codex heartbeat automation `continue-tsuzuki-work` repointed to this file.
+- Back on the desktop: JDK 21 = Android Studio `jbr` (21.0.10); the Temurin path in older notes is the laptop's.
+  Tablet `R52Y90HA77L` + S22 `RZCWA139X1X` connected; owner's phone `R5GL23ZYE1V` is not (it's on the laptop).
+- `main` = docs batch Q (`f832df96a`) + this plan. Q1 is being reviewed by Claude now, then merged into main;
+  `tsuzuki/q5` gets rebased onto it. Codex runs **Overnight batch Q** below in one thread.
+- Old worktree `.worktrees/anime-spike` still exists (untouched).
 
 ## Claude is working on (Codex: don't touch these)
 
-- Reviewing batch Q as cards reach `review`, and device-checking on the phone below.
+- Q1 review + merge into `main`, then rebasing `tsuzuki/q5` onto it (Codex: skip Q5 until it says `ready`).
+- Overnight: every ~2 h Claude reviews cards that reached `review`, builds (only when Codex isn't building),
+  device-checks on the tablet + S22, merges good cards into `main` locally and pushes. Codex never waits on this.
 
 ## Codex queue
+
+### Overnight batch Q — run rules (2026-11-06 night; overrides the batch Q "How to run" and prompt below)
+
+**Prompt the owner pastes into ONE Codex thread:**
+
+```text
+You are working on Tsuzuki (Android, Kotlin, Jetpack Compose) overnight, alone. Read AGENTS.md, then
+docs/HANDOFF.md section "Overnight batch Q — run rules", and follow it exactly: do the cards in the order of its
+table, one at a time, until the table is finished or you run out of usage. Before each card re-read
+docs/HANDOFF.md (Claude edits it during the night) and skip any card that is not `ready`. Never stop at a
+blocked card: record it and move on to the next one.
+```
+
+**Rules (every card):**
+1. **Re-read this file** (root checkout `docs/HANDOFF.md`) before each card. Take the next `ready` row of the
+   table. Set its card heading status to `codex-working (.worktrees/<id>, 2026-11-06)` — in the **root
+   checkout's** `docs/HANDOFF.md`, never in the worktree copy. Only status + Result are yours to edit here.
+2. **Worktree from the current `main`** (Claude merges reviewed cards into main during the night, so main
+   moves): `git -c core.longpaths=true worktree add -b tsuzuki/<id> .worktrees/<id> main`, copy
+   `local.properties`. Then for every card in the row's **Needs** column that is not yet in main
+   (`git merge-base --is-ancestor tsuzuki/<need> main` fails), run `git merge --no-edit tsuzuki/<need>` in your
+   worktree. A merge conflict there → `git merge --abort`, set the card `blocked` ("needs Claude to merge
+   <need> first"), go to the next row.
+3. **Before UI work** open the card's boards: `docs/design/boards/fixes-2026-11/README.md` (board → card),
+   `png/<Board>.png` + `png/Colour<Board>.png`, numbers in `<Board>.dc.html`, bug shots in `evidence/`. Dot
+   first, then Colour. Extra-wave cards name their boards in `docs/design/boards/INDEX.md`.
+4. **Build:** JDK 21 exactly as AGENTS.md "Build" says (on this machine `/c/Program Files/Android/Android
+   Studio/jbr`). At most **one** Gradle build of yours at a time. Follow AGENTS.md Rules + WORKPLAN appendix
+   "standard rules for restyle cards": tokens + `MaterialTheme.typography` only, Dot uppercase + red, real data
+   only, strings in all 8 locales, small dispatch hooks in upstream files (list every upstream file you touch
+   in Result — Claude adds it to AGENTS.md), new code in `tsuzuki` packages, tests for logic you add.
+5. **Done =** per-file `spotlessApply -PspotlessIdeHook=<abs path>` twice on every file you touched (never the
+   whole project), `./gradlew :app:assembleDebug :app:testDebugUnitTest` green.
+6. **Commit on the card's own branch** (owner approved 2026-11-06 for tonight):
+   `git add -A -- . ':!docs/HANDOFF.md' ':!AGENTS.md' ':!docs/WORKPLAN.md'` then
+   `git commit -m "<id>: <what and why>"`. Owner is the author; **no Co-Authored-By / Generated-with
+   trailers**. Never commit to or merge into `main`, never push, never rebase another card's branch, never use
+   adb or devices.
+7. **Result** (under the card, root checkout): branch + commit hash, files + one line each, upstream files
+   touched, decisions, what you left out and why, test count (`N tests, 0 failures`), exactly what Claude must
+   check on the phone/tablet. Then set the card `review` and go straight on to the next row.
+8. **Stuck > 45 min or build can't go green** → `blocked` + the exact question/error in Result, commit
+   nothing, `git -C .worktrees/<id> reset --hard && git -C .worktrees/<id> clean -fd`, next row.
+9. Never touch: release/signing/telemetry files, `app/google-services.json`, `.github/`, other cards'
+   worktrees, `.worktrees/anime-spike`, DB schema (`*.sq` / `*.sqm` migrations). Q4's app-start migration is
+   data-only (no schema change) and is the one allowed data migration.
+10. AGENTS.md / WORKPLAN changes a card asks for (Q12's theme rule): write the exact new text into Result;
+    Claude applies it.
+
+**Order (one thread, top to bottom):**
+
+| # | Card | Needs (merge first if not in main) | Why here |
+|---|---|---|---|
+| 1 | Q2 Novel reader next chapter | — | Only broken-function bug; doesn't overlap Q1, so it starts before Q1 is merged |
+| 2 | Q5 Navigation Library tab | Q1 | Continue Codex's own work on `tsuzuki/q5` — **not** a new branch: Claude rebases it onto main and sets it `ready`; use `git -c core.longpaths=true worktree add .worktrees/q5 tsuzuki/q5`. If not `ready` yet, skip and come back after Q4 |
+| 3 | Q3 Save chapters number range | — | Details download sheet + chapter-list range select |
+| 4 | Q6 Book details header | Q3 | Same details screen files as Q3 |
+| 5 | Q4 Two Default shelves | — | Import fix + one-time data migration (Claude runs it on a device only after a backup) |
+| 6 | Q7 Browse tabs + source rows | — | Browse header only |
+| 7 | Q12 Remove other themes | — | Must land before Q11 (one page-colour list) |
+| 8 | Q11 Reader settings redesign | Q12 | Uses Q12's page-colour list; also touches `NovelPage.kt` |
+| 9 | Q9 Accessibility + QoL | Q3, Q5 | Range select (Q3) and nav labels (Q5) |
+| 10 | Q8 Overflow + large-font sweep | Q2, Q3, Q5, Q6, Q7, Q11 | Touches every screen — last of batch Q |
+| 11 | X1 Reader hook consolidation | Q2 | Extra wave |
+| 12 | X2 Tablet Updates two-pane | Q5 | Extra wave |
+| 13 | X3 Restyle check: ReplaceRules + SettingsTranslation | Q11 | Extra wave |
+| 14 | X4 Restyle check: DuplicateFinder + Migration | — | Extra wave |
+
+Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build + device table).
 
 ### Batch Q — polish, layout overflow, smooth Dot motion, Mihon-style QoL (written 2026-11-06 by Claude)
 
@@ -89,7 +154,7 @@ time; put the rest in an overflow menu or a "More" sheet; never let a row scroll
 tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
 case, Doto only for short headings and numbers.
 
-#### Q1 Smooth motion in Dot (T3) — `review` (Codex done; branch `tsuzuki/q1` @ 1d8fe9074, pushed; Result is in that branch's HANDOFF.md; 862 tests green; Claude review + phone check pending)
+#### Q1 Smooth motion in Dot (T3) — `claude-working` (Claude reviewing `tsuzuki/q1` @ 1d8fe9074, then merging into main; Codex's Result is in that branch's HANDOFF.md)
 Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
 p50 5 ms at 120 Hz) — the lag is **designed in**:
 1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible
@@ -173,7 +238,7 @@ LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN categor
 - Display: if two pills would still render the same label, never show duplicates (append the content type).
 - Pills show their book count (N12 already has the query).
 
-#### Q5 Navigation: Library tab + real labels (T3) — `codex-working`, paused by owner 2026-11-06 (branch `tsuzuki/q5` @ 4345fc994, pushed; contains the Q1 diff as a prerequisite, so review it against `tsuzuki/q1`; tests/review pending) (owner approved 2026-11-06; after Q1)
+#### Q5 Navigation: Library tab + real labels (T3) — `blocked` (waiting for Claude: rebase `tsuzuki/q5` @ 4345fc994 onto main after Q1 merges, then Claude sets `ready`; Codex continues on that branch) (owner approved 2026-11-06)
 Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
 Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
 `Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
@@ -264,11 +329,52 @@ keep working"** — update that rule in the same card. Board `Themes.dc.html`.
 - Tests: theme migration (every legacy value → COLOUR; COLOUR/DOT untouched), novel theme mapping, backup restore of
   a legacy theme value. Device check (Claude): Appearance shows two cards; switching works; reader colours intact.
 
-#### Q10 Docs: JDK 21 path (T1) — `ready` `parallel-ok`
+#### Q10 Docs: JDK 21 path (T1) — `done` (Claude 2026-11-06: AGENTS.md Build picks jbr 21 or Temurin 21; owner phone in device table)
 `AGENTS.md` Build section still says JDK 21 is Android Studio's `jbr`; Android Studio 2026.2 ships JDK 25. Point to
 Temurin 21 (`C:\Program Files\Eclipse Adoptium\jdk-21.0.13.9-hotspot`) and note the owner's phone serial
 `R5GL23ZYE1V` (release app `io.github.manojx2005.tsuzuki`) in the device table. Docs only.
 
+
+### Extra wave X (owner approved 2026-11-06; only after the batch Q rows above)
+
+General: each X card first checks whether the work already exists (grep `presentation/tsuzuki/`, the status
+table in `docs/design/README.md`). If it is already done, set `done` with a one-line Result saying where, and
+move on.
+
+#### X1 Reader hook consolidation (T3) — `ready`
+WORKPLAN P0.4. Start from `git diff $(git merge-base HEAD tsundoku/main) HEAD -- app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderViewModel.kt`
+(includes Q2's additions once merged). Move every Tsuzuki addition (reader transition animation selection,
+`ReadingDays` recording, contents drawer relaunch, Tsuzuki chrome, Q2's next-chapter hooks) into
+`presentation/tsuzuki/reader/TsuzukiReaderHooks.kt` (or a few small files there); the upstream files keep
+one-line calls. **Behaviour identical**: no logic changes, no re-indent of Tsundoku code; Tsundoku's own novel
+branches stay where they are. Tests for any pure helper you extract. Result lists each moved block
+(upstream line → new function) so Claude can verify on devices: novel TextView + WebView open/close animation,
+progress/history saved, `ReadingDays` minutes increase, contents drawer jump, manga paged + long strip.
+Result: _pending_
+
+#### X2 Tablet Updates: list + chapter preview (T3) — `ready`
+Board `docs/design/boards/png/11-tablet/TabletUpdates.png` (+ `dot/`), HTML `html/11-tablet/TabletUpdates.html`.
+On windows ≥ 900 dp wide (same breakpoint helper as N9 Tablet Browse / N25 side panel — reuse it), Updates
+becomes two panes: the existing Tsuzuki updates list on the left, the selected chapter's book card on the right
+(cover, title, chapter number/title, date, downloaded state, actions READ / DOWNLOAD / OPEN BOOK). Phone layout
+unchanged. Selection survives rotation (`rememberSaveable` chapter id). Real data only: no excerpt unless it is
+cheap and real — otherwise leave it out and say so. Upstream `UpdatesScreen.kt` keeps one dispatch.
+Tests: pane/selection logic.
+Result: _pending_
+
+#### X3 Restyle check: ReplaceRules + SettingsTranslation (T2) — `ready`
+Boards `png/06-reader/ReplaceRules.png`, `png/08-tools/SettingsTranslation.png` (+ `dot/`, HTML alongside).
+Find the screens (Tsundoku text replacement rules, translation engine settings). If they are stock in Tsuzuki
+themes, restyle with `PreferenceScreen` / `tsuzukiGroupedTile` / `TsuzukiPill` per the boards (dispatch at the
+top of the upstream composable). Never show an API key in clear text; add no network calls. Leave out any board
+stat without backing data.
+Result: _pending_
+
+#### X4 Restyle check: DuplicateFinder + Migration (T2) — `ready`
+Boards `png/08-tools/DuplicateFinder.png`, `png/04-browse/Migration.png`, `png/04-browse/MigrationCompare.png`
+(+ `dot/`). `presentation/tsuzuki/migration/` exists: compare it to the boards first and fix only what differs
+(list the differences in Result). DuplicateFinder: restyle if stock. No change to migration logic.
+Result: _pending_
 
 ### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
 
@@ -628,6 +734,11 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-06 evening Claude — overnight plan.** Back on the desktop (JDK 21 = AS jbr). Owner approved for
+  tonight: Codex commits on card branches; Claude reviews + merges Q1 now, then reviews/merges cards about every
+  2 h, device-tests on tablet + S22 (in-app backup first; Q4 migration allowed after a backup), pushes main +
+  card branches, deletes the superseded draft branches; extra wave X1–X4 after batch Q. Q10 done by Claude.
 
 - **2026-11-06 Claude — owner switching computers; everything pushed.** Codex finished Q1 (`review`) and started Q5
   (paused) in uncommitted worktrees; each was committed as a `wip(...)` commit on its own branch and pushed:
