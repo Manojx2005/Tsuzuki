@@ -1289,4 +1289,12 @@
     <string name="tsz_appearance_dot_covers">Dot 主题封面</string>
     <string name="tsz_appearance_covers_colour">彩色</string>
     <string name="tsz_appearance_legacy_themes">旧版 Mihon 和 Tsundoku 主题现已切换为 Colour。</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">动画测试</string>
+    <string name="tsz_anime_debug_repo_url">仓库网址</string>
+    <string name="tsz_anime_debug_load">加载</string>
+    <string name="tsz_anime_debug_episodes">剧集</string>
+    <string name="tsz_anime_debug_first_episode">加载首集视频</string>
+    <string name="tsz_anime_debug_playback_error">播放失败</string>
 </resources>

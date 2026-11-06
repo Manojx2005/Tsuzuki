@@ -10,8 +10,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tsuzuki.animeplayer.MpvPlayer
 import `is`.xyz.mpv.MPVLib
+import tachiyomi.i18n.MR
 import java.io.File
 
 /**
@@ -24,13 +26,16 @@ import java.io.File
 class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
 
     private var started = false
+    private var video: Video? = null
+    private var status: TextView? = null
     private var url: String? = null
     private var logObserver: MPVLib.LogObserver? = null
     private var eventObserver: MPVLib.EventObserver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        url = intent.getStringExtra("url")
+        video = AnimeDebugPlayback.take(intent)
+        url = video?.videoUrl ?: intent.getStringExtra("url")
         if (url.isNullOrBlank()) {
             Toast.makeText(this, "Missing intent extra: url", Toast.LENGTH_LONG).show()
             finish()
@@ -52,7 +57,11 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         }
 
         val surface = SurfaceView(this).also { it.holder.addCallback(this) }
-        val label = TextView(this).apply { text = url }
+        val label = TextView(this).apply {
+            text = video?.let { it.videoTitle.ifBlank { getString(MR.strings.tsz_widget_listening_play.resourceId) } }
+                ?: url
+        }
+        status = label
         val controls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             addView(button("-10 s") { MpvPlayer.command("seek", "-10", "relative") })
@@ -83,7 +92,7 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         File(configDir, "mpv.conf").apply { if (!exists()) createNewFile() }
 
         val logs = MPVLib.LogObserver { prefix, level, text ->
-            Log.println(logPriority(level), TAG, "[$prefix] ${text.trimEnd()}")
+            if (video == null) Log.println(logPriority(level), TAG, "[$prefix] ${text.trimEnd()}")
         }
         logObserver = logs
         MpvPlayer.addLogObserver(logs)
@@ -106,6 +115,15 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         setOpt("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
         setOpt("input-default-bindings", "yes")
         setOpt("keep-open", "yes")
+        video?.headers?.let { headers ->
+            // Use the dedicated string options for the headers commonly needed by embed hosts.
+            for ((header, option) in listOf("Referer" to "referrer", "User-Agent" to "user-agent")) {
+                headers[header]?.let { MpvPlayer.optionOrFalse(option, it) }
+            }
+            headers["Origin"]?.takeUnless { ',' in it || '\\' in it }?.let {
+                MpvPlayer.optionOrFalse("http-header-fields", "Origin: $it")
+            }
+        }
         MpvPlayer.init()
 
         // Post-init (BaseMPVView): force-window would crash before the surface is attached.
@@ -177,6 +195,10 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         }
 
         override fun efEvent(err: String?) {
+            if (video != null && !err.isNullOrBlank()) {
+                runOnUiThread { status?.setText(MR.strings.tsz_anime_debug_playback_error.resourceId) }
+                return
+            }
             Log.i(TAG, "end-file error text: ${err ?: "none"}")
         }
     }

@@ -1288,4 +1288,12 @@
     <string name="tsz_appearance_dot_covers">Dotの表紙</string>
     <string name="tsz_appearance_covers_colour">カラー</string>
     <string name="tsz_appearance_legacy_themes">従来のMihonとTsundokuのテーマはColourに切り替わります。</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">アニメのテスト</string>
+    <string name="tsz_anime_debug_repo_url">リポジトリのURL</string>
+    <string name="tsz_anime_debug_load">読み込む</string>
+    <string name="tsz_anime_debug_episodes">エピソード</string>
+    <string name="tsz_anime_debug_first_episode">最初のエピソードの動画を読み込む</string>
+    <string name="tsz_anime_debug_playback_error">再生できませんでした</string>
 </resources>

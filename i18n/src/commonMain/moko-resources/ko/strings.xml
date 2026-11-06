@@ -1288,4 +1288,12 @@
     <string name="tsz_appearance_dot_covers">Dot의 표지</string>
     <string name="tsz_appearance_covers_colour">컬러</string>
     <string name="tsz_appearance_legacy_themes">이전 Mihon 및 Tsundoku 테마는 이제 Colour를 사용합니다.</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">애니메이션 테스트</string>
+    <string name="tsz_anime_debug_repo_url">저장소 URL</string>
+    <string name="tsz_anime_debug_load">불러오기</string>
+    <string name="tsz_anime_debug_episodes">에피소드</string>
+    <string name="tsz_anime_debug_first_episode">첫 에피소드 영상 불러오기</string>
+    <string name="tsz_anime_debug_playback_error">재생 실패</string>
 </resources>

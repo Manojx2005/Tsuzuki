@@ -1653,4 +1653,12 @@
     <string name="tsz_appearance_dot_covers">Covers in Dot</string>
     <string name="tsz_appearance_covers_colour">In colour</string>
     <string name="tsz_appearance_legacy_themes">Earlier Mihon and Tsundoku themes now use Colour.</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">Anime test</string>
+    <string name="tsz_anime_debug_repo_url">Repository URL</string>
+    <string name="tsz_anime_debug_load">Load</string>
+    <string name="tsz_anime_debug_episodes">Episodes</string>
+    <string name="tsz_anime_debug_first_episode">Load first episode videos</string>
+    <string name="tsz_anime_debug_playback_error">Playback failed</string>
 </resources>

@@ -1276,4 +1276,12 @@
     <string name="tsz_appearance_dot_covers">Portadas en Dot</string>
     <string name="tsz_appearance_covers_colour">En color</string>
     <string name="tsz_appearance_legacy_themes">Los temas anteriores de Mihon y Tsundoku ahora usan Colour.</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">Prueba de anime</string>
+    <string name="tsz_anime_debug_repo_url">URL del repositorio</string>
+    <string name="tsz_anime_debug_load">Cargar</string>
+    <string name="tsz_anime_debug_episodes">Episodios</string>
+    <string name="tsz_anime_debug_first_episode">Cargar vídeos del primer episodio</string>
+    <string name="tsz_anime_debug_playback_error">Error de reproducción</string>
 </resources>
