@@ -1307,4 +1307,11 @@
     <string name="tsz_q11_top">Superior</string>
     <string name="tsz_q11_bottom">Inferior</string>
     <string name="tsz_q11_status_position">Posição da barra de status</string>
+    <string name="tsz_q8_reader_top">Topo</string>
+    <string name="tsz_q8_reader_scroll">Rolar</string>
+    <string name="tsz_q8_reader_stop">Parar</string>
+    <string name="tsz_q8_reader_back">Voltar</string>
+    <string name="tsz_q8_reader_next">Próximo</string>
+    <string name="tsz_q8_reader_here">Aqui</string>
+    <string name="tsz_q8_reader_rotate">Girar</string>
 </resources>

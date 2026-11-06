@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -42,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiModalBottomSheet
@@ -124,7 +127,12 @@ private fun LookTab(preferences: ReaderPreferences) {
         FontChoice("monospace", MR.strings.tsz_rs_font_mono, FontFamily.Monospace),
     )
     TsuzukiSectionLabel(stringResource(MR.strings.tsz_rs_font))
-    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 2 else 4,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
         fonts.forEach { choice ->
             ChoiceTile(
                 label = stringResource(choice.label),
@@ -238,7 +246,8 @@ private fun ChoiceTile(
             },
             fontWeight = FontWeight.SemiBold,
             color = if (selected) tokens.background else MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

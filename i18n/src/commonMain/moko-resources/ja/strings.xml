@@ -1309,4 +1309,11 @@
     <string name="tsz_q11_top">上</string>
     <string name="tsz_q11_bottom">下</string>
     <string name="tsz_q11_status_position">ステータスバーの位置</string>
+    <string name="tsz_q8_reader_top">先頭</string>
+    <string name="tsz_q8_reader_scroll">スクロール</string>
+    <string name="tsz_q8_reader_stop">停止</string>
+    <string name="tsz_q8_reader_back">前</string>
+    <string name="tsz_q8_reader_next">次</string>
+    <string name="tsz_q8_reader_here">ここから</string>
+    <string name="tsz_q8_reader_rotate">回転</string>
 </resources>

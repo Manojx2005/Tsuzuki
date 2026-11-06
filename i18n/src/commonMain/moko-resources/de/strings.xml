@@ -1310,4 +1310,11 @@
     <string name="tsz_q11_top">Oben</string>
     <string name="tsz_q11_bottom">Unten</string>
     <string name="tsz_q11_status_position">Position der Statusleiste</string>
+    <string name="tsz_q8_reader_top">Anfang</string>
+    <string name="tsz_q8_reader_scroll">Scrollen</string>
+    <string name="tsz_q8_reader_stop">Stopp</string>
+    <string name="tsz_q8_reader_back">Zurück</string>
+    <string name="tsz_q8_reader_next">Weiter</string>
+    <string name="tsz_q8_reader_here">Hier</string>
+    <string name="tsz_q8_reader_rotate">Drehen</string>
 </resources>

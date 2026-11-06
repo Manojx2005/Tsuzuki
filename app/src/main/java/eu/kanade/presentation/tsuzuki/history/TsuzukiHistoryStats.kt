@@ -4,10 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,9 +67,11 @@ fun TsuzukiHistoryStatsTiles(modifier: Modifier = Modifier) {
     val streak = remember(daysRaw) {
         eu.kanade.tachiyomi.tsuzuki.ReadingDays.streak(readingDays.days(), java.time.LocalDate.now())
     }
-    Row(
+    FlowRow(
         modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 3,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         StatTile(
             stringResource(MR.strings.tsz_today),
@@ -96,7 +100,7 @@ private fun StatTile(label: String, value: Int, unit: String, modifier: Modifier
     val shape = RoundedCornerShape(18.dp)
     val up: (String) -> String = { if (t.isDot) it.uppercase() else it }
     Column(
-        modifier.height(104.dp).clip(shape).background(t.tile)
+        modifier.heightIn(min = 104.dp).clip(shape).background(t.tile)
             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
             .padding(14.dp),
     ) {
@@ -108,7 +112,7 @@ private fun StatTile(label: String, value: Int, unit: String, modifier: Modifier
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.weight(1f))
-        Row(verticalAlignment = Alignment.Bottom) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 "$value",
                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 40.sp),
@@ -116,7 +120,7 @@ private fun StatTile(label: String, value: Int, unit: String, modifier: Modifier
             )
             Text(
                 up(unit),
-                modifier = Modifier.padding(start = 4.dp, bottom = 3.dp),
+                modifier = Modifier.align(Alignment.Bottom).padding(bottom = 3.dp),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

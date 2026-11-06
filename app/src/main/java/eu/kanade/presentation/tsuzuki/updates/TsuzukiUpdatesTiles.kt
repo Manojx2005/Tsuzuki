@@ -5,10 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,15 +46,17 @@ fun TsuzukiUpdatesTiles(
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
     val tile = Modifier
-        .height(104.dp)
+        .heightIn(min = 104.dp)
         .clip(shape)
     val up: (String) -> String = { if (t.isDot) it.uppercase() else it }
     val border = t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier
-    Row(
+    FlowRow(
         modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(
             tile
@@ -69,7 +73,7 @@ fun TsuzukiUpdatesTiles(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.Bottom) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     "$newCount",
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 40.sp),
@@ -77,7 +81,7 @@ fun TsuzukiUpdatesTiles(
                 )
                 Text(
                     up(stringResource(MR.strings.tsz_ch)),
-                    modifier = Modifier.padding(start = 4.dp, bottom = 3.dp),
+                    modifier = Modifier.align(Alignment.Bottom).padding(bottom = 3.dp),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -117,7 +121,8 @@ fun TsuzukiUpdatesTiles(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = ink.copy(alpha = 0.8f),
-                    maxLines = 1,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
             }
         }

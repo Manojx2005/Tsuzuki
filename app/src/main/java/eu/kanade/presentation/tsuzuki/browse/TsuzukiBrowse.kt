@@ -7,7 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,7 +46,7 @@ fun TsuzukiGlobalSearchTile(sourceCount: Int, onClick: () -> Unit, modifier: Mod
             .tsuzukiPress(press)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .fillMaxWidth()
-            .height(52.dp)
+            .heightIn(min = 52.dp)
             .clip(shape)
             .background(t.tile)
             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
@@ -62,7 +62,13 @@ fun TsuzukiGlobalSearchTile(sourceCount: Int, onClick: () -> Unit, modifier: Mod
     ) {
         val muted = MaterialTheme.colorScheme.onSurfaceVariant
         Icon(Icons.Outlined.Search, contentDescription = null, tint = muted, modifier = Modifier.size(18.dp))
-        Text(if (t.isDot) text.uppercase() else text, color = muted, fontSize = 14.sp, maxLines = 1)
+        Text(
+            if (t.isDot) text.uppercase() else text,
+            color = muted,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -111,7 +117,7 @@ fun TsuzukiPinnedSources(
                     androidx.compose.foundation.layout.Column(
                         Modifier
                             .weight(1f)
-                            .height(128.dp)
+                            .heightIn(min = 128.dp)
                             .clip(shape)
                             .background(t.tile)
                             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
@@ -143,7 +149,7 @@ fun TsuzukiPinnedSources(
                             if (t.isDot) source.name.uppercase() else source.name,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurface,
                         )

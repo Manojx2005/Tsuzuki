@@ -1303,4 +1303,11 @@
     <string name="tsz_q11_top">Haut</string>
     <string name="tsz_q11_bottom">Bas</string>
     <string name="tsz_q11_status_position">Position de la barre d’état</string>
+    <string name="tsz_q8_reader_top">Haut</string>
+    <string name="tsz_q8_reader_scroll">Défiler</string>
+    <string name="tsz_q8_reader_stop">Arrêter</string>
+    <string name="tsz_q8_reader_back">Précédent</string>
+    <string name="tsz_q8_reader_next">Suivant</string>
+    <string name="tsz_q8_reader_here">Ici</string>
+    <string name="tsz_q8_reader_rotate">Pivoter</string>
 </resources>

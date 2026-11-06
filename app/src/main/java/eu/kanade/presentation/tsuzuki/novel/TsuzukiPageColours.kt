@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
@@ -24,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.reader.settings.ColorPickerDialog
@@ -68,6 +71,7 @@ internal fun TsuzukiPageColourPicker(
     val customInk by preferences.novelFontColor.collectAsState()
     val customPage by preferences.novelBackgroundColor.collectAsState()
     var editCustom by rememberSaveable { mutableStateOf<String?>(null) }
+    val rowSize = if (LocalDensity.current.fontScale >= 1.5f) minOf(columns, 3) else columns
     val options = NovelPageColour.entries.filter { includeCustom || it != NovelPageColour.CUSTOM }
     Column(modifier.fillMaxWidth()) {
         TsuzukiSectionLabel(stringResource(MR.strings.tsz_rs_page_colour))
@@ -75,7 +79,7 @@ internal fun TsuzukiPageColourPicker(
             Modifier.fillMaxWidth().selectableGroup().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            options.chunked(columns).forEach { row ->
+            options.chunked(rowSize).forEach { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -101,7 +105,7 @@ internal fun TsuzukiPageColourPicker(
                             else -> Color(requireNotNull(colours).second)
                         }
                         Column(
-                            Modifier.weight(1f)
+                            Modifier.weight(1f).heightIn(min = 48.dp)
                                 .semantics {
                                     selected = selectedOption
                                     contentDescription = label
@@ -139,10 +143,12 @@ internal fun TsuzukiPageColourPicker(
                                 tsuzukiMenuLabel(label),
                                 style = MaterialTheme.typography.labelSmall,
                                 textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(rowSize - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

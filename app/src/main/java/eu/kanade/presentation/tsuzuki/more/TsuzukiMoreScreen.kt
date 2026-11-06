@@ -6,11 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -40,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -104,8 +109,8 @@ fun TsuzukiMoreScreen(
             color = Color.White,
             modifier = Modifier.padding(start = 4.dp, bottom = 14.dp, top = 4.dp).semantics { heading() },
         )
-        Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.widthIn(max = 720.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            MoreTilePair {
                 ToggleTile(
                     icon = Icons.Outlined.CloudDownload,
                     label = stringResource(MR.strings.label_downloaded_only),
@@ -132,7 +137,7 @@ fun TsuzukiMoreScreen(
                 onClickHistory,
                 height = 96.dp,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MoreTilePair {
                 NavTile(
                     Icons.Outlined.GetApp,
                     stringResource(MR.strings.label_download_queue),
@@ -153,7 +158,7 @@ fun TsuzukiMoreScreen(
                     onClickStats,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MoreTilePair {
                 NavTile(
                     Icons.Outlined.Label,
                     stringResource(MR.strings.categories),
@@ -171,7 +176,7 @@ fun TsuzukiMoreScreen(
                     onClickDataAndStorage,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MoreTilePair {
                 NavTile(
                     Icons.Outlined.Settings,
                     stringResource(MR.strings.label_settings),
@@ -202,6 +207,19 @@ fun TsuzukiMoreScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MoreTilePair(content: @Composable FlowRowScope.() -> Unit) {
+    val singleColumn = LocalDensity.current.fontScale >= 1.5f && LocalConfiguration.current.screenWidthDp < 600
+    FlowRow(
+        Modifier.fillMaxWidth(),
+        maxItemsInEachRow = if (singleColumn) 1 else 2,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        content = content,
+    )
+}
+
 @Composable
 private fun ToggleTile(
     icon: ImageVector,
@@ -215,7 +233,7 @@ private fun ToggleTile(
     val ink = if (checked) t.onAccent else Color.White
     Column(
         modifier
-            .height(132.dp)
+            .heightIn(min = 132.dp)
             .clip(RoundedCornerShape(24.dp))
             .then(if (checked) Modifier.background(t.accent) else tileFill(t))
             .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
@@ -240,7 +258,7 @@ private fun ToggleTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = ink,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
@@ -269,7 +287,7 @@ private fun NavTile(
     Column(
         modifier
             .tsuzukiPress(press)
-            .height(height)
+            .heightIn(min = height)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t))
             .clickable(
@@ -303,7 +321,7 @@ private fun NavTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = Color.White,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         sub?.let {
@@ -311,7 +329,7 @@ private fun NavTile(
                 t.case(it),
                 style = body(11.sp, FontWeight.Medium),
                 color = muted,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }

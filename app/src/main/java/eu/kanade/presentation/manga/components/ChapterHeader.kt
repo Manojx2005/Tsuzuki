@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.components.material.padding
@@ -28,6 +30,7 @@ fun ChapterHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
@@ -36,11 +39,13 @@ fun ChapterHeader(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         Text(
-            text = if (chapterCount == null) {
-                stringResource(MR.strings.chapters)
-            } else {
-                pluralStringResource(MR.plurals.manga_num_chapters, count = chapterCount, chapterCount)
-            },
+            text = tsuzukiMenuLabel(
+                if (chapterCount == null) {
+                    stringResource(MR.strings.chapters)
+                } else {
+                    pluralStringResource(MR.plurals.manga_num_chapters, count = chapterCount, chapterCount)
+                },
+            ),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )

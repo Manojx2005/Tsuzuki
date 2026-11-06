@@ -534,7 +534,12 @@ private fun NovelReaderBottomBar(
             val (icon, label) = bottomBarItemInfo(item, orientation, isAutoScrolling, isTtsActive, false)
             when (item) {
                 BottomBarItem.PREV_CHAPTER, BottomBarItem.NEXT_CHAPTER -> null
-                BottomBarItem.SCROLL_TO_TOP -> NovelChromeAction(icon, label, onScrollToTop)
+                BottomBarItem.SCROLL_TO_TOP -> NovelChromeAction(
+                    icon,
+                    label,
+                    onScrollToTop,
+                    shortLabel = stringResource(MR.strings.tsz_q8_reader_top),
+                )
                 BottomBarItem.TRANSLATE -> NovelChromeAction(
                     icon,
                     label,
@@ -547,6 +552,9 @@ private fun NovelReaderBottomBar(
                     if (isAutoScrolling) stringResource(TDMR.strings.action_stop_auto_scroll) else label,
                     onToggleAutoScroll,
                     active = isAutoScrolling,
+                    shortLabel = stringResource(
+                        if (isAutoScrolling) MR.strings.tsz_q8_reader_stop else MR.strings.tsz_q8_reader_scroll,
+                    ),
                 )
                 BottomBarItem.TTS -> NovelChromeAction(
                     Icons.Outlined.VolumeUp,
@@ -555,14 +563,30 @@ private fun NovelReaderBottomBar(
                     onLongPressTts,
                     ttsControlsVisible,
                 )
-                BottomBarItem.TTS_PREV_PARAGRAPH -> NovelChromeAction(icon, label, onTtsPreviousParagraph)
-                BottomBarItem.TTS_NEXT_PARAGRAPH -> NovelChromeAction(icon, label, onTtsNextParagraph)
+                BottomBarItem.TTS_PREV_PARAGRAPH -> NovelChromeAction(
+                    icon,
+                    label,
+                    onTtsPreviousParagraph,
+                    shortLabel = stringResource(MR.strings.tsz_q8_reader_back),
+                )
+                BottomBarItem.TTS_NEXT_PARAGRAPH -> NovelChromeAction(
+                    icon,
+                    label,
+                    onTtsNextParagraph,
+                    shortLabel = stringResource(MR.strings.tsz_q8_reader_next),
+                )
                 BottomBarItem.TTS_VIEWPORT -> NovelChromeAction(
                     icon,
                     stringResource(MR.strings.tsz_reader_listen_here),
                     onTtsStartFromViewport,
+                    shortLabel = stringResource(MR.strings.tsz_q8_reader_here),
                 )
-                BottomBarItem.ORIENTATION -> NovelChromeAction(icon, label, onClickOrientation)
+                BottomBarItem.ORIENTATION -> NovelChromeAction(
+                    icon,
+                    label,
+                    onClickOrientation,
+                    shortLabel = stringResource(MR.strings.tsz_q8_reader_rotate),
+                )
                 BottomBarItem.SETTINGS -> NovelChromeAction(icon, label, onClickSettings)
                 BottomBarItem.QUOTES -> NovelChromeAction(icon, label, onQuotes)
                 BottomBarItem.EDIT -> NovelChromeAction(icon, label, onToggleEdit, active = isEditing)

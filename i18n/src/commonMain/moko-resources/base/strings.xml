@@ -1674,4 +1674,11 @@
     <string name="tsz_q11_top">Top</string>
     <string name="tsz_q11_bottom">Bottom</string>
     <string name="tsz_q11_status_position">Status bar position</string>
+    <string name="tsz_q8_reader_top">Top</string>
+    <string name="tsz_q8_reader_scroll">Scroll</string>
+    <string name="tsz_q8_reader_stop">Stop</string>
+    <string name="tsz_q8_reader_back">Back</string>
+    <string name="tsz_q8_reader_next">Next</string>
+    <string name="tsz_q8_reader_here">Here</string>
+    <string name="tsz_q8_reader_rotate">Rotate</string>
 </resources>
