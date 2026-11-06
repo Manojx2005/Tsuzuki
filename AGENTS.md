@@ -93,8 +93,11 @@ done
   (Android 10+). Use `MaterialTheme.typography` styles so this applies; never set `fontFamily` directly.
   The Japanese fonts in `res/font/lnr_jp_*.ttf` are subsets (kana + JIS X 0208 kanji) made with the `subset-font`
   npm package; their licences are in `docs/licenses/`.
-- **Legacy themes must keep working.** Tsuzuki UI is used only when `tokens.style != TsuzukiStyle.NONE`; other
-  themes get stock Mihon/Tsundoku UI.
+- **App themes (owner 2026-11-06, card Q12).** Colour and Dot are the only selectable app themes. Stored and
+  restored legacy app themes resolve to Colour. Keep the legacy `AppTheme` entries, colour schemes and
+  `TsuzukiStyle.NONE` for backup compatibility and Tsundoku merges (keep the `tokens.style != NONE` dispatches).
+  The shared novel page choices are Book, Paper, Sepia, Sage, Night, Black and Custom; the saved custom text and
+  background colours apply in Custom.
 - **Real data only.** Never ship the design's sample numbers. If a tile has no backing data yet (streak, listen,
   source health), leave it out and note it in the task queue.
 - **Keep Tsundoku mergeable.** Put new code in `tsuzuki` packages and keep edits to upstream files small
@@ -134,3 +137,5 @@ done
 - The old task queue and orders 1–14 (with per-order notes) are in git: `git show 8f7f12e3b:AGENTS.md`.
 
 - **Overnight 2026-11-06 additional upstream touches (small hooks):** `SourcesScreen.kt`, `GlobalSearchScreen.kt`, `SearchViewModel.kt`, `ExtensionStoresViewModel.kt`, `ExtensionStoresScreen.kt`, `ExtensionsScreen.kt`, `ExtensionDetailsScreen.kt`, `SettingsBrowseScreen.kt`, `SourcePreferences.kt`, `GetExtensionsByType.kt`, `ExtensionLoader.kt`, `ExtensionManager.kt`, `ExtensionInstallReceiver.kt`, `LoadResult.kt`, domain `Extension.kt`, `NovelStatusBar.kt` (body moved into a themed content fn), `ReaderTopBar.kt` (actions lambda), `ReadingModePage.kt` (import aliases), `StatusBarElementsScreen.kt`, `ScanlatorFilterDialog.kt`, `DownloadQueueScreen.kt`/`ViewModel.kt`, `CategoryViewModel.kt`, `categories.sq`/`mangas.sq` (read-only queries), `MangaRepository(Impl)`, `ChapterRepository(Impl)`, `NotificationReceiver.kt`, `Notifications.kt`, `InfoScreen.kt`, `BasePreferences.kt`, `CrashLogUtil.kt`, `NewUpdateScreen(Model).kt`, `TtsPlaybackService.kt`, `NovelWebViewViewer.kt` (find API), `MangaCover.kt` + cover call sites, `app/build.gradle.kts` (debugImplementation anime-player). See docs/UPSTREAM.md and the HANDOFF log for each.
+
+- **Batch Q upstream touches (merged 2026-11-07):** `NovelReaderAppBars.kt` (Tsuzuki row dispatch), `ReaderActivity.kt` / `ReaderViewModel.kt` (visible-chapter next/prev, pending replay), `NovelViewer.kt`, `NovelWebViewViewer.kt`, `NovelWebViewStyler.kt` (themed chapter-end card + `assets/novel-reader/chapter-end-card.js`), `ThemeUtils.kt`, `ReaderPreferences.kt`, `NovelPage.kt` (Tsundoku theme lists removed, Q12), `SettingsNovelReaderScreen.kt`, `SettingsAppearanceScreen.kt`, `AppThemePreferenceWidget.kt`, `UiPreferences.kt`, `PreferenceRestorer.kt`, `App.kt` (theme + shelf migrations), `LNReaderBackupImporter.kt` (LN Default → system shelf), `LibraryTabs.kt`, `LibraryContent.kt`, `LibraryTab.kt`, `LibraryViewModel.kt`, `NovelsTab.kt`, `MangaScreen.kt`, `MangaInfoHeader.kt` (hourglass tile wrapped in an `if` — small re-indent), `MangaToolbar.kt`, `MangaViewModel.kt`, `BrowseTab.kt`, `SourcesScreen.kt`, `TabbedScreen.kt`, `HomeScreen.kt`, `MoreTab.kt`, `MoreScreen.kt`.
