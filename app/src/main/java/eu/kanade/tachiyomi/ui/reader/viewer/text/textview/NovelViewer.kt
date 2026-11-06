@@ -1741,8 +1741,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             // the empty block seen during the recreate that a rotation triggers.
             pendingRestoreChapterId = page.chapter.chapter.id
             pendingRestoreProgress = progress
+            activity.onNovelProgressChanged(progress)
         } else {
             lastSavedProgress = 0f
+            // Report the chapter's start: with the text already loaded (next chapter prefetched) no scroll
+            // event outside the entry grace period updates the bar, so it kept the previous chapter's 100 %.
+            activity.onNovelProgressChanged(0f)
             scrollView.post {
                 isRestoringScroll = true
                 scrollView.scrollTo(0, 0)

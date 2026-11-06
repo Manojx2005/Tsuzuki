@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
 import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
+import eu.kanade.tachiyomi.tsuzuki.reader.NovelNextChapterWarmup
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.DownloadPageLoader
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -207,6 +208,9 @@ class ReaderViewModel @JvmOverloads constructor(
             savedState["novel_scroll_progress"] = value
             field = value
         }
+
+    /** Card Q13: fetches the next chapter's text while reading, so › Next opens it without a network wait. */
+    private val nextChapterWarmup = NovelNextChapterWarmup()
 
     /**
      * The time the chapter was started reading
@@ -866,6 +870,11 @@ class ReaderViewModel @JvmOverloads constructor(
         val clamped = progress.coerceIn(0, 100)
         mutableState.update { it.copy(novelProgressPercent = clamped) }
         novelScrollProgress = clamped
+        if (!readerPreferences.novelInfiniteScroll.get()) {
+            nextChapterWarmup.onProgress(clamped, state.value.viewerChapters?.currChapter?.chapter?.id, viewModelScope) {
+                prepareNextChapterForInfiniteScroll()
+            }
+        }
     }
 
     fun updateNovelPageInfo(pageIndex: Int, pageCount: Int) {
