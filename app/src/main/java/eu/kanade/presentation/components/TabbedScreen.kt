@@ -67,7 +67,7 @@ fun TabbedScreen(
             ),
         ) {
             if (tabsHeader != null) {
-                tabsHeader(currentPage, onSelectPage)
+                eu.kanade.presentation.tsuzuki.browse.TsuzukiPagerHeader(state, tabs.size, scope, tabsHeader)
             } else if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
                 eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
             ) {
