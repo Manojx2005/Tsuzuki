@@ -37,7 +37,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- **Q13 and Q14** (owner 2026-11-07: Codex works on the anime lane only; Claude fixes these). Codex: skip them.
+- Owner 2026-11-07: Codex works on the anime lane only; Claude fixes owner-reported bugs.
 - Overnight: every ~2 h Claude reviews cards that reached `review`, builds (only when Codex isn't building),
   device-checks on the tablet + S22 **with the preview build** (`.debug`; the owner's `.dev` data is never used for
   card builds; backup before data-changing cards Q4/Q12; A2.2 only in a temporary `.scratch` install), merges good
@@ -664,7 +664,7 @@ side panel shows the listen controls (play/pause, speed, voice, sleep timer, par
 state mapping.
 Result: _pending_
 
-#### Q13 Novel next chapter: instant, never a blank page (T3) — `claude-working` (owner 2026-11-07: Codex does anime, Claude fixes Q13/Q14)
+#### Q13 Novel next chapter: instant, never a blank page (T3) — `done` (Claude `54717865f`: warm-up past 75 %, Next ~0.1 s instead of ~1.2 s blank on the S22; also fixed the stale 100 % on chapter entry)
 Owner 2026-11-07: "sometimes the novel reader lags before going to the next chapter." Measured on the S22
 (preview, Royal Road, TextView, infinite scroll off): tapping › Next shows a **blank black page for ~1.2 s**
 (`app/build/night3-evidence/next.mp4`, `next-strip.png`) while the chapter text is fetched from the network.
@@ -682,7 +682,7 @@ Owner 2026-11-07: "sometimes the novel reader lags before going to the next chap
 Hooks in `NovelViewer.kt` / `NovelWebViewViewer.kt` stay small (call into `tsuzuki/reader/`).
 Result: _pending_
 
-#### Q14 Design fixes from Claude's 2026-11-07 device pass (T2) — `claude-working` (Claude, 2026-11-07)
+#### Q14 Design fixes from Claude's 2026-11-07 device pass (T2) — `done` (Claude `aa9d5544a`: items 1–5 fixed and device-checked; item 6 tablet margins deferred → owner question)
 Boards: `fixes-2026-11/` (ReaderQuick, ReaderAll, Q9Selection) and `INDEX.md` SettingsTranslation. Evidence:
 `app/build/night3-evidence/` (`reader-quick.png`, `reader-all.png`, `q9-selection.png`, `x3-translation.png`).
 Fix each, Dot then Colour, at 360 dp and font scale 1.3:
@@ -1061,6 +1061,19 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-07 08:40 Claude — Q13 + Q14 done (owner: Codex on anime, Claude fixes).** `54717865f` Q13: new
+  `tsuzuki/reader/NovelNextChapterWarmup.kt` called from `ReaderViewModel.updateNovelProgressPercent` (infinite
+  scroll off): past 75 % it prepares the next chapter and loads its text; S22 recording: Next ~0.1 s (was ~1.2 s
+  blank). Found + fixed: entering a chapter whose text is already loaded kept the previous chapter's 100 % in the
+  bar (`NovelViewer.restoreProgress` now reports the start/restored progress). `aa9d5544a` Q14: font tiles keep the
+  face's own name (Literata fits), All reader settings tabs in one row (labelSmall), one-line title, paragraph
+  indent/spacing in em (`formatReaderEm`), mixed Library grid selection per board (ring + check, others dimmed,
+  no tint — the All view uses `TsuzukiMixedLibraryGrid`, which Q9 missed), selection-bar labels white, one line
+  (`MARK READ`), slider titles in Dot case (`PreferenceItem.kt`), grouped tiles round first/last *shown* rows
+  (`PreferenceScreen.kt`; hidden disabled rows left Translation › General with square corners). 906 tests, 0
+  failures; checked on S22 + tablet, no crashes. Q14 item 6 (wider tablet margins / max line length) deferred:
+  needs owner decision + layout work in TextView and WebView.
 
 - **2026-11-07 07:25 Claude — cut letters at the page edge fixed (`9ed457af5`).** Owner screenshot (Lord of the
   Mysteries ch. 40, Sepia, Literata, justify): the "f" of "patrol of" lost its tip. TextView clips text to its
