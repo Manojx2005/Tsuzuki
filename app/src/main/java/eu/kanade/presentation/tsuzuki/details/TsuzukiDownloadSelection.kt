@@ -18,9 +18,14 @@ internal enum class TsuzukiDownloadOption {
 internal fun chaptersToSave(
     chapters: List<ChapterList.Item>,
     option: TsuzukiDownloadOption,
-    range: IntRange = chapters.indices,
+    range: ClosedFloatingPointRange<Double>? = null,
 ): List<ChapterList.Item> {
-    val available = chapters.filter {
+    val candidates = if (option == TsuzukiDownloadOption.CUSTOM && range != null) {
+        chaptersInNumberRange(chapters, range.start, range.endInclusive)
+    } else {
+        chapters
+    }
+    val available = candidates.filter {
         it.downloadState == Download.State.NOT_DOWNLOADED || it.downloadState == Download.State.ERROR
     }
     return when (option) {
@@ -31,10 +36,46 @@ internal fun chaptersToSave(
         TsuzukiDownloadOption.UNREAD -> available.filterNot { it.chapter.read }
         TsuzukiDownloadOption.ALL -> available
         TsuzukiDownloadOption.BOOKMARKED -> available.filter { it.chapter.bookmark }
-        TsuzukiDownloadOption.CUSTOM -> chapters.filterIndexed { index, _ -> index in range }.filter {
-            it.downloadState == Download.State.NOT_DOWNLOADED || it.downloadState == Download.State.ERROR
-        }
+        TsuzukiDownloadOption.CUSTOM -> available.takeIf { range != null }.orEmpty()
     }.distinctBy { it.id }
+}
+
+/** Use the source number when known, otherwise use the 1-based reading-order position. */
+internal fun downloadChapterNumber(item: ChapterList.Item, index: Int): Double =
+    item.chapter.chapterNumber.takeIf { it.isFinite() && item.chapter.isRecognizedNumber } ?: (index + 1).toDouble()
+
+internal fun chaptersInNumberRange(
+    chapters: List<ChapterList.Item>,
+    from: Double,
+    to: Double,
+): List<ChapterList.Item> =
+    if (from.isFinite() && to.isFinite() && from <= to) {
+        chapters.filterIndexed { index, item -> downloadChapterNumber(item, index) in from..to }
+    } else {
+        emptyList()
+    }
+
+internal fun parseDownloadChapterNumber(text: String): Double? {
+    val normalized = text.trim().map { char ->
+        when (char) {
+            ',', '，', '．', '٫' -> '.'
+            else -> char.digitToIntOrNull()?.digitToChar() ?: char
+        }
+    }.joinToString("")
+    if (normalized.any { it !in '0'..'9' && it != '.' }) return null
+    return normalized.toDoubleOrNull()?.takeIf { it.isFinite() }
+}
+
+/** Select beyond the nearest visible boundary. Hidden rows never take part in a long-press range. */
+internal fun chapterSelectionRange(chapters: List<ChapterList.Item>, index: Int): IntRange {
+    val first = chapters.indexOfFirst { it.selected }
+    val last = chapters.indexOfLast { it.selected }
+    return when {
+        first == -1 -> index..index
+        index < first -> index..first
+        index > last -> last..index
+        else -> index..index
+    }
 }
 
 /**

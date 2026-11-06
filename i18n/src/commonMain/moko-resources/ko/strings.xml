@@ -1264,4 +1264,21 @@
     <string name="tsz_reader_up_next">다음 읽을 장</string>
     <string name="tsz_reader_chapter_position">%1$s장</string>
     <string name="tsz_reader_chapter_end">장 끝</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">시작 장</string>
+    <string name="tsz_download_to">끝 장</string>
+    <string name="tsz_download_from_here">읽던 곳부터</string>
+    <string name="tsz_download_to_last">마지막 장까지</string>
+    <string name="tsz_download_totals">읽지 않음 %1$d개 · 전체 %2$d개</string>
+    <string name="tsz_download_skipped_saved">저장된 %1$d개 건너뜀</string>
+    <string name="tsz_download_number_required">시작 장과 끝 장의 번호를 입력하세요</string>
+    <string name="tsz_download_reversed">시작 장 번호는 끝 장 번호보다 클 수 없습니다</string>
+    <string name="tsz_download_out_of_range">%1$s~%2$s 사이의 장 번호를 입력하세요</string>
+    <string name="tsz_download_none_available">이 범위에 다운로드할 장이 없습니다</string>
+    <string name="tsz_download_save_range">%1$s~%2$s장 저장</string>
+    <string name="tsz_download_settings">다운로드 설정</string>
+    <string name="tsz_download_decrease">%1$s 번호 줄이기</string>
+    <string name="tsz_download_increase">%1$s 번호 늘리기</string>
+    <string name="tsz_download_all_eligible">전체를 선택하면 다운로드 가능한 장이 대기열에 추가됩니다.</string>
+    <string name="tsz_download_filtered">현재 장 필터가 다운로드에 적용됩니다.</string>
 </resources>

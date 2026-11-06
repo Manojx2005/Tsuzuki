@@ -194,7 +194,6 @@ class MangaViewModel(
     val isUpdateIntervalEnabled =
         LibraryPreferences.MANGA_OUTSIDE_RELEASE_PERIOD in libraryPreferences.autoUpdateMangaRestrictions.get()
 
-    private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
 
     override fun onCleared() {
@@ -1244,58 +1243,19 @@ class MangaViewModel(
         fromLongPress: Boolean = false,
     ) {
         updateSuccessState { successState ->
-            val newChapters = successState.processedChapters.toMutableList().apply {
-                val selectedIndex = successState.processedChapters.indexOfFirst { it.id == item.chapter.id }
-                if (selectedIndex < 0) return@apply
+            val visible = successState.processedChapters
+            val index = visible.indexOfFirst { it.id == item.id }
+            if (index < 0 || visible[index].selected == selected) return@updateSuccessState successState
 
-                val selectedItem = get(selectedIndex)
-                if ((selectedItem.selected && selected) || (!selectedItem.selected && !selected)) return@apply
-
-                val firstSelection = none { it.selected }
-                set(selectedIndex, selectedItem.copy(selected = selected))
-                selectedChapterIds.addOrRemove(item.id, selected)
-
-                if (selected && fromLongPress) {
-                    if (firstSelection) {
-                        selectedPositions[0] = selectedIndex
-                        selectedPositions[1] = selectedIndex
-                    } else {
-                        // Try to select the items in-between when possible
-                        val range: IntRange
-                        if (selectedIndex < selectedPositions[0]) {
-                            range = selectedIndex + 1..<selectedPositions[0]
-                            selectedPositions[0] = selectedIndex
-                        } else if (selectedIndex > selectedPositions[1]) {
-                            range = (selectedPositions[1] + 1)..<selectedIndex
-                            selectedPositions[1] = selectedIndex
-                        } else {
-                            // Just select itself
-                            range = IntRange.EMPTY
-                        }
-
-                        range.forEach {
-                            val inbetweenItem = get(it)
-                            if (!inbetweenItem.selected) {
-                                selectedChapterIds.add(inbetweenItem.id)
-                                set(it, inbetweenItem.copy(selected = true))
-                            }
-                        }
-                    }
-                } else if (!fromLongPress) {
-                    if (!selected) {
-                        if (selectedIndex == selectedPositions[0]) {
-                            selectedPositions[0] = indexOfFirst { it.selected }
-                        } else if (selectedIndex == selectedPositions[1]) {
-                            selectedPositions[1] = indexOfLast { it.selected }
-                        }
-                    } else {
-                        if (selectedIndex < selectedPositions[0]) {
-                            selectedPositions[0] = selectedIndex
-                        } else if (selectedIndex > selectedPositions[1]) {
-                            selectedPositions[1] = selectedIndex
-                        }
-                    }
-                }
+            val range = if (selected && fromLongPress) {
+                eu.kanade.presentation.tsuzuki.details.chapterSelectionRange(visible, index)
+            } else {
+                index..index
+            }
+            val changedIds = range.mapTo(hashSetOf()) { visible[it].id }
+            changedIds.forEach { selectedChapterIds.addOrRemove(it, selected) }
+            val newChapters = successState.chapters.map {
+                if (it.id in changedIds) it.copy(selected = selected) else it
             }
             successState.copy(chapters = newChapters)
         }
@@ -1307,8 +1267,6 @@ class MangaViewModel(
                 selectedChapterIds.addOrRemove(it.id, selected)
                 it.copy(selected = selected)
             }
-            selectedPositions[0] = -1
-            selectedPositions[1] = -1
             successState.copy(chapters = newChapters)
         }
     }
@@ -1319,8 +1277,6 @@ class MangaViewModel(
                 selectedChapterIds.addOrRemove(it.id, !it.selected)
                 it.copy(selected = !it.selected)
             }
-            selectedPositions[0] = -1
-            selectedPositions[1] = -1
             successState.copy(chapters = newChapters)
         }
     }

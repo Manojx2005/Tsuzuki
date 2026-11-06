@@ -1252,4 +1252,21 @@
     <string name="tsz_reader_up_next">A continuación</string>
     <string name="tsz_reader_chapter_position">Capítulo %1$s</string>
     <string name="tsz_reader_chapter_end">Fin del capítulo</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">Desde el capítulo</string>
+    <string name="tsz_download_to">Hasta el capítulo</string>
+    <string name="tsz_download_from_here">Desde donde estoy</string>
+    <string name="tsz_download_to_last">Hasta el último</string>
+    <string name="tsz_download_totals">%1$d sin leer · %2$d en total</string>
+    <string name="tsz_download_skipped_saved">%1$d ya guardados · omitidos</string>
+    <string name="tsz_download_number_required">Introduce ambos números de capítulo</string>
+    <string name="tsz_download_reversed">El primer capítulo debe ser anterior o igual al último</string>
+    <string name="tsz_download_out_of_range">Introduce números entre %1$s y %2$s</string>
+    <string name="tsz_download_none_available">No hay capítulos para descargar en este intervalo</string>
+    <string name="tsz_download_save_range">Guardar caps. %1$s–%2$s</string>
+    <string name="tsz_download_settings">Ajustes de descarga</string>
+    <string name="tsz_download_decrease">Reducir: %1$s</string>
+    <string name="tsz_download_increase">Aumentar: %1$s</string>
+    <string name="tsz_download_all_eligible">Todos pone en cola los capítulos disponibles para descargar.</string>
+    <string name="tsz_download_filtered">Los filtros de capítulos actuales se aplican a las descargas.</string>
 </resources>

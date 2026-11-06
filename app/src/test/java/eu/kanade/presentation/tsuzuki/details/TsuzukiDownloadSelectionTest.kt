@@ -14,10 +14,20 @@ class TsuzukiDownloadSelectionTest {
         read: Boolean = false,
         bookmark: Boolean = false,
         state: Download.State = Download.State.NOT_DOWNLOADED,
+        number: Double = -1.0,
+        scanlator: String? = null,
+        selected: Boolean = false,
     ) = ChapterList.Item(
-        chapter = Chapter.create().copy(id = id, read = read, bookmark = bookmark),
+        chapter = Chapter.create().copy(
+            id = id,
+            read = read,
+            bookmark = bookmark,
+            chapterNumber = number,
+            scanlator = scanlator,
+        ),
         downloadState = state,
         downloadProgress = 0,
+        selected = selected,
     )
 
     @Test
@@ -51,18 +61,52 @@ class TsuzukiDownloadSelectionTest {
     }
 
     @Test
-    fun `custom range uses inclusive list positions before excluding active downloads`() {
-        val chapters = listOf(item(10), item(20, read = true), item(30, state = Download.State.QUEUE), item(40))
-
-        assertEquals(listOf(20L, 40L), chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, 1..3).map { it.id })
-        assertEquals(
-            listOf(10L, 20L, 40L),
-            chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, -5..99).map {
-                it.id
-            },
+    fun `custom range is inclusive and preserves decimal and duplicate source numbers`() {
+        val chapters = listOf(
+            item(10, number = 12.0),
+            item(20, number = 12.5, scanlator = "A"),
+            item(30, number = 12.5, scanlator = "B"),
+            item(40, number = 13.0),
         )
-        assertTrue(chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, 4..9).isEmpty())
-        assertTrue(chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, IntRange.EMPTY).isEmpty())
+
+        assertEquals(listOf(20L, 30L), chaptersInNumberRange(chapters, 12.5, 12.5).map { it.id })
+        assertEquals(listOf(20L, 30L, 40L), chaptersInNumberRange(chapters, 12.5, 13.0).map { it.id })
+        assertTrue(chaptersInNumberRange(chapters, 13.0, 12.5).isEmpty())
+        assertTrue(chaptersInNumberRange(chapters, Double.NaN, 13.0).isEmpty())
+    }
+
+    @Test
+    fun `chapters without a source number use their one-based reading position`() {
+        val chapters = listOf(
+            item(10, number = 100.0),
+            item(20, read = true),
+            item(30, state = Download.State.QUEUE),
+            item(40),
+        )
+
+        assertEquals(listOf(20L, 30L, 40L), chaptersInNumberRange(chapters, 2.0, 4.0).map { it.id })
+        assertEquals(listOf(20L, 40L), chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, 2.0..4.0).map { it.id })
+        assertTrue(chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, 5.0..9.0).isEmpty())
+        assertTrue(chaptersToSave(chapters, TsuzukiDownloadOption.CUSTOM, null).isEmpty())
+    }
+
+    @Test
+    fun `chapter entry accepts decimal keyboards and rejects nonnumeric or infinite values`() {
+        assertEquals(12.5, parseDownloadChapterNumber("12.5"))
+        assertEquals(12.5, parseDownloadChapterNumber("12,5"))
+        assertEquals(12.5, parseDownloadChapterNumber("１２．５"))
+        assertEquals(null, parseDownloadChapterNumber("12.5.5"))
+        assertEquals(null, parseDownloadChapterNumber("1e2"))
+        assertEquals(null, parseDownloadChapterNumber("Infinity"))
+    }
+
+    @Test
+    fun `long press selects up to the nearest visible selection boundary`() {
+        val chapters = listOf(item(1), item(2), item(3, selected = true), item(4), item(5, selected = true), item(6))
+        assertEquals(0..2, chapterSelectionRange(chapters, 0))
+        assertEquals(4..5, chapterSelectionRange(chapters, 5))
+        assertEquals(3..3, chapterSelectionRange(chapters, 3))
+        assertEquals(0..0, chapterSelectionRange(chapters.take(2), 0))
     }
 
     @Test

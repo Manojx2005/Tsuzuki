@@ -1264,4 +1264,21 @@
     <string name="tsz_reader_up_next">次の章</string>
     <string name="tsz_reader_chapter_position">第%1$s章</string>
     <string name="tsz_reader_chapter_end">章の終わり</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">開始する章</string>
+    <string name="tsz_download_to">終了する章</string>
+    <string name="tsz_download_from_here">続きから</string>
+    <string name="tsz_download_to_last">最後まで</string>
+    <string name="tsz_download_totals">未読 %1$d · 全 %2$d 章</string>
+    <string name="tsz_download_skipped_saved">保存済み %1$d 章を除外</string>
+    <string name="tsz_download_number_required">開始と終了の章番号を入力してください</string>
+    <string name="tsz_download_reversed">終了の章番号は開始の章番号以上にしてください</string>
+    <string name="tsz_download_out_of_range">%1$s から %2$s までの章番号を入力してください</string>
+    <string name="tsz_download_none_available">この範囲にダウンロードできる章はありません</string>
+    <string name="tsz_download_save_range">第%1$s〜%2$s章を保存</string>
+    <string name="tsz_download_settings">ダウンロード設定</string>
+    <string name="tsz_download_decrease">%1$sの番号を減らす</string>
+    <string name="tsz_download_increase">%1$sの番号を増やす</string>
+    <string name="tsz_download_all_eligible">「すべて」ではダウンロード可能な章をキューに追加します。</string>
+    <string name="tsz_download_filtered">現在の章フィルターがダウンロードに適用されます。</string>
 </resources>

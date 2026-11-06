@@ -1258,4 +1258,21 @@
     <string name="tsz_reader_up_next">À suivre</string>
     <string name="tsz_reader_chapter_position">Chapitre %1$s</string>
     <string name="tsz_reader_chapter_end">Fin du chapitre</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">Du chapitre</string>
+    <string name="tsz_download_to">Au chapitre</string>
+    <string name="tsz_download_from_here">Depuis ma progression</string>
+    <string name="tsz_download_to_last">Jusqu’au dernier</string>
+    <string name="tsz_download_totals">%1$d non lus · %2$d au total</string>
+    <string name="tsz_download_skipped_saved">%1$d déjà enregistrés · ignorés</string>
+    <string name="tsz_download_number_required">Saisissez les deux numéros de chapitre</string>
+    <string name="tsz_download_reversed">Le premier chapitre doit précéder le dernier ou être identique</string>
+    <string name="tsz_download_out_of_range">Saisissez des numéros entre %1$s et %2$s</string>
+    <string name="tsz_download_none_available">Aucun chapitre à télécharger dans cette plage</string>
+    <string name="tsz_download_save_range">Enregistrer les chap. %1$s–%2$s</string>
+    <string name="tsz_download_settings">Paramètres de téléchargement</string>
+    <string name="tsz_download_decrease">Diminuer : %1$s</string>
+    <string name="tsz_download_increase">Augmenter : %1$s</string>
+    <string name="tsz_download_all_eligible">Tout ajoute les chapitres téléchargeables à la file.</string>
+    <string name="tsz_download_filtered">Les filtres de chapitres actuels s’appliquent aux téléchargements.</string>
 </resources>
