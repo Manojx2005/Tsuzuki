@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -43,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -60,6 +62,9 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.details.TsuzukiResumeTile
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReadingMode
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaScanlatorFilter
@@ -351,14 +356,26 @@ private fun MangaScreenSmallImpl(
         )
     }
 
+    val hasResumeTile = state.chapters.isNotEmpty() && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
     val chapterListState = rememberLazyListState()
+    val resumeTileVisible by remember {
+        derivedStateOf {
+            val layout = chapterListState.layoutInfo
+            layout.totalItemsCount == 0 || layout.visibleItemsInfo.any { it.key == RESUME_TILE_KEY }
+        }
+    }
     val scrollScope = rememberCoroutineScope()
     val context = LocalContext.current
-    val scrollActions = remember(listItem, state.chapters, state.manga) {
+    val additionalHeaderItems = when {
+        !hasResumeTile -> 0
+        state.isNovel -> 1
+        else -> 2
+    }
+    val scrollActions = remember(listItem, state.chapters, state.manga, additionalHeaderItems) {
         chapterScrollActions(
             scope = scrollScope,
             listState = chapterListState,
-            headerItems = ONE_PANE_HEADER_ITEMS,
+            headerItems = ONE_PANE_HEADER_ITEMS + additionalHeaderItems,
             listItem = listItem,
             nextUnreadId = { state.chapters.getNextUnread(state.manga)?.id },
             onNoTarget = { context.toast(TDMR.strings.manga_no_unread_chapter) },
@@ -442,16 +459,17 @@ private fun MangaScreenSmallImpl(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            val isFABVisible = remember(chapters) {
-                chapters.fastAny { !it.chapter.read } && !isAnySelected
-            }
+            val hasUnread = remember(chapters) { chapters.fastAny { !it.chapter.read } }
+            val isFABVisible = hasUnread && !isAnySelected && (!hasResumeTile || !resumeTileVisible)
             SmallExtendedFloatingActionButton(
                 text = {
                     val isReading = remember(state.chapters) {
                         state.chapters.fastAny { it.chapter.read }
                     }
                     Text(
-                        text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
+                        text = tsuzukiMenuLabel(
+                            stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
+                        ),
                     )
                 },
                 icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
@@ -523,19 +541,18 @@ private fun MangaScreenSmallImpl(
                         )
                     }
 
-                    // Tsuzuki themes: Resume tile under the actions (board "NovelDetails").
-                    if (state.chapters.isNotEmpty()) {
-                        item(key = "tsuzuki_resume", contentType = "tsuzuki_resume") {
-                            if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
-                                eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
-                            ) {
-                                TsuzukiResumeTile(
-                                    readCount = state.chapters.count { it.chapter.read },
-                                    total = state.chapters.size,
-                                    nextChapter = state.chapters.getNextUnread(state.manga)?.name,
-                                    onClick = onContinueReading,
-                                )
-                                if (!state.isNovel) TsuzukiMangaReadingMode(state.manga)
+                    if (hasResumeTile) {
+                        item(key = RESUME_TILE_KEY, contentType = RESUME_TILE_KEY) {
+                            TsuzukiResumeTile(
+                                readCount = state.chapters.count { it.chapter.read },
+                                total = state.chapters.size,
+                                nextChapter = state.chapters.getNextUnread(state.manga)?.name,
+                                onClick = onContinueReading,
+                            )
+                        }
+                        if (!state.isNovel) {
+                            item(key = "tsuzuki_reading_mode", contentType = "tsuzuki_reading_mode") {
+                                TsuzukiMangaReadingMode(state.manga)
                             }
                         }
                     }
@@ -688,6 +705,8 @@ fun MangaScreenLargeImpl(
     val insetPadding = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal).asPaddingValues()
     var topBarHeight by remember { mutableIntStateOf(0) }
 
+    val hasResumeTile = state.chapters.isNotEmpty() && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
+    var resumeTileVisible by remember(state.manga.id) { mutableStateOf(true) }
     val chapterListState = rememberLazyListState()
     val scrollScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -771,17 +790,16 @@ fun MangaScreenLargeImpl(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            val isFABVisible = remember(chapters) {
-                chapters.fastAny { !it.chapter.read } && !isAnySelected
-            }
+            val hasUnread = remember(chapters) { chapters.fastAny { !it.chapter.read } }
+            val isFABVisible = hasUnread && !isAnySelected && (!hasResumeTile || !resumeTileVisible)
             SmallExtendedFloatingActionButton(
                 text = {
                     val isReading = remember(state.chapters) {
                         state.chapters.fastAny { it.chapter.read }
                     }
                     Text(
-                        text = stringResource(
-                            if (isReading) MR.strings.action_resume else MR.strings.action_start,
+                        text = tsuzukiMenuLabel(
+                            stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
                         ),
                     )
                 },
@@ -840,15 +858,15 @@ fun MangaScreenLargeImpl(
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
                         )
-                        if (state.chapters.isNotEmpty() &&
-                            eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
-                            eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
-                        ) {
+                        if (hasResumeTile) {
                             TsuzukiResumeTile(
                                 readCount = state.chapters.count { it.chapter.read },
                                 total = state.chapters.size,
                                 nextChapter = state.chapters.getNextUnread(state.manga)?.name,
                                 onClick = onContinueReading,
+                                modifier = Modifier.onVisibilityChanged(minFractionVisible = 0.01f) {
+                                    resumeTileVisible = it
+                                },
                             )
                             if (!state.isNovel) TsuzukiMangaReadingMode(state.manga)
                         }
@@ -932,6 +950,7 @@ fun MangaScreenLargeImpl(
 
 // Items each layout's LazyColumn shows before the chapter rows.
 private const val ONE_PANE_HEADER_ITEMS = 4
+private const val RESUME_TILE_KEY = "tsuzuki_resume"
 private const val TWO_PANE_HEADER_ITEMS = 1
 
 private class ChapterScrollActions(
@@ -1086,7 +1105,11 @@ private fun LazyListScope.sharedChapterItems(
                         }
                         else -> item.chapter.name
                     },
-                    date = relativeDateText(item.chapter.dateUpload),
+                    date = if (item.chapter.dateUpload == 0L && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+                        null
+                    } else {
+                        relativeDateText(item.chapter.dateUpload)
+                    },
                     readProgress = item.chapter.lastPageRead
                         .takeIf { !item.chapter.read && it > 0L }
                         ?.let {

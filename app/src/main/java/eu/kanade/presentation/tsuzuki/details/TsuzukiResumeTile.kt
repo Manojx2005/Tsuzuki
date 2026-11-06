@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,7 +34,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Resume tile on book details (board "NovelDetails"): play disc, what comes next, and progress
- * through the book. Colour: accent fill. Dot: dark tile with a red play disc.
+ * through the book. The play disc uses the theme accent.
  */
 @Composable
 fun TsuzukiResumeTile(
@@ -46,7 +45,7 @@ fun TsuzukiResumeTile(
     modifier: Modifier = Modifier,
 ) {
     val t = TsuzukiTheme.tokens
-    val ink = if (t.isDot) Color.White else t.onAccent
+    val ink = t.dotOn
     val shape = RoundedCornerShape(24.dp)
     val started = readCount > 0
     val label =
@@ -56,33 +55,26 @@ fun TsuzukiResumeTile(
         modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .height(76.dp)
+            .heightIn(min = 88.dp)
             .clip(shape)
-            .then(
-                if (t.isDot) {
-                    Modifier
-                        .background(t.tile)
-                        .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-                } else {
-                    Modifier.background(t.accent)
-                },
-            )
+            .background(t.tile)
+            .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Box(
             Modifier
-                .size(48.dp)
+                .size(56.dp)
                 .clip(CircleShape)
-                .background(if (t.isDot) t.accent else t.background.takeUnlessUnspecified(Color.Black)),
+                .background(t.accent),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 Icons.Filled.PlayArrow,
                 contentDescription = null,
-                tint = if (t.isDot) Color.White else t.accent,
+                tint = t.onAccent,
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -107,12 +99,8 @@ fun TsuzukiResumeTile(
                     progress = readCount.toFloat() / total,
                     dots = 18,
                     thickness = 5.dp,
-                    fill = if (t.isDot) Color.Unspecified else t.onAccent,
-                    track = if (t.isDot) Color.Unspecified else t.onAccent.copy(alpha = 0.2f),
                 )
             }
         }
     }
 }
-
-private fun Color.takeUnlessUnspecified(other: Color) = if (this == Color.Unspecified) other else this
