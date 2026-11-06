@@ -1062,6 +1062,20 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-07 06:52 Claude — morning report, overnight batch Q.** **Done + merged into main (pushed):**
+  Q1 `7aad35150`; Q2, Q3, Q4, Q5, Q6, Q7, Q12 via `review/night1` `52ac6a536`; Q8, Q9, Q11, X1, X3, X4 via
+  `review/night2` `6af172281`; Q10 docs; Claude fixes Browse pills `277130bd3`, paragraph gaps `8582f16a5`, Q2
+  labels `86c2ee50d`. X2 dropped (already built). **In progress:** A1.5 anime test screen (Codex). **Queued
+  next:** Q13 next-chapter prefetch, Q14 design fixes, then A2.2–A2.4, Y1–Y6. **Nothing blocked.** **Checked on
+  devices:** preview build only (never `.dev`), backups first (`app/build/night1-evidence/`), tablet
+  `R52Y90HA77L` (Dot rail, Colour Browse, Appearance, translation settings, reader) and S22 `RZCWA139X1X` (Dot:
+  nav, Library, Browse + recording, details, save sheet, reader menu/quick/full settings, paragraphs, next-chapter
+  timing, selection); crash buffers empty after every install. Owner phone `R5GL23ZYE1V` not connected (Q1
+  gfxinfo/recording still owed there). Deleted origin drafts q1-motion, q1-nav, q1-nav-fix, q1-review, q5-more,
+  q5-settings (all files covered by q1/q5 in main). **Open questions for the owner:** where do letters look cut
+  at the page edge (device/book/renderer, screenshot)? Q4 duplicate-Default migration still unproven on real data
+  (run on your phone after an in-app backup). Gradle user-file memory cap applies to all your Gradle projects.
+
 - **2026-11-07 06:20–06:55 Claude — owner awake: memory fix, review/night2 merged, three reader/Browse fixes.**
   Builds were being killed because `~/.gradle/gradle.properties` set `org.gradle.jvmargs` without `-Xmx` (it
   overrides the project's `-Xmx4g`), so the Gradle and Kotlin daemons each took ~8 GB (15.4 GB together). Owner
