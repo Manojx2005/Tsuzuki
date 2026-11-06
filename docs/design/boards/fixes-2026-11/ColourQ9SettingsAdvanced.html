@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Settings — advanced options folded</title>
+<!-- Board for docs/HANDOFF.md. Static HTML (no canvas runtime). Colours here are illustrations of
+     TsuzukiTheme.tokens; build with tokens + MaterialTheme.typography, never these hex values.
+     Card Q9. Which options are "advanced": decided per screen, listed in the card Result. -->
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#2a2a2a;display:flex;width:640px}
+.side{width:250px;box-sizing:border-box;padding:20px 16px;font:400 12px/1.45 'Space Mono',monospace;color:#cfe8ff}
+.side h2{font:700 13px/1.3 'Space Mono',monospace;margin:0 0 10px;color:#fff}
+.side li{margin-bottom:10px}
+.ph{width:390px;height:844px;position:relative;overflow:hidden;background:#1C2B4A;font-family:'Manrope',sans-serif;color:#fff;}
+.h1{font:italic 400 44px/1 'Instrument Serif',serif;margin:0}
+.muted{color:rgba(255,255,255,.72);font:400 12px/1.4 'Manrope',sans-serif;letter-spacing:.4px}
+.lbl{font:700 11px/1 'Manrope',sans-serif;letter-spacing:1px;color:rgba(255,255,255,.72)}
+.tile{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-sizing:border-box}
+.pill{height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:700 12px/1 'Manrope',sans-serif;letter-spacing:1px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;box-sizing:border-box}
+.pill.on{background:#E9B44C;border-color:#E9B44C;color:#1C2B4A}
+.ib{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;flex:none}
+.row{min-height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;box-sizing:border-box}
+.row+.row{border-top:1px solid rgba(255,255,255,.16)}
+.t{font:700 14px/1.3 'Manrope',sans-serif;letter-spacing:.4px}
+.s{font:400 12px/1.35 'Manrope',sans-serif;color:rgba(255,255,255,.72);letter-spacing:.3px;text-transform:none}
+.btn{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:10px;font:700 14px/1 'Manrope',sans-serif;letter-spacing:1px;box-sizing:border-box}
+.btn.p{background:#E9B44C;color:#1C2B4A}
+.btn.o{border:1px solid rgba(255,255,255,.16);color:#fff}
+.nav{position:absolute;left:16px;right:16px;bottom:20px;height:62px;border-radius:31px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);box-sizing:border-box;padding:0 6px;display:flex;align-items:center}
+.nav span{flex:1;text-align:center;font:700 11px/1 'Manrope',sans-serif;letter-spacing:.6px;color:rgba(255,255,255,.72);position:relative}
+.ann{position:absolute;right:8px;font:400 10px/1.3 'Space Mono',monospace;color:#7CF;text-transform:none;background:rgba(0,0,0,.7);padding:3px 6px;border-radius:4px;max-width:180px}
+</style></head><body>
+<div class="ph"><div style="padding:16px 8px 0 8px;display:flex;align-items:center;gap:4px"><div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></div><h1 class="h1" style="font-size:34px">Library</h1></div>
+<div style="padding:20px 20px 8px" class="lbl">Display</div>
+<div class="tile" style="margin:0 16px"><div class="row"><div style="flex:1;min-width:0"><div class="t">Show unread count</div><div class="s">Badge on each cover</div></div><div style="width:52px;height:32px;border-radius:16px;background:#E9B44C;position:relative;flex:none"><div style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:12px;background:#1C2B4A"></div></div></div><div class="row"><div style="flex:1;min-width:0"><div class="t">Shelf book counts</div><div class="s">Number beside each shelf</div></div><div style="width:52px;height:32px;border-radius:16px;background:#E9B44C;position:relative;flex:none"><div style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:12px;background:#1C2B4A"></div></div></div></div>
+<div style="padding:20px 20px 8px" class="lbl">Updates</div>
+<div class="tile" style="margin:0 16px"><div class="row"><div style="flex:1;min-width:0"><div class="t">Automatic updates</div><div class="s">Every 12 hours · Wi-Fi only</div></div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.72)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></div><div class="row"><div style="flex:1;min-width:0"><div class="t">Only update ongoing</div><div class="s">Skip completed books</div></div><div style="width:52px;height:32px;border-radius:16px;border:2px solid rgba(255,255,255,.72);box-sizing:border-box;position:relative;flex:none"><div style="position:absolute;left:5px;top:5px;width:18px;height:18px;border-radius:9px;background:rgba(255,255,255,.72)"></div></div></div></div>
+<div style="padding:20px 20px 8px" class="lbl">Advanced</div>
+<div class="tile" style="margin:0 16px">
+  <div class="row"><div style="flex:1"><div class="t">Advanced options</div><div class="s">9 more · update restrictions, mark-duplicate rules, swipe actions…</div></div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div></div>
+</div>
+<div class="side"><h2>Settings — advanced options folded</h2><ul style="padding-left:16px;margin:0"><li>Rare Tsundoku power options fold into one collapsed Advanced tile at the end of each settings screen. Nothing deleted; search still finds them and opens the tile expanded</li></ul><p style="color:#9ab">Card Q9. Which options are "advanced": decided per screen, listed in the card Result.</p></div>
+</body></html>

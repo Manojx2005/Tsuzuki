@@ -55,6 +55,10 @@ docs/HANDOFF.md (Claude edits it during the night) and skip any card that is not
 blocked card: record it and move on to the next one.
 ```
 
+**Design first:** every UI card in this table has a board (batch Q: `fixes-2026-11/README.md`; anime and
+X/Y: named in the card or `docs/design/boards/INDEX.md`). If a card's screen has **no** board, don't invent one:
+set it `blocked` ("needs a board") and move on — Claude draws it.
+
 **Rules (every card):**
 1. **Re-read this file** (root checkout `docs/HANDOFF.md`) before each card. Take the next `ready` row of the
    table. Set its card heading status to `codex-working (.worktrees/<id>, 2026-11-06)` — in the **root
@@ -290,6 +294,7 @@ phone now: More "DATA AND STORA…", reader title hard-cut, genre chips, Browse 
 wrap instead of scroll, min 48 dp targets, no fixed heights around text. List every fix in Result.
 
 #### Q9 Accessibility + quality of life, Mihon parity (T3) — `ready`
+Boards (fixes-2026-11): `Q9Selection`, `Q9Undo`, `Q9UpdatesLoading`, `Q9SettingsAdvanced` + `Colour*` twins (static `.html` + `png/`).
 - Nav and tab labels are spoken as real words (already true for content descriptions — keep it when Q5 lands).
 - Contrast: check every muted/disabled colour on tile/background (e.g. `#8A8A8A` on `#0D0D0D`, dim read-chapter rows
   at `alpha .55`) ≥ 4.5:1 for text; fix tokens, not screens.
@@ -400,6 +405,7 @@ ported file + upstream revision in Result; nothing visible to normal users in re
 tab already exists as a placeholder). No GPL. Never download or install anything yourself — no network in tests.
 
 #### A1.5 Anime: debug extension install → list sources → play (T3) — `ready`
+Board: `docs/design/boards/fixes-2026-11/AnimeDebug.html` / `png/AnimeDebug.png` (Dot only).
 Goal: from a **debug-only** developer screen, add an Aniyomi-format extension repo URL, list its extensions, install
 one into the private dir (`files/anime-exts`, via the loader ported in `9b2a924de` with the host's trust/signature
 check), list the installed sources, fetch Popular for one source, open one entry's episode list, resolve the video
@@ -444,6 +450,7 @@ episode list from the source, PLAY first/next episode in the player). Boards: `d
 Result: _pending_
 
 #### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `ready` (needs A2.3)
+Boards: `fixes-2026-11/AnimeShelves` + `ColourAnimeShelves` (shelf management), `png/10-anime/AnimeLibrary`, `AnimeHome` (with Q5's nav).
 Add to library from anime details (writes `animes.favorite`, anime categories picker using `anime_categories`).
 Home's Watch tab becomes real: Continue watching (from `anime_history`), shelf row; Library gets the anime media
 switch (board `LibraryMixed`, `AnimeLibrary`, `AnimeHome`) showing anime shelves only. Anime shelf management

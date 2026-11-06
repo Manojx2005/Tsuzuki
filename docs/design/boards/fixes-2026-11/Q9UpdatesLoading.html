@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Updates — loading</title>
+<!-- Board for docs/HANDOFF.md. Static HTML (no canvas runtime). Colours here are illustrations of
+     TsuzukiTheme.tokens; build with tokens + MaterialTheme.typography, never these hex values.
+     Card Q9. Real count only if it is known before the rows (else just "Loading updates…"). -->
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#2a2a2a;display:flex;width:640px}
+.side{width:250px;box-sizing:border-box;padding:20px 16px;font:400 12px/1.45 'Space Mono',monospace;color:#cfe8ff}
+.side h2{font:700 13px/1.3 'Space Mono',monospace;margin:0 0 10px;color:#fff}
+.side li{margin-bottom:10px}
+.ph{width:390px;height:844px;position:relative;overflow:hidden;background:#000;background-image:radial-gradient(#1C1C1C 1px,transparent 1.2px);background-size:12px 12px;background-position:6px 6px;font-family:'Space Mono',monospace;color:#fff;text-transform:uppercase;}
+.h1{font:900 40px/1 'Doto',monospace;letter-spacing:1px;margin:0}
+.muted{color:#8A8A8A;font:400 12px/1.4 'Space Mono',monospace;letter-spacing:.4px}
+.lbl{font:700 11px/1 'Space Mono',monospace;letter-spacing:1px;color:#8A8A8A}
+.tile{background:#111;border:1px solid #2A2A2A;border-radius:20px;box-sizing:border-box}
+.pill{height:40px;padding:0 16px;border-radius:20px;border:1px solid #2A2A2A;background:#111;color:#fff;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;box-sizing:border-box}
+.pill.on{background:#FF2D2D;border-color:#FF2D2D;color:#fff}
+.ib{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;flex:none}
+.row{min-height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;box-sizing:border-box}
+.row+.row{border-top:1px solid #2A2A2A}
+.t{font:700 14px/1.3 'Space Mono',monospace;letter-spacing:.4px}
+.s{font:400 12px/1.35 'Space Mono',monospace;color:#8A8A8A;letter-spacing:.3px;text-transform:none}
+.btn{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:10px;font:700 14px/1 'Space Mono',monospace;letter-spacing:1px;box-sizing:border-box}
+.btn.p{background:#FF2D2D;color:#fff}
+.btn.o{border:1px solid #2A2A2A;color:#fff}
+.nav{position:absolute;left:16px;right:16px;bottom:20px;height:62px;border-radius:31px;background:#111;border:1px solid #2A2A2A;box-sizing:border-box;padding:0 6px;display:flex;align-items:center}
+.nav span{flex:1;text-align:center;font:700 11px/1 'Space Mono',monospace;letter-spacing:.6px;color:#8A8A8A;position:relative}
+.ann{position:absolute;right:8px;font:400 10px/1.3 'Space Mono',monospace;color:#7CF;text-transform:none;background:rgba(0,0,0,.7);padding:3px 6px;border-radius:4px;max-width:180px}
+</style></head><body>
+<div class="ph"><div style="padding:20px 8px 0 20px;display:flex;align-items:center">
+  <h1 class="h1" style="flex:1">Updates</h1><div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M7 12h10M10 18h4"/></svg></div><div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></div></div>
+<div style="padding:14px 16px 0;display:flex;gap:8px"><span class="pill on">All</span><span class="pill">Manga</span><span class="pill">Novels</span></div>
+<div style="padding:16px 20px 0" class="muted">Loading 1,871 updates…</div>
+<div style="padding:6px 16px 0"><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:70%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:45%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:65%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:55%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:60%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:65%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:55%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:45%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:50%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:55%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:45%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:65%;border-radius:5px;background:#1A1A1A"></div></div></div><div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+  <div style="width:48px;height:64px;border-radius:10px;background:#1A1A1A"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:40%;border-radius:6px;background:#1A1A1A"></div><div style="height:10px;width:45%;border-radius:5px;background:#1A1A1A"></div></div></div></div>
+<div class="nav"><div style="position:absolute;left:144px;top:6px;width:69px;height:48px;border-radius:24px;background:#fff"></div><span>Home</span><span>Library</span><span style="color:#000">Updates</span><span>Browse</span><span>More</span></div>
+</div>
+<div class="side"><h2>Updates — loading</h2><ul style="padding-left:16px;margin:0"><li>First frame within 100 ms: skeleton rows (no spinner). Mapping off the main thread; real rows replace skeletons in place, no jump. Static (no shimmer) when Reduce motion is on</li></ul><p style="color:#9ab">Card Q9. Real count only if it is known before the rows (else just "Loading updates…").</p></div>
+</body></html>

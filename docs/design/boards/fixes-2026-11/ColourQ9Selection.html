@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Library — selection mode</title>
+<!-- Board for docs/HANDOFF.md. Static HTML (no canvas runtime). Colours here are illustrations of
+     TsuzukiTheme.tokens; build with tokens + MaterialTheme.typography, never these hex values.
+     Card Q9 (+ Q3 range select). Same bar in chapter list, Updates and History with their own actions. -->
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#2a2a2a;display:flex;width:640px}
+.side{width:250px;box-sizing:border-box;padding:20px 16px;font:400 12px/1.45 'Space Mono',monospace;color:#cfe8ff}
+.side h2{font:700 13px/1.3 'Space Mono',monospace;margin:0 0 10px;color:#fff}
+.side li{margin-bottom:10px}
+.ph{width:390px;height:844px;position:relative;overflow:hidden;background:#1C2B4A;font-family:'Manrope',sans-serif;color:#fff;}
+.h1{font:italic 400 44px/1 'Instrument Serif',serif;margin:0}
+.muted{color:rgba(255,255,255,.72);font:400 12px/1.4 'Manrope',sans-serif;letter-spacing:.4px}
+.lbl{font:700 11px/1 'Manrope',sans-serif;letter-spacing:1px;color:rgba(255,255,255,.72)}
+.tile{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-sizing:border-box}
+.pill{height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:700 12px/1 'Manrope',sans-serif;letter-spacing:1px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;box-sizing:border-box}
+.pill.on{background:#E9B44C;border-color:#E9B44C;color:#1C2B4A}
+.ib{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;flex:none}
+.row{min-height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;box-sizing:border-box}
+.row+.row{border-top:1px solid rgba(255,255,255,.16)}
+.t{font:700 14px/1.3 'Manrope',sans-serif;letter-spacing:.4px}
+.s{font:400 12px/1.35 'Manrope',sans-serif;color:rgba(255,255,255,.72);letter-spacing:.3px;text-transform:none}
+.btn{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:10px;font:700 14px/1 'Manrope',sans-serif;letter-spacing:1px;box-sizing:border-box}
+.btn.p{background:#E9B44C;color:#1C2B4A}
+.btn.o{border:1px solid rgba(255,255,255,.16);color:#fff}
+.nav{position:absolute;left:16px;right:16px;bottom:20px;height:62px;border-radius:31px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);box-sizing:border-box;padding:0 6px;display:flex;align-items:center}
+.nav span{flex:1;text-align:center;font:700 11px/1 'Manrope',sans-serif;letter-spacing:.6px;color:rgba(255,255,255,.72);position:relative}
+.ann{position:absolute;right:8px;font:400 10px/1.3 'Space Mono',monospace;color:#7CF;text-transform:none;background:rgba(0,0,0,.7);padding:3px 6px;border-radius:4px;max-width:180px}
+</style></head><body>
+<div class="ph"><div style="height:72px;display:flex;align-items:center;padding:0 8px;gap:4px;background:rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.16)">
+  <div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+  <div style="flex:1;font:700 18px/1 'Manrope',sans-serif;letter-spacing:1px">3 selected</div>
+  <div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></div></div>
+<div style="padding:12px 16px 0;display:flex;gap:8px"><span class="pill on">All</span><span class="pill">Novels</span><span class="pill">Manga</span></div>
+<div style="padding:16px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px"><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#3B4F7A;outline:3px solid #E9B44C;outline-offset:2px;"><span style="position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:13px;background:#E9B44C;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C2B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg></span></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Lord of the Mysteries</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;opacity:.55;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#5A4A6E;"></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Shadow Slave</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#2F5A5A;outline:3px solid #E9B44C;outline-offset:2px;"><span style="position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:13px;background:#E9B44C;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C2B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg></span></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Reverend Insanity</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;opacity:.55;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#6B4E3A;"></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Circle of Inevitability</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#44507A;outline:3px solid #E9B44C;outline-offset:2px;"><span style="position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:13px;background:#E9B44C;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C2B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg></span></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Nano Machine</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;opacity:.55;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#5E3B4A;"></div>
+  <div style="font:700 11px/1.35 'Manrope',sans-serif;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">The Academy's Genius Swordsman</div></div></div>
+<div style="position:absolute;left:12px;right:12px;bottom:20px;height:72px;border-radius:24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);display:flex;box-sizing:border-box"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span style="font:700 10px/1 'Manrope',sans-serif;letter-spacing:.6px">Shelf</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg><span style="font:700 10px/1 'Manrope',sans-serif;letter-spacing:.6px">Mark read</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span style="font:700 10px/1 'Manrope',sans-serif;letter-spacing:.6px">Save</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg><span style="font:700 10px/1 'Manrope',sans-serif;letter-spacing:.6px">Remove</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span style="font:700 10px/1 'Manrope',sans-serif;letter-spacing:.6px">More</span></div></div>
+
+</div>
+<div class="side"><h2>Library — selection mode</h2><ul style="padding-left:16px;margin:0"><li>Long-press a cover → selection. Long-press a 2nd → selects the range between (Q3/Q9)</li><li>Bar replaces the nav while selecting; 5 labelled actions max, the rest in More. Back = clear selection</li></ul><p style="color:#9ab">Card Q9 (+ Q3 range select). Same bar in chapter list, Updates and History with their own actions.</p></div>
+</body></html>

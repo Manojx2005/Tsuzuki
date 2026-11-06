@@ -19,6 +19,17 @@ Live canvas (owner only): https://claude.ai/artifact/Qs9pMeZhphy77fbPiE9cTH — 
 | `ReaderAll` / `ColourReaderAll` | Q11 | Full-screen reader settings, TEXT tab: labelled tabs, labels above controls, FINE-TUNE expander, preview |
 | `ReaderAllPage` / `ColourReaderAllPage` | Q11, Q12 | PAGE tab: one page-colour list + CUSTOM, side and top/bottom margins |
 | `Themes` | Q12 | Appearance with only Colour and Dot, the eight real accent swatches, Dot covers switch |
+| `Q9Selection` / `ColourQ9Selection` | Q9 (+Q3) | Long-press selection: count bar, selected covers, 5 labelled actions replacing the nav |
+| `Q9Undo` / `ColourQ9Undo` | Q9 | Undo snackbar instead of a confirm dialog, 6 s time bar, above the nav |
+| `Q9UpdatesLoading` / `ColourQ9UpdatesLoading` | Q9 | Updates first load: skeleton rows, no spinner |
+| `Q9SettingsAdvanced` / `ColourQ9SettingsAdvanced` | Q9 | Rare options folded into one Advanced tile per settings screen |
+| `AnimeShelves` / `ColourAnimeShelves` | A2.4 | Anime shelf management, separate from book shelves (owner decision) |
+| `AnimeDebug` | A1.5 | Debug-only anime test screen: repo → extension → source → episode → play |
+
+The Q9 / Anime boards (added 2026-11-06 by Claude) are **static HTML** (`<Board>.html`, open in any browser) with
+the notes in a column beside the phone; `make_boards.py <dir>` regenerates them (Dot and Colour from one template).
+Anime library / home / details / browse / player boards are in `../png/10-anime/` (use the new nav from Q5 on them).
+Boards for X/Y cards are in `../INDEX.md`; cards with no UI (Q8 sweep, X1, Y1, Y4) need none.
 
 Rules for reading the boards:
 - Sample text and numbers are the owner's real data from the phone (Lord of the Mysteries, ch. 33, 1,432 chapters).

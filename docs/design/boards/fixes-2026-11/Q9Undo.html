@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Library — undo instead of confirm</title>
+<!-- Board for docs/HANDOFF.md. Static HTML (no canvas runtime). Colours here are illustrations of
+     TsuzukiTheme.tokens; build with tokens + MaterialTheme.typography, never these hex values.
+     Card Q9. Snackbar sits above the nav pill (or above the selection bar). -->
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#2a2a2a;display:flex;width:640px}
+.side{width:250px;box-sizing:border-box;padding:20px 16px;font:400 12px/1.45 'Space Mono',monospace;color:#cfe8ff}
+.side h2{font:700 13px/1.3 'Space Mono',monospace;margin:0 0 10px;color:#fff}
+.side li{margin-bottom:10px}
+.ph{width:390px;height:844px;position:relative;overflow:hidden;background:#000;background-image:radial-gradient(#1C1C1C 1px,transparent 1.2px);background-size:12px 12px;background-position:6px 6px;font-family:'Space Mono',monospace;color:#fff;text-transform:uppercase;}
+.h1{font:900 40px/1 'Doto',monospace;letter-spacing:1px;margin:0}
+.muted{color:#8A8A8A;font:400 12px/1.4 'Space Mono',monospace;letter-spacing:.4px}
+.lbl{font:700 11px/1 'Space Mono',monospace;letter-spacing:1px;color:#8A8A8A}
+.tile{background:#111;border:1px solid #2A2A2A;border-radius:20px;box-sizing:border-box}
+.pill{height:40px;padding:0 16px;border-radius:20px;border:1px solid #2A2A2A;background:#111;color:#fff;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;box-sizing:border-box}
+.pill.on{background:#FF2D2D;border-color:#FF2D2D;color:#fff}
+.ib{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;flex:none}
+.row{min-height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;box-sizing:border-box}
+.row+.row{border-top:1px solid #2A2A2A}
+.t{font:700 14px/1.3 'Space Mono',monospace;letter-spacing:.4px}
+.s{font:400 12px/1.35 'Space Mono',monospace;color:#8A8A8A;letter-spacing:.3px;text-transform:none}
+.btn{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:10px;font:700 14px/1 'Space Mono',monospace;letter-spacing:1px;box-sizing:border-box}
+.btn.p{background:#FF2D2D;color:#fff}
+.btn.o{border:1px solid #2A2A2A;color:#fff}
+.nav{position:absolute;left:16px;right:16px;bottom:20px;height:62px;border-radius:31px;background:#111;border:1px solid #2A2A2A;box-sizing:border-box;padding:0 6px;display:flex;align-items:center}
+.nav span{flex:1;text-align:center;font:700 11px/1 'Space Mono',monospace;letter-spacing:.6px;color:#8A8A8A;position:relative}
+.ann{position:absolute;right:8px;font:400 10px/1.3 'Space Mono',monospace;color:#7CF;text-transform:none;background:rgba(0,0,0,.7);padding:3px 6px;border-radius:4px;max-width:180px}
+</style></head><body>
+<div class="ph"><div style="padding:20px 8px 0 20px;display:flex;align-items:center">
+  <h1 class="h1" style="flex:1">Library</h1><div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div><div class="ib"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M7 12h10M10 18h4"/></svg></div><div class="ib"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></div></div>
+<div style="padding:6px 20px 0" class="muted">4 novels · 141 manga</div>
+<div style="padding:14px 16px 0;display:flex;gap:8px"><span class="pill on">All</span><span class="pill">Novels</span><span class="pill">Manga</span></div>
+<div style="padding:10px 16px 0;display:flex;gap:8px"><span class="pill" style="background:#fff;color:#000;border-color:#fff">Default <span style="font-weight:400;opacity:.7">143</span></span><span class="pill">Local <span style="font-weight:400;opacity:.7">0</span></span></div>
+<div style="padding:16px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px"><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#2B2B2B;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Shadow Slave</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#3A3A3A;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Circle of Inevitability</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#232323;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Nano Machine</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#333333;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">The Academy's Genius Swordsman</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#292929;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Overgeared</div></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+  <div style="position:relative;aspect-ratio:2/3;border-radius:14px;background:#3E3E3E;"></div>
+  <div style="font:700 11px/1.35 'Space Mono',monospace;letter-spacing:.6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Solo Leveling</div></div></div>
+<div style="position:absolute;left:16px;right:16px;bottom:96px;min-height:56px;border-radius:16px;background:#fff;color:#000;display:flex;align-items:center;padding:0 8px 0 18px;box-sizing:border-box;gap:8px;overflow:hidden">
+  <div style="flex:1;font:700 13px/1.3 'Space Mono',monospace;letter-spacing:.4px;text-transform:none">2 books removed from library</div>
+  <div style="height:48px;padding:0 14px;display:flex;align-items:center;font:700 13px/1 'Space Mono',monospace;letter-spacing:1px;color:#FF2D2D;border-radius:24px">UNDO</div>
+  <div style="position:absolute;left:0;bottom:0;height:3px;width:62%;background:#FF2D2D"></div></div>
+<div class="nav"><div style="position:absolute;left:75px;top:6px;width:69px;height:48px;border-radius:24px;background:#fff"></div><span>Home</span><span style="color:#000">Library</span><span>Updates</span><span>Browse</span><span>More</span></div>
+</div>
+<div class="side"><h2>Library — undo instead of confirm</h2><ul style="padding-left:16px;margin:0"><li>After Remove / Delete downloads / Mark read: no confirm dialog. Action runs, snackbar offers UNDO for 6 s (bar = time left). TalkBack: announced, stays until dismissed</li></ul><p style="color:#9ab">Card Q9. Snackbar sits above the nav pill (or above the selection bar).</p></div>
+</body></html>
