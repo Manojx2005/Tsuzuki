@@ -39,7 +39,9 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 - Q1 review + merge into `main`, then rebasing `tsuzuki/q5` onto it (Codex: skip Q5 until it says `ready`).
 - Overnight: every ~2 h Claude reviews cards that reached `review`, builds (only when Codex isn't building),
-  device-checks on the tablet + S22, merges good cards into `main` locally and pushes. Codex never waits on this.
+  device-checks on the tablet + S22 **with the preview build** (`.debug`; the owner's `.dev` data is never used for
+  card builds; backup before data-changing cards Q4/Q12; A2.2 only in a temporary `.scratch` install), merges good
+  cards into `main` locally and pushes main. Codex never waits on this.
 
 ## Codex queue
 
@@ -127,8 +129,9 @@ X2 (tablet Updates two-pane) was dropped: Claude saw it already built on the tab
 
 **Optional second Codex thread (anime lane):** the anime rows (14–17) touch only new anime files, a debug entry
 and the new migration, so the owner may run them in a **second** thread at the same time. Prompt: same as above
-but "do only rows 14–17 of the table, in order". Thread 1 then skips rows 14–17 if they're claimed. Both threads:
-one Gradle build each at most.
+but "do only rows 14–17 of the table, in order". **If a second thread is open, thread 1 skips rows 14–17
+entirely** (claimed or not). Both threads: one Gradle build each at most (with two threads, Claude's overnight
+reviews mostly wait for the morning because of the two-build limit).
 
 Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build + device table).
 
