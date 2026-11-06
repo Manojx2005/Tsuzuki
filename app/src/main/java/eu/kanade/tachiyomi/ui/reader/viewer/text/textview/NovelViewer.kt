@@ -26,6 +26,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.tsuzuki.reader.keepGlyphOverhangVisible
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -1773,6 +1774,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         // Drop the font's leading pad on the first/last line so spacing matches the WebView, which
         // has no such padding.
         textView.includeFontPadding = false
+        textView.keepGlyphOverhangVisible()
 
         textView.typeface = when {
             // Tsuzuki: bundled Literata (res/font/lnr_literata.ttf).

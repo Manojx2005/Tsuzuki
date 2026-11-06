@@ -70,7 +70,7 @@ internal class NovelTextRenderer(
                     val cleanHtmlContent = normalizeHtmlForRendering(processedContent)
                     Html.fromHtml(cleanHtmlContent, Html.FROM_HTML_MODE_LEGACY, imageGetter, null)
                 }
-                SpannableStringBuilder(spanned).let { if (rawHtmlMode) it else it.removeBlankLines() }
+                SpannableStringBuilder(spanned).let { if (rawHtmlMode || paragraphSpacing <= 0f) it else it.removeBlankLines() }
             }
 
             val spacingPx = (paragraphSpacing * fontSize * density).toInt()

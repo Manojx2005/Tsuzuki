@@ -6,7 +6,8 @@ import android.text.SpannableStringBuilder
  * `Html.fromHtml(FROM_HTML_MODE_LEGACY)` ends every `<p>` with two line breaks, and `&nbsp;`-only paragraphs
  * become further empty lines. Each empty line costs a full line height and also receives the paragraph-spacing
  * span, so paragraphs ended up about three lines apart. Removing blank lines leaves the reader's
- * paragraph-spacing setting as the only gap between paragraphs.
+ * paragraph-spacing setting as the only gap between paragraphs. Only used when that setting is above 0: at 0 the
+ * book's own blank lines are the only separation, so they stay.
  */
 internal fun SpannableStringBuilder.removeBlankLines(): SpannableStringBuilder {
     blankLineRanges(this).asReversed().forEach { (start, end) -> delete(start, end) }
