@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
@@ -130,13 +131,16 @@ private fun RowScope.SelectionButton(action: SelectionAction) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically),
         ) {
-            Icon(action.icon, null, Modifier.size(20.dp))
+            Icon(action.icon, null, Modifier.size(20.dp), tint = TsuzukiTheme.tokens.dotOn)
             Text(
                 tsuzukiMenuLabel(action.shortTitle),
                 modifier = Modifier.clearAndSetSemantics {},
-                style = MaterialTheme.typography.labelSmall,
+                // No extra tracking: "MARK READ" must fit a fifth of a 360 dp screen on one line.
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, letterSpacing = 0.sp),
+                // Board Q9Selection: labels in full ink, one line each.
+                color = TsuzukiTheme.tokens.dotOn,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }

@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -60,7 +61,6 @@ import eu.kanade.presentation.reader.settings.NovelAutoSplitSettings
 import eu.kanade.presentation.reader.settings.NovelControlsTab
 import eu.kanade.presentation.reader.settings.NovelFontSetting
 import eu.kanade.presentation.reader.settings.NovelIndividualMargins
-import eu.kanade.presentation.reader.settings.NovelParagraphSettings
 import eu.kanade.presentation.reader.settings.NovelStatusBarSettings
 import eu.kanade.presentation.reader.settings.NovelTtsTab
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
@@ -109,16 +109,17 @@ internal fun TsuzukiAllReaderSettings(viewModel: ReaderSettingsViewModel, onBack
                     Text(
                         tsuzukiMenuLabel(stringResource(MR.strings.tsz_q11_all)),
                         Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     TextButton(onClick = { reset = true }) {
                         Text(tsuzukiMenuLabel(stringResource(MR.strings.action_reset)))
                     }
                 }
-                ReaderChoices(
+                ReaderTabs(
                     labels = NovelSettingsTab.entries.map { stringResource(it.label) },
                     selected = tab.ordinal,
-                    role = Role.Tab,
                     onSelect = { tab = NovelSettingsTab.entries[it] },
                 )
                 val labelTransform: (String) -> String = { if (tokens.isDot) it.uppercase() else it }
@@ -136,7 +137,7 @@ internal fun TsuzukiAllReaderSettings(viewModel: ReaderSettingsViewModel, onBack
                                         ReaderPreview(preferences, activity)
                                     }
                                     ReaderPreferenceGroup.PARAGRAPHS -> FineTune {
-                                        NovelParagraphSettings(viewModel)
+                                        ReaderParagraphSettings(preferences)
                                         NovelAutoSplitSettings(viewModel)
                                     }
                                     ReaderPreferenceGroup.COLOURS -> TsuzukiPageColourPicker(preferences)
@@ -300,6 +301,55 @@ private fun LinkedMarginControl(label: String, first: Preference<Int>, second: P
             second.set(it)
         },
         displayValue = formatReaderMargins(firstValue, secondValue),
+    )
+}
+
+/** The five settings tabs in one row of equal segments: they must never wrap onto a second line (card Q14). */
+@Composable
+private fun ReaderTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    val tokens = TsuzukiTheme.tokens
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp).selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        labels.forEachIndexed { index, label ->
+            val active = index == selected
+            Text(
+                tsuzukiMenuLabel(label),
+                Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    .background(if (active) tokens.accent else tokens.tile)
+                    .selectable(active, role = Role.Tab, onClick = { onSelect(index) })
+                    .heightIn(min = 48.dp).padding(horizontal = 2.dp, vertical = 15.dp),
+                color = if (active) tokens.onAccent else MaterialTheme.colorScheme.onSurface,
+                // labelSmall: "CONTROLS" must fit a fifth of a 360 dp screen without an ellipsis.
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Paragraph indent and spacing with their unit (stored in em; Tsundoku's stepper showed tenths with no unit). */
+@Composable
+private fun ReaderParagraphSettings(preferences: ReaderPreferences) {
+    EmStepper(stringResource(TDMR.strings.pref_novel_paragraph_indent), preferences.novelParagraphIndent, 0..100)
+    EmStepper(stringResource(TDMR.strings.pref_novel_paragraph_spacing), preferences.novelParagraphSpacing, 0..30)
+}
+
+@Composable
+private fun EmStepper(label: String, pref: Preference<Float>, range: IntRange) {
+    val value by pref.collectAsState()
+    val locale = LocalConfiguration.current.locales[0]
+    val tenths = (value * 10).roundToInt()
+    StepperItem(
+        label = label,
+        value = tenths,
+        onChange = { pref.set(it / 10f) },
+        valueRange = range,
+        defaultValue = (pref.defaultValue() * 10).roundToInt(),
+        displayValue = formatReaderEm(tenths, locale),
     )
 }
 

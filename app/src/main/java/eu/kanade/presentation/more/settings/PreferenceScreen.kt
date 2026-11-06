@@ -88,12 +88,16 @@ fun PreferenceScreen(
                         }
                     }
                     val groupItems = preference.preferenceItems
+                    // Disabled items are hidden (StatusWrapper), so round the first/last *shown* rows.
+                    val firstShown = groupItems.indexOfFirst { it.enabled }
+                    val lastShown = groupItems.indexOfLast { it.enabled }
                     itemsIndexed(groupItems) { index, item ->
                         if (tsuzuki) {
+                            if (!item.enabled) return@itemsIndexed
                             androidx.compose.foundation.layout.Box(
                                 eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile(
-                                    first = index == 0,
-                                    last = index == groupItems.lastIndex,
+                                    first = index == firstShown,
+                                    last = index == lastShown,
                                 ),
                             ) {
                                 PreferenceItem(item = item, highlightKey = highlightKey)

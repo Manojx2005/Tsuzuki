@@ -237,7 +237,9 @@ private fun ChoiceTile(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            cased(label),
+            // Font tiles show the face's own name in its own face (like the "Aa" page swatches); upper-casing
+            // a wide serif such as LITERATA overflowed the tile at 360 dp (card Q14).
+            if (fontFamily != null) label else cased(label),
             // The font tiles preview their own face; the rest follow the theme.
             style = if (fontFamily != null) {
                 MaterialTheme.typography.bodyMedium.copy(fontFamily = fontFamily)
@@ -246,8 +248,9 @@ private fun ChoiceTile(
             },
             fontWeight = FontWeight.SemiBold,
             color = if (selected) tokens.background else MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
+            maxLines = if (fontFamily != null) 1 else 2,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 6.dp),
         )
     }
 }

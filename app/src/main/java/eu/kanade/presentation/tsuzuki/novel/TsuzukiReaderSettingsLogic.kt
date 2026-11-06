@@ -36,6 +36,9 @@ internal fun formatReaderSize(size: Int): String = "$size sp"
 internal fun formatReaderSpacing(tenths: Int, locale: Locale): String =
     String.format(locale, "%.1f×", tenths / 10f)
 
+/** Paragraph indent and spacing are stored in em (multiples of the text size), edited in tenths. */
+internal fun formatReaderEm(tenths: Int, locale: Locale): String = String.format(locale, "%.1f em", tenths / 10f)
+
 internal fun formatReaderMargins(first: Int, second: Int): String =
     if (first == second) "$first dp" else "$first / $second dp"
 

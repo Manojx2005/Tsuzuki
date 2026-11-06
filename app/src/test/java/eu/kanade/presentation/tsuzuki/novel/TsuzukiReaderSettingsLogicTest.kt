@@ -21,6 +21,8 @@ class TsuzukiReaderSettingsLogicTest {
         formatReaderSize(13) shouldBe "13 sp"
         formatReaderSpacing(11, Locale.US) shouldBe "1.1×"
         formatReaderSpacing(20, Locale.GERMANY) shouldBe "2,0×"
+        formatReaderEm(5, Locale.US) shouldBe "0.5 em"
+        formatReaderEm(0, Locale.GERMANY) shouldBe "0,0 em"
     }
 
     @Test

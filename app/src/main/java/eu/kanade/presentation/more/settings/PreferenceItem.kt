@@ -87,8 +87,8 @@ internal fun PreferenceItem(
                     value = item.value,
                     valueRange = item.valueRange,
                     steps = item.steps,
-                    title = item.title,
-                    subtitle = item.subtitle,
+                    title = eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(item.title) ?: item.title,
+                    subtitle = item.subtitle?.let { eu.kanade.presentation.tsuzuki.settings.tsuzukiCase(it) ?: it },
                     valueString = item.valueString.takeUnless { it.isNullOrEmpty() } ?: item.value.toString(),
                     onChange = {
                         scope.launch {

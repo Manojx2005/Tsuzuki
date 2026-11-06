@@ -41,6 +41,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.i18n.MR
@@ -83,15 +84,9 @@ fun TsuzukiMixedLibraryGrid(
             Column(
                 modifier = Modifier
                     .clip(shape)
-                    .then(
-                        if (manga.id in
-                            selection
-                        ) {
-                            Modifier.background(tokens.accent.copy(alpha = 0.25f))
-                        } else {
-                            Modifier
-                        },
-                    )
+                    // Board Q9Selection: selected books keep full strength with an accent ring + check;
+                    // the others dim while a selection is active.
+                    .alpha(if (selection.isNotEmpty() && manga.id !in selection) 0.55f else 1f)
                     .tsuzukiClickable(
                         role = Role.Button,
                         onClick = { onClick(book) },
@@ -109,15 +104,7 @@ fun TsuzukiMixedLibraryGrid(
                             lastModified = manga.coverLastModified,
                             title = manga.title,
                         ),
-                        modifier = Modifier.fillMaxSize().tsuzukiSharedCover(manga.id).alpha(
-                            if (manga.id in
-                                selection
-                            ) {
-                                0.76f
-                            } else {
-                                1f
-                            },
-                        ),
+                        modifier = Modifier.fillMaxSize().tsuzukiSharedCover(manga.id),
                         shape = shape,
                     )
                     Text(
@@ -146,8 +133,10 @@ fun TsuzukiMixedLibraryGrid(
                         fontWeight = FontWeight.ExtraBold,
                         maxLines = 1,
                     )
-                    Box(Modifier.align(Alignment.TopEnd).padding(4.dp)) {
-                        UnreadBadge(item.badges.unreadCount)
+                    if (manga.id !in selection) {
+                        Box(Modifier.align(Alignment.TopEnd).padding(4.dp)) {
+                            UnreadBadge(item.badges.unreadCount)
+                        }
                     }
                     Row(
                         modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
@@ -168,6 +157,7 @@ fun TsuzukiMixedLibraryGrid(
                             Icon(Icons.Filled.PlayArrow, stringResource(MR.strings.action_resume))
                         }
                     }
+                    if (manga.id in selection) TsuzukiSelectedCover()
                 }
                 if (book.totalChapters > 0) {
                     TsuzukiProgressBar(

@@ -118,6 +118,7 @@ internal fun TsuzukiLibrarySelectionBar(
             stringResource(MR.strings.action_mark_as_read),
             Icons.Outlined.DoneAll,
             onMarkAsReadClicked,
+            shortTitle = stringResource(MR.strings.tsz_q9_mark_read),
         ),
         onDownloadClicked?.let {
             SelectionAction(
