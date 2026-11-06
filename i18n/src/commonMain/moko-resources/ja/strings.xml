@@ -1317,4 +1317,6 @@
     <string name="tsz_q9_pending_history_remove">選択した履歴を削除します</string>
     <string name="tsz_q9_selection_count">%d 件選択</string>
     <string name="tsz_q9_mark_read">既読にする</string>
+    <string name="tsz_x3_test_passed">テストに成功しました</string>
+    <string name="tsz_x3_test_failed">テストに失敗しました</string>
 </resources>

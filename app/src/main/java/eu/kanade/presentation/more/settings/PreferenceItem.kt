@@ -181,6 +181,7 @@ internal fun PreferenceItem(
                     subtitle = item.subtitle,
                     icon = item.icon,
                     value = values,
+                    sensitive = item.sensitive,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
                         if (accepted) item.preference.set(it)

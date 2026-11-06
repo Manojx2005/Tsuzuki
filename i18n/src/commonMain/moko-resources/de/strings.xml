@@ -1318,4 +1318,6 @@
     <string name="tsz_q9_pending_history_remove">Der ausgewählte Verlauf wird entfernt</string>
     <string name="tsz_q9_selection_count">%d ausgewählt</string>
     <string name="tsz_q9_mark_read">Gelesen</string>
+    <string name="tsz_x3_test_passed">Test erfolgreich</string>
+    <string name="tsz_x3_test_failed">Test fehlgeschlagen</string>
 </resources>

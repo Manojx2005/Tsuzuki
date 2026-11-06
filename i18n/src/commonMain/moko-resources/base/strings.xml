@@ -1682,4 +1682,6 @@
     <string name="tsz_q9_pending_history_remove">Selected history will be removed</string>
     <string name="tsz_q9_selection_count">%d selected</string>
     <string name="tsz_q9_mark_read">Mark read</string>
+    <string name="tsz_x3_test_passed">Test passed</string>
+    <string name="tsz_x3_test_failed">Test failed</string>
 </resources>

@@ -1317,4 +1317,6 @@
     <string name="tsz_q9_pending_history_remove">선택한 기록을 삭제합니다</string>
     <string name="tsz_q9_selection_count">%d개 선택됨</string>
     <string name="tsz_q9_mark_read">읽음 표시</string>
+    <string name="tsz_x3_test_passed">테스트 성공</string>
+    <string name="tsz_x3_test_failed">테스트 실패</string>
 </resources>

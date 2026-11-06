@@ -1318,4 +1318,6 @@
     <string name="tsz_q9_pending_history_remove">将删除选中的历史记录</string>
     <string name="tsz_q9_selection_count">已选 %d 项</string>
     <string name="tsz_q9_mark_read">标为已读</string>
+    <string name="tsz_x3_test_passed">测试通过</string>
+    <string name="tsz_x3_test_failed">测试失败</string>
 </resources>
