@@ -37,7 +37,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- Q1 review + merge into `main`, then rebasing `tsuzuki/q5` onto it (Codex: skip Q5 until it says `ready`).
+- **Q13 and Q14** (owner 2026-11-07: Codex works on the anime lane only; Claude fixes these). Codex: skip them.
 - Overnight: every ~2 h Claude reviews cards that reached `review`, builds (only when Codex isn't building),
   device-checks on the tablet + S22 **with the preview build** (`.debug`; the owner's `.dev` data is never used for
   card builds; backup before data-changing cards Q4/Q12; A2.2 only in a temporary `.scratch` install), merges good
@@ -664,7 +664,7 @@ side panel shows the listen controls (play/pause, speed, voice, sleep timer, par
 state mapping.
 Result: _pending_
 
-#### Q13 Novel next chapter: instant, never a blank page (T3) — `ready`
+#### Q13 Novel next chapter: instant, never a blank page (T3) — `claude-working` (owner 2026-11-07: Codex does anime, Claude fixes Q13/Q14)
 Owner 2026-11-07: "sometimes the novel reader lags before going to the next chapter." Measured on the S22
 (preview, Royal Road, TextView, infinite scroll off): tapping › Next shows a **blank black page for ~1.2 s**
 (`app/build/night3-evidence/next.mp4`, `next-strip.png`) while the chapter text is fetched from the network.
@@ -682,7 +682,7 @@ Owner 2026-11-07: "sometimes the novel reader lags before going to the next chap
 Hooks in `NovelViewer.kt` / `NovelWebViewViewer.kt` stay small (call into `tsuzuki/reader/`).
 Result: _pending_
 
-#### Q14 Design fixes from Claude's 2026-11-07 device pass (T2) — `ready`
+#### Q14 Design fixes from Claude's 2026-11-07 device pass (T2) — `claude-working` (Claude, 2026-11-07)
 Boards: `fixes-2026-11/` (ReaderQuick, ReaderAll, Q9Selection) and `INDEX.md` SettingsTranslation. Evidence:
 `app/build/night3-evidence/` (`reader-quick.png`, `reader-all.png`, `q9-selection.png`, `x3-translation.png`).
 Fix each, Dot then Colour, at 360 dp and font scale 1.3:
