@@ -1250,4 +1250,11 @@
     <string name="ext_content_warning_nsfw_description">Les sources de cette extension sont principalement axées sur du contenu 18+.</string>
     <string name="pref_apply_content_warnings_to_installed">Appliquer aussi aux extensions installées</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Désactivé, les extensions déjà installées continuent de se charger et de se mettre à jour quel que soit leur avertissement</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Personnalisé</string>
+    <string name="tsz_rs_custom_ink">Couleur du texte</string>
+    <string name="tsz_rs_custom_page">Couleur de fond</string>
+    <string name="tsz_appearance_dot_covers">Couvertures dans Dot</string>
+    <string name="tsz_appearance_covers_colour">En couleur</string>
+    <string name="tsz_appearance_legacy_themes">Les anciens thèmes de Mihon et Tsundoku utilisent désormais Colour.</string>
 </resources>

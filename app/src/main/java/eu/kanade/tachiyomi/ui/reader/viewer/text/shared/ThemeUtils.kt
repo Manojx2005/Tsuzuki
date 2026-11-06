@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.text.shared
 
 import android.app.Activity
+import eu.kanade.presentation.tsuzuki.novel.NovelPageColour
+import eu.kanade.tachiyomi.tsuzuki.BOOK_PAGE_THEME
+import eu.kanade.tachiyomi.tsuzuki.novelThemeFromStorage
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 
 object ThemeUtils {
@@ -14,8 +17,10 @@ object ThemeUtils {
         val backgroundColor = preferences.novelBackgroundColor.get()
         val fontColor = preferences.novelFontColor.get()
 
-        return when (theme) {
-            "app" -> eu.kanade.presentation.theme.tsuzuki.BookTint.forReader(activity) ?: run {
+        val pageTheme = novelThemeFromStorage(theme)
+        NovelPageColour.entries.firstOrNull { it.key == pageTheme }?.fixedColours?.let { return it }
+        return when (pageTheme) {
+            BOOK_PAGE_THEME -> eu.kanade.presentation.theme.tsuzuki.BookTint.forReader(activity) ?: run {
                 val typedValue = android.util.TypedValue()
                 val actTheme = activity.theme
                 val bgColor = if (actTheme.resolveAttribute(
@@ -52,14 +57,6 @@ object ThemeUtils {
                 }
                 bgColor to textColor
             }
-            "dark" -> 0xFF121212.toInt() to 0xFFE0E0E0.toInt()
-            "sepia" -> 0xFFF4ECD8.toInt() to 0xFF5B4636.toInt()
-            "black" -> 0xFF000000.toInt() to 0xFFCCCCCC.toInt()
-            "grey" -> 0xFF292832.toInt() to 0xFFCCCCCC.toInt()
-            // Tsuzuki reader sheet pages (ReaderSettings board)
-            "paper" -> 0xFFFAFAF7.toInt() to 0xFF1F2024.toInt()
-            "sage" -> 0xFFDDE5D6.toInt() to 0xFF25301F.toInt()
-            "night" -> 0xFF15140F.toInt() to 0xFFDED7C9.toInt()
             "custom" -> {
                 val bg = if (backgroundColor != 0) backgroundColor else 0xFFFFFFFF.toInt()
                 val text = if (fontColor != 0) fontColor else 0xFF000000.toInt()

@@ -1621,4 +1621,11 @@
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
     <string name="pref_apply_content_warnings_to_installed">Also apply to installed extensions</string>
     <string name="pref_apply_content_warnings_to_installed_summary">When off, extensions you already installed keep loading and updating regardless of their warning</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Custom</string>
+    <string name="tsz_rs_custom_ink">Text colour</string>
+    <string name="tsz_rs_custom_page">Background colour</string>
+    <string name="tsz_appearance_dot_covers">Covers in Dot</string>
+    <string name="tsz_appearance_covers_colour">In colour</string>
+    <string name="tsz_appearance_legacy_themes">Earlier Mihon and Tsundoku themes now use Colour.</string>
 </resources>

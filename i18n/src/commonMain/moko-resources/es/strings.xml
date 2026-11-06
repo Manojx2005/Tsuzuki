@@ -1244,4 +1244,11 @@
     <string name="ext_content_warning_nsfw_description">Las fuentes de esta extensión se centran principalmente en contenido +18.</string>
     <string name="pref_apply_content_warnings_to_installed">Aplicar también a las extensiones instaladas</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Si está desactivado, las extensiones que ya instalaste se seguirán cargando y actualizando sin importar su advertencia</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Personalizado</string>
+    <string name="tsz_rs_custom_ink">Color del texto</string>
+    <string name="tsz_rs_custom_page">Color de fondo</string>
+    <string name="tsz_appearance_dot_covers">Portadas en Dot</string>
+    <string name="tsz_appearance_covers_colour">En color</string>
+    <string name="tsz_appearance_legacy_themes">Los temas anteriores de Mihon y Tsundoku ahora usan Colour.</string>
 </resources>

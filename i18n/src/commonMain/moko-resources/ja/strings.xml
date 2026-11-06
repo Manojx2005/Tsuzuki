@@ -1256,4 +1256,11 @@
     <string name="ext_content_warning_nsfw_description">この拡張機能のソースは主に18+コンテンツを扱います。</string>
     <string name="pref_apply_content_warnings_to_installed">インストール済みの拡張機能にも適用</string>
     <string name="pref_apply_content_warnings_to_installed_summary">オフにすると、インストール済みの拡張機能は警告に関係なく読み込みと更新が行われます</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">カスタム</string>
+    <string name="tsz_rs_custom_ink">文字色</string>
+    <string name="tsz_rs_custom_page">背景色</string>
+    <string name="tsz_appearance_dot_covers">Dotの表紙</string>
+    <string name="tsz_appearance_covers_colour">カラー</string>
+    <string name="tsz_appearance_legacy_themes">従来のMihonとTsundokuのテーマはColourに切り替わります。</string>
 </resources>

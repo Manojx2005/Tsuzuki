@@ -1257,4 +1257,11 @@
     <string name="ext_content_warning_nsfw_description">Quellen dieser Erweiterung konzentrieren sich hauptsächlich auf 18+-Inhalte.</string>
     <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihrer Warnung weiter geladen und aktualisiert</string>
+    <!-- Q12 -->
+    <string name="tsz_rs_page_custom">Benutzerdefiniert</string>
+    <string name="tsz_rs_custom_ink">Textfarbe</string>
+    <string name="tsz_rs_custom_page">Hintergrundfarbe</string>
+    <string name="tsz_appearance_dot_covers">Cover in Dot</string>
+    <string name="tsz_appearance_covers_colour">Farbig</string>
+    <string name="tsz_appearance_legacy_themes">Ältere Mihon- und Tsundoku-Themen verwenden jetzt Colour.</string>
 </resources>

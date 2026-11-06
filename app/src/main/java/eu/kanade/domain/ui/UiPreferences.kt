@@ -5,6 +5,8 @@ import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
+import eu.kanade.tachiyomi.tsuzuki.APP_THEME_KEY
+import eu.kanade.tachiyomi.tsuzuki.appThemeFromStorage
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -20,9 +22,11 @@ class UiPreferences(
 
     val themeMode: Preference<ThemeMode> = preferenceStore.getEnum("pref_theme_mode_key", ThemeMode.SYSTEM)
 
-    val appTheme: Preference<AppTheme> = preferenceStore.getEnum(
-        "pref_app_theme",
-        AppTheme.COLOUR,
+    val appTheme: Preference<AppTheme> = preferenceStore.getObjectFromString(
+        key = APP_THEME_KEY,
+        defaultValue = AppTheme.COLOUR,
+        serializer = { appThemeFromStorage(it.name).name },
+        deserializer = ::appThemeFromStorage,
     )
 
     val themeDarkAmoled: Preference<Boolean> = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)

@@ -7,6 +7,9 @@ import eu.kanade.presentation.reader.DefaultStatusBarOrder
 import eu.kanade.presentation.reader.appbars.DefaultBottomBarItems
 import eu.kanade.presentation.reader.appbars.serialize
 import eu.kanade.presentation.reader.serializeStatusBarOrder
+import eu.kanade.tachiyomi.tsuzuki.BOOK_PAGE_THEME
+import eu.kanade.tachiyomi.tsuzuki.NOVEL_THEME_KEY
+import eu.kanade.tachiyomi.tsuzuki.novelThemeFromStorage
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -232,7 +235,12 @@ class ReaderPreferences(
     // region Novel
     val novelFontSize: Preference<Int> = preferenceStore.getInt("pref_novel_font_size", 16)
     val novelFontFamily: Preference<String> = preferenceStore.getString("pref_novel_font_family", "literata")
-    val novelTheme: Preference<String> = preferenceStore.getString("pref_novel_theme", "app")
+    val novelTheme: Preference<String> = preferenceStore.getObjectFromString(
+        key = NOVEL_THEME_KEY,
+        defaultValue = BOOK_PAGE_THEME,
+        serializer = ::novelThemeFromStorage,
+        deserializer = ::novelThemeFromStorage,
+    )
     val novelLineHeight: Preference<Float> = preferenceStore.getFloat("pref_novel_line_height", 1.6f)
     val novelTextAlign: Preference<String> = preferenceStore.getString("pref_novel_text_align", "left")
 
