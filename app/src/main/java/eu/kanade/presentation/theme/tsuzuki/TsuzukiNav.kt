@@ -1,13 +1,19 @@
 package eu.kanade.presentation.theme.tsuzuki
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,22 +36,32 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.tachiyomi.R
@@ -68,94 +84,100 @@ data class TsuzukiNavItem(
     val onClick: () -> Unit,
 )
 
-private val DotNavMuted = Color(0xFF9A9A9A)
-private val DotRailMuted = Color(0xFF8A8A8A)
+/** Fixed cells keep tab changes out of measurement; only the shared indicator layer moves. */
+internal fun navIndicatorOffset(index: Int, count: Int, cellExtent: Float, reverse: Boolean = false): Float =
+    if (index !in 0 until count) 0f else index * cellExtent * if (reverse) -1f else 1f
+
+internal fun navHighlightedIndex(position: Float, count: Int, cellExtent: Float = 1f, reverse: Boolean = false): Int =
+    if (cellExtent <= 0f) -1 else highlightedSegment(position / cellExtent * if (reverse) -1f else 1f, count)
+
+/** All rail cells share enough room for the icon, gap and tallest scaled label. */
+internal fun railCellHeight(labelHeightDp: Float): Float = maxOf(60f, 32f + 4f + labelHeightDp)
+
+internal fun navIndicatorSpec(reduced: Boolean): FiniteAnimationSpec<Float> = if (reduced) {
+    snap()
+} else {
+    spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
+}
 
 /** Floating pill bottom bar for phones. */
 @Composable
 fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(31.dp)
-    Row(
+    val selectedIndex = items.indexOfFirst { it.selected }
+    val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val position = animateFloatAsState(
+        targetValue = navIndicatorOffset(selectedIndex, items.size, 1f, reverse),
+        animationSpec = navIndicatorSpec(rememberReduceMotion()),
+        label = "navIndicator",
+    )
+    val highlightedIndex by remember(position, items.size, reverse) {
+        derivedStateOf { navHighlightedIndex(position.value, items.size, reverse = reverse) }
+    }
+    BoxWithConstraints(
         modifier = modifier
             .navigationBarsPadding()
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .fillMaxWidth()
             .height(62.dp)
             .clip(shape)
-            .then(
-                if (t.isDot) {
-                    Modifier.background(Color(0xFF111111)).border(1.dp, Color(0xFF2A2A2A), shape)
-                } else {
-                    // Solid, never see-through: the book colour darkened (board "Nav").
-                    Modifier.background(
-                        Color.Black.copy(alpha = 0.45f).compositeOver(t.background.takeOrElse(Color.Black)),
-                    )
-                },
-            )
+            .background(t.tile.compositeOver(t.background))
+            .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
             .padding(horizontal = 7.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.CenterStart,
     ) {
-        items.forEach { item -> NavBarItem(item) }
+        if (items.isNotEmpty()) {
+            val cellWidth = maxWidth / items.size
+            if (selectedIndex >= 0) {
+                Box(
+                    Modifier
+                        .width(cellWidth)
+                        .height(48.dp)
+                        .graphicsLayer {
+                            translationX = position.value * cellWidth.toPx()
+                        }
+                        .background(t.dotOn, RoundedCornerShape(24.dp)),
+                )
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                items.forEachIndexed { index, item ->
+                    NavBarItem(item, selectedIndex >= 0 && index == highlightedIndex, Modifier.weight(1f))
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun NavBarItem(item: TsuzukiNavItem) {
+private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Modifier = Modifier) {
     val t = TsuzukiTheme.tokens
-    val pill = RoundedCornerShape(24.dp)
-    val base = Modifier
-        .height(48.dp)
-        .clip(pill)
-        .selectable(selected = item.selected, role = Role.Tab, onClick = item.onClick)
-        .semantics { contentDescription = item.label }
-        .animateContentSize()
-
-    if (t.isDot) {
-        val showBadge = item.badge > 0 && !item.selected
-        val text = if (showBadge) "${item.shortLabel} ${item.badge}" else item.shortLabel
-        Box(
-            base
-                .then(if (item.selected) Modifier.background(Color.White) else Modifier)
-                .padding(horizontal = if (item.selected) 18.dp else 9.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = text,
-                style = navLabel(MaterialTheme.typography.labelLarge, dot = true),
-                color = when {
-                    item.selected -> Color.Black
-                    item.badge > 0 -> t.accent
-                    else -> DotNavMuted
-                },
-                maxLines = 1,
+    val interactions = remember { MutableInteractionSource() }
+    Box(
+        modifier
+            .height(48.dp)
+            .selectable(
+                selected = item.selected,
+                role = Role.Tab,
+                onClick = item.onClick,
+                interactionSource = interactions,
+                indication = null,
             )
-        }
-    } else {
-        Row(
-            base
-                .then(
-                    if (item.selected) {
-                        Modifier.background(Color.White).padding(horizontal = 16.dp)
-                    } else {
-                        Modifier.width(48.dp)
-                    },
-                ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val tint = if (item.selected) t.background.takeOrElse(Color.Black) else Color.White.copy(alpha = 0.8f)
-            BadgedIcon(item, tint, size = if (item.selected) 20 else 22)
-            if (item.selected) {
-                Text(
-                    text = item.label,
-                    style = navLabel(MaterialTheme.typography.labelLarge, dot = false),
-                    color = tint,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            .semantics { contentDescription = item.label },
+        contentAlignment = Alignment.Center,
+    ) {
+        // Clip the ripple only, so an unread badge is not cut by the cell's rounded corner.
+        Box(Modifier.matchParentSize().clip(RoundedCornerShape(24.dp)).indication(interactions, ripple()))
+        Text(
+            text = if (t.isDot) item.shortLabel else item.label,
+            style = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot),
+            color = if (highlighted) t.background else t.dotOn.copy(alpha = 0.7f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 2.dp),
+        )
+        if (item.badge > 0 && !item.selected) {
+            NavBadge(item.badge, Modifier.align(Alignment.TopEnd))
         }
     }
 }
@@ -176,10 +198,10 @@ fun TsuzukiRail(
             .then(
                 if (t.isDot) {
                     Modifier
-                        .background(Color(0xFF070707))
-                        .drawRightBorder(Color(0xFF222222))
+                        .background(t.background)
+                        .drawRightBorder(t.tileBorder ?: t.track)
                 } else {
-                    Modifier.background(Color.Black.copy(alpha = 0.2f))
+                    Modifier.background(t.tile.compositeOver(t.background))
                 },
             )
             .systemBarsPadding()
@@ -196,7 +218,7 @@ fun TsuzukiRail(
                 .clip(logoShape)
                 .then(
                     if (t.isDot) {
-                        Modifier.background(Color.Black).border(1.dp, Color(0xFF333333), logoShape)
+                        Modifier.background(t.background).border(1.dp, t.track, logoShape)
                     } else {
                         Modifier.background(t.accent)
                     },
@@ -227,9 +249,9 @@ fun TsuzukiRail(
                 .clip(fabShape)
                 .then(
                     if (t.isDot) {
-                        Modifier.border(1.dp, Color(0xFF333333), fabShape)
+                        Modifier.border(1.dp, t.track, fabShape)
                     } else {
-                        Modifier.background(Color.White.copy(alpha = 0.12f))
+                        Modifier.background(t.dotOn.copy(alpha = 0.12f))
                     },
                 )
                 .clickable(role = Role.Button, onClick = onSearch),
@@ -238,12 +260,47 @@ fun TsuzukiRail(
             Icon(
                 Icons.Outlined.Search,
                 contentDescription = stringResource(MR.strings.tsz_search),
-                tint = Color.White,
+                tint = t.dotOn,
                 modifier = Modifier.size(22.dp),
             )
         }
 
-        items.forEach { item -> RailItem(item) }
+        val labelStyle = railLabelStyle(t.isDot)
+        val textMeasurer = rememberTextMeasurer()
+        val labelHeightPx = items.maxOfOrNull {
+            textMeasurer.measure(
+                text = AnnotatedString(if (t.isDot) it.label.uppercase() else it.label),
+                style = labelStyle,
+                maxLines = 1,
+            ).size.height
+        } ?: 0
+        val cellHeight = with(LocalDensity.current) { railCellHeight(labelHeightPx.toDp().value).dp }
+        val cellExtent = cellHeight.value + 10f
+        val selectedIndex = items.indexOfFirst { it.selected }
+        val position = animateFloatAsState(
+            targetValue = navIndicatorOffset(selectedIndex, items.size, cellExtent),
+            animationSpec = navIndicatorSpec(rememberReduceMotion()),
+            label = "railIndicator",
+        )
+        val highlightedIndex by remember(position, items.size, cellExtent) {
+            derivedStateOf { navHighlightedIndex(position.value, items.size, cellExtent) }
+        }
+        Box(Modifier.fillMaxWidth()) {
+            if (selectedIndex >= 0) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .size(width = 56.dp, height = 32.dp)
+                        .graphicsLayer { translationY = position.value.dp.toPx() }
+                        .background(t.accent, RoundedCornerShape(16.dp)),
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items.forEachIndexed { index, item ->
+                    RailItem(item, selectedIndex >= 0 && index == highlightedIndex, cellHeight, labelStyle)
+                }
+            }
+        }
 
         Spacer(Modifier.weight(1f))
         Box(
@@ -256,7 +313,7 @@ fun TsuzukiRail(
             Icon(
                 Icons.Outlined.Settings,
                 contentDescription = stringResource(MR.strings.tsz_settings),
-                tint = if (t.isDot) DotRailMuted else Color.White.copy(alpha = 0.7f),
+                tint = t.dotOn.copy(alpha = 0.7f),
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -264,39 +321,27 @@ fun TsuzukiRail(
 }
 
 @Composable
-private fun RailItem(item: TsuzukiNavItem) {
+private fun RailItem(item: TsuzukiNavItem, highlighted: Boolean, cellHeight: Dp, labelStyle: TextStyle) {
     val t = TsuzukiTheme.tokens
-    val muted = if (t.isDot) DotRailMuted else Color.White.copy(alpha = 0.7f)
-    val labelColor by animateColorAsState(if (item.selected) Color.White else muted, label = "railLabel")
-    val pillColor by animateColorAsState(if (item.selected) t.accent else Color.Transparent, label = "railPill")
+    val labelColor = t.dotOn.copy(alpha = if (highlighted) 1f else 0.7f)
     Column(
         Modifier
-            .heightIn(min = 60.dp)
+            .height(cellHeight)
             .fillMaxWidth()
             .selectable(selected = item.selected, role = Role.Tab, onClick = item.onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(
             Modifier
-                .size(width = 56.dp, height = 32.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(pillColor),
+                .size(width = 56.dp, height = 32.dp),
             contentAlignment = Alignment.Center,
         ) {
-            BadgedIcon(item, if (item.selected) t.onAccent else labelColor, size = 22)
+            BadgedIcon(item, if (highlighted) t.onAccent else labelColor, size = 22)
         }
         Text(
             text = if (t.isDot) item.label.uppercase() else item.label,
-            style = if (t.isDot) {
-                MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    letterSpacing = 1.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            } else {
-                MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            },
+            style = labelStyle,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -306,38 +351,46 @@ private fun RailItem(item: TsuzukiNavItem) {
 }
 
 @Composable
+private fun railLabelStyle(dot: Boolean): TextStyle = if (dot) {
+    MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+} else {
+    MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold)
+}
+
+@Composable
 private fun BadgedIcon(item: TsuzukiNavItem, tint: Color, size: Int) {
-    val t = TsuzukiTheme.tokens
     Box {
         Icon(item.icon, contentDescription = null, tint = tint, modifier = Modifier.size(size.dp))
         if (item.badge > 0 && !item.selected) {
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 10.dp, y = (-6).dp)
-                    .heightIn(min = 16.dp)
-                    .clip(CircleShape)
-                    .background(if (t.isDot) t.accent else Color(0xFFFF8A70))
-                    .padding(horizontal = 4.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = if (item.badge > 99) "99+" else item.badge.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                    color = Color.White,
-                )
-            }
+            NavBadge(item.badge, Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-6).dp))
         }
     }
 }
 
-private fun navLabel(base: TextStyle, dot: Boolean): TextStyle = if (dot) {
-    base.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-} else {
-    base.copy(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
+@Composable
+private fun NavBadge(count: Int, modifier: Modifier = Modifier) {
+    val t = TsuzukiTheme.tokens
+    Box(
+        modifier
+            .heightIn(min = 16.dp)
+            .clip(CircleShape)
+            .background(t.accent)
+            .padding(horizontal = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = if (count > 99) "99+" else count.toString(),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+            color = t.onAccent,
+        )
+    }
 }
 
-private fun Color.takeOrElse(other: Color) = if (this == Color.Unspecified) other else this
+private fun navLabel(base: TextStyle, dot: Boolean): TextStyle = if (dot) {
+    base.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp)
+} else {
+    base.copy(fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+}
 
 private fun Modifier.drawRightBorder(color: Color) = this.then(
     Modifier.drawBehind {

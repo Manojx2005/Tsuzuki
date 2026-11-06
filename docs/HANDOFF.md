@@ -89,7 +89,7 @@ time; put the rest in an overflow menu or a "More" sheet; never let a row scroll
 tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
 case, Doto only for short headings and numbers.
 
-#### Q1 Smooth motion in Dot (T3) — `ready`
+#### Q1 Smooth motion in Dot (T3) — `review` (C:/Users/Manoj/Tsuzuki/.worktrees/q1, 2026-11-06)
 Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
 p50 5 ms at 120 Hz) — the lag is **designed in**:
 1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible
@@ -110,6 +110,39 @@ p50 5 ms at 120 Hz) — the lag is **designed in**:
 Keep Reduce motion behaviour. Tests: `stepped` / motion-spec selection unit tests updated.
 Device check (Claude): record `dumpsys gfxinfo framestats` + screen recording for sheet open/close, tab switch,
 home stack swipe, book open, before/after.
+
+
+**Result (2026-11-06, Codex; worktree `.worktrees/q1`):**
+- `theme/tsuzuki/TsuzukiMotion.kt`: smooth shared tween; discrete fills require their dot count; reduced motion stays short.
+- `theme/tsuzuki/TsuzukiModalBottomSheet.kt`: smooth Dot enter/exit curves, existing reduced fade retained.
+- `theme/tsuzuki/TsuzukiNav.kt`: equal fixed phone cells and one spring-translated indicator per bar/rail; token colours, RTL, reduced snap, badge overlays.
+- `theme/tsuzuki/TsuzukiComponents.kt`: cache one density-sized dot tile and repeat its ImageShader on redraw.
+- `theme/tsuzuki/TsuzukiSegments.kt`: defer indicator position to graphicsLayer; derived midpoint changes preserve text contrast without per-frame recomposition.
+- `theme/tsuzuki/TsuzukiSharedCover.kt`: correct stale stepped-motion comment; existing smooth layer implementation retained.
+- `tsuzuki/home/TsuzukiCoverStack.kt`: defer animated depth to placement instead of recomposition.
+- `tsuzuki/novel/TsuzukiReaderContents.kt`: drawer translation in graphicsLayer; short fade without translation when reduced.
+- `tsuzuki/onboarding/TsuzukiOnboardingScreen.kt`: smooth Dot step transitions.
+- `tsuzuki/startup/TsuzukiStartup.kt`: smooth logo flight and observe app/system Reduce motion.
+- `res/anim/tsuzuki_reader_behind_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_enter_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_exit_dot.xml`: removed unreferenced stepped animation.
+- `res/anim/tsuzuki_reader_return_dot.xml`: removed unreferenced stepped animation.
+- `TsuzukiMotionTest.kt`: 12 cases (4 added), covering explicit dot counts, easing bounds, smooth spec and reduced spec.
+- `TsuzukiNavIndicatorTest.kt`: 8 new cases for cell offsets, rail gaps, RTL, invalid selection, reduced spec, scaled rail height and animated tint midpoint.
+- `TsuzukiSegmentsTest.kt`: 4 cases for midpoint tint, reverse travel, overshoot and empty labels.
+- `NovelWebViewImageCacheTest.kt`: close intercepted response streams; fixes 7 pre-existing Windows temp-directory cleanup failures.
+- `app/src/test/java/android/webkit/WebResourceResponse.java`: JVM fixture retains the response stream instead of discarding it like the Android stub, enabling real cleanup.
+- `docs/design/README.md`: implementation status updated for Q1 review.
+Validation: per-file Spotless twice on all 14 Kotlin files (second pass all IS CLEAN); hook also run twice for the Java fixture (no Java formatter configured). Requested JDK 21; `:app:assembleDebug :app:testDebugUnitTest` green, 862 tests, 0 failures/errors/skips. Log: `app/build/q1-final-validation.log`.
+Left out: Q5 destination/label changes remain for Q5; no new strings or data (existing translations reused).
+AdaptiveSheet and SharedCover were already layer-based. Discrete progress dots already use their actual count;
+no artificial 8-step animation remains in UI callers. No adb, commits or pushes; no measured performance claim.
+**Claude device check:** on owner phone `R5GL23ZYE1V`, Dot then Colour: record before/after screen video and
+`dumpsys gfxinfo framestats` for details filter/download sheet open/close, every nav tab (rapid reversals too),
+Home cover-stack advance and book open/back. Verify pill stays under equal cells, labels/badge fit at 384 dp,
+contents drawer closes cleanly, dot-grid pitch/radius unchanged, startup logo smooth. Repeat app Reduce motion
+and system animator scale 0: no nav/rail sliding, sheets/contents fade. Check tablet rail indicator against every
+icon in Dot and Colour, and RTL bar direction. Device evidence remains Claude-owned.
 
 #### Q2 Novel reader: next chapter always reachable (T3) — `ready`
 Owner: "the continue button on the novel reader doesn't go to the next chapter." Found on the phone

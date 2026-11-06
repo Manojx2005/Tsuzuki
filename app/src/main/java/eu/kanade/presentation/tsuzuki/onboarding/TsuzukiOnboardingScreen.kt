@@ -104,7 +104,7 @@ fun TsuzukiOnboardingScreen(
     val storageLocation by storagePref.changes().collectAsState(storagePref.get())
     val storageConfigured = storageLocation.isNotEmpty() && storagePref.isSet()
     val reducedMotion = rememberReduceMotion()
-    val easing = if (tokens.isDot) TsuzukiMotion.stepped(TsuzukiMotion.Standard) else TsuzukiMotion.Standard
+    val easing = TsuzukiMotion.Standard
 
     BackHandler(enabled = step > 0) { step-- }
 

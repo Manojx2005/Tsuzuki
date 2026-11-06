@@ -56,10 +56,12 @@ class NovelWebViewImageCacheTest {
             fallbackLoader = loader,
         )
 
-        assertNotNull(response)
-        val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
-        assertNotNull(cachedFiles)
-        assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        response?.data.use {
+            assertNotNull(response)
+            val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
+            assertNotNull(cachedFiles)
+            assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        }
     }
 
     @Test
@@ -74,10 +76,12 @@ class NovelWebViewImageCacheTest {
             fallbackLoader = loader,
         )
 
-        assertNotNull(response)
-        val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "png" }
-        assertNotNull(cachedFiles)
-        assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        response?.data.use {
+            assertNotNull(response)
+            val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "png" }
+            assertNotNull(cachedFiles)
+            assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        }
     }
 
     @Test
@@ -94,8 +98,8 @@ class NovelWebViewImageCacheTest {
         }
         val cache = makeCache(tempDir.toFile())
 
-        cache.intercept("tsundoku-novel-image://anim.gif", 1L, loader)
-        cache.intercept("tsundoku-novel-image://anim.gif", 1L, loader)
+        cache.intercept("tsundoku-novel-image://anim.gif", 1L, loader)?.data.use { }
+        cache.intercept("tsundoku-novel-image://anim.gif", 1L, loader)?.data.use { }
 
         assert(loadCount == 1) { "Loader should only be called once; second hit should come from cache" }
     }
@@ -126,10 +130,12 @@ class NovelWebViewImageCacheTest {
             fallbackLoader = loader,
         )
 
-        assertNotNull(response)
-        val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
-        assertNotNull(cachedFiles)
-        assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        response?.data.use {
+            assertNotNull(response)
+            val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
+            assertNotNull(cachedFiles)
+            assertArrayEquals(imageBytes, cachedFiles!!.first().readBytes())
+        }
     }
 
     @Test
@@ -143,16 +149,19 @@ class NovelWebViewImageCacheTest {
         cache.schedulePrefetch(content = "", chapterId = 4L, loader = loader4)
 
         val r3 = cache.intercept("tsundoku-novel-image://3/image_0.jpg", null, loader3)
-        val r4 = cache.intercept("tsundoku-novel-image://4/image_0.jpg", null, loader4)
-
-        assertNotNull(r3)
-        assertNotNull(r4)
-        val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
-        assertNotNull(cachedFiles)
-        assert(cachedFiles!!.size == 2) { "Expected 2 distinct cache files, got ${cachedFiles.size}" }
-        val allBytes = cachedFiles.map { it.readBytes() }.sortedWith(compareBy { it[0] })
-        assertArrayEquals(ch3Bytes, allBytes[0])
-        assertArrayEquals(ch4Bytes, allBytes[1])
+        r3?.data.use {
+            val r4 = cache.intercept("tsundoku-novel-image://4/image_0.jpg", null, loader4)
+            r4?.data.use {
+                assertNotNull(r3)
+                assertNotNull(r4)
+                val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
+                assertNotNull(cachedFiles)
+                assert(cachedFiles!!.size == 2) { "Expected 2 distinct cache files, got ${cachedFiles.size}" }
+                val allBytes = cachedFiles.map { it.readBytes() }.sortedWith(compareBy { it[0] })
+                assertArrayEquals(ch3Bytes, allBytes[0])
+                assertArrayEquals(ch4Bytes, allBytes[1])
+            }
+        }
     }
 
     @Test
@@ -173,10 +182,12 @@ class NovelWebViewImageCacheTest {
             fallbackLoader = baseLoader,
         )
 
-        assertNotNull(response)
-        val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
-        assertNotNull(cachedFiles)
-        assertArrayEquals(folderBytes, cachedFiles!!.first().readBytes())
+        response?.data.use {
+            assertNotNull(response)
+            val cachedFiles = tempDir.toFile().listFiles { f -> f.extension == "jpg" }
+            assertNotNull(cachedFiles)
+            assertArrayEquals(folderBytes, cachedFiles!!.first().readBytes())
+        }
     }
 
     @Test
@@ -210,7 +221,9 @@ class NovelWebViewImageCacheTest {
             fallbackLoader = countingLoader,
         )
 
-        assertNotNull(response, "Prefetched image must be served from cache")
-        assert(loadCount == 0) { "Counting loader must not be called when cache is warm" }
+        response?.data.use {
+            assertNotNull(response, "Prefetched image must be served from cache")
+            assert(loadCount == 0) { "Counting loader must not be called when cache is warm" }
+        }
     }
 }
