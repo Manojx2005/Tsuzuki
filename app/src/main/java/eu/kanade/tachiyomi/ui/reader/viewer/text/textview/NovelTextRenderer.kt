@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.core.text.PrecomputedTextCompat
 import androidx.core.widget.TextViewCompat
 import eu.kanade.tachiyomi.data.translation.TranslationHtmlUtils
+import eu.kanade.tachiyomi.tsuzuki.reader.removeBlankLines
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ProcessedContent
@@ -69,7 +70,7 @@ internal class NovelTextRenderer(
                     val cleanHtmlContent = normalizeHtmlForRendering(processedContent)
                     Html.fromHtml(cleanHtmlContent, Html.FROM_HTML_MODE_LEGACY, imageGetter, null)
                 }
-                SpannableStringBuilder(spanned)
+                SpannableStringBuilder(spanned).let { if (rawHtmlMode) it else it.removeBlankLines() }
             }
 
             val spacingPx = (paragraphSpacing * fontSize * density).toInt()
