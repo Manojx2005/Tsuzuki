@@ -6,7 +6,6 @@ import android.content.Context
 import android.net.Uri
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
-import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
@@ -15,6 +14,8 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.jsplugin.JsPluginManager
+import eu.kanade.tachiyomi.tsuzuki.defaultShelfNames
+import eu.kanade.tachiyomi.tsuzuki.mapLNReaderShelves
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -38,7 +39,6 @@ import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.intOrNull
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.manga.interactor.GetMangaByUrlAndSourceId
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -52,21 +52,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.zip.ZipInputStream
-
-/**
- * Imports LNReader backup files (.zip) into Tsundoku.
- *
- * LNReader backup format:
- * ```
- * backup.zip
- * ├── Version.json
- * ├── Category.json
- * ├── NovelAndChapters/
- * │   ├── {novelId}.json  (each contains novel info + chapters array)
- * │   └── ...
- * └── Setting.json
- * ```
- */
 
 /** Older LNReader exports use 0/1 for booleans; newer ones use real JSON booleans. Accept both. */
 private object FlexibleBoolAsIntSerializer : KSerializer<Int> {
@@ -84,6 +69,20 @@ private object FlexibleBoolAsIntSerializer : KSerializer<Int> {
     }
 }
 
+/**
+ * Imports LNReader backup files (.zip) into Tsundoku.
+ *
+ * LNReader backup format:
+ * ```
+ * backup.zip
+ * ├── Version.json
+ * ├── Category.json
+ * ├── NovelAndChapters/
+ * │   ├── {novelId}.json  (each contains novel info + chapters array)
+ * │   └── ...
+ * └── Setting.json
+ * ```
+ */
 class LNReaderBackupImporter(
     private val context: Context,
     private val notifier: BackupNotifier? = null,
@@ -200,18 +199,15 @@ class LNReaderBackupImporter(
                     "LNReaderImport: Found ${novels.size} novels, ${categories.size} categories (options: $options)"
                 }
 
-                // Step 2: Restore categories FIRST
-                val backupCategories = categories.map { lnCat ->
-                    BackupCategory(
-                        name = lnCat.name,
-                        order = lnCat.sort.toLong(),
-                        flags = 0,
-                        contentType = Category.CONTENT_TYPE_NOVEL,
-                    )
+                // Restore shelves before the novels resolve their memberships.
+                val shelves = if (options.restoreCategories) {
+                    mapLNReaderShelves(categories, defaultShelfNames(context))
+                } else {
+                    mapLNReaderShelves(emptyList(), emptySet())
                 }
-                if (options.restoreCategories) {
-                    categoriesRestorer(backupCategories)
-                    categoryCount = categories.size
+                if (shelves.categories.isNotEmpty()) {
+                    categoriesRestorer(shelves.categories)
+                    categoryCount = shelves.categories.size
                     logcat(LogPriority.INFO) { "LNReaderImport: Restored $categoryCount categories" }
                 }
 
@@ -263,15 +259,6 @@ class LNReaderBackupImporter(
                     }
                 }
 
-                // Build category name -> novel IDs mapping for assignment
-                // Build category name -> novel IDs mapping for assignment
-                val novelIdToCategoryNames = mutableMapOf<Int, MutableList<String>>()
-                categories.forEach { cat ->
-                    cat.novelIds.forEach { novelId ->
-                        novelIdToCategoryNames.getOrPut(novelId) { mutableListOf() }.add(cat.name)
-                    }
-                }
-
                 // Pre-fetch existing manga mappings to avoid 2N DB lookups
                 val mangaCache = mutableMapOf<Pair<String, Long>, tachiyomi.domain.manga.model.Manga>()
                 novels.forEach { novel ->
@@ -314,11 +301,9 @@ class LNReaderBackupImporter(
                                 val backupManga = convertNovel(
                                     novel,
                                     sourceId,
-                                    novelIdToCategoryNames,
-                                    backupCategories,
+                                    shelves.ordersByNovelId[novel.id].orEmpty(),
                                     includeChapters = options.restoreChapters,
                                     includeHistory = options.restoreHistory,
-                                    includeCategories = options.restoreCategories,
                                 )
 
                                 // Check if this novel already exists in the database
@@ -330,10 +315,14 @@ class LNReaderBackupImporter(
                                     logcat(LogPriority.INFO) {
                                         "LNReaderImport: Novel '${novel.name}' already exists (id=${existingManga.id}), updating chapters only"
                                     }
-                                    mangaRestorer.restoreExistingChapters(existingManga, backupManga, backupCategories)
+                                    mangaRestorer.restoreExistingChapters(
+                                        existingManga,
+                                        backupManga,
+                                        shelves.categories,
+                                    )
                                     skippedCount++
                                 } else {
-                                    mangaRestorer.restore(backupManga, backupCategories)
+                                    mangaRestorer.restore(backupManga, shelves.categories)
                                 }
                                 novelCount++
                                 logcat(LogPriority.DEBUG) {
@@ -792,11 +781,9 @@ class LNReaderBackupImporter(
     private fun convertNovel(
         novel: LNNovel,
         sourceId: Long,
-        novelIdToCategoryNames: Map<Int, List<String>>,
-        backupCategories: List<BackupCategory>,
+        categoryOrders: List<Long>,
         includeChapters: Boolean = true,
         includeHistory: Boolean = true,
-        includeCategories: Boolean = true,
     ): BackupManga {
         val backupChapters = if (includeChapters) {
             val lastIndex = novel.chapters.size - 1
@@ -829,16 +816,6 @@ class LNReaderBackupImporter(
                         readDuration = 0L,
                     )
                 }
-        } else {
-            emptyList()
-        }
-
-        // Map novel ID to category orders (use the BackupCategory.order, not list index)
-        val categoryOrders = if (includeCategories) {
-            val categoryNames = novelIdToCategoryNames[novel.id].orEmpty()
-            categoryNames.mapNotNull { name ->
-                backupCategories.firstOrNull { it.name == name }?.order
-            }
         } else {
             emptyList()
         }

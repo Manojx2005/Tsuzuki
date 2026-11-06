@@ -50,6 +50,7 @@ import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -131,7 +132,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
             Injekt.get<SourceManager>()
 
-            Injekt.get<Database>()
+            val database = Injekt.get<Database>()
+            try {
+                eu.kanade.tachiyomi.tsuzuki.migrateLegacyDefaultShelf(this@App, database)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to merge legacy Default shelves" }
+            }
 
             Injekt.get<DownloadManager>()
 

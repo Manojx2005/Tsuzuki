@@ -7,9 +7,9 @@ import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.library.TsuzukiShelfPills
 import tachiyomi.domain.category.model.Category
 import tachiyomi.presentation.core.components.material.TabText
 
@@ -22,7 +22,7 @@ internal fun LibraryTabs(
 ) {
     val currentPageIndex = pagerState.currentPage.coerceAtMost(categories.lastIndex)
     if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
-        TsuzukiCategoryPills(categories, currentPageIndex, getItemCountForCategory, onTabItemClick)
+        TsuzukiShelfPills(categories, currentPageIndex, getItemCountForCategory, onTabItemClick)
         return
     }
     PrimaryScrollableTabRow(
@@ -43,20 +43,4 @@ internal fun LibraryTabs(
             )
         }
     }
-}
-
-/** Board "LibraryList": categories as pills; the current one takes the accent. */
-@Composable
-private fun TsuzukiCategoryPills(
-    categories: List<Category>,
-    selected: Int,
-    getItemCountForCategory: (Category) -> Int?,
-    onClick: (Int) -> Unit,
-) {
-    TsuzukiPillRow(
-        labels = categories.map { it.visualName },
-        counts = categories.map(getItemCountForCategory),
-        selected = selected,
-        onClick = onClick,
-    )
 }
