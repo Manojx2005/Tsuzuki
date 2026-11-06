@@ -1257,4 +1257,21 @@
     <string name="ext_content_warning_nsfw_description">Quellen dieser Erweiterung konzentrieren sich hauptsächlich auf 18+-Inhalte.</string>
     <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihrer Warnung weiter geladen und aktualisiert</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">Ab Kapitel</string>
+    <string name="tsz_download_to">Bis Kapitel</string>
+    <string name="tsz_download_from_here">Ab Leseposition</string>
+    <string name="tsz_download_to_last">Bis zum letzten</string>
+    <string name="tsz_download_totals">%1$d ungelesen · %2$d insgesamt</string>
+    <string name="tsz_download_skipped_saved">%1$d bereits gespeichert · übersprungen</string>
+    <string name="tsz_download_number_required">Gib beide Kapitelnummern ein</string>
+    <string name="tsz_download_reversed">Das erste Kapitel muss vor dem letzten liegen oder ihm entsprechen</string>
+    <string name="tsz_download_out_of_range">Gib Kapitelnummern von %1$s bis %2$s ein</string>
+    <string name="tsz_download_none_available">In diesem Bereich gibt es keine Kapitel zum Herunterladen</string>
+    <string name="tsz_download_save_range">Kap. %1$s–%2$s speichern</string>
+    <string name="tsz_download_settings">Download-Einstellungen</string>
+    <string name="tsz_download_decrease">%1$s verringern</string>
+    <string name="tsz_download_increase">%1$s erhöhen</string>
+    <string name="tsz_download_all_eligible">Alle stellt verfügbare Kapitel zum Download in die Warteschlange.</string>
+    <string name="tsz_download_filtered">Aktuelle Kapitelfilter gelten auch für Downloads.</string>
 </resources>

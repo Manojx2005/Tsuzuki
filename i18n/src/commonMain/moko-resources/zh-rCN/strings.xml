@@ -1257,4 +1257,21 @@
     <string name="ext_content_warning_nsfw_description">此插件的图源主要提供 18+ 内容。</string>
     <string name="pref_apply_content_warnings_to_installed">同时应用于已安装的插件</string>
     <string name="pref_apply_content_warnings_to_installed_summary">关闭后，已安装的插件无论警告级别如何都会继续加载和更新</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">起始章节</string>
+    <string name="tsz_download_to">结束章节</string>
+    <string name="tsz_download_from_here">从当前进度开始</string>
+    <string name="tsz_download_to_last">到最后一章</string>
+    <string name="tsz_download_totals">%1$d 章未读 · 共 %2$d 章</string>
+    <string name="tsz_download_skipped_saved">跳过 %1$d 个已保存章节</string>
+    <string name="tsz_download_number_required">请输入起始和结束章号</string>
+    <string name="tsz_download_reversed">起始章号不能大于结束章号</string>
+    <string name="tsz_download_out_of_range">请输入 %1$s 到 %2$s 之间的章号</string>
+    <string name="tsz_download_none_available">此范围没有可下载的章节</string>
+    <string name="tsz_download_save_range">保存第 %1$s–%2$s 章</string>
+    <string name="tsz_download_settings">下载设置</string>
+    <string name="tsz_download_decrease">减小%1$s章号</string>
+    <string name="tsz_download_increase">增大%1$s章号</string>
+    <string name="tsz_download_all_eligible">“全部”将可下载的章节加入队列。</string>
+    <string name="tsz_download_filtered">下载遵循当前章节筛选条件。</string>
 </resources>

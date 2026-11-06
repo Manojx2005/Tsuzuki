@@ -1621,4 +1621,21 @@
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
     <string name="pref_apply_content_warnings_to_installed">Also apply to installed extensions</string>
     <string name="pref_apply_content_warnings_to_installed_summary">When off, extensions you already installed keep loading and updating regardless of their warning</string>
+    <!-- Q3 -->
+    <string name="tsz_download_from">From chapter</string>
+    <string name="tsz_download_to">To chapter</string>
+    <string name="tsz_download_from_here">From where I am</string>
+    <string name="tsz_download_to_last">To last</string>
+    <string name="tsz_download_totals">%1$d unread · %2$d total</string>
+    <string name="tsz_download_skipped_saved">%1$d already saved · skipped</string>
+    <string name="tsz_download_number_required">Enter both chapter numbers</string>
+    <string name="tsz_download_reversed">The first chapter must come before or match the last</string>
+    <string name="tsz_download_out_of_range">Enter chapter numbers from %1$s to %2$s</string>
+    <string name="tsz_download_none_available">Nothing to download in this range</string>
+    <string name="tsz_download_save_range">Save ch. %1$s–%2$s</string>
+    <string name="tsz_download_settings">Download settings</string>
+    <string name="tsz_download_decrease">Decrease %1$s</string>
+    <string name="tsz_download_increase">Increase %1$s</string>
+    <string name="tsz_download_all_eligible">All queues chapters that are available to download.</string>
+    <string name="tsz_download_filtered">Current chapter filters apply to downloads.</string>
 </resources>
