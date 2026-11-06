@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -64,6 +65,7 @@ import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.tsuzuki.home.TsuzukiHomeTab
+import eu.kanade.tachiyomi.ui.tsuzuki.navigation.TsuzukiNavigation
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -78,6 +80,7 @@ import tachiyomi.presentation.core.components.material.NavigationBar
 import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -103,14 +106,8 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
-    /** Tsuzuki (Colour / Dot themes): Home replaces Library in the nav; Library opens from Home. */
-    private val TSUZUKI_TABS = listOf(
-        TsuzukiHomeTab,
-        UpdatesTab,
-        HistoryTab,
-        BrowseTab,
-        MoreTab,
-    )
+    /** Tsuzuki bar and rail share Home, Library, Updates, Browse and More. */
+    private val TSUZUKI_TABS = TsuzukiNavigation.tabs
 
     private val JOINED_TABS = listOf(
         NovelsTab,
@@ -136,8 +133,11 @@ object HomeScreen : Screen() {
         val homeTab = if (isTsuzuki) TsuzukiHomeTab else NovelsTab
         // Retain the Library tab when the outer navigator temporarily disposes Home during a cover transition.
         var retainedTsuzukiTab by rememberSaveable { mutableStateOf<String?>(null) }
+        var retainedLibraryKey by rememberSaveable { mutableStateOf(NovelsTab.key) }
+        val libraryTab = TsuzukiNavigation.library(retainedLibraryKey, joined = isJoined || hideMangaUi)
+        val currentLibraryTab by rememberUpdatedState(libraryTab)
         val initialTab = if (isTsuzuki) {
-            (tabs + NovelsTab).firstOrNull { it.key == retainedTsuzukiTab } ?: homeTab
+            TsuzukiNavigation.restore(retainedTsuzukiTab, joined = isJoined || hideMangaUi)
         } else {
             homeTab
         }
@@ -177,7 +177,14 @@ object HomeScreen : Screen() {
                 tab = initialTab,
                 key = TabNavigatorKey,
             ) { tabNavigator ->
-                if (isTsuzuki) androidx.compose.runtime.SideEffect { retainedTsuzukiTab = tabNavigator.current.key }
+                if (isTsuzuki) {
+                    androidx.compose.runtime.SideEffect {
+                        retainedTsuzukiTab = tabNavigator.current.key
+                        if (tabNavigator.current is NovelsTab || tabNavigator.current is LibraryTab) {
+                            retainedLibraryKey = tabNavigator.current.key
+                        }
+                    }
+                }
                 // Provide usable navigator to content screen
                 CompositionLocalProvider(
                     LocalNavigator provides navigator,
@@ -188,7 +195,7 @@ object HomeScreen : Screen() {
                         startBar = {
                             if (isTabletUi() && isTsuzuki) {
                                 TsuzukiRail(
-                                    items = tsuzukiNavItems(tabs),
+                                    items = tsuzukiNavItems(tabs, libraryTab),
                                     onSearch = { tabNavigator.current = NovelsTab },
                                     onSettings = { navigator.push(SettingsScreen()) },
                                 )
@@ -211,7 +218,7 @@ object HomeScreen : Screen() {
                                     exit = shrinkVertically(),
                                 ) {
                                     if (isTsuzuki) {
-                                        TsuzukiNavBar(items = tsuzukiNavItems(tabs))
+                                        TsuzukiNavBar(items = tsuzukiNavItems(tabs, libraryTab))
                                     } else {
                                         NavigationBar {
                                             tabs.fastForEach {
@@ -260,7 +267,7 @@ object HomeScreen : Screen() {
                     }
                     launch {
                         openTabEvent.receiveAsFlow().collectLatest {
-                            tabNavigator.current = when (it) {
+                            val target = when (it) {
                                 Tab.Home -> homeTab
                                 is Tab.Library -> if (isJoined || hideMangaUi) NovelsTab else LibraryTab
                                 Tab.Updates -> UpdatesTab
@@ -273,6 +280,8 @@ object HomeScreen : Screen() {
                                 }
                                 is Tab.More -> MoreTab
                             }
+                            tabNavigator.current =
+                                if (isTsuzuki) TsuzukiNavigation.destination(it, currentLibraryTab) else target
 
                             if (it is Tab.Library && it.mangaIdToOpen != null) {
                                 navigator.push(MangaScreen(it.mangaIdToOpen))
@@ -400,9 +409,12 @@ object HomeScreen : Screen() {
         }
     }
 
-    /** Builds the Tsuzuki nav entries; Library tabs count as "Home" since Home opens them. */
+    /** Builds the same destinations for the phone bar and tablet rail. */
     @Composable
-    private fun tsuzukiNavItems(tabs: List<eu.kanade.presentation.util.Tab>): List<TsuzukiNavItem> {
+    private fun tsuzukiNavItems(
+        tabs: List<eu.kanade.presentation.util.Tab>,
+        libraryTab: eu.kanade.presentation.util.Tab,
+    ): List<TsuzukiNavItem> {
         val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
@@ -414,29 +426,28 @@ object HomeScreen : Screen() {
         }
         val current = tabNavigator.current
         return tabs.map { tab ->
-            val selected = when (tab) {
-                is TsuzukiHomeTab -> current is TsuzukiHomeTab || current is NovelsTab || current is LibraryTab
-                else -> current::class == tab::class
-            }
-            val (short, icon) = when (tab) {
-                is TsuzukiHomeTab -> "HOME" to Icons.Outlined.GridView
-                is UpdatesTab -> "NEW" to Icons.Outlined.NotificationsNone
-                is HistoryTab -> "PAST" to Icons.Outlined.Schedule
-                is BrowseTab -> "FIND" to Icons.Outlined.Explore
-                else -> "•••" to Icons.Outlined.MoreHoriz
+            val destination = if (tab is NovelsTab) libraryTab else tab
+            val selected = TsuzukiNavigation.selected(current) == tab
+            val label = if (tab is NovelsTab) stringResource(MR.strings.label_library) else tab.options.title
+            val icon = when (tab) {
+                is TsuzukiHomeTab -> Icons.Outlined.GridView
+                is NovelsTab -> Icons.AutoMirrored.Outlined.MenuBook
+                is UpdatesTab -> Icons.Outlined.NotificationsNone
+                is BrowseTab -> Icons.Outlined.Explore
+                else -> Icons.Outlined.MoreHoriz
             }
             TsuzukiNavItem(
                 key = tab.key,
-                label = tab.options.title,
-                shortLabel = short,
+                label = label,
+                shortLabel = label.uppercase(),
                 icon = icon,
                 selected = selected,
                 badge = if (tab is UpdatesTab) updatesCount else 0,
                 onClick = {
-                    if (current::class != tab::class) {
-                        tabNavigator.current = tab
+                    if (current::class != destination::class) {
+                        tabNavigator.current = destination
                     } else {
-                        scope.launch { tab.onReselect(navigator) }
+                        scope.launch { destination.onReselect(navigator) }
                     }
                 },
             )
