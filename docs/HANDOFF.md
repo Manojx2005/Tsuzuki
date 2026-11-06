@@ -74,8 +74,8 @@ what you left out and why, test counts, exactly what Claude must check on the ph
 Don't commit, push or use adb. If you are stuck for more than 45 minutes, set `blocked` with the question and stop.
 ```
 
-**How to run:** one card per Codex thread, in order Q1 → Q12 unless a card says `parallel-ok` (Q5 waits for the
-owner). Worktree per card:
+**How to run:** one card per Codex thread, in order Q1 → Q12 unless a card says `parallel-ok`. Q5 builds on
+Q1 (sliding nav indicator): start it after Q1 is merged. Worktree per card:
 `git -c core.longpaths=true worktree add -b tsuzuki/<id> .worktrees/<id> main`, copy `local.properties`.
 Follow `AGENTS.md` Rules and WORKPLAN "Appendix — standard rules for restyle cards" (early-return dispatch in upstream
 files, tokens/typography only, Dot uppercase + red, real data only, strings in all 8 locales, per-file Spotless twice,
@@ -173,11 +173,16 @@ LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN categor
 - Display: if two pills would still render the same label, never show duplicates (append the content type).
 - Pills show their book count (N12 already has the query).
 
-#### Q5 Navigation: Library tab + real labels (T3) — `owner-decision` (don't start until the owner answers)
+#### Q5 Navigation: Library tab + real labels (T3) — `ready` (owner approved 2026-11-06; after Q1)
 Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
 Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
 `Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
 Uses Q1's sliding indicator. Tablet rail gets the same items. TalkBack labels unchanged words.
+- History stays reachable: a HISTORY tile/row in More (top group) and Home's recent row opens it; deep links and
+  shortcuts that targeted the History tab still land on History. Library tab opens the existing library screen
+  (the one behind Home's ALL BOOKS →), keeps its state across tab switches, and Home's ALL BOOKS → selects the tab.
+- Badges: Updates keeps its unread badge. Back from any tab returns to Home (as now).
+- Tests: nav item list per layout, History routing. Device check (Claude): phone pill + tablet rail, Dot + Colour.
 
 #### Q6 Book details header (T2) — `ready`
 `evidence/details-header.png`, board `Details.dc.html`:
@@ -583,8 +588,6 @@ Result: _pending_
 
 ## Open questions for the owner
 
-- **Q5 nav (2026-11-06):** make Library a nav tab (HOME · LIBRARY · UPDATES · BROWSE · MORE, History inside More
-  and Home) with plain-word labels instead of `NEW / PAST / FIND / •••`? Codex waits on this card.
 
 - Anime schema (docs/ANIME_SCHEMA.md Q1–Q8): share `categories` with content_type 3? Aniyomi-compatible backups (proto 500/501)? season columns? watch time in the reading streak? table naming; discard the spike's 36.sqm.
 - Still parked: release v0.1 / signing / making the repo public; Firebase telemetry removal before release;
@@ -594,6 +597,9 @@ Result: _pending_
   if you prefer the stock behaviour.
 
 ## Owner decisions in force
+
+- Nav (2026-11-06): HOME · LIBRARY · UPDATES · BROWSE · MORE with plain-word labels; History moves into More and
+  Home's recent row (card Q5). Only Colour and Dot themes ship (card Q12). Reader settings follow the batch Q boards.
 
 - Priority: usable, stable, smooth, fast first; then design completion; then Mihon features; then new features;
   anime last (but plan it now). (2026-11-04)
@@ -629,7 +635,7 @@ Result: _pending_
   off-screen, save-chapters custom range is an index slider, library shows two DEFAULT shelves (LNReader import),
   details/Browse/More text clipped, Dot motion stepped by design (frames fine: 1.2 % janky at 120 Hz). Boards for
   the fixes: `docs/design/boards/fixes-2026-11/` + canvas https://claude.ai/artifact/Qs9pMeZhphy77fbPiE9cTH.
-  Cards Q1–Q12 written (Q11 reader settings, Q12 remove non-Tsuzuki themes, both added on owner request; Colour boards added); Q5 waits for the owner.
+  Cards Q1–Q12 written (Q11 reader settings, Q12 remove non-Tsuzuki themes, both added on owner request; Colour boards added); Owner approved Q5 (nav) the same day.
 
 - **2026-11-06 06:30 Claude — batch N complete.** N20 merged (blocking storage lookups → IO: chapter content
   reader, DownloadPageLoader, `isChapterOnDisk` for skip-cache probes; 5 off-thread tests; novel + manga readers
