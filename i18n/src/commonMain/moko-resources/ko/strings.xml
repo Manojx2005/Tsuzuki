@@ -1323,4 +1323,11 @@
     <string name="tsz_x4_more_books">책 %d권 더 보기</string>
     <string name="tsz_x4_search_sources">검색 소스 · %d개 선택</string>
     <string name="tsz_x4_find_matches">일치 항목 찾기 · %d권</string>
+    <string name="tsz_q8_reader_top">맨 위</string>
+    <string name="tsz_q8_reader_scroll">스크롤</string>
+    <string name="tsz_q8_reader_stop">정지</string>
+    <string name="tsz_q8_reader_back">이전</string>
+    <string name="tsz_q8_reader_next">다음</string>
+    <string name="tsz_q8_reader_here">여기서</string>
+    <string name="tsz_q8_reader_rotate">회전</string>
 </resources>

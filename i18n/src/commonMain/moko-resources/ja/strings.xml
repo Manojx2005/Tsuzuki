@@ -1323,4 +1323,11 @@
     <string name="tsz_x4_more_books">ほか%d冊</string>
     <string name="tsz_x4_search_sources">検索元 · %d件選択</string>
     <string name="tsz_x4_find_matches">候補を探す · %d冊</string>
+    <string name="tsz_q8_reader_top">先頭</string>
+    <string name="tsz_q8_reader_scroll">スクロール</string>
+    <string name="tsz_q8_reader_stop">停止</string>
+    <string name="tsz_q8_reader_back">前</string>
+    <string name="tsz_q8_reader_next">次</string>
+    <string name="tsz_q8_reader_here">ここから</string>
+    <string name="tsz_q8_reader_rotate">回転</string>
 </resources>

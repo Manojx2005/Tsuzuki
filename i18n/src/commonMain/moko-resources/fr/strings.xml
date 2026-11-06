@@ -1317,4 +1317,11 @@
     <string name="tsz_x4_more_books">%d autres livres</string>
     <string name="tsz_x4_search_sources">Sources de recherche · %d sélectionnées</string>
     <string name="tsz_x4_find_matches">Trouver les correspondances · %d</string>
+    <string name="tsz_q8_reader_top">Haut</string>
+    <string name="tsz_q8_reader_scroll">Défiler</string>
+    <string name="tsz_q8_reader_stop">Arrêter</string>
+    <string name="tsz_q8_reader_back">Précédent</string>
+    <string name="tsz_q8_reader_next">Suivant</string>
+    <string name="tsz_q8_reader_here">Ici</string>
+    <string name="tsz_q8_reader_rotate">Pivoter</string>
 </resources>

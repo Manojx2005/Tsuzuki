@@ -1324,4 +1324,11 @@
     <string name="tsz_x4_more_books">另有 %d 本</string>
     <string name="tsz_x4_search_sources">搜索来源 · 已选 %d 个</string>
     <string name="tsz_x4_find_matches">查找匹配 · %d</string>
+    <string name="tsz_q8_reader_top">顶部</string>
+    <string name="tsz_q8_reader_scroll">滚动</string>
+    <string name="tsz_q8_reader_stop">停止</string>
+    <string name="tsz_q8_reader_back">上一段</string>
+    <string name="tsz_q8_reader_next">下一段</string>
+    <string name="tsz_q8_reader_here">从这里</string>
+    <string name="tsz_q8_reader_rotate">旋转</string>
 </resources>

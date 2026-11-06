@@ -146,7 +146,7 @@ fun TsuzukiSettingsSectionRow(
                 if (t.isDot) title.uppercase() else title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold),
                 color = Color.White,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (!twoPane && !subtitle.isNullOrBlank()) {
@@ -154,7 +154,7 @@ fun TsuzukiSettingsSectionRow(
                     if (t.isDot) subtitle.uppercase() else subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                     color = muted,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

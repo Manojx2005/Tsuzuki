@@ -105,6 +105,7 @@ internal fun navIndicatorSpec(reduced: Boolean): FiniteAnimationSpec<Float> = if
 fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(31.dp)
+    val cellHeight = 48.dp + 20.dp * (LocalDensity.current.fontScale - 1f).coerceAtLeast(0f)
     val selectedIndex = items.indexOfFirst { it.selected }
     val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
     val position = animateFloatAsState(
@@ -120,7 +121,7 @@ fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
             .navigationBarsPadding()
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .fillMaxWidth()
-            .height(62.dp)
+            .heightIn(min = cellHeight + 14.dp)
             .clip(shape)
             .background(t.tile.compositeOver(t.background))
             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
@@ -133,7 +134,7 @@ fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
                 Box(
                     Modifier
                         .width(cellWidth)
-                        .height(48.dp)
+                        .height(cellHeight)
                         .graphicsLayer {
                             translationX = position.value * cellWidth.toPx()
                         }
@@ -142,7 +143,11 @@ fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 items.forEachIndexed { index, item ->
-                    NavBarItem(item, selectedIndex >= 0 && index == highlightedIndex, Modifier.weight(1f))
+                    NavBarItem(
+                        item,
+                        selectedIndex >= 0 && index == highlightedIndex,
+                        Modifier.weight(1f).heightIn(min = cellHeight),
+                    )
                 }
             }
         }
@@ -155,7 +160,7 @@ private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Mod
     val interactions = remember { MutableInteractionSource() }
     Box(
         modifier
-            .height(48.dp)
+            .heightIn(min = 48.dp)
             .selectable(
                 selected = item.selected,
                 role = Role.Tab,
@@ -172,7 +177,7 @@ private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Mod
             text = if (t.isDot) item.shortLabel else item.label,
             style = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot),
             color = if (highlighted) t.background else t.mutedText,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
         )

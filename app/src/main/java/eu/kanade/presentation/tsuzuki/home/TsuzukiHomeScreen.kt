@@ -57,6 +57,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -166,20 +167,26 @@ private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier
             true to stringResource(MR.strings.tsz_watch),
         ).forEach { (isWatch, label) ->
             val selected = watching == isWatch
-            Text(
-                text = t.case(label),
-                style = bodyStyle(13.sp, FontWeight.ExtraBold),
-                color = when {
-                    selected && t.isDot -> Color.Black
-                    selected -> t.background.orIfUnspecified(Color.Black)
-                    else -> muted(t)
-                },
-                modifier = Modifier
-                    .clip(RoundedCornerShape(19.dp))
+            Box(
+                modifier = Modifier.heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(22.dp))
                     .then(if (selected) Modifier.background(Color.White) else Modifier)
                     .selectable(selected = selected, role = Role.Tab) { onChange(isWatch) }
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
-            )
+                    .padding(horizontal = 18.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = t.case(label),
+                    style = bodyStyle(13.sp, FontWeight.ExtraBold),
+                    color = when {
+                        selected && t.isDot -> Color.Black
+                        selected -> t.background.orIfUnspecified(Color.Black)
+                        else -> muted(t)
+                    },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -269,7 +276,12 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(t.case(todayKicker(state.libraryCount)), style = labelStyle(t), color = muted(t))
+            Text(
+                t.case(todayKicker(state.libraryCount)),
+                style = labelStyle(t),
+                color = muted(t),
+                modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
+            )
             IconCircle(onClick = actions.onSearch) {
                 Icon(
                     Icons.Outlined.Search,
@@ -280,45 +292,23 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             }
         }
 
-        // Cover stack: tap to switch which book the Resume tile acts on.
-        Row(
-            Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).height(236.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            TsuzukiCoverStack(stack, stackIndex.coerceIn(0, stack.lastIndex)) {
-                stackIndex = (stackIndex.coerceIn(0, stack.lastIndex) + 1) % stack.size
+        val activeIndex = stackIndex.coerceIn(0, stack.lastIndex)
+        val stacked = LocalDensity.current.fontScale >= 1.5f
+        val heroModifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 6.dp)
+        val cover: @Composable () -> Unit = {
+            Box(Modifier.height(236.dp)) {
+                TsuzukiCoverStack(stack, activeIndex) { stackIndex = (activeIndex + 1) % stack.size }
             }
-            Column(Modifier.weight(1f).padding(top = 6.dp)) {
-                if (stack.size > 1) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        stack.indices.forEach { k -> Pip(selected = k == stackIndex.coerceIn(0, stack.lastIndex)) }
-                    }
-                }
-                Text(
-                    t.case(current.title),
-                    style = displayStyle(30.sp),
-                    color = Color.White,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 14.dp),
-                )
-                current.chapterLabel?.let {
-                    Text(
-                        t.case(it),
-                        style = bodyStyle(13.sp, FontWeight.SemiBold),
-                        color = muted(t, 0.8f),
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
-                if (current.unread > 0) UnreadChip(current.unread, Modifier.padding(top = 10.dp))
-                Spacer(Modifier.weight(1f))
-                if (stack.size > 1) {
-                    Text(
-                        t.case(stringResource(MR.strings.tsz_tap_stack)),
-                        style = bodyStyle(12.sp, FontWeight.SemiBold),
-                        color = t.mutedText,
-                    )
-                }
+        }
+        if (stacked) {
+            Column(heroModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                cover()
+                PhoneHeroText(current, stack.size, activeIndex, Modifier.fillMaxWidth())
+            }
+        } else {
+            Row(heroModifier, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                cover()
+                PhoneHeroText(current, stack.size, activeIndex, Modifier.weight(1f).heightIn(min = 236.dp))
             }
         }
 
@@ -327,12 +317,17 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ResumeTile(current, state.fromHistory, onClick = { actions.onResume(current) })
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                maxItemsInEachRow = if (stacked) 1 else 2,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 StatTile(
                     stringResource(MR.strings.tsz_new_chapters),
                     state.newChapters.toString(),
                     null,
-                    Modifier.weight(1f).height(100.dp),
+                    Modifier.weight(1f).heightIn(min = 100.dp),
                     accentValue =
                     t.isDot && state.newChapters > 0,
                     onClick = actions.onUpdates,
@@ -341,7 +336,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
                     stringResource(MR.strings.tsz_today),
                     state.todayMinutes.toString(),
                     stringResource(MR.strings.tsz_min),
-                    Modifier.weight(1f).height(100.dp),
+                    Modifier.weight(1f).heightIn(min = 100.dp),
                     onClick = actions.onHistory,
                 )
             }
@@ -353,6 +348,42 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
             coverHeight = null,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
         )
+    }
+}
+
+@Composable
+private fun PhoneHeroText(book: HomeBook, count: Int, activeIndex: Int, modifier: Modifier) {
+    val t = TsuzukiTheme.tokens
+    Column(modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (count > 1) {
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                repeat(count) { Pip(selected = it == activeIndex) }
+            }
+        }
+        Text(
+            t.case(book.title),
+            style = displayStyle(30.sp),
+            color = Color.White,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        book.chapterLabel?.let {
+            Text(
+                t.case(it),
+                style = bodyStyle(13.sp, FontWeight.SemiBold),
+                color = muted(t, 0.8f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (book.unread > 0) UnreadChip(book.unread)
+        if (count > 1) {
+            Text(
+                t.case(stringResource(MR.strings.tsz_tap_stack)),
+                style = bodyStyle(12.sp, FontWeight.SemiBold),
+                color = muted(t),
+            )
+        }
     }
 }
 
@@ -386,7 +417,7 @@ private fun TabletPortraitHome(state: HomeState, actions: HomeActions) {
                 stringResource(MR.strings.tsz_new),
                 state.newChapters.toString(),
                 null,
-                Modifier.weight(1f).height(130.dp),
+                Modifier.weight(1f).heightIn(min = 130.dp),
                 accentValue =
                 state.newChapters > 0,
                 bigSize = 50.sp,
@@ -396,7 +427,7 @@ private fun TabletPortraitHome(state: HomeState, actions: HomeActions) {
                 stringResource(MR.strings.tsz_today),
                 state.todayMinutes.toString(),
                 stringResource(MR.strings.tsz_min),
-                Modifier.weight(1f).height(130.dp),
+                Modifier.weight(1f).heightIn(min = 130.dp),
                 bigSize = 40.sp,
                 onClick = actions.onHistory,
             )
@@ -404,7 +435,7 @@ private fun TabletPortraitHome(state: HomeState, actions: HomeActions) {
                 stringResource(MR.strings.tsz_library),
                 state.libraryCount.toString(),
                 stringResource(MR.strings.tsz_books_unit),
-                Modifier.weight(1f).height(130.dp),
+                Modifier.weight(1f).heightIn(min = 130.dp),
                 bigSize = 40.sp,
                 onClick = actions.onAllBooks,
             )
@@ -795,7 +826,7 @@ private fun ResumeTile(book: HomeBook, canResume: Boolean, onClick: () -> Unit) 
         Modifier
             .tsuzukiPress(press)
             .fillMaxWidth()
-            .height(80.dp)
+            .heightIn(min = 80.dp)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = true))
             .clickable(
@@ -804,7 +835,7 @@ private fun ResumeTile(book: HomeBook, canResume: Boolean, onClick: () -> Unit) 
                 role = Role.Button,
                 onClick = onClick,
             )
-            .padding(start = 14.dp, end = 16.dp),
+            .padding(start = 14.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -864,14 +895,16 @@ private fun StatTile(
     ) {
         Text(t.case(label), style = labelStyle(t), color = muted(t))
         Spacer(Modifier.weight(1f))
-        Row(verticalAlignment = Alignment.Bottom) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             Text(value, style = numberStyle(t, bigSize), color = if (accentValue) t.accent else Color.White)
             unit?.let {
                 Text(
                     t.case(it),
                     style = bodyStyle(13.sp, FontWeight.Bold),
                     color = muted(t),
-                    modifier = Modifier.padding(start = 6.dp, bottom = 6.dp),
+                    modifier = Modifier.align(Alignment.Bottom).padding(bottom = 6.dp),
                 )
             }
         }
@@ -890,7 +923,7 @@ private fun ActionTile(
     val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Column(
         Modifier.tsuzukiPress(press).then(modifier)
-            .height(132.dp)
+            .heightIn(min = 132.dp)
             .clip(RoundedCornerShape(24.dp))
             .then(tileFill(t, hero = false))
             .clickable(
