@@ -22,6 +22,7 @@ import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -967,9 +968,25 @@ class LibraryViewModel(
     /**
      * Marks mangas' chapters read status.
      */
-    fun markReadSelection(read: Boolean) {
+    fun markReadSelection(read: Boolean, offerUndo: Boolean = false) {
         val selection = state.value.selectedManga
-        viewModelScope.launchNonCancellable {
+        if (selection.isEmpty()) return
+        clearSelection()
+        viewModelScope.launchIO {
+            val application = Injekt.get<android.app.Application>()
+            if (offerUndo && snackbarHostState.awaitTsuzukiUndo(
+                    application,
+                    application.stringResource(MR.strings.tsz_q9_pending_mark_read),
+                )
+            ) {
+                return@launchIO
+            }
+            applyReadSelection(selection, read)
+        }
+    }
+
+    private suspend fun applyReadSelection(selection: List<Manga>, read: Boolean) =
+        tachiyomi.core.common.util.lang.withNonCancellableContext {
             selection.forEach { manga ->
                 setReadStatus.await(
                     manga = manga,
@@ -986,8 +1003,6 @@ class LibraryViewModel(
             }
             getLibraryManga.applyBatchChapterUpdates(updates)
         }
-        clearSelection()
-    }
 
     /**
      * Remove the selected manga.
@@ -1502,6 +1517,28 @@ class LibraryViewModel(
             val preselected = categories.toCommonCheckboxState({ it.id }, perManga)
 
             mutableState.update { it.copy(dialog = Dialog.ChangeCategory(mangaList, preselected)) }
+        }
+    }
+
+    fun removeSelectionFromLibraryWithUndo() {
+        val selection = state.value.selectedManga.filter { it.favorite }
+        if (selection.isEmpty()) return
+        clearSelection()
+        viewModelScope.launchIO {
+            val application = Injekt.get<android.app.Application>()
+            if (!updateManga.awaitAll(selection.map { MangaUpdate(id = it.id, favorite = false) })) {
+                snackbarHostState.showSnackbar(application.stringResource(MR.strings.internal_error))
+                return@launchIO
+            }
+            if (snackbarHostState.awaitTsuzukiUndo(
+                    application,
+                    application.stringResource(MR.strings.manga_removed_library),
+                )
+            ) {
+                if (!updateManga.awaitAll(selection.map { MangaUpdate(id = it.id, favorite = true) })) {
+                    snackbarHostState.showSnackbar(application.stringResource(MR.strings.internal_error))
+                }
+            }
         }
     }
 

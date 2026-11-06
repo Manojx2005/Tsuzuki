@@ -283,7 +283,7 @@ private fun LibrarySelectionToolbar(
     onClickInvertSelection: () -> Unit,
 ) {
     AppBar(
-        titleContent = { Text(text = "$selectedCount") },
+        titleContent = { Text(text = eu.kanade.presentation.tsuzuki.selection.selectionCountLabel(selectedCount)) },
         actions = {
             AppBarActions(
                 listOf(

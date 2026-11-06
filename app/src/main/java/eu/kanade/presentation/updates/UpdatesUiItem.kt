@@ -169,10 +169,15 @@ private fun UpdatesUiItem(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    val textAlpha = if (update.read) DISABLED_ALPHA else 1f
 
     // Tsuzuki themes: each update is a tile (design board "Updates").
     val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val themed = tsuzuki.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    val mutedText = when {
+        !themed -> LocalContentColor.current.copy(alpha = DISABLED_ALPHA)
+        selected -> tsuzuki.dotOn
+        else -> tsuzuki.mutedText
+    }
     val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     Row(
         modifier = modifier
@@ -218,7 +223,7 @@ private fun UpdatesUiItem(
                 text = if (tsuzuki.isDot) update.mangaTitle.uppercase() else update.mangaTitle,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
+                color = if (update.read) mutedText else LocalContentColor.current,
                 overflow = TextOverflow.Ellipsis,
             )
 
@@ -248,7 +253,7 @@ private fun UpdatesUiItem(
                     text = if (tsuzuki.isDot) update.chapterName.uppercase() else update.chapterName,
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.copy(alpha = textAlpha),
+                    color = if (update.read) mutedText else LocalContentColor.current,
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = { textHeight = it.size.height },
                     modifier = Modifier
@@ -259,7 +264,7 @@ private fun UpdatesUiItem(
                     Text(
                         text = if (tsuzuki.isDot) readProgress.uppercase() else readProgress,
                         maxLines = 1,
-                        color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                        color = mutedText,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }

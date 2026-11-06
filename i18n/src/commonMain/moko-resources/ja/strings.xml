@@ -1288,4 +1288,12 @@
     <string name="tsz_appearance_dot_covers">Dotの表紙</string>
     <string name="tsz_appearance_covers_colour">カラー</string>
     <string name="tsz_appearance_legacy_themes">従来のMihonとTsundokuのテーマはColourに切り替わります。</string>
+    <string name="tsz_q9_loading_updates">更新を読み込み中…</string>
+    <string name="tsz_q9_shelf">本棚</string>
+    <string name="tsz_q9_advanced_options">詳細オプション</string>
+    <string name="tsz_q9_pending_mark_read">チャプターを既読にします</string>
+    <string name="tsz_q9_pending_delete_downloads">ダウンロードを削除します</string>
+    <string name="tsz_q9_pending_history_remove">選択した履歴を削除します</string>
+    <string name="tsz_q9_selection_count">%d 件選択</string>
+    <string name="tsz_q9_mark_read">既読にする</string>
 </resources>

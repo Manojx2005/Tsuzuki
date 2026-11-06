@@ -1,5 +1,6 @@
 package eu.kanade.presentation.history
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.SnackbarHost
@@ -16,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -27,6 +31,11 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.presentation.tsuzuki.history.TsuzukiHistorySelection
+import eu.kanade.presentation.tsuzuki.selection.SelectionAction
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectionBar
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.ui.history.HistoryFilter
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
@@ -56,9 +65,38 @@ fun HistoryScreen(
     onLoadNextPage: () -> Unit,
     showAllFilter: Boolean = true,
     showMangaFilter: Boolean = true,
+    onRemoveSelected: ((List<HistoryWithRelations>) -> Unit)? = null,
 ) {
+    val tsuzuki = isTsuzukiStyle()
+    val selection = remember { TsuzukiHistorySelection() }
+    val rows = remember(state.list) { state.list.orEmpty().filterIsInstance<HistoryUiModel.Item>().map { it.item } }
+    val selected = remember(rows, selection.ids) { rows.filter { it.id in selection.ids } }
+    val selecting = selected.isNotEmpty()
+    BackHandler(enabled = selecting, onBack = selection::clear)
+    LaunchedEffect(state.searchQuery, state.filter, state.groupByNovel) { selection.clear() }
+
     Scaffold(
         topBar = { scrollBehavior ->
+            if (selecting) {
+                AppBar(
+                    title = null,
+                    actionModeCounter = selected.size,
+                    onCancelActionMode = selection::clear,
+                    actionModeActions = {
+                        AppBarActions(
+                            listOf(
+                                AppBar.Action(
+                                    title = stringResource(MR.strings.action_select_all),
+                                    icon = Icons.Outlined.SelectAll,
+                                    onClick = { selection.selectAll(rows) },
+                                ),
+                            ),
+                        )
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+                return@Scaffold
+            }
             SearchToolbar(
                 titleContent = { AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
@@ -84,7 +122,21 @@ fun HistoryScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = {
+            if (selecting && onRemoveSelected != null) {
+                TsuzukiSelectionBar(
+                    listOf(
+                        SelectionAction(stringResource(MR.strings.action_remove), Icons.Outlined.Delete, {
+                            selection.clear()
+                            onRemoveSelected(selected)
+                        }),
+                    ),
+                )
+            }
+        },
+        snackbarHost = {
+            if (tsuzuki) TsuzukiUndoSnackbarHost(snackbarHostState) else SnackbarHost(snackbarHostState)
+        },
     ) { contentPadding ->
         Column(
             modifier = Modifier.padding(contentPadding),
@@ -163,6 +215,13 @@ fun HistoryScreen(
                         onClickDelete = { item -> onDialogChange(HistoryViewModel.Dialog.Delete(item)) },
                         onClickFavorite = { history -> onClickFavorite(history.mangaId) },
                         onLoadNextPage = onLoadNextPage,
+                        selected = selection.ids,
+                        onLongPress = if (tsuzuki && onRemoveSelected != null) {
+                            { row -> selection.extendTo(row.id, rows) }
+                        } else {
+                            null
+                        },
+                        onToggle = if (selecting) selection::toggle else null,
                     )
                 }
             }
@@ -178,6 +237,9 @@ private fun HistoryScreenContent(
     onClickDelete: (HistoryWithRelations) -> Unit,
     onClickFavorite: (HistoryWithRelations) -> Unit,
     onLoadNextPage: () -> Unit,
+    selected: Set<Long>,
+    onLongPress: ((HistoryWithRelations) -> Unit)?,
+    onToggle: ((Long) -> Unit)?,
 ) {
     val timeFormatter = rememberTimestampFormatter()
     val tsuzukiStats = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
@@ -190,7 +252,12 @@ private fun HistoryScreenContent(
         }
         items(
             items = history,
-            key = { "history-${it.hashCode()}" },
+            key = {
+                when (it) {
+                    is HistoryUiModel.Header -> "history-date-${it.date}"
+                    is HistoryUiModel.Item -> "history-item-${it.item.id}"
+                }
+            },
             contentType = {
                 when (it) {
                     is HistoryUiModel.Header -> "header"
@@ -220,10 +287,13 @@ private fun HistoryScreenContent(
                         modifier = Modifier.animateItem(),
                         history = value,
                         timeFormatter = timeFormatter,
-                        onClickCover = { onClickCover(value) },
-                        onClickResume = { onClickResume(value) },
+                        onClickCover = { if (onToggle != null) onToggle(value.id) else onClickCover(value) },
+                        onClickResume = { if (onToggle != null) onToggle(value.id) else onClickResume(value) },
                         onClickDelete = { onClickDelete(value) },
                         onClickFavorite = { onClickFavorite(value) },
+                        selected = value.id in selected,
+                        selectionMode = onToggle != null,
+                        onLongClick = onLongPress?.let { press -> { press(value) } },
                     )
                 }
             }

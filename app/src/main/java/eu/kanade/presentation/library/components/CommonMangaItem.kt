@@ -33,6 +33,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -41,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -83,6 +87,7 @@ fun MangaCompactGridItem(
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
 ) {
+    val tsuzuki = isTsuzukiStyle()
     GridItemSelectable(
         isSelected = isSelected,
         onClick = onClick,
@@ -94,12 +99,13 @@ fun MangaCompactGridItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .tsuzukiSharedCover(coverData.mangaId)
-                        .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                        .alpha(if (isSelected && !tsuzuki) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                     data = coverData,
                 )
             },
             badgesStart = coverBadgeStart,
             badgesEnd = coverBadgeEnd,
+            tsuzukiSelected = tsuzuki && isSelected,
             content = {
                 if (title != null) {
                     CoverTextOverlay(
@@ -193,6 +199,7 @@ fun MangaComfortableGridItem(
     coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
     onClickContinueReading: (() -> Unit)? = null,
 ) {
+    val tsuzuki = isTsuzukiStyle()
     GridItemSelectable(
         isSelected = isSelected,
         onClick = onClick,
@@ -205,12 +212,13 @@ fun MangaComfortableGridItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .tsuzukiSharedCover(coverData.mangaId)
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                            .alpha(if (isSelected && !tsuzuki) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                         data = coverData,
                     )
                 },
                 badgesStart = coverBadgeStart,
                 badgesEnd = coverBadgeEnd,
+                tsuzukiSelected = tsuzuki && isSelected,
                 content = {
                     if (onClickContinueReading != null) {
                         ContinueReadingButton(
@@ -245,6 +253,7 @@ private fun MangaGridCover(
     badgesStart: (@Composable RowScope.() -> Unit)? = null,
     badgesEnd: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable (BoxScope.() -> Unit)? = null,
+    tsuzukiSelected: Boolean = false,
 ) {
     Box(
         modifier = modifier
@@ -262,7 +271,7 @@ private fun MangaGridCover(
             )
         }
 
-        if (badgesEnd != null) {
+        if (badgesEnd != null && !tsuzukiSelected) {
             BadgeGroup(
                 modifier = Modifier
                     .padding(4.dp)
@@ -270,6 +279,7 @@ private fun MangaGridCover(
                 content = badgesEnd,
             )
         }
+        if (tsuzukiSelected) TsuzukiSelectedCover()
     }
 }
 
@@ -305,6 +315,7 @@ private fun GridItemSelectable(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val tsuzuki = isTsuzukiStyle()
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
@@ -312,10 +323,11 @@ private fun GridItemSelectable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
+            .semantics { selected = isSelected }
+            .selectedOutline(isSelected = isSelected && !tsuzuki, color = MaterialTheme.colorScheme.secondary)
             .padding(4.dp),
     ) {
-        val contentColor = if (isSelected) {
+        val contentColor = if (isSelected && !tsuzuki) {
             MaterialTheme.colorScheme.onSecondary
         } else {
             LocalContentColor.current
@@ -361,6 +373,7 @@ fun MangaListItem(
     Row(
         modifier = Modifier
             .selectedBackground(isSelected)
+            .semantics { selected = isSelected }
             .height(height)
             .combinedClickable(
                 onClick = onClick,

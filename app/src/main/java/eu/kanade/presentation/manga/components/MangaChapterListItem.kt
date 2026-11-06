@@ -91,6 +91,7 @@ fun MangaChapterListItem(
     // Tsuzuki themes: each chapter is a tile; swipe actions stay inside its rounded shape.
     val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
     val tsuzuki = tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+    val mutedText = if (selected) tokens.dotOn else tokens.mutedText
     val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
     SwipeableActionsBox(
         modifier = if (tsuzuki) {
@@ -166,15 +167,22 @@ fun MangaChapterListItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         onTextLayout = { textHeight = it.size.height },
-                        color = LocalContentColor.current.copy(alpha = if (read) DISABLED_ALPHA else 1f),
+                        color = if (tsuzuki && read) {
+                            mutedText
+                        } else {
+                            LocalContentColor.current.copy(alpha = if (read) DISABLED_ALPHA else 1f)
+                        },
                     )
                 }
 
                 Row {
                     val subtitleStyle = MaterialTheme.typography.bodySmall
                         .merge(
-                            color = LocalContentColor.current
-                                .copy(alpha = if (read) DISABLED_ALPHA else SECONDARY_ALPHA),
+                            color = if (tsuzuki) {
+                                mutedText
+                            } else {
+                                LocalContentColor.current.copy(alpha = if (read) DISABLED_ALPHA else SECONDARY_ALPHA)
+                            },
                         )
                     ProvideTextStyle(value = subtitleStyle) {
                         if (date != null) {
@@ -190,7 +198,11 @@ fun MangaChapterListItem(
                                 text = readProgress,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                                color = if (tsuzuki) {
+                                    mutedText
+                                } else {
+                                    LocalContentColor.current.copy(alpha = DISABLED_ALPHA)
+                                },
                             )
                             if (scanlator != null) DotSeparatorText()
                         }

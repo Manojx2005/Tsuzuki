@@ -37,6 +37,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesLoading
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
@@ -84,6 +85,7 @@ fun UpdateScreen(
         onSelectAll(false)
     }
 
+    val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
     val tsuzukiTwoPane = eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesTwoPaneEnabled()
 
     Scaffold(
@@ -111,11 +113,17 @@ fun UpdateScreen(
                 onMultiDeleteClicked = onMultiDeleteClicked,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            if (tsuzuki) {
+                eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost(snackbarHostState)
+            } else {
+                SnackbarHost(snackbarHostState)
+            }
+        },
     ) { contentPadding ->
         when {
-            state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
-            tsuzukiTwoPane -> eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTwoPane(
+            state.isLoading && !tsuzuki -> LoadingScreen(Modifier.padding(contentPadding))
+            tsuzukiTwoPane && !state.isLoading -> eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTwoPane(
                 state = state,
                 contentPadding = contentPadding,
                 lastUpdated = lastUpdated,
@@ -246,9 +254,11 @@ fun UpdateScreen(
                             }
                         }
 
-                        updatesLastUpdatedItem(lastUpdated)
+                        if (!state.isLoading) updatesLastUpdatedItem(lastUpdated)
 
-                        if (state.items.isEmpty()) {
+                        if (state.isLoading) {
+                            tsuzukiUpdatesLoading()
+                        } else if (state.items.isEmpty()) {
                             item(key = "empty_state") {
                                 // Use Box without verticalScroll for LazyColumn compatibility
                                 androidx.compose.foundation.layout.Box(

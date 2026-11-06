@@ -2,7 +2,7 @@ package eu.kanade.presentation.tsuzuki.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -24,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,6 +54,9 @@ fun TsuzukiHistoryItem(
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
     timeFormatter: DateTimeFormatter,
+    isSelected: Boolean = false,
+    selectionMode: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
@@ -75,8 +81,15 @@ fun TsuzukiHistoryItem(
             .fillMaxWidth()
             .clip(shape)
             .background(t.tile)
-            .then(if (t.tileBorder != null) Modifier.border(1.dp, t.tileBorder, shape) else Modifier)
-            .clickable(role = Role.Button, onClick = onClickResume)
+            .then(
+                when {
+                    isSelected -> Modifier.border(2.dp, t.accent, shape)
+                    t.tileBorder != null -> Modifier.border(1.dp, t.tileBorder, shape)
+                    else -> Modifier
+                },
+            )
+            .semantics { if (selectionMode) selected = isSelected }
+            .combinedClickable(role = Role.Button, onClick = onClickResume, onLongClick = onLongClick)
             .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -85,7 +98,7 @@ fun TsuzukiHistoryItem(
             data = history.coverData,
             modifier = Modifier.width(44.dp),
             shape = RoundedCornerShape(6.dp),
-            onClick = onClickCover,
+            onClick = if (selectionMode) null else onClickCover,
         )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -104,7 +117,7 @@ fun TsuzukiHistoryItem(
             )
             progress?.let { TsuzukiProgressBar(it, dots = 16, thickness = 4.dp) }
         }
-        if (!history.coverData.isMangaFavorite) {
+        if (!selectionMode && !history.coverData.isMangaFavorite) {
             IconButton(onClick = onClickFavorite) {
                 Icon(
                     Icons.Outlined.FavoriteBorder,
@@ -114,13 +127,17 @@ fun TsuzukiHistoryItem(
                 )
             }
         }
-        IconButton(onClick = onClickDelete) {
-            Icon(
-                Icons.Outlined.Close,
-                contentDescription = stringResource(MR.strings.action_delete),
-                tint = muted,
-                modifier = Modifier.size(18.dp),
-            )
+        if (isSelected) {
+            Icon(Icons.Outlined.Check, null, Modifier.padding(horizontal = 12.dp), tint = t.accent)
+        } else if (!selectionMode) {
+            IconButton(onClick = onClickDelete) {
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = stringResource(MR.strings.action_delete),
+                    tint = muted,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }

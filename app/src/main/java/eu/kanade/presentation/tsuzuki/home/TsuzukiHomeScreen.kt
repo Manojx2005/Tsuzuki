@@ -316,7 +316,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
                     Text(
                         t.case(stringResource(MR.strings.tsz_tap_stack)),
                         style = bodyStyle(12.sp, FontWeight.SemiBold),
-                        color = if (t.isDot) Color(0xFF5A5A5A) else Color.White.copy(alpha = 0.55f),
+                        color = t.mutedText,
                     )
                 }
             }

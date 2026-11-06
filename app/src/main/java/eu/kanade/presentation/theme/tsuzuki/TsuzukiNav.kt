@@ -171,7 +171,7 @@ private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Mod
         Text(
             text = if (t.isDot) item.shortLabel else item.label,
             style = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot),
-            color = if (highlighted) t.background else t.dotOn.copy(alpha = 0.7f),
+            color = if (highlighted) t.background else t.mutedText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
@@ -313,7 +313,7 @@ fun TsuzukiRail(
             Icon(
                 Icons.Outlined.Settings,
                 contentDescription = stringResource(MR.strings.tsz_settings),
-                tint = t.dotOn.copy(alpha = 0.7f),
+                tint = t.mutedText,
                 modifier = Modifier.size(22.dp),
             )
         }

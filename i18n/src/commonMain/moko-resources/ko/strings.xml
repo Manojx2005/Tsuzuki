@@ -1288,4 +1288,12 @@
     <string name="tsz_appearance_dot_covers">Dot의 표지</string>
     <string name="tsz_appearance_covers_colour">컬러</string>
     <string name="tsz_appearance_legacy_themes">이전 Mihon 및 Tsundoku 테마는 이제 Colour를 사용합니다.</string>
+    <string name="tsz_q9_loading_updates">업데이트를 불러오는 중…</string>
+    <string name="tsz_q9_shelf">책장</string>
+    <string name="tsz_q9_advanced_options">고급 옵션</string>
+    <string name="tsz_q9_pending_mark_read">챕터를 읽음으로 표시합니다</string>
+    <string name="tsz_q9_pending_delete_downloads">다운로드를 삭제합니다</string>
+    <string name="tsz_q9_pending_history_remove">선택한 기록을 삭제합니다</string>
+    <string name="tsz_q9_selection_count">%d개 선택됨</string>
+    <string name="tsz_q9_mark_read">읽음 표시</string>
 </resources>

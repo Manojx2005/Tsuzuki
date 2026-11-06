@@ -1289,4 +1289,12 @@
     <string name="tsz_appearance_dot_covers">Cover in Dot</string>
     <string name="tsz_appearance_covers_colour">Farbig</string>
     <string name="tsz_appearance_legacy_themes">Ältere Mihon- und Tsundoku-Themen verwenden jetzt Colour.</string>
+    <string name="tsz_q9_loading_updates">Updates werden geladen…</string>
+    <string name="tsz_q9_shelf">Regal</string>
+    <string name="tsz_q9_advanced_options">Erweiterte Optionen</string>
+    <string name="tsz_q9_pending_mark_read">Die Kapitel werden als gelesen markiert</string>
+    <string name="tsz_q9_pending_delete_downloads">Die Downloads werden gelöscht</string>
+    <string name="tsz_q9_pending_history_remove">Der ausgewählte Verlauf wird entfernt</string>
+    <string name="tsz_q9_selection_count">%d ausgewählt</string>
+    <string name="tsz_q9_mark_read">Gelesen</string>
 </resources>

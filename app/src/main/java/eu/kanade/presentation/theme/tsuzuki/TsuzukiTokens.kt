@@ -6,6 +6,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.AppTheme
@@ -43,6 +45,24 @@ data class TsuzukiTokens(
     val gridSpacing: Dp,
 ) {
     val isDot get() = style == TsuzukiStyle.DOT
+
+    /** Read and secondary labels still need to be readable on both the base and the tile. */
+    val mutedText: Color
+        get() {
+            val muted = if (isDot) Color(0xFF8A8A8A) else dotOn.copy(alpha = 0.72f)
+            val fill = tile.compositeOver(background)
+            return if (textContrast(muted, fill) >= 4.5f && textContrast(muted, background) >= 4.5f) {
+                muted
+            } else {
+                dotOn
+            }
+        }
+}
+
+internal fun textContrast(ink: Color, surface: Color): Float {
+    val first = ink.compositeOver(surface).luminance()
+    val second = surface.luminance()
+    return (maxOf(first, second) + 0.05f) / (minOf(first, second) + 0.05f)
 }
 
 /** Default Colour palette: navy book + gold accent, used until a cover palette is known. */

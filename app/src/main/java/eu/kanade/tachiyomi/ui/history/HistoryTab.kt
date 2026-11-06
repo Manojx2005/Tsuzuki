@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -23,6 +24,7 @@ import eu.kanade.presentation.history.HistoryScreen
 import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
+import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -32,6 +34,7 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import mihon.feature.migration.dialog.MigrateMangaDialog
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.chapter.model.Chapter
@@ -77,6 +80,7 @@ data object HistoryTab : Tab {
             viewModel.syncFilterWithHideManga(hideMangaUi)
         }
 
+        val scope = rememberCoroutineScope()
         HistoryScreen(
             state = state,
             snackbarHostState = snackbarHostState,
@@ -91,6 +95,17 @@ data object HistoryTab : Tab {
             onLoadNextPage = viewModel::loadNextPage,
             showAllFilter = !hideMangaUi,
             showMangaFilter = !hideMangaUi,
+            onRemoveSelected = { rows ->
+                scope.launch {
+                    if (!snackbarHostState.awaitTsuzukiUndo(
+                            context,
+                            context.stringResource(MR.strings.tsz_q9_pending_history_remove),
+                        )
+                    ) {
+                        rows.forEach(viewModel::removeFromHistory)
+                    }
+                }
+            },
         )
 
         val onDismissRequest = { viewModel.setDialog(null) }

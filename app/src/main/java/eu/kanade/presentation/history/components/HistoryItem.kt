@@ -45,6 +45,9 @@ fun HistoryItem(
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
     timeFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT),
+    selected: Boolean = false,
+    selectionMode: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
 ) {
     if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
@@ -57,6 +60,9 @@ fun HistoryItem(
             onClickFavorite,
             modifier,
             timeFormatter,
+            selected,
+            selectionMode,
+            onLongClick,
         )
         return
     }

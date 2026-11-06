@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,6 +37,8 @@ import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
@@ -133,7 +134,7 @@ data object NovelsTab : Tab {
             settingsViewModel.libraryPreferences.showUrlInList.get(),
         )
 
-        val snackbarHostState = remember { SnackbarHostState() }
+        val snackbarHostState = viewModel.snackbarHostState
 
         // Local reload from database - doesn't fetch from sources
         val onLocalRefresh: () -> Unit = {
@@ -229,11 +230,16 @@ data object NovelsTab : Tab {
                 LibraryBottomActionMenu(
                     visible = state.selectionMode,
                     onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
-                    onMarkAsReadClicked = { viewModel.showMarkReadConfirmation(true) },
+                    onMarkAsReadClicked = if (isTsuzukiStyle()) {
+                        { viewModel.markReadSelection(read = true, offerUndo = true) }
+                    } else {
+                        { viewModel.showMarkReadConfirmation(true) }
+                    },
                     onMarkAsUnreadClicked = { viewModel.showMarkReadConfirmation(false) },
                     onDownloadClicked = viewModel::performDownloadAction
                         .takeIf { state.selectedManga.fastAll { !it.isLocal() } },
                     onDeleteClicked = viewModel::openDeleteMangaDialog,
+                    onRemoveFromLibraryClicked = viewModel::removeSelectionFromLibraryWithUndo,
                     onMigrateClicked = {
                         val selection = state.selection
                         viewModel.clearSelection()
@@ -253,7 +259,9 @@ data object NovelsTab : Tab {
                     onExportEpubClicked = viewModel::openExportEpubDialog,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = {
+                if (isTsuzukiStyle()) TsuzukiUndoSnackbarHost(snackbarHostState) else SnackbarHost(snackbarHostState)
+            },
         ) { contentPadding ->
             when {
                 state.isLoading -> {

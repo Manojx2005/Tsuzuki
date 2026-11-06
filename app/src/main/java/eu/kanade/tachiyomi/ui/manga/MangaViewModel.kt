@@ -30,6 +30,7 @@ import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
+import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.data.download.ChapterContentReader
 import eu.kanade.tachiyomi.data.download.DownloadCache
@@ -970,6 +971,28 @@ class MangaViewModel(
      */
     fun markChaptersRead(chapters: List<Chapter>, read: Boolean) {
         toggleAllSelection(false)
+        applyChapterReadStatus(chapters, read)
+    }
+
+    fun markSelectionReadWithUndo(chapters: List<Chapter>, read: Boolean) {
+        if (!read) {
+            markChaptersRead(chapters, read = false)
+            return
+        }
+        if (chapters.isEmpty()) return
+        toggleAllSelection(false)
+        viewModelScope.launch {
+            if (!snackbarHostState.awaitTsuzukiUndo(
+                    context,
+                    context.stringResource(MR.strings.tsz_q9_pending_mark_read),
+                )
+            ) {
+                applyChapterReadStatus(chapters, read = true)
+            }
+        }
+    }
+
+    private fun applyChapterReadStatus(chapters: List<Chapter>, read: Boolean) {
         if (chapters.isEmpty()) return
         viewModelScope.launchIO {
             setReadStatus.await(
@@ -1352,6 +1375,20 @@ class MangaViewModel(
     fun dismissDialog() {
         wordCountJob?.cancel()
         updateSuccessState { it.copy(dialog = null) }
+    }
+
+    fun deleteSelectedDownloadsWithUndo(chapters: List<Chapter>) {
+        if (chapters.isEmpty()) return
+        toggleAllSelection(false)
+        viewModelScope.launch {
+            if (!snackbarHostState.awaitTsuzukiUndo(
+                    context,
+                    context.stringResource(MR.strings.tsz_q9_pending_delete_downloads),
+                )
+            ) {
+                deleteChapters(chapters)
+            }
+        }
     }
 
     fun showDeleteChapterDialog(chapters: List<Chapter>) {

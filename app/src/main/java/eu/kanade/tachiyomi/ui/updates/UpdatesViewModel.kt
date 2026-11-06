@@ -11,6 +11,7 @@ import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
+import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -38,6 +39,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import logcat.LogPriority
 import mihon.core.viewmodel.StateViewModel
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -56,6 +58,7 @@ import tachiyomi.domain.updates.interactor.ClearUpdatesCache
 import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.service.UpdatesPreferences
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
@@ -170,28 +173,24 @@ class UpdatesViewModel(
             }
                 .catch {
                     logcat(LogPriority.ERROR, it)
+                    mutableState.update { it.copy(isLoading = false, isLoadingMore = false, hasMorePages = false) }
                     _events.send(Event.InternalError)
                 }
                 .collectLatest { (updateItems, hasMore) ->
                     val shouldPrefetchForGroupedView =
                         state.value.groupByNovel &&
                             hasMore &&
-                            updateItems.groupBy { it.update.mangaId }.size < GROUPED_NOVEL_TARGET
-
-                    if (shouldPrefetchForGroupedView) {
-                        mutableState.update { it.copy(isLoadingMore = true) }
-                        currentLimit.value += GetUpdates.PAGE_SIZE
-                        return@collectLatest
-                    }
+                            updateItems.distinctBy { it.update.mangaId }.size < GROUPED_NOVEL_TARGET
 
                     mutableState.update {
                         it.copy(
                             isLoading = false,
-                            isLoadingMore = false,
+                            isLoadingMore = shouldPrefetchForGroupedView,
                             items = updateItems,
                             hasMorePages = hasMore,
                         )
                     }
+                    if (shouldPrefetchForGroupedView) currentLimit.value += GetUpdates.PAGE_SIZE
                 }
         }
 
@@ -346,8 +345,18 @@ class UpdatesViewModel(
      * @param updates the list of selected updates.
      * @param read whether to mark chapters as read or unread.
      */
-    fun markUpdatesRead(updates: List<UpdatesItem>, read: Boolean) {
+    fun markUpdatesRead(updates: List<UpdatesItem>, read: Boolean, offerUndo: Boolean = false) {
+        if (updates.isEmpty()) return
+        toggleAllSelection(false)
         viewModelScope.launchIO {
+            val application = Injekt.get<Application>()
+            if (offerUndo && read && snackbarHostState.awaitTsuzukiUndo(
+                    application,
+                    application.stringResource(MR.strings.tsz_q9_pending_mark_read),
+                )
+            ) {
+                return@launchIO
+            }
             val chapterIds = updates.map { it.update.chapterId }
             val chapters = getChapter.awaitAll(chapterIds)
             setReadStatus.await(
@@ -369,7 +378,6 @@ class UpdatesViewModel(
             }
             getLibraryManga.applyBatchChapterUpdates(batch)
         }
-        toggleAllSelection(false)
     }
 
     /**
@@ -410,7 +418,7 @@ class UpdatesViewModel(
      *
      * @param updatesItem list of chapters
      */
-    fun deleteChapters(updatesItem: List<UpdatesItem>) {
+    fun deleteChapters(updatesItem: List<UpdatesItem>, clearSelection: Boolean = true) {
         viewModelScope.launchNonCancellable {
             updatesItem
                 .groupBy { it.update.mangaId }
@@ -423,7 +431,22 @@ class UpdatesViewModel(
                     downloadManager.deleteChapters(chapters, manga, source)
                 }
         }
+        if (clearSelection) toggleAllSelection(false)
+    }
+
+    fun deleteSelectionWithUndo(items: List<UpdatesItem>) {
+        if (items.isEmpty()) return
         toggleAllSelection(false)
+        viewModelScope.launch {
+            val application = Injekt.get<Application>()
+            if (!snackbarHostState.awaitTsuzukiUndo(
+                    application,
+                    application.stringResource(MR.strings.tsz_q9_pending_delete_downloads),
+                )
+            ) {
+                deleteChapters(items, clearSelection = false)
+            }
+        }
     }
 
     fun showConfirmDeleteChapters(updatesItem: List<UpdatesItem>) {
