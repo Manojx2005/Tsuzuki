@@ -17,6 +17,8 @@ It is a fork of Tsundoku (itself a Mihon fork). Read these before changing anyth
    manga and shared code live). Codex: take the first `ready` card in the Codex queue and follow the protocol at
    the top of `HANDOFF.md`. Claude: review `review` cards first, then continue the plan.
 2. Find and look at its design board **before making UI changes**. Use the offline canvas snapshot first:
+   - **Batch Q (2026-11-06) boards win over older boards where they overlap:** `docs/design/boards/fixes-2026-11/`
+     (`README.md` maps each board to its card; PNGs in `png/`, Dot and Colour; bug screenshots in `evidence/`).
    - **`docs/design/boards/INDEX.md`** and `gallery.html`: 139 artboards and 99 individual Dot screens, captured from the owner's Vivaldi session on 2026-11-03. PNGs are in `png/<page>/`; individual Dot screens are in `png/<page>/dot/`. Per-board source is in `html/<page>/`, with original page exports in `exports/`. The index maps exact paths. Archives are reference only.
    - **`docs/design/specs.md`**: the boards for every open task, written out with sizes, colours, states and motion.
      Use these written measurements alongside the relevant screenshot and HTML.

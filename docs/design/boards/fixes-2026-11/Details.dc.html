@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Book details</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.lab{font:700 11px/1 'Space Mono',monospace;letter-spacing:1.2px;color:#8A8A8A}
+.tile{flex:1 1 0;min-width:0;height:76px;border-radius:20px;background:#0D0D0D;border:1px solid #262626;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px}
+.tag{height:32px;padding:0 12px;border-radius:16px;border:1px solid #2A2A2A;font:700 11px/32px 'Space Mono',monospace;letter-spacing:1px;color:#ccc;white-space:nowrap}
+.row{display:flex;align-items:center;gap:12px;min-height:64px;padding:0 8px 0 16px;border-radius:18px;background:#0D0D0D;border:1px solid #262626}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;font-family:'Space Mono',monospace;color:#fff">
+  <header style="height:64px;display:flex;align-items:center;padding:0 4px">
+    <button class="ib" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 5l-7 7 7 7"/></svg></button>
+    <div style="flex:1"></div>
+    <button class="ib" aria-label="Save chapters"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>
+    <button class="ib" aria-label="Filter and sort chapters"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M3 6h18M7 12h10M10 18h4"/></svg></button>
+    <button class="ib" aria-label="More options"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </header>
+
+  <div style="padding:4px 16px 0;display:flex;gap:16px">
+    <div style="flex:0 0 112px;height:168px;border-radius:14px;background:#2E2E2E;border:1px solid #333" role="img" aria-label="Cover"></div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+      <h1 style="margin:0;font:900 26px/1.05 'Doto',monospace;letter-spacing:1px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">LORD OF THE MYSTERIES</h1>
+      <div style="font:400 12px/1.4 'Space Mono',monospace;color:#ccc;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Cuttlefish That Loves Diving</div>
+      <div class="lab" style="line-height:1.5">COMPLETED · ALLNOVEL</div>
+    </div>
+  </div>
+
+  <div style="padding:16px 16px 0;display:flex;gap:8px">
+    <button class="tile" aria-pressed="true" style="color:#FF2D2D"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF2D2D" aria-hidden="true"><path d="M12 21s-8-5.5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 5.5-8 11-8 11z"/></svg>IN LIBRARY</button>
+    <button class="tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5M18 3v4h-4M6 21v-4h4"/></svg>TRACKING</button>
+    <button class="tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>WEBVIEW</button>
+  </div>
+
+  <button style="margin:12px 16px 0;width:358px;box-sizing:border-box;height:88px;border-radius:24px;background:#0D0D0D;border:1px solid #262626;color:#fff;display:flex;align-items:center;gap:14px;padding:0 16px;text-align:left">
+    <span style="flex:0 0 56px;height:56px;border-radius:28px;background:#FF2D2D;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg></span>
+    <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+      <span style="font:700 15px/1 'Space Mono',monospace;letter-spacing:1px">RESUME · 32 / 1432</span>
+      <span class="lab" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CH. 33 – SWITCH</span>
+    </span>
+  </button>
+
+  <div style="margin:12px 16px 0;display:flex;flex-direction:column;gap:12px">
+    <p style="margin:0;font:400 13px/1.55 'Space Mono',monospace;color:#ddd;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">In the waves of steam and machinery, who could achieve extraordinary? In the fogs of history and darkness, who was whispering?</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;max-height:72px;overflow:hidden">
+      <span class="tag">ACTION</span><span class="tag">ADVENTURE</span><span class="tag">FANTASY</span><span class="tag">MYSTERY</span>
+    </div>
+  </div>
+
+  <div style="margin:18px 16px 0;display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0;font:700 15px/1 'Space Mono',monospace;letter-spacing:1px">1432 CHAPTERS</h2>
+    <span class="lab">1198 UNREAD</span>
+  </div>
+  <div style="margin:10px 16px 0;display:flex;flex-direction:column;gap:8px;opacity:.55">
+    <div class="row"><span style="flex:1;font:700 13px/1.3 'Space Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CH. 1 – CRIMSON</span><button class="ib" aria-label="Download chapter 1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v8M8.5 11.5L12 15l3.5-3.5"/></svg></button></div>
+    <div class="row"><span style="flex:1;font:700 13px/1.3 'Space Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CH. 2 – SITUATION</span><button class="ib" aria-label="Download chapter 2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v8M8.5 11.5L12 15l3.5-3.5"/></svg></button></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

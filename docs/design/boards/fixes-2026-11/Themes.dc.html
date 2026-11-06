@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Appearance — themes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif:ital@1&amp;family=Manrope:wght@600;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.lab{font:700 11px/1 'Space Mono',monospace;letter-spacing:1.2px;color:#8A8A8A}
+.seg{flex:1 1 0;height:40px;border:0;border-radius:20px;background:transparent;color:#8A8A8A;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px}
+.card{flex:1 1 0;min-width:0;border-radius:24px;padding:0;overflow:hidden;display:flex;flex-direction:column;text-align:left;cursor:pointer}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;font-family:'Space Mono',monospace;color:#fff">
+  <header style="height:64px;display:flex;align-items:center;gap:4px;padding:0 4px">
+    <button class="ib" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 5l-7 7 7 7"/></svg></button>
+    <h1 style="margin:0;flex:1;font:900 26px/1 'Doto',monospace;letter-spacing:1px">APPEARANCE</h1>
+  </header>
+
+  <div style="padding:8px 16px 0;display:flex;flex-direction:column;gap:16px">
+    <span class="lab">THEME</span>
+    <div style="display:flex;gap:10px" role="radiogroup" aria-label="Theme">
+      <button class="card" role="radio" aria-checked="false" style="background:#1C2B4A;border:1px solid transparent">
+        <div style="height:200px;padding:14px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+          <div style="width:56px;height:84px;border-radius:8px;background:#E9B44C"></div>
+          <div style="font:italic 400 24px/1 'Instrument Serif',serif;color:#fff">Colour</div>
+          <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.18)"><div style="width:40%;height:6px;border-radius:3px;background:#E9B44C"></div></div>
+        </div>
+        <div style="padding:12px 14px;background:rgba(0,0,0,.25);font:600 12px/1.4 'Manrope',sans-serif;color:rgba(255,255,255,.8)">Takes its colours from the book you're reading</div>
+      </button>
+      <button class="card" role="radio" aria-checked="true" style="background:#0D0D0D;border:2px solid #FF2D2D;background-image:radial-gradient(#1C1C1C 1px,transparent 1.2px);background-size:12px 12px">
+        <div style="height:200px;padding:14px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+          <div style="width:56px;height:84px;border-radius:8px;background:#3A3A3A"></div>
+          <div style="font:900 24px/1 'Doto',monospace;color:#fff">DOT</div>
+          <div style="display:flex;gap:4px" aria-hidden="true"><span style="width:6px;height:6px;border-radius:3px;background:#fff"></span><span style="width:6px;height:6px;border-radius:3px;background:#fff"></span><span style="width:6px;height:6px;border-radius:3px;background:#FF2D2D"></span><span style="width:6px;height:6px;border-radius:3px;background:#2E2E2E"></span><span style="width:6px;height:6px;border-radius:3px;background:#2E2E2E"></span></div>
+        </div>
+        <div style="padding:12px 14px;background:#000;font:700 11px/1.5 'Space Mono',monospace;letter-spacing:.8px;color:#8A8A8A">MONOCHROME DOTS, ONE RED ACCENT</div>
+      </button>
+    </div>
+
+    <div style="background:#0D0D0D;border:1px solid #262626;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <span class="lab">COLOUR THEME ACCENT</span>
+      <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px" role="radiogroup" aria-label="Colour accent">
+        <sc-for list="{{sw}}" as="s" hint-placeholder-count="8">
+          <button role="radio" aria-checked="{{s.on}}" aria-label="{{s.n}}" style="height:44px;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center"><span style="width:32px;height:32px;border-radius:16px;background:{{s.c}};box-shadow:{{s.ring}}"></span></button>
+        </sc-for>
+      </div>
+      <span class="lab" style="line-height:1.5">USED BY COLOUR ONLY. DOT STAYS RED.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="lab">COVERS IN DOT</span>
+      <div style="height:48px;box-sizing:border-box;padding:4px;border-radius:24px;background:#111;border:1px solid #2A2A2A;display:flex" role="radiogroup" aria-label="Covers in Dot">
+        <button class="seg" role="radio" aria-checked="true" style="background:#fff;color:#000">GREYSCALE</button>
+        <button class="seg" role="radio" aria-checked="false">IN COLOUR</button>
+      </div>
+    </div>
+
+    <p class="lab" style="margin:0;line-height:1.6">THE MIHON / TSUNDOKU THEMES (DEFAULT, MONET, CATPPUCCIN, TAKO…) ARE GONE. IF YOU USED ONE, YOU'RE NOW ON COLOUR.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const sw = [['Gold','#E9B44C'],['Amber','#FFB000'],['Coral','#FF6B5B'],['Rose','#F06FA8'],['Violet','#B28CF5'],['Sky','#5BB8F5'],['Mint','#5FD3A0'],['White','#FFFFFF']]
+      .map(([n, c], i) => ({ n, c, on: i === 0 ? 'true' : 'false', ring: i === 0 ? '0 0 0 2px #0D0D0D, 0 0 0 4px #fff' : 'none' }));
+    return { sw };
+  }
+}
+</script>
+</body>
+</html>

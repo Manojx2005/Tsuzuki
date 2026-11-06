@@ -399,3 +399,9 @@ Intentionally undesigned (developer or transient): `DebugInfoScreen`, `WorkerInf
 `DeepLinkScreen`. Needs an owner decision: `SupportUsScreen`. Covered by existing boards under other names: language
 filters (pills on `Extensions`), download settings (`UpdateSchedule`), tracking (`TrackerAccounts`), data
 (`DataTools`), security (`AppLock`), status-bar elements (`ReaderBars`), backups (`Backup`).
+
+## Batch Q fixes (2026-11-06)
+
+`fixes-2026-11/`: 19 phone boards (Dot + Colour) for cards Q1–Q12 in `docs/HANDOFF.md` — reader menu, end of chapter,
+save chapters, library, details, browse, reader quick sheet, full reader settings (Text, Page), Appearance themes.
+See `fixes-2026-11/README.md`. These replace the older boards where they overlap.

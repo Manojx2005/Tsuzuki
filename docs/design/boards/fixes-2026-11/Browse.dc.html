@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Browse</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.pill{height:40px;padding:0 16px;border-radius:20px;border:1px solid #2A2A2A;background:#111;color:#fff;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px;white-space:nowrap}
+.seg{flex:1 1 0;height:40px;border:0;border-radius:20px;background:transparent;color:#8A8A8A;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px}
+.lab{font:700 11px/1 'Space Mono',monospace;letter-spacing:1.2px;color:#8A8A8A}
+.nav{flex:1 1 0;min-width:0;height:48px;border:0;border-radius:24px;background:transparent;color:#8A8A8A;font:700 11px/1 'Space Mono',monospace;letter-spacing:.6px;padding:0}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;font-family:'Space Mono',monospace;color:#fff;background-image:radial-gradient(#1C1C1C 1px,transparent 1.2px);background-size:12px 12px;background-position:6px 6px">
+  <header style="padding:20px 8px 0 20px;display:flex;align-items:center;gap:4px">
+    <h1 style="margin:0;flex:1;font:900 40px/1 'Doto',monospace;letter-spacing:1px">BROWSE</h1>
+    <button class="ib" aria-label="Filter sources"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M3 6h18M7 12h10M10 18h4"/></svg></button>
+    <button class="ib" aria-label="More options"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </header>
+
+  <div style="padding:16px 16px 0;display:flex;gap:8px" role="tablist" aria-label="Media">
+    <button class="pill" role="tab" aria-selected="true" style="background:#FF2D2D;border-color:#FF2D2D">NOVELS</button>
+    <button class="pill" role="tab" aria-selected="false">MANGA</button>
+  </div>
+  <div style="margin:10px 16px 0;height:48px;box-sizing:border-box;padding:4px;border-radius:24px;background:#111;border:1px solid #2A2A2A;display:flex" role="tablist" aria-label="Section">
+    <button class="seg" role="tab" aria-selected="true" style="background:#fff;color:#000">SOURCES</button>
+    <button class="seg" role="tab" aria-selected="false">EXTENSIONS</button>
+  </div>
+
+  <label style="margin:14px 16px 0;height:52px;border-radius:26px;background:#0D0D0D;border:1px solid #262626;display:flex;align-items:center;gap:10px;padding:0 16px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input placeholder="SEARCH 10 SOURCES" aria-label="Search all sources" style="flex:1;min-width:0;border:0;background:transparent;color:#fff;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px;outline:none">
+  </label>
+
+  <div class="lab" style="padding:20px 20px 8px">ENGLISH</div>
+  <div style="margin:0 16px;border-radius:24px;background:#0D0D0D;border:1px solid #262626;overflow:hidden">
+    <sc-for list="{{src}}" as="s" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:12px;min-height:64px;padding:0 4px 0 14px;border-bottom:1px solid #1A1A1A">
+        <span style="flex:0 0 36px;height:36px;border-radius:10px;background:#2A2A2A" aria-hidden="true"></span>
+        <span style="flex:1;min-width:0;font:700 13px/1.3 'Space Mono',monospace;letter-spacing:.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{s.n}}</span>
+        <button style="height:32px;padding:0 10px;border-radius:16px;border:1px solid #2A2A2A;background:transparent;color:#FF2D2D;font:700 10px/1 'Space Mono',monospace;letter-spacing:1px">LATEST</button>
+        <button class="ib" aria-label="Pin {{s.n}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" stroke-width="2" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></svg></button>
+      </div>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Main" style="position:absolute;left:16px;right:16px;bottom:20px;height:62px;border-radius:31px;background:#111;border:1px solid #2A2A2A;box-sizing:border-box;padding:0 6px;display:flex;align-items:center">
+    <div aria-hidden="true" style="position:absolute;left:213px;top:6px;width:64px;height:48px;border-radius:24px;background:#fff"></div>
+    <button class="nav" style="position:relative">HOME</button>
+    <button class="nav" style="position:relative">LIBRARY</button>
+    <button class="nav" style="position:relative">UPDATES</button>
+    <button class="nav" aria-current="page" style="position:relative;color:#000">BROWSE</button>
+    <button class="nav" style="position:relative">MORE</button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const src = ['ALLNOVEL', 'ALLNOVELFULL', 'KAKUYOMU', 'LIGHTNOVELPUB', 'NOVEL BIN', 'ROYAL ROAD'].map(n => ({ n }));
+    return { src };
+  }
+}
+</script>
+</body>
+</html>

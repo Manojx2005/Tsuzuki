@@ -43,9 +43,227 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Claude is working on (Codex: don't touch these)
 
-- Nothing until the 06:00 review of batch N.
+- Reviewing batch Q as cards reach `review`, and device-checking on the phone below.
 
 ## Codex queue
+
+### Batch Q — polish, layout overflow, smooth Dot motion, Mihon-style QoL (written 2026-11-06 by Claude)
+
+**Why:** device pass on the owner's phone (Galaxy `R5GL23ZYE1V`, SM-S948Q, 1080×2340 @ 450 dpi ≈ **384×832 dp**,
+120 Hz, release build `io.github.manojx2005.tsuzuki`, Dot theme). Evidence screenshots:
+`docs/design/boards/fixes-2026-11/evidence/`. Boards for this batch: **`docs/design/boards/fixes-2026-11/README.md`**
+(maps board → card). Look at `png/<Board>.png` (Dot) and `png/Colour<Board>.png` first; `<Board>.dc.html` is the
+source with exact sizes. Same boards on the owner's canvas https://claude.ai/artifact/Qs9pMeZhphy77fbPiE9cTH (pages
+**Dot** and **Colour**). In the app Colour labels are sentence case, not the uppercase drawn on most Colour boards.
+Build Dot first, then match Colour. Stock themes go away in Q12; until then leave them unchanged.
+
+**Prompt the owner pastes into Codex (one thread per card; change the card id):**
+
+```text
+You are working on Tsuzuki (Android, Kotlin, Jetpack Compose). Read AGENTS.md, then docs/HANDOFF.md, then do
+card Q1 only (batch Q). Claim it first: set its status to `codex-working` with your worktree path and today's date.
+Before changing UI, open the card's boards in docs/design/boards/fixes-2026-11/ (README.md says which; look at
+png/<Board>.png and png/Colour<Board>.png, measurements in <Board>.dc.html) and the bug screenshots in evidence/.
+Work only in your worktree (.worktrees/q1, branch tsuzuki/q1 from main). Build with
+JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.13.9-hotspot". Follow AGENTS.md Rules: tokens and
+MaterialTheme.typography only, Dot uppercase + red, real data only, strings in all 8 locales, small dispatch
+hooks in upstream files, new code in tsuzuki packages. Write tests for the logic you add.
+Done means: per-file spotlessApply twice on the files you touched,
+./gradlew :app:assembleDebug :app:testDebugUnitTest green, then fill the card's Result (files + one line each,
+what you left out and why, test counts, exactly what Claude must check on the phone) and set it to `review`.
+Don't commit, push or use adb. If you are stuck for more than 45 minutes, set `blocked` with the question and stop.
+```
+
+**How to run:** one card per Codex thread, in order Q1 → Q12 unless a card says `parallel-ok` (Q5 waits for the
+owner). Worktree per card:
+`git -c core.longpaths=true worktree add -b tsuzuki/<id> .worktrees/<id> main`, copy `local.properties`.
+Follow `AGENTS.md` Rules and WORKPLAN "Appendix — standard rules for restyle cards" (early-return dispatch in upstream
+files, tokens/typography only, Dot uppercase + red, real data only, strings in all 8 locales, per-file Spotless twice,
+`./gradlew :app:assembleDebug :app:testDebugUnitTest` green). **Build JDK:** Android Studio now bundles JDK 25 — use
+`JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.13.9-hotspot"`. Don't commit, push or use adb; fill
+**Result** (files + one line each, what you left out and why, test counts, what Claude must check on the phone),
+set `review`, stop. Stuck > 45 min → `blocked` with the question.
+
+**Mihon rule of thumb for every card (owner: "don't overwhelm users"):** show the 3–5 actions people use every
+time; put the rest in an overflow menu or a "More" sheet; never let a row scroll sideways to hide an action; hide
+tiles/labels that have no data (no `N/A`); one primary action per screen; long text uses the body face in sentence
+case, Doto only for short headings and numbers.
+
+#### Q1 Smooth motion in Dot (T3) — `ready`
+Owner: "a lot of animations are laggy and not smooth on Dot." Measured: frames are fine (gfxinfo 1.2 % janky,
+p50 5 ms at 120 Hz) — the lag is **designed in**:
+1. `theme/tsuzuki/TsuzukiMotion.kt` `stepped()` quantises Dot motion into `DOT_STEPS = 8` jumps (≈ 13–27 visible
+   fps). Used by `tsuzukiTween()` (all Dot callers), `TsuzukiModalBottomSheet.kt:41,47` and
+   `TsuzukiOnboardingScreen.kt:107`. The owner already rejected this for the reader transition on 2026-11-06
+   (`TsuzukiReaderTransition.kt:18`). **Use the smooth curve in Dot everywhere**; keep `stepped()` only for
+   genuinely discrete fills (progress dots lighting one by one), and make those step on the dot count, not 8.
+   Delete the now-unused `res/anim/tsuzuki_reader_*_dot.xml` if nothing references them.
+2. Nav pill (`TsuzukiNav.kt` `NavBarItem`): `animateContentSize()` on every item + background toggled instantly →
+   the white pill pops while the whole row re-lays out. Replace with ONE indicator behind fixed-width items that
+   slides with `graphicsLayer { translationX }` (spring, no layout per frame). Same for the tablet rail.
+3. Dot grid (`TsuzukiComponents.kt` `tsuzukiBackground`): ~2,000 `drawCircle` calls per draw, 22 call sites.
+   Draw one 12 dp tile into an `ImageBitmap` once (`drawWithCache`) and fill with an `ImageShader`
+   (`TileMode.Repeated`).
+4. Audit remaining Dot-only animations (`TsuzukiStartup.kt`, `TsuzukiSharedCover.kt`, `TsuzukiCoverStack.kt`,
+   `TsuzukiAdaptiveSheet.kt`, `TsuzukiSegments.kt`, `TsuzukiReaderContents.kt`): animate only
+   transform/alpha in `graphicsLayer`, read animated values in draw/layout lambdas, not composition.
+Keep Reduce motion behaviour. Tests: `stepped` / motion-spec selection unit tests updated.
+Device check (Claude): record `dumpsys gfxinfo framestats` + screen recording for sheet open/close, tab switch,
+home stack swipe, book open, before/after.
+
+#### Q2 Novel reader: next chapter always reachable (T3) — `ready`
+Owner: "the continue button on the novel reader doesn't go to the next chapter." Found on the phone
+(`evidence/reader-menu-overflow.png`): the bottom bar (`presentation/reader/appbars/NovelReaderAppBars.kt` ~l.504)
+is a `horizontalScroll` row with `SpaceEvenly`; with 9–10 enabled items it is wider than 384 dp, **Settings is
+clipped and Next chapter is off-screen** (uiautomator: Settings ends at x=1057/1080, no Next node). Board
+`fixes-2026-11/Main.dc.html`:
+- Row 1: fixed **‹ Previous** (48 dp, tile) | progress dots + `19%` / page | fixed **› Next** (48 dp, accent). Never
+  scroll. Disabled state when there is no prev/next chapter.
+- Row 2: the first **4** enabled actions from the existing configurable bottom-bar list (`BottomBarItem` order) with
+  short labels + **MORE** (a Tsuzuki menu/sheet holding the rest: auto-scroll, rotation, scroll to top, edit, TTS
+  paragraph controls). PREV/NEXT_CHAPTER items are taken out of row 2 because row 1 owns them.
+- Top bar: title and chapter both `maxLines = 1` + ellipsis (now "SWITC" is hard-cut).
+- End of chapter (infinite scroll off): replace the hardcoded light-blue `android.widget.Button` in
+  `NovelViewer.addNextChapterButton()` (`#ADD8E6`, black stroke) with a themed end card — board
+  `ChapterEnd.dc.html` (next chapter number + title from source, downloaded state, NEXT CHAPTER 56 dp, Mark read,
+  Contents). The card sits on the reading page, so it takes the **page colours** (ink text, ink-filled button with
+  page-coloured label, tile = ink at ~8 % over the page) in Colour, for every page colour incl. Night/Black — never
+  the app tile/accent (white/gold on cream is unreadable; see `ColourChapterEnd.dc.html`, its `pageColour` switch).
+  Do it through a hook/factory in `presentation/tsuzuki/reader/` so `NovelViewer` keeps a one-line call.
+  WebView renderer: same card via its existing JS bridge / `onChapterNavigate` path.
+- **Verify the action itself:** write tests around `ReaderActivity.loadNextChapterInternal` /
+  `ReaderViewModel.loadNextChapter` for (a) infinite scroll on — `viewerChapters.nextChapter` must follow the
+  *visible* chapter (`novelVisibleChapter`), not the first-loaded one; (b) a tap while `isLoadingAdjacentChapter`
+  (pending direction replay); (c) WebView paged. If (a) is wrong, fix it.
+Stock themes: keep the stock row but add the same fixed prev/next (it's a bug there too) only if the diff stays a
+small slot; otherwise Tsuzuki-only and say so.
+
+#### Q3 Save chapters: choose a range by chapter number (T3) — `ready`
+Owner: "I can't choose which chapter I want to download properly with entering numbers." Found
+(`evidence/save-chapters-slider.png`, `presentation/tsuzuki/details/TsuzukiDownloadSheet.kt`): CUSTOM is a
+`RangeSlider` over **list positions** (`rangeStart/rangeEnd` are indices); on 1,229 chapters a 25-chapter range puts
+both thumbs on top of each other; no text entry. Board `SaveChapters.dc.html`:
+- CUSTOM shows **From chapter / To chapter** numeric fields (`KeyboardType.Number`, IME Done), −/+ steppers (long-press
+  repeats), shortcuts **FROM WHERE I AM** (first unread after last read) and **TO LAST**. Values are **chapter
+  numbers** (`chapterNumber`, fallback to list order for chapters without a number); decimals (12.5) allowed.
+- Inline validation (from > to, out of range, nothing to download) in the accent colour; the CTA reads
+  `SAVE CH. 33–57` and is disabled when invalid. Show `N CHAPTERS · M ALREADY SAVED · SKIPPED`.
+- Keep the slider out (remove it) — Mihon uses a number dialog for custom amounts; the slider is unusable on long books.
+- Move the two app-wide switches (Only on Wi-Fi, Delete after reading) out of the per-book sheet into a
+  `DOWNLOAD SETTINGS ›` row that opens the download settings screen.
+- Explain/fix the count mismatch: header shows `1432 chapters`, sheet shows `ALL 1229`, `UNREAD 1198`. Label what
+  ALL means (not yet saved?) or make it match; same numbers on details and sheet.
+- Pure helper `chaptersInNumberRange(chapters, from, to)` + tests (decimals, missing numbers, reversed input,
+  duplicates across scanlators).
+Also confirm Mihon-style range selection still works in the chapter list (long-press one chapter, long-press
+another → selects everything between → download from the action bar); if not wired in the Tsuzuki list, wire it.
+
+#### Q4 Two "Default" shelves in the library (T3) — `ready`
+Found (`evidence/library-two-defaults.png`): shelf pills `DEFAULT · DEFAULT · LOCAL`. The first is the system
+category (id 0, manga); the second is a **real category named "Default"** holding the 4 novels, created by the
+LNReader backup import (`LNReaderBackupImporter.kt` ~l.204 maps every LN category, including LNReader's own
+"Default", to a new `BackupCategory`; `CategoriesRestorer` then creates it).
+- Import: map LNReader's default category (its id 1 / name "Default", case-insensitive, also the localized
+  `default_category` string) to the system category instead of creating one.
+- One-time fix for existing installs (app-start migration in `tsuzuki/`, guarded by a preference flag): if a
+  non-system category's trimmed name equals "Default" (or the localized default name) **and** it has content type
+  novel or all, move its memberships to the system category and delete it. Unit/SQLite test with the in-memory fixture
+  (memberships preserved, other categories untouched, runs once). Note it in the HANDOFF log; Claude will run it on
+  the phone only after an in-app backup.
+- Display: if two pills would still render the same label, never show duplicates (append the content type).
+- Pills show their book count (N12 already has the query).
+
+#### Q5 Navigation: Library tab + real labels (T3) — `owner-decision` (don't start until the owner answers)
+Mihon's five tabs are Library · Updates · History · Browse · More; in Tsuzuki the library is only reachable from
+Home's "ALL BOOKS →" (no nav item) and Dot labels are cryptic (`NEW / PAST / FIND / •••`). Board `Library.dc.html` /
+`Browse.dc.html`: **HOME · LIBRARY · UPDATES · BROWSE · MORE** (History moves into More + Home's recent row).
+Uses Q1's sliding indicator. Tablet rail gets the same items. TalkBack labels unchanged words.
+
+#### Q6 Book details header (T2) — `ready`
+`evidence/details-header.png`, board `Details.dc.html`:
+- Toolbar: back · download · filter · overflow. Move scroll-to-top / next-unread / scroll-to-bottom into the overflow
+  (Tsundoku added them; keep the actions, Mihon shows only download/filter/more).
+- Hide tiles without data: the hourglass `N/A` tile; chapter rows show no `N/A` date line when the date is unknown.
+- One Resume: the big Resume tile stays; the floating `Resume` FAB over the chapter list only appears after the tile
+  scrolls off screen (it currently overlaps chapter 2 while the tile is visible).
+- Genre chips wrap to max two lines (+N chip) instead of being clipped at the card edge ("Myster…").
+- Dot case consistency: tile labels uppercase via tokens ("In library", "Tracking", "WebView" are mixed case);
+  summary/author stay sentence case in the body face. Summary expand chevron must not overlap text.
+
+#### Q7 Browse tabs + source rows (T2) — `ready` `parallel-ok`
+`evidence/tabs-updates-history-browse-more.png` (3rd panel), board `Browse.dc.html`: the 4 pills
+(NOVEL SOURCES · MANGA SOURCES · NOVEL EXT… · …) run off screen. Use media pills (NOVELS | MANGA) + a 2-item
+segmented control (SOURCES | EXTENSIONS) — the existing pager keeps its 4 pages, only the header changes. Source rows:
+name gets the full width (no "LightNovelP…" at 384 dp), LATEST becomes a compact outline chip, pin stays 48 dp.
+
+#### Q8 Overflow and large-font sweep (T3) — `ready`
+Every Tsuzuki screen at **360 dp width** and **font scale 1.0 / 1.3 / 2.0**, Dot + Colour, EN + JA. Known on the
+phone now: More "DATA AND STORA…", reader title hard-cut, genre chips, Browse pills, source names, Home hero title
+(`LORD OF / THE / MYSTERIES` 3 lines pushes the stack), shelf pills. Add `@Preview` groups
+(`widthDp = 360, fontScale = 1.3f/2f`) for each Tsuzuki screen and fix: no clipped text without ellipsis, rows that
+wrap instead of scroll, min 48 dp targets, no fixed heights around text. List every fix in Result.
+
+#### Q9 Accessibility + quality of life, Mihon parity (T3) — `ready`
+- Nav and tab labels are spoken as real words (already true for content descriptions — keep it when Q5 lands).
+- Contrast: check every muted/disabled colour on tile/background (e.g. `#8A8A8A` on `#0D0D0D`, dim read-chapter rows
+  at `alpha .55`) ≥ 4.5:1 for text; fix tokens, not screens.
+- Undo instead of confirm where Mihon does (remove from library, delete downloads, mark read): snackbar with UNDO.
+- Long-press anywhere a list has selection (library, chapters, updates, history) and a bottom action bar with
+  labelled actions; range select by long-press (see Q3).
+- Settings: hide rarely used Tsundoku power options behind an "Advanced" group in each settings screen (no deletes).
+- Updates: show a skeleton/last-update list instead of a bare spinner while 1,871 rows load (took > 2.5 s on the phone);
+  profile the load and move mapping off the main thread if needed.
+Each item is optional if it turns out already done — say so in Result.
+
+#### Q11 Reader settings redesign: quick sheet + All reader settings (T4) — `ready`
+Owner: "redesign the reader settings … the all settings panel too." Boards (Dot + Colour pages of the canvas;
+offline `fixes-2026-11/ReaderQuick`, `ReaderAll`, `ReaderAllPage` and their `Colour*` twins). Found on the phone:
+- Quick sheet (`presentation/tsuzuki/novel/TsuzukiReaderSettingsSheet.kt`): 6 page-colour circles overflow 384 dp
+  (BLACK clipped) and have no visible names; tabs LOOK/LAYOUT/CONTROLS; size `13` and lines `1.1` without units.
+- All settings (`presentation/reader/settings/NovelPage.kt`, 2,044 lines, Tsundoku's stock sheet opened from
+  "ALL SETTINGS"): five **unlabelled icon tabs**, labels wrap mid-word ("Rende / ring / mode"), line height shows
+  `11` here vs `1.1` in the quick sheet, four separate margin steppers, ~30 options, and **three overlapping colour
+  lists** (Theme App/Light/Dark/Sepia/Black/Grey/Custom + Font colour ×9 + Background colour ×9) that fight the
+  quick sheet's Book/Paper/Sepia/Sage/Night/Black.
+Do:
+1. Quick sheet → board `ReaderQuick`: tabs **TEXT · PAGE · CONTROLS**; page colours in one 6-column grid with names
+   under each swatch (fits 360 dp); TEXT SIZE / LINE SPACING with the same unit formatting as the full screen
+   (one formatter, e.g. `1.1×`); RESET (this reader's defaults) + `ALL READER SETTINGS ›`.
+2. All reader settings → a **Tsuzuki full-screen page** (not a sheet) in `presentation/tsuzuki/novel/`, opened from
+   the quick sheet in Tsuzuki themes; stock themes keep `NovelPage`. Labelled tabs
+   **TEXT · PAGE · CONTROLS · LISTEN · MORE** mapping the existing tabs (Reading/Appearance/Controls/TTS/Advanced).
+   Labels sit above controls (never beside a wrapping label); every row min 56 dp; rare options fold into a
+   **FINE-TUNE** expander (paragraph indent/spacing, individual top/bottom margins, highlight style…).
+   PAGE tab: one page-colour list (Q12) + CUSTOM swatch that opens the existing text/background colour pickers;
+   margins as SIDE MARGINS + TOP / BOTTOM (writes left+right / top+bottom; separate values still editable in
+   FINE-TUNE). Live preview strip on TEXT. Every control writes the **same `ReaderPreferences` keys** — no new prefs
+   except what Q12 needs; no option is deleted, only regrouped.
+3. Same treatment for the manga reader settings dialog tabs (`ReaderSettingsDialog.kt`, N4's Tsuzuki pages): labelled
+   tabs, no mid-word wraps. Small.
+Tests: pure mapping of tab → preference groups, unit formatter, margin linking. Strings in 8 locales.
+
+#### Q12 Remove the themes we didn't make (T3) — `ready`
+Owner: "remove themes that we did not make" (2026-11-06). **This overrides the AGENTS.md rule "Legacy themes must
+keep working"** — update that rule in the same card. Board `Themes.dc.html`.
+- **App themes:** Settings › Appearance offers only **Colour** and **Dot** (+ light/dark/system mode, Colour accent
+  swatches, Dot covers greyscale/in colour). Hide DEFAULT, MONET, CATPPUCCIN, GREEN_APPLE, LAVENDER,
+  MIDNIGHT_DUSK, NORD, STRAWBERRY_DAIQUIRI, TAKO, TEALTURQUOISE, TIDAL_WAVE, YINYANG, YOTSUBA, TOKYONIGHT,
+  MONOCHROME and the hidden DARK_BLUE/HOT_PINK/BLUE from `AppThemePreferenceWidget.kt` / `AppThemesList`. On
+  start, a stored legacy value maps to **COLOUR** (one-time migration, also when restoring an old backup). Keep the
+  enum entries and colour-scheme files for now (Tsundoku merges + backups stay readable) — just unreachable; list
+  them for a later deletion card. Remove the stock-UI branches only where trivial; don't rip out `TsuzukiStyle.NONE`.
+- **Novel reader themes (Tsundoku's):** `NovelPage.kt` `novelThemes` (app/light/dark/sepia/black/grey/custom) and
+  the Font colour / Background colour lists disappear from Tsuzuki UI; the only list is ours (Book/Paper/Sepia/Sage/
+  Night/Black + Custom). Map stored `pref_novel_theme`: light→paper, dark→night, grey→night, sepia→sepia,
+  black→black, app→book, custom stays custom (font/background colour prefs kept for Custom).
+- Tests: theme migration (every legacy value → COLOUR; COLOUR/DOT untouched), novel theme mapping, backup restore of
+  a legacy theme value. Device check (Claude): Appearance shows two cards; switching works; reader colours intact.
+
+#### Q10 Docs: JDK 21 path (T1) — `ready` `parallel-ok`
+`AGENTS.md` Build section still says JDK 21 is Android Studio's `jbr`; Android Studio 2026.2 ships JDK 25. Point to
+Temurin 21 (`C:\Program Files\Eclipse Adoptium\jdk-21.0.13.9-hotspot`) and note the owner's phone serial
+`R5GL23ZYE1V` (release app `io.github.manojx2005.tsuzuki`) in the device table. Docs only.
+
 
 ### Overnight batch N (2026-11-05 → 06:00 2026-11-06) — run in ONE Codex thread, in order
 
@@ -365,6 +583,9 @@ Result: _pending_
 
 ## Open questions for the owner
 
+- **Q5 nav (2026-11-06):** make Library a nav tab (HOME · LIBRARY · UPDATES · BROWSE · MORE, History inside More
+  and Home) with plain-word labels instead of `NEW / PAST / FIND / •••`? Codex waits on this card.
+
 - Anime schema (docs/ANIME_SCHEMA.md Q1–Q8): share `categories` with content_type 3? Aniyomi-compatible backups (proto 500/501)? season columns? watch time in the reading streak? table naming; discard the spike's 36.sqm.
 - Still parked: release v0.1 / signing / making the repo public; Firebase telemetry removal before release;
   Support us screen; in-app PIN lock; Import EPUB "off" switch.
@@ -401,6 +622,14 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-06 15:20 Claude — new machine set up + device pass → batch Q.** Installed Android Studio 2026.2.2,
+  Temurin JDK 21, SDK 37.0/36, build-tools 37/36, NDK 29.0.14206865, platform-tools; `:app:compileDebugKotlin`
+  green in 5 m 38 s. Owner's phone `R5GL23ZYE1V` (release build, Dot): reader bottom bar hides Next chapter
+  off-screen, save-chapters custom range is an index slider, library shows two DEFAULT shelves (LNReader import),
+  details/Browse/More text clipped, Dot motion stepped by design (frames fine: 1.2 % janky at 120 Hz). Boards for
+  the fixes: `docs/design/boards/fixes-2026-11/` + canvas https://claude.ai/artifact/Qs9pMeZhphy77fbPiE9cTH.
+  Cards Q1–Q12 written (Q11 reader settings, Q12 remove non-Tsuzuki themes, both added on owner request; Colour boards added); Q5 waits for the owner.
 
 - **2026-11-06 06:30 Claude — batch N complete.** N20 merged (blocking storage lookups → IO: chapter content
   reader, DownloadPageLoader, `isChapterOnDisk` for skip-cache probes; 5 off-thread tests; novel + manga readers

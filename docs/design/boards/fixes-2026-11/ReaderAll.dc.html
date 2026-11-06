@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>All reader settings — Text</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.tab{flex:0 0 auto;height:40px;padding:0 14px;border:0;border-radius:20px;background:transparent;color:#8A8A8A;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px}
+.lab{font:700 11px/1 'Space Mono',monospace;letter-spacing:1.2px;color:#8A8A8A}
+.grp{background:#0D0D0D;border:1px solid #262626;border-radius:24px;padding:4px 16px}
+.row{display:flex;flex-direction:column;gap:10px;padding:14px 0;border-bottom:1px solid #1A1A1A}
+.rowi{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid #1A1A1A}
+.t{font:700 13px/1.3 'Space Mono',monospace;letter-spacing:.8px}
+.seg2{flex:1 1 0;height:40px;border:0;border-radius:20px;background:transparent;color:#8A8A8A;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px}
+.stp{width:44px;height:44px;border-radius:22px;border:0;background:#1E1E1E;color:#fff;font:700 18px/1 'Space Mono',monospace}
+.val{min-width:56px;text-align:center;font:900 22px/1 'Doto',monospace;color:#FF2D2D}
+.al{width:44px;height:44px;border-radius:22px;border:0;background:#1E1E1E;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;font-family:'Space Mono',monospace;color:#fff">
+  <header style="height:64px;display:flex;align-items:center;gap:4px;padding:0 4px">
+    <button class="ib" aria-label="Back to reader"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 5l-7 7 7 7"/></svg></button>
+    <h1 style="margin:0;flex:1;font:900 26px/1 'Doto',monospace;letter-spacing:1px">READER</h1>
+    <button style="height:40px;padding:0 12px;border-radius:20px;border:1px solid #2A2A2A;background:transparent;color:#fff;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px;margin-right:8px">RESET</button>
+  </header>
+  <div style="padding:0 12px;display:flex;gap:2px;border-bottom:1px solid #1A1A1A;padding-bottom:8px" role="tablist" aria-label="Reader settings sections">
+    <button class="tab" role="tab" aria-selected="true" style="background:#fff;color:#000">TEXT</button>
+    <button class="tab" role="tab" aria-selected="false">PAGE</button>
+    <button class="tab" role="tab" aria-selected="false">CONTROLS</button>
+    <button class="tab" role="tab" aria-selected="false">LISTEN</button>
+    <button class="tab" role="tab" aria-selected="false">MORE</button>
+  </div>
+
+  <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div class="grp">
+      <div class="row">
+        <span class="lab">RENDERER</span>
+        <div style="height:48px;box-sizing:border-box;padding:4px;border-radius:24px;background:#111;border:1px solid #2A2A2A;display:flex" role="radiogroup" aria-label="Renderer">
+          <button class="seg2" role="radio" aria-checked="true" style="background:#fff;color:#000">TEXT VIEW</button>
+          <button class="seg2" role="radio" aria-checked="false">WEB VIEW</button>
+        </div>
+      </div>
+      <div class="rowi"><span class="t">FONT</span><button style="height:40px;border:0;background:transparent;color:#FF2D2D;font:700 13px/1 'Space Mono',monospace;letter-spacing:.8px">LITERATA ›</button></div>
+      <div class="rowi"><span class="t">TEXT SIZE</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Smaller">−</button><span class="val">13</span><button class="stp" aria-label="Larger">+</button></div></div>
+      <div class="rowi"><span class="t">LINE SPACING</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Tighter">−</button><span class="val">1.1×</span><button class="stp" aria-label="Looser">+</button></div></div>
+      <div class="rowi" style="border-bottom:0"><span class="t">ALIGN</span>
+        <div style="display:flex;gap:6px" role="radiogroup" aria-label="Text alignment">
+          <button class="al" role="radio" aria-checked="false" aria-label="Left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
+          <button class="al" role="radio" aria-checked="false" aria-label="Centre"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
+          <button class="al" role="radio" aria-checked="true" aria-label="Justify" style="background:#FF2D2D"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <details class="grp" style="padding:0 16px">
+      <summary style="list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:56px;cursor:pointer"><span class="t">FINE-TUNE</span><span class="lab">INDENT 0 · SPACING 0 ▾</span></summary>
+      <div class="rowi"><span class="t">PARAGRAPH INDENT</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Less indent">−</button><span class="val">0</span><button class="stp" aria-label="More indent">+</button></div></div>
+      <div class="rowi" style="border-bottom:0"><span class="t">PARAGRAPH SPACING</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Less spacing">−</button><span class="val">0</span><button class="stp" aria-label="More spacing">+</button></div></div>
+    </details>
+
+    <div style="background:#F3EADB;border-radius:20px;padding:16px;color:#3A2E22;font:500 15px/1.55 Georgia,serif" aria-label="Preview">
+      <span class="lab" style="color:#8B7B66;display:block;margin-bottom:8px">PREVIEW</span>
+      The quick brown fox jumps over the lazy dog. 素早い茶色の狐。
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

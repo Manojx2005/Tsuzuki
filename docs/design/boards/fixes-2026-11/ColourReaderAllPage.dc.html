@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>All reader settings — Page (Colour)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&amp;family=Manrope:wght@500;700;800&amp;family=Space+Mono:wght@400;700&amp;family=Literata:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.tab{flex:0 0 auto;height:40px;padding:0 14px;border:0;border-radius:20px;background:transparent;color:rgba(255,255,255,.72);font:700 11px/1 'Manrope',sans-serif;letter-spacing:1px}
+.lab{font:700 11px/1 'Manrope',sans-serif;letter-spacing:1.2px;color:rgba(255,255,255,.72)}
+.grp{background:rgba(255,255,255,.08);border:1px solid transparent;border-radius:24px;padding:4px 16px}
+.row{display:flex;flex-direction:column;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.rowi{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid rgba(255,255,255,.08)}
+.t{font:700 13px/1.3 'Manrope',sans-serif;letter-spacing:.8px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:#fff;font:700 10px/1 'Manrope',sans-serif;letter-spacing:.8px;min-width:0}
+.dot{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;font:500 16px/1 'Literata',serif;box-sizing:border-box}
+.stp{width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.12);color:#fff;font:700 18px/1 'Manrope',sans-serif}
+.val{min-width:48px;text-align:center;font:italic 400 25px/1 'Instrument Serif',serif;color:#E9B44C}
+.tog{width:52px;height:32px;border-radius:16px;border:0;padding:0;position:relative}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#1C2B4A;font-family:'Manrope',sans-serif;color:#fff">
+  <header style="height:64px;display:flex;align-items:center;gap:4px;padding:0 4px">
+    <button class="ib" aria-label="Back to reader"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 5l-7 7 7 7"/></svg></button>
+    <h1 style="margin:0;flex:1;font:italic 400 30px/1 'Instrument Serif',serif;letter-spacing:1px">READER</h1>
+    <button style="height:40px;padding:0 12px;border-radius:20px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;font:700 11px/1 'Manrope',sans-serif;letter-spacing:1px;margin-right:8px">RESET</button>
+  </header>
+  <div style="padding:0 12px 8px;display:flex;gap:2px;border-bottom:1px solid rgba(255,255,255,.08)" role="tablist" aria-label="Reader settings sections">
+    <button class="tab" role="tab" aria-selected="false">TEXT</button>
+    <button class="tab" role="tab" aria-selected="true" style="background:#fff;color:#1C2B4A">PAGE</button>
+    <button class="tab" role="tab" aria-selected="false">CONTROLS</button>
+    <button class="tab" role="tab" aria-selected="false">LISTEN</button>
+    <button class="tab" role="tab" aria-selected="false">MORE</button>
+  </div>
+
+  <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div class="grp">
+      <div class="row" style="border-bottom:0">
+        <span class="lab">PAGE COLOUR</span>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 4px" role="radiogroup" aria-label="Page colour">
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:#2B2118;color:#F3EADB">Aa</span>BOOK</button>
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:#FAF8F3;color:rgba(255,255,255,.12)">Aa</span>PAPER</button>
+          <button class="sw" role="radio" aria-checked="true"><span class="dot" style="background:#F3EADB;color:#4A3B2A;outline:2px solid #fff;outline-offset:3px">Aa</span>SEPIA</button>
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:#DCE5D6;color:#2E3A2A">Aa</span>SAGE</button>
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:#1D1A16;color:#D8CFC0;border:1px solid rgba(255,255,255,.2)">Aa</span>NIGHT</button>
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:#1C2B4A;color:#ddd;border:1px solid rgba(255,255,255,.2)">Aa</span>BLACK</button>
+          <button class="sw" role="radio" aria-checked="false"><span class="dot" style="background:rgba(255,255,255,.08);color:#fff;border:1px dashed #555">+</span>CUSTOM</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="rowi"><span class="t">SIDE MARGINS</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Narrower">−</button><span class="val">14</span><button class="stp" aria-label="Wider">+</button></div></div>
+      <div class="rowi"><span class="t">TOP / BOTTOM</span><div style="display:flex;align-items:center;gap:4px"><button class="stp" aria-label="Less">−</button><span class="val">16</span><button class="stp" aria-label="More">+</button></div></div>
+      <div class="rowi"><span class="t">KEEP SCREEN ON</span><button class="tog" role="switch" aria-checked="true" aria-label="Keep screen on" style="color:#1C2B4A;background:#E9B44C"><span style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:12px;background:#1C2B4A"></span></button></div>
+      <div class="rowi" style="border-bottom:0"><span class="t">STATUS BAR</span><button style="height:40px;border:0;background:transparent;color:#E9B44C;font:700 13px/1 'Manrope',sans-serif;letter-spacing:.8px">BOTTOM ›</button></div>
+    </div>
+
+    <p class="lab" style="margin:0;line-height:1.6">MARGINS IN DP. TOP AND BOTTOM CAN BE SET SEPARATELY UNDER MORE › FINE-TUNE.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

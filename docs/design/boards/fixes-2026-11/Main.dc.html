@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reader menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;family=Literata:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ib{width:48px;height:48px;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0}
+.act{flex:1 1 0;min-width:0;height:64px;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:700 10px/1 'Space Mono',monospace;letter-spacing:1px;border-radius:16px}
+.line{height:12px;border-radius:6px;background:#CFC3AE}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#F3EADB;font-family:'Space Mono',monospace;color:#fff">
+  <div style="position:absolute;top:96px;left:16px;right:16px;display:flex;flex-direction:column;gap:14px" aria-hidden="true">
+    <div class="line" style="width:100%"></div><div class="line" style="width:94%"></div><div class="line" style="width:60%"></div>
+    <div style="height:10px"></div>
+    <div class="line" style="width:98%"></div><div class="line" style="width:100%"></div><div class="line" style="width:72%"></div>
+    <div style="height:10px"></div>
+    <div class="line" style="width:100%"></div><div class="line" style="width:88%"></div><div class="line" style="width:96%"></div><div class="line" style="width:40%"></div>
+    <div style="height:10px"></div>
+    <div class="line" style="width:92%"></div><div class="line" style="width:100%"></div><div class="line" style="width:66%"></div>
+    <div style="height:10px"></div>
+    <div class="line" style="width:100%"></div><div class="line" style="width:84%"></div>
+  </div>
+
+  <header style="position:absolute;top:0;left:0;right:0;height:72px;background:#000;display:flex;align-items:center;gap:4px;padding:0 4px 0 4px;box-sizing:border-box">
+    <button class="ib" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 5l-7 7 7 7"/></svg></button>
+    <div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px">
+      <div style="font:700 14px/1.2 'Space Mono',monospace;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LORD OF THE MYSTERIES</div>
+      <div style="font:400 12px/1.2 'Space Mono',monospace;letter-spacing:1px;color:#8A8A8A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CH. 33 · CHAPTER 33 – SWITCH</div>
+    </div>
+    <button class="ib" aria-label="Contents"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+    <button class="ib" aria-label="Bookmark chapter"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
+    <button class="ib" aria-label="More options"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </header>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#000;padding:10px 8px 22px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="ib" aria-label="Previous chapter" style="background:#111;border:1px solid #2A2A2A;width:48px;flex:0 0 48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:8px;padding:0 4px">
+        <div style="display:flex;justify-content:space-between;font:700 11px/1 'Space Mono',monospace;letter-spacing:1px;color:#8A8A8A"><span style="color:#fff">19%</span><span>PAGE 3 / 16</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;height:10px" aria-hidden="true">
+          <sc-for list="{{dots}}" as="d" hint-placeholder-count="20"><span style="width:6px;height:6px;border-radius:3px;background:{{d.c}}"></span></sc-for>
+        </div>
+      </div>
+      <button class="ib" aria-label="Next chapter" style="background:#FF2D2D;width:48px;flex:0 0 48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div style="display:flex;align-items:stretch;gap:2px">
+      <button class="act"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>LISTEN</button>
+      <button class="act"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c1 4 4 7 7 8M11 5c-1 4-4 7-7 8M13 21l4-9 4 9M14.5 18h5"/></svg>TRANSLATE</button>
+      <button class="act"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M7 7h4v4c0 3-2 5-4 6M15 7h4v4c0 3-2 5-4 6"/></svg>QUOTES</button>
+      <button class="act"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>SETTINGS</button>
+      <button class="act"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>MORE</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dots = [];
+    for (let i = 0; i < 20; i++) dots.push({ c: i < 3 ? '#FFFFFF' : (i === 3 ? '#FF2D2D' : '#2E2E2E') });
+    return { dots };
+  }
+}
+</script>
+</body>
+</html>

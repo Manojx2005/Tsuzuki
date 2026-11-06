@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Save chapters — custom range</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.chip{height:40px;padding:0 14px;border-radius:20px;border:1px solid #2A2A2A;background:#111;color:#fff;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px;white-space:nowrap}
+.lab{font:700 11px/1 'Space Mono',monospace;letter-spacing:1.2px;color:#8A8A8A}
+.step{width:48px;height:48px;border-radius:24px;border:1px solid #2A2A2A;background:#111;color:#fff;font:700 20px/1 'Space Mono',monospace;flex:0 0 48px}
+.num{flex:1 1 auto;min-width:0;height:56px;box-sizing:border-box;border-radius:16px;border:1px solid #2A2A2A;background:#000;color:#fff;font:900 28px/1 'Doto',monospace;text-align:center;letter-spacing:1px}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;font-family:'Space Mono',monospace;color:#fff">
+  <div style="position:absolute;inset:0;background:#050505"></div>
+  <section aria-labelledby="sc-h" style="position:absolute;left:0;right:0;bottom:0;top:96px;background:#0B0B0B;border-top:1px solid #222;border-radius:28px 28px 0 0;padding:12px 16px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+    <div style="align-self:center;width:40px;height:4px;border-radius:2px;background:#333" aria-hidden="true"></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+      <h2 id="sc-h" style="margin:0;font:900 30px/1 'Doto',monospace;letter-spacing:1px">SAVE CHAPTERS</h2>
+      <span class="lab">1,198 UNREAD · 1,432 TOTAL</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px" role="radiogroup" aria-label="Which chapters">
+      <button class="chip" role="radio" aria-checked="false">NEXT 1</button>
+      <button class="chip" role="radio" aria-checked="false">NEXT 5</button>
+      <button class="chip" role="radio" aria-checked="false">NEXT 25</button>
+      <button class="chip" role="radio" aria-checked="false">UNREAD</button>
+      <button class="chip" role="radio" aria-checked="false">ALL</button>
+      <button class="chip" role="radio" aria-checked="true" style="background:#FF2D2D;border-color:#FF2D2D">CUSTOM</button>
+    </div>
+
+    <div style="background:#0D0D0D;border:1px solid #262626;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="from" class="lab">FROM CHAPTER</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="step" aria-label="From minus one">−</button>
+          <input id="from" class="num" inputmode="numeric" value="33">
+          <button class="step" aria-label="From plus one">+</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="to" class="lab">TO CHAPTER</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="step" aria-label="To minus one">−</button>
+          <input id="to" class="num" inputmode="numeric" value="57">
+          <button class="step" aria-label="To plus one">+</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="chip" style="height:36px">FROM WHERE I AM</button>
+        <button class="chip" style="height:36px">TO LAST</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #222;padding-top:12px">
+        <span style="font:700 12px/1 'Space Mono',monospace;letter-spacing:1px">25 CHAPTERS</span>
+        <span class="lab">3 ALREADY SAVED · SKIPPED</span>
+      </div>
+    </div>
+
+    <a href="#" style="display:flex;justify-content:space-between;align-items:center;height:48px;color:#8A8A8A;text-decoration:none;font:700 12px/1 'Space Mono',monospace;letter-spacing:1px">DOWNLOAD SETTINGS<span aria-hidden="true">›</span></a>
+
+    <button style="margin-top:auto;height:56px;border:0;border-radius:28px;background:#FF2D2D;color:#fff;font:700 14px/1 'Space Mono',monospace;letter-spacing:1.2px;display:flex;align-items:center;justify-content:center;gap:10px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>SAVE CH. 33–57</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
