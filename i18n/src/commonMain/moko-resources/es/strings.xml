@@ -1276,4 +1276,8 @@
     <string name="tsz_appearance_dot_covers">Portadas en Dot</string>
     <string name="tsz_appearance_covers_colour">En color</string>
     <string name="tsz_appearance_legacy_themes">Los temas anteriores de Mihon y Tsundoku ahora usan Colour.</string>
+    <string name="tsz_x4_books_to_move">Libros para migrar · %d</string>
+    <string name="tsz_x4_more_books">%d libros más</string>
+    <string name="tsz_x4_search_sources">Fuentes de búsqueda · %d seleccionadas</string>
+    <string name="tsz_x4_find_matches">Buscar coincidencias · %d</string>
 </resources>

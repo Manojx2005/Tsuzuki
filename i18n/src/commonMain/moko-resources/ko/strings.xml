@@ -1288,4 +1288,8 @@
     <string name="tsz_appearance_dot_covers">Dot의 표지</string>
     <string name="tsz_appearance_covers_colour">컬러</string>
     <string name="tsz_appearance_legacy_themes">이전 Mihon 및 Tsundoku 테마는 이제 Colour를 사용합니다.</string>
+    <string name="tsz_x4_books_to_move">이동할 책 · %d권</string>
+    <string name="tsz_x4_more_books">책 %d권 더 보기</string>
+    <string name="tsz_x4_search_sources">검색 소스 · %d개 선택</string>
+    <string name="tsz_x4_find_matches">일치 항목 찾기 · %d권</string>
 </resources>

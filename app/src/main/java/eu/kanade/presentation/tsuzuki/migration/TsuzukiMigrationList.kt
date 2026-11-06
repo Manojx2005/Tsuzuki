@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.migration
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -21,16 +22,21 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,11 +47,15 @@ import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsBackground
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsContainer
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
@@ -75,9 +85,13 @@ internal fun TsuzukiMigrationListContent(
     onCopy: (Long) -> Unit,
     openMigrationDialog: (Boolean) -> Unit,
 ) {
+    val back = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Scaffold(
+        modifier = tsuzukiSettingsBackground(),
+        containerColor = tsuzukiSettingsContainer() ?: MaterialTheme.colorScheme.background,
         topBar = { scrollBehavior ->
             AppBar(
+                navigateUp = back?.let { it::onBackPressed },
                 title = if (items.isNotEmpty()) {
                     stringResource(MR.strings.migrationListScreenTitleWithProgress, finishedCount, items.size)
                 } else {
@@ -178,23 +192,31 @@ private fun TsuzukiMigrationRow(
                 )
             }
         }
+        val actions = migrationRowActions(result)
+        val (secondary, primary) = if (result is MigratingManga.SearchResult.Success) {
+            actions.partition { it == MigrationRowAction.CopyNow || it == MigrationRowAction.SearchManually }
+        } else {
+            emptyList<MigrationRowAction>() to actions
+        }
+        val onAction: (MigrationRowAction) -> Unit = { action ->
+            when (action) {
+                MigrationRowAction.Skip -> onSkip()
+                MigrationRowAction.SearchManually -> onSearchManually()
+                MigrationRowAction.CopyNow -> onCopy()
+                MigrationRowAction.MigrateNow -> onMigrate()
+            }
+        }
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            for (action in migrationRowActions(result)) {
+            for (action in primary) {
                 val text = tsuzukiCase(stringResource(action.label())).orEmpty()
-                val onClick = when (action) {
-                    MigrationRowAction.Skip -> onSkip
-                    MigrationRowAction.SearchManually -> onSearchManually
-                    MigrationRowAction.CopyNow -> onCopy
-                    MigrationRowAction.MigrateNow -> onMigrate
-                }
                 if (action == MigrationRowAction.MigrateNow) {
                     Button(
-                        onClick = onClick,
-                        modifier = Modifier.heightIn(min = 48.dp),
+                        onClick = { onAction(action) },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = tokens.accent,
                             contentColor = tokens.onAccent,
@@ -204,7 +226,7 @@ private fun TsuzukiMigrationRow(
                     }
                 } else {
                     OutlinedButton(
-                        onClick = onClick,
+                        onClick = { onAction(action) },
                         modifier = Modifier.heightIn(min = 48.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = tokens.tile,
@@ -213,6 +235,22 @@ private fun TsuzukiMigrationRow(
                         border = BorderStroke(1.dp, tokens.tileBorder ?: tokens.track),
                     ) {
                         Text(text = text, style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            }
+            if (secondary.isNotEmpty()) {
+                Box {
+                    var expanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(Icons.Outlined.MoreHoriz, stringResource(MR.strings.label_more))
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        secondary.forEach { action ->
+                            TsuzukiMenuItem(stringResource(action.label()), onClick = {
+                                expanded = false
+                                onAction(action)
+                            })
+                        }
                     }
                 }
             }
@@ -259,26 +297,28 @@ private fun TsuzukiMigrationSide(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val latest = remember(latestChapter) { latestChapter?.let(::formatChapterNumber) }
+            val count = pluralStringResource(MR.plurals.manga_num_chapters, chapterCount, chapterCount)
             Text(
                 text = tsuzukiCase(
-                    pluralStringResource(MR.plurals.manga_num_chapters, chapterCount, chapterCount),
+                    listOfNotNull(count, manga.author?.takeIf(String::isNotBlank)).joinToString(" · "),
                 ).orEmpty(),
                 style = MaterialTheme.typography.labelSmall,
                 color = muted,
-            )
-            Text(
-                text = tsuzukiCase(
-                    stringResource(
-                        MR.strings.migrationListScreen_latestChapterLabel,
-                        latest ?: stringResource(MR.strings.migrationListScreen_unknownLatestChapter),
-                    ),
-                ).orEmpty(),
-                style = MaterialTheme.typography.labelSmall,
-                color = muted,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            val latest = remember(latestChapter) { latestChapter?.let(::formatChapterNumber) }
+            if (latest != null) {
+                Text(
+                    text = tsuzukiCase(
+                        stringResource(MR.strings.migrationListScreen_latestChapterLabel, latest),
+                    ).orEmpty(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

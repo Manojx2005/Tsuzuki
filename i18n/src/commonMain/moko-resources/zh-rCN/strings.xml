@@ -1289,4 +1289,8 @@
     <string name="tsz_appearance_dot_covers">Dot 主题封面</string>
     <string name="tsz_appearance_covers_colour">彩色</string>
     <string name="tsz_appearance_legacy_themes">旧版 Mihon 和 Tsundoku 主题现已切换为 Colour。</string>
+    <string name="tsz_x4_books_to_move">待迁移书籍 · %d</string>
+    <string name="tsz_x4_more_books">另有 %d 本</string>
+    <string name="tsz_x4_search_sources">搜索来源 · 已选 %d 个</string>
+    <string name="tsz_x4_find_matches">查找匹配 · %d</string>
 </resources>
