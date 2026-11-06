@@ -74,6 +74,9 @@ fun MangaToolbar(
     val isActionMode = actionModeCounter > 0
     val scrollActionsInOverflow by remember { Injekt.get<UiPreferences>().mangaScrollActionsInOverflow }
         .collectAsState()
+    val showScrollActionsInOverflow = scrollActionsInOverflow ||
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     AppBar(
         titleContent = {
             if (isActionMode) {
@@ -130,7 +133,7 @@ fun MangaToolbar(
                         )
                     }
 
-                    if (!scrollActionsInOverflow) {
+                    if (!showScrollActionsInOverflow) {
                         if (onClickScrollToTop != null) {
                             add(
                                 AppBar.Action(
@@ -300,7 +303,7 @@ fun MangaToolbar(
                             icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.notes,
                         ),
                     )
-                    if (scrollActionsInOverflow) {
+                    if (showScrollActionsInOverflow) {
                         if (onClickScrollToTop != null) {
                             add(
                                 AppBar.OverflowAction(

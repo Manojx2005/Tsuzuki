@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -92,7 +93,11 @@ import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.details.TsuzukiDetailsDescription
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -196,7 +201,16 @@ fun MangaActionRow(
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
+    val tokens = TsuzukiTheme.tokens
+    val isTsuzuki = tokens.style != TsuzukiStyle.NONE
+    val defaultActionButtonColor = if (isTsuzuki) {
+        tokens.dotOn
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(
+            alpha = DISABLED_ALPHA,
+        )
+    }
+    val activeActionButtonColor = if (isTsuzuki) tokens.accent else MaterialTheme.colorScheme.primary
 
     // TODO: show something better when using custom interval
     val nextUpdateDays = remember(nextUpdate) {
@@ -216,24 +230,26 @@ fun MangaActionRow(
                 stringResource(MR.strings.add_to_library)
             },
             icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (favorite) activeActionButtonColor else defaultActionButtonColor,
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
         )
-        MangaActionButton(
-            title = when (nextUpdateDays) {
-                null -> stringResource(MR.strings.not_applicable)
-                0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                else -> pluralStringResource(
-                    MR.plurals.day,
-                    count = nextUpdateDays,
-                    nextUpdateDays,
-                )
-            },
-            icon = Icons.Default.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = { onEditIntervalClicked?.invoke() },
-        )
+        if (!isTsuzuki || nextUpdateDays != null) {
+            MangaActionButton(
+                title = when (nextUpdateDays) {
+                    null -> stringResource(MR.strings.not_applicable)
+                    0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
+                    else -> pluralStringResource(
+                        MR.plurals.day,
+                        count = nextUpdateDays,
+                        nextUpdateDays,
+                    )
+                },
+                icon = Icons.Default.HourglassEmpty,
+                color = if (isUserIntervalMode) activeActionButtonColor else defaultActionButtonColor,
+                onClick = { onEditIntervalClicked?.invoke() },
+            )
+        }
         MangaActionButton(
             title = if (trackingCount == 0) {
                 stringResource(MR.strings.manga_tracking_tab)
@@ -241,7 +257,7 @@ fun MangaActionRow(
                 pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
             },
             icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-            color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
+            color = if (trackingCount == 0) defaultActionButtonColor else activeActionButtonColor,
             onClick = onTrackingClicked,
         )
         if (onWebViewClicked != null) {
@@ -275,23 +291,27 @@ fun ExpandableMangaDescription(
     onEditNotes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Tsuzuki themes: synopsis + tags sit in a tile (board "NovelDetails").
-    val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
-    val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
-    Column(
-        modifier = modifier.then(
-            if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
-                Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(tileShape)
-                    .background(tokens.tile)
-                    .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, tileShape) } ?: Modifier)
-                    .padding(vertical = 6.dp)
-            } else {
-                Modifier
-            },
-        ),
-    ) {
+    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        TsuzukiDetailsDescription(
+            modifier = modifier,
+            defaultExpanded = defaultExpandState,
+            hasSummary = !description.isNullOrBlank() || notes.isNotBlank(),
+            tags = tagsProvider().orEmpty(),
+            onTagSearch = onTagSearch,
+            onCopyTag = onCopyTagToClipboard,
+        ) { expanded ->
+            MangaSummary(
+                description = description.orEmpty(),
+                expanded = expanded,
+                notes = notes,
+                onEditNotesClicked = onEditNotes,
+                separateExpandControl = true,
+            )
+        }
+        return
+    }
+
+    Column(modifier = modifier) {
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }
@@ -558,7 +578,11 @@ private fun ColumnScope.MangaContentInfo(
         Text(
             text = author?.takeIf { it.isNotBlank() }
                 ?: stringResource(MR.strings.unknown_author),
-            style = MaterialTheme.typography.titleSmall,
+            style = if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) {
+                MaterialTheme.typography.titleSmall
+            } else {
+                MaterialTheme.typography.bodyMedium
+            },
             modifier = Modifier
                 .clickableNoIndication(
                     onLongClick = {
@@ -732,6 +756,7 @@ private fun MangaSummary(
     expanded: Boolean,
     onEditNotesClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    separateExpandControl: Boolean = false,
 ) {
     val preferences = remember { Injekt.get<UiPreferences>() }
     val loadImages = remember { preferences.imagesInDescription.get() }
@@ -797,20 +822,19 @@ private fun MangaSummary(
         val shrunkHeight = shrunk.single()
             .measure(constraints)
             .height
-        val heightDelta = infoHeight - shrunkHeight
+        val actualPlaceable = actual.single().measure(constraints)
+        val collapsedHeight = if (separateExpandControl) minOf(shrunkHeight, actualPlaceable.height) else shrunkHeight
+        val expandedHeight = if (separateExpandControl) actualPlaceable.height else infoHeight + 24.dp.roundToPx()
+        val currentHeight = collapsedHeight + ((expandedHeight - collapsedHeight) * animProgress).roundToInt()
         val scrimHeight = 24.dp.roundToPx()
-
-        val actualPlaceable = actual.single()
-            .measure(constraints)
-        val scrimPlaceable = scrim.single()
-            .measure(Constraints.fixed(width = constraints.maxWidth, height = scrimHeight))
-
-        val currentHeight = shrunkHeight + ((heightDelta + scrimHeight) * animProgress).roundToInt()
+        val scrimPlaceable = if (separateExpandControl) {
+            null
+        } else {
+            scrim.single().measure(Constraints.fixed(width = constraints.maxWidth, height = scrimHeight))
+        }
         layout(constraints.maxWidth, currentHeight) {
             actualPlaceable.place(0, 0)
-
-            val scrimY = currentHeight - scrimHeight
-            scrimPlaceable.place(0, scrimY)
+            scrimPlaceable?.place(0, currentHeight - scrimHeight)
         }
     }
 }
@@ -851,7 +875,7 @@ private fun RowScope.MangaActionButton(
                 if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
                     Modifier
                         .padding(horizontal = 3.dp)
-                        .height(72.dp)
+                        .heightIn(min = 76.dp)
                         .clip(tileShape)
                         .background(tokens.tile)
                         .then(
@@ -874,7 +898,7 @@ private fun RowScope.MangaActionButton(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = title,
+                text = tsuzukiMenuLabel(title),
                 color = color,
                 fontSize = if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) 11.sp else 12.sp,
                 lineHeight = 13.sp,
