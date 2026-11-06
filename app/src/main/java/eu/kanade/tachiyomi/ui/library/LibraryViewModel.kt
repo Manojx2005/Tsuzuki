@@ -2128,8 +2128,14 @@ class LibraryViewModel(
             return groupedFavorites[category].orEmpty().mapNotNull { libraryData.favoritesById[it] }
         }
 
-        fun getItemCountForCategory(category: Category): Int? {
-            return if (showMangaCount || !searchQuery.isNullOrEmpty()) groupedFavorites[category]?.size else null
+        fun getItemCountForCategory(category: Category, showAlways: Boolean = false): Int? {
+            return if (showAlways || showMangaCount ||
+                !searchQuery.isNullOrEmpty()
+            ) {
+                groupedFavorites[category]?.size
+            } else {
+                null
+            }
         }
 
         // Sentinel re-fire key: changes on every per-category fetch (paginationGeneration) and on

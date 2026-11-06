@@ -18,6 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.library.rememberPaginatedShelfCounts
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,7 +47,7 @@ fun LibraryContent(
     onToggleRangeSelection: (Category, LibraryManga) -> Unit,
     onRefresh: () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getItemCountForCategory: (Category) -> Int?,
+    getItemCountForCategory: (Category, showAlways: Boolean) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
@@ -75,10 +78,20 @@ fun LibraryContent(
                     pagerState.scrollToPage(categories.size - 1)
                 }
             }
+            val themed = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
+            val paginatedCounts = if (themed && paginationEnabled) rememberPaginatedShelfCounts() else null
             LibraryTabs(
                 categories = categories,
                 pagerState = pagerState,
-                getItemCountForCategory = getItemCountForCategory,
+                getItemCountForCategory = { category ->
+                    if (paginatedCounts !=
+                        null
+                    ) {
+                        paginatedCounts[category.id]
+                    } else {
+                        getItemCountForCategory(category, themed)
+                    }
+                },
                 onTabItemClick = {
                     scope.launch {
                         pagerState.animateScrollToPage(it)

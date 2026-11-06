@@ -308,7 +308,7 @@ data object NovelsTab : Tab {
                         onGlobalSearchClicked = {
                             navigator.push(NovelGlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
-                        getItemCountForCategory = { state.getItemCountForCategory(it) },
+                        getItemCountForCategory = state::getItemCountForCategory,
                         getDisplayMode = { viewModel.getDisplayMode() },
                         getColumnsForOrientation = { viewModel.getColumnsForOrientation(it) },
                         getItemsForCategory = { state.getItemsForCategory(it) },
