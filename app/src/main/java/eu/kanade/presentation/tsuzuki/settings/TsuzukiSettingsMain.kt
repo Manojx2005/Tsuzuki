@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -119,7 +120,7 @@ fun TsuzukiSettingsSectionRow(
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
     val press = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(if (t.isDot) 18.dp else 20.dp)
+    val shape = RoundedCornerShape(16.dp)
     Row(
         Modifier
             .tsuzukiPress(press)
@@ -129,14 +130,16 @@ fun TsuzukiSettingsSectionRow(
                     Modifier
                         .padding(horizontal = 12.dp, vertical = 2.dp)
                         .clip(shape)
-                        .then(if (selected) Modifier.border(2.dp, t.accent, shape) else Modifier)
+                        .then(
+                            if (selected) Modifier.background(t.tile).border(2.dp, t.accent, shape) else Modifier,
+                        )
                 } else {
                     Modifier
                 },
             )
             .clickable(interactionSource = press, indication = ripple(), role = Role.Button, onClick = onClick)
             .fillMaxWidth()
-            .heightIn(min = if (twoPane) 56.dp else 64.dp)
+            .heightIn(min = if (twoPane) 52.dp else 64.dp)
             .padding(horizontal = if (twoPane) 18.dp else 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -222,7 +225,7 @@ fun TsuzukiSettingsTwoPane(
     Row(Modifier.fillMaxSize().tsuzukiBackground(t)) {
         TsuzukiRail(items = items, onSearch = onSearch, onSettings = {})
         BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
-            val listWidth = (maxWidth * 0.42f).coerceIn(280.dp, 380.dp)
+            val listWidth = (maxWidth * 0.42f).coerceIn(280.dp, 360.dp)
             Row(Modifier.fillMaxSize()) {
                 Box(Modifier.width(listWidth).fillMaxHeight(), content = startContent)
                 Box(Modifier.weight(1f).fillMaxHeight(), content = endContent)
