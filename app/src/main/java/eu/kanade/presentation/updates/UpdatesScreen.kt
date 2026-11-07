@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -86,6 +87,7 @@ fun UpdateScreen(
     }
 
     val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
+    var selectedPreviewKey by rememberSaveable { mutableStateOf<Long?>(null) }
     val tsuzukiTwoPane = eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesTwoPaneEnabled()
 
     Scaffold(
@@ -125,6 +127,8 @@ fun UpdateScreen(
             state.isLoading && !tsuzuki -> LoadingScreen(Modifier.padding(contentPadding))
             tsuzukiTwoPane && !state.isLoading -> eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTwoPane(
                 state = state,
+                selectedKey = selectedPreviewKey,
+                onSelectKey = { selectedPreviewKey = it },
                 contentPadding = contentPadding,
                 lastUpdated = lastUpdated,
                 showFilterChips = showFilterChips,

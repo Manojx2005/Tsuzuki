@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.produceState
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
@@ -40,6 +41,7 @@ abstract class SearchViewModel(
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val getManga: GetManga = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
+    private val savedState: SavedStateHandle? = null,
 ) : StateViewModel<SearchViewModel.State>(initialState) {
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
@@ -116,11 +118,37 @@ abstract class SearchViewModel(
             .filter { it in enabledSources }
     }
 
+    protected fun restoreSearch(initialQuery: String) {
+        val filter = when (savedState?.get<String>("source_filter")) {
+            "all" -> SourceFilter.All
+            "pinned" -> SourceFilter.PinnedOnly
+            "group" -> savedState.get<String>("source_group")?.let { SourceFilter.Group(it) } ?: SourceFilter.PinnedOnly
+            else -> if (extensionFilter != null) SourceFilter.All else state.value.sourceFilter
+        }
+        val draft = if (savedState?.contains("draft_query") == true) {
+            savedState.get<String>("draft_query")
+        } else {
+            initialQuery
+        }
+        mutableState.update { it.copy(searchQuery = draft, sourceFilter = filter) }
+        search(savedState?.get<String>("submitted_query") ?: initialQuery)
+    }
+
     fun updateSearchQuery(query: String?) {
+        savedState?.set("draft_query", query)
         mutableState.update { it.copy(searchQuery = query) }
     }
 
     fun setSourceFilter(filter: SourceFilter) {
+        savedState?.set(
+            "source_filter",
+            when (filter) {
+                SourceFilter.All -> "all"
+                SourceFilter.PinnedOnly -> "pinned"
+                is SourceFilter.Group -> "group"
+            },
+        )
+        savedState?.set("source_group", (filter as? SourceFilter.Group)?.name)
         mutableState.update { it.copy(sourceFilter = filter) }
         search()
     }
@@ -129,11 +157,12 @@ abstract class SearchViewModel(
         preferences.globalSearchFilterState.toggle()
     }
 
-    fun search() {
-        val query = state.value.searchQuery
-        val sourceFilter = state.value.sourceFilter
+    fun search() = search(state.value.searchQuery)
 
+    private fun search(query: String?) {
         if (query.isNullOrBlank()) return
+        val sourceFilter = state.value.sourceFilter
+        savedState?.set("submitted_query", query)
 
         val sameQuery = this.lastQuery == query
         if (sameQuery && this.lastSourceFilter == sourceFilter) return

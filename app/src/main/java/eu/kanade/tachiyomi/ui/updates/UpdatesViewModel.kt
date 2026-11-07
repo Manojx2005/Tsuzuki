@@ -1,16 +1,23 @@
 package eu.kanade.tachiyomi.ui.updates
 
 import android.app.Application
+import android.os.Bundle
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastFilter
+import androidx.core.os.bundleOf
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
+import eu.kanade.presentation.tsuzuki.selection.savedSelection
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -103,12 +110,22 @@ class UpdatesViewModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val updatesPreferences: UpdatesPreferences = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    savedState: SavedStateHandle? = null,
 ) : StateViewModel<UpdatesViewModel.State>(
-    State(groupByNovel = Injekt.get<LibraryPreferences>().updatesGroupByNovel.get()),
+    State(
+        groupByNovel = libraryPreferences.updatesGroupByNovel.get(),
+        filter = UpdatesFilter.entries.firstOrNull {
+            it.name == savedState?.get<Bundle>("tsuzuki_updates_ui")?.getString("filter")
+        } ?: UpdatesFilter.ALL,
+    ),
 ) {
 
     companion object {
         private const val GROUPED_NOVEL_TARGET = 30
+
+        val Factory = viewModelFactory {
+            initializer { UpdatesViewModel(savedState = createSavedStateHandle()) }
+        }
     }
 
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
@@ -118,12 +135,22 @@ class UpdatesViewModel(
 
     // First and last selected index in list
     private val selectedPositions: Array<Int> = arrayOf(-1, -1)
-    private val selectedChapterIds: HashSet<Long> = HashSet()
+    private val restoredUi = savedState?.get<Bundle>("tsuzuki_updates_ui")
+    private val selectedChapterIds = HashSet(restoredUi?.getLongArray("selected")?.toList().orEmpty())
 
     // DB-level pagination: start with one page, grow as user scrolls
-    private val currentLimit = MutableStateFlow(GetUpdates.PAGE_SIZE)
+    private val currentLimit = MutableStateFlow(
+        (restoredUi?.getLong("limit") ?: GetUpdates.PAGE_SIZE).coerceAtLeast(GetUpdates.PAGE_SIZE),
+    )
 
     init {
+        savedState?.setSavedStateProvider("tsuzuki_updates_ui") {
+            bundleOf(
+                "selected" to selectedChapterIds.savedSelection(),
+                "filter" to state.value.filter.name,
+                "limit" to currentLimit.value,
+            )
+        }
         viewModelScope.launchIO {
             // Set date limit for recent chapters
             val dateThreshold = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
@@ -465,6 +492,10 @@ class UpdatesViewModel(
             val newItems = state.items.toMutableList().apply {
                 val selectedIndex = indexOfFirst { it.update.chapterId == item.update.chapterId }
                 if (selectedIndex < 0) return@apply
+                if (selectedPositions[0] < 0) {
+                    selectedPositions[0] = indexOfFirst { it.selected }
+                    selectedPositions[1] = indexOfLast { it.selected }
+                }
 
                 val selectedItem = get(selectedIndex)
                 if (selectedItem.selected == selected) return@apply

@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -9,7 +11,8 @@ import eu.kanade.tachiyomi.source.isNovelSource
 class GlobalSearchViewModel(
     initialQuery: String,
     initialExtensionFilter: String?,
-) : SearchViewModel(State(searchQuery = initialQuery)) {
+    savedState: SavedStateHandle? = null,
+) : SearchViewModel(State(searchQuery = initialQuery), savedState = savedState) {
 
     companion object {
         val INITIAL_QUERY_KEY = CreationExtras.Key<String>()
@@ -20,6 +23,7 @@ class GlobalSearchViewModel(
                 GlobalSearchViewModel(
                     initialQuery = get(INITIAL_QUERY_KEY)!!,
                     initialExtensionFilter = get(INITIAL_EXTENSION_FILTER_KEY),
+                    savedState = createSavedStateHandle(),
                 )
             }
         }
@@ -27,13 +31,7 @@ class GlobalSearchViewModel(
 
     init {
         extensionFilter = initialExtensionFilter
-        if (initialQuery.isNotBlank() || !initialExtensionFilter.isNullOrBlank()) {
-            if (extensionFilter != null) {
-                // we're going to use custom extension filter instead
-                setSourceFilter(SourceFilter.All)
-            }
-            search()
-        }
+        restoreSearch(initialQuery)
     }
 
     override fun getEnabledSources(): List<Source> {

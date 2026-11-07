@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +66,8 @@ internal class TsuzukiReaderChromeRequests {
 
     @Composable
     fun bind(viewModel: ReaderViewModel, state: ReaderViewModel.State): TsuzukiReaderChrome {
-        val contents = remember { TsuzukiReaderContentsHook() }
+        val contentsVisible = rememberSaveable { mutableStateOf(false) }
+        val contents = remember(contentsVisible) { TsuzukiReaderContentsHook(contentsVisible) }
         val openContents = contents.openAction()
         LaunchedEffect(openContentsRequested) {
             if (openContentsRequested) {
@@ -96,8 +99,8 @@ internal class TsuzukiReaderChrome(
     fun Overlay(activity: ReaderActivity) = overlay(activity)
 }
 
-private class TsuzukiReaderContentsHook {
-    private var visible by mutableStateOf(false)
+private class TsuzukiReaderContentsHook(visibleState: MutableState<Boolean>) {
+    private var visible by visibleState
 
     @Composable
     private fun docked(): Boolean =

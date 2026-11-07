@@ -38,6 +38,7 @@ import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
+import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -95,8 +96,9 @@ data object LibraryTab : Tab {
         val haptic = LocalHapticFeedback.current
 
         val viewModel = viewModel<LibraryViewModel>(
+            key = "tsuzuki-library-manga",
             factory = LibraryViewModel.Factory,
-            extras = CreationExtras {
+            extras = tsuzukiScreenExtras {
                 set(LibraryViewModel.TYPE_KEY, LibraryViewModel.LibraryType.Manga)
             },
         )

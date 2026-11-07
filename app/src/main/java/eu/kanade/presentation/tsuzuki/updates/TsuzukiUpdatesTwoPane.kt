@@ -38,7 +38,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -98,6 +97,8 @@ internal fun otherNewChapters(items: List<UpdatesItem>, selected: UpdatesItem): 
 @Composable
 fun TsuzukiUpdatesTwoPane(
     state: UpdatesViewModel.State,
+    selectedKey: Long?,
+    onSelectKey: (Long) -> Unit,
     contentPadding: PaddingValues,
     lastUpdated: Long,
     showFilterChips: Boolean,
@@ -114,8 +115,6 @@ fun TsuzukiUpdatesTwoPane(
     modifier: Modifier = Modifier,
 ) {
     val t = TsuzukiTheme.tokens
-    // Item rows are keyed by chapter id, grouped rows by manga id.
-    var selectedKey by rememberSaveable { mutableStateOf<Long?>(null) }
     var pendingSave by remember { mutableStateOf<List<UpdatesItem>?>(null) }
     val groups = remember(state.items, state.groupByNovel) {
         if (state.groupByNovel) state.getNovelGroups() else emptyList()
@@ -207,7 +206,7 @@ fun TsuzukiUpdatesTwoPane(
                         saved = group.chapters.all { it.downloadStateProvider() == Download.State.DOWNLOADED },
                         highlighted = group.mangaId == selectedGroup?.mangaId,
                         selectedForAction = false,
-                        onClick = { selectedKey = group.mangaId },
+                        onClick = { onSelectKey(group.mangaId) },
                         onLongClick = null,
                     )
                 }
@@ -247,7 +246,7 @@ fun TsuzukiUpdatesTwoPane(
                                     if (state.selectionMode) {
                                         onUpdateSelected(item, !item.selected, false)
                                     } else {
-                                        selectedKey = item.update.chapterId
+                                        onSelectKey(item.update.chapterId)
                                     }
                                 },
                                 onLongClick = { onUpdateSelected(item, !item.selected, true) },
@@ -279,7 +278,7 @@ fun TsuzukiUpdatesTwoPane(
                 selectedItem != null -> ChapterPreview(
                     item = selectedItem,
                     others = otherNewChapters(state.items, selectedItem),
-                    onSelectOther = { selectedKey = it.update.chapterId },
+                    onSelectOther = { onSelectKey(it.update.chapterId) },
                     onRead = { onOpenChapter(selectedItem) },
                     onMarkRead = { onMultiMarkAsReadClicked(listOf(selectedItem), !selectedItem.update.read) },
                     onDownload = { onDownloadChapter(listOf(selectedItem), ChapterDownloadAction.START) },
