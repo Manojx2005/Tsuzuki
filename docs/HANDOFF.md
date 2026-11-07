@@ -139,6 +139,139 @@ reviews mostly wait for the morning because of the two-build limit).
 
 Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build + device table).
 
+### v0.1 release — every card (written 2026-11-07 by Claude; owner: v0.1 ships without anime)
+
+**Critical path:** V0 (owner, start now) · V1 → R6 + R7 → V2 upstream merge → **freeze** → V3–V6 (Codex) →
+V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
+**Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
+R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
+**Codex lane 2 order from now:** R6 → R7 → V3 → V4 → V5 → V6 → (after the tag) R8 rework → R10 rework → R11 → … → R17.
+Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
+**Not in v0.1 (v0.2 or later):** anime (A2.3 → R-A4 and stages 3–4), R8/R10 reworks unless they land before the freeze,
+R11–R17, P1.11 storage async migration, Phase 5 features without a card.
+
+| # | Card | Who | Needs | Tier |
+|---|---|---|---|---|
+| V0 | Owner tasks: repo public, secrets, signing key, permissions | owner | — | — |
+| V1 | Review batch: device-check + merge Y2, Y6, R1–R5, R9 | Claude | — | — |
+| — | R6 Colour parity, R7 Japanese layout (existing cards) | Codex | R3 | T2 |
+| V2 | Tsundoku + Mihon upstream merge (C5), then freeze | Claude | V1, R6, R7 | — |
+| V3 | Watch teaser check (switch stays, owner 2026-11-07) | Codex | V2 | T1 |
+| V4 | Telemetry out + Tsuzuki `release.yml` | Codex | V2 | T2 |
+| V5 | About, licences, privacy, links | Codex | V2 | T2 |
+| V6 | CHANGELOG 0.1.0 + version | Codex | V2 | T1 |
+| V7 | Release-build runtime sweep (RUNTIME_QA gaps) | Claude | V3–V6 | — |
+| V8 | Built-but-never-seen screens (WORKPLAN 4A) | Claude | V3–V6 | — |
+| V9 | Cold start + baseline profile re-collect | Claude | V7 fixes | — |
+| V10 | Signing continuity check | Claude + owner | V0, V4 | — |
+| V11 | Release candidate on all three devices | Claude + owner | V9, V10 | — |
+| V12 | Tag v0.1.0, publish, verify updater | Claude + owner | V11 | — |
+
+#### V0 Owner tasks (owner) — `done` except item 2 (answers below)
+1. Make `Manojx2005/Tsuzuki` public, or name a separate public releases repo (then `GITHUB_REPO` in
+   `AppUpdateChecker.kt` changes in V4). The updater 404s until the repo it reads is public.
+2. Confirm the Actions secrets `tsuzuki-preview.yml` uses exist: `SIGNING_KEY_BASE64`, `KEY_STORE_PASSWORD`,
+   `KEY_ALIAS`, `KEY_PASSWORD`. V4's `release.yml` uses the same names.
+3. Tell Claude which key signed the release app on your phone (`io.github.manojx2005.tsuzuki`): the same keystore
+   as the secrets, or a different one. V10 checks it; a different key means v0.1 can't install over your data.
+4. Answer the permission questions (V3 Watch switch, device use, phone upgrade, test installs, language switch,
+   pushes). Answers are recorded under "Owner permissions for v0.1" below.
+
+#### V1 Review batch (Claude) — `ready`
+Merge Y2, Y6, R1, R2, R3, R4, R5, R9 into a `review/night5` branch, resolve overlaps, build, unit tests, install on
+the tablet + S22. Per card: its "Claude device checks" list. Plus C4: restore R1's synthetic 500-book backup into a
+**scratch** install and record `gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse; and R2:
+`adb shell am kill` on every screen in R2's Result. Merge into `main` only what passes; failures go back as fix cards.
+
+#### V2 Upstream merge + freeze (Claude) — `ready` after V1, R6, R7
+`scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
+`docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
+
+#### V3 Watch teaser check (T1) — `ready` after V2 (owner 2026-11-07: keep the Read / Watch switch as a teaser)
+`presentation/tsuzuki/home/TsuzukiHomeScreen.kt` `WatchPlaceholder`: the copy must say anime is coming in a later
+version, with no sample numbers, fake titles or controls that look usable; nothing on it may open anime code in a
+release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
+Fix only what fails; list the checks in Result. Claude checks: preview build, Home → Watch, both themes, both devices.
+
+#### V4 Telemetry out + Tsuzuki release workflow (T2) — `ready` after V2
+`PRIVACY.md` promises no telemetry. Keep `Config.includeTelemetry` and the Firebase code paths for Tsundoku merges,
+but the Tsuzuki release must never pass `-Pinclude-telemetry`.
+- Rewrite `.github/workflows/release.yml` for Tsuzuki: run on tag `v*` pushes, gate
+  `github.repository == 'Manojx2005/Tsuzuki'`, JDK 21, `./gradlew assembleRelease -Penable-updater` (no telemetry),
+  sign with the same secret names as `tsuzuki-preview.yml`, APK names `tsuzuki-<tag>.apk` (universal) and
+  `tsuzuki-arm64-v8a-<tag>.apk` (+ the other ABIs the build makes), SHA-256 file, release notes = the matching
+  `CHANGELOG.md` section. Copy the signing step style from `tsuzuki-preview.yml`. Remove Tsundoku-only jobs.
+- Delete `app/google-services.json` (owner approved 2026-11-07) after confirming release builds without it; note it
+  in `docs/UPSTREAM.md` (a Tsundoku merge that restores it gets resolved by deleting again).
+- Add a Gradle check or unit test that release builds have `BuildConfig.TELEMETRY_INCLUDED == false`.
+- Don't run the workflow and don't create tags. Claude checks: `assembleRelease -Penable-updater` locally, then the
+  APK has no `com.google.firebase` classes.
+
+#### V5 About, licences, privacy, links (T2) — `ready` after V2
+About screen: app name, version, "Based on Tsundoku and Mihon" credit with links, GitHub link = the V0 releases
+repo, open-source licences list includes the bundled fonts (`docs/licenses/`), QuickJS host and the LNReader plugin
+index terms. `PRIVACY.md`: accurate for v0.1 (no telemetry; network calls: sources, trackers, translation provider if
+configured, updater). `TsuzukiLinks.kt`: no link points at tsundoku-otaku. `NOTICE`/licence files present for
+Apache-2.0. List each check in Result. Claude checks: About + licences on both devices, both themes.
+
+#### V6 CHANGELOG 0.1.0 + version (T1) — `ready` after V2
+Move Tsundoku's changelog to `docs/CHANGELOG-tsundoku.md` (header: "Inherited from Tsundoku; Tsuzuki's own
+history is in CHANGELOG.md"). New `CHANGELOG.md`: same Keep-a-Changelog format, `## [0.1.0]` written for users
+from this file's log (Dot + Colour themes, Home, library shelves, novel reader + TTS, manga reader, tablet layouts,
+downloads, backups, widgets, Japanese UI); no card IDs, no sample numbers. Leave `versionName = "0.1.0"`;
+`versionCode` stays 24 unless Claude reports in V10 that the phone's install is ≥ 24 (then bump above it).
+
+#### V7 Release-build runtime sweep (Claude) — `ready` after V3–V6
+On an optimised (preview or release-type) build, tablet + S22, Dot + Colour, close every gap in
+`docs/RUNTIME_QA.md`: P1.1 rotation + process death (readers, sheets, queued work), P1.2 downloads (novel + manga,
+pause/resume, force-stop), P1.3 backup round trip, P1.4 EPUB + mass import (owner-approved temporary files), P1.5
+translation safe failure without credentials, P1.6 TTS remaining combos + background + headset, P1.7 one
+owner-approved extension install/update/uninstall, P1.8 widget, P1.10 separate-library mode, search, empty and
+error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + repro). Update RUNTIME_QA.
+
+#### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
+WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
+config, download queue Cancel all), mass import batch cards, phone Settings layout. NewUpdate screen moves to V12
+(needs a public release). One English pass on the S22 if the owner approved it in V0. Bugs → `V8.n`.
+
+#### V9 Cold start + baseline profile (Claude) — `ready` after V7 fixes
+P2.1: phone cold start, `am start -W`, 10 runs, compiled vs not, before/after numbers in `docs/PERFORMANCE.md`.
+P2.4: re-collect the baseline profile on the frozen main (`-PtsuzukiProfileConnected=true`), commit it.
+
+#### V10 Signing continuity (Claude + owner) — `ready` after V0, V4
+Pull the phone's installed release APK (`pm path io.github.manojx2005.tsuzuki`) and compare its certificate SHA-256
+(`apksigner verify --print-certs`) with an APK signed by the release key; record the phone's installed `versionCode`.
+Same cert and version code below the new one: in-place upgrade works. Different cert: **stop**, owner decides
+(sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
+
+#### V11 Release candidate (Claude + owner) — `ready` after V9, V10
+Build `assembleRelease -Penable-updater` locally with the release key. Tablet + S22: install the release app id,
+smoke test Home, Library, both readers, TTS, downloads, backup + restore, Browse, extensions, settings, widgets.
+Owner's phone (as approved in V0): fresh backup copied to the PC first, then upgrade in place over the real data;
+check library, progress, shelves, history and prefs survived; crash buffer empty on all three.
+
+#### V12 Tag + publish (Claude + owner) — `ready` after V11
+Owner OK → `git tag v0.1.0` on frozen main → push **only that tag** (`git push origin v0.1.0`; never `--tags`: the
+repo holds Tsundoku's `v0.8.4`–`v0.9.2`, which would look newer to the updater). Watch the workflow, check the
+release assets and SHA-256 file. On the tablet, install a build reporting an older version and confirm the in-app
+updater finds v0.1.0 and the NewUpdate screen renders (V8's deferred item). Then lift the freeze, merge the waiting
+branches, and start v0.2 (anime).
+
+#### Owner permissions for v0.1 (answers recorded 2026-11-07)
+- **Repo:** `Manojx2005/Tsuzuki` is public (owner; Claude checked the API returns 200 without auth). Releases go there;
+  `GITHUB_REPO` stays.
+- **Signing:** owner: "do what is best". V10 signs v0.1 with whichever key signed the phone's installed release, so it
+  upgrades in place; if that key isn't the Actions secret, Claude asks the owner to update the secrets before V12.
+  Item 2 (secrets exist) is checked in V10.
+- **Watch switch:** keep as a teaser (V3 rewritten).
+- **Devices:** tablet + S22 free to use (any build type, `am kill`, scratch installs with the synthetic backup, widgets,
+  temporary EPUB/mass-import files cleaned up after); one extension install/update/uninstall on tablet/S22; S22 to
+  English once and back; owner's phone upgraded in place at V11 after a backup is copied to the PC.
+- **Push:** Claude pushes `main` to origin after each verified merge, and pushes only the `v0.1.0` tag at V12 (never
+  `--tags`).
+- **Firebase:** delete `app/google-services.json` in V4.
+- **Publish:** Claude stops after V11 and asks the owner before the V12 tag push.
+
 ### Batch R — the long list (written 2026-11-07 by Claude)
 
 Same run rules as "Overnight batch Q — run rules" above (worktree per card from current `main`, Needs merged
