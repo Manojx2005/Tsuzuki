@@ -74,12 +74,71 @@ internal fun TsuzukiExportEpubDialog(
     onExport: (Uri, EpubExportOptions) -> Unit,
     documentName: (String, EpubExportOptions, Boolean) -> String,
 ) {
+    TsuzukiEpubExportForm(
+        initialFilename = EpubExportNaming.sanitizeFilename(manga.title) + ".epub",
+        initialOptions = EpubExportOptions(downloadedOnly = true),
+        selectionLabel = stringResource(TDMR.strings.epub_chapters_export_count, chapters.size),
+        forceZip = false,
+        onDismissRequest = onDismissRequest,
+        onExport = onExport,
+        documentName = documentName,
+    )
+}
+
+@Composable
+internal fun TsuzukiBatchExportEpubDialog(
+    mangaList: List<Manga>,
+    onDismissRequest: () -> Unit,
+    onExport: (Uri, EpubExportOptions) -> Unit,
+) {
+    val single = mangaList.singleOrNull()
+    val initialFilename = single?.title?.let { EpubExportNaming.sanitizeFilename(it) + ".epub" } ?: "novels_export.zip"
+    TsuzukiEpubExportForm(
+        initialFilename = initialFilename,
+        initialOptions = EpubExportOptions(),
+        selectionLabel = stringResource(TDMR.strings.epub_novels_export_count, mangaList.size),
+        forceZip = single == null,
+        onDismissRequest = onDismissRequest,
+        onExport = onExport,
+        documentName = { filename, _, asZip -> batchEpubDocumentName(filename, initialFilename, asZip) },
+        selectionContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                mangaList.take(5).forEach { manga -> ExportSupportingText(manga.title) }
+                if (mangaList.size > 5) {
+                    ExportSupportingText(stringResource(TDMR.strings.epub_and_more, mangaList.size - 5))
+                }
+            }
+        },
+    )
+}
+
+internal fun batchEpubDocumentName(input: String, fallback: String, asZip: Boolean): String {
+    fun stem(name: String): String = when {
+        name.endsWith(".epub", ignoreCase = true) -> name.dropLast(5)
+        name.endsWith(".zip", ignoreCase = true) -> name.dropLast(4)
+        else -> name
+    }
+    val base = EpubExportNaming.sanitizeFilename(stem(input.trim())).ifBlank { stem(fallback) }
+    return base + if (asZip) ".zip" else ".epub"
+}
+
+@Composable
+private fun TsuzukiEpubExportForm(
+    initialFilename: String,
+    initialOptions: EpubExportOptions,
+    selectionLabel: String,
+    forceZip: Boolean,
+    onDismissRequest: () -> Unit,
+    onExport: (Uri, EpubExportOptions) -> Unit,
+    documentName: (String, EpubExportOptions, Boolean) -> String,
+    selectionContent: @Composable () -> Unit = {},
+) {
     val tokens = TsuzukiTheme.tokens
     val exportLabel = stringResource(TDMR.strings.action_export_epub)
-    var filename by remember { mutableStateOf(EpubExportNaming.sanitizeFilename(manga.title) + ".epub") }
-    var options by remember { mutableStateOf(EpubExportOptions(downloadedOnly = true)) }
-    val asZip = epubExportUsesZip(options)
-    val preview = remember(filename, options) { documentName(filename, options, asZip) }
+    var filename by remember(initialFilename) { mutableStateOf(initialFilename) }
+    var options by remember(initialOptions) { mutableStateOf(initialOptions) }
+    val asZip = forceZip || epubExportUsesZip(options)
+    val preview = documentName(filename, options, asZip)
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(if (asZip) "application/zip" else "application/epub+zip"),
     ) { uri ->
@@ -120,9 +179,7 @@ internal fun TsuzukiExportEpubDialog(
                             color = tokens.dotOn,
                         )
                         Text(
-                            text = tsuzukiCase(
-                                stringResource(TDMR.strings.epub_chapters_export_count, chapters.size),
-                            ).orEmpty(),
+                            text = tsuzukiCase(selectionLabel).orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
                             color = tokens.dotOn.copy(alpha = 0.72f),
                         )
@@ -133,6 +190,7 @@ internal fun TsuzukiExportEpubDialog(
                     Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    selectionContent()
                     ExportEpubContentOptions(options) { options = it }
                     ExportEpubFilenameOptions(filename, { filename = it }, preview, options) { options = it }
                     ExportEpubSnippetOptions(options) { options = it }

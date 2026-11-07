@@ -1346,4 +1346,8 @@
     <string name="tsz_local_manga_formats">CBZ、ZIP、文件夹</string>
     <string name="tsz_manga_repos">漫画扩展仓库</string>
     <string name="tsz_manga_repos_summary">使用兼容 Mihon 和 Tachiyomi 的仓库安装漫画来源。</string>
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">读完一章后自动同步</string>
+    <string name="tsz_quotes_saved_count">已保存 %1$d 条</string>
+    <string name="tsz_quotes_export">导出摘录</string>
 </resources>

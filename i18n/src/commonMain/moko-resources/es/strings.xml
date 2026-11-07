@@ -1333,4 +1333,8 @@
     <string name="tsz_local_manga_formats">CBZ, ZIP y carpetas</string>
     <string name="tsz_manga_repos">Repositorios de extensiones de manga</string>
     <string name="tsz_manga_repos_summary">Instala fuentes de manga desde repositorios compatibles con Mihon y Tachiyomi.</string>
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">Sincronización automática al terminar un capítulo</string>
+    <string name="tsz_quotes_saved_count">%1$d guardadas</string>
+    <string name="tsz_quotes_export">Exportar citas</string>
 </resources>

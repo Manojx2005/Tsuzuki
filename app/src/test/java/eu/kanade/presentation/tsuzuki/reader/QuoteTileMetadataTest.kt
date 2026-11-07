@@ -28,4 +28,13 @@ class QuoteTileMetadataTest {
         quoteForSharing(quote) shouldBe "First line\nSecond line\n\nChapter 12"
         quoteForSharing(quote.copy(chapterName = " ")) shouldBe quote.content
     }
+
+    @Test
+    fun exportKeepsSavedOrderAndAvailableChapterNames() {
+        val first = Quote(chapterName = "Chapter 12", content = "最初の引用")
+        val second = Quote(chapterName = "", content = "Second quote")
+        val text = buildString { writeQuoteExport(this, "My novel", listOf(first, second)) }
+
+        text shouldBe "My novel\n\n最初の引用\n\nChapter 12\n\nSecond quote\n"
+    }
 }

@@ -1345,4 +1345,8 @@
     <string name="tsz_local_manga_formats">CBZ, ZIP, 폴더</string>
     <string name="tsz_manga_repos">만화 확장 저장소</string>
     <string name="tsz_manga_repos_summary">Mihon 및 Tachiyomi 호환 저장소에서 만화 소스를 설치하세요.</string>
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">챕터를 다 읽으면 자동으로 동기화</string>
+    <string name="tsz_quotes_saved_count">%1$d개 저장됨</string>
+    <string name="tsz_quotes_export">인용구 내보내기</string>
 </resources>
