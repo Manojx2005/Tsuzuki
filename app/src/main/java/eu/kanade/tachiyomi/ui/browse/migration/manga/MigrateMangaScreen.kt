@@ -100,7 +100,7 @@ data class MigrateMangaScreen(
                         IconButton(onClick = { showMenu = true }) {
                             Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More")
                         }
-                        androidx.compose.material3.DropdownMenu(
+                        eu.kanade.presentation.components.AnchoredDropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {

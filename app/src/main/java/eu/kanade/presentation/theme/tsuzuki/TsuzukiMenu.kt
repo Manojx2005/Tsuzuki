@@ -35,16 +35,20 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -130,17 +134,22 @@ fun tsuzukiMenuWeight(): FontWeight? = when (TsuzukiTheme.tokens.style) {
  * accent. Use inside [eu.kanade.presentation.components.DropdownMenu].
  */
 @Composable
-fun TsuzukiMenuItem(text: String, onClick: () -> Unit, danger: Boolean = false) {
-    val t = TsuzukiTheme.tokens
+fun TsuzukiMenuItem(
+    text: String,
+    onClick: () -> Unit,
+    danger: Boolean = false,
+    icon: ImageVector? = null,
+) {
     androidx.compose.material3.DropdownMenuItem(
         text = {
             androidx.compose.material3.Text(
                 tsuzukiMenuLabel(text),
-                fontWeight = tsuzukiMenuWeight(),
-                color = if (danger) t.accent else Color.Unspecified,
+                fontWeight = tsuzukiMenuWeight() ?: FontWeight.Normal,
+                color = tsuzukiMenuDangerColor(danger),
             )
         },
         onClick = onClick,
+        leadingIcon = tsuzukiMenuIcon(icon, destructive = danger),
     )
 }
 
@@ -152,19 +161,15 @@ fun tsuzukiMenuDangerColor(destructive: Boolean): Color =
 /** A menu row's leading icon in the Tsuzuki themes (muted, or the accent on destructive rows); null in stock. */
 @Composable
 fun tsuzukiMenuIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector?,
+    icon: ImageVector?,
     destructive: Boolean,
 ): (@Composable () -> Unit)? {
     val t = TsuzukiTheme.tokens
     if (icon == null || t.style == TsuzukiStyle.NONE) return null
-    val tint = if (destructive) {
-        t.accent
-    } else if (t.isDot) {
-        Color(0xFF8A8A8A)
-    } else {
-        Color.White.copy(alpha = 0.72f)
+    val tint = if (destructive) t.accent else t.mutedText
+    return {
+        androidx.compose.material3.Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
     }
-    return { androidx.compose.material3.Icon(icon, contentDescription = null, tint = tint) }
 }
 
 /** Icons for the Library overflow menu (board "Menus"), kept here so the upstream toolbar needs no new imports. */
@@ -209,15 +214,27 @@ object TsuzukiMenuIcons {
     val filter = Icons.Outlined.FilterList
     val repos = Icons.Outlined.Inventory2
     val cancel = Icons.Outlined.Close
+    val sort = Icons.Outlined.SwapVert
 }
 
-/** The board's hairline above a destructive menu row; nothing for other rows or in stock themes. */
+/** An optional group caption and a hairline between sections of a themed menu. */
 @Composable
-fun TsuzukiMenuSeparator(beforeDestructive: Boolean) {
+fun TsuzukiMenuGroup(label: String? = null, divider: Boolean = false) {
     val t = TsuzukiTheme.tokens
-    if (!beforeDestructive || t.style == TsuzukiStyle.NONE) return
-    androidx.compose.material3.HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-        color = t.tileBorder ?: Color.White.copy(alpha = 0.10f),
-    )
+    if (t.style == TsuzukiStyle.NONE) return
+    if (divider) {
+        androidx.compose.material3.HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            color = t.tileBorder ?: t.mutedText.copy(alpha = 0.18f),
+        )
+    }
+    if (label != null) {
+        Text(
+            text = tsuzukiMenuLabel(label),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = t.mutedText,
+            fontWeight = FontWeight.Bold,
+        )
+    }
 }

@@ -13,7 +13,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -252,21 +251,18 @@ fun AppBarActions(
             expanded = showMenu,
             onDismissRequest = { showMenu = false },
         ) {
-            overflowActions.map {
-                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuSeparator(it.destructive)
-                DropdownMenuItem(
+            overflowActions.forEachIndexed { index, action ->
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuGroup(
+                    divider = index > 0 && (action.dividerBefore || action.destructive),
+                )
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem(
+                    text = action.title,
                     onClick = {
-                        it.onClick()
+                        action.onClick()
                         showMenu = false
                     },
-                    text = {
-                        Text(
-                            eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel(it.title),
-                            fontWeight = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuWeight() ?: FontWeight.Normal,
-                            color = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuDangerColor(it.destructive),
-                        )
-                    },
-                    leadingIcon = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuIcon(it.icon, it.destructive),
+                    danger = action.destructive,
+                    icon = action.icon,
                 )
             }
         }
@@ -448,5 +444,6 @@ sealed interface AppBar {
         // Tsuzuki (board 17-drafts "Menus"): optional row icon and accent destructive row, Tsuzuki themes only.
         val icon: ImageVector? = null,
         val destructive: Boolean = false,
+        val dividerBefore: Boolean = false,
     ) : AppBarAction
 }
