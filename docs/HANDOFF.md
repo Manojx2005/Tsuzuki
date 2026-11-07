@@ -137,6 +137,179 @@ reviews mostly wait for the morning because of the two-build limit).
 
 Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build + device table).
 
+### Batch R — the long list (written 2026-11-07 by Claude)
+
+Same run rules as "Overnight batch Q — run rules" above (worktree per card from current `main`, Needs merged
+first, commit on the card branch, Result + `review`, blocked → next row). Boards: `docs/design/boards/INDEX.md`
+(open `png/<page>/<Board>.png` + `dot/` + `html/`) unless the card names another. Priority order from the owner:
+stable → smooth/fast → design complete → Mihon parity → new features; anime has its own lane.
+
+**Lane 1 — anime (Codex thread 1, in order):** A2.3 → A2.4 → Y2 rework → Y6 rework → R-A1 → R-A2 → R-A3 → R-A4.
+**Lane 2 — app (Codex thread 2, in order):** R1 → R2 → … → R16. Lane 2 never touches anime files, and lane 1
+never touches R-card files; both threads: one Gradle build at a time each.
+**Lane 3 — Claude:** reviews, device checks and the C-list at the end of this section.
+
+| # | Card | Lane | Needs | Tier |
+|---|---|---|---|---|
+| 1 | R1 Large-library performance pass | 2 | — | T3 |
+| 2 | R2 Process death + rotation audit | 2 | — | T3 |
+| 3 | R3 Mid-word wraps + tile labels sweep | 2 | — | T2 |
+| 4 | R4 Menus: icons, groups, destructive row | 2 | — | T2 |
+| 5 | R5 Tablet Library + Tablet Settings vs boards | 2 | — | T3 |
+| 6 | R6 Colour theme parity pass | 2 | R3 | T2 |
+| 7 | R7 Japanese layout pass | 2 | R3 | T2 |
+| 8 | R8 Downloads screen + queue vs board | 2 | — | T2 |
+| 9 | R9 Widgets: Continue reading + Listening vs board | 2 | — | T3 |
+| 10 | R10 Tracker accounts + update schedule vs boards | 2 | — | T2 |
+| 11 | R11 Reading estimates (time left, speed) | 2 | — | T3 |
+| 12 | R12 Source health | 2 | — | T3 |
+| 13 | R13 Dictionary lookup (system-provided) | 2 | — | T3 |
+| 14 | R14 Merge sources for one book | 2 | — | T4 |
+| 15 | R15 Backup: scheduled export + restore polish (Backup board) | 2 | — | T3 |
+| 16 | R16 Upcoming: notify on expected release (optional) | 2 | — | T2 |
+| 17 | R-A1 Anime backups: Aniyomi import + our 8000-range fields | 1 | A2.4 | T4 |
+| 18 | R-A2 Player settings + sheets (subtitles, audio, speed, decoder) | 1 | A2.4 | T3 |
+| 19 | R-A3 Anime in Updates + "Airing today" strip | 1 | A2.4 | T3 |
+| 20 | R-A4 Anime episode downloads (third engine) | 1 | R-A2 | T4 |
+
+#### R1 Large-library performance pass (T3) — `ready`
+Use Y4's `scripts/generate_synthetic_backup.py` (500 books, 30 shelves, 50 k chapters). Codex: no devices — profile
+on the JVM side only: add Macrobenchmark-free unit/perf tests for the hot paths (library grouping/sorting/filtering,
+shelf counts, Updates mapping, Home stack queries) with the synthetic data shape, find anything O(n²) or done on
+the main thread, fix the top issues (stable keys/contentType already done in N30 — check for regressions),
+document numbers before/after in Result. Claude then restores the backup into a **scratch** install and records
+`gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse.
+Result: _pending_
+
+#### R2 Process death + rotation audit (T3) — `ready`
+WORKPLAN P1.1. For every Tsuzuki screen and sheet with user state (Home stack index, Library tab/shelf/filter/
+selection, details sheets incl. Q3 save range, reader quick sheet tab, All reader settings tab, Browse media/
+section, search queries, Q9 selection, Updates two-pane selection), make sure state survives rotation and
+process death (`rememberSaveable` / ScreenModel saved state, no Parcelable leaks). List each screen + what was
+missing in Result. Tests for any saver you write. Claude verifies with `adb shell am kill` on both devices.
+Result: _pending_
+
+#### R3 Mid-word wraps + tile labels sweep (T2) — `ready`
+Found 2026-11-07: details action tiles wrap mid-word with 4 tiles ("TRACKIN / G", "IN / LIBRARY") on 360 dp.
+Grep every Tsuzuki tile/pill/button label for `maxLines = 2` without word-safe handling; for equal-width tiles use
+one line + ellipsis or a shorter label (8 locales), never break inside a word (`LineBreak.Simple` /
+`Hyphens.None`, or `softWrap` off for single words). Add the details 4-tile case to `TsuzukiNarrowPreviews`.
+Result: _pending_
+
+#### R4 Menus: icons, groups, destructive row (T2) — `ready`
+Board `17-drafts` Menus / MenuPick (status table: "Not yet: item icons, groups, accent destructive row, screens
+using Material's menu directly"). Extend the shared Tsuzuki dropdown (`components/DropdownMenu.kt` hook +
+`theme/tsuzuki/TsuzukiMenu.kt`) with optional leading icons, group dividers/labels and a destructive (accent) row;
+then switch the remaining Material `DropdownMenu` call sites in Tsuzuki themes to it (list them).
+Result: _pending_
+
+#### R5 Tablet Library + Tablet Settings vs boards (T3) — `ready`
+Boards `11-tablet/TabletLibrary`, `TabletSettings` (+ dot). Compare with the current tablet layouts (rail + Library
+grid; Settings two-pane) and fix only differences (list them). Real data only.
+Result: _pending_
+
+#### R6 Colour theme parity pass (T2) — `ready` (needs R3)
+Every Tsuzuki screen in **Colour** at 360 dp and tablet: sentence case, Instrument Serif headings, book-palette
+accents, no Dot-only artefacts (uppercase, grey `#8A8A8A`, red). Use the Q8 narrow previews in Colour; fix
+differences; list per screen.
+Result: _pending_
+
+#### R7 Japanese layout pass (T2) — `ready` (needs R3)
+Devices are Japanese. Status table: translated layouts never visually checked. Run the narrow previews with the
+`ja` locale; fix truncation, mixed fonts (Japanese must use the partner font via `MaterialTheme.typography`) and
+any hard-coded English in Tsuzuki screens (move to strings, 8 locales).
+Result: _pending_
+
+#### R8 Downloads screen + queue vs board (T2) — `ready`
+Board `Downloads` (+ `DownloadSheet`). Compare the Tsuzuki download queue (N10 Compose rows) with the board: group
+headers, per-group pause/resume, progress, error rows with retry; fix differences.
+Result: _pending_
+
+#### R9 Widgets vs board (T3) — `ready`
+Board `Widgets`. Continue-reading widget and N28 Listening widget: match sizes/styles, Dot + Colour (follow app
+theme), real data only, tap targets open the right screen. Claude places them on the tablet and checks.
+Result: _pending_
+
+#### R10 Tracker accounts + update schedule vs boards (T2) — `ready`
+Boards `TrackerAccounts`, `UpdateSchedule`. Settings › Tracking and Library update schedule screens: compare and
+fix; never show tokens; no new network calls.
+Result: _pending_
+
+#### R11 Reading estimates (T3) — `ready`
+Phase 5 "reading estimates (words, speed, time left)". Details Resume tile / reader chrome show **time left in
+chapter** and **in book** only when backed by data: words from downloaded/cached chapter text (count once, cache in
+a Tsuzuki table-free store e.g. prefs/JSON keyed by chapter id — no schema change), reading speed from
+`ReadingDays` minutes ÷ words read (rolling median, needs ≥ 3 sessions). Hide when unknown. Pure helpers + tests.
+Board: NovelDetails / TabletNovel estimate rows (status table says "estimates left out").
+Result: _pending_
+
+#### R12 Source health (T3) — `ready`
+Board `SourceHealth`. Per installed source: last successful request time, average response time, last error
+(HTTP code / Cloudflare / timeout), measured passively from real Browse/Updates traffic via an OkHttp interceptor
+hook in `tsuzuki/` (no extra pings; optional manual "Check now" that does one Popular request). Store in a small
+Tsuzuki store (no DB migration). Show on the Browse source rows (status dot) and a Source health screen.
+Result: _pending_
+
+#### R13 Dictionary lookup (T3) — `ready`
+Board `Dictionary`. Long-press a word in the novel reader (TextView + WebView) → a Tsuzuki sheet with the word and
+actions that use what the device already has: Android `ACTION_PROCESS_TEXT` handlers (Google Translate, installed
+dictionaries), `ACTION_DEFINE` where available, web search. **Ship no dictionary data** (licences). Copy to the
+book's notebook (N27) as a quote. Tests for word extraction at selection edges.
+Result: _pending_
+
+#### R14 Merge sources for one book (T4) — `ready`
+Board `MergeSources`. Start the Result with a short design note, then build it: link 2+ library entries of the same book from different sources into one "merged" view (chapter
+list unified by chapter number, preferred source per chapter, read state synced across). Must not change the DB
+schema in this card: store links in a Tsuzuki store; reading progress sync via existing interactors. Mihon has no
+equivalent — keep it Tsuzuki-only. If it can't be done without schema changes, set `blocked` with the proposed
+schema for Claude.
+Result: _pending_
+
+#### R15 Backup: scheduled export + restore polish (T3) — `ready`
+Board `Backup`. Data and storage › Backup: last backup time + size, scheduled frequency (existing pref), keep-N
+rotation, restore preview (what's inside before restoring: counts of books/shelves/history from the file header),
+clear errors. No cloud sync in this card (owner decision needed for Drive/WebDAV).
+Result: _pending_
+
+#### R16 Upcoming: notify on expected release (T2) — `ready`
+Optional per-book toggle on Upcoming: a notification on the expected date from the existing interval estimate;
+off by default; uses the existing notification channel; no new background polling.
+Result: _pending_
+
+#### R-A1 Anime backups (T4) — `ready` (needs A2.4)
+ANIME_SCHEMA §4 + §9 Q2 (import only): read Aniyomi backups (fields 500–503) into the anime tables; write anime
+into our own backups in the 8000 range; restore round-trip test with a synthetic file; never change existing
+manga/novel backup fields. Claude: scratch-install restore test.
+Result: _pending_
+
+#### R-A2 Player settings + sheets (T3) — `ready` (needs A2.4)
+Boards `10-anime/PlayerSettings`, `PlayerSheets`. Subtitles (track pick, size), audio track, speed, decoder
+(hw/sw), gestures (seek/brightness/volume), skip ±85 s; persist per user; Dot + Colour.
+Result: _pending_
+
+#### R-A3 Anime in Updates + "Airing today" (T3) — `ready` (needs A2.4)
+New episodes from library anime appear in Updates under the media pills (ANIME pill only when ≥ 1 anime in
+library); "Airing today" strip from source upload dates (real data only). Anime library update job (separate
+worker, respects existing update restrictions).
+Result: _pending_
+
+#### R-A4 Anime episode downloads (T4) — `ready` (needs R-A2)
+WORKPLAN 6.3 third engine: queue in its own store, files under `<downloads>/<source>/<anime>/<episode>/`,
+HLS/segments, pause/resume, Wi-Fi only pref, shown in the Downloads screen as an Anime group. Design note in
+Result first; Claude reviews before merge (T4).
+Result: _pending_
+
+**Claude list (lane 3):** C1 review + device-check every card above as it lands · C2 A1.5 device test (needs a
+non-owner debug install: build debug with a temporary `.scratch` suffix, install one yuzono extension, play an
+episode, uninstall) · C3 Q1 frame timing + recording on the owner's phone when it is connected · C4 restore R1's
+500-book backup into a scratch install and record jank · C5 Tsundoku + Mihon upstream merge (`scripts/upstream-
+report.sh`) · C6 N28/R9 widgets placed and checked · C7 tablet line-length decision (owner) · C8 release v0.1
+prep when the owner says go (signing, telemetry removal, changelog).
+
+**Prompts for the owner:**
+- Thread 1 (anime): `Read AGENTS.md and docs/HANDOFF.md, then work through "Batch R" lane 1 in order (A2.3, A2.4, Y2 rework, Y6 rework, R-A1…R-A4) under the batch Q run rules.`
+- Thread 2 (app): `Read AGENTS.md and docs/HANDOFF.md, then work through "Batch R" lane 2 in order (R1…R16) under the batch Q run rules. Never touch anime files.`
+
 ### Batch Q — polish, layout overflow, smooth Dot motion, Mihon-style QoL (written 2026-11-06 by Claude)
 
 **Why:** device pass on the owner's phone (Galaxy `R5GL23ZYE1V`, SM-S948Q, 1080×2340 @ 450 dpi ≈ **384×832 dp**,
