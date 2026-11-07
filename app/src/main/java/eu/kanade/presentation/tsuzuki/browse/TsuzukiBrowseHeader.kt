@@ -35,23 +35,26 @@ internal fun browsePages(hideManga: Boolean): List<BrowsePage> =
 internal fun List<BrowsePage>.pageIndex(media: BrowseMedia, section: BrowseSection): Int =
     indexOfFirst { it.media == media && it.section == section }
 
-/** Sources and Extensions always; Migrate only while it is the open section. */
-internal fun browseHeaderSections(active: BrowseSection): List<BrowseSection> =
-    if (active == BrowseSection.MIGRATION) {
-        listOf(BrowseSection.SOURCES, BrowseSection.EXTENSIONS, BrowseSection.MIGRATION)
-    } else {
-        listOf(BrowseSection.SOURCES, BrowseSection.EXTENSIONS)
-    }
+/** The pages the pager shows for one media: its Sources, Extensions and Migrate, in that order. */
+internal fun browsePagesFor(all: List<BrowsePage>, media: BrowseMedia): List<BrowsePage> =
+    BrowseSection.entries.mapNotNull { section -> all.firstOrNull { it.media == media && it.section == section } }
 
+/** The header's segments: Sources, Extensions and Migrate, always all three. */
+internal val browseHeaderSections: List<BrowseSection> = BrowseSection.entries
+
+/**
+ * Browse header in the Tsuzuki themes: the media pills choose Novels or Manga (swiping never crosses media), and
+ * the segments choose Sources / Extensions / Migrate within that media.
+ */
 @Composable
 internal fun TsuzukiBrowseHeader(
-    pages: List<BrowsePage>,
-    currentPage: Int,
-    extensionBadges: List<Int?>,
-    onSelectPage: (Int) -> Unit,
+    hasManga: Boolean,
+    active: BrowsePage,
+    extensionBadge: Int?,
+    onSelectMedia: (BrowseMedia) -> Unit,
+    onSelectSection: (BrowseSection) -> Unit,
 ) {
-    val active = pages[currentPage]
-    val mediaOptions = if (pages.any { it.media == BrowseMedia.MANGA }) {
+    val mediaOptions = if (hasManga) {
         listOf(
             BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels),
             BrowseMedia.MANGA to stringResource(MR.strings.tsz_storage_manga),
@@ -60,9 +63,15 @@ internal fun TsuzukiBrowseHeader(
         listOf(BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels))
     }
     val extensions = stringResource(MR.strings.label_extensions)
-    val extensionPage = pages.pageIndex(active.media, BrowseSection.EXTENSIONS)
-    val updates = extensionBadges.getOrNull(extensionPage)
-    val extensionLabel = if (updates != null && updates > 0) "$extensions · $updates" else extensions
+    val extensionLabel = if (extensionBadge != null &&
+        extensionBadge > 0
+    ) {
+        "$extensions · $extensionBadge"
+    } else {
+        extensions
+    }
+    val sourcesLabel = stringResource(MR.strings.label_sources)
+    val migrationLabel = stringResource(MR.strings.label_migration)
 
     Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
@@ -75,25 +84,21 @@ internal fun TsuzukiBrowseHeader(
                     text = label,
                     selected = isSelected,
                     modifier = Modifier.semantics { selected = isSelected },
-                    onClick = { onSelectPage(pages.pageIndex(media, active.section)) },
+                    onClick = { if (!isSelected) onSelectMedia(media) },
                     role = Role.Tab,
                 )
             }
         }
-        // Migrate is opened from the overflow menu; while it is open it shows as a third, selected segment so the
-        // header says where you are (with only two segments nothing was selected and the indicator collapsed).
-        val sections = browseHeaderSections(active.section)
-        val migrationLabel = stringResource(MR.strings.label_migration)
         TsuzukiSegments(
-            labels = sections.map {
+            labels = browseHeaderSections.map {
                 when (it) {
-                    BrowseSection.SOURCES -> stringResource(MR.strings.label_sources)
+                    BrowseSection.SOURCES -> sourcesLabel
                     BrowseSection.EXTENSIONS -> extensionLabel
                     BrowseSection.MIGRATION -> migrationLabel
                 }
             },
-            selected = sections.indexOf(active.section),
-            onClick = { segment -> onSelectPage(pages.pageIndex(active.media, sections[segment])) },
+            selected = browseHeaderSections.indexOf(active.section),
+            onClick = { segment -> onSelectSection(browseHeaderSections[segment]) },
         )
     }
 }

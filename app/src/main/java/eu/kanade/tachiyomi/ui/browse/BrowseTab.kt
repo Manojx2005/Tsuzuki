@@ -19,14 +19,13 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabbedScreen
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons
 import eu.kanade.presentation.tsuzuki.browse.BrowseMedia
 import eu.kanade.presentation.tsuzuki.browse.BrowsePage
 import eu.kanade.presentation.tsuzuki.browse.BrowseSection
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiBrowseHeader
 import eu.kanade.presentation.tsuzuki.browse.browsePages
+import eu.kanade.presentation.tsuzuki.browse.browsePagesFor
 import eu.kanade.presentation.tsuzuki.browse.pageIndex
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
@@ -99,12 +98,15 @@ data object BrowseTab : Tab {
             novelExtensionsViewModel.search(novelQuery)
         }
 
-        val pages = remember(hideMangaUi) { browsePages(hideMangaUi) }
+        val allPages = remember(hideMangaUi) { browsePages(hideMangaUi) }
+        // Tsuzuki: swipes stay inside the chosen media (Sources / Extensions / Migrate); the pills switch media.
+        var media by rememberSaveable { mutableStateOf(BrowseMedia.NOVELS) }
+        val activeMedia = if (allPages.any { it.media == media }) media else BrowseMedia.NOVELS
+        val pages = if (themed) browsePagesFor(allPages, activeMedia) else allPages
         val state = rememberPagerState { pages.size }
         val scope = rememberCoroutineScope()
-        val migrationLabel = stringResource(MR.strings.label_migration)
         val tabs = pages.map { page ->
-            val tab = when (page) {
+            when (page) {
                 BrowsePage.NOVEL_SOURCES -> novelSourcesTab()
                 BrowsePage.MANGA_SOURCES -> sourcesTab(extensionsState.updates) {
                     scope.launch {
@@ -116,18 +118,6 @@ data object BrowseTab : Tab {
                 BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()
                 BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
             }
-            if (themed && page.section != BrowseSection.MIGRATION) {
-                val migrationPage = pages.pageIndex(page.media, BrowseSection.MIGRATION)
-                tab.copy(
-                    actions = tab.actions + AppBar.OverflowAction(
-                        title = migrationLabel,
-                        icon = TsuzukiMenuIcons.migrate,
-                        onClick = { scope.launch { state.animateScrollToPage(migrationPage) } },
-                    ),
-                )
-            } else {
-                tab
-            }
         }
         val novelExtensionsTabIndex = pages.indexOf(BrowsePage.NOVEL_EXTENSIONS)
         val mangaExtensionsTabIndex = pages.indexOf(BrowsePage.MANGA_EXTENSIONS)
@@ -138,7 +128,14 @@ data object BrowseTab : Tab {
             state = state,
             tabsHeader = if (themed) {
                 { currentPage, onSelectPage ->
-                    TsuzukiBrowseHeader(pages, currentPage, tabs.map { it.badgeNumber }, onSelectPage)
+                    TsuzukiBrowseHeader(
+                        hasManga = allPages.any { it.media == BrowseMedia.MANGA },
+                        active = pages[currentPage.coerceIn(pages.indices)],
+                        extensionBadge = tabs.getOrNull(pages.pageIndex(activeMedia, BrowseSection.EXTENSIONS))
+                            ?.badgeNumber,
+                        onSelectMedia = { media = it },
+                        onSelectSection = { onSelectPage(pages.pageIndex(activeMedia, it)) },
+                    )
                 }
             } else {
                 null
@@ -163,8 +160,13 @@ data object BrowseTab : Tab {
         )
         LaunchedEffect(hideMangaUi) {
             switchToExtensionTabChannel.receiveAsFlow().collectLatest {
-                val media = if (hideMangaUi) BrowseMedia.NOVELS else BrowseMedia.MANGA
-                state.scrollToPage(pages.pageIndex(media, BrowseSection.EXTENSIONS))
+                val target = if (hideMangaUi) BrowseMedia.NOVELS else BrowseMedia.MANGA
+                if (themed) {
+                    media = target
+                    state.scrollToPage(browsePagesFor(allPages, target).pageIndex(target, BrowseSection.EXTENSIONS))
+                } else {
+                    state.scrollToPage(pages.pageIndex(target, BrowseSection.EXTENSIONS))
+                }
             }
         }
 

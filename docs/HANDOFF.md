@@ -392,6 +392,10 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
   segments, so nothing was selected and the indicator collapsed; the list was stock-styled. Now Migrate shows as a
   selected third segment while open, and the list uses the Sources rows (`TsuzukiMigrateSourceList`). Tablet: header,
   rows, tap → source's books, Sources segment back; `BrowseHeaderSectionsTest` 2/2.
+  **Follow-up (owner 2026-11-07):** Migrate is now always the third segment (no overflow entry), and the Browse pager
+  holds only the chosen media's three pages, so swipes move Sources ↔ Extensions ↔ Migrate and never cross Novels /
+  Manga; the pills switch media and keep the section. Tablet: 4 swipes stop at Novels Migrate; Manga keeps Migrate;
+  3 back-swipes stop at Manga Sources. `BrowseHeaderSectionsTest` 4/4.
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.
