@@ -7,12 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.GlobalSearchScreen
+import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
@@ -34,7 +34,7 @@ class NovelGlobalSearchScreen(
 
         val viewModel = viewModel<NovelGlobalSearchViewModel>(
             factory = NovelGlobalSearchViewModel.Factory,
-            extras = CreationExtras {
+            extras = tsuzukiScreenExtras {
                 set(NovelGlobalSearchViewModel.INITIAL_QUERY_KEY, searchQuery)
                 set(NovelGlobalSearchViewModel.INITIAL_EXTENSION_FILTER_KEY, extensionFilter)
             },

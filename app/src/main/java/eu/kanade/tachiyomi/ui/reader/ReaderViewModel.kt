@@ -6,6 +6,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
+import androidx.core.os.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -154,11 +155,20 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private val mutableState = MutableStateFlow(
         State(
+            dialog = Dialog.Settings.takeIf {
+                savedState.get<android.os.Bundle>("tsuzuki_reader_ui")?.getBoolean("settings") == true
+            },
             isTranslating = translationPreferences.translationEnabled().get() &&
                 translationPreferences.smartAutoTranslate().get(),
         ),
     )
     val state = mutableState.asStateFlow()
+
+    init {
+        savedState.setSavedStateProvider("tsuzuki_reader_ui") {
+            bundleOf("settings" to (state.value.dialog == Dialog.Settings))
+        }
+    }
 
     /**
      * Ids of the manga and chapter the reader was launched with, taken from the activity intent.
@@ -871,7 +881,11 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(novelProgressPercent = clamped) }
         novelScrollProgress = clamped
         if (!readerPreferences.novelInfiniteScroll.get()) {
-            nextChapterWarmup.onProgress(clamped, state.value.viewerChapters?.currChapter?.chapter?.id, viewModelScope) {
+            nextChapterWarmup.onProgress(
+                clamped,
+                state.value.viewerChapters?.currChapter?.chapter?.id,
+                viewModelScope,
+            ) {
                 prepareNextChapterForInfiniteScroll()
             }
         }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -42,6 +43,7 @@ import eu.kanade.presentation.manga.components.MangaCoverDialog
 import eu.kanade.presentation.manga.components.RemoveChaptersFromDbDialog
 import eu.kanade.presentation.manga.components.ScanlatorFilterDialog
 import eu.kanade.presentation.manga.components.SetIntervalDialog
+import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -103,7 +105,7 @@ class MangaScreen(
         val scope = rememberCoroutineScope()
         val viewModel = viewModel<MangaViewModel>(
             factory = MangaViewModel.Factory,
-            extras = CreationExtras {
+            extras = tsuzukiScreenExtras {
                 set(MangaViewModel.MANGA_ID_KEY, mangaId)
                 set(MangaViewModel.IS_FROM_SOURCE_KEY, fromSource)
             },
@@ -131,7 +133,7 @@ class MangaScreen(
             }
         }
 
-        var showScanlatorsDialog by remember { mutableStateOf(false) }
+        var showScanlatorsDialog by rememberSaveable { mutableStateOf(false) }
         MangaScreen(
             state = successState,
             onScanlatorFilterClicked = { showScanlatorsDialog = true },

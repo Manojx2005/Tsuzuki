@@ -540,7 +540,7 @@ class ReaderActivity : BaseActivity() {
                     },
                 )
             }
-            is ReaderViewModel.Dialog.Settings -> {
+            is ReaderViewModel.Dialog.Settings -> if (state.viewer != null) {
                 ReaderSettingsDialog(
                     onDismissRequest = onDismissRequest,
                     onShowMenus = { setMenuVisibility(true) },

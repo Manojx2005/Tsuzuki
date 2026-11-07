@@ -8,8 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.Navigator
@@ -89,6 +92,13 @@ data object BrowseTab : Tab {
         val novelExtensionsViewModel = viewModel<NovelExtensionsViewModel>()
         val novelExtensionsState by novelExtensionsViewModel.state.collectAsState()
 
+        var mangaQuery by rememberSaveable { mutableStateOf(extensionsState.searchQuery) }
+        var novelQuery by rememberSaveable { mutableStateOf(novelExtensionsState.searchQuery) }
+        LaunchedEffect(extensionsViewModel, novelExtensionsViewModel) {
+            extensionsViewModel.search(mangaQuery)
+            novelExtensionsViewModel.search(novelQuery)
+        }
+
         val pages = remember(hideMangaUi) { browsePages(hideMangaUi) }
         val state = rememberPagerState { pages.size }
         val scope = rememberCoroutineScope()
@@ -140,8 +150,14 @@ data object BrowseTab : Tab {
             },
             onChangeSearchQuery = { query ->
                 when (state.currentPage) {
-                    novelExtensionsTabIndex -> novelExtensionsViewModel.search(query)
-                    mangaExtensionsTabIndex -> extensionsViewModel.search(query)
+                    novelExtensionsTabIndex -> {
+                        novelQuery = query
+                        novelExtensionsViewModel.search(query)
+                    }
+                    mangaExtensionsTabIndex -> {
+                        mangaQuery = query
+                        extensionsViewModel.search(query)
+                    }
                 }
             },
         )

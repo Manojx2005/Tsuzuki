@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -91,7 +92,7 @@ fun MangaToolbar(
             .copy(alpha = if (isActionMode) 1f else backgroundAlphaProvider()),
         navigateUp = navigateUp,
         actions = {
-            var downloadExpanded by remember { mutableStateOf(false) }
+            var downloadExpanded by rememberSaveable { mutableStateOf(false) }
             if (downloadSheet != null) {
                 if (downloadExpanded) downloadSheet { downloadExpanded = false }
             } else if (onClickDownload != null) {
