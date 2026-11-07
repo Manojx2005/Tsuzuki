@@ -1421,6 +1421,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             return
         }
         val page = chapters.currChapter.pages?.firstOrNull() ?: return
+        val enteredViaPrevious = chapters.takePreviousEntry()
 
         loadJob?.cancel()
         currentPage = page
@@ -1428,7 +1429,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
         val loadedIndex = loadedChapters.indexOfFirst { it.chapter.chapter.id == chapters.currChapter.chapter.id }
         if (preferences.novelInfiniteScroll.get() && loadedIndex >= 0) {
-            if (chapters.enteredViaPrevious) {
+            if (enteredViaPrevious) {
                 pendingRestoreChapterId = null
                 progressSaveJob?.cancel()
                 currentChapterIndex = loadedIndex
@@ -1448,7 +1449,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         if (page.status == Page.State.Ready && !page.text.isNullOrEmpty()) {
             hideLoadingIndicator()
             displayChapter(chapters.currChapter, page)
-            restoreProgress(page, chapters.enteredViaPrevious)
+            restoreProgress(page, enteredViaPrevious)
             activity.viewModel.setNovelVisibleChapter(page.chapter.chapter)
             return
         }
@@ -1479,7 +1480,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 Page.State.Ready -> {
                     hideLoadingIndicator()
                     displayChapter(chapters.currChapter, page)
-                    restoreProgress(page, chapters.enteredViaPrevious)
+                    restoreProgress(page, enteredViaPrevious)
                     activity.viewModel.setNovelVisibleChapter(page.chapter.chapter)
                 }
                 is Page.State.Error -> {
@@ -2117,7 +2118,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     override fun moveToPage(page: ReaderPage) {
         if (!preferences.novelInfiniteScroll.get() || loadedChapters.size < 2) return
         val chapter = loadedChapters.firstOrNull { it.chapter.chapter.id == page.chapter.chapter.id } ?: return
-        scrollView.scrollTo(0, chapter.headerView.top)
+        scrollView.scrollTo(0, chapter.block.container.top)
     }
 
     override fun handleKeyEvent(event: KeyEvent): Boolean {

@@ -446,7 +446,7 @@ class ReaderViewModel @JvmOverloads constructor(
             chapter,
             chapterList.getOrNull(chapterPos - 1),
             chapterList.getOrNull(chapterPos + 1),
-            enteredViaPrevious = enteredViaPrevious,
+            previousEntry = if (enteredViaPrevious) ViewerChapters.PreviousEntry() else null,
         )
 
         withUIContext {

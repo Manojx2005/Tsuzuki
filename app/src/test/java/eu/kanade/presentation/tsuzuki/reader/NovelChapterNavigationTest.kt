@@ -5,12 +5,29 @@ import eu.kanade.tachiyomi.tsuzuki.reader.adjacentNovelChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.chapter.model.Chapter
 
 class NovelChapterNavigationTest {
     private val chapters = (1L..4L).map { ReaderChapter(Chapter.create().copy(id = it)) }
     private val active = ViewerChapters(chapters[0], null, chapters[1])
+
+    @Test
+    fun `previous entry is used once even if a renderer receives the same chapter snapshot again`() {
+        val previous = active.copy(previousEntry = ViewerChapters.PreviousEntry())
+        previous.takePreviousEntry() shouldBe true
+        previous.takePreviousEntry() shouldBe false
+        active.takePreviousEntry() shouldBe false
+    }
+
+    @Test
+    fun `a second previous tap targeting the same chapter still emits a new entry`() {
+        val first = active.copy(previousEntry = ViewerChapters.PreviousEntry())
+        val second = active.copy(previousEntry = ViewerChapters.PreviousEntry())
+        first shouldNotBe second
+        second.takePreviousEntry() shouldBe true
+    }
 
     @Test
     fun `infinite scroll follows the visible chapter including when it has no next chapter`() {

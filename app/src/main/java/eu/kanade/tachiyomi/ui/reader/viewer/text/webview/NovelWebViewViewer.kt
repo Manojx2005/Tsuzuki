@@ -147,6 +147,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     // stale event or the programmatic restore scroll can't persist against the new chapter's page.
     private var isRestoringScroll = false
     private var scrollRestoreToken = 0
+    private var restoreFromPreviousEntry = false
 
     // Blocks flushing the backward-entry 1f baseline until a real scroll sample replaces it.
     private var awaitingFirstScrollSample = false
@@ -905,8 +906,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             chapter.last_page_read,
             chapter.read,
             libraryPreferences.novelReadProgress100.get(),
-            currentChapters?.enteredViaPrevious == true,
+            restoreFromPreviousEntry,
         )
+        restoreFromPreviousEntry = false
         if (progress > 0f) {
             lastSavedProgress = progress
             activity.onNovelProgressChanged(progress)
@@ -1208,8 +1210,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             return
         }
 
+        val enteredViaPrevious = chapters.takePreviousEntry()
         loadJob?.cancel()
-        if (chapters.enteredViaPrevious) contentJob?.cancel()
+        if (enteredViaPrevious) contentJob?.cancel()
+        restoreFromPreviousEntry = false
 
         currentPage = page
         currentChapters = chapters
@@ -1220,13 +1224,13 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         isInfiniteScrollPrepend = false
         isInfiniteScrollNavigation = false
 
-        if (loadedChapterIds.contains(chapterId) && (!chapters.enteredViaPrevious || docState == DocState.READY)) {
+        if (loadedChapterIds.contains(chapterId) && (!enteredViaPrevious || docState == DocState.READY)) {
             logcat(LogPriority.DEBUG) { "NovelWebViewViewer: Chapter $chapterId already loaded, skipping" }
             val index = chapterQueue.indexOf(chapterId)
             if (index >= 0) {
                 currentChapterIndex = index
             }
-            if (chapters.enteredViaPrevious) {
+            if (enteredViaPrevious) {
                 lastSavedProgress = 0f
                 lastPersistedPercent = -1
                 awaitingFirstScrollSample = true
@@ -1238,6 +1242,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             return
         }
 
+        restoreFromPreviousEntry = enteredViaPrevious
         ttsController.stop()
 
         // Paged mode always does a full chapter switch (never an append), same as infinite

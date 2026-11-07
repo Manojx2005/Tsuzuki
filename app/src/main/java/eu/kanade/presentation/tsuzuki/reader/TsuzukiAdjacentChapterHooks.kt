@@ -40,9 +40,10 @@ internal class TsuzukiAdjacentNavigation {
             beforeLoad()
             val loaded = if (forward) viewModel.loadNextChapter() else viewModel.loadPreviousChapter()
             if (!loaded) return@launch
-            (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate(if (forward) "next" else "prev")
+            val viewer = viewModel.state.value.viewer
+            (viewer as? NovelWebViewViewer)?.onChapterNavigate(if (forward) "next" else "prev")
             // Novel Previous positions the target in setChapters, when that renderer receives it.
-            if (viewModel.state.value.viewerChapters?.enteredViaPrevious != true) afterLoad()
+            if (forward || (viewer !is NovelViewer && viewer !is NovelWebViewViewer)) afterLoad()
         }
     }
 }
