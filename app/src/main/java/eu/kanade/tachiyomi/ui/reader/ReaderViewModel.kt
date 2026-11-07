@@ -427,6 +427,7 @@ class ReaderViewModel @JvmOverloads constructor(
         loader: ChapterLoader,
         chapter: ReaderChapter,
         forceFromSource: Boolean = false,
+        enteredViaPrevious: Boolean = false,
     ): ViewerChapters {
         // Capture instead of letting this propagate immediately, so viewerChapters below still
         // updates to the errored chapter (chapter.state is already Error(e), set by loader) and the
@@ -445,6 +446,7 @@ class ReaderViewModel @JvmOverloads constructor(
             chapter,
             chapterList.getOrNull(chapterPos - 1),
             chapterList.getOrNull(chapterPos + 1),
+            enteredViaPrevious = enteredViaPrevious,
         )
 
         withUIContext {
@@ -496,7 +498,7 @@ class ReaderViewModel @JvmOverloads constructor(
     /**
      * Called when the user is going to load the prev/next chapter through the toolbar buttons.
      */
-    private suspend fun loadAdjacent(chapter: ReaderChapter): Boolean {
+    private suspend fun loadAdjacent(chapter: ReaderChapter, enteredViaPrevious: Boolean = false): Boolean {
         val loader = loader ?: return false
         if (state.value.isLoadingAdjacentChapter) return false
 
@@ -509,7 +511,7 @@ class ReaderViewModel @JvmOverloads constructor(
         var success = true
         try {
             withIOContext {
-                loadChapter(loader, chapter)
+                loadChapter(loader, chapter, enteredViaPrevious = enteredViaPrevious)
             }
         } catch (e: Throwable) {
             if (e is CancellationException) {
@@ -1126,7 +1128,7 @@ class ReaderViewModel @JvmOverloads constructor(
      */
     suspend fun loadPreviousChapter(): Boolean {
         val prevChapter = adjacentChapter(state.value, forward = false) ?: return false
-        return loadAdjacent(prevChapter)
+        return loadAdjacent(prevChapter, enteredViaPrevious = manga?.isNovel == true)
     }
 
     internal fun adjacentChapter(readerState: State, forward: Boolean): ReaderChapter? =

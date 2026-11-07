@@ -27,6 +27,7 @@ import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.tsuzuki.reader.keepGlyphOverhangVisible
+import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -1425,21 +1426,29 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         currentPage = page
         currentChapters = chapters
 
-        val isAlreadyLoaded = loadedChapters.any { it.chapter.chapter.id == chapters.currChapter.chapter.id }
-
-        if (preferences.novelInfiniteScroll.get() && loadedChapters.isNotEmpty() && isAlreadyLoaded) {
+        val loadedIndex = loadedChapters.indexOfFirst { it.chapter.chapter.id == chapters.currChapter.chapter.id }
+        if (preferences.novelInfiniteScroll.get() && loadedIndex >= 0) {
+            if (chapters.enteredViaPrevious) {
+                pendingRestoreChapterId = null
+                progressSaveJob?.cancel()
+                currentChapterIndex = loadedIndex
+                lastSavedProgress = 0f
+                awaitingFirstScrollSample = true
+                activity.viewModel.setNovelVisibleChapter(chapters.currChapter.chapter)
+                activity.onNovelProgressChanged(0f)
+                moveToPage(page)
+            }
             return
         }
 
-        if (!preferences.novelInfiniteScroll.get() || !isAlreadyLoaded) {
-            contentContainer.removeAllViews()
-            chapterQueue.clear()
-        }
+        pendingRestoreChapterId = null
+        contentContainer.removeAllViews()
+        chapterQueue.clear()
 
         if (page.status == Page.State.Ready && !page.text.isNullOrEmpty()) {
             hideLoadingIndicator()
             displayChapter(chapters.currChapter, page)
-            restoreProgress(page)
+            restoreProgress(page, chapters.enteredViaPrevious)
             activity.viewModel.setNovelVisibleChapter(page.chapter.chapter)
             return
         }
@@ -1470,7 +1479,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 Page.State.Ready -> {
                     hideLoadingIndicator()
                     displayChapter(chapters.currChapter, page)
-                    restoreProgress(page)
+                    restoreProgress(page, chapters.enteredViaPrevious)
                     activity.viewModel.setNovelVisibleChapter(page.chapter.chapter)
                 }
                 is Page.State.Error -> {
@@ -1716,20 +1725,15 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
     }
 
-    private fun restoreProgress(page: ReaderPage) {
-        val savedProgress = page.chapter.chapter.last_page_read
-        val isRead = page.chapter.chapter.read
-        logcat(LogPriority.DEBUG) {
-            "NovelViewer: Restoring progress, savedProgress=$savedProgress, isRead=$isRead for ${page.chapter.chapter.name}"
-        }
-
-        val shouldRestore = if (!isRead) {
-            savedProgress in 1..100
-        } else {
-            libraryPreferences.novelReadProgress100.get() && savedProgress in 1..100
-        }
-        if (shouldRestore) {
-            val progress = (savedProgress / 100f).coerceIn(0f, 1f)
+    private fun restoreProgress(page: ReaderPage, enteredViaPrevious: Boolean) {
+        val chapter = page.chapter.chapter
+        val progress = novelEntryProgress(
+            chapter.last_page_read,
+            chapter.read,
+            libraryPreferences.novelReadProgress100.get(),
+            enteredViaPrevious,
+        )
+        if (progress > 0f) {
             lastSavedProgress = progress
             // Chapter content renders async (displayChapter -> setChapterContent -> onChapterTextSet).
             // Defer the scroll to onChapterTextSet so it runs against the rendered height instead of
@@ -1742,7 +1746,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             // Report the chapter's start: with the text already loaded (next chapter prefetched) no scroll
             // event outside the entry grace period updates the bar, so it kept the previous chapter's 100 %.
             activity.onNovelProgressChanged(0f)
+            val generation = renderGeneration
             scrollView.post {
+                if (generation != renderGeneration) return@post
                 isRestoringScroll = true
                 scrollView.scrollTo(0, 0)
                 isRestoringScroll = false
@@ -1857,14 +1863,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun onChapterTextSet(loaded: LoadedChapter) {
+        if (loadedChapters.none { it === loaded }) return
         loaded.isTextSet = true
 
         if (loaded.chapter.chapter.id == pendingRestoreChapterId) {
             pendingRestoreChapterId = null
             val progress = pendingRestoreProgress
+            val generation = renderGeneration
             // doOnPreDraw fires once, after measure and layout, so setScrollProgress uses the final
             // content height rather than the empty block height present when restoreProgress ran.
             scrollView.doOnPreDraw {
+                if (generation != renderGeneration) return@doOnPreDraw
                 isRestoringScroll = true
                 setScrollProgress(progress)
                 logcat(LogPriority.DEBUG) { "NovelViewer: Scroll restored to ${(progress * 100).toInt()}%" }

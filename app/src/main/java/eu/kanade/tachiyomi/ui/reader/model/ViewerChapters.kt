@@ -4,6 +4,7 @@ data class ViewerChapters(
     val currChapter: ReaderChapter,
     val prevChapter: ReaderChapter?,
     val nextChapter: ReaderChapter?,
+    val enteredViaPrevious: Boolean = false,
 ) {
 
     fun ref() {

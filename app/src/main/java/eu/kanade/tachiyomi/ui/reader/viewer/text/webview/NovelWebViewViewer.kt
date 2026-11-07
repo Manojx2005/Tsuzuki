@@ -29,6 +29,7 @@ import android.widget.FrameLayout
 import androidx.annotation.Keep
 import androidx.lifecycle.Lifecycle
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -899,16 +900,14 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             isRestoringScroll = false
             return
         }
-        val savedProgress = page.chapter.chapter.last_page_read
-        val isRead = page.chapter.chapter.read
-
-        val shouldRestore = if (!isRead) {
-            savedProgress > 0 && savedProgress <= 100
-        } else {
-            libraryPreferences.novelReadProgress100.get() && savedProgress > 0 && savedProgress <= 100
-        }
-        if (shouldRestore) {
-            val progress = savedProgress / 100f
+        val chapter = page.chapter.chapter
+        val progress = novelEntryProgress(
+            chapter.last_page_read,
+            chapter.read,
+            libraryPreferences.novelReadProgress100.get(),
+            currentChapters?.enteredViaPrevious == true,
+        )
+        if (progress > 0f) {
             lastSavedProgress = progress
             activity.onNovelProgressChanged(progress)
             isRestoringScroll = true
@@ -1210,6 +1209,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         }
 
         loadJob?.cancel()
+        if (chapters.enteredViaPrevious) contentJob?.cancel()
 
         currentPage = page
         currentChapters = chapters
@@ -1220,11 +1220,19 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         isInfiniteScrollPrepend = false
         isInfiniteScrollNavigation = false
 
-        if (loadedChapterIds.contains(chapterId)) {
+        if (loadedChapterIds.contains(chapterId) && (!chapters.enteredViaPrevious || docState == DocState.READY)) {
             logcat(LogPriority.DEBUG) { "NovelWebViewViewer: Chapter $chapterId already loaded, skipping" }
             val index = chapterQueue.indexOf(chapterId)
             if (index >= 0) {
                 currentChapterIndex = index
+            }
+            if (chapters.enteredViaPrevious) {
+                lastSavedProgress = 0f
+                lastPersistedPercent = -1
+                awaitingFirstScrollSample = true
+                activity.viewModel.setNovelVisibleChapter(chapters.currChapter.chapter)
+                activity.onNovelProgressChanged(0f)
+                moveToPage(page)
             }
             releasePagedChapterSwitchIfPending()
             return
