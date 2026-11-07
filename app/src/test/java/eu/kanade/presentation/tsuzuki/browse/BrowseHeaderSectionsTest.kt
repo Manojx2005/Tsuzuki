@@ -31,4 +31,15 @@ class BrowseHeaderSectionsTest {
     fun `without manga only the novel pages exist`() {
         browsePagesFor(browsePages(hideManga = true), BrowseMedia.MANGA) shouldBe emptyList()
     }
+
+    @Test
+    fun `anime pages are absent when the caller does not provide installed sources`() {
+        browsePagesFor(browsePages(hideManga = false), BrowseMedia.ANIME) shouldBe emptyList()
+    }
+
+    @Test
+    fun `anime exposes sources and extensions even when manga is hidden`() {
+        browsePagesFor(browsePages(hideManga = true, hasAnime = true), BrowseMedia.ANIME) shouldBe
+            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_EXTENSIONS)
+    }
 }

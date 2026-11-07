@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity
+            android:name="eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeCatalogueActivity"
+            android:exported="false" />
+        <activity
             android:name="eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"

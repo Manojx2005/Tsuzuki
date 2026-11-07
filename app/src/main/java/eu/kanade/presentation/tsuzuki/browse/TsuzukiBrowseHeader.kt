@@ -16,7 +16,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-internal enum class BrowseMedia { NOVELS, MANGA }
+internal enum class BrowseMedia { NOVELS, MANGA, ANIME }
 
 internal enum class BrowseSection { SOURCES, EXTENSIONS, MIGRATION }
 
@@ -27,10 +27,18 @@ internal enum class BrowsePage(val media: BrowseMedia, val section: BrowseSectio
     MANGA_EXTENSIONS(BrowseMedia.MANGA, BrowseSection.EXTENSIONS),
     NOVEL_MIGRATION(BrowseMedia.NOVELS, BrowseSection.MIGRATION),
     MANGA_MIGRATION(BrowseMedia.MANGA, BrowseSection.MIGRATION),
+    ANIME_SOURCES(BrowseMedia.ANIME, BrowseSection.SOURCES),
+    ANIME_EXTENSIONS(BrowseMedia.ANIME, BrowseSection.EXTENSIONS),
 }
 
-internal fun browsePages(hideManga: Boolean): List<BrowsePage> =
-    BrowsePage.entries.filter { !hideManga || it.media == BrowseMedia.NOVELS }
+internal fun browsePages(hideManga: Boolean, hasAnime: Boolean = false): List<BrowsePage> =
+    BrowsePage.entries.filter {
+        when (it.media) {
+            BrowseMedia.NOVELS -> true
+            BrowseMedia.MANGA -> !hideManga
+            BrowseMedia.ANIME -> hasAnime
+        }
+    }
 
 internal fun List<BrowsePage>.pageIndex(media: BrowseMedia, section: BrowseSection): Int =
     indexOfFirst { it.media == media && it.section == section }
@@ -53,14 +61,17 @@ internal fun TsuzukiBrowseHeader(
     extensionBadge: Int?,
     onSelectMedia: (BrowseMedia) -> Unit,
     onSelectSection: (BrowseSection) -> Unit,
+    hasAnime: Boolean = false,
 ) {
-    val mediaOptions = if (hasManga) {
-        listOf(
-            BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels),
-            BrowseMedia.MANGA to stringResource(MR.strings.tsz_storage_manga),
-        )
+    val mediaOptions = buildList {
+        add(BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels))
+        if (hasManga) add(BrowseMedia.MANGA to stringResource(MR.strings.tsz_storage_manga))
+        if (hasAnime) add(BrowseMedia.ANIME to stringResource(MR.strings.tsz_watch))
+    }
+    val sections = if (active.media == BrowseMedia.ANIME) {
+        browseHeaderSections.filterNot { it == BrowseSection.MIGRATION }
     } else {
-        listOf(BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels))
+        browseHeaderSections
     }
     val extensions = stringResource(MR.strings.label_extensions)
     val extensionLabel = if (extensionBadge != null &&
@@ -90,15 +101,15 @@ internal fun TsuzukiBrowseHeader(
             }
         }
         TsuzukiSegments(
-            labels = browseHeaderSections.map {
+            labels = sections.map {
                 when (it) {
                     BrowseSection.SOURCES -> sourcesLabel
                     BrowseSection.EXTENSIONS -> extensionLabel
                     BrowseSection.MIGRATION -> migrationLabel
                 }
             },
-            selected = browseHeaderSections.indexOf(active.section),
-            onClick = { segment -> onSelectSection(browseHeaderSections[segment]) },
+            selected = sections.indexOf(active.section),
+            onClick = { segment -> onSelectSection(sections[segment]) },
         )
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">Erste Folge abspielen</string>
+    <string name="tsz_anime_play_next">Nächste Folge abspielen</string>
+    <string name="tsz_anime_no_episodes">Keine Folgen gefunden</string>
+</resources>

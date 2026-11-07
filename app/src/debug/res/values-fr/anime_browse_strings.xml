@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">Lire le premier épisode</string>
+    <string name="tsz_anime_play_next">Lire l’épisode suivant</string>
+    <string name="tsz_anime_no_episodes">Aucun épisode trouvé</string>
+</resources>

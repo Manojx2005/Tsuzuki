@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">Reproduzir primeiro episódio</string>
+    <string name="tsz_anime_play_next">Reproduzir próximo episódio</string>
+    <string name="tsz_anime_no_episodes">Nenhum episódio encontrado</string>
+</resources>
