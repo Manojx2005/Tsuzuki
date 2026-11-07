@@ -369,6 +369,11 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
 - **R6 pass** (S22, Colour): italic serif headings over Manrope body, palette follows the current book; Home + Library.
 - **R7 mostly pass** (S22, app language Default = Japanese): dates, counts, tabs, tiles, badges localized. **Bug →
   V7.1:** the pill-nav label ライブラリ wraps mid-word ("ライブラ / リ") on the phone, selected and unselected.
+- **Downloads (P1.2) pass** (S22): Updates → Save all queued 6 novel chapters; the tile turned "saved" and the queue
+  emptied with no errors.
+- **V7.2 fixed by Claude:** More tiles in Japanese cut off ダウンロードキュー / データとストレージ with "…"; tile titles now
+  auto-size down to 75 % before ellipsizing (`TsuzukiMoreScreen.kt`). S22: both labels whole.
+- V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.
 - Owner 2026-11-07: Claude tests on tablet + S22 only; the owner checks the release build on their own phone

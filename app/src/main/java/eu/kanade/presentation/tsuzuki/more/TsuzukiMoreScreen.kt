@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.presentation.theme.tsuzuki.NAV_LABEL_MIN_SCALE
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
@@ -323,6 +325,8 @@ private fun NavTile(
             color = Color.White,
             maxLines = 1,
             softWrap = false,
+            // Long one-word labels (e.g. ダウンロードキュー) shrink before they are cut off.
+            autoSize = TextAutoSize.StepBased(minFontSize = 15.sp * NAV_LABEL_MIN_SCALE, maxFontSize = 15.sp),
             overflow = TextOverflow.Ellipsis,
         )
         sub?.let {
