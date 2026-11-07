@@ -940,6 +940,7 @@
     <string name="tsz_start">Starten</string>
     <string name="tsz_new_chapters">Neue Kapitel</string>
     <string name="tsz_new">Neu</string>
+    <string name="tsz_home_new_count">+%1$d neu</string>
     <string name="tsz_today">Heute</string>
     <string name="tsz_min">Min.</string>
     <string name="tsz_library">Bibliothek</string>

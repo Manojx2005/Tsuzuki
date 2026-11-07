@@ -927,6 +927,7 @@
     <string name="tsz_start">Empezar</string>
     <string name="tsz_new_chapters">Capítulos nuevos</string>
     <string name="tsz_new">Nuevo</string>
+    <string name="tsz_home_new_count">+%1$d nuevos</string>
     <string name="tsz_today">Hoy</string>
     <string name="tsz_min">min</string>
     <string name="tsz_library">Biblioteca</string>

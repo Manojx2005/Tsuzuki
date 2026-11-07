@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_manga">漫画</string>
+    <string name="label_novels">小说</string>
+    <string name="action_translate">翻译</string>
+    <string name="pref_novel_status_bar">阅读状态栏</string>
+    <string name="pref_novel_status_bar_customize">自定义状态栏</string>
+    <string name="pref_novel_status_bar_customize_summary">调整时间、章节、进度和电量的显示和顺序</string>
+</resources>

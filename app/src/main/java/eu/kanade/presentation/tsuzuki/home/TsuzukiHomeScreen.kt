@@ -57,6 +57,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -82,7 +83,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 /** Everything Home can do; the tab wires these to navigation. */
 data class HomeActions(
@@ -1068,7 +1068,7 @@ private fun UnreadChip(count: Int, modifier: Modifier = Modifier, onHero: Boolea
         else -> t.onAccent
     }
     Text(
-        text = if (compact) count.toString() else t.case("+$count new"),
+        text = if (compact) count.toString() else t.case(stringResource(MR.strings.tsz_home_new_count, count)),
         style = bodyStyle(12.sp, FontWeight.ExtraBold),
         color = fg,
         modifier = modifier
@@ -1180,8 +1180,8 @@ private fun greeting(): String = when (Calendar.getInstance().get(Calendar.HOUR_
 
 @Composable
 private fun todayKicker(books: Int): String {
-    // Device locale, e.g. "Mon 2 Nov" or "11月3日(火)".
-    val pattern = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMM")
-    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date()) + " · " +
+    val locale = LocalConfiguration.current.locales[0]
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEdMMM")
+    return SimpleDateFormat(pattern, locale).format(Date()) + " · " +
         stringResource(MR.strings.tsz_books_count, books)
 }

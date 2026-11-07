@@ -932,6 +932,7 @@
     <string name="tsz_start">開始</string>
     <string name="tsz_new_chapters">新着チャプター</string>
     <string name="tsz_new">新着</string>
+    <string name="tsz_home_new_count">新着%1$d話</string>
     <string name="tsz_today">今日</string>
     <string name="tsz_min">分</string>
     <string name="tsz_library">ライブラリ</string>

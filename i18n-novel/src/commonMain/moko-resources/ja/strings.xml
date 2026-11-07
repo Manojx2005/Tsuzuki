@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_manga">マンガ</string>
+    <string name="label_novels">小説</string>
+    <string name="action_translate">翻訳</string>
+    <string name="pref_novel_status_bar">読書ステータスバー</string>
+    <string name="pref_novel_status_bar_customize">ステータスバーをカスタマイズ</string>
+    <string name="pref_novel_status_bar_customize_summary">時刻、章、進捗、バッテリーの表示と順序を変更します</string>
+</resources>

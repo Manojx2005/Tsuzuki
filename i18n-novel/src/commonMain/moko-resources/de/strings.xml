@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_manga">Manga</string>
+    <string name="label_novels">Romane</string>
+    <string name="action_translate">Übersetzen</string>
+    <string name="pref_novel_status_bar">Lesestatusleiste</string>
+    <string name="pref_novel_status_bar_customize">Lesestatusleiste anpassen</string>
+    <string name="pref_novel_status_bar_customize_summary">Uhrzeit, Kapitel, Fortschritt und Akkustand ein- oder ausblenden und neu anordnen</string>
+</resources>
