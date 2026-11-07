@@ -16,6 +16,8 @@ import eu.kanade.presentation.browse.SourcePinGroupsDialog
 import eu.kanade.presentation.browse.SourcesScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
+import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import eu.kanade.presentation.tsuzuki.browse.TsuzukiMangaRepoTile
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import kotlinx.coroutines.flow.collectLatest
@@ -26,7 +28,7 @@ import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-fun Screen.sourcesTab(): TabContent {
+fun Screen.sourcesTab(extensionUpdates: Int, onOpenExtensions: () -> Unit): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val viewModel = viewModel<SourcesViewModel>()
     val state by viewModel.state.collectAsState()
@@ -49,6 +51,13 @@ fun Screen.sourcesTab(): TabContent {
             SourcesScreen(
                 onClickGlobalSearch = { navigator.push(GlobalSearchScreen()) },
                 state = state,
+                mangaFooter = {
+                    TsuzukiMangaRepoTile(
+                        updates = extensionUpdates,
+                        onOpenRepos = { navigator.push(ExtensionStoresScreen()) },
+                        onOpenExtensions = onOpenExtensions,
+                    )
+                },
                 contentPadding = contentPadding,
                 onClickItem = { source, listing ->
                     navigator.push(BrowseSourceScreen(source.id, listing.query))

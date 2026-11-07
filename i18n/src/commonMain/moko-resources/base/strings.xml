@@ -1703,4 +1703,11 @@
     <string name="tsz_anime_debug_episodes">Episodes</string>
     <string name="tsz_anime_debug_first_episode">Load first episode videos</string>
     <string name="tsz_anime_debug_playback_error">Playback failed</string>
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">Opens as a webtoon</string>
+    <string name="tsz_manga_change_mode">Change for this series</string>
+    <string name="tsz_local_manga">Local manga</string>
+    <string name="tsz_local_manga_formats">CBZ, ZIP, folders</string>
+    <string name="tsz_manga_repos">Manga extension repos</string>
+    <string name="tsz_manga_repos_summary">Use compatible Mihon and Tachiyomi repositories to install manga sources.</string>
 </resources>

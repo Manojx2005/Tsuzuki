@@ -1332,4 +1332,11 @@
     <string name="tsz_anime_debug_episodes">Épisodes</string>
     <string name="tsz_anime_debug_first_episode">Charger les vidéos du premier épisode</string>
     <string name="tsz_anime_debug_playback_error">Échec de la lecture</string>
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">S’ouvre en mode webtoon</string>
+    <string name="tsz_manga_change_mode">Modifier pour cette série</string>
+    <string name="tsz_local_manga">Manga local</string>
+    <string name="tsz_local_manga_formats">CBZ, ZIP et dossiers</string>
+    <string name="tsz_manga_repos">Dépôts d’extensions manga</string>
+    <string name="tsz_manga_repos_summary">Installez des sources de manga depuis des dépôts compatibles avec Mihon et Tachiyomi.</string>
 </resources>

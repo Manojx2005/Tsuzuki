@@ -1338,4 +1338,11 @@
     <string name="tsz_anime_debug_episodes">에피소드</string>
     <string name="tsz_anime_debug_first_episode">첫 에피소드 영상 불러오기</string>
     <string name="tsz_anime_debug_playback_error">재생 실패</string>
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">웹툰 모드로 열림</string>
+    <string name="tsz_manga_change_mode">이 작품의 설정 변경</string>
+    <string name="tsz_local_manga">로컬 만화</string>
+    <string name="tsz_local_manga_formats">CBZ, ZIP, 폴더</string>
+    <string name="tsz_manga_repos">만화 확장 저장소</string>
+    <string name="tsz_manga_repos_summary">Mihon 및 Tachiyomi 호환 저장소에서 만화 소스를 설치하세요.</string>
 </resources>

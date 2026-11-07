@@ -75,6 +75,7 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
+import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.toast
@@ -164,6 +165,7 @@ fun MangaScreen(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     onScanlatorFilterClicked: (() -> Unit)? = null,
+    onChangeMangaReadingMode: ((ReadingMode) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -225,6 +227,7 @@ fun MangaScreen(
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
             onScanlatorFilterClicked = onScanlatorFilterClicked,
+            onChangeMangaReadingMode = onChangeMangaReadingMode,
         )
     } else {
         MangaScreenLargeImpl(
@@ -279,6 +282,7 @@ fun MangaScreen(
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
             onScanlatorFilterClicked = onScanlatorFilterClicked,
+            onChangeMangaReadingMode = onChangeMangaReadingMode,
         )
     }
 }
@@ -349,6 +353,7 @@ private fun MangaScreenSmallImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     onScanlatorFilterClicked: (() -> Unit)? = null,
+    onChangeMangaReadingMode: ((ReadingMode) -> Unit)? = null,
 ) {
     val (chapters, listItem, isAnySelected) = remember(state) {
         Triple(
@@ -556,7 +561,7 @@ private fun MangaScreenSmallImpl(
                         }
                         if (!state.isNovel) {
                             item(key = "tsuzuki_reading_mode", contentType = "tsuzuki_reading_mode") {
-                                TsuzukiMangaReadingMode(state.manga)
+                                TsuzukiMangaReadingMode(state.manga, onChangeMangaReadingMode)
                             }
                         }
                     }
@@ -694,6 +699,7 @@ fun MangaScreenLargeImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     onScanlatorFilterClicked: (() -> Unit)? = null,
+    onChangeMangaReadingMode: ((ReadingMode) -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -874,7 +880,7 @@ fun MangaScreenLargeImpl(
                                     resumeTileVisible = it
                                 },
                             )
-                            if (!state.isNovel) TsuzukiMangaReadingMode(state.manga)
+                            if (!state.isNovel) TsuzukiMangaReadingMode(state.manga, onChangeMangaReadingMode)
                         }
                         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
                         val sortMangaTags by libraryPreferences.sortMangaTags.changes().collectAsState(

@@ -135,6 +135,7 @@ class MangaScreen(
         MangaScreen(
             state = successState,
             onScanlatorFilterClicked = { showScanlatorsDialog = true },
+            onChangeMangaReadingMode = viewModel::setMangaReadingMode,
             snackbarHostState = viewModel.snackbarHostState,
             nextUpdate = successState.manga.expectedNextUpdate,
             isTabletUi = isTabletUi(),

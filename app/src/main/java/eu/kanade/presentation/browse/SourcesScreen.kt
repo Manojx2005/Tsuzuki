@@ -45,6 +45,7 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceRow
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiTabletBrowse
+import eu.kanade.presentation.tsuzuki.browse.mangaSourceTiles
 import eu.kanade.presentation.tsuzuki.browse.tsuzukiSelectedSource
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.isTabletUi
@@ -77,17 +78,23 @@ fun SourcesScreen(
     onRemoveFromGroup: (Source, String) -> Unit,
     onLongClickItem: (Source) -> Unit,
     onClickGlobalSearch: (() -> Unit)? = null,
+    mangaFooter: (@Composable () -> Unit)? = null,
 ) {
+    val showMangaTiles = mangaFooter != null && isTsuzukiStyle()
+    val items = remember(state.items, showMangaTiles) {
+        if (showMangaTiles) mangaSourceTiles(state.items) else state.items
+    }
     val sourceList: @Composable (Long?, (Source, Listing) -> Unit) -> Unit = { selectedId, onSelect ->
         SourcesList(
-            state, contentPadding, onSelect, onClickPin, onLongClickPin,
+            state.copy(items = items), contentPadding, onSelect, onClickPin, onLongClickPin,
             onRemoveFromGroup, onLongClickItem, onClickGlobalSearch, selectedId,
+            mangaFooter = mangaFooter.takeIf { showMangaTiles },
         )
     }
     // Two panes only when the window is wide enough for source names beside the preview (tablet landscape).
     if (isTsuzukiStyle() && isTabletUi() && LocalConfiguration.current.screenWidthDp >= 900) {
         TsuzukiTabletBrowse(
-            items = state.items,
+            items = items,
             contentPadding = contentPadding,
             onOpen = onClickItem,
             sourceList = sourceList,
@@ -108,15 +115,20 @@ private fun SourcesList(
     onLongClickItem: (Source) -> Unit,
     onClickGlobalSearch: (() -> Unit)?,
     selectedId: Long?,
+    mangaFooter: (@Composable () -> Unit)?,
 ) {
     val tsuzuki = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
         eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
-        state.isEmpty -> EmptyScreen(
-            stringRes = MR.strings.source_empty_screen,
-            modifier = Modifier.padding(contentPadding),
-        )
+        state.isEmpty -> if (mangaFooter == null) {
+            EmptyScreen(stringRes = MR.strings.source_empty_screen, modifier = Modifier.padding(contentPadding))
+        } else {
+            Column(Modifier.padding(contentPadding)) {
+                mangaFooter()
+                EmptyScreen(stringRes = MR.strings.source_empty_screen)
+            }
+        }
         else -> {
             ScrollbarLazyColumn(
                 contentPadding = contentPadding + topSmallPaddingValues,
@@ -173,6 +185,7 @@ private fun SourcesList(
                                         onLongClick = onLongClickItem,
                                         onUnpin = onClickPin,
                                         selectedId = selectedId,
+                                        showLocalMangaInfo = mangaFooter != null,
                                     )
                                 }
                             }
@@ -203,6 +216,7 @@ private fun SourcesList(
                                     .tsuzukiSelectedSource(model.source.id == selectedId),
                                 source = model.source,
                                 hasDefaultPreset = model.hasDefaultPreset,
+                                alwaysShowLanguage = mangaFooter != null,
                                 groupSection = model.sectionKey.ifEmpty { null },
                                 onClickItem = onClickItem,
                                 onLongClickItem = onLongClickItem,
@@ -213,6 +227,7 @@ private fun SourcesList(
                         }
                     }
                 }
+                if (mangaFooter != null) item(key = "tsuzuki_manga_repos", content = { mangaFooter() })
             }
         }
     }
@@ -238,6 +253,7 @@ private fun SourceHeader(
 private fun SourceItem(
     source: Source,
     hasDefaultPreset: Boolean,
+    alwaysShowLanguage: Boolean = false,
     groupSection: String?,
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,
@@ -249,7 +265,7 @@ private fun SourceItem(
     if (isTsuzukiStyle()) {
         TsuzukiSourceRow(
             source = source,
-            showLanguage = groupSection != null,
+            showLanguage = alwaysShowLanguage || groupSection != null,
             onOpen = { onClickItem(source, Listing.Popular) },
             onOptions = { onLongClickItem(source) },
             onPreset = if (hasDefaultPreset) {
