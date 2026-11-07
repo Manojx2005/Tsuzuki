@@ -15,4 +15,25 @@
     <string name="tsz_anime_player_autoplay_off">自動再生を無効にする</string>
     <string name="tsz_anime_player_rewind">10秒戻る</string>
     <string name="tsz_anime_player_forward">10秒進む</string>
+    <string name="tsz_anime_player_audio">音声</string>
+    <string name="tsz_anime_player_autoplay">次の話を自動再生</string>
+    <string name="tsz_anime_player_brightness">明るさ</string>
+    <string name="tsz_anime_player_close_options">オプションを閉じる</string>
+    <string name="tsz_anime_player_decoder_hardware">ハードウェアデコード</string>
+    <string name="tsz_anime_player_decoder_software">ソフトウェアデコード</string>
+    <string name="tsz_anime_player_decrease">減らす</string>
+    <string name="tsz_anime_player_episodes">エピソード</string>
+    <string name="tsz_anime_player_gestures">ジェスチャー</string>
+    <string name="tsz_anime_player_increase">増やす</string>
+    <string name="tsz_anime_player_no_options">利用できる項目がありません</string>
+    <string name="tsz_anime_player_seek_gesture">ダブルタップでシーク</string>
+    <string name="tsz_anime_player_skip">%+d秒</string>
+    <string name="tsz_anime_player_speed">再生速度</string>
+    <string name="tsz_anime_player_subtitle_delay">字幕の遅延</string>
+    <string name="tsz_anime_player_subtitle_size">字幕サイズ</string>
+    <string name="tsz_anime_player_subtitles">字幕</string>
+    <string name="tsz_anime_player_track_number">トラック%d</string>
+    <string name="tsz_anime_player_track_off">オフ</string>
+    <string name="tsz_anime_player_video">映像</string>
+    <string name="tsz_anime_player_volume">音量</string>
 </resources>

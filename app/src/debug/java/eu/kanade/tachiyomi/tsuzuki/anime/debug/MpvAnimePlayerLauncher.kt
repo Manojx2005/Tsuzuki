@@ -4,11 +4,15 @@ import android.content.Context
 import android.util.Log
 import android.view.Surface
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettings
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeTrackKind
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerLauncher
 import eu.kanade.tsuzuki.animeplayer.MpvPlayer
 import `is`.xyz.mpv.MPVLib
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.File
 
 internal object MpvAnimePlayerLauncher : AnimePlayerLauncher {
@@ -25,6 +29,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var created = false
     private var defaultUserAgent: String? = null
     private var originalVolume: Double? = null
+    private var appliedSettings: AnimePlayerSettings? = null
+    private var externalTracks: Video? = null
     private var eventObserver: MPVLib.EventObserver? = null
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
@@ -70,6 +76,9 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         MpvPlayer.observeProperty("duration", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("demuxer-cache-time", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("eof-reached", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
+        MpvPlayer.observeProperty("track-list/count", MPVLib.mpvFormat.MPV_FORMAT_INT64)
+        MpvPlayer.observeProperty("sid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
+        MpvPlayer.observeProperty("aid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
     }
 
     private fun setOpt(name: String, value: String) {
@@ -77,11 +86,17 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     private fun newEventObserver(listener: AnimePlayerBackend.Listener) = object : MPVLib.EventObserver {
-        override fun eventProperty(property: String) = Unit
+        override fun eventProperty(property: String) {
+            if (property == "sid" || property == "aid") listener.onTracksChanged()
+        }
 
-        override fun eventProperty(property: String, value: Long) = Unit
+        override fun eventProperty(property: String, value: Long) {
+            if (property == "track-list/count") listener.onTracksChanged()
+        }
 
-        override fun eventProperty(property: String, value: String) = Unit
+        override fun eventProperty(property: String, value: String) {
+            if (property == "sid" || property == "aid") listener.onTracksChanged()
+        }
 
         override fun eventProperty(property: String, value: Boolean) {
             if (property == "eof-reached" && value) listener.onEnded()
@@ -108,6 +123,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     override fun load(video: Video, resumePosition: Double) {
+        externalTracks = video
         val headers = video.headers
         MpvPlayer.property("referrer", headers?.get("Referer").orEmpty())
         MpvPlayer.property("user-agent", headers?.get("User-Agent") ?: defaultUserAgent.orEmpty())
@@ -156,6 +172,55 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
             originalVolume?.let { MPVLib.setPropertyDouble("volume", it) }
             originalVolume = null
         }
+    }
+
+    override fun applySettings(settings: AnimePlayerSettings) {
+        val previous = appliedSettings
+        if (settings.speed != previous?.speed) MPVLib.setPropertyDouble("speed", settings.speed.toDouble())
+        if (settings.subtitleScale != previous?.subtitleScale) {
+            MPVLib.setPropertyDouble("sub-scale", settings.subtitleScale.toDouble())
+        }
+        if (settings.subtitleDelay != previous?.subtitleDelay) {
+            MPVLib.setPropertyDouble("sub-delay", settings.subtitleDelay.toDouble())
+        }
+        if (settings.hardwareDecoding != previous?.hardwareDecoding) {
+            MpvPlayer.property("hwdec", if (settings.hardwareDecoding) "auto" else "no")
+        }
+        appliedSettings = settings
+    }
+
+    override fun tracks(): List<AnimePlayerTrack> {
+        externalTracks?.let { video ->
+            externalTracks = null
+            video.subtitleTracks.forEach { track ->
+                track.url.toHttpUrlOrNull()?.let { MpvPlayer.command("sub-add", it.toString(), "auto", "", track.lang) }
+            }
+            video.audioTracks.forEach { track ->
+                track.url.toHttpUrlOrNull()?.let {
+                    MpvPlayer.command("audio-add", it.toString(), "auto", "", track.lang)
+                }
+            }
+        }
+        val count = MPVLib.getPropertyInt("track-list/count") ?: 0
+        return (0 until count).mapNotNull { index ->
+            val path = "track-list/$index"
+            val type = MPVLib.getPropertyString("$path/type")
+            val kind = AnimeTrackKind.entries.firstOrNull { it.mpvType == type } ?: return@mapNotNull null
+            val id = MPVLib.getPropertyInt("$path/id") ?: return@mapNotNull null
+            AnimePlayerTrack(
+                id = id,
+                kind = kind,
+                language = MPVLib.getPropertyString("$path/lang"),
+                title = MPVLib.getPropertyString("$path/title"),
+                codec = MPVLib.getPropertyString("$path/codec"),
+                selected = MPVLib.getPropertyBoolean("$path/selected") == true,
+            )
+        }
+    }
+
+    override fun selectTrack(kind: AnimeTrackKind, id: Int?) {
+        val property = if (kind == AnimeTrackKind.SUBTITLE) "sid" else "aid"
+        MpvPlayer.property(property, id?.toString() ?: "no")
     }
 
     override fun close() {

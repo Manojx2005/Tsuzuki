@@ -14,12 +14,12 @@ internal class AnimePlaybackProgress {
     private var skipIncrement = true
 
     @Synchronized
-    fun onPosition(seconds: Double) {
+    fun onPosition(seconds: Double, playbackRate: Float = 1f) {
         if (!seconds.isFinite() || seconds < 0.0) return
         val last = position
         if (last != null && !skipIncrement) {
-            val delta = seconds - last
-            if (delta in 0.0..2.0) watchSeconds += delta
+            val elapsed = (seconds - last) / playbackRate
+            if (elapsed in 0.0..2.0) watchSeconds += elapsed
         }
         skipIncrement = false
         if (last != null && last != seconds) changed = true

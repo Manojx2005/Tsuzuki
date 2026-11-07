@@ -39,6 +39,7 @@ import kotlin.math.abs
 internal data class AnimePlayerState(
     val title: String = "",
     val episode: Episode? = null,
+    val episodes: List<Episode> = emptyList(),
     val previous: Episode? = null,
     val next: Episode? = null,
     val position: Double = 0.0,
@@ -47,6 +48,8 @@ internal data class AnimePlayerState(
     val qualities: List<Int> = emptyList(),
     val resolution: Int? = null,
     val autoplay: Boolean = true,
+    val settings: AnimePlayerSettings = AnimePlayerSettings(),
+    val tracks: List<AnimePlayerTrack> = emptyList(),
     val loading: Boolean = true,
     val playing: Boolean = false,
     val ended: Boolean = false,
@@ -65,9 +68,12 @@ internal class AnimePlayerModel(
     restoredPosition: Double?,
     restoredPaused: Boolean,
 ) : ViewModel() {
-    private val quality = preferences.getInt("tsuzuki_anime_player_quality", 0)
-    private val autoplay = preferences.getBoolean("tsuzuki_anime_player_autoplay", true)
-    private val mutableState = MutableStateFlow(AnimePlayerState(autoplay = autoplay.get()))
+    private val playerPreferences = AnimePlayerPreferences(preferences)
+    private val quality = playerPreferences.quality
+    private val autoplay = playerPreferences.autoplay
+    private val mutableState = MutableStateFlow(
+        AnimePlayerState(autoplay = autoplay.get(), settings = playerPreferences.get()),
+    )
     val state = mutableState.asStateFlow()
 
     private val writes = Channel<Pair<Long, AnimePlaybackCheckpoint>>(Channel.UNLIMITED)
@@ -118,6 +124,7 @@ internal class AnimePlayerModel(
         try {
             backend.initialize(context, playerEvents())
             initialized = true
+            backend.applySettings(state.value.settings)
             when (request) {
                 is AnimePlayback.Request.Direct -> {
                     mutableState.update { it.copy(title = request.video.videoTitle) }
@@ -198,6 +205,29 @@ internal class AnimePlayerModel(
         state.value.next?.let { navigateTo(it.id) }
     }
 
+    fun selectEpisode(id: Long) {
+        if (id != targetEpisodeId && state.value.episodes.any { it.id == id }) navigateTo(id)
+    }
+
+    fun setSettings(settings: AnimePlayerSettings) {
+        playerPreferences.set(settings)
+        val updated = playerPreferences.get()
+        if (updated.speed != state.value.settings.speed) tracker.skipNextIncrement()
+        mutableState.update { it.copy(settings = updated) }
+        if (initialized) backend.applySettings(updated)
+    }
+
+    fun setTrack(kind: AnimeTrackKind, track: AnimePlayerTrack?) {
+        if (!initialized || state.value.loading || state.value.failed) return
+        when (kind) {
+            AnimeTrackKind.SUBTITLE ->
+                playerPreferences.preferredSubtitle.set(track?.preferenceKey ?: AnimePlayerPreferences.SUBTITLES_OFF)
+            AnimeTrackKind.AUDIO -> playerPreferences.preferredAudio.set(track?.preferenceKey.orEmpty())
+        }
+        backend.selectTrack(kind, track?.id)
+        refreshTracks()
+    }
+
     fun setQuality(resolution: Int) {
         if (candidates.isEmpty() || (resolution == quality.get() && resolution == state.value.resolution)) return
         quality.set(resolution)
@@ -252,6 +282,7 @@ internal class AnimePlayerModel(
             AnimePlayerState(
                 title = current.title,
                 autoplay = current.autoplay,
+                settings = current.settings,
                 fallbackNotice = current.fallbackNotice,
             )
         }
@@ -260,12 +291,20 @@ internal class AnimePlayerModel(
             try {
                 val episode = checkNotNull(library.getEpisode(id))
                 val anime = checkNotNull(library.getAnime(episode.animeId))
-                val (previous, next) = adjacentAnimeEpisodes(library.getEpisodes(anime.id), episode.id)
+                val episodes = library.getEpisodes(anime.id)
+                val (previous, next) = adjacentAnimeEpisodes(episodes, episode.id)
                 val start = restoredPosition?.takeIf { it.isFinite() && it >= 0 }
                     ?: episode.lastSecondSeen.toDouble().takeUnless { episode.seen }
                     ?: 0.0
                 mutableState.update {
-                    it.copy(title = anime.title, episode = episode, previous = previous, next = next, position = start)
+                    it.copy(
+                        title = anime.title,
+                        episode = episode,
+                        episodes = episodes,
+                        previous = previous,
+                        next = next,
+                        position = start,
+                    )
                 }
                 val (entry, videos) = withContext(Dispatchers.IO) {
                     val sources = AnimeSourceManager.create(context)
@@ -299,6 +338,7 @@ internal class AnimePlayerModel(
                 loading = true,
                 failed = false,
                 ended = false,
+                tracks = emptyList(),
                 bufferedUntil = it.position,
                 fallbackNotice = it.fallbackNotice + if (fallback) 1 else 0,
             )
@@ -333,7 +373,7 @@ internal class AnimePlayerModel(
     private fun playerEvents() = object : AnimePlayerBackend.Listener {
         override fun onPosition(seconds: Double) = onMain {
             if (state.value.loading || state.value.ended || !seconds.isFinite() || seconds < 0) return@onMain
-            if (foreground) tracker.onPosition(seconds)
+            if (foreground) tracker.onPosition(seconds, state.value.settings.speed)
             if (abs(state.value.position - seconds) >= 0.1) {
                 mutableState.update { it.copy(position = seconds) }
             }
@@ -357,13 +397,18 @@ internal class AnimePlayerModel(
             if (!waitingForFile) return@onMain
             waitingForFile = false
             mutableState.update { it.copy(loading = false) }
+            refreshTracks()
             syncPause()
+        }
+
+        override fun onTracksChanged() = onMain {
+            if (!state.value.loading && !state.value.failed) refreshTracks()
         }
 
         override fun onEnded() = onMain {
             val current = state.value
             if (current.loading || current.ended || current.failed) return@onMain
-            if (current.duration > 0) tracker.onPosition(current.duration)
+            if (current.duration > 0) tracker.onPosition(current.duration, current.settings.speed)
             saveProgress()
             mutableState.update { it.copy(ended = true) }
             syncPause()
@@ -378,6 +423,24 @@ internal class AnimePlayerModel(
 
     private fun onMain(block: () -> Unit) {
         viewModelScope.launch(Dispatchers.Main) { block() }
+    }
+
+    private fun refreshTracks() {
+        val tracks = backend.tracks()
+        val subtitles = tracks.filter { it.kind == AnimeTrackKind.SUBTITLE }
+        val audio = tracks.filter { it.kind == AnimeTrackKind.AUDIO }
+        val subtitlePreference = playerPreferences.preferredSubtitle.get()
+        val subtitle = preferredAnimeTrack(subtitles, subtitlePreference)
+        val preferredAudio = preferredAnimeTrack(audio, playerPreferences.preferredAudio.get())
+        if (subtitlePreference == AnimePlayerPreferences.SUBTITLES_OFF && subtitles.any(AnimePlayerTrack::selected)) {
+            backend.selectTrack(AnimeTrackKind.SUBTITLE, null)
+        } else if (subtitle != null && !subtitle.selected) {
+            backend.selectTrack(AnimeTrackKind.SUBTITLE, subtitle.id)
+        }
+        if (preferredAudio != null && !preferredAudio.selected) {
+            backend.selectTrack(AnimeTrackKind.AUDIO, preferredAudio.id)
+        }
+        mutableState.update { it.copy(tracks = tracks) }
     }
 
     private fun fail() {

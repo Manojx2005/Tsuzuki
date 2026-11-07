@@ -15,4 +15,25 @@
     <string name="tsz_anime_player_autoplay_off">Disable autoplay</string>
     <string name="tsz_anime_player_rewind">Go back 10 seconds</string>
     <string name="tsz_anime_player_forward">Go forward 10 seconds</string>
+    <string name="tsz_anime_player_audio">Audio</string>
+    <string name="tsz_anime_player_autoplay">Autoplay next</string>
+    <string name="tsz_anime_player_brightness">Brightness</string>
+    <string name="tsz_anime_player_close_options">Close options</string>
+    <string name="tsz_anime_player_decoder_hardware">Hardware decoding</string>
+    <string name="tsz_anime_player_decoder_software">Software decoding</string>
+    <string name="tsz_anime_player_decrease">Decrease</string>
+    <string name="tsz_anime_player_episodes">Episodes</string>
+    <string name="tsz_anime_player_gestures">Gestures</string>
+    <string name="tsz_anime_player_increase">Increase</string>
+    <string name="tsz_anime_player_no_options">No options available</string>
+    <string name="tsz_anime_player_seek_gesture">Double-tap to seek</string>
+    <string name="tsz_anime_player_skip">%+d s</string>
+    <string name="tsz_anime_player_speed">Speed</string>
+    <string name="tsz_anime_player_subtitle_delay">Subtitle delay</string>
+    <string name="tsz_anime_player_subtitle_size">Subtitle size</string>
+    <string name="tsz_anime_player_subtitles">Subtitles</string>
+    <string name="tsz_anime_player_track_number">Track %d</string>
+    <string name="tsz_anime_player_track_off">Off</string>
+    <string name="tsz_anime_player_video">Video</string>
+    <string name="tsz_anime_player_volume">Volume</string>
 </resources>

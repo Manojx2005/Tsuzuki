@@ -919,6 +919,7 @@
     <string name="tsz_watch">Ver</string>
     <string name="tsz_anime_media">Anime</string>
     <string name="tsz_anime_shelves">Estantes de anime</string>
+    <string name="tsz_anime_player_settings">Reproductor</string>
     <string name="tsz_anime_shelves_hint">Estantes de anime. Las novelas y el manga tienen sus propios estantes.</string>
     <string name="tsz_anime_new_shelf">Nuevo estante de anime</string>
     <string name="tsz_anime_continue_watching">Seguir viendo</string>

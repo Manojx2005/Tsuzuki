@@ -925,6 +925,7 @@
     <string name="tsz_watch">Regarder</string>
     <string name="tsz_anime_media">Anime</string>
     <string name="tsz_anime_shelves">Étagères anime</string>
+    <string name="tsz_anime_player_settings">Lecteur vidéo</string>
     <string name="tsz_anime_shelves_hint">Étagères pour les animes. Les romans et les mangas ont leurs propres étagères.</string>
     <string name="tsz_anime_new_shelf">Nouvelle étagère anime</string>
     <string name="tsz_anime_continue_watching">Reprendre le visionnage</string>

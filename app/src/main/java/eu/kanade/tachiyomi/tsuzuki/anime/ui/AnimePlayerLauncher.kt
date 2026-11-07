@@ -3,6 +3,9 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 import android.content.Context
 import android.view.Surface
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettings
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeTrackKind
 
 internal interface AnimePlayerLauncher {
     fun launch(context: Context, request: AnimePlayback.Request): Boolean
@@ -18,6 +21,9 @@ internal interface AnimePlayerBackend : AutoCloseable {
     fun seekTo(seconds: Double)
     fun setPaused(paused: Boolean)
     fun setDucked(ducked: Boolean)
+    fun applySettings(settings: AnimePlayerSettings)
+    fun tracks(): List<AnimePlayerTrack>
+    fun selectTrack(kind: AnimeTrackKind, id: Int?)
 
     interface Listener {
         fun onPosition(seconds: Double)
@@ -25,6 +31,7 @@ internal interface AnimePlayerBackend : AutoCloseable {
         fun onBuffered(seconds: Double)
         fun onSeek()
         fun onLoaded()
+        fun onTracksChanged()
         fun onEnded()
         fun onError()
     }

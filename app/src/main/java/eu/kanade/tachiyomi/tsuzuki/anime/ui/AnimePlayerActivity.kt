@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.content.pm.ActivityInfo
+import android.media.AudioManager
 import android.os.Bundle
+import android.provider.Settings
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
@@ -30,10 +32,13 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.math.roundToInt
 
 class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     private var model: AnimePlayerModel? = null
     private var orientationLocked by mutableStateOf(false)
+    private var gestureStartLevel = 0f
+    private val audio by lazy { getSystemService(AudioManager::class.java) }
 
     private val systemBars by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
@@ -98,6 +103,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                         applyOrientation()
                     },
                     orientationLocked = orientationLocked,
+                    onLevelGesture = ::adjustLevel,
                     surface = { modifier ->
                         AndroidView(
                             modifier = modifier,
@@ -117,6 +123,29 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         } else {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
+    }
+
+    private fun adjustLevel(volume: Boolean, delta: Float, start: Boolean): Float {
+        if (volume) {
+            val manager = audio ?: return 0f
+            val stream = AudioManager.STREAM_MUSIC
+            val maximum = manager.getStreamMaxVolume(stream).coerceAtLeast(1)
+            if (start) gestureStartLevel = manager.getStreamVolume(stream).toFloat() / maximum
+            val target = ((gestureStartLevel + delta).coerceIn(0f, 1f) * maximum).roundToInt()
+            if (!manager.isVolumeFixed && target != manager.getStreamVolume(stream)) {
+                manager.setStreamVolume(stream, target, 0)
+            }
+            return manager.getStreamVolume(stream).toFloat() / maximum
+        }
+
+        val attrs = window.attributes
+        if (start) {
+            gestureStartLevel = attrs.screenBrightness.takeIf { it >= 0f }
+                ?: (Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, 128) / 255f)
+        }
+        attrs.screenBrightness = (gestureStartLevel + delta).coerceIn(0.05f, 1f)
+        window.attributes = attrs
+        return attrs.screenBrightness
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

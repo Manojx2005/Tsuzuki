@@ -932,6 +932,7 @@
     <string name="tsz_watch">Ansehen</string>
     <string name="tsz_anime_media">Anime</string>
     <string name="tsz_anime_shelves">Anime-Regale</string>
+    <string name="tsz_anime_player_settings">Player</string>
     <string name="tsz_anime_shelves_hint">Regale für Anime. Romane und Manga haben eigene Regale.</string>
     <string name="tsz_anime_new_shelf">Neues Anime-Regal</string>
     <string name="tsz_anime_continue_watching">Weiterschauen</string>

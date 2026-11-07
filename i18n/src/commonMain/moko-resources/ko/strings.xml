@@ -931,6 +931,7 @@
     <string name="tsz_watch">보기</string>
     <string name="tsz_anime_media">애니메이션</string>
     <string name="tsz_anime_shelves">애니메이션 책장</string>
+    <string name="tsz_anime_player_settings">플레이어</string>
     <string name="tsz_anime_shelves_hint">애니메이션 전용 책장입니다. 소설과 만화는 별도 책장을 사용합니다.</string>
     <string name="tsz_anime_new_shelf">새 애니메이션 책장</string>
     <string name="tsz_anime_continue_watching">이어서 보기</string>

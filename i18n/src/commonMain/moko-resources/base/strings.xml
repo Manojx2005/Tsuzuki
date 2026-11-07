@@ -1289,6 +1289,7 @@
     <string name="tsz_watch">Watch</string>
     <string name="tsz_anime_media">Anime</string>
     <string name="tsz_anime_shelves">Anime shelves</string>
+    <string name="tsz_anime_player_settings">Player</string>
     <string name="tsz_anime_shelves_hint">Shelves for anime. Novels and manga have their own shelves.</string>
     <string name="tsz_anime_new_shelf">New anime shelf</string>
     <string name="tsz_anime_continue_watching">Continue watching</string>

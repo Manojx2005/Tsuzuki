@@ -15,4 +15,25 @@
     <string name="tsz_anime_player_autoplay_off">Desativar reprodução automática</string>
     <string name="tsz_anime_player_rewind">Voltar 10 segundos</string>
     <string name="tsz_anime_player_forward">Avançar 10 segundos</string>
+    <string name="tsz_anime_player_audio">Áudio</string>
+    <string name="tsz_anime_player_autoplay">Reproduzir próximo automaticamente</string>
+    <string name="tsz_anime_player_brightness">Brilho</string>
+    <string name="tsz_anime_player_close_options">Fechar opções</string>
+    <string name="tsz_anime_player_decoder_hardware">Decodificação por hardware</string>
+    <string name="tsz_anime_player_decoder_software">Decodificação por software</string>
+    <string name="tsz_anime_player_decrease">Diminuir</string>
+    <string name="tsz_anime_player_episodes">Episódios</string>
+    <string name="tsz_anime_player_gestures">Gestos</string>
+    <string name="tsz_anime_player_increase">Aumentar</string>
+    <string name="tsz_anime_player_no_options">Nenhuma opção disponível</string>
+    <string name="tsz_anime_player_seek_gesture">Toque duas vezes para avançar ou voltar</string>
+    <string name="tsz_anime_player_skip">%+d s</string>
+    <string name="tsz_anime_player_speed">Velocidade</string>
+    <string name="tsz_anime_player_subtitle_delay">Atraso das legendas</string>
+    <string name="tsz_anime_player_subtitle_size">Tamanho das legendas</string>
+    <string name="tsz_anime_player_subtitles">Legendas</string>
+    <string name="tsz_anime_player_track_number">Faixa %d</string>
+    <string name="tsz_anime_player_track_off">Desativado</string>
+    <string name="tsz_anime_player_video">Vídeo</string>
+    <string name="tsz_anime_player_volume">Volume</string>
 </resources>

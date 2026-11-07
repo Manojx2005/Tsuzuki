@@ -4,8 +4,11 @@ import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -24,6 +28,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Forward10
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.FullscreenExit
+import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.MoreVert
@@ -79,19 +84,23 @@ internal fun AnimePlayerContent(
     onBack: () -> Unit,
     onOrientationLock: (Boolean) -> Unit,
     orientationLocked: Boolean,
+    onLevelGesture: (volume: Boolean, delta: Float, start: Boolean) -> Float,
     surface: @Composable (Modifier) -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
     var visible by rememberSaveable { mutableStateOf(true) }
     var locked by rememberSaveable { mutableStateOf(false) }
+    var sheet by rememberSaveable { mutableStateOf<AnimePlayerSheet?>(null) }
+    var level by remember { mutableStateOf<Pair<Boolean, Float>?>(null) }
+    val settings = state.settings
     var interaction by remember { mutableIntStateOf(0) }
     var lastNotice by rememberSaveable { mutableIntStateOf(0) }
     val snackbar = remember { SnackbarHostState() }
     val fallback = stringResource(R.string.tsz_anime_player_fallback)
     val showControls = visible && !locked
 
-    LaunchedEffect(visible, locked, state.playing, interaction) {
-        if (visible && state.playing && !locked) {
+    LaunchedEffect(visible, locked, state.playing, interaction, sheet) {
+        if (visible && state.playing && !locked && sheet == null) {
             delay(3_000)
             visible = false
         }
@@ -102,7 +111,14 @@ internal fun AnimePlayerContent(
             snackbar.showSnackbar(fallback)
         }
     }
-    BackHandler(enabled = locked) {
+    LaunchedEffect(level) {
+        if (level != null) {
+            delay(700)
+            level = null
+        }
+    }
+    BackHandler(enabled = sheet != null) { sheet = null }
+    BackHandler(enabled = locked && sheet == null) {
         locked = false
         visible = true
     }
@@ -110,18 +126,41 @@ internal fun AnimePlayerContent(
     Box(Modifier.fillMaxSize().background(tokens.background)) {
         surface(Modifier.fillMaxSize())
         Box(
-            Modifier.fillMaxSize().pointerInput(locked) {
-                detectTapGestures(
-                    onTap = { if (!locked) visible = !visible },
-                    onDoubleTap = { offset ->
-                        if (!locked) {
-                            model.seekBy(if (offset.x < size.width / 2) -10 else 10)
-                            visible = true
-                            interaction++
-                        }
-                    },
-                )
-            },
+            Modifier.fillMaxSize()
+                .pointerInput(locked, settings.seekGesture) {
+                    detectTapGestures(
+                        onTap = { if (!locked) visible = !visible },
+                        onDoubleTap = if (!locked && settings.seekGesture) {
+                            { offset ->
+                                model.seekBy(if (offset.x < size.width / 2) -10 else 10)
+                                visible = true
+                                interaction++
+                            }
+                        } else {
+                            null
+                        },
+                    )
+                }
+                .pointerInput(locked, settings.brightnessGesture, settings.volumeGesture) {
+                    if (locked || (!settings.brightnessGesture && !settings.volumeGesture)) return@pointerInput
+                    var volume = false
+                    var enabled = false
+                    var delta = 0f
+                    detectVerticalDragGestures(
+                        onDragStart = { point ->
+                            volume = point.x >= size.width / 2
+                            enabled = if (volume) settings.volumeGesture else settings.brightnessGesture
+                            delta = 0f
+                            if (enabled) level = volume to onLevelGesture(volume, 0f, true)
+                        },
+                        onVerticalDrag = { _, amount ->
+                            if (enabled && size.height > 0) {
+                                delta -= amount / size.height
+                                level = volume to onLevelGesture(volume, delta, false)
+                            }
+                        },
+                    )
+                },
         )
         if (showControls) {
             Box(
@@ -141,6 +180,7 @@ internal fun AnimePlayerContent(
                     onOrientationLock = { onOrientationLock(!orientationLocked) },
                     onBack = onBack,
                     model = model,
+                    onSheet = { sheet = it },
                     modifier = Modifier.align(Alignment.TopCenter),
                 )
                 if (!state.loading && !state.failed && state.nextIn == null) {
@@ -148,9 +188,16 @@ internal fun AnimePlayerContent(
                 }
                 Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)) {
                     AnimePlayerTimeline(state, onSeek = model::seekTo, onInteract = { interaction++ })
-                    PlayerIcon(Icons.Outlined.Lock, stringResource(R.string.tsz_anime_player_lock)) {
-                        locked = true
-                    }
+                    AnimePlayerControlsRow(
+                        settings = settings,
+                        enabled = state.duration > 0 && !state.loading,
+                        onLock = { locked = true },
+                        onSheet = { sheet = it },
+                        onSeek = {
+                            interaction++
+                            model.seekBy(it)
+                        },
+                    )
                 }
             }
         }
@@ -211,10 +258,25 @@ internal fun AnimePlayerContent(
                 }
             }
         }
+        level?.let { (volume, fraction) ->
+            val label = stringResource(
+                if (volume) R.string.tsz_anime_player_volume else R.string.tsz_anime_player_brightness,
+            )
+            TsuzukiTile(Modifier.align(Alignment.TopCenter).padding(top = 72.dp), padding = 10.dp) {
+                Text(
+                    tsuzukiMenuLabel("$label ${formatAnimePercent(fraction)}"),
+                    color = tokens.dotOn,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+        }
         SnackbarHost(
             hostState = snackbar,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp),
         )
+        sheet?.let {
+            AnimePlayerSheets(it, state, model, onPick = { selected -> sheet = selected }, onDismiss = { sheet = null })
+        }
     }
 }
 
@@ -225,10 +287,10 @@ private fun AnimePlayerTopBar(
     onOrientationLock: () -> Unit,
     onBack: () -> Unit,
     model: AnimePlayerModel,
+    onSheet: (AnimePlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tokens = TsuzukiTheme.tokens
-    var showQuality by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         PlayerIcon(
@@ -257,32 +319,17 @@ private fun AnimePlayerTopBar(
             }
         }
         if (state.qualities.isNotEmpty()) {
-            Box {
-                TsuzukiPill(
-                    text = state.resolution?.let { stringResource(R.string.tsz_anime_player_quality_value, it) }
-                        ?: stringResource(R.string.tsz_anime_player_quality),
-                    selected = false,
-                    onClick = { showQuality = true },
-                    role = Role.Button,
-                )
-                DropdownMenu(expanded = showQuality, onDismissRequest = { showQuality = false }) {
-                    TsuzukiMenuItem(
-                        text = stringResource(R.string.tsz_anime_player_best),
-                        onClick = {
-                            showQuality = false
-                            model.setQuality(0)
-                        },
-                    )
-                    state.qualities.forEach { resolution ->
-                        TsuzukiMenuItem(
-                            text = stringResource(R.string.tsz_anime_player_quality_value, resolution),
-                            onClick = {
-                                showQuality = false
-                                model.setQuality(resolution)
-                            },
-                        )
-                    }
-                }
+            TsuzukiPill(
+                text = state.resolution?.let { stringResource(R.string.tsz_anime_player_quality_value, it) }
+                    ?: stringResource(R.string.tsz_anime_player_quality),
+                selected = false,
+                onClick = { onSheet(AnimePlayerSheet.QUALITY) },
+                role = Role.Button,
+            )
+        }
+        if (state.episodes.isNotEmpty()) {
+            PlayerIcon(Icons.Outlined.List, stringResource(R.string.tsz_anime_player_episodes)) {
+                onSheet(AnimePlayerSheet.EPISODES)
             }
         }
         PlayerIcon(
@@ -299,6 +346,13 @@ private fun AnimePlayerTopBar(
         Box {
             PlayerIcon(Icons.Outlined.MoreVert, mokoStringResource(MR.strings.label_more)) { showMenu = true }
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                TsuzukiMenuItem(
+                    text = stringResource(R.string.tsz_anime_player_video),
+                    onClick = {
+                        showMenu = false
+                        onSheet(AnimePlayerSheet.VIDEO)
+                    },
+                )
                 val autoplayLabel = if (state.autoplay) {
                     R.string.tsz_anime_player_autoplay_off
                 } else {
@@ -370,6 +424,55 @@ private fun AnimePlayerTransport(
         ) {
             onInteract()
             model.next()
+        }
+    }
+}
+
+@Composable
+private fun AnimePlayerControlsRow(
+    settings: AnimePlayerSettings,
+    enabled: Boolean,
+    onLock: () -> Unit,
+    onSheet: (AnimePlayerSheet) -> Unit,
+    onSeek: (Int) -> Unit,
+) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val compact = maxWidth < 560.dp
+        Row(
+            modifier = if (compact) Modifier.horizontalScroll(rememberScrollState()) else Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PlayerIcon(Icons.Outlined.Lock, stringResource(R.string.tsz_anime_player_lock), onClick = onLock)
+            TsuzukiPill(
+                text = formatAnimeSpeed(settings.speed),
+                selected = false,
+                onClick = { onSheet(AnimePlayerSheet.SPEED) },
+                role = Role.Button,
+            )
+            TsuzukiPill(
+                text = stringResource(R.string.tsz_anime_player_subtitles),
+                selected = false,
+                onClick = { onSheet(AnimePlayerSheet.SUBTITLES) },
+                role = Role.Button,
+            )
+            TsuzukiPill(
+                text = stringResource(R.string.tsz_anime_player_audio),
+                selected = false,
+                onClick = { onSheet(AnimePlayerSheet.AUDIO) },
+                role = Role.Button,
+            )
+            if (enabled) {
+                if (!compact) Box(Modifier.weight(1f))
+                for (seconds in listOf(-85, 85)) {
+                    TsuzukiPill(
+                        text = stringResource(R.string.tsz_anime_player_skip, seconds),
+                        selected = false,
+                        onClick = { onSeek(seconds) },
+                        role = Role.Button,
+                    )
+                }
+            }
         }
     }
 }

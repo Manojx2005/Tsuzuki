@@ -15,4 +15,25 @@
     <string name="tsz_anime_player_autoplay_off">자동 재생 끄기</string>
     <string name="tsz_anime_player_rewind">10초 뒤로</string>
     <string name="tsz_anime_player_forward">10초 앞으로</string>
+    <string name="tsz_anime_player_audio">오디오</string>
+    <string name="tsz_anime_player_autoplay">다음 회차 자동 재생</string>
+    <string name="tsz_anime_player_brightness">밝기</string>
+    <string name="tsz_anime_player_close_options">옵션 닫기</string>
+    <string name="tsz_anime_player_decoder_hardware">하드웨어 디코딩</string>
+    <string name="tsz_anime_player_decoder_software">소프트웨어 디코딩</string>
+    <string name="tsz_anime_player_decrease">줄이기</string>
+    <string name="tsz_anime_player_episodes">회차</string>
+    <string name="tsz_anime_player_gestures">제스처</string>
+    <string name="tsz_anime_player_increase">늘리기</string>
+    <string name="tsz_anime_player_no_options">사용 가능한 옵션 없음</string>
+    <string name="tsz_anime_player_seek_gesture">두 번 탭하여 탐색</string>
+    <string name="tsz_anime_player_skip">%+d초</string>
+    <string name="tsz_anime_player_speed">재생 속도</string>
+    <string name="tsz_anime_player_subtitle_delay">자막 지연</string>
+    <string name="tsz_anime_player_subtitle_size">자막 크기</string>
+    <string name="tsz_anime_player_subtitles">자막</string>
+    <string name="tsz_anime_player_track_number">트랙 %d</string>
+    <string name="tsz_anime_player_track_off">끄기</string>
+    <string name="tsz_anime_player_video">동영상</string>
+    <string name="tsz_anime_player_volume">볼륨</string>
 </resources>

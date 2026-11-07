@@ -924,6 +924,7 @@
     <string name="tsz_watch">観る</string>
     <string name="tsz_anime_media">アニメ</string>
     <string name="tsz_anime_shelves">アニメの本棚</string>
+    <string name="tsz_anime_player_settings">プレーヤー</string>
     <string name="tsz_anime_shelves_hint">アニメ専用の本棚です。小説とマンガにはそれぞれ専用の本棚があります。</string>
     <string name="tsz_anime_new_shelf">アニメの本棚を追加</string>
     <string name="tsz_anime_continue_watching">視聴を再開</string>

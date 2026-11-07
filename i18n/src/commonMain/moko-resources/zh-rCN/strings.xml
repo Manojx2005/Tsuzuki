@@ -932,6 +932,7 @@
     <string name="tsz_watch">观看</string>
     <string name="tsz_anime_media">动画</string>
     <string name="tsz_anime_shelves">动画书架</string>
+    <string name="tsz_anime_player_settings">播放器</string>
     <string name="tsz_anime_shelves_hint">这些书架用于动画。小说和漫画各有自己的书架。</string>
     <string name="tsz_anime_new_shelf">新建动画书架</string>
     <string name="tsz_anime_continue_watching">继续观看</string>
