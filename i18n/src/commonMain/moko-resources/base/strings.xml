@@ -1719,4 +1719,15 @@
     <string name="tsz_app_update_channel">App updates</string>
     <string name="tsz_app_update_available">Tsuzuki %1$s is available</string>
     <string name="tsz_app_update_tap">Tap to see what's new and update</string>
+    <!-- Browse and appearance settings -->
+    <string name="pref_source_page_load_delay">Page load delay</string>
+    <string name="pref_source_page_load_delay_summary">Delay between loading pages (helps with rate limits)</string>
+    <string name="pref_source_page_number_summary">Display current page number with jump navigation</string>
+    <string name="pref_source_skip_cover_loading">Skip cover loading</string>
+    <string name="pref_source_skip_cover_loading_summary">Don\'t load cover images in browse to save bandwidth</string>
+    <string name="pref_source_confirm_back_after_pages">Confirm back after pages</string>
+    <string name="pref_source_confirm_back_after_pages_summary">Show confirmation dialog when going back after loading many pages</string>
+    <string name="pref_library_layout">Library layout</string>
+    <string name="pref_combined_library">Combined library</string>
+    <string name="pref_combined_library_summary">Merge Novels and Manga into a single Library tab</string>
 </resources>

@@ -184,12 +184,12 @@ object SettingsAppearanceScreen : SearchableSettings {
         val context = LocalContext.current
         val basePreferences = remember { Injekt.get<eu.kanade.domain.base.BasePreferences>() }
         return Preference.PreferenceGroup(
-            title = "Library layout",
+            title = stringResource(MR.strings.pref_library_layout),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.joinedLibrary,
-                    title = "Combined library",
-                    subtitle = "Merge Novels and Manga into a single Library tab",
+                    title = stringResource(MR.strings.pref_combined_library),
+                    subtitle = stringResource(MR.strings.pref_combined_library_summary),
                     onValueChanged = {
                         context.toast(MR.strings.requires_app_restart)
                         true
