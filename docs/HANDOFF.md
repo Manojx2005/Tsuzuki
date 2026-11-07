@@ -29,7 +29,13 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ---
 
-## Current state (2026-11-06 evening, Claude — desktop machine)
+## Current state (2026-11-07 evening, Claude)
+
+- **Goal: v0.1 release (no anime).** Plan and every card: "v0.1 release — every card" in the Codex queue below.
+- V1 merged (`3fa896b3e`): Y2, Y6, R1–R5, R9 are in main. Codex: V1.1 → R6 → R7 → V3–V6, then post-v0.1 cards.
+- Claude's next session: V1 leftovers, review everything Codex finished, V2 upstream merge + freeze, V7–V12.
+
+## Earlier state (2026-11-06 evening, Claude — desktop machine)
 
 - Back on the desktop: JDK 21 = Android Studio `jbr` (21.0.10); the Temurin path in older notes is the laptop's.
   Tablet `R52Y90HA77L` + S22 `RZCWA139X1X` connected; owner's phone `R5GL23ZYE1V` is not (it's on the laptop).
@@ -145,7 +151,9 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now:** R6 → R7 → V3 → V4 → V5 → V6 → (after the tag) R8 rework → R10 rework → R11 → … → R17.
+**Codex lane 2 order from now (updated 2026-11-07 after V1 merged):** V1.1 → R6 → R7 → V3 → V4 → V5 → V6 → R8 rework →
+R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
+for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
 **Not in v0.1 (v0.2 or later):** anime (A2.3 → R-A4 and stages 3–4), R8/R10 reworks unless they land before the freeze,
 R11–R17, P1.11 storage async migration, Phase 5 features without a card.
@@ -177,7 +185,7 @@ R11–R17, P1.11 storage async migration, Phase 5 features without a card.
 4. Answer the permission questions (V3 Watch switch, device use, phone upgrade, test installs, language switch,
    pushes). Answers are recorded under "Owner permissions for v0.1" below.
 
-#### V1 Review batch (Claude) — `claude-working` (`review/night5` in `.worktrees/review5`, 2026-11-07; Codex: don't touch Y2, Y6, R1–R5, R9 branches)
+#### V1 Review batch (Claude) — `done` except leftovers below (merged into main as `3fa896b3e` on 2026-11-07)
 Merge Y2, Y6, R1, R2, R3, R4, R5, R9 into a `review/night5` branch, resolve overlaps, build, unit tests, install on
 the tablet + S22. Per card: its "Claude device checks" list. Plus C4: restore R1's synthetic 500-book backup into a
 **scratch** install and record `gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse; and R2:
@@ -189,11 +197,14 @@ installed on tablet + S22, both launch, crash buffers empty.
 - Pass: **Y6** (tablet landscape docks the LISTEN panel; playback survives rotation; portrait < 900 dp keeps the
   floating pill by design). **R4** (Library menu: icons, groups, red destructive row). **R5** (tablet Settings two-pane).
 - Found: **V1.1** (selected tab lost after process death; not from this batch).
+- S22: **R3** pass (word-boundary wraps on Library, Updates, Home); Library/Updates phone layouts fine.
+- Merged into main as `3fa896b3e` with these **leftovers for Claude's next session** (code already in main):
 - Pending: **Y2** (needs a *paged* manga: the only manga, Nano Machine, opens as a webtoon), **R1/C4** scratch 500-book
   frame timing, **R2** in-Library state (after V1.1), **R3/R9** on the S22, R9 widgets placed.
 - Polish notes for V8 (existing, not regressions): Dot System/Light/Dark segment not uppercased and in body font;
   Settings TIME FORMAT label wraps while its value truncates; "GRAYSCALE" vs British "colour"; Listen panel voice
-  label shows a raw locale ("en-US-language").
+  label shows a raw locale ("en-US-language"); Updates "Library last updated: Never" is italic body text, not
+  uppercased in Dot.
 
 #### V1.1 Selected tab lost after process death (T3) — `ready` (found by Claude in V1, 2026-11-07; release-blocking)
 Repro (preview build `.debug`, tablet, Dot): Library → MANGA tab → Home key → `adb shell am kill
@@ -212,13 +223,13 @@ survived process death.
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
 
-#### V3 Watch teaser check (T1) — `ready` after V2 (owner 2026-11-07: keep the Read / Watch switch as a teaser)
+#### V3 Watch teaser check (T1) — `ready` (start from current main) (owner 2026-11-07: keep the Read / Watch switch as a teaser)
 `presentation/tsuzuki/home/TsuzukiHomeScreen.kt` `WatchPlaceholder`: the copy must say anime is coming in a later
 version, with no sample numbers, fake titles or controls that look usable; nothing on it may open anime code in a
 release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
 Fix only what fails; list the checks in Result. Claude checks: preview build, Home → Watch, both themes, both devices.
 
-#### V4 Telemetry out + Tsuzuki release workflow (T2) — `ready` after V2
+#### V4 Telemetry out + Tsuzuki release workflow (T2) — `ready` (start from current main)
 `PRIVACY.md` promises no telemetry. Keep `Config.includeTelemetry` and the Firebase code paths for Tsundoku merges,
 but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Rewrite `.github/workflows/release.yml` for Tsuzuki: run on tag `v*` pushes, gate
@@ -232,14 +243,14 @@ but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Don't run the workflow and don't create tags. Claude checks: `assembleRelease -Penable-updater` locally, then the
   APK has no `com.google.firebase` classes.
 
-#### V5 About, licences, privacy, links (T2) — `ready` after V2
+#### V5 About, licences, privacy, links (T2) — `ready` (start from current main)
 About screen: app name, version, "Based on Tsundoku and Mihon" credit with links, GitHub link = the V0 releases
 repo, open-source licences list includes the bundled fonts (`docs/licenses/`), QuickJS host and the LNReader plugin
 index terms. `PRIVACY.md`: accurate for v0.1 (no telemetry; network calls: sources, trackers, translation provider if
 configured, updater). `TsuzukiLinks.kt`: no link points at tsundoku-otaku. `NOTICE`/licence files present for
 Apache-2.0. List each check in Result. Claude checks: About + licences on both devices, both themes.
 
-#### V6 CHANGELOG 0.1.0 + version (T1) — `ready` after V2
+#### V6 CHANGELOG 0.1.0 + version (T1) — `ready` (start from current main)
 Move Tsundoku's changelog to `docs/CHANGELOG-tsundoku.md` (header: "Inherited from Tsundoku; Tsuzuki's own
 history is in CHANGELOG.md"). New `CHANGELOG.md`: same Keep-a-Changelog format, `## [0.1.0]` written for users
 from this file's log (Dot + Colour themes, Home, library shelves, novel reader + TTS, manga reader, tablet layouts,
@@ -336,7 +347,7 @@ never touches R-card files; both threads: one Gradle build at a time each.
 | 19 | R-A3 Anime in Updates + "Airing today" strip | 1 | A2.4 | T3 |
 | 20 | R-A4 Anime episode downloads (third engine) | 1 | R-A2 | T4 |
 
-#### R1 Large-library performance pass (T3) — `review` (Claude committed `01c55ae17` on `tsuzuki/r1` 2026-11-07; device check + merge pending)
+#### R1 Large-library performance pass (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Use Y4's `scripts/generate_synthetic_backup.py` (500 books, 30 shelves, 50 k chapters). Codex: no devices — profile
 on the JVM side only: add Macrobenchmark-free unit/perf tests for the hot paths (library grouping/sorting/filtering,
 shelf counts, Updates mapping, Home stack queries) with the synthetic data shape, find anything O(n²) or done on
@@ -349,7 +360,7 @@ document numbers before/after in Result. Claude then restores the backup into a 
 - `LibraryGrouping.kt` exposes the existing linear category grouping for JVM tests. Upstream `LibraryViewModel.kt` calls it; grouping, sorting and filters already run on IO. `LibraryGroupingTest.kt` verifies ordering of shelves, 500 books across 30 shelves, title filtering and shelf counts. N30 keys and content types remain in place.
 - Ran Y4's generator. Fixture: `.worktrees/r1/build/r1-synthetic-500.tachibk`. JVM numbers are operation counts, not device frame timings. Claude: restore into a scratch install, compare Home stack and badge updates, Library shelves, Updates media and downloaded filters, History and Browse using `gfxinfo framestats` on phone/tablet.
 
-#### R2 Process death + rotation audit (T3) — `review` (Claude committed `6e00565ee` on `tsuzuki/r2` 2026-11-07; device check + merge pending)
+#### R2 Process death + rotation audit (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 WORKPLAN P1.1. For every Tsuzuki screen and sheet with user state (Home stack index, Library tab/shelf/filter/
 selection, details sheets incl. Q3 save range, reader quick sheet tab, All reader settings tab, Browse media/
 section, search queries, Q9 selection, Updates two-pane selection), make sure state survives rotation and
@@ -365,7 +376,7 @@ missing in Result. Tests for any saver you write. Claude verifies with `adb shel
 - `TsuzukiSavedScreenState.kt` and `TsuzukiSavedScreenStateTest.kt` limit each saved selection to 8,192 IDs. Larger selections restore empty to avoid a partial bulk operation. Transient confirmations, in-flight work and reader find results are recreated on demand. R1 and R2 both change UpdatesViewModel; preserve both when merging.
 - Claude device review: background and kill, reopen, and rotate on the phone and tablet with each named state active. Verify a custom chapter range, unsent draft vs submitted search, Q9 selection, both reader renderers, and a tablet preview selected beyond the first Updates page. JVM verification only.
 
-#### R3 Mid-word wraps + tile labels sweep (T2) — `review` (Claude committed `be6ad4f44` on `tsuzuki/r3` 2026-11-07; device check + merge pending)
+#### R3 Mid-word wraps + tile labels sweep (T2) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Found 2026-11-07: details action tiles wrap mid-word with 4 tiles ("TRACKIN / G", "IN / LIBRARY") on 360 dp.
 Grep every Tsuzuki tile/pill/button label for `maxLines = 2` without word-safe handling; for equal-width tiles use
 one line + ellipsis or a shorter label (8 locales), never break inside a word (`LineBreak.Simple` /
@@ -375,7 +386,7 @@ one line + ellipsis or a shorter label (8 locales), never break inside a word (`
 - `TsuzukiPill.kt`, `TsuzukiSegments.kt`, and `TsuzukiNav.kt` apply single-line ellipses to shared control labels. `TsuzukiBrowse.kt`, `TsuzukiPageColours.kt`, `TsuzukiMoreScreen.kt`, `TsuzukiAboutScreen.kt`, and `TsuzukiBackupTiles.kt` apply the same to their action labels. Source names, book titles, and other body text keep their multiline treatment.
 - `TsuzukiNarrowPreviews.kt` adds the real four-action details row, using the existing translated labels. The preview compiled. Claude: inspect at 360 dp in Dot and Colour, EN and JA, including 130% and 200% font sizes. On the phone open a library book with an expected update and a WebView action to check all four buttons and TalkBack labels.
 
-#### R4 Menus: icons, groups, destructive row (T2) — `review` (Claude committed `9bd651136` on `tsuzuki/r4` 2026-11-07; device check + merge pending)
+#### R4 Menus: icons, groups, destructive row (T2) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Board `17-drafts` Menus / MenuPick (status table: "Not yet: item icons, groups, accent destructive row, screens
 using Material's menu directly"). Extend the shared Tsuzuki dropdown (`components/DropdownMenu.kt` hook +
 `theme/tsuzuki/TsuzukiMenu.kt`) with optional leading icons, group dividers/labels and a destructive (accent) row;
@@ -386,7 +397,7 @@ then switch the remaining Material `DropdownMenu` call sites in Tsuzuki themes t
 - The remaining direct Material dropdown containers now use the shared anchored popup in upstream `ImportEpubDialog.kt`, `ImportEpubScreen.kt`, `MassImportDialog.kt`, `SettingsAdvancedScreen.kt`, `SettingsNovelDownloadScreen.kt`, `SettingsTrackingScreen.kt`, `DuplicateDetectionScreen.kt`, `MigrationListScreenContent.kt`, and `MigrateMangaScreen.kt`. Their row actions and custom content remain in their owners.
 - Claude device review: compare Library overflow groups, Catalogue display mode, Downloads sorting and cancel row, then an import category and tracker list picker in Dot and Colour. Check edge anchoring and nested menu focus.
 
-#### R5 Tablet Library + Tablet Settings vs boards (T3) — `review` (Claude committed `5ba44e50a` on `tsuzuki/r5` 2026-11-07; device check + merge pending)
+#### R5 Tablet Library + Tablet Settings vs boards (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Boards `11-tablet/TabletLibrary`, `TabletSettings` (+ dot). Compare with the current tablet layouts (rail + Library
 grid; Settings two-pane) and fix only differences (list them). Real data only.
 **Result (Codex, 2026-11-07):** Verified working diff on `tsuzuki/r5` at `.worktrees/r5` (base `d5ff042a6`). Per-file Spotless twice and JDK 21 `:app:assembleDebug :app:testDebugUnitTest` passed (921 tests, 0 failures). Card-branch commit needs owner or Claude after automatic approval rejected that operation under AGENTS.md.
@@ -394,13 +405,13 @@ grid; Settings two-pane) and fix only differences (list them). Real data only.
 - `TsuzukiSettingsMain.kt` caps the section list at the board's 360 dp, gives rows the 52 dp minimum and fills the selected row's tile within the accent outline. The existing shared rail and appearance pane remain the entry points.
 - Kept the available real-data tiles and settings. Device review: verify Dot and Colour on tablet portrait and landscape. In landscape confirm the six-cover row and details selection, then check Settings list width, selected outline/fill and preference navigation. Check the separate Library grid and rail at a large font scale.
 
-#### R6 Colour theme parity pass (T2) — `ready` (R3 committed as `be6ad4f44` on `tsuzuki/r3`: branch from it)
+#### R6 Colour theme parity pass (T2) — `ready` (R3 is in main: start from main)
 Every Tsuzuki screen in **Colour** at 360 dp and tablet: sentence case, Instrument Serif headings, book-palette
 accents, no Dot-only artefacts (uppercase, grey `#8A8A8A`, red). Use the Q8 narrow previews in Colour; fix
 differences; list per screen.
 **Result (Codex, 2026-11-07):** R3 passed verification, but its implementation is an uncommitted diff. The Batch R prerequisite requires an R3 commit to merge or its implementation already in main. No changes for this card.
 
-#### R7 Japanese layout pass (T2) — `ready` (R3 committed as `be6ad4f44` on `tsuzuki/r3`: branch from it)
+#### R7 Japanese layout pass (T2) — `ready` (R3 is in main: start from main)
 Devices are Japanese. Status table: translated layouts never visually checked. Run the narrow previews with the
 `ja` locale; fix truncation, mixed fonts (Japanese must use the partner font via `MaterialTheme.typography`) and
 any hard-coded English in Tsuzuki screens (move to strings, 8 locales).
@@ -416,7 +427,7 @@ headers, per-group pause/resume, progress, error rows with retry; fix difference
 - Manga groups retain source grouping, novel groups retain book grouping, and source pauses are session-scoped like existing novel pauses. The board's video rows, sample storage and retry countdown were not added. R4 and R8 both edit `DownloadQueueScreen.kt`; preserve both when merging.
 - Claude device review: on Dot and Colour queue from two manga sources and two novels, pause one source and one novel while in flight, confirm others advance, resume, then trigger two errors and retry one. Check retry while the source or whole queue is paused, reordering, and removing items during progress.
 
-#### R9 Widgets vs board (T3) — `review` (Claude committed `f2b6b9c89` on `tsuzuki/r9` 2026-11-07; device check + merge pending)
+#### R9 Widgets vs board (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Board `Widgets`. Continue-reading widget and N28 Listening widget: match sizes/styles, Dot + Colour (follow app
 theme), real data only, tap targets open the right screen. Claude places them on the tablet and checks.
 **Result (Codex, 2026-11-07):** Verified working diff on `tsuzuki/r9` at `.worktrees/r9` (base `d5ff042a6`). Per-file Spotless twice and JDK 21 `:app:assembleDebug :app:testDebugUnitTest` passed (923 tests, 0 failures). Card-branch commit needs owner or Claude after automatic approval rejected that operation under AGENTS.md.
@@ -1042,7 +1053,7 @@ Result, skip any that conflicts with Tsuzuki hooks and say why. Tests where Miho
 
 **Result (Codex, 2026-11-07):** Already on main. `7edc18c05` covers Mihon `88d4071cc` (startup cache rescan), `f28b2d887` (cancel removed-chapter queue entries), and `f82a7a68f` (fresh notification builders, with Tsuzuki's per-chapter error suppression retained). `DownloadProvider.kt` and its existing `DownloadProviderTest.kt` cover `f0f1e4de5` and `a5d584eeb`. The speed picks `730e43fd1`, `f02bf5ba7`, `9a6dea804`, and `fb8e640d6` are recorded in UPSTREAM's order 8 hand-port log. `2135d3852` already ports `c279291e2` (tablet FAB) and `a6ee4bc59` (range selection). The WebView group `649fc83ff`, `5a5ff22c3`, `5f63c983d`, `7ae858e60` is documented in the 2026-11-04 WebView entry. The remaining `ba16158b1` requires Mihon's subscriber gate and download-state refactor and removes row progress used by Tsuzuki. Kept that documented skip. No new code or build required for this audit.
 
-#### Y2 Tablet manga two-page spread (T3) — `review` (Claude reviewed the rework and committed it as `374961b32` on `tsuzuki/y2`; upstream hooks are now one-liners and the mode-off path is unchanged; device check + merge pending) (sent back by Claude 2026-11-07)
+#### Y2 Tablet manga two-page spread (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 **Claude review 2026-11-07 — rework on `tsuzuki/y2` (keep your commit, add a fix commit):** the pairing logic is
 good, but `PagerViewer.kt` (+99/−30) rewrites Mihon's `onPageChange` forward/preload block and long-tap handling for
 every pager reader, and pulls `UiPreferences` via Injekt into the viewer. That changes behaviour for all manga
@@ -1104,7 +1115,7 @@ fix differences; stock → restyle with a dispatch hook. List per screen in Resu
 - Edit Novel: `TsuzukiEditMangaDialog.kt` already has the cover picker/reset, themed fields, status pills and Save. Verified by comparison. The board's manual book palette has no saved per-book setting in this editor. Eight locale files add the three new labels.
 - Claude device checks: in Dot and Colour, open Tracking with auto-sync on/off and exercise linked/unlinked trackers, then export several disposable quotes and inspect UTF-8 text and chapter order. Open one- and multi-selection EPUB forms and verify cancel, picker MIME and filename for original, Both and split volumes. Check Upcoming month/day/filter interactions and Edit Info cover, status and Save on a disposable book. Device verification pending.
 
-#### Y6 Tablet TTS panel + foldable (T3) — `review` (Claude reviewed the rework and committed it as `553e4fd88` on `tsuzuki/y6`; ReaderActivity now binds one hook; device check + merge pending) (sent back by Claude 2026-11-07) (needs Q11)
+#### Y6 Tablet TTS panel + foldable (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 **Claude review 2026-11-07 — rework on `tsuzuki/y6`:** X1 just moved Tsuzuki code out of `ReaderActivity`; Y6 adds
 ~50 lines of listen-panel composition back into `ReaderActivity.setContent` (fold detection, listening state,
 the whole `TsuzukiReaderListenPanel` lambda). Move that into one Tsuzuki composable / hook in
