@@ -68,6 +68,8 @@ fun ScreenTransition(
 ) {
     AnimatedContent(
         targetState = navigator.lastItem,
+        // Saved Compose state must match after Voyager deserializes a new screen instance.
+        contentKey = { it.key },
         transitionSpec = transition,
         modifier = modifier,
         label = "transition",
