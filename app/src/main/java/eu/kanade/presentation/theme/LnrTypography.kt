@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.R
 import android.graphics.Typeface as AndroidTypeface
 import android.graphics.fonts.Font as AndroidFont
 import android.graphics.fonts.FontFamily as AndroidFontFamily
+import android.graphics.fonts.FontStyle as AndroidFontStyle
 import androidx.compose.ui.text.font.AndroidFont as ComposeAndroidFont
 import androidx.compose.ui.text.font.Typeface as ComposeTypeface
 
@@ -85,12 +86,18 @@ private class FontLoader(private val res: Resources) {
         AndroidFontFamily.Builder(fonts.first()).apply { fonts.drop(1).forEach(::addFont) }.build()
 
     /** A Compose family: Latin first, the Japanese partner next, then the system [system] family. */
-    fun paired(latin: AndroidFontFamily, japanese: AndroidFontFamily, system: String): FontFamily =
+    fun paired(
+        latin: AndroidFontFamily,
+        japanese: AndroidFontFamily,
+        system: String,
+        style: AndroidFontStyle = AndroidFontStyle(400, FONT_SLANT_UPRIGHT),
+    ): FontFamily =
         FontFamily(
             ComposeTypeface(
                 AndroidTypeface.CustomFallbackBuilder(latin)
                     .addCustomFallback(japanese)
                     .setSystemFallback(system)
+                    .setStyle(style)
                     .build(),
             ),
         )
@@ -165,6 +172,8 @@ private fun buildColourFamilies(res: Resources): Pair<FontFamily, FontFamily> = 
         ),
         family(font(R.font.lnr_jp_notoserif, 600)),
         "serif",
+        // Compose uses the style of the prebuilt typeface for this family.
+        style = AndroidFontStyle(400, FONT_SLANT_ITALIC),
     )
     val body = pairedWeights(
         family(
