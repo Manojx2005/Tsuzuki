@@ -432,7 +432,10 @@ Pull the phone's installed release APK (`pm path io.github.manojx2005.tsuzuki`) 
 Same cert and version code below the new one: in-place upgrade works. Different cert: **stop**, owner decides
 (sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
 
-#### V11 Release candidate (Claude + owner) — RC1 built 2026-11-07, owner testing on their phone
+#### V11 Release candidate (Claude + owner) — RC2 built 2026-11-07, owner testing on their phone
+**RC2 (current):** commit `2b9911b76` (adds the app update notification), Actions run 42375424770; same checks as RC1
+pass (0.1.0 (24), cert `ffcdc743…`, 0 Firebase classes, `TsuzukiAppUpdateJob` kept by R8). Files + checklist:
+`C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc2/tsuzuki-rc-2b9911b76/`. RC1 below is superseded.
 **RC1:** commit `0025beca7`, built and signed by GitHub Actions (`release.yml` manual run 42373139062, no publish).
 Verified: `io.github.manojx2005.tsuzuki` 0.1.0 (24), cert `CN=Tsuzuki` SHA-256 `ffcdc743…f6c7`, 0 Firebase classes,
 baseline profile packaged. APKs + SHA256SUMS + owner checklist in `C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc1/`.
