@@ -1,8 +1,15 @@
 package eu.kanade.tachiyomi.ui.tsuzuki.home
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.MangaCover
+import java.util.concurrent.atomic.AtomicInteger
 
 class TsuzukiHomeLogicTest {
 
@@ -85,5 +92,30 @@ class TsuzukiHomeLogicTest {
     fun `no books means no hero and an empty shelf`() {
         HomeState().hero shouldBe null
         HomeState().shelf shouldBe emptyList()
+    }
+
+    @Test
+    fun `badge changes leave the nine book stack loaded`() = runTest {
+        val updates = MutableStateFlow(0)
+        val history = MutableStateFlow(emptyList<HistoryWithRelations>())
+        val library = MutableStateFlow(emptyList<LibraryManga>())
+        val stack = (1L..9L).map(::book)
+        val loads = AtomicInteger()
+        val emitted = Channel<HomeState>()
+        backgroundScope.launch {
+            homeStates(history, library, updates) { _, _ ->
+                loads.incrementAndGet()
+                HomeState(loading = false, books = stack)
+            }.collect { emitted.send(it) }
+        }
+
+        emitted.receive().books shouldBe stack
+        repeat(20) { index ->
+            updates.value = index + 1
+            val state = emitted.receive()
+            state.books shouldBe stack
+            state.newChapters shouldBe index + 1
+        }
+        loads.get() shouldBe 1
     }
 }
