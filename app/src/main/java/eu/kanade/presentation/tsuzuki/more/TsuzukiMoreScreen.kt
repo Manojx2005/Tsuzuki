@@ -101,8 +101,8 @@ fun TsuzukiMoreScreen(
         Modifier
             .fillMaxSize()
             .tsuzukiBackground(t)
-            .verticalScroll(rememberScrollState())
             .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
             .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 24.dp),
     ) {
         Text(
