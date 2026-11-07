@@ -19,6 +19,7 @@ import eu.kanade.domain.chapter.interactor.GetAvailableScanlators
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
+import eu.kanade.domain.manga.interactor.SetMangaViewerFlags
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.WordDensity
 import eu.kanade.domain.manga.model.chaptersFiltered
@@ -48,6 +49,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.rateLimitHost
 import eu.kanade.tachiyomi.ui.reader.quote.QuoteManager
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.system.toast
@@ -1206,6 +1208,13 @@ class MangaViewModel(
      * Sets the active display mode.
      * @param mode the mode to set.
      */
+    fun setMangaReadingMode(mode: ReadingMode) {
+        val manga = manga ?: return
+        viewModelScope.launchIO {
+            Injekt.get<SetMangaViewerFlags>().awaitSetReadingMode(manga.id, mode.flagValue.toLong())
+        }
+    }
+
     fun setDisplayMode(mode: Long) {
         val manga = successState?.manga ?: return
 

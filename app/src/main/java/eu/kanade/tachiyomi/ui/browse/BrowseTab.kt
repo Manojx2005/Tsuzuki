@@ -96,7 +96,11 @@ data object BrowseTab : Tab {
         val tabs = pages.map { page ->
             val tab = when (page) {
                 BrowsePage.NOVEL_SOURCES -> novelSourcesTab()
-                BrowsePage.MANGA_SOURCES -> sourcesTab()
+                BrowsePage.MANGA_SOURCES -> sourcesTab(extensionsState.updates) {
+                    scope.launch {
+                        state.animateScrollToPage(pages.pageIndex(BrowseMedia.MANGA, BrowseSection.EXTENSIONS))
+                    }
+                }
                 BrowsePage.NOVEL_EXTENSIONS -> novelExtensionsTab(novelExtensionsViewModel)
                 BrowsePage.MANGA_EXTENSIONS -> extensionsTab(extensionsViewModel)
                 BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()

@@ -1331,4 +1331,12 @@
     <string name="tsz_q8_reader_next">下一段</string>
     <string name="tsz_q8_reader_here">从这里</string>
     <string name="tsz_q8_reader_rotate">旋转</string>
+
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">以条漫模式打开</string>
+    <string name="tsz_manga_change_mode">更改本作品的阅读模式</string>
+    <string name="tsz_local_manga">本地漫画</string>
+    <string name="tsz_local_manga_formats">CBZ、ZIP、文件夹</string>
+    <string name="tsz_manga_repos">漫画扩展仓库</string>
+    <string name="tsz_manga_repos_summary">使用兼容 Mihon 和 Tachiyomi 的仓库安装漫画来源。</string>
 </resources>

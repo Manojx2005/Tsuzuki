@@ -1328,4 +1328,12 @@
     <string name="tsz_q8_reader_next">Próximo</string>
     <string name="tsz_q8_reader_here">Aqui</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">Abre como webtoon</string>
+    <string name="tsz_manga_change_mode">Alterar para esta série</string>
+    <string name="tsz_local_manga">Mangá local</string>
+    <string name="tsz_local_manga_formats">CBZ, ZIP e pastas</string>
+    <string name="tsz_manga_repos">Repositórios de extensões de mangá</string>
+    <string name="tsz_manga_repos_summary">Instale fontes de mangá de repositórios compatíveis com Mihon e Tachiyomi.</string>
 </resources>

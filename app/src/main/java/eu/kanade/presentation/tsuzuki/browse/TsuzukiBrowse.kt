@@ -28,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.source.local.isLocal
 
 private val TileRadius = 24.dp
 
@@ -103,6 +105,7 @@ fun TsuzukiPinnedSources(
     onUnpin: (tachiyomi.domain.source.model.Source) -> Unit,
     modifier: Modifier = Modifier,
     selectedId: Long? = null,
+    showLocalMangaInfo: Boolean = false,
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(TileRadius)
@@ -114,6 +117,7 @@ fun TsuzukiPinnedSources(
         sources.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pair.forEach { source ->
+                    val localManga = showLocalMangaInfo && source.isLocal()
                     androidx.compose.foundation.layout.Column(
                         Modifier
                             .weight(1f)
@@ -132,31 +136,36 @@ fun TsuzukiPinnedSources(
                         Row(verticalAlignment = Alignment.Top) {
                             eu.kanade.presentation.browse.components.SourceIcon(source = source)
                             androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-                            androidx.compose.material3.IconButton(
-                                onClick = { onUnpin(source) },
-                                modifier = Modifier.size(32.dp),
-                            ) {
-                                Icon(
-                                    androidx.compose.material.icons.Icons.Filled.PushPin,
-                                    contentDescription = stringResource(MR.strings.action_unpin),
-                                    tint = t.accent,
-                                    modifier = Modifier.size(16.dp),
-                                )
+                            if (!localManga) {
+                                androidx.compose.material3.IconButton(
+                                    onClick = { onUnpin(source) },
+                                    modifier = Modifier.size(32.dp),
+                                ) {
+                                    Icon(
+                                        androidx.compose.material.icons.Icons.Filled.PushPin,
+                                        contentDescription = stringResource(MR.strings.action_unpin),
+                                        tint = t.accent,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
                             }
                         }
                         androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                         Text(
-                            if (t.isDot) source.name.uppercase() else source.name,
+                            tsuzukiMenuLabel(
+                                if (localManga) stringResource(MR.strings.tsz_local_manga) else source.name,
+                            ),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
                             maxLines = 2,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
-                        val lang = eu.kanade.tachiyomi.util.system.LocaleHelper.getSourceDisplayName(
-                            source.lang,
-                            context,
-                        )
+                        val lang = if (localManga) {
+                            stringResource(MR.strings.tsz_local_manga_formats)
+                        } else {
+                            eu.kanade.tachiyomi.util.system.LocaleHelper.getSourceDisplayName(source.lang, context)
+                        }
                         Text(
                             if (t.isDot) lang.uppercase() else lang,
                             fontSize = 11.sp,

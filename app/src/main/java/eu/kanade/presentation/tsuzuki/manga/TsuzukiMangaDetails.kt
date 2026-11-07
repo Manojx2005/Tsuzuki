@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.manga
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
@@ -18,7 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -43,7 +47,8 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 @Composable
-internal fun TsuzukiMangaReadingMode(manga: Manga) {
+internal fun TsuzukiMangaReadingMode(manga: Manga, onChange: ((ReadingMode) -> Unit)? = null) {
+    var showPicker by remember(manga.id) { mutableStateOf(false) }
     val configuredMode = ReadingMode.fromPreference(manga.readingMode.toInt())
     val mode = if (configuredMode == ReadingMode.DEFAULT) {
         val preferences = remember { Injekt.get<ReaderPreferences>() }
@@ -55,7 +60,8 @@ internal fun TsuzukiMangaReadingMode(manga: Manga) {
     if (mode == ReadingMode.NOVEL) return
     val tokens = TsuzukiTheme.tokens
     TsuzukiTile(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
+            .then(if (onChange != null) Modifier.clickable(role = Role.Button) { showPicker = true } else Modifier),
         padding = 14.dp,
     ) {
         Row(
@@ -63,16 +69,43 @@ internal fun TsuzukiMangaReadingMode(manga: Manga) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Icon(painterResource(mode.iconRes), contentDescription = null, tint = tokens.accent)
-            Text(
-                text = tsuzukiCase(stringResource(MR.strings.pref_category_reading_mode)).orEmpty(),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
-            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = tsuzukiCase(
+                        stringResource(
+                            if (mode == ReadingMode.WEBTOON) {
+                                MR.strings.tsz_manga_opens_webtoon
+                            } else {
+                                MR.strings.pref_category_reading_mode
+                            },
+                        ),
+                    ).orEmpty(),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                if (onChange != null) {
+                    Text(
+                        text = tsuzukiCase(stringResource(MR.strings.tsz_manga_change_mode)).orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             Text(
                 text = tsuzukiCase(stringResource(mode.stringRes)).orEmpty(),
+                modifier = Modifier.widthIn(max = 120.dp),
                 color = tokens.accent,
                 style = MaterialTheme.typography.labelLarge,
             )
+        }
+    }
+    if (showPicker && onChange != null) {
+        TsuzukiAdaptiveSheet(onDismissRequest = { showPicker = false }) { close ->
+            Column(Modifier.padding(vertical = 16.dp)) {
+                TsuzukiReadingModeGrid(configuredMode) { selected ->
+                    onChange(selected)
+                    close { showPicker = false }
+                }
+            }
         }
     }
 }

@@ -1330,4 +1330,12 @@
     <string name="tsz_q8_reader_next">次</string>
     <string name="tsz_q8_reader_here">ここから</string>
     <string name="tsz_q8_reader_rotate">回転</string>
+
+    <!-- Y3 -->
+    <string name="tsz_manga_opens_webtoon">ウェブトゥーン形式で開きます</string>
+    <string name="tsz_manga_change_mode">この作品の設定を変更</string>
+    <string name="tsz_local_manga">ローカル漫画</string>
+    <string name="tsz_local_manga_formats">CBZ、ZIP、フォルダー</string>
+    <string name="tsz_manga_repos">漫画の拡張機能リポジトリ</string>
+    <string name="tsz_manga_repos_summary">Mihon・Tachiyomi 互換リポジトリから漫画ソースをインストールできます。</string>
 </resources>
