@@ -87,3 +87,11 @@ median 365.8 ms, range 346.5–392.6 ms; frame CPU P95 20.3 ms, overrun P95 16.9
 deadline (18.4%), no thermal sleep. The frame results are mixed and do not demonstrate an overall smoothness
 gain. The initial-window change also precedes the animated state reads and cannot be attributed to them.
 Evidence: `cold-startup-draw-benchmark*` and device `*-startup.mp4` files in the preview evidence directory.
+
+## v0.1 cold start, S22 (2026-11-07)
+
+Optimized preview from main `17ac99c42`, Galaxy S22, Colour theme, Japanese UI, four-book library. Ten launches with
+`am force-stop` then `am start -W` (`TotalTime`, initial window): 447, 334, 338, 456, 372, 346, 360, 347, 355, 350 ms;
+**median 352.5 ms**, min 334, max 456. The earlier single phone launch was 594 ms (2026-11-04); no regression after the
+Batch R / v0.1 merges. Baseline profile re-collect (P2.4) still to do before the release tag.
+

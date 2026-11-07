@@ -407,7 +407,7 @@ WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extens
 config, download queue Cancel all), mass import batch cards, phone Settings layout. NewUpdate screen moves to V12
 (needs a public release). One English pass on the S22 if the owner approved it in V0. Bugs → `V8.n`.
 
-#### V9 Cold start + baseline profile (Claude) — `ready` after V7 fixes
+#### V9 Cold start + baseline profile (Claude) — cold start `done` 2026-11-07 (S22 median 352.5 ms over 10, see PERFORMANCE.md); baseline profile re-collect still to do
 P2.1: phone cold start, `am start -W`, 10 runs, compiled vs not, before/after numbers in `docs/PERFORMANCE.md`.
 P2.4: re-collect the baseline profile on the frozen main (`-PtsuzukiProfileConnected=true`), commit it.
 
