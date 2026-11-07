@@ -4,6 +4,7 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
+import eu.kanade.tachiyomi.animesource.model.SAnime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
@@ -36,6 +37,82 @@ import tachiyomi.domain.track.anime.model.AnimeTrack
 import java.util.Date
 
 class AnimeDatabaseTest {
+    @Test
+    fun animeShelfEditsKeepDefaultImplicitAndUpdateAnExistingFavorite() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val categories = AnimeCategoryRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                categories,
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val existing = anime.insert(Anime(source = 8, url = "/anime", title = "Old title"))
+            store.saveShelf(null, "Watching")
+            val shelf = categories.awaitAll().single { !it.isSystem }
+            val show = SAnime.create().apply {
+                url = "/anime"
+                title = "Updated title"
+            }
+
+            assertEquals(existing, store.setFavorite(8, show, true, setOf(0L, shelf.id)))
+            assertEquals("Updated title", anime.awaitById(existing)?.title)
+            assertEquals(setOf(shelf.id), store.observeLibrary().first().single().shelfIds)
+            assertEquals(listOf(shelf.id), categories.awaitByAnimeId(existing).map { it.id })
+            store.saveShelf(shelf, "On hold")
+            assertEquals("On hold", categories.awaitByAnimeId(existing).single().name)
+            val default = categories.awaitAll().single { it.isSystem }
+            categories.update(default.copy(name = "Changed"))
+            assertEquals(default, categories.awaitAll().single { it.isSystem })
+            store.deleteShelf(shelf.id)
+            assertEquals(setOf(0L), store.observeLibrary().first().single().shelfIds)
+        }
+    }
+
+    @Test
+    fun continueWatchingUsesTheMostRecentFavoriteAndAdvancesWhenItsEpisodeIsSeen() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val store = AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, history)
+            val first = anime.insert(Anime(source = 8, url = "/first", title = "First", favorite = true))
+            val second = anime.insert(Anime(source = 8, url = "/second", title = "Second", favorite = true))
+            val (older, latest, next) = episodes.insertAll(
+                listOf(
+                    Episode(first, "/older", "Older"),
+                    Episode(second, "/latest", "Latest", episodeNumber = 1.0, sourceOrder = 1),
+                    Episode(second, "/next", "Next", episodeNumber = 2.0, sourceOrder = 0),
+                ),
+            )
+            history.upsert(older, Date(100), 10)
+            history.upsert(latest, Date(200), 30)
+            assertEquals(latest, store.observeContinueWatching().first()?.episode?.id)
+
+            store.saveProgress(latest, AnimePlaybackCheckpoint(position = 85.0, duration = 100.0, watchSeconds = 5))
+            assertEquals(next, store.observeContinueWatching().first()?.episode?.id)
+            assertEquals(35L, history.awaitByEpisodeId(latest)?.timeWatched)
+        }
+    }
+
+    @Test
+    fun playbackMarksSeenAtEightyFivePercentAndDoesNotCountSeekDistance() {
+        assertTrue(!animeEpisodeSeen(84.99, 100.0))
+        assertTrue(animeEpisodeSeen(85.0, 100.0))
+        assertTrue(!animeEpisodeSeen(85.0, 0.0))
+        val progress = AnimePlaybackProgress()
+        progress.onDuration(100.0)
+        progress.onPosition(10.0)
+        progress.onPosition(11.0)
+        progress.skipNextIncrement()
+        progress.onPosition(85.0)
+        assertEquals(AnimePlaybackCheckpoint(85.0, 100.0, 1), progress.checkpoint())
+        assertEquals(85.0, progress.resumePosition())
+        assertNull(progress.checkpoint())
+    }
+
     @Test
     fun upgradePreservesBookRowsAndSeedsOnlyDefaultAnimeShelf() = runBlocking {
         withPreAnimeDatabase { driver ->

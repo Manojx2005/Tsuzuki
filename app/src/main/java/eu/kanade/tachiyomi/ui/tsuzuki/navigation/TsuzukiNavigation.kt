@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.tsuzuki.navigation
 
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.history.HistoryTab
@@ -9,24 +10,32 @@ import eu.kanade.tachiyomi.ui.library.NovelsTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.tsuzuki.home.TsuzukiHomeTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
+import eu.kanade.tachiyomi.util.system.isDebugBuildType
 
 /** The phone bar and tablet rail share destinations; History remains a retained, hidden tab. */
 object TsuzukiNavigation {
     val tabs: List<Tab> = listOf(TsuzukiHomeTab, NovelsTab, UpdatesTab, BrowseTab, MoreTab)
 
     fun selected(tab: cafe.adriel.voyager.navigator.tab.Tab): cafe.adriel.voyager.navigator.tab.Tab = when (tab) {
-        LibraryTab -> NovelsTab
+        LibraryTab, AnimeLibraryTab -> NovelsTab
         HistoryTab -> MoreTab
         else -> tab
     }
 
     fun restore(key: String?, joined: Boolean = false): Tab {
-        val retained = (tabs + LibraryTab + HistoryTab).firstOrNull { it.key == key } ?: TsuzukiHomeTab
+        val retained = if (isDebugBuildType && key == AnimeLibraryTab.key) {
+            AnimeLibraryTab
+        } else {
+            (tabs + LibraryTab + HistoryTab).firstOrNull { it.key == key } ?: TsuzukiHomeTab
+        }
         return if (joined && retained == LibraryTab) NovelsTab else retained
     }
 
-    fun library(key: String?, joined: Boolean): Tab =
-        if (!joined && key == LibraryTab.key) LibraryTab else NovelsTab
+    fun library(key: String?, joined: Boolean): Tab = when {
+        isDebugBuildType && key == AnimeLibraryTab.key -> AnimeLibraryTab
+        !joined && key == LibraryTab.key -> LibraryTab
+        else -> NovelsTab
+    }
 
     /** Route external shortcuts too, without turning History into a different destination. */
     fun destination(request: HomeScreen.Tab, library: Tab = NovelsTab): Tab = when (request) {

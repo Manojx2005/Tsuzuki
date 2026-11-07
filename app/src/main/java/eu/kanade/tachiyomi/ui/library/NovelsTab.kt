@@ -170,11 +170,17 @@ data object NovelsTab : Tab {
                 LibraryToolbar(
                     below = {
                         if (mixedLibrary && !state.selectionMode && state.toolbarQuery == null) {
+                            val animeTabs = cafe.adriel.voyager.navigator.tab.LocalTabNavigator.current
                             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
                                 novelCount = state.libraryData.novelCount,
                                 mangaCount = state.libraryData.mangaCount,
                                 showCounts = !viewModel.paginationEnabled && !state.isLoading,
                                 onFilterChanged = viewModel::clearSelection,
+                                onOpenAnime = if (eu.kanade.tachiyomi.util.system.isDebugBuildType) {
+                                    { animeTabs.current = eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab }
+                                } else {
+                                    null
+                                },
                             )
                         } else {
                             eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(isManga = false)

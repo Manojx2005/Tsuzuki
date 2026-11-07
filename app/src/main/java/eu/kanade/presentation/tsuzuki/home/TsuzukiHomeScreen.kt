@@ -136,6 +136,9 @@ fun TsuzukiHomeScreen(
         ) {
             val bottomPad = if (bottomBarOverlay) 110.dp else 24.dp
             when {
+                watching && eu.kanade.tachiyomi.util.system.isDebugBuildType -> {
+                    eu.kanade.presentation.tsuzuki.anime.TsuzukiAnimeWatch(bottomPad, actions.onBrowse)
+                }
                 watching -> WatchPlaceholder(onBack = { watching = false })
                 state.loading -> Unit
                 state.isEmpty -> EmptyHome(actions, compact = maxWidth < 600.dp, bottomPad = bottomPad)

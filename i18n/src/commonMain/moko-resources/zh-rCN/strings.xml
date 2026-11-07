@@ -930,6 +930,14 @@
     <string name="tsz_home">首页</string>
     <string name="tsz_read">阅读</string>
     <string name="tsz_watch">观看</string>
+    <string name="tsz_anime_media">动画</string>
+    <string name="tsz_anime_shelves">动画书架</string>
+    <string name="tsz_anime_shelves_hint">这些书架用于动画。小说和漫画各有自己的书架。</string>
+    <string name="tsz_anime_new_shelf">新建动画书架</string>
+    <string name="tsz_anime_continue_watching">继续观看</string>
+    <string name="tsz_anime_library_empty">动画库为空</string>
+    <string name="tsz_anime_shelf_count">%1$d 部动画</string>
+    <string name="tsz_anime_episode_progress">%1$d / %2$d 集</string>
     <string name="tsz_greeting_morning">今天早上</string>
     <string name="tsz_greeting_afternoon">今天下午</string>
     <string name="tsz_greeting_night">今晚</string>

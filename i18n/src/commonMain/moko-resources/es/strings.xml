@@ -917,6 +917,14 @@
     <string name="tsz_home">Inicio</string>
     <string name="tsz_read">Leer</string>
     <string name="tsz_watch">Ver</string>
+    <string name="tsz_anime_media">Anime</string>
+    <string name="tsz_anime_shelves">Estantes de anime</string>
+    <string name="tsz_anime_shelves_hint">Estantes de anime. Las novelas y el manga tienen sus propios estantes.</string>
+    <string name="tsz_anime_new_shelf">Nuevo estante de anime</string>
+    <string name="tsz_anime_continue_watching">Seguir viendo</string>
+    <string name="tsz_anime_library_empty">Tu biblioteca de anime está vacía</string>
+    <string name="tsz_anime_shelf_count">%1$d animes</string>
+    <string name="tsz_anime_episode_progress">%1$d / %2$d episodios</string>
     <string name="tsz_greeting_morning">Esta mañana</string>
     <string name="tsz_greeting_afternoon">Esta tarde</string>
     <string name="tsz_greeting_night">Esta noche</string>

@@ -11,9 +11,17 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimePlaybackProgress
 import eu.kanade.tsuzuki.animeplayer.MpvPlayer
 import `is`.xyz.mpv.MPVLib
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.File
 
 /**
@@ -27,6 +35,11 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
 
     private var started = false
     private var video: Video? = null
+    private var episode: Episode? = null
+    private val playbackProgress = AnimePlaybackProgress()
+
+    @Volatile private var visible = false
+    private var resumeAfterPause = false
     private var status: TextView? = null
     private var url: String? = null
     private var logObserver: MPVLib.LogObserver? = null
@@ -34,7 +47,9 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        video = AnimeDebugPlayback.take(intent)
+        val playback = AnimeDebugPlayback.take(intent)
+        video = playback?.video
+        episode = playback?.episode
         url = video?.videoUrl ?: intent.getStringExtra("url")
         if (url.isNullOrBlank()) {
             Toast.makeText(this, "Missing intent extra: url", Toast.LENGTH_LONG).show()
@@ -115,6 +130,9 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         setOpt("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
         setOpt("input-default-bindings", "yes")
         setOpt("keep-open", "yes")
+        episode?.lastSecondSeen?.takeIf { it > 0 && episode?.seen == false }?.let {
+            setOpt("start", it.toString())
+        }
         video?.headers?.let { headers ->
             // Use the dedicated string options for the headers commonly needed by embed hosts.
             for ((header, option) in listOf("Referer" to "referrer", "User-Agent" to "user-agent")) {
@@ -170,6 +188,12 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         }
 
         override fun eventProperty(property: String, value: Double) {
+            if (episode != null) {
+                when (property) {
+                    "duration" -> playbackProgress.onDuration(value)
+                    "time-pos" -> if (visible) playbackProgress.onPosition(value)
+                }
+            }
             // time-pos changes constantly; log it once per second.
             if (property == "time-pos") {
                 val second = value.toLong()
@@ -180,6 +204,7 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         }
 
         override fun event(eventId: Int) {
+            if (eventId == MPVLib.mpvEventId.MPV_EVENT_SEEK) playbackProgress.skipNextIncrement()
             val name = when (eventId) {
                 MPVLib.mpvEventId.MPV_EVENT_START_FILE -> "start-file"
                 MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> "file-loaded"
@@ -215,6 +240,7 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         MpvPlayer.attachSurface(holder.surface)
         // Forces mpv to render into the surface even if it would ordinarily not (BaseMPVView.surfaceCreated).
         setOpt("force-window", "yes")
+        if (episode != null) playbackProgress.resumePosition()?.let { setOpt("start", it.toString()) }
         MpvPlayer.command("loadfile", url!!)
     }
 
@@ -230,6 +256,37 @@ class AnimeDebugPlayerActivity : Activity(), SurfaceHolder.Callback {
         MpvPlayer.property("vo", "null")
         setOpt("force-window", "no")
         MpvPlayer.detachSurface()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        visible = true
+        playbackProgress.skipNextIncrement()
+        if (started && resumeAfterPause) MpvPlayer.property("pause", "no")
+    }
+
+    override fun onPause() {
+        visible = false
+        if (started && episode != null) {
+            resumeAfterPause = MPVLib.getPropertyBoolean("pause") == false
+            MpvPlayer.property("pause", "yes")
+        }
+        savePlaybackProgress()
+        super.onPause()
+    }
+
+    private fun savePlaybackProgress() {
+        val id = episode?.id ?: return
+        val checkpoint = playbackProgress.checkpoint() ?: return
+        Injekt.get<CoroutineScope>().launch {
+            try {
+                Injekt.get<AnimeLibraryStore>().saveProgress(id, checkpoint)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not save episode progress", e)
+            }
+        }
     }
 
     override fun onDestroy() {

@@ -180,7 +180,7 @@ object HomeScreen : Screen() {
                 if (isTsuzuki) {
                     androidx.compose.runtime.SideEffect {
                         retainedTsuzukiTab = tabNavigator.current.key
-                        if (tabNavigator.current is NovelsTab || tabNavigator.current is LibraryTab) {
+                        if (TsuzukiNavigation.selected(tabNavigator.current) == NovelsTab) {
                             retainedLibraryKey = tabNavigator.current.key
                         }
                     }

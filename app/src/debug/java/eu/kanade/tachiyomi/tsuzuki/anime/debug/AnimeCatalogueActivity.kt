@@ -56,13 +56,17 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
+import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
+import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -71,28 +75,40 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 class AnimeCatalogueActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!intent.hasExtra(ANIME_SOURCE_ID)) {
+        if (!intent.hasExtra(ANIME_SOURCE_ID) && !intent.hasExtra(SAVED_ANIME_ID)) {
             finish()
             return
         }
         val sourceId = intent.getLongExtra(ANIME_SOURCE_ID, -1L)
+        val savedId = intent.getLongExtra(SAVED_ANIME_ID, -1L)
+        val resumeId = intent.getLongExtra(RESUME_ANIME_EPISODE_ID, -1L)
         val openLatest = intent.getBooleanExtra(ANIME_OPEN_LATEST, false)
         val sources = AnimeSourceManager.create(applicationContext)
         val repository = AnimeDebugRepository(applicationContext)
+        val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
                 val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading) {
                     value = try {
                         sources.refresh()
-                        val entry = sources.get(sourceId)
+                        val saved = if (savedId >= 0) library.getAnime(savedId) else null
+                        val actualSource = saved?.source ?: sourceId
+                        val entry = sources.get(actualSource)
                         if (entry != null) {
-                            AnimeCatalogueLocation.Ready(entry)
+                            val resume = if (resumeId >= 0) library.getEpisode(resumeId) else null
+                            AnimeCatalogueLocation.Ready(
+                                entry,
+                                saved?.toSourceAnime(),
+                                resume?.takeIf { it.animeId == savedId }?.url,
+                            )
                         } else {
-                            AnimeCatalogueLocation.Missing(sources.stub(sourceId)?.name)
+                            AnimeCatalogueLocation.Missing(sources.stub(actualSource)?.name)
                         }
                     } catch (e: CancellationException) {
                         throw e
@@ -111,7 +127,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                     is AnimeCatalogueLocation.Ready -> {
                         val catalogueState = rememberSaveableStateHolder()
                         var appliedFilters by remember { mutableStateOf(AnimeFilterList()) }
-                        var selected by remember { mutableStateOf<SAnime?>(null) }
+                        var selected by remember { mutableStateOf(result.saved) }
                         val anime = selected
                         if (anime == null) {
                             catalogueState.SaveableStateProvider(sourceId) {
@@ -125,10 +141,17 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 )
                             }
                         } else {
-                            val back = { selected = null }
+                            val back = { if (result.saved != null) finish() else selected = null }
                             BackHandler(onBack = back)
-                            AnimeDetailsScreen(result.entry, anime, repository, back) {
-                                AnimeDebugPlayback.launch(this, it)
+                            AnimeDetailsScreen(
+                                result.entry,
+                                anime,
+                                repository,
+                                library,
+                                result.resumeUrl,
+                                back,
+                            ) { video, ep ->
+                                AnimeDebugPlayback.launch(this, video, ep)
                             }
                         }
                     }
@@ -140,7 +163,11 @@ class AnimeCatalogueActivity : BaseActivity() {
 
 private sealed interface AnimeCatalogueLocation {
     data object Loading : AnimeCatalogueLocation
-    data class Ready(val entry: RegisteredAnimeSource) : AnimeCatalogueLocation
+    data class Ready(
+        val entry: RegisteredAnimeSource,
+        val saved: SAnime?,
+        val resumeUrl: String?,
+    ) : AnimeCatalogueLocation
     data class Missing(val name: String?) : AnimeCatalogueLocation
 }
 

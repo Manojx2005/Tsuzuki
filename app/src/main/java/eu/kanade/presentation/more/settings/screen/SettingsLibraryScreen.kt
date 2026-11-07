@@ -86,7 +86,7 @@ object SettingsLibraryScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.categories),
-            preferenceItems = listOf(
+            preferenceItems = listOfNotNull(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.action_edit_categories),
                     subtitle = pluralStringResource(
@@ -96,6 +96,14 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     onClick = { navigator.push(CategoryScreen()) },
                 ),
+                if (eu.kanade.tachiyomi.util.system.isDebugBuildType) {
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.tsz_anime_shelves),
+                        onClick = { navigator.push(eu.kanade.presentation.tsuzuki.anime.AnimeShelvesScreen()) },
+                    )
+                } else {
+                    null
+                },
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.defaultCategory,
                     entries = ids.zip(labels).toMap(),
