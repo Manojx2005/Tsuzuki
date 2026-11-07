@@ -151,7 +151,7 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now (updated 2026-11-07 after V1 merged):** V1.1 → R6 → R7 → V3 → V4 → V5 → V6 → R8 rework →
+**Codex lane 2 order from now (updated 2026-11-07 after V1 merged):** V1.1 → V2b → R6 → R7 → V3 → V4 → V5 → V6 → R8 rework →
 R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
 for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
@@ -219,9 +219,25 @@ state (shelf, search, selection) can be checked; Claude re-tests both on the tab
 batch (none of its cards touch `HomeScreen.kt` or `MainActivity.kt`), but R2's Result claimed the root tab already
 survived process death.
 
-#### V2 Upstream merge + freeze (Claude) — `ready` after V1, R6, R7
+#### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; device TTS check pending in V7); Mihon part → V2b (Codex); freeze starts when V2b, R6, R7, V1.1 are merged
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
+
+#### V2b Mihon release picks (T3) — `ready` (start from current main; written by Claude 2026-11-07, owner: leave the rest to Codex)
+Claude ran `scripts/upstream-report.sh mihon`: 224 commits not taken, most already logged as picked or skipped in
+`docs/UPSTREAM.md`. For v0.1 take only these, one `git cherry-pick -x` each on `tsuzuki/v2b` (skip any already in
+main or logged in UPSTREAM.md; if one conflicts with a Tsuzuki hook, resolve keeping the Tsuzuki behaviour, or skip
+it and say why):
+- `35bb84705` reader: GPU texture leak when a decoded page is no longer usable (#3872)
+- `a82baac3e` tracking: Kitsu score-type crash from login (#3887)
+- `1e054ea14` tracking: inverted MAL OAuth expiry check (#3927)
+- `40f552981` duplicates: a blank title matched every library entry (#3308)
+- `4b48a84ec` backup: keep a stored track's remote entry when restoring
+- `6d4ed6cb2` extensions: backport class loader before Android 17
+- `b19c8abeb` tab badges stay visible when the label is too long (the final version; not 7a5632c01/e8977b4a6)
+- `0864ce0f4` redact sensitive headers in logcat (#4156): privacy, wanted for v0.1 even though it is flagged T/D
+Log each pick (or skip + reason) in `docs/UPSTREAM.md`. Build + unit tests. Result: list, test count, what Claude
+should check on a device (tracker login only if the owner approves; reader paging; Library duplicates; tab badges).
 
 #### V3 Watch teaser check (T1) — `ready` (start from current main) (owner 2026-11-07: keep the Read / Watch switch as a teaser)
 `presentation/tsuzuki/home/TsuzukiHomeScreen.kt` `WatchPlaceholder`: the copy must say anime is coming in a later
