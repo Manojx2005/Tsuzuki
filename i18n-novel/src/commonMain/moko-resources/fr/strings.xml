@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_manga">Mangas</string>
+    <string name="label_novels">Romans</string>
+    <string name="action_translate">Traduire</string>
+    <string name="pref_novel_status_bar">Barre d’état de lecture</string>
+    <string name="pref_novel_status_bar_customize">Personnaliser la barre d’état</string>
+    <string name="pref_novel_status_bar_customize_summary">Réorganiser, afficher ou masquer l’heure, le chapitre, la progression et la batterie</string>
+</resources>

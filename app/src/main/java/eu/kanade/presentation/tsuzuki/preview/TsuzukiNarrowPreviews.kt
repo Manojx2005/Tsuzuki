@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.preview
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +19,12 @@ import androidx.compose.material.icons.outlined.VerticalAlignTop
 import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -76,13 +81,72 @@ import java.util.Date
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
-@Preview(name = "EN 100%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "en", fontScale = 1f)
-@Preview(name = "EN 130%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "en", fontScale = 1.3f)
-@Preview(name = "EN 200%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "en", fontScale = 2f)
-@Preview(name = "JA 100%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "ja", fontScale = 1f)
-@Preview(name = "JA 130%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "ja", fontScale = 1.3f)
-@Preview(name = "JA 200%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "ja", fontScale = 2f)
+@Preview(
+    name = "EN 100%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "en",
+    fontScale = 1f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
+@Preview(
+    name = "EN 130%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "en",
+    fontScale = 1.3f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
+@Preview(
+    name = "EN 200%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "en",
+    fontScale = 2f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
+@Preview(
+    name = "JA 100%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "ja",
+    fontScale = 1f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
+@Preview(
+    name = "JA 130%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "ja",
+    fontScale = 1.3f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
+@Preview(
+    name = "JA 200%",
+    group = "360 dp",
+    widthDp = 360,
+    heightDp = 800,
+    locale = "ja",
+    fontScale = 2f,
+    uiMode = UI_MODE_NIGHT_YES,
+)
 private annotation class NarrowPreviews
+
+@Preview(name = "Portrait", group = "Tablet", widthDp = 753, heightDp = 1205, locale = "en", uiMode = UI_MODE_NIGHT_YES)
+@Preview(
+    name = "Landscape",
+    group = "Tablet",
+    widthDp = 1205,
+    heightDp = 753,
+    locale = "en",
+    uiMode = UI_MODE_NIGHT_YES,
+)
+private annotation class TabletPreviews
 
 internal class TsuzukiNarrowPreviews : PreviewParameterProvider<AppTheme> {
     override val values = sequenceOf(AppTheme.DOT, AppTheme.COLOUR)
@@ -91,8 +155,15 @@ internal class TsuzukiNarrowPreviews : PreviewParameterProvider<AppTheme> {
 @Composable
 private fun PreviewPage(theme: AppTheme, content: @Composable () -> Unit) {
     TachiyomiPreviewTheme(appTheme = theme) {
-        Column(Modifier.fillMaxSize().tsuzukiBackground(TsuzukiTheme.tokens).verticalScroll(rememberScrollState())) {
-            content()
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+            LocalTextStyle provides MaterialTheme.typography.bodySmall,
+        ) {
+            Column(
+                Modifier.fillMaxSize().tsuzukiBackground(TsuzukiTheme.tokens).verticalScroll(rememberScrollState()),
+            ) {
+                content()
+            }
         }
     }
 }
@@ -112,6 +183,7 @@ private fun chapterTitle(): String = if (LocalConfiguration.current.locales[0].l
 }
 
 @NarrowPreviews
+@TabletPreviews
 @Composable
 private fun HomePreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: AppTheme) {
     val title = longTitle()
@@ -135,6 +207,7 @@ private fun HomePreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: A
 }
 
 @NarrowPreviews
+@TabletPreviews
 @Composable
 private fun LibraryPreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: AppTheme) = PreviewPage(theme) {
     val title = longTitle()
@@ -282,6 +355,7 @@ private fun ReaderSettingsPreview(
 }
 
 @NarrowPreviews
+@TabletPreviews
 @Composable
 private fun SettingsPreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: AppTheme) = PreviewPage(theme) {
     TsuzukiSettingsTitle(stringResource(MR.strings.label_settings), onBack = {})
@@ -296,6 +370,7 @@ private fun SettingsPreview(@PreviewParameter(TsuzukiNarrowPreviews::class) them
 }
 
 @NarrowPreviews
+@TabletPreviews
 @Composable
 private fun UpdatesPreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: AppTheme) = PreviewPage(theme) {
     TsuzukiUpdatesTiles(newCount = 1871, toSave = 925, onSaveAll = {})

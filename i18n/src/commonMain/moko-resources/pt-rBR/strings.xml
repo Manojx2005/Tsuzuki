@@ -937,6 +937,7 @@
     <string name="tsz_start">Iniciar</string>
     <string name="tsz_new_chapters">Novos capítulos</string>
     <string name="tsz_new">Novo</string>
+    <string name="tsz_home_new_count">+%1$d novos</string>
     <string name="tsz_today">Hoje</string>
     <string name="tsz_min">min</string>
     <string name="tsz_library">Biblioteca</string>
@@ -961,14 +962,7 @@
     <string name="tsz_import_backup_sub">LNReader, Mihon, Tsundoku</string>
     <string name="tsz_open_epub">Abrir EPUB</string>
     <string name="tsz_open_epub_sub">Deste dispositivo</string>
-    <string name="tsz_coming_soon">Em breve</string>
-    <string name="tsz_watch_body">O anime está chegando: episódios e temporadas, um player mpv completo e acompanhamento de anime, com os mesmos dois temas. Seu progresso de leitura será preservado.</string>
-    <string name="tsz_watch_f1">Episódios e temporadas</string>
-    <string name="tsz_watch_f1_sub">Episódios de preenchimento marcados e contagem regressiva para o próximo episódio</string>
-    <string name="tsz_watch_f2">Player mpv</string>
-    <string name="tsz_watch_f2_sub">Pular aberturas, legendas, áudio e qualidade</string>
-    <string name="tsz_watch_f3">Importe sua biblioteca do Aniyomi</string>
-    <string name="tsz_watch_f3_sub">Backups e acompanhamento pelo AniList / MAL</string>
+    <string name="tsz_watch_body">A opção de assistir a animes chegará em uma versão futura do Tsuzuki.</string>
     <string name="tsz_back_to_reading">Voltar à leitura</string>
     <string name="tsz_search">Pesquisar</string>
     <string name="tsz_font_literata">Literata</string>

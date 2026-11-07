@@ -258,8 +258,7 @@ private fun ToggleTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = ink,
-            maxLines = 1,
-            softWrap = false,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         Text(

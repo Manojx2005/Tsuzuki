@@ -939,6 +939,7 @@
     <string name="tsz_start">시작</string>
     <string name="tsz_new_chapters">새 챕터</string>
     <string name="tsz_new">새 항목</string>
+    <string name="tsz_home_new_count">새 챕터 %1$d개</string>
     <string name="tsz_today">오늘</string>
     <string name="tsz_min">분</string>
     <string name="tsz_library">서재</string>
@@ -963,14 +964,7 @@
     <string name="tsz_import_backup_sub">LNReader, Mihon, Tsundoku</string>
     <string name="tsz_open_epub">EPUB 열기</string>
     <string name="tsz_open_epub_sub">이 기기에서</string>
-    <string name="tsz_coming_soon">출시 예정</string>
-    <string name="tsz_watch_body">애니메이션 기능이 곧 제공됩니다. 에피소드와 시즌, 완전한 mpv 플레이어, 시청 기록 연동을 같은 두 테마로 이용할 수 있어요. 독서 진행 상황은 그대로 유지됩니다.</string>
-    <string name="tsz_watch_f1">에피소드 및 시즌</string>
-    <string name="tsz_watch_f1_sub">필러 표시, 다음 에피소드 공개까지 남은 시간</string>
-    <string name="tsz_watch_f2">mpv 플레이어</string>
-    <string name="tsz_watch_f2_sub">오프닝 건너뛰기, 자막, 오디오, 화질</string>
-    <string name="tsz_watch_f3">Aniyomi 라이브러리 가져오기</string>
-    <string name="tsz_watch_f3_sub">백업 및 AniList / MAL 연동</string>
+    <string name="tsz_watch_body">애니메이션 시청은 Tsuzuki의 향후 버전에서 지원될 예정입니다.</string>
     <string name="tsz_back_to_reading">읽기로 돌아가기</string>
     <string name="tsz_search">검색</string>
     <string name="tsz_font_literata">Literata</string>

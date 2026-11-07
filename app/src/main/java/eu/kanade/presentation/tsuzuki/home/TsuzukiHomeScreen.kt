@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,6 +58,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -82,7 +84,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 /** Everything Home can do; the tab wires these to navigation. */
 data class HomeActions(
@@ -191,9 +192,10 @@ private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier
     }
 }
 
-/** Anime is designed (canvas page "Final · Anime") but not built yet; this keeps its place. */
+/** Release teaser for the Watch half of Home. */
 @Composable
 private fun WatchPlaceholder(onBack: () -> Unit) {
+    BackHandler(onBack = onBack)
     val t = TsuzukiTheme.tokens
     Column(
         Modifier
@@ -203,40 +205,12 @@ private fun WatchPlaceholder(onBack: () -> Unit) {
             .widthIn(max = 640.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(t.case(stringResource(MR.strings.tsz_coming_soon)), style = labelStyle(t), color = t.accent)
         Text(t.case(stringResource(MR.strings.tsz_watch)), style = displayStyle(56.sp), color = Color.White)
         Text(
-            t.case(
-                stringResource(MR.strings.tsz_watch_body),
-            ),
+            t.case(stringResource(MR.strings.tsz_watch_body)),
             style = bodyStyle(14.sp, FontWeight.Medium).copy(lineHeight = 21.sp),
             color = muted(t),
         )
-        Spacer(Modifier.height(4.dp))
-        listOf(
-            Icons.Filled.PlayArrow to
-                (stringResource(MR.strings.tsz_watch_f1) to stringResource(MR.strings.tsz_watch_f1_sub)),
-            Icons.Outlined.Explore to
-                (stringResource(MR.strings.tsz_watch_f2) to stringResource(MR.strings.tsz_watch_f2_sub)),
-            Icons.Outlined.FileUpload to
-                (stringResource(MR.strings.tsz_watch_f3) to stringResource(MR.strings.tsz_watch_f3_sub)),
-        ).forEach { (icon, text) ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .then(tileFill(t, hero = false))
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                Icon(icon, contentDescription = null, tint = t.accent, modifier = Modifier.size(22.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(t.case(text.first), style = bodyStyle(15.sp, FontWeight.ExtraBold), color = Color.White)
-                    Text(t.case(text.second), style = bodyStyle(12.sp, FontWeight.Medium), color = muted(t))
-                }
-            }
-        }
         Spacer(Modifier.height(4.dp))
         Text(
             t.case(stringResource(MR.strings.tsz_back_to_reading)),
@@ -1068,7 +1042,7 @@ private fun UnreadChip(count: Int, modifier: Modifier = Modifier, onHero: Boolea
         else -> t.onAccent
     }
     Text(
-        text = if (compact) count.toString() else t.case("+$count new"),
+        text = if (compact) count.toString() else t.case(stringResource(MR.strings.tsz_home_new_count, count)),
         style = bodyStyle(12.sp, FontWeight.ExtraBold),
         color = fg,
         modifier = modifier
@@ -1180,8 +1154,8 @@ private fun greeting(): String = when (Calendar.getInstance().get(Calendar.HOUR_
 
 @Composable
 private fun todayKicker(books: Int): String {
-    // Device locale, e.g. "Mon 2 Nov" or "11月3日(火)".
-    val pattern = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMM")
-    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date()) + " · " +
+    val locale = LocalConfiguration.current.locales[0]
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEdMMM")
+    return SimpleDateFormat(pattern, locale).format(Date()) + " · " +
         stringResource(MR.strings.tsz_books_count, books)
 }
