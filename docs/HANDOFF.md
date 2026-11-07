@@ -146,6 +146,9 @@ first, commit on the card branch, Result + `review`, blocked → next row). Boar
 (open `png/<page>/<Board>.png` + `dot/` + `html/`) unless the card names another. Priority order from the owner:
 stable → smooth/fast → design complete → Mihon parity → new features; anime has its own lane.
 
+**Owner 2026-11-07: v0.1 ships without anime (anime = v0.2); checklist in WORKPLAN Phase 7.** Lane 2 cards R6 and R7 come first.
+Anime lane rule until v0.2: no anime entry point may appear in a release build (gate with `BuildConfig.BUILD_TYPE == "debug"`, like the anime debug screen).
+
 **Lane 1 — anime (Codex thread 1, in order):** A2.3 → A2.4 → Y2 rework → Y6 rework → R-A1 → R-A2 → R-A3 → R-A4.
 **Lane 2 — app (Codex thread 2, in order):** R1 → R2 → … → R16 → R17. Lane 2 never touches anime files, and lane 1
 never touches R-card files; both threads: one Gradle build at a time each.

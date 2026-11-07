@@ -276,6 +276,29 @@ Downloads, Stats, More, Settings (Player), Backup, TrackerAccounts, Widgets, Ext
 
 ## Phase 7 — release v0.1 (owner-gated; don't start alone)
 
+**Owner decision 2026-11-07: v0.1 ships without anime; anime is v0.2.** The anime lane keeps going, but every
+anime entry point stays out of release builds until v0.2 (debug-only module, `BuildConfig.BUILD_TYPE == "debug"`
+checks). Today the only anime UI a release user can see is Home's Read / Watch switch and its Watch placeholder.
+
+**v0.1 checklist (in order):**
+1. Claude: device-check and merge the `review` cards (Y2, Y6, R1–R5, R9). R1 + R2 are the release-critical ones.
+2. Codex: R6 Colour parity, R7 Japanese layout. Claude reviews + merges. (R8/R10 reworks and R11–R17 are welcome
+   if they land in time, but don't block v0.1.)
+3. Claude: Tsundoku + Mihon upstream merge (C5), so v0.1 starts from current fixes.
+4. Owner decision: hide Home's Read / Watch switch in release builds (Claude's recommendation), or keep it as a
+   "coming soon" teaser.
+5. Owner: make the repo public (or name a releases repo); create the signing keystore + GitHub Actions secrets.
+6. Claude/Codex: remove Tsundoku's Firebase config (below), adapt `release.yml` + signing, `CHANGELOG.md`,
+   bump `versionName`.
+7. Claude: release-build regression pass on the tablet, S22 and the owner's phone (upgrade over the owner's
+   current release install with real data; Home, Library, reader, downloads, backup + restore, updater).
+8. Tag, publish, verify the in-app updater sees the release.
+
+Note: anime migration 36 (A2.2) is already in main, so v0.1 creates the (empty) anime tables. From v0.1 on, any
+anime schema change needs a new migration, not an edit to 36.
+
+Original Phase 7 notes:
+
 Owner: make repo public (or name a releases repo), create keystore + Actions secrets. Then Claude/Codex: remove
 or replace Tsundoku's Firebase config (`app/google-services.json`, `-Pinclude-telemetry` in `release.yml`)
 because `PRIVACY.md` promises no telemetry; adapt `release.yml` + signing block to Tsuzuki; `CHANGELOG.md`;
