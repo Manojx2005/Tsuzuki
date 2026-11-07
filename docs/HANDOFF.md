@@ -373,6 +373,10 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
   emptied with no errors.
 - **V7.2 fixed by Claude:** More tiles in Japanese cut off ダウンロードキュー / データとストレージ with "…"; tile titles now
   auto-size down to 75 % before ellipsizing (`TsuzukiMoreScreen.kt`). S22: both labels whole.
+- **Light mode bug fixed (owner report 2026-11-07):** picking Light (or System on a light phone) mixed a light Material
+  scheme into the dark-only Dot/Colour designs (white Settings pane, invisible labels, dark status icons on black).
+  Owner: "just remove it". Dot and Colour now always use night mode and Appearance no longer shows the switch.
+  `TsuzukiThemeModeTest` 2/2; tablet with Light stored renders correctly.
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.

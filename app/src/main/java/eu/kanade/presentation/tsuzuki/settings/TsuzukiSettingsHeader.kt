@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.ThemeMode
-import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiThemeReveal
@@ -120,7 +119,12 @@ fun TsuzukiThemeCards(appTheme: AppTheme, onPickTheme: (AppTheme) -> Unit, modif
     }
 }
 
-/** Appearance offers the same two themes as onboarding and the Settings header. */
+/**
+ * Appearance offers the same two themes as onboarding and the Settings header. Both are dark-only designs, so the
+ * System / Light / Dark choice is not shown ([effectiveThemeMode] always applies dark); the parameters stay for the
+ * upstream call site.
+ */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun TsuzukiAppearanceThemePicker(
     appTheme: AppTheme,
@@ -136,7 +140,6 @@ fun TsuzukiAppearanceThemePicker(
                 (context as? android.app.Activity)?.let { a -> androidx.core.app.ActivityCompat.recreate(a) }
             }
         })
-        AppThemeModePreferenceWidget(value = themeMode, onItemClick = onPickMode)
     }
 }
 
