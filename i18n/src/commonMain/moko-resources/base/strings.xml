@@ -1714,4 +1714,8 @@
     <string name="tsz_tracking_chapter_sync">Auto-sync when you finish a chapter</string>
     <string name="tsz_quotes_saved_count">%1$d saved</string>
     <string name="tsz_quotes_export">Export quotes</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Novel trackers</string>
+    <string name="tsz_tracker_signed_out">Not signed in</string>
+    <string name="tsz_tracker_linked_count">Linked %1$d</string>
 </resources>

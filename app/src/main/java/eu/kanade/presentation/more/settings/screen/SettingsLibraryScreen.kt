@@ -20,12 +20,16 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiUpdateCategoryRow
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiUpdateRestrictionRows
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
@@ -150,9 +154,26 @@ object SettingsLibraryScreen : SearchableSettings {
             )
         }
 
+        val themed = isTsuzukiStyle()
+        val restrictions = if (themed) {
+            tsuzukiUpdateRestrictionRows(libraryPreferences, scheduled = autoUpdateInterval > 0) {
+                LibraryUpdateJob.setupTask(context)
+            }
+        } else {
+            emptyList()
+        }
+        val categoryTitle = stringResource(MR.strings.categories)
+        val categoryLabel = getCategoriesLabel(allCategories, included, excluded)
+        val openCategories = { showCategoriesDialog = true }
+        val refreshMetadata = Preference.PreferenceItem.SwitchPreference(
+            preference = libraryPreferences.autoUpdateMetadata,
+            title = stringResource(MR.strings.pref_library_update_refresh_metadata),
+            subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
+        )
+
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_library_update),
-            preferenceItems = listOf(
+            preferenceItems = listOfNotNull(
                 Preference.PreferenceItem.ListPreference(
                     preference = autoUpdateIntervalPref,
                     entries = mapOf(
@@ -170,46 +191,56 @@ object SettingsLibraryScreen : SearchableSettings {
                     },
                     tsuzukiPills = true,
                 ),
-                Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.autoUpdateDeviceRestrictions,
-                    entries = mapOf(
-                        DEVICE_ONLY_ON_WIFI to stringResource(MR.strings.connected_to_wifi),
-                        DEVICE_NETWORK_NOT_METERED to stringResource(MR.strings.network_not_metered),
-                        DEVICE_CHARGING to stringResource(MR.strings.charging),
-                    ),
-                    title = stringResource(MR.strings.pref_library_update_restriction),
-                    subtitle = stringResource(MR.strings.restrictions),
-                    enabled = autoUpdateInterval > 0,
-                    onValueChanged = {
-                        // Post to event looper to allow the preference to be updated.
-                        ContextCompat.getMainExecutor(context).execute { LibraryUpdateJob.setupTask(context) }
-                        true
-                    },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.categories),
-                    subtitle = getCategoriesLabel(
-                        allCategories = allCategories,
-                        included = included,
-                        excluded = excluded,
-                    ),
-                    onClick = { showCategoriesDialog = true },
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.autoUpdateMetadata,
-                    title = stringResource(MR.strings.pref_library_update_refresh_metadata),
-                    subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
-                ),
-                Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.autoUpdateMangaRestrictions,
-                    entries = mapOf(
-                        MANGA_HAS_UNREAD to stringResource(MR.strings.pref_update_only_completely_read),
-                        MANGA_NON_READ to stringResource(MR.strings.pref_update_only_started),
-                        MANGA_NON_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
-                        MANGA_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
-                    ),
-                    title = stringResource(MR.strings.pref_library_update_smart_update),
-                ),
+                *restrictions.toTypedArray(),
+                if (!themed) {
+                    Preference.PreferenceItem.MultiSelectListPreference(
+                        preference = libraryPreferences.autoUpdateDeviceRestrictions,
+                        entries = mapOf(
+                            DEVICE_ONLY_ON_WIFI to stringResource(MR.strings.connected_to_wifi),
+                            DEVICE_NETWORK_NOT_METERED to stringResource(MR.strings.network_not_metered),
+                            DEVICE_CHARGING to stringResource(MR.strings.charging),
+                        ),
+                        title = stringResource(MR.strings.pref_library_update_restriction),
+                        subtitle = stringResource(MR.strings.restrictions),
+                        enabled = autoUpdateInterval > 0,
+                        onValueChanged = {
+                            // Post to event looper to allow the preference to be updated.
+                            ContextCompat.getMainExecutor(context).execute { LibraryUpdateJob.setupTask(context) }
+                            true
+                        },
+                    )
+                } else {
+                    null
+                },
+                if (themed) refreshMetadata else null,
+                if (themed) {
+                    tsuzukiUpdateCategoryRow(categoryTitle, categoryLabel, openCategories)
+                } else {
+                    Preference.PreferenceItem.TextPreference(
+                        title = categoryTitle,
+                        subtitle = categoryLabel,
+                        onClick = openCategories,
+                    )
+                },
+                if (!themed) refreshMetadata else null,
+                if (!themed) {
+                    Preference.PreferenceItem.MultiSelectListPreference(
+                        preference = libraryPreferences.autoUpdateMangaRestrictions,
+                        entries = mapOf(
+                            MANGA_HAS_UNREAD to stringResource(MR.strings.pref_update_only_completely_read),
+                            MANGA_NON_READ to stringResource(MR.strings.pref_update_only_started),
+                            MANGA_NON_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
+                            MANGA_OUTSIDE_RELEASE_PERIOD to
+                                stringResource(MR.strings.pref_update_only_in_release_period),
+                        ),
+                        title = stringResource(MR.strings.pref_library_update_smart_update),
+                    )
+                } else {
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = remember { Injekt.get<DownloadPreferences>() }.downloadNewChapters,
+                        title = stringResource(MR.strings.pref_download_new),
+                    )
+                },
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.skipUpdateTime,
                     entries = mapOf(

@@ -1,11 +1,14 @@
 package eu.kanade.presentation.tsuzuki.settings
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material3.Icon
@@ -14,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,16 +28,16 @@ import eu.kanade.tachiyomi.data.track.Tracker
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-/**
- * A tracker account row in the Tsuzuki themes (board 08-tools "TrackerAccounts"): logo, name, "Logged in · user" or
- * nothing, and on the right an accent check when signed in or an accent "Login" when not (the stock row's green check
- * breaks Dot's one-colour rule). Tapping logs in or out, as stock. The board's "Linked N" count isn't stored.
- */
+/** Uses local link counts and display names in the themed account list. */
 @Composable
-fun TsuzukiTrackerRow(tracker: Tracker, isLoggedIn: Boolean, onClick: (() -> Unit)?) {
+fun TsuzukiTrackerRow(
+    tracker: Tracker,
+    isLoggedIn: Boolean,
+    linkedCount: Int?,
+    onClick: (() -> Unit)?,
+) {
     val t = TsuzukiTheme.tokens
     val up: (String) -> String = { if (t.isDot) it.uppercase() else it }
-    val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
     Row(
         Modifier
             .fillMaxWidth()
@@ -43,27 +45,52 @@ fun TsuzukiTrackerRow(tracker: Tracker, isLoggedIn: Boolean, onClick: (() -> Uni
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TrackLogoIcon(tracker)
+        if (t.isDot) {
+            Box(
+                modifier = Modifier.size(42.dp)
+                    .border(1.dp, t.tileBorder ?: t.mutedText, RoundedCornerShape(4.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    tracker.name.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = t.dotOn,
+                )
+            }
+        } else {
+            TrackLogoIcon(tracker)
+        }
         Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
             Text(
                 up(tracker.name),
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold),
-                color = Color.White,
+                color = t.dotOn,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val status = if (isLoggedIn) {
+                val displayName = tracker.getDisplayUsername()
+                val label = stringResource(MR.strings.login_success)
+                if (displayName.isBlank()) label else "$label · $displayName"
+            } else {
+                stringResource(MR.strings.tsz_tracker_signed_out)
+            }
+            Text(
+                up(status),
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                color = t.mutedText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (isLoggedIn && linkedCount != null) {
+            Text(
+                up(stringResource(MR.strings.tsz_tracker_linked_count, linkedCount)),
+                style = MaterialTheme.typography.labelLarge,
+                color = t.accent,
                 maxLines = 1,
             )
-            val name = tracker.getDisplayUsername()
-            if (isLoggedIn) {
-                val status = stringResource(MR.strings.login_success)
-                Text(
-                    up(if (name.isNotBlank()) "$status · $name" else status),
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                    color = muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (isLoggedIn) {
+        } else if (isLoggedIn) {
             Icon(
                 Icons.Outlined.Done,
                 contentDescription = stringResource(MR.strings.login_success),

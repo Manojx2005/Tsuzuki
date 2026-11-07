@@ -1347,4 +1347,8 @@
     <string name="tsz_tracking_chapter_sync">Sincroniza automaticamente ao concluir um capítulo</string>
     <string name="tsz_quotes_saved_count">%1$d salvas</string>
     <string name="tsz_quotes_export">Exportar citações</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
+    <string name="tsz_tracker_signed_out">Não conectado</string>
+    <string name="tsz_tracker_linked_count">%1$d vinculados</string>
 </resources>

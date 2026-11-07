@@ -1350,4 +1350,8 @@
     <string name="tsz_tracking_chapter_sync">Beim Kapitelabschluss automatisch synchronisieren</string>
     <string name="tsz_quotes_saved_count">%1$d gespeichert</string>
     <string name="tsz_quotes_export">Zitate exportieren</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Roman-Tracker</string>
+    <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
+    <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
 </resources>
