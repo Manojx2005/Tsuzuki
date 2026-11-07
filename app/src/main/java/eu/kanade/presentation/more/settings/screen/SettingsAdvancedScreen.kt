@@ -35,7 +35,6 @@ import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -118,6 +117,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import eu.kanade.presentation.components.AnchoredDropdownMenu as DropdownMenu
 import tachiyomi.core.common.i18n.stringResource as contextStringResource
 
 object SettingsAdvancedScreen : SearchableSettings {

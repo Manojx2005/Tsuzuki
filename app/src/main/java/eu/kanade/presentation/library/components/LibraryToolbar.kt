@@ -224,6 +224,7 @@ private fun LibraryRegularToolbar(
                         title = stringResource(TDMR.strings.action_mass_import),
                         onClick = onClickMassImport,
                         icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.massImport,
+                        dividerBefore = true,
                     ),
                 )
             }
@@ -234,6 +235,7 @@ private fun LibraryRegularToolbar(
                         title = "Import EPUB",
                         onClick = onClickImportEpub,
                         icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.importEpub,
+                        dividerBefore = onClickMassImport == null,
                     ),
                 )
             }
@@ -244,6 +246,7 @@ private fun LibraryRegularToolbar(
                         title = "Find Duplicates",
                         onClick = onClickFindDuplicates,
                         icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.duplicates,
+                        dividerBefore = onClickMassImport == null && onClickImportEpub == null,
                     ),
                 )
             }

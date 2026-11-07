@@ -18,9 +18,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuIcon
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuStyle
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.material3.DropdownMenu as ComposeDropdownMenu
@@ -39,7 +42,7 @@ fun DropdownMenu(
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val tsuzuki = eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuStyle()
+    val tsuzuki = tsuzukiMenuStyle()
     if (tsuzuki != null) {
         ComposeDropdownMenu(
             expanded = expanded,
@@ -66,6 +69,22 @@ fun DropdownMenu(
         properties = properties,
         content = content,
     )
+}
+
+/** Keeps Material's normal anchor offset and natural width when using a stock theme. */
+@Composable
+fun AnchoredDropdownMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset.Zero,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (tsuzukiMenuStyle() != null) {
+        DropdownMenu(expanded, onDismissRequest, modifier, offset, content = content)
+        return
+    }
+    ComposeDropdownMenu(expanded, onDismissRequest, modifier, offset, content = content)
 }
 
 @Composable
@@ -101,6 +120,7 @@ fun NestedMenuItem(
     text: @Composable () -> Unit,
     children: @Composable ColumnScope.(() -> Unit) -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
 ) {
     var nestedExpanded by remember { mutableStateOf(false) }
     val closeMenu = { nestedExpanded = false }
@@ -109,6 +129,7 @@ fun NestedMenuItem(
         DropdownMenuItem(
             text = text,
             onClick = { nestedExpanded = true },
+            leadingIcon = tsuzukiMenuIcon(icon, destructive = false),
             trailingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowRight,
