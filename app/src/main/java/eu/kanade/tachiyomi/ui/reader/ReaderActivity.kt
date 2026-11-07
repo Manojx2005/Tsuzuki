@@ -48,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -84,17 +83,11 @@ import eu.kanade.presentation.reader.appbars.bottomBarItemInfo
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
-import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderListenPanel
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
-import eu.kanade.presentation.tsuzuki.reader.rememberReaderFold
-import eu.kanade.presentation.tsuzuki.reader.rememberReaderListeningState
-import eu.kanade.presentation.tsuzuki.reader.shouldDockReaderPanel
+import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
 import eu.kanade.presentation.util.formatChapterNumber
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
@@ -939,50 +932,12 @@ class ReaderActivity : BaseActivity() {
             var showBottomBarEditor by remember { mutableStateOf(false) }
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
-            val themedListening = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
-            val fold by rememberReaderFold(this@ReaderActivity, themedListening)
-            val controller = when (val viewer = state.viewer) {
-                is NovelViewer -> viewer.listeningController
-                is NovelWebViewViewer -> viewer.listeningController
-                else -> null
-            }
-            val canDockListening = themedListening && (
-                fold != null || shouldDockReaderPanel(isTabletUi(), LocalConfiguration.current.screenWidthDp)
-                )
-            val listening by rememberReaderListeningState(controller, canDockListening)
-            val ttsSessionActive = if (canDockListening) listening != null else isTtsActive
-            val chrome = tsuzukiChromeRequests.bind(
-                viewModel = viewModel,
-                state = state,
-                fold = fold,
-                listenContent = listening?.let { snapshot ->
-                    controller?.let { engine ->
-                        @Composable { close: () -> Unit ->
-                            val chapters = state.viewerChapters
-                            val chapterTitle = listOfNotNull(
-                                chapters?.currChapter,
-                                chapters?.prevChapter,
-                                chapters?.nextChapter,
-                            ).firstOrNull { it.chapter.id == engine.ttsPlaybackChapterId }?.chapter?.name
-                            TsuzukiReaderListenPanel(
-                                manga = state.manga,
-                                chapterTitle = chapterTitle,
-                                state = snapshot,
-                                controller = engine,
-                                preferences = readerPreferences,
-                                compact = fold != null,
-                                onTogglePlayback = {
-                                    if (engine.isPaused()) resumeTtsFromNotification() else pauseTtsFromNotification()
-                                    isTtsPaused = engine.isPaused()
-                                },
-                                onStepParagraph = ::stepTtsParagraph,
-                                onSeekParagraph = ::seekTtsToParagraph,
-                                onClose = close,
-                            )
-                        }
-                    }
-                },
+            val listenPanel = rememberTsuzukiListenPanel(
+                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused,
+                ::pauseTtsFromNotification, ::resumeTtsFromNotification, ::stepTtsParagraph, ::seekTtsToParagraph,
+                onPausedChanged = { isTtsPaused = it },
             )
+            val chrome = tsuzukiChromeRequests.bind(viewModel, state, listenPanel.fold, listenPanel.content)
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1116,8 +1071,8 @@ class ReaderActivity : BaseActivity() {
                 onToggleTranslation = viewModel::toggleTranslation,
                 onLongPressTranslation = viewModel::openTranslationLanguageDialog,
                 onRetranslate = if (state.isTranslating) viewModel::retranslateCurrentChapter else null,
-                isTtsActive = ttsSessionActive,
-                isTtsPaused = listening?.paused ?: isTtsPaused,
+                isTtsActive = listenPanel.sessionActive,
+                isTtsPaused = listenPanel.paused,
                 ttsControlsVisible = ttsControlsVisible,
                 onToggleTtsControls = toggle@{
                     chrome.onToggleListening?.let {
@@ -1129,7 +1084,7 @@ class ReaderActivity : BaseActivity() {
                     readerPreferences.novelTtsControlsVisible.set(nowVisible)
                     val viewer = state.viewer
                     if (nowVisible) {
-                        if (!ttsSessionActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
+                        if (!listenPanel.sessionActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
                             when (viewer) {
                                 is NovelViewer -> {
                                     startBackgroundTtsIfEnabled()
