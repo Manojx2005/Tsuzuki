@@ -78,7 +78,7 @@ class DownloadManager(
         get() = downloader.queueState
 
     // For use by DownloadService only
-    fun downloaderStart() = downloader.start()
+    fun downloaderStart(retryErrors: Boolean = true) = downloader.start(retryErrors)
     fun downloaderStop(reason: String? = null) = downloader.stop(reason)
 
     val isDownloaderRunning
@@ -103,6 +103,12 @@ class DownloadManager(
     fun pauseDownloads() {
         downloader.pause()
     }
+
+    val pausedMangaSourceIds get() = downloader.pausedMangaSourceIds
+
+    fun setMangaSourcePaused(sourceId: Long, paused: Boolean) = downloader.setMangaSourcePaused(sourceId, paused)
+
+    fun retryFailedDownloads(chapterIds: Set<Long>) = downloader.retryFailedDownloads(chapterIds)
 
     /**
      * Novel groups that are individually paused.

@@ -41,13 +41,14 @@ data class NovelDownloadItem(
     val sourceName: String,
     val subItems: List<Download>,
     val initialTotal: Int, // Total chapters when the download batch started
+    val statuses: List<Download.State> = subItems.map(Download::status),
 ) {
     val remainingChapters: Int get() = subItems.size
 
     // Downloaded chapters = initial total - remaining (since completed are removed from queue)
     val downloadedChapters: Int get() = (initialTotal - remainingChapters).coerceAtLeast(0)
     val totalChapters: Int get() = initialTotal
-    val currentDownload: Download? get() = subItems.find { it.status == Download.State.DOWNLOADING }
+    val currentDownload: Download? get() = subItems.getOrNull(statuses.indexOf(Download.State.DOWNLOADING))
 
     // Chapter-based progress. Per-chapter page progress is meaningless for novels (a chapter is a
     // single text page that flips 0->100 instantly), so the bar tracks completed chapters only.
@@ -57,7 +58,10 @@ data class NovelDownloadItem(
     }
 
     val isActive: Boolean get() = currentDownload != null
-    val erroredDownloads: List<Download> get() = subItems.filter { it.status == Download.State.ERROR }
+    val erroredDownloads: List<Download> get() = subItems.filterIndexed { index, _ ->
+        statuses[index] ==
+            Download.State.ERROR
+    }
     val hasError: Boolean get() = erroredDownloads.isNotEmpty()
 
     /** Per-chapter failure reason (first line of the stored error). */
@@ -74,7 +78,7 @@ data class NovelDownloadItem(
     val statusText: String get() = when {
         hasError -> "Error"
         isActive -> "Downloading"
-        subItems.all { it.status == Download.State.QUEUE } && subItems.isNotEmpty() -> "Queued"
+        statuses.all { it == Download.State.QUEUE } && statuses.isNotEmpty() -> "Queued"
         downloadedChapters == totalChapters -> "Completed"
         else -> "Pending"
     }
@@ -264,6 +268,13 @@ class DownloadQueueViewModel(
     fun pauseDownloads() {
         downloadManager.pauseDownloads()
     }
+
+    val pausedMangaSourceIds = downloadManager.pausedMangaSourceIds
+
+    fun setMangaSourcePaused(sourceId: Long, paused: Boolean) = downloadManager.setMangaSourcePaused(sourceId, paused)
+
+    fun retryFailedDownloads(downloads: List<Download>) =
+        downloadManager.retryFailedDownloads(downloads.mapTo(HashSet(), Download::chapterId))
 
     val pausedNovelMangaIds = downloadManager.pausedNovelMangaIds
 

@@ -20,6 +20,9 @@ import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
+import eu.kanade.tachiyomi.tsuzuki.download.DownloadQueueControls
+import eu.kanade.tachiyomi.tsuzuki.download.activeMangaDownloads
+import eu.kanade.tachiyomi.tsuzuki.download.pendingDownloadsForStart
 import eu.kanade.tachiyomi.util.chapter.ChapterImageEmbedder
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
@@ -27,6 +30,7 @@ import eu.kanade.tachiyomi.util.storage.saveTo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -36,7 +40,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -47,6 +50,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Semaphore
@@ -118,6 +122,10 @@ class Downloader(
         NovelDownloadEngine(context, novelDownloadPreferences, translationPreferences, translationService)
     val pausedNovelMangaIds = novel.pausedMangaIds
 
+    private val queueControls = MutableStateFlow(DownloadQueueControls())
+    private val runningDownloads = ConcurrentHashMap<Download, Job>()
+    val pausedMangaSourceIds = queueControls.map { it.pausedMangaSources }.distinctUntilChanged()
+
     /**
      * Notifier for the downloader state and progress.
      */
@@ -161,12 +169,13 @@ class Downloader(
      *
      * @return true if the downloader is started, false otherwise.
      */
-    fun start(): Boolean {
+    fun start(retryErrors: Boolean = true): Boolean {
         if (isRunning || queueState.value.isEmpty()) {
             return false
         }
 
-        val pending = queueState.value.filter { it.status != Download.State.DOWNLOADED }
+        val pending = pendingDownloadsForStart(queueState.value, retryErrors)
+        if (pending.isEmpty()) return false
         pending.forEach {
             if (it.status != Download.State.QUEUE) it.status = Download.State.QUEUE
             // Clear previous errors when retrying.
@@ -177,7 +186,7 @@ class Downloader(
 
         launchDownloaderJob()
 
-        return pending.isNotEmpty()
+        return true
     }
 
     /**
@@ -229,6 +238,7 @@ class Downloader(
         cancelDownloaderJob()
 
         internalClearQueue()
+        queueControls.update { it.copy(pausedMangaSources = emptySet()) }
         notifier.dismissProgress()
     }
 
@@ -251,6 +261,45 @@ class Downloader(
         }
     }
 
+    fun setMangaSourcePaused(sourceId: Long, paused: Boolean) {
+        queueControls.update {
+            val sources = if (paused) it.pausedMangaSources + sourceId else it.pausedMangaSources - sourceId
+            it.copy(pausedMangaSources = sources)
+        }
+        if (!paused) startQueuedDownloads()
+    }
+
+    fun retryFailedDownloads(chapterIds: Set<Long>) {
+        scope.launchIO {
+            val pending = queueState.value.filter { it.chapterId in chapterIds && it.status == Download.State.ERROR }
+            // A failed row can be visible before the attempt has released its archive/page writes.
+            pending.mapNotNull(runningDownloads::get).joinAll()
+            val failed = queueState.value.filter { it in pending && it.status == Download.State.ERROR }
+            if (failed.isEmpty()) return@launchIO
+            failed.forEach {
+                it.clearError()
+                it.status = Download.State.QUEUE
+            }
+            queueControls.update { it.copy(retryGeneration = it.retryGeneration + 1) }
+            val pausedSources = queueControls.value.pausedMangaSources
+            if (failed.any {
+                    if (it.source.isNovelSource()) {
+                        it.mangaId !in pausedNovelMangaIds.value
+                    } else {
+                        it.source.id !in
+                            pausedSources
+                    }
+                }
+            ) {
+                startQueuedDownloads()
+            }
+        }
+    }
+
+    private fun startQueuedDownloads() {
+        if (!isRunning && !isPaused) DownloadJob.start(context, retryErrors = false)
+    }
+
     /**
      * Prepares the subscriptions to start downloading.
      */
@@ -267,20 +316,15 @@ class Downloader(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
                 novel.parallelLimit(),
-                // Re-evaluate the active set whenever a group is paused/resumed.
+                // Group controls and targeted retries can change what is runnable without changing queue membership.
                 novel.pausedMangaIds,
-            ) { queue, parallelCount, parallelNovelCount, _ ->
-                Triple(queue, parallelCount, parallelNovelCount)
-            }.transformLatest { (queue, parallelCount, parallelNovelCount) ->
+                queueControls,
+            ) { queue, parallelCount, parallelNovelCount, _, controls ->
+                Triple(queue, parallelCount to parallelNovelCount, controls.pausedMangaSources)
+            }.transformLatest { (queue, limits, pausedSources) ->
+                val (parallelCount, parallelNovelCount) = limits
                 while (true) {
-                    val activeDownloads = queue.asSequence()
-                        .filterNot { it.source.isNovelSource() }
-                        // Ignore completed downloads, leave them in the queue
-                        .filter { it.status.value <= Download.State.DOWNLOADING.value }
-                        .groupBy { it.source }
-                        .toList()
-                        .take(parallelCount.coerceAtLeast(1))
-                        .map { (_, downloads) -> downloads.first() } +
+                    val activeDownloads = activeMangaDownloads(queue, parallelCount, pausedSources) +
                         novel.pickActive(queue, parallelNovelCount)
                     emit(activeDownloads)
 
@@ -293,42 +337,39 @@ class Downloader(
                     activeDownloadsErroredFlow.first()
                 }
             }
-                .distinctUntilChanged()
 
             // Use supervisorScope to cancel child jobs when the downloader job is cancelled
             supervisorScope {
                 val sourceJobs = mutableMapOf<CatalogueSource, Job>()
-                val downloadJobs = ConcurrentHashMap<Download, Job>()
                 // Tsuzuki: novels keep one job per chapter, picked by NovelDownloadEngine.pickActive
                 val novelJobs = mutableMapOf<Download, Job>()
 
                 // A source runs several of its chapters at once, so a removed one is stopped by itself
                 launch {
                     queueState.collect { queue ->
-                        downloadJobs.keys.filter { it !in queue }.forEach { downloadJobs.remove(it)?.cancel() }
+                        runningDownloads.filterKeys { it !in queue }.values.forEach { it.cancel() }
                     }
                 }
 
-                activeDownloadsFlow.collectLatest { allActiveDownloads ->
+                activeDownloadsFlow.collect { allActiveDownloads ->
                     val (novelDownloads, activeDownloads) = allActiveDownloads.partition { it.source.isNovelSource() }
-                    novelJobs.filter { it.key !in novelDownloads }.forEach { (download, job) ->
-                        job.cancel()
-                        novelJobs.remove(download)
-                    }
-                    novelDownloads.filter { it !in novelJobs }.forEach { download ->
-                        novelJobs[download] = launchDownloadJob(download, Semaphore(1), CompletableDeferred())
-                    }
+                    val novelJobsToStop = novelJobs.filterKeys { it !in novelDownloads }
+                    val activeSources = activeDownloads.mapTo(HashSet()) { it.source }
+                    val sourceJobsToStop = sourceJobs.filterKeys { it !in activeSources }
+                    val stoppedJobs = novelJobsToStop.values + sourceJobsToStop.values
+                    stoppedJobs.forEach { it.cancel() }
+                    // Wait for cancellation to reset statuses and release the old page/archive writes before resuming.
+                    stoppedJobs.joinAll()
+                    novelJobsToStop.keys.forEach(novelJobs::remove)
+                    sourceJobsToStop.keys.forEach(sourceJobs::remove)
 
-                    val activeSources = activeDownloads.map { it.source }
-                    val sourceJobsToStop = sourceJobs.filter { it.key !in activeSources }
-                    sourceJobsToStop.forEach { (source, job) ->
-                        job.cancel()
-                        sourceJobs.remove(source)
+                    novelDownloads.filter { novelJobs[it]?.isCompleted != false }.forEach { download ->
+                        novelJobs[download] = launchDownloadJob(download, Semaphore(1), CompletableDeferred())
                     }
 
                     val sourcesToStart = activeSources.filter { it !in sourceJobs }
                     sourcesToStart.forEach { source ->
-                        sourceJobs[source] = launchSourceJob(source, downloadJobs)
+                        sourceJobs[source] = launchSourceJob(source)
                     }
                 }
             }
@@ -340,27 +381,22 @@ class Downloader(
      * chapter starts once every page of the current one has a slot, so slots don't sit idle while a chapter's last
      * pages finish and it's archived.
      */
-    private fun CoroutineScope.launchSourceJob(
-        source: CatalogueSource,
-        downloadJobs: MutableMap<Download, Job>,
-    ) = launchIO {
+    private fun CoroutineScope.launchSourceJob(source: CatalogueSource) = launchIO {
         val slots = Semaphore(downloadPreferences.parallelPageLimit.get())
         while (true) {
             // A canceled job can mark a chapter as downloading after it's been reset, so that counts as waiting too
-            val download = queueState
-                .map { queue ->
-                    queue.firstOrNull {
-                        it.source == source &&
-                            (it.status == Download.State.QUEUE || it.status == Download.State.DOWNLOADING) &&
-                            it !in downloadJobs
-                    }
+            val download = combine(queueState, queueControls) { queue, controls ->
+                queue.firstOrNull {
+                    it.source == source &&
+                        source.id !in controls.pausedMangaSources &&
+                        (it.status == Download.State.QUEUE || it.status == Download.State.DOWNLOADING) &&
+                        runningDownloads[it]?.isCompleted != false
                 }
+            }
                 .filterNotNull()
                 .first()
             val pagesStarted = CompletableDeferred<Unit>()
-            val job = launchDownloadJob(download, slots, pagesStarted)
-            downloadJobs[download] = job
-            job.invokeOnCompletion { downloadJobs.remove(download, job) }
+            launchDownloadJob(download, slots, pagesStarted)
             pagesStarted.await()
         }
     }
@@ -369,7 +405,21 @@ class Downloader(
         download: Download,
         slots: Semaphore,
         pagesStarted: CompletableDeferred<Unit>,
-    ) = launchIO {
+    ): Job {
+        val job = launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+            runDownload(download, slots, pagesStarted)
+        }
+        runningDownloads[download] = job
+        job.invokeOnCompletion { runningDownloads.remove(download, job) }
+        job.start()
+        return job
+    }
+
+    private suspend fun runDownload(
+        download: Download,
+        slots: Semaphore,
+        pagesStarted: CompletableDeferred<Unit>,
+    ) {
         try {
             // Per-request pacing now happens in the shared OkHttp client
             // (see PerHostDynamicRateLimitInterceptor), not here.
