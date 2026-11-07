@@ -177,7 +177,7 @@ R11–R17, P1.11 storage async migration, Phase 5 features without a card.
 4. Answer the permission questions (V3 Watch switch, device use, phone upgrade, test installs, language switch,
    pushes). Answers are recorded under "Owner permissions for v0.1" below.
 
-#### V1 Review batch (Claude) — `ready`
+#### V1 Review batch (Claude) — `claude-working` (`review/night5` in `.worktrees/review5`, 2026-11-07; Codex: don't touch Y2, Y6, R1–R5, R9 branches)
 Merge Y2, Y6, R1, R2, R3, R4, R5, R9 into a `review/night5` branch, resolve overlaps, build, unit tests, install on
 the tablet + S22. Per card: its "Claude device checks" list. Plus C4: restore R1's synthetic 500-book backup into a
 **scratch** install and record `gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse; and R2:
