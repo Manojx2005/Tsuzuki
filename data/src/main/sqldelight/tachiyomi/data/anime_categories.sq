@@ -1,0 +1,45 @@
+CREATE TABLE anime_categories(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    sort INTEGER NOT NULL,
+    flags INTEGER NOT NULL
+);
+
+INSERT INTO anime_categories(_id, name, sort, flags) VALUES (0, '', -1, 0);
+
+CREATE TRIGGER system_anime_category_delete_trigger
+BEFORE DELETE ON anime_categories
+WHEN old._id = 0
+BEGIN
+    SELECT RAISE(ABORT, 'System anime category cannot be deleted');
+END;
+
+getAll:
+SELECT * FROM anime_categories ORDER BY sort, _id;
+
+getForAnime:
+SELECT anime_categories.*
+FROM anime_categories
+LEFT JOIN animes_categories ON animes_categories.category_id = anime_categories._id
+    AND animes_categories.anime_id = :animeId
+WHERE animes_categories._id IS NOT NULL OR (
+    anime_categories._id = 0 AND EXISTS (SELECT 1 FROM animes WHERE _id = :animeId)
+    AND NOT EXISTS (SELECT 1 FROM animes_categories WHERE anime_id = :animeId)
+)
+ORDER BY anime_categories.sort, anime_categories._id;
+
+insert:
+INSERT INTO anime_categories(name, sort, flags)
+VALUES (:name, (SELECT coalesce(max(sort), -1) + 1 FROM anime_categories), :flags);
+
+update:
+UPDATE anime_categories SET name = :name, flags = :flags WHERE _id = :id;
+
+setOrder:
+UPDATE anime_categories SET sort = :sort WHERE _id = :id AND _id != 0;
+
+delete:
+DELETE FROM anime_categories WHERE _id = :id AND _id != 0;
+
+lastInsertedId:
+SELECT last_insert_rowid();

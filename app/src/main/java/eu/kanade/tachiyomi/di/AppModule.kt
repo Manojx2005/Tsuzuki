@@ -50,6 +50,7 @@ import tachiyomi.data.Mangas
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
+import tachiyomi.data.anime.AnimeDatabaseAdapters
 import tachiyomi.domain.download.service.RateLimitResolver
 import tachiyomi.domain.download.service.SourceRateLimitPolicy
 import tachiyomi.domain.source.service.SourceManager
@@ -93,6 +94,9 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory {
             Database(
                 driver = get(),
+                anime_historyAdapter = AnimeDatabaseAdapters.history,
+                animesAdapter = AnimeDatabaseAdapters.animes,
+                episodesAdapter = AnimeDatabaseAdapters.episodes,
                 historyAdapter = History.Adapter(
                     last_readAdapter = DateColumnAdapter,
                 ),

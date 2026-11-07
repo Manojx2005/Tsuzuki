@@ -1,0 +1,56 @@
+import java.util.Date;
+
+CREATE TABLE anime_history(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    episode_id INTEGER NOT NULL UNIQUE,
+    last_seen INTEGER AS Date,
+    time_watched INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(episode_id) REFERENCES episodes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX anime_history_episode_id_index ON anime_history(episode_id);
+CREATE INDEX idx_anime_history_last_seen ON anime_history(last_seen);
+
+CREATE TRIGGER anime_agg_history_upsert
+AFTER INSERT ON anime_history
+BEGIN
+    UPDATE animes SET last_seen = max(last_seen, ifnull(CAST(new.last_seen AS INTEGER), 0))
+    WHERE _id = (SELECT anime_id FROM episodes WHERE _id = new.episode_id);
+END;
+
+CREATE TRIGGER anime_agg_history_update
+AFTER UPDATE OF last_seen ON anime_history
+BEGIN
+    UPDATE animes SET last_seen = max(last_seen, ifnull(CAST(new.last_seen AS INTEGER), 0))
+    WHERE _id = (SELECT anime_id FROM episodes WHERE _id = new.episode_id);
+END;
+
+getByEpisodeId:
+SELECT * FROM anime_history WHERE episode_id = :episodeId;
+
+getContinueWatching:
+SELECT animes._id AS anime_id, episodes._id AS episode_id, anime_history.last_seen
+FROM anime_history
+JOIN episodes ON episodes._id = anime_history.episode_id
+JOIN animes ON animes._id = episodes.anime_id
+WHERE animes.favorite = 1 AND anime_history.last_seen IS NOT NULL
+    AND anime_history._id = (
+        SELECT candidate._id
+        FROM episodes AS anime_episode
+        JOIN anime_history AS candidate ON candidate.episode_id = anime_episode._id
+        WHERE anime_episode.anime_id = animes._id AND candidate.last_seen IS NOT NULL
+        ORDER BY candidate.last_seen DESC, candidate._id DESC LIMIT 1
+    )
+ORDER BY anime_history.last_seen DESC, anime_history._id DESC;
+
+upsert:
+INSERT INTO anime_history(episode_id, last_seen, time_watched)
+VALUES (:episodeId, :lastSeen, :watchSeconds)
+ON CONFLICT(episode_id) DO UPDATE SET
+    last_seen = CASE
+        WHEN excluded.last_seen IS NULL THEN anime_history.last_seen
+        WHEN anime_history.last_seen IS NULL THEN excluded.last_seen
+        ELSE max(anime_history.last_seen, excluded.last_seen)
+    END,
+    time_watched = anime_history.time_watched + excluded.time_watched;

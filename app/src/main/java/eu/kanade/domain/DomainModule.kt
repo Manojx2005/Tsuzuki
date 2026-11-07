@@ -44,6 +44,12 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.domain.migration.usecases.MigrateMangaUseCase
 import mihon.domain.source.interactor.UpdateMangaFromRemote
 import mihon.domain.upcoming.interactor.GetUpcomingManga
+import tachiyomi.data.anime.AnimeCategoryRepositoryImpl
+import tachiyomi.data.anime.AnimeHistoryRepositoryImpl
+import tachiyomi.data.anime.AnimeRepositoryImpl
+import tachiyomi.data.anime.AnimeSourceRepositoryImpl
+import tachiyomi.data.anime.AnimeTrackRepositoryImpl
+import tachiyomi.data.anime.EpisodeRepositoryImpl
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.chapter.ChapterRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
@@ -54,6 +60,9 @@ import tachiyomi.data.source.StubSourceRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.translation.TranslatedChapterRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
+import tachiyomi.domain.category.anime.interactor.AnimeCategories
+import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
+import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
 import tachiyomi.domain.category.interactor.DeleteCategory
 import tachiyomi.domain.category.interactor.GetCategories
@@ -74,12 +83,23 @@ import tachiyomi.domain.chapter.interactor.SetMangaDefaultChapterFlags
 import tachiyomi.domain.chapter.interactor.ShouldUpdateDbChapter
 import tachiyomi.domain.chapter.interactor.UpdateChapter
 import tachiyomi.domain.chapter.repository.ChapterRepository
+import tachiyomi.domain.entries.anime.interactor.GetAnime
+import tachiyomi.domain.entries.anime.interactor.InsertAnime
+import tachiyomi.domain.entries.anime.interactor.UpdateAnime
+import tachiyomi.domain.entries.anime.repository.AnimeRepository
+import tachiyomi.domain.history.anime.interactor.GetAnimeContinueWatching
+import tachiyomi.domain.history.anime.interactor.UpsertAnimeHistory
+import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.GetNextChapters
 import tachiyomi.domain.history.interactor.GetTotalReadDuration
 import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryRepository
+import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
+import tachiyomi.domain.items.episode.interactor.InsertEpisodes
+import tachiyomi.domain.items.episode.repository.EpisodeRepository
+import tachiyomi.domain.library.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.library.interactor.RefreshLibraryCache
 import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.domain.manga.interactor.FindDuplicateNovels
@@ -99,10 +119,13 @@ import tachiyomi.domain.manga.interactor.UpdateMangaNotes
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
+import tachiyomi.domain.source.anime.repository.AnimeSourceRepository
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryManga
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
+import tachiyomi.domain.track.anime.interactor.AnimeTracks
+import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import tachiyomi.domain.track.interactor.DeleteTrack
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.domain.track.interactor.GetTracksPerManga
@@ -122,6 +145,9 @@ class DomainModule : InjektModule {
 
     override fun InjektRegistrar.registerInjectables() {
         addSingletonFactory<CategoryRepository> { CategoryRepositoryImpl(get()) }
+        addSingletonFactory<AnimeCategoryRepository> { AnimeCategoryRepositoryImpl(get()) }
+        addFactory { AnimeCategories(get()) }
+        addFactory { SetAnimeCategories(get()) }
         addFactory { GetCategories(get()) }
         addFactory { ResetCategoryFlags(get(), get()) }
         addFactory { SetDisplayMode(get()) }
@@ -132,6 +158,11 @@ class DomainModule : InjektModule {
         addFactory { DeleteCategory(get(), get(), get()) }
 
         addSingletonFactory<MangaRepository> { MangaRepositoryImpl(get()) }
+        addSingletonFactory<AnimeRepository> { AnimeRepositoryImpl(get()) }
+        addFactory { GetAnime(get()) }
+        addFactory { InsertAnime(get()) }
+        addFactory { UpdateAnime(get()) }
+        addFactory { GetLibraryAnime(get()) }
         addFactory { GetDuplicateLibraryManga(get(), get()) }
         addFactory { FindDuplicateNovels(get()) }
         addFactory { SearchMangaMetadata(get()) }
@@ -169,6 +200,8 @@ class DomainModule : InjektModule {
         addFactory { GetApplicationRelease(get()) }
 
         addSingletonFactory<TrackRepository> { TrackRepositoryImpl(get()) }
+        addSingletonFactory<AnimeTrackRepository> { AnimeTrackRepositoryImpl(get()) }
+        addFactory { AnimeTracks(get()) }
         addFactory { TrackChapter(get(), get(), get(), get()) }
         addFactory { AddTracks(get(), get(), get(), get()) }
         addFactory { RefreshTracks(get(), get(), get(), get()) }
@@ -179,6 +212,9 @@ class DomainModule : InjektModule {
         addFactory { SyncChapterProgressWithTrack(get(), get(), get()) }
 
         addSingletonFactory<ChapterRepository> { ChapterRepositoryImpl(get()) }
+        addSingletonFactory<EpisodeRepository> { EpisodeRepositoryImpl(get()) }
+        addFactory { GetEpisodesByAnimeId(get()) }
+        addFactory { InsertEpisodes(get()) }
         addFactory { GetChapter(get()) }
         addFactory { GetChaptersByMangaId(get()) }
         addFactory { GetBookmarkedChaptersByMangaId(get()) }
@@ -193,6 +229,9 @@ class DomainModule : InjektModule {
         addFactory { SearchChapterNames(get()) }
 
         addSingletonFactory<HistoryRepository> { HistoryRepositoryImpl(get()) }
+        addSingletonFactory<AnimeHistoryRepository> { AnimeHistoryRepositoryImpl(get()) }
+        addFactory { GetAnimeContinueWatching(get()) }
+        addFactory { UpsertAnimeHistory(get()) }
         addFactory { GetHistory(get()) }
         addFactory { UpsertHistory(get()) }
         addFactory { RemoveHistory(get()) }
@@ -213,6 +252,7 @@ class DomainModule : InjektModule {
 
         addSingletonFactory<SourceRepository> { SourceRepositoryImpl(get(), get()) }
         addSingletonFactory<StubSourceRepository> { StubSourceRepositoryImpl(get()) }
+        addSingletonFactory<AnimeSourceRepository> { AnimeSourceRepositoryImpl(get()) }
         addFactory { GetEnabledSources(get(), get(), get()) }
         addFactory { GetEnabledNovelSources(get(), get(), get()) }
         addFactory { GetLanguagesWithSources(get(), get()) }

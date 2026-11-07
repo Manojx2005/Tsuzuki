@@ -1,0 +1,121 @@
+import kotlin.Boolean;
+import kotlinx.serialization.json.JsonObject;
+
+CREATE TABLE episodes(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    seen INTEGER AS Boolean NOT NULL,
+    bookmark INTEGER AS Boolean NOT NULL,
+    fillermark INTEGER AS Boolean NOT NULL DEFAULT 0,
+    last_second_seen INTEGER NOT NULL,
+    total_seconds INTEGER NOT NULL,
+    episode_number REAL NOT NULL,
+    source_order INTEGER NOT NULL,
+    date_fetch INTEGER NOT NULL,
+    date_upload INTEGER NOT NULL,
+    summary TEXT,
+    preview_url TEXT,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    memo BLOB AS JsonObject NOT NULL DEFAULT '{}',
+    FOREIGN KEY(anime_id) REFERENCES animes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX episodes_anime_id_index ON episodes(anime_id);
+CREATE INDEX episodes_unseen_by_anime_index ON episodes(anime_id, seen) WHERE seen = 0;
+CREATE INDEX episodes_library_aggregate_index ON episodes(anime_id, seen, bookmark, date_upload, date_fetch);
+CREATE INDEX episodes_updates_idx ON episodes(date_fetch DESC, anime_id, date_upload);
+CREATE INDEX episodes_url_index ON episodes(url);
+
+CREATE TRIGGER update_last_modified_at_episodes
+AFTER UPDATE ON episodes
+FOR EACH ROW
+BEGIN
+  UPDATE episodes
+  SET last_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_episode_and_anime_version AFTER UPDATE ON episodes
+WHEN new.is_syncing = 0 AND (
+    new.seen != old.seen OR
+    new.bookmark != old.bookmark OR
+    new.last_second_seen != old.last_second_seen
+)
+BEGIN
+    -- Update the episode version
+    UPDATE episodes SET version = version + 1
+    WHERE _id = new._id;
+
+    -- Update the anime version
+    UPDATE animes SET version = version + 1
+    WHERE _id = new.anime_id AND (SELECT is_syncing FROM animes WHERE _id = new.anime_id) = 0;
+END;
+
+CREATE TRIGGER anime_agg_episode_insert
+AFTER INSERT ON episodes
+BEGIN
+    UPDATE animes SET
+        total_count = total_count + 1,
+        seen_count = seen_count + new.seen,
+        bookmark_count = bookmark_count + new.bookmark,
+        latest_upload = max(latest_upload, new.date_upload),
+        episode_fetched_at = max(episode_fetched_at, new.date_fetch)
+    WHERE _id = new.anime_id;
+END;
+
+CREATE TRIGGER anime_agg_episode_update
+AFTER UPDATE OF seen, bookmark, date_upload, date_fetch ON episodes
+WHEN new.seen != old.seen OR new.bookmark != old.bookmark
+    OR new.date_upload != old.date_upload OR new.date_fetch != old.date_fetch
+BEGIN
+    UPDATE animes SET
+        seen_count = seen_count + new.seen - old.seen,
+        bookmark_count = bookmark_count + new.bookmark - old.bookmark,
+        latest_upload = coalesce((SELECT max(date_upload) FROM episodes WHERE anime_id = new.anime_id), 0),
+        episode_fetched_at = coalesce((SELECT max(date_fetch) FROM episodes WHERE anime_id = new.anime_id), 0)
+    WHERE _id = new.anime_id;
+END;
+
+CREATE TRIGGER anime_agg_episode_delete
+AFTER DELETE ON episodes
+BEGIN
+    UPDATE animes SET
+        total_count = total_count - 1,
+        seen_count = seen_count - old.seen,
+        bookmark_count = bookmark_count - old.bookmark,
+        latest_upload = coalesce((SELECT max(date_upload) FROM episodes WHERE anime_id = old.anime_id), 0),
+        episode_fetched_at = coalesce((SELECT max(date_fetch) FROM episodes WHERE anime_id = old.anime_id), 0),
+        last_seen = coalesce((
+            SELECT max(anime_history.last_seen)
+            FROM anime_history JOIN episodes ON episodes._id = anime_history.episode_id
+            WHERE episodes.anime_id = old.anime_id
+        ), 0)
+    WHERE _id = old.anime_id;
+END;
+
+getByAnimeId:
+SELECT * FROM episodes WHERE anime_id = :animeId ORDER BY source_order, _id;
+
+getById:
+SELECT * FROM episodes WHERE _id = :id;
+
+insert:
+INSERT INTO episodes (
+    anime_id, url, name, scanlator, seen, bookmark, fillermark, last_second_seen, total_seconds,
+    episode_number, source_order, date_fetch, date_upload, summary, preview_url, memo
+) VALUES ?;
+
+updateProgress:
+UPDATE episodes SET seen = :seen, last_second_seen = :lastSecondSeen, total_seconds = :totalSeconds WHERE _id = :id;
+
+delete:
+DELETE FROM episodes WHERE _id = :id;
+
+lastInsertedId:
+SELECT last_insert_rowid();
