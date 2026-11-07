@@ -24,6 +24,7 @@ class TtsController(
     interface Callbacks {
         fun onInitialized(pendingRequest: StartRequest?)
         fun getCurrentPage(): ReaderPage?
+        fun onPlaybackStarted()
         fun onHighlightChunk(chunkIndex: Int, chunk: String, startOffset: Int, paragraphIndex: Int)
         fun onClearHighlights()
         fun onLastChunkDone()
@@ -219,10 +220,12 @@ class TtsController(
 
     fun speakChunksFrom(startIndex: Int) {
         if (ttsChunks.isEmpty() || startIndex >= ttsChunks.size) return
+        val engine = tts ?: return
+        callbacks.onPlaybackStarted()
         ttsChunks.drop(startIndex).forEachIndexed { i, chunk ->
             val actualIndex = startIndex + i
             val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            tts?.speak(chunk, mode, null, "tts_utterance_$actualIndex")
+            engine.speak(chunk, mode, null, "tts_utterance_$actualIndex")
         }
     }
 

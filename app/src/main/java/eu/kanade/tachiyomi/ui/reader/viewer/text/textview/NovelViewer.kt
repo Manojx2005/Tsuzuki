@@ -419,6 +419,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     private fun saveProgress(progress: Float) {
         currentPage?.let { page ->
             val progressValue = (progress * 100f).roundToInt().coerceIn(0, 100)
+            activity.noteNovelReadingProgress(page, progressValue, listening = ttsController.isTtsAutoPlay)
             activity.saveNovelProgress(page, progressValue)
             logcat(LogPriority.DEBUG) { "NovelViewer: Saving progress $progressValue% for chapter" }
         }
@@ -806,6 +807,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
 
             override fun getCurrentPage(): ReaderPage? = currentPage
+
+            override fun onPlaybackStarted() = activity.discardNovelReadingSample()
 
             override fun onHighlightChunk(chunkIndex: Int, chunk: String, startOffset: Int, paragraphIndex: Int) {
                 applyTtsHighlight(chunk, startOffset, paragraphIndex)
@@ -1492,6 +1495,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             return
         }
 
+        activity.cacheNovelEstimateWords(chapter.chapter.id, rawContent)
         val existingIndex = loadedChapters.indexOfFirst { it.chapter.chapter.id == chapter.chapter.id }
         if (existingIndex >= 0) {
             logcat(LogPriority.DEBUG) {
@@ -2034,6 +2038,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     fun isAutoScrollActive(): Boolean = isAutoScrolling
 
     fun scrollToTop() {
+        activity.discardNovelReadingSample()
         scrollView.scrollTo(0, 0)
     }
 
@@ -2083,6 +2088,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     fun setProgressPercent(percent: Int) {
+        activity.discardNovelReadingSample()
         val progress = percent.coerceIn(0, 100) / 100f
         setScrollProgress(progress)
         maybeLoadNextChapterFromSlider()

@@ -1294,6 +1294,8 @@
     <string name="tsz_continue">Continue</string>
     <string name="tsz_start_reading">Start reading</string>
     <string name="tsz_resume">Resume</string>
+    <string name="tsz_time_left_chapter">%1$s left in chapter</string>
+    <string name="tsz_time_left_book">%1$s left in book</string>
     <string name="tsz_start">Start</string>
     <string name="tsz_new_chapters">New chapters</string>
     <string name="tsz_new">New</string>

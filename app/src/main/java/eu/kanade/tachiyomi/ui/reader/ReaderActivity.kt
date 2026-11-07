@@ -87,6 +87,7 @@ import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
 import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
 import eu.kanade.presentation.util.formatChapterNumber
@@ -704,11 +705,13 @@ class ReaderActivity : BaseActivity() {
      */
     override fun onResume() {
         super.onResume()
-        lifecycleScope.launch { viewModel.restartReadTimerSynced() }
+        val listening = currentNovelTtsState()?.active == true
+        lifecycleScope.launch {
+            viewModel.restartReadTimerSynced()
+            if (listening) viewModel.discardNovelReadingSample()
+        }
         setMenuVisibility(viewModel.state.value.menuVisible)
-        if (readerPreferences.novelTtsBackgroundPlayback.get() &&
-            currentNovelTtsState()?.active == true
-        ) {
+        if (readerPreferences.novelTtsBackgroundPlayback.get() && listening) {
             startTtsNotificationSync()
             syncBackgroundTtsState()
         }
@@ -950,6 +953,13 @@ class ReaderActivity : BaseActivity() {
 
                 novelTitle = state.manga?.title,
                 chapterTitle = formattedChapterTitle,
+                estimates = {
+                    val manga = state.manga
+                    val chapterId = state.novelVisibleChapter?.id ?: state.currentChapter?.chapter?.id
+                    if (manga != null && chapterId != null) {
+                        TsuzukiReadingEstimateLabel(manga, chapterId, novelProgressFromState)
+                    }
+                },
                 navigateUp = onBackPressedDispatcher::onBackPressed,
                 onClickTopAppBar = ::openMangaScreen,
                 bookmarked = state.bookmarked,
@@ -1773,6 +1783,14 @@ class ReaderActivity : BaseActivity() {
     fun onPageSelected(page: ReaderPage, spreadStart: Int? = null) {
         viewModel.onPageSelected(page, spreadStart)
     }
+
+    internal fun cacheNovelEstimateWords(chapterId: Long?, content: String) =
+        viewModel.cacheNovelEstimateWords(chapterId, content)
+
+    internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) =
+        viewModel.noteNovelReadingProgress(page, progress, listening)
+
+    internal fun discardNovelReadingSample() = viewModel.discardNovelReadingSample()
 
     /**
      * Called from the novel viewer to save reading progress with a percentage.

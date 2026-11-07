@@ -42,6 +42,8 @@ import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.rateLimitHost
+import eu.kanade.tachiyomi.tsuzuki.NovelReadingEstimates
+import eu.kanade.tachiyomi.tsuzuki.NovelReadingSession
 import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
 import eu.kanade.tachiyomi.tsuzuki.reader.NovelNextChapterWarmup
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
@@ -226,6 +228,8 @@ class ReaderViewModel @JvmOverloads constructor(
      * The time the chapter was started reading
      */
     private var chapterReadStartTime: Long? = null
+    private val novelReadingSession = NovelReadingSession()
+    private val novelEstimates by lazy { Injekt.get<NovelReadingEstimates>() }
 
     private var chapterToDownload: Download? = null
 
@@ -1060,7 +1064,28 @@ class ReaderViewModel @JvmOverloads constructor(
         updateChapter.awaitAll(duplicateUnreadChapters)
     }
 
+    internal fun cacheNovelEstimateWords(chapterId: Long?, content: String) {
+        if (chapterId == null || incognitoMode) return
+        viewModelScope.launch(Dispatchers.Default) { novelEstimates.cacheWords(chapterId, content) }
+    }
+
+    internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) {
+        if (incognitoMode) return
+        if (listening) {
+            novelReadingSession.discard()
+            return
+        }
+        val chapter = page.chapter.chapter
+        val id = chapter.id ?: return
+        novelReadingSession.note(id, chapter.last_page_read, progress)
+    }
+
+    internal fun discardNovelReadingSample() = novelReadingSession.discard()
+
     fun restartReadTimer() {
+        // The first resume can precede loading the book. Only non-incognito novel viewers
+        // contribute progress, so the timer can start before the book is known.
+        novelReadingSession.start()
         chapterReadStartTime = Clock.System.now().toEpochMilliseconds()
     }
 
@@ -1099,6 +1124,9 @@ class ReaderViewModel @JvmOverloads constructor(
         val endTime = Date()
         val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
         recordTsuzukiReadingTime(sessionReadDuration)
+        if (manga?.isNovel == true) {
+            novelEstimates.recordSession(sessionReadDuration, novelReadingSession.finish())
+        }
 
         // Novels stamp last_read on chapter entry via setNovelVisibleChapter, which owns recency.
         // Re-stamping it here (on a chapter switch or pause flush) can push the just-left chapter's

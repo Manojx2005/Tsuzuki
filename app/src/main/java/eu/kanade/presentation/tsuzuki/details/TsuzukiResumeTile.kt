@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,8 +30,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
+import eu.kanade.tachiyomi.ui.manga.MangaViewModel
+import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+
+@Composable
+internal fun TsuzukiDetailsResumeTile(
+    state: MangaViewModel.State.Success,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val next = remember(state.chapters, state.manga) { state.chapters.getNextUnread(state.manga) }
+    TsuzukiResumeTile(
+        readCount = state.chapters.count { it.chapter.read },
+        total = state.chapters.size,
+        nextChapter = next?.name,
+        onClick = onClick,
+        modifier = modifier,
+        estimates = {
+            if (state.isNovel && next != null) {
+                val chapters = remember(state.chapters) { state.chapters.map { it.chapter } }
+                TsuzukiReadingEstimateLabel(state.manga, next.id, next.lastPageRead.toInt(), chapters)
+            }
+        },
+    )
+}
 
 /**
  * Resume tile on book details (board "NovelDetails"): play disc, what comes next, and progress
@@ -43,6 +69,7 @@ fun TsuzukiResumeTile(
     nextChapter: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    estimates: @Composable () -> Unit = {},
 ) {
     val t = TsuzukiTheme.tokens
     val ink = t.dotOn
@@ -94,6 +121,7 @@ fun TsuzukiResumeTile(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            estimates()
             if (total > 0) {
                 TsuzukiProgressBar(
                     progress = readCount.toFloat() / total,
