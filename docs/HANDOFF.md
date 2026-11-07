@@ -568,7 +568,7 @@ ANIME_SCHEMA §7); Apache-2.0 only — Aniyomi files may be ported only if their
 ported file + upstream revision in Result; nothing visible to normal users in release builds until A2.4 (Watch
 tab already exists as a placeholder). No GPL. Never download or install anything yourself — no network in tests.
 
-#### A1.5 Anime: debug extension install → list sources → play (T3) — `codex-working` (.worktrees/a1.5, 2026-11-06)
+#### A1.5 Anime: debug extension install → list sources → play (T3) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`)
 Board: `docs/design/boards/fixes-2026-11/AnimeDebug.html` / `png/AnimeDebug.png` (Dot only).
 Goal: from a **debug-only** developer screen, add an Aniyomi-format extension repo URL, list its extensions, install
 one into the private dir (`files/anime-exts`, via the loader ported in `9b2a924de` with the host's trust/signature
@@ -583,9 +583,15 @@ list of the first episode and play it in the N22 debug player (`anime-player` mo
   on the screen (not swallowed).
 - Entry point: a row in the existing debug/developer settings screen (find where N22's debug player is launched).
 - Tests: index parser, URL mapping, install-state model. Result: what Claude must tap to play an episode.
-Result: _pending_
 
-#### A2.2 Anime tables + data layer — migration 36 (T4) — `ready`
+**Result (Codex, 2026-11-07):** `tsuzuki/a1.5` @ `03038f852`. **893 tests, 0 failures.** JDK 21, per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- `AnimeRepoIndexParser.kt` validates JSON entries and maps GitHub URLs to their repo branch, including Yūzōnō's separate anime-repo alias. `AnimeRepoIndexParserTest.kt` and the synthetic `anime-repo-index.json` cover parsing, URL mapping, unsafe paths and the four install states.
+- `AnimeDebugRepository.kt` keeps repo URLs in a debug preference, fetches via NetworkHelper, checks the APK package/version/signature and installs via the existing private loader. Existing packages are reused. Untrusted packages require a separate fingerprint confirmation before they load. No third-party source code was copied.
+- `AnimeDebugActivity.kt` adds the five-step Dot flow through Popular, episodes and playable video choices. The debug manifest registers it privately. Upstream hook `DebugInfoScreen.kt` adds the row only to the debug build. Eight locale files add the new interface labels.
+- `AnimeDebugPlayback.kt` and the N22 `AnimeDebugPlayerActivity.kt` hook hand the selected video to mpv in memory and support Referer, User-Agent and Origin. This debug path omits extension-specific mpv arguments, cookies, alternate tracks and local servers. Only the JSON index is in scope. Secozzi's current advertised protobuf URL has not been exercised.
+- Claude device check on the scratch arm64 debug install: Settings > Developer/Debug info > Anime test. Enter the approved Yūzōnō GitHub URL, tap Load, Install one extension, then Trust after checking the package, version and fingerprint. Tap Popular on its source, Episodes on a title, Load first episode videos, then Play on a video. Confirm playback and seek, Back returns to the flow, and reopening lists the saved repo and trusted source. Repeat repo loading with the approved Secozzi URL and record any live index error. No repo/APK was fetched or installed by Codex.
+
+#### A2.2 Anime tables + data layer — migration 36 (T4) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`)
 Implement ANIME_SCHEMA §2–§3 and §7 **with the §9 decisions** (separate `anime_categories`; `anime_sync`; season
 columns kept; no fansub exclusion; no `extension_store` column).
 - `ls data/src/main/sqldelight/tachiyomi/migrations | sort -n | tail -1` → use latest + 1 (35 → `36.sqm`). One
@@ -602,18 +608,28 @@ columns kept; no fansub exclusion; no `extension_store` column).
 - Backup proto: **not in this card** (A2.5 later).
 - Claude: line-by-line review + kotlin-reviewer agent, then scratch-install upgrade test on the tablet (a second
   install of an older build, never the owner's apps), then merge (owner allowed if all pass).
-Result: _pending_
 
-#### A2.3 Anime sources + browse catalogue (T3) — `ready` (needs A1.5, A2.2)
+**Result (Codex, 2026-11-07):** `tsuzuki/a2.2` @ `6323ef6bb`. **910 tests, 0 failures.** JDK 21, two per-file Spotless passes and `:app:assembleDebug :app:testDebugUnitTest` green. No device actions.
+- `36.sqm` creates the seven anime tables, matching the new `animes.sq`, `episodes.sq`, `anime_history.sq`, `anime_categories.sq`, `animes_categories.sq`, `anime_sync.sq` and `anime_sources.sq`. It seeds only the protected anime default shelf. Episode counters and guarded history timestamps are maintained separately from books. The four season columns are stored, and the source/URL index and category links are unique.
+- `AnimeDatabaseAdapters.kt` registers enum, memo, list and date columns. `AnimeRepositoryImpl.kt` handles identity and library queries. `EpisodeRepositoryImpl.kt` handles episode reads, inserts and progress. `AnimeHistoryRepositoryImpl.kt` handles accumulated watch seconds and one latest watch per anime. `AnimeCategoryRepositoryImpl.kt` handles shelves, order and transactional links. `AnimeTrackRepositoryImpl.kt` upserts stable tracker identities. `AnimeSourceRepositoryImpl.kt` persists stub source metadata.
+- Domain `Anime.kt`, `Episode.kt`, `AnimeHistory.kt`, `AnimeCategory.kt`, `AnimeTrack.kt`, `StubAnimeSource.kt` and `LibraryAnime.kt` define separate anime records. Their repository contracts and `AnimeInteractors.kt`, `EpisodeInteractors.kt`, `AnimeHistoryInteractors.kt`, `AnimeCategoryInteractors.kt`, `AnimeTracks.kt` and `GetLibraryAnime.kt` expose the A2 operations.
+- Upstream `AppModule.kt` wires the adapters and `DomainModule.kt` registers the repositories and interactors. `app/build.gradle.kts` and `gradle/libs.versions.toml` add a test-only SQLDelight JDBC driver. `AnimeDatabaseTest.kt` tests unchanged book fixtures, fresh/upgrade schema equality, repository round-trips, cascades and NULL history. Since the repo has no pre-anime schema snapshot, the tests reconstruct schema version 36 by removing only the seven new tables before applying migration 36 to reach version 37. A separate in-memory SQLite run compared all 80 schema entries.
+- No backup proto, season UI, fansub exclusion or extension-store schema changes. Watch time remains in anime history. No Aniyomi implementation files were ported.
+- Claude review gate: review migration line by line. In a scratch tablet profile only, copy and hash the old build's 12-file DB/WAL/SHM, prefs and WorkManager backup, install the migration build, compare all old book rows and schema, confirm only anime shelf 0 is seeded and run integrity/foreign-key checks. Verify the old novel/manga Home, Library, History and Updates still open. Also check fresh startup. For rollback, reinstall the pre-migration APK, restore the 12 backed-up files and verify hashes. SQLite does not support reopening the upgraded DB with the older app. Never run the upgrade or rollback drill on the owner's live data.
+
+#### A2.3 Anime sources + browse catalogue (T3) — `ready` (A1.5 + A2.2 are in main: start from main, no prerequisite merge)
+**Claude 2026-11-07:** A1.5 + A2.2 are being merged into main by Claude (string conflicts resolved there); when the A2.2 card says `done`, start A2.3 from main (no prerequisite merge needed).
 Register installed anime extensions as sources in an `AnimeSourceManager` (stub via `anime_sources` when the
 extension is gone). Browse → a WATCH/ANIME media pill alongside novels/manga only when ≥ 1 anime extension is
 installed (stays hidden otherwise; release users see nothing new). Catalogue screen: Popular / Latest / Search +
 filters using the existing Tsuzuki browse grid components, cover → anime details stub (title, cover, description,
 episode list from the source, PLAY first/next episode in the player). Boards: `docs/design/boards/png/10-anime/`
 (BrowseAnime, AnimeDetails; Dot + Colour). Tests: source registration + stub fallback.
-Result: _pending_
 
-#### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `ready` (needs A2.3)
+**Result (Codex, 2026-11-07):** Needs Claude to merge A1.5 first. Merging `tsuzuki/a1.5` at `03038f852` into A2.3 from `main` at `f6cff8b77` conflicted in all eight `i18n/src/commonMain/moko-resources/*/strings.xml` files. The merge was aborted, so A2.2 was not merged and no A2.3 work was committed.
+
+#### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `ready` (needs A2.3 — merge `tsuzuki/a2.3` first per the run rules)
+**From the A2.2 review (fix in A2.4):** `AnimeCategoryRepositoryImpl.setForAnime` must not insert a link row for the default shelf `0` when other shelves are chosen; `AnimeRepositoryImpl.insert` returns the existing id for a duplicate (source, url) without updating fields — call `update` after it when adding to the library.
 Boards: `fixes-2026-11/AnimeShelves` + `ColourAnimeShelves` (shelf management), `png/10-anime/AnimeLibrary`, `AnimeHome` (with Q5's nav).
 Add to library from anime details (writes `animes.favorite`, anime categories picker using `anime_categories`).
 Home's Watch tab becomes real: Continue watching (from `anime_history`), shelf row; Library gets the anime media
@@ -621,48 +637,96 @@ switch (board `LibraryMixed`, `AnimeLibrary`, `AnimeHome`) showing anime shelves
 screen reusing the Tsuzuki category components with the anime repository. Episode progress saved from the
 player (position, seen at ≥ 85 %). Watch minutes recorded separately (not in `ReadingDays`). Boards in
 `png/10-anime/`. Tests: progress threshold, continue-watching ordering, shelf CRUD.
-Result: _pending_
+
+**Result (Codex, 2026-11-07):** Needs A2.3 first. A2.3's A1.5 prerequisite merge conflicted and was aborted. The A2.3 branch contains no catalogue, details or player integration to extend. No A2.4 changes were made.
 
 ### Wave Y (owner approved 2026-11-06; after the anime lane)
 
 Same general rule as wave X: check first whether it already exists; if done, set `done` with where.
 
-#### Y1 Mihon skipped fixes, top group (T3) — `ready`
+#### Y1 Mihon skipped fixes, top group (T3) — `done`
 `docs/UPSTREAM.md` "Skipped for conflicts": take the most valuable group (downloads, tablet FAB, range-selection
 crash, WebView) that is still missing. Port each fix with the smallest diff, cite the Mihon commit hash per fix in
 Result, skip any that conflicts with Tsuzuki hooks and say why. Tests where Mihon had them.
-Result: _pending_
 
-#### Y2 Tablet manga two-page spread (T3) — `ready`
+**Result (Codex, 2026-11-07):** Already on main. `7edc18c05` covers Mihon `88d4071cc` (startup cache rescan), `f28b2d887` (cancel removed-chapter queue entries), and `f82a7a68f` (fresh notification builders, with Tsuzuki's per-chapter error suppression retained). `DownloadProvider.kt` and its existing `DownloadProviderTest.kt` cover `f0f1e4de5` and `a5d584eeb`. The speed picks `730e43fd1`, `f02bf5ba7`, `9a6dea804`, and `fb8e640d6` are recorded in UPSTREAM's order 8 hand-port log. `2135d3852` already ports `c279291e2` (tablet FAB) and `a6ee4bc59` (range selection). The WebView group `649fc83ff`, `5a5ff22c3`, `5f63c983d`, `7ae858e60` is documented in the 2026-11-04 WebView entry. The remaining `ba16158b1` requires Mihon's subscriber gate and download-state refactor and removes row progress used by Tsuzuki. Kept that documented skip. No new code or build required for this audit.
+
+#### Y2 Tablet manga two-page spread (T3) — `ready` (sent back by Claude 2026-11-07)
+**Claude review 2026-11-07 — rework on `tsuzuki/y2` (keep your commit, add a fix commit):** the pairing logic is
+good, but `PagerViewer.kt` (+99/−30) rewrites Mihon's `onPageChange` forward/preload block and long-tap handling for
+every pager reader, and pulls `UiPreferences` via Injekt into the viewer. That changes behaviour for all manga
+reading and makes every Mihon/Tsundoku merge of `PagerViewer` conflict. Move the spread logic behind a small
+Tsuzuki helper (e.g. `tsuzuki/reader/MangaSpreadController` owning `updateSpreadLayout`, page-shape bookkeeping and
+the `MangaSpread` → `ReaderPage` mapping); `PagerViewer` keeps the original `onPageChange` block untouched when the
+spread is inactive and gets ≤ ~15 lines of one-line calls. Pass "themed" in from the activity instead of reading
+`UiPreferences` in the viewer. Same for `PagerViewerAdapter` (keep its upstream code paths intact when inactive).
 Board `png/11-tablet/TabletReader.png` / `TabletMangaSpread` (+ `dot/`). Paged manga reader on landscape windows
 ≥ 900 dp: optional two-page spread (setting in the manga reader settings, default off), first page single,
 wide pages shown alone, RTL order follows reading direction. Hook in the viewer with a small Tsuzuki helper.
 Tests: page-pairing logic (odd counts, wide pages, RTL).
-Result: _pending_
 
-#### Y3 Manga details + Browse manga boards (T2/T3) — `ready` (needs Q6)
+**Result (Codex, 2026-11-07):** `tsuzuki/y2` @ `80173711f`. **910 tests, 0 failures.** JDK 21, per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- `MangaSpread.kt` groups adjacent portrait pages in reading order, with first, wide and unpaired pages kept single and no cross-chapter pairs. `MangaSpreadHolder.kt` reuses two paged image holders and places the earlier page on the right for RTL. `MangaSpreadTest.kt` covers first page, odd tails, wide/unknown pages, chapter boundaries and RTL.
+- Upstream `ReaderPreferences.kt`, `ReadingModePage.kt` and `PagerConfig.kt` wire the default-off setting. `PagerPageHolder.kt`, `PagerViewerAdapter.kt` and `PagerViewer.kt` classify loaded images, apply pairs when idle and retain the selected original page through layout changes. Long press uses the touched side.
+- Upstream `ReaderActivity.kt`, `ReaderViewModel.kt` and `ReaderPageIndicator.kt` pass the original-page range to `TsuzukiMangaReaderChrome.kt`. Resume, seek and completion use real page indices. The eight locale files add the toggle label.
+- Pairing starts once both dimensions are known. The mode applies to Dot and Colour on landscape paged manga at 900 dp or wider. In this mode, the old rotate/split treatment is suspended so wide scans stay intact. The board's spread is wired into the existing reader chrome.
+- Claude device checks: on the tablet in both themes, confirm default off, enable in Reading mode and open a chapter with portrait pages, an odd tail and a wide scan. Check first/solo pages, RTL and LTR visual order, long-press each half, scrubbing/resume into either member, turn across chapters and completion when the last page is paired. Rotate or resize below 900 dp, return to landscape, and switch off while on a pair. On the phone verify the setting leaves single pages. Device verification pending.
+
+#### Y3 Manga details + Browse manga boards (T2/T3) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`) (needs Q6)
 Boards `png/09-manga/MangaDetails.png`, `BrowseManga.png` (+ `dot/`): scanlator filter entry, auto-webtoon hint,
 manga-specific tiles; compare with what N5 built and fix only differences (list them).
-Result: _pending_
 
-#### Y4 Synthetic 500-book backup generator (T2) — `ready`
+**Result (Codex, 2026-11-07):** `tsuzuki/y3` @ `8dc76777d`. **909 tests, 0 failures.** JDK 21, per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- `TsuzukiMangaDetails.kt` adds the effective Webtoon hint and a tappable reading-mode tile that opens the existing themed grid. It uses the per-series flag or global default, without making an image-detection claim. The scanlator filter entry, count, and multi-select exclusions from N5 already match the requested behavior.
+- Upstream details hooks in `presentation/manga/MangaScreen.kt`, `ui/manga/MangaScreen.kt`, and `MangaViewModel.kt` pass the choice to the existing `SetMangaViewerFlags` interactor. Novel and stock details still use their existing routes.
+- `TsuzukiBrowseManga.kt` places Local manga alongside pinned sources without changing pin state and adds a manga repo tile. `TsuzukiBrowse.kt` renders the real local formats, while upstream `SourcesScreen.kt` exposes language under manga source names. `SourcesTab.kt` opens the existing repo manager and `BrowseTab.kt` switches to the existing Manga Extensions tab with its real update count.
+- `MangaSourceTilesTest.kt` covers local promotion, ordering and an absent local source. Eight locale files add the labels and help copy. The board's fabricated genres and source totals are omitted, and the separate anime selector remains in the anime lane. The repo button opens the manager where the existing Add action lives.
+- Claude device checks: in Dot and Colour on phone and tablet, use an entry with several scanlators, open/apply/cancel the exclusions, and switch the entry between Webtoon, RTL and Default from the tile. Open a chapter to confirm the saved mode. In Browse Manga, verify Local opens the local catalogue, real pins remain removable, remote rows show language and supported Latest actions, and both repo and extension shortcuts open the intended screens. Repeat Browse Novels to check its layout. Device verification pending.
+
+#### Y4 Synthetic 500-book backup generator (T2) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`)
 WORKPLAN P2.2: a script in `scripts/` (Kotlin script or Python, no app code) that writes a valid Tsuzuki
 `.tachibk` with 500 books (novels + manga mix), 30 shelves, 50 k chapters, history, using the backup proto in
 the repo. Fake titles clearly marked `[synthetic]`; no real source data. Claude restores it only into a scratch
 install. Test: the script output parses with the app's backup decoder (unit test that decodes a small generated file).
-Result: _pending_
 
-#### Y5 Restyle checks: Tracking, Quotes, ExportEpub, Upcoming, EditNovel (T2) — `ready` (needs Q6)
+**Result (Codex, 2026-11-07):** `tsuzuki/y4` @ `6b25f922b`. **907 tests, 0 failures.** JDK 21, per-file Spotless hooks twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- `scripts/generate_synthetic_backup.py` writes the existing gzip/protobuf format with the Python standard library. Titles and stub names are marked `[synthetic]`, all identifiers are fabricated, and output requires a new file. Counts and the reference timestamp can be overridden for reproducible smaller fixtures.
+- `synthetic-library-small.tachibk` is the deterministic fixture with four books, two shelves and 20 chapters. `SyntheticBackupTest.kt` decodes it through the app's `BackupDecoder` and checks media mix, source and shelf links, original chapter numbering, resume progress and history. No production app files changed.
+- The default run wrote `.worktrees/y4/build/synthetic-library.tachibk` (generated, ignored). Independent wire counts confirmed 250 novels, 250 manga, 30 shelves, 50,000 chapters, 995 history records and two stub sources. Recreate from the card checkout with `python scripts/generate_synthetic_backup.py build/synthetic-library.tachibk` using a new destination if the file already exists.
+- Claude scratch check: restore into an empty scratch preview profile, select both manga and novels plus history, confirm totals, shelf names, History and Continue entries, and exercise the Home and Library grids. The generator omits covers and real source content, so it measures the restored library data and layout. No restore or device action performed.
+
+#### Y5 Restyle checks: Tracking, Quotes, ExportEpub, Upcoming, EditNovel (T2) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`) (needs Q6)
 Boards in `docs/design/boards/INDEX.md` (05-novel, 08-tools). For each: Tsuzuki version exists? compare to board,
 fix differences; stock → restyle with a dispatch hook. List per screen in Result.
-Result: _pending_
 
-#### Y6 Tablet TTS panel + foldable (T3) — `ready` (needs Q11)
+**Result (Codex, 2026-11-07):** `tsuzuki/y5` @ `0a13db39f`. **908 tests, 0 failures.** JDK 21, per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- Tracking: `TsuzukiTrackInfoDialogHome.kt` adds the chapter auto-sync hint when a tracker is linked and the real auto-update preference is enabled. Existing cards, metric edits, add/search, private and date controls already cover the board's backed actions.
+- Quotes: `QuotesSheet.kt` uses themed heading typography and localized action descriptions. New `TsuzukiQuotesExport.kt` adds the actual count and saves the current novel's quotes to a UTF-8 text file through the document picker. `QuoteTileMetadataTest.kt` checks order, Unicode and chapter attribution. The existing quote tile covers per-quote share/delete. No cross-novel selector was added because this sheet is backed by the current novel.
+- Export EPUB: upstream `BatchExportEpubDialog.kt` dispatches Dot/Colour to the form shared with single-book export in `TsuzukiExportEpubDialog.kt`. It shows the real selected count and titles and keeps existing options/defaults and the EPUB/ZIP output contract. `EpubExportContainerTest.kt` checks the filename follows the actual container. Multi-novel output stays one ZIP and the form omits unsupported separate-file and compression choices.
+- Upcoming: `TsuzukiUpcomingScreen.kt` already has the board's month controls, actual marked dates and selected-day cover list. Verified by comparison. No predicted chapter number was invented.
+- Edit Novel: `TsuzukiEditMangaDialog.kt` already has the cover picker/reset, themed fields, status pills and Save. Verified by comparison. The board's manual book palette has no saved per-book setting in this editor. Eight locale files add the three new labels.
+- Claude device checks: in Dot and Colour, open Tracking with auto-sync on/off and exercise linked/unlinked trackers, then export several disposable quotes and inspect UTF-8 text and chapter order. Open one- and multi-selection EPUB forms and verify cancel, picker MIME and filename for original, Both and split volumes. Check Upcoming month/day/filter interactions and Edit Info cover, status and Save on a disposable book. Device verification pending.
+
+#### Y6 Tablet TTS panel + foldable (T3) — `ready` (sent back by Claude 2026-11-07) (needs Q11)
+**Claude review 2026-11-07 — rework on `tsuzuki/y6`:** X1 just moved Tsuzuki code out of `ReaderActivity`; Y6 adds
+~50 lines of listen-panel composition back into `ReaderActivity.setContent` (fold detection, listening state,
+the whole `TsuzukiReaderListenPanel` lambda). Move that into one Tsuzuki composable / hook in
+`presentation/tsuzuki/reader/` (e.g. `rememberTsuzukiListenPanel(state, viewer, readerPreferences, actions)` returning
+`fold`, `listenContent`, `ttsSessionActive`, `ttsPaused`), with the activity passing the existing TTS functions as
+lambdas. `ReaderActivity` should end up with a few one-line calls, as after X1. `TtsController.kt` (+40) is fine if
+it only exposes state; keep it read-only.
 Boards `png/11-tablet/TabletTTS.png`, `Foldable.png` (+ `dot/`). Tablet novel reader with TTS active: the N25
 side panel shows the listen controls (play/pause, speed, voice, sleep timer, paragraph list) using existing
 `TtsController` state; foldable half-open posture keeps text on top, controls on the bottom half. Tests: panel
 state mapping.
-Result: _pending_
+
+**Result (Codex, 2026-11-07):** `tsuzuki/y6` @ `b0bc2463e`. **910 tests, 0 failures.** JDK 21, per-file Spotless twice and `:app:assembleDebug :app:testDebugUnitTest` green.
+- `ReaderListenLayout.kt` reads Jetpack WindowManager posture and maps the existing controller's paragraph position to panel progress. `TsuzukiReaderPanel.kt` and `TsuzukiReaderHooks.kt` show Listen in the N25 dock, preserve Contents/Quotes/Notes, reserve reader space and move the panel below a horizontal half-open hinge. The measured hinge gap stays clear. Flat and vertical folds retain the normal reader layout.
+- `TsuzukiReaderListenPanel.kt` shows the real cover, playing chapter when available, current voice, speed, paragraph progress, play/pause and paragraph transport. It lists the controller's actual spoken paragraphs for direct seek. Voice/speed selection reuses reader preferences and reapplies settings at the active paragraph when speaking.
+- `TtsSleepTimer.kt` defines Off, end of chapter, and 15/30/60-minute choices. Upstream `TtsController.kt` owns the one-shot timer and short paragraph previews. A timed expiry stops playback and the chapter-end choice suppresses auto-advance. Timer state is scoped to the existing playback controller and clears on stop or destruction.
+- Upstream `NovelViewer.kt` and `NovelWebViewViewer.kt` expose their existing controller internally. `ReaderActivity.kt` and `NovelReaderAppBars.kt` pass the active controls through the reader panel and reserve its measured space for the reader chrome. `app/build.gradle.kts` and `gradle/libs.versions.toml` declare AndroidX WindowManager 1.5.0. Eight locale files add timer and paragraph labels.
+- `TsuzukiReaderPanelTest.kt` covers fold selection, hinge gap and clamped paragraph progress. `TtsSleepTimerTest.kt` tests replacing a timer and stopping once at expiry. No sample voice, offline badge or fake chapter data was added. The card's horizontal half-open instruction takes precedence over the board's vertical hinge illustration.
+- Claude device checks: in Dot and Colour, start TTS on the tablet in each novel renderer, verify text and dock coexist, then pause/resume, change speed/voice and seek to a visible paragraph. Verify the close action keeps playback running and Listen reopens the panel. Check Contents/Quotes/Notes, status and menu bars with the dock open. Try timer replacement and end-of-chapter with auto-advance enabled. On a half-open foldable or emulator, verify text stays above the physical hinge, controls below, and flattening restores the ordinary layout without losing playback. Device verification pending.
 
 #### Q13 Novel next chapter: instant, never a blank page (T3) — `done` (Claude `54717865f`: warm-up past 75 %, Next ~0.1 s instead of ~1.2 s blank on the S22; also fixed the stale 100 % on chapter entry)
 Owner 2026-11-07: "sometimes the novel reader lags before going to the next chapter." Measured on the S22
@@ -1061,6 +1125,18 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-07 11:35 Claude — Codex review: A1.5, A2.2, Y3, Y4, Y5 merged (`c7c805cf2`); Y2, Y6 sent back.**
+  `review/night4` = main + a1.5, a2.2, y3, y4, y5 (string files union-merged). **921 tests, 0 failures.**
+  A2.2 gate met: line-by-line read of `36.sqm` (additive only, `ifnull` guard, seeded anime shelf `_id 0`),
+  kotlin-reviewer agent "safe to merge" (low items moved to A2.4), and a **scratch upgrade test** on the tablet:
+  main build installed as `.scratch` (temporary uncommitted suffix), today's preview backup restored (4 novels,
+  1 manga, updates list), then the A2.2 build installed over it → library counts and the Updates list identical,
+  no crash, no SQLite errors; `.scratch` uninstalled, scratch worktrees removed. Merged build installed as preview on
+  tablet + S22: Y3 webtoon tile + Browse › Manga (Local manga pinned, Extensions · 7) fine, no crashes. A1.5 is
+  debug-build-only (no non-owner debug install available) → merged on review + tests, device test pending. Y2
+  (PagerViewer rewrite) and Y6 (listen panel inlined in ReaderActivity) back to `ready` with rework notes. A2.3 /
+  A2.4 unblocked. Follow-up: details action tiles wrap mid-word at 4 tiles ("TRACKIN / G").
 
 - **2026-11-07 08:40 Claude — Q13 + Q14 done (owner: Codex on anime, Claude fixes).** `54717865f` Q13: new
   `tsuzuki/reader/NovelNextChapterWarmup.kt` called from `ReaderViewModel.updateNovelProgressPercent` (infinite
