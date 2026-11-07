@@ -1337,4 +1337,6 @@
     <string name="tsz_tracking_chapter_sync">Sincronización automática al terminar un capítulo</string>
     <string name="tsz_quotes_saved_count">%1$d guardadas</string>
     <string name="tsz_quotes_export">Exportar citas</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Doble página en tabletas en horizontal</string>
 </resources>

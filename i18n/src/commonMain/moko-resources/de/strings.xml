@@ -1350,4 +1350,6 @@
     <string name="tsz_tracking_chapter_sync">Beim Kapitelabschluss automatisch synchronisieren</string>
     <string name="tsz_quotes_saved_count">%1$d gespeichert</string>
     <string name="tsz_quotes_export">Zitate exportieren</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Doppelseite auf Tablets im Querformat</string>
 </resources>

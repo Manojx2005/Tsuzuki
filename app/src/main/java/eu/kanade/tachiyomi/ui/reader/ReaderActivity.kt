@@ -64,6 +64,8 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.hippo.unifile.UniFile
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.EstimatedStatusBarHeight
 import eu.kanade.presentation.reader.NovelStatusBar
@@ -381,6 +383,9 @@ class ReaderActivity : BaseActivity() {
             .launchIn(lifecycleScope)
     }
 
+    internal val useTsuzukiMangaSpreads: Boolean
+        get() = Injekt.get<UiPreferences>().appTheme.get() in setOf(AppTheme.DOT, AppTheme.COLOUR)
+
     private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setComposeContent {
         val state by viewModel.state.collectAsState()
         val showPageNumber by readerPreferences.showPageNumber.collectAsState()
@@ -450,6 +455,7 @@ class ReaderActivity : BaseActivity() {
             if (!state.menuVisible && showPageNumber && !isNovelMode) {
                 ReaderPageIndicator(
                     currentPage = state.currentPage,
+                    spreadStart = state.mangaSpreadStart,
                     totalPages = state.totalPages,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -1746,8 +1752,8 @@ class ReaderActivity : BaseActivity() {
      * Called from the viewer whenever a [page] is marked as active. It updates the values of the
      * bottom menu and delegates the change to the presenter.
      */
-    fun onPageSelected(page: ReaderPage) {
-        viewModel.onPageSelected(page)
+    fun onPageSelected(page: ReaderPage, spreadStart: Int? = null) {
+        viewModel.onPageSelected(page, spreadStart)
     }
 
     /**

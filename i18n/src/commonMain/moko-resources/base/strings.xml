@@ -1714,4 +1714,6 @@
     <string name="tsz_tracking_chapter_sync">Auto-sync when you finish a chapter</string>
     <string name="tsz_quotes_saved_count">%1$d saved</string>
     <string name="tsz_quotes_export">Export quotes</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Two-page spread on landscape tablets</string>
 </resources>
