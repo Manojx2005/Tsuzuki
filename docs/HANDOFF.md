@@ -219,7 +219,7 @@ state (shelf, search, selection) can be checked; Claude re-tests both on the tab
 batch (none of its cards touch `HomeScreen.kt` or `MainActivity.kt`), but R2's Result claimed the root tab already
 survived process death.
 
-#### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; device TTS check pending in V7); Mihon part → V2b (Codex); freeze starts when V2b, R6, R7, V1.1 are merged
+#### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; S22 preview from main `3da3254c7`: TTS plays, highlights the spoken paragraph, progress advances, no crash); Mihon part → V2b (Codex); freeze starts when V2b, R6, R7, V1.1 are merged
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
 
