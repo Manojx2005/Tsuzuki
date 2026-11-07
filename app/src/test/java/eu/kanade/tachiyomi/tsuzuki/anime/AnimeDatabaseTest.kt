@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
@@ -246,7 +247,7 @@ class AnimeDatabaseTest {
             val before = bookTables.associateWith { driver.tableRows(it) }
             val oldSchema = driver.schema()
 
-            Database.Schema.migrate(driver, PRE_ANIME_VERSION, Database.Schema.version).await()
+            Database.Schema.migrate(driver, PRE_ANIME_VERSION, PRE_ANIME_VERSION + 1).await()
 
             assertEquals(before, bookTables.associateWith { driver.tableRows(it) })
             assertTrue(driver.schema().containsAll(oldSchema))
@@ -262,11 +263,57 @@ class AnimeDatabaseTest {
     @Test
     fun upgradedSchemaMatchesFreshInstall() = runBlocking {
         withPreAnimeDatabase { upgraded ->
-            Database.Schema.migrate(upgraded, PRE_ANIME_VERSION, Database.Schema.version).await()
+            Database.Schema.migrate(upgraded, PRE_ANIME_VERSION, PRE_ANIME_VERSION + 1).await()
             JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).use { fresh ->
                 Database.Schema.create(fresh).await()
                 assertEquals(fresh.schema(), upgraded.schema())
             }
+        }
+    }
+
+    @Test
+    fun extensionStoreMigrationKeepsNovelAndMangaRowsAndAddsAnAnimeMediaType() = runBlocking {
+        withPreAnimeDatabase { driver ->
+            driver.sql("ALTER TABLE extension_store DROP COLUMN media")
+            driver.sql(
+                """
+                INSERT INTO extension_store(
+                    index_url, name, badge_label, signing_key, contact_website, is_legacy, is_novel
+                )
+                VALUES ('https://manga.example', 'Manga', 'Manga', '', '', 1, 0),
+                       ('https://novels.example', 'Novels', 'Novels', '', '', 1, 1)
+                """.trimIndent(),
+            )
+
+            Database.Schema.migrate(driver, PRE_ANIME_VERSION, Database.Schema.version).await()
+
+            assertEquals(
+                listOf(listOf("Manga", "0", "manga"), listOf("Novels", "1", "novel")),
+                driver.rows("SELECT name, is_novel, media FROM extension_store ORDER BY name", 3),
+            )
+            assertEquals(listOf(listOf("ok")), driver.rows("PRAGMA integrity_check"))
+        }
+    }
+
+    @Test
+    fun animeExtensionStoresStaySeparateFromBookStoreOperations() = runBlocking {
+        withDatabase { driver, db ->
+            val stores = db.extension_storeQueries
+            val animeUrl = "https://anime.example/index.min.json"
+            val novelUrl = "https://novel.example/index.min.json"
+            stores.insertAnimeStore(animeUrl, "Anime")
+            stores.upsert(novelUrl, "Novels", "Novels", "", "", null, true, true, null)
+            stores.upsert(animeUrl, "Wrong type", "Wrong type", "", "", null, true, false, null)
+            stores.delete(animeUrl)
+
+            assertEquals(
+                listOf("Novels"),
+                driver.rows("SELECT name FROM extension_store WHERE media = 'novel'").flatten(),
+            )
+            assertEquals(novelUrl, stores.getAll().awaitAsList().single().index_url)
+            assertEquals(animeUrl, stores.getAnimeStores().awaitAsList().single().index_url)
+            stores.deleteAnimeStore(animeUrl)
+            assertTrue(stores.getAnimeStores().awaitAsList().isEmpty())
         }
     }
 
@@ -393,7 +440,7 @@ class AnimeDatabaseTest {
             ANIME_TABLES.forEach { driver.sql("DROP TABLE $it") }
             driver.sql("PRAGMA user_version = $PRE_ANIME_VERSION")
             driver.sql("PRAGMA foreign_keys = ON")
-            assertEquals(PRE_ANIME_VERSION + 1, Database.Schema.version)
+            assertTrue(Database.Schema.version >= PRE_ANIME_VERSION + 1)
             block(driver)
         }
     }

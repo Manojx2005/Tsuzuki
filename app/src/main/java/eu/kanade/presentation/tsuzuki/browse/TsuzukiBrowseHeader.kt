@@ -36,12 +36,17 @@ internal fun browsePages(
     hideManga: Boolean,
     hasAnime: Boolean = false,
     animeEnabled: Boolean = TsuzukiAnime.enabled,
+    hasAnimeRepos: Boolean = false,
 ): List<BrowsePage> =
     BrowsePage.entries.filter {
         when (it.media) {
             BrowseMedia.NOVELS -> true
             BrowseMedia.MANGA -> !hideManga
-            BrowseMedia.ANIME -> animeEnabled && hasAnime
+            BrowseMedia.ANIME -> animeEnabled && if (it.section == BrowseSection.EXTENSIONS) {
+                hasAnimeRepos
+            } else {
+                hasAnime || hasAnimeRepos
+            }
         }
     }
 
@@ -67,14 +72,15 @@ internal fun TsuzukiBrowseHeader(
     onSelectMedia: (BrowseMedia) -> Unit,
     onSelectSection: (BrowseSection) -> Unit,
     hasAnime: Boolean = false,
+    hasAnimeRepos: Boolean = false,
 ) {
     val mediaOptions = buildList {
         add(BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels))
         if (hasManga) add(BrowseMedia.MANGA to stringResource(MR.strings.tsz_storage_manga))
-        if (hasAnime) add(BrowseMedia.ANIME to stringResource(MR.strings.tsz_watch))
+        if (hasAnime) add(BrowseMedia.ANIME to stringResource(MR.strings.tsz_anime_media))
     }
     val sections = if (active.media == BrowseMedia.ANIME) {
-        browseHeaderSections.filterNot { it == BrowseSection.MIGRATION }
+        browseHeaderSections.filter { it == BrowseSection.SOURCES || (it == BrowseSection.EXTENSIONS && hasAnimeRepos) }
     } else {
         browseHeaderSections
     }

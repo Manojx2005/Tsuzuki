@@ -5,6 +5,9 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionLoader
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -59,6 +62,13 @@ internal class AnimeSourceManager(
     suspend fun stub(id: Long): StubAnimeSource? = repository.awaitById(id)
 
     companion object {
+        private val mutableExtensionChanges = MutableStateFlow(0L)
+        val extensionChanges = mutableExtensionChanges.asStateFlow()
+
+        fun extensionsChanged() {
+            mutableExtensionChanges.update { it + 1 }
+        }
+
         fun create(context: Context): AnimeSourceManager {
             val appContext = context.applicationContext
             return AnimeSourceManager(Injekt.get()) {

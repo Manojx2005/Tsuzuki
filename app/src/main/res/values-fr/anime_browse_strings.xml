@@ -18,4 +18,7 @@
     <string name="tsz_anime_unseen_only">Non vus uniquement</string>
     <string name="tsz_anime_bookmarked_only">Avec signet uniquement</string>
     <string name="tsz_anime_upcoming">À venir</string>
+    <string name="tsz_anime_extension_repos">Dépôts d’extensions d’anime</string>
+    <string name="tsz_anime_aniyomi_format">Format Aniyomi</string>
+    <string name="tsz_anime_extensions_available">Disponibles</string>
 </resources>

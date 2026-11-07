@@ -29,6 +29,7 @@ import eu.kanade.presentation.tsuzuki.browse.animeSourcesTab
 import eu.kanade.presentation.tsuzuki.browse.browsePages
 import eu.kanade.presentation.tsuzuki.browse.browsePagesFor
 import eu.kanade.presentation.tsuzuki.browse.pageIndex
+import eu.kanade.presentation.tsuzuki.browse.rememberAnimeBrowseRepos
 import eu.kanade.presentation.tsuzuki.browse.rememberAnimeBrowseSources
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
@@ -103,8 +104,12 @@ data object BrowseTab : Tab {
         }
 
         val animeSources = if (themed && TsuzukiAnime.enabled) rememberAnimeBrowseSources().value else emptyList()
-        val hasAnime = animeSources.isNotEmpty()
-        val allPages = remember(hideMangaUi, hasAnime) { browsePages(hideMangaUi, hasAnime) }
+        val animeRepos = if (themed && TsuzukiAnime.enabled) rememberAnimeBrowseRepos().value else emptyList()
+        val hasAnime = animeSources.isNotEmpty() || animeRepos.isNotEmpty()
+        val hasAnimeRepos = animeRepos.isNotEmpty()
+        val allPages = remember(hideMangaUi, hasAnime, hasAnimeRepos) {
+            browsePages(hideMangaUi, hasAnime, hasAnimeRepos = hasAnimeRepos)
+        }
         // Tsuzuki: swipes stay inside the chosen media (Sources / Extensions / Migrate); the pills switch media.
         var media by rememberSaveable { mutableStateOf(BrowseMedia.NOVELS) }
         val activeMedia = if (allPages.any { it.media == media }) media else BrowseMedia.NOVELS
@@ -124,7 +129,7 @@ data object BrowseTab : Tab {
                 BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()
                 BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
                 BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources)
-                BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeSources)
+                BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeRepos)
             }
         }
         val novelExtensionsTabIndex = pages.indexOf(BrowsePage.NOVEL_EXTENSIONS)
@@ -151,6 +156,7 @@ data object BrowseTab : Tab {
                         },
                         onSelectSection = { onSelectPage(pages.pageIndex(activeMedia, it)) },
                         hasAnime = hasAnime,
+                        hasAnimeRepos = hasAnimeRepos,
                     )
                 }
             } else {

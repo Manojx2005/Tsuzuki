@@ -1,6 +1,5 @@
-package eu.kanade.tachiyomi.tsuzuki.anime.debug
+package eu.kanade.tachiyomi.tsuzuki.anime.extension
 
-import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -39,7 +38,7 @@ internal object AnimeRepoIndexParser {
         val trimmed = input.trim()
         val url = (if (trimmed.startsWith("github.com/", ignoreCase = true)) "https://$trimmed" else trimmed)
             .toHttpUrlOrNull() ?: return null
-        if (!url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty()) return null
+        if (!url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty() || url.fragment != null) return null
         if (url.host != "github.com") {
             return url.takeIf { it.pathSegments.last() == "index.min.json" }
         }
@@ -51,18 +50,3 @@ internal object AnimeRepoIndexParser {
         return "https://raw.githubusercontent.com/$owner/$name/repo/index.min.json".toHttpUrlOrNull()
     }
 }
-
-internal enum class AnimeDebugInstallAction {
-    Install,
-    Trust,
-    Installed,
-    Retry,
-}
-
-internal fun animeDebugInstallAction(extension: AnimeLoadResult?) =
-    when (extension) {
-        null -> AnimeDebugInstallAction.Install
-        is AnimeLoadResult.Untrusted -> AnimeDebugInstallAction.Trust
-        is AnimeLoadResult.Success -> AnimeDebugInstallAction.Installed
-        AnimeLoadResult.Error -> AnimeDebugInstallAction.Retry
-    }

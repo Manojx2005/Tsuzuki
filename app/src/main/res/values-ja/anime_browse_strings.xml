@@ -18,4 +18,7 @@
     <string name="tsz_anime_unseen_only">未視聴のみ</string>
     <string name="tsz_anime_bookmarked_only">ブックマークのみ</string>
     <string name="tsz_anime_upcoming">配信予定</string>
+    <string name="tsz_anime_extension_repos">アニメ拡張リポジトリ</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi形式</string>
+    <string name="tsz_anime_extensions_available">利用可能</string>
 </resources>

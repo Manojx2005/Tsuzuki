@@ -18,4 +18,7 @@
     <string name="tsz_anime_unseen_only">仅未观看</string>
     <string name="tsz_anime_bookmarked_only">仅有书签</string>
     <string name="tsz_anime_upcoming">即将播出</string>
+    <string name="tsz_anime_extension_repos">动漫扩展仓库</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi 格式</string>
+    <string name="tsz_anime_extensions_available">可用</string>
 </resources>

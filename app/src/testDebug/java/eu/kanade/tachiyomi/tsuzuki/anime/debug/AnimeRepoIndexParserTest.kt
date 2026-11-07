@@ -1,7 +1,12 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.debug
 
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtension
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeListedExtension
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeRepoIndexParser
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeStoreAction
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.animeStoreRows
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -48,7 +53,44 @@ class AnimeRepoIndexParserTest {
         assertEquals(url, AnimeRepoIndexParser.indexUrl(url).toString())
         assertNull(AnimeRepoIndexParser.indexUrl("http://example.org/index.min.json"))
         assertNull(AnimeRepoIndexParser.indexUrl("https://secret@example.org/index.min.json"))
+        assertNull(AnimeRepoIndexParser.indexUrl("https://example.org/index.min.json#fragment"))
         assertNull(AnimeRepoIndexParser.indexUrl("https://github.com/org/repo/tree/repo"))
+    }
+
+    @Test
+    fun mapsRepoEntriesToInstallUpdateTrustAndRemovalStates() {
+        val parsed = AnimeRepoIndexParser.parse(fixture).single()
+        val index = "https://example.org/index.min.json".toHttpUrl()
+        val listing = AnimeListedExtension(index, parsed)
+        val signature = AnimeExtension.Untrusted("Fixture", parsed.packageName, "14.2", 2, 14.0, "hash")
+        val installed = AnimeExtension.Installed(
+            name = signature.name,
+            pkgName = signature.pkgName,
+            versionName = signature.versionName,
+            versionCode = signature.versionCode,
+            libVersion = signature.libVersion,
+            lang = "en",
+            isNsfw = false,
+            isTorrent = false,
+            pkgFactory = null,
+            sources = emptyList(),
+            icon = null,
+            isShared = false,
+        )
+        val packages = mapOf(parsed.packageName to AnimeLoadResult.Success(installed))
+        val update = listing.copy(entry = parsed.copy(versionCode = 3))
+
+        assertEquals(AnimeStoreAction.INSTALL, animeStoreRows(listOf(listing), emptyMap()) { false }.single().action)
+        assertEquals(AnimeStoreAction.INSTALLED, animeStoreRows(listOf(listing), packages) { true }.single().action)
+        assertEquals(update, animeStoreRows(listOf(listing, update), packages) { true }.single().listed)
+        assertEquals(AnimeStoreAction.UPDATE, animeStoreRows(listOf(update), packages) { true }.single().action)
+        assertEquals(AnimeStoreAction.BROKEN, animeStoreRows(listOf(listing), emptyMap()) { true }.single().action)
+        assertEquals(
+            AnimeStoreAction.TRUST,
+            animeStoreRows(listOf(listing), mapOf(parsed.packageName to AnimeLoadResult.Untrusted(signature))) {
+                true
+            }.single().action,
+        )
     }
 
     @Test

@@ -46,6 +46,8 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtension
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeRepoEntry
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeRepoIndexParser
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

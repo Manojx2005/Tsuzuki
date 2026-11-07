@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 class TsuzukiAnimeGateTest {
     @Test
     fun disabledHidesBrowseWatchAndLibraryDestinations() {
-        val browse = browsePages(hideManga = false, hasAnime = true, animeEnabled = false)
+        val browse = browsePages(hideManga = false, hasAnime = true, animeEnabled = false, hasAnimeRepos = true)
         assertFalse(browse.any { it.media == BrowseMedia.ANIME })
         assertFalse(showAnimeWatch(watching = true, animeEnabled = false))
         assertFalse(isAnimeLibraryKey(AnimeLibraryTab.key, animeEnabled = false))

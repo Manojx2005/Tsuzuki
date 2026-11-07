@@ -18,4 +18,7 @@
     <string name="tsz_anime_unseen_only">Unwatched only</string>
     <string name="tsz_anime_bookmarked_only">Bookmarked only</string>
     <string name="tsz_anime_upcoming">Upcoming</string>
+    <string name="tsz_anime_extension_repos">Anime extension repos</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi format</string>
+    <string name="tsz_anime_extensions_available">Available</string>
 </resources>

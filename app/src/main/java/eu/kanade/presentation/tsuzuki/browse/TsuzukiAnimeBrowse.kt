@@ -18,6 +18,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,12 +38,17 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionInstaller
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionRepo
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionRepos
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 @Composable
 internal fun rememberAnimeBrowseSources(): State<List<RegisteredAnimeSource>> {
@@ -51,15 +57,24 @@ internal fun rememberAnimeBrowseSources(): State<List<RegisteredAnimeSource>> {
     val manager = remember(appContext) { AnimeSourceManager.create(appContext) }
     return produceState(emptyList(), manager, owner) {
         owner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            try {
-                value = manager.refresh()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logcat(LogPriority.WARN, e) { "Could not refresh anime sources" }
+            AnimeSourceManager.extensionChanges.collect {
+                try {
+                    value = manager.refresh()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logcat(LogPriority.WARN, e) { "Could not refresh anime sources" }
+                }
             }
         }
     }
+}
+
+@Composable
+internal fun rememberAnimeBrowseRepos(): State<List<AnimeExtensionRepo>> {
+    val context = LocalContext.current.applicationContext
+    val repository = remember(context) { AnimeExtensionRepos(Injekt.get(), AnimeExtensionInstaller(context)) }
+    return remember(repository) { repository.observe() }.collectAsState(emptyList())
 }
 
 internal fun animeSourcesTab(
@@ -68,6 +83,15 @@ internal fun animeSourcesTab(
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (sources.isEmpty()) {
+            item {
+                Text(
+                    stringResource(MR.strings.no_results_found),
+                    color = tokens.mutedText,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
+        }
         items(sources, key = { it.source.id }) { entry ->
             val source = entry.source
             Row(
@@ -125,43 +149,6 @@ internal fun animeSourcesTab(
         }
     }
 }
-
-internal fun animeExtensionsTab(sources: List<RegisteredAnimeSource>) =
-    TabContent(MR.strings.label_extensions) { padding, _ ->
-        val context = LocalContext.current
-        val tokens = TsuzukiTheme.tokens
-        val installed = sources.distinctBy { it.extensionPackage }
-        LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            item(key = "anime-extension-setup") {
-                Box(Modifier.padding(horizontal = 12.dp)) {
-                    TsuzukiPill(
-                        text = stringResource(MR.strings.tsz_anime_debug_title),
-                        selected = false,
-                        onClick = {
-                            context.startActivity(
-                                Intent().setClassName(
-                                    context,
-                                    "eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugActivity",
-                                ),
-                            )
-                        },
-                        role = Role.Button,
-                    )
-                }
-            }
-            items(installed, key = { it.extensionPackage }) { entry ->
-                Text(
-                    text = tsuzukiMenuLabel(entry.extensionName),
-                    color = tokens.dotOn,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(tsuzukiGroupedTile(first = true, last = true))
-                        .padding(12.dp),
-                )
-            }
-        }
-    }
 
 internal const val ANIME_SOURCE_ID = "anime_source_id"
 internal const val ANIME_OPEN_LATEST = "anime_open_latest"

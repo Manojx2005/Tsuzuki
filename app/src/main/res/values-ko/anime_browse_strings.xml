@@ -18,4 +18,7 @@
     <string name="tsz_anime_unseen_only">미시청만</string>
     <string name="tsz_anime_bookmarked_only">북마크만</string>
     <string name="tsz_anime_upcoming">공개 예정</string>
+    <string name="tsz_anime_extension_repos">애니메이션 확장 저장소</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi 형식</string>
+    <string name="tsz_anime_extensions_available">설치 가능</string>
 </resources>
