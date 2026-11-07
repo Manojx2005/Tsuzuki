@@ -151,7 +151,7 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now (updated 2026-11-07 after V1 merged):** V1.1 → V2b → R6 → R7 → V3 → V4 → V5 → V6 → R8 rework →
+**Codex lane 2 order from now (updated 2026-11-07 after V1 merged):** V1.1 → V2b → R6 → R7 → V3 → (V4–V6: Claude) → R8 rework →
 R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
 for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
@@ -245,7 +245,7 @@ version, with no sample numbers, fake titles or controls that look usable; nothi
 release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
 Fix only what fails; list the checks in Result. Claude checks: preview build, Home → Watch, both themes, both devices.
 
-#### V4 Telemetry out + Tsuzuki release workflow (T2) — `ready` (start from current main)
+#### V4 Telemetry out + Tsuzuki release workflow (T2) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
 `PRIVACY.md` promises no telemetry. Keep `Config.includeTelemetry` and the Firebase code paths for Tsundoku merges,
 but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Rewrite `.github/workflows/release.yml` for Tsuzuki: run on tag `v*` pushes, gate
@@ -259,14 +259,14 @@ but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Don't run the workflow and don't create tags. Claude checks: `assembleRelease -Penable-updater` locally, then the
   APK has no `com.google.firebase` classes.
 
-#### V5 About, licences, privacy, links (T2) — `ready` (start from current main)
+#### V5 About, licences, privacy, links (T2) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
 About screen: app name, version, "Based on Tsundoku and Mihon" credit with links, GitHub link = the V0 releases
 repo, open-source licences list includes the bundled fonts (`docs/licenses/`), QuickJS host and the LNReader plugin
 index terms. `PRIVACY.md`: accurate for v0.1 (no telemetry; network calls: sources, trackers, translation provider if
 configured, updater). `TsuzukiLinks.kt`: no link points at tsundoku-otaku. `NOTICE`/licence files present for
 Apache-2.0. List each check in Result. Claude checks: About + licences on both devices, both themes.
 
-#### V6 CHANGELOG 0.1.0 + version (T1) — `ready` (start from current main)
+#### V6 CHANGELOG 0.1.0 + version (T1) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
 Move Tsundoku's changelog to `docs/CHANGELOG-tsundoku.md` (header: "Inherited from Tsundoku; Tsuzuki's own
 history is in CHANGELOG.md"). New `CHANGELOG.md`: same Keep-a-Changelog format, `## [0.1.0]` written for users
 from this file's log (Dot + Colour themes, Home, library shelves, novel reader + TTS, manga reader, tablet layouts,
