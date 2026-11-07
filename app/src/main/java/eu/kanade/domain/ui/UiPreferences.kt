@@ -32,10 +32,10 @@ class UiPreferences(
     val themeDarkAmoled: Preference<Boolean> = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
 
     // Tsuzuki: in the Colour theme, take the colours of the book you're reading.
-    val tsuzukiFollowBook: Preference<Boolean> = preferenceStore.getBoolean("tsz_follow_book", true)
+    val tsuzukiFollowBook: Preference<Boolean> = preferenceStore.getBoolean("tsz_follow_book", false)
 
     // Tsuzuki Dot: keep manga and novel covers in colour instead of greyscale.
-    val tsuzukiDotColourCovers: Preference<Boolean> = preferenceStore.getBoolean("tsz_dot_colour_covers", false)
+    val tsuzukiDotColourCovers: Preference<Boolean> = preferenceStore.getBoolean("tsz_dot_colour_covers", true)
 
     // Tsuzuki Colour: accent (ARGB) used when no book palette applies. Default = the original gold.
     val tsuzukiColourAccent: Preference<Int> = preferenceStore.getInt("tsz_colour_accent", 0xFFE9B44C.toInt())

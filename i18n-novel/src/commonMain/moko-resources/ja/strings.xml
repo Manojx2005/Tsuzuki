@@ -6,4 +6,19 @@
     <string name="pref_novel_status_bar">読書ステータスバー</string>
     <string name="pref_novel_status_bar_customize">ステータスバーをカスタマイズ</string>
     <string name="pref_novel_status_bar_customize_summary">時刻、章、進捗、バッテリーの表示と順序を変更します</string>
+    <!-- Japanese for settings (owner 2026-11-07) -->
+    <string name="pref_category_manga_reader">マンガリーダー</string>
+    <string name="pref_category_novel_reader">小説リーダー</string>
+    <string name="pref_category_novel">小説</string>
+    <string name="pref_category_novel_downloads">小説のダウンロード</string>
+    <string name="pref_category_novel_webview">小説の WebView</string>
+    <string name="pref_category_novel_images">チャプターの画像</string>
+    <string name="pref_category_translation">翻訳</string>
+    <string name="pref_category_mass_import">一括インポート</string>
+    <string name="novel_snippet_title">スニペットのタイトル</string>
+    <string name="novel_add_rule_title">検索と置換のルールを追加</string>
+    <string name="novel_rule_title">タイトル</string>
+    <string name="pref_novel_hide_chapter_title">本文中のチャプタータイトルを隠す</string>
+    <string name="skip_recently_updated_title">最近更新された項目をスキップ</string>
+    <string name="pref_novel_status_bar_show_chapter_title">チャプタータイトルを表示</string>
 </resources>

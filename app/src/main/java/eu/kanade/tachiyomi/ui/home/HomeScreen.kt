@@ -145,8 +145,8 @@ object HomeScreen : Screen() {
         val latestCover by remember {
             Injekt.get<tachiyomi.domain.history.interactor.GetHistory>().subscribe(query = "", limit = 1)
         }.collectAsState(initial = emptyList())
-        val followBook by remember { Injekt.get<eu.kanade.domain.ui.UiPreferences>().tsuzukiFollowBook.changes() }
-            .collectAsState(initial = true)
+        val followBookPref = remember { Injekt.get<eu.kanade.domain.ui.UiPreferences>().tsuzukiFollowBook }
+        val followBook by remember { followBookPref.changes() }.collectAsState(initial = followBookPref.get())
         val bookPalette = if (TsuzukiTheme.tokens.style == TsuzukiStyle.COLOUR && followBook) {
             eu.kanade.presentation.theme.tsuzuki.rememberBookPalette(latestCover.firstOrNull()?.coverData)
         } else {
