@@ -6,12 +6,13 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -28,13 +29,17 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
@@ -49,6 +54,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.roundToInt
 
 /** The docked panel needs a window about as wide as a tablet in landscape. */
 internal const val READER_PANEL_MIN_WINDOW_DP = 900
@@ -77,36 +83,67 @@ internal fun TsuzukiReaderPanel(
     loadQuotes: () -> List<Quote>,
     onDismissRequest: () -> Unit,
     onOpenChapter: (chapterId: Long) -> Unit,
+    fold: ReaderFold? = null,
+    onInsetsChanged: (end: Dp, bottom: Dp) -> Unit = { _, _ -> },
+    listenContent: (@Composable () -> Unit)? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val open = visible && manga != null
     BackHandler(enabled = open, onBack = onDismissRequest)
 
-    // Shrink the text area by the panel width while the panel is open.
-    val widthPx = with(LocalDensity.current) { widthDp.dp.roundToPx() }
-    DisposableEffect(open, widthPx) {
-        val container = activity.findViewById<View>(R.id.reader_container)
-        if (open) container?.setPaddingRelative(0, 0, widthPx, 0)
-        onDispose { container?.setPaddingRelative(0, 0, 0, 0) }
-    }
     if (!open || manga == null) return
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    val entries by produceState<List<TsuzukiTocEntry>?>(null, manga.id) {
-        value = withIOContext { loadToc(manga) }
+    val entries by produceState<List<TsuzukiTocEntry>?>(null, manga.id, listenContent != null) {
+        if (listenContent == null) value = withIOContext { loadToc(manga) }
     }
     val shape = RoundedCornerShape(0.dp)
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
+    var windowTop by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    BoxWithConstraints(
+        Modifier.fillMaxSize().onGloballyPositioned { windowTop = it.positionInWindow().y.roundToInt() },
+        contentAlignment = if (fold == null) Alignment.CenterEnd else Alignment.BottomCenter,
+    ) {
+        val folded = fold?.let {
+            foldedReaderPane(
+                ReaderFold(it.top - windowTop, it.bottom - windowTop),
+                with(density) { maxHeight.roundToPx() },
+            )
+        }
+        if (fold != null && folded == null) return@BoxWithConstraints
+        val end = if (folded == null) widthDp.dp else 0.dp
+        val bottom = with(density) { (folded?.readerBottomInset ?: 0).toDp() }
+        val endPx = with(density) { end.roundToPx() }
+        val bottomPx = folded?.readerBottomInset ?: 0
+        DisposableEffect(activity, endPx, bottomPx) {
+            val container = activity.findViewById<View>(R.id.reader_container) ?: return@DisposableEffect onDispose {}
+            val start = container.paddingStart
+            val top = container.paddingTop
+            val originalEnd = container.paddingEnd
+            val originalBottom = container.paddingBottom
+            container.setPaddingRelative(start, top, originalEnd + endPx, originalBottom + bottomPx)
+            onInsetsChanged(end, bottom)
+            onDispose {
+                container.setPaddingRelative(start, top, originalEnd, originalBottom)
+                onInsetsChanged(0.dp, 0.dp)
+            }
+        }
+        val size = if (folded == null) {
+            Modifier.width(widthDp.dp).fillMaxHeight().statusBarsPadding()
+        } else {
+            Modifier.fillMaxWidth().height(with(density) { folded.panelHeight.toDp() })
+        }
         Column(
-            Modifier
-                .width(widthDp.dp)
-                .fillMaxHeight()
+            size
                 .clip(shape)
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-                .statusBarsPadding()
                 .navigationBarsPadding(),
         ) {
+            if (listenContent != null) {
+                listenContent()
+                return@Column
+            }
             TsuzukiSegments(
                 labels = listOf(
                     stringResource(MR.strings.tsz_reader_contents),

@@ -1318,4 +1318,10 @@
     <string name="tsz_q8_reader_next">Siguiente</string>
     <string name="tsz_q8_reader_here">Aquí</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Temporizador de sueño</string>
+    <string name="tsz_reader_sleep_off">Desactivado</string>
+    <string name="tsz_reader_sleep_chapter">Fin del capítulo</string>
+    <string name="tsz_reader_listen_paragraphs">Párrafos</string>
 </resources>

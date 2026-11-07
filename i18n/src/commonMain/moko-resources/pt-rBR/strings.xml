@@ -1328,4 +1328,10 @@
     <string name="tsz_q8_reader_next">Próximo</string>
     <string name="tsz_q8_reader_here">Aqui</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Temporizador de sono</string>
+    <string name="tsz_reader_sleep_off">Desativado</string>
+    <string name="tsz_reader_sleep_chapter">Fim do capítulo</string>
+    <string name="tsz_reader_listen_paragraphs">Parágrafos</string>
 </resources>

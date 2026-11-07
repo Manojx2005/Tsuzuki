@@ -1331,4 +1331,10 @@
     <string name="tsz_q8_reader_next">下一段</string>
     <string name="tsz_q8_reader_here">从这里</string>
     <string name="tsz_q8_reader_rotate">旋转</string>
+
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">睡眠定时器</string>
+    <string name="tsz_reader_sleep_off">关闭</string>
+    <string name="tsz_reader_sleep_chapter">本章结束</string>
+    <string name="tsz_reader_listen_paragraphs">段落</string>
 </resources>

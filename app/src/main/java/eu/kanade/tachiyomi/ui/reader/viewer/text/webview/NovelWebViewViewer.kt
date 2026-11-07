@@ -3174,6 +3174,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             ttsController.isPaused() || ttsController.isStarting()
 
     /** (paragraphIndex, paragraphCount) for the media notification's "paragraph N of M". */
+    internal val listeningController get() = ttsController
+
     fun getTtsParagraphProgress(): Pair<Int, Int> = ttsController.getParagraphProgress()
 
     /** Media-notification seek-bar drag: jump straight to [paragraphIndex]. */

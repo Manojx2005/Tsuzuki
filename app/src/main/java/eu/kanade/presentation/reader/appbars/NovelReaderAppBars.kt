@@ -174,6 +174,9 @@ fun NovelReaderAppBars(
 
     // Extra bottom offset for the floating TTS overlay so it clears the status bar
     ttsOverlayBottomPadding: Dp = 0.dp,
+    showTtsMiniOverlay: Boolean = true,
+    panelEndInset: Dp = 0.dp,
+    panelBottomInset: Dp = 0.dp,
 
     // Measured bar heights in px (0 while hidden), so the page can inset fixed elements clear of the
     // transient reader menu bars.
@@ -204,7 +207,7 @@ fun NovelReaderAppBars(
         }
     }
 
-    Box(modifier = Modifier.fillMaxHeight()) {
+    Box(modifier = Modifier.fillMaxHeight().padding(end = panelEndInset, bottom = panelBottomInset)) {
         Column(modifier = Modifier.fillMaxHeight()) {
             AnimatedVisibility(
                 visible = visible,
@@ -267,7 +270,7 @@ fun NovelReaderAppBars(
                     )
                 }
 
-                if (ttsControlsVisible) {
+                if (ttsControlsVisible && showTtsMiniOverlay) {
                     NovelTtsControlsOverlay(
                         isTtsActive = isTtsActive,
                         isTtsPaused = isTtsPaused,

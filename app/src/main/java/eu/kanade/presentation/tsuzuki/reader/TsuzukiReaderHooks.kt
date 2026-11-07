@@ -14,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiReaderTransition
@@ -57,14 +59,31 @@ internal fun readerTransitionAnimations(opening: Boolean, themedAnimations: Pair
 /** Activity-owned requests survive a composition change. Drawer and find state stay in the reader composition. */
 internal class TsuzukiReaderChromeRequests {
     private var openContentsRequested by mutableStateOf(false)
+    var panelEndInset by mutableStateOf(0.dp)
+        private set
+    var panelBottomInset by mutableStateOf(0.dp)
+        private set
+
+    private fun onPanelInsetsChanged(end: Dp, bottom: Dp) {
+        panelEndInset = end
+        panelBottomInset = bottom
+    }
 
     fun openContents() {
         openContentsRequested = true
     }
 
     @Composable
-    fun bind(viewModel: ReaderViewModel, state: ReaderViewModel.State): TsuzukiReaderChrome {
+    fun bind(
+        viewModel: ReaderViewModel,
+        state: ReaderViewModel.State,
+        fold: ReaderFold? = null,
+        listenContent: (@Composable (onClose: () -> Unit) -> Unit)? = null,
+    ): TsuzukiReaderChrome {
         val contents = remember { TsuzukiReaderContentsHook() }
+        val listening = listenContent != null
+        LaunchedEffect(listening) { if (listening) contents.beginListening() }
+        val showListening = listening && contents.showListening
         val openContents = contents.openAction()
         LaunchedEffect(openContentsRequested) {
             if (openContentsRequested) {
@@ -75,11 +94,20 @@ internal class TsuzukiReaderChromeRequests {
         val find = remember { TsuzukiReaderFindHook() }
         return TsuzukiReaderChrome(
             onOpenContents = openContents,
+            onToggleListening = contents::toggleListening.takeIf { listening },
+            listeningVisible = showListening,
             onFind = find.openAction(state.viewer) { viewModel.showMenus(false) },
             hasNextChapter = viewModel.adjacentChapter(state, forward = true) != null,
             hasPreviousChapter = viewModel.adjacentChapter(state, forward = false) != null,
         ) { activity ->
-            contents.Drawer(activity, viewModel, state)
+            contents.Drawer(
+                activity = activity,
+                viewModel = viewModel,
+                state = state,
+                fold = fold.takeIf { showListening },
+                listenContent = listenContent.takeIf { showListening },
+                onInsetsChanged = ::onPanelInsetsChanged,
+            )
             find.Bar(state.viewer)
         }
     }
@@ -87,6 +115,8 @@ internal class TsuzukiReaderChromeRequests {
 
 internal class TsuzukiReaderChrome(
     val onOpenContents: (() -> Unit)?,
+    val onToggleListening: (() -> Unit)?,
+    val listeningVisible: Boolean,
     val onFind: (() -> Unit)?,
     val hasNextChapter: Boolean,
     val hasPreviousChapter: Boolean,
@@ -98,6 +128,19 @@ internal class TsuzukiReaderChrome(
 
 private class TsuzukiReaderContentsHook {
     private var visible by mutableStateOf(false)
+    private var listeningDismissed by mutableStateOf(false)
+
+    val showListening: Boolean get() = !visible && !listeningDismissed
+
+    fun beginListening() {
+        visible = false
+        listeningDismissed = false
+    }
+
+    fun toggleListening() {
+        listeningDismissed = showListening
+        visible = false
+    }
 
     @Composable
     private fun docked(): Boolean =
@@ -111,17 +154,34 @@ private class TsuzukiReaderContentsHook {
     }
 
     @Composable
-    fun Drawer(activity: ReaderActivity, viewModel: ReaderViewModel, state: ReaderViewModel.State) {
-        if (docked()) {
+    fun Drawer(
+        activity: ReaderActivity,
+        viewModel: ReaderViewModel,
+        state: ReaderViewModel.State,
+        fold: ReaderFold?,
+        listenContent: (@Composable (onClose: () -> Unit) -> Unit)?,
+        onInsetsChanged: (end: Dp, bottom: Dp) -> Unit,
+    ) {
+        if (docked() || (fold != null && listenContent != null)) {
+            val dismiss = {
+                if (listenContent != null) listeningDismissed = true else visible = false
+            }
             TsuzukiReaderPanel(
                 activity = activity,
-                visible = visible && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE,
+                visible = (visible || listenContent != null) && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE,
                 widthDp = readerPanelWidthDp(LocalConfiguration.current.screenWidthDp),
                 manga = state.manga,
                 currentChapterId = state.contentsChapterId(),
                 loadQuotes = viewModel::getQuotes,
-                onDismissRequest = { visible = false },
+                onDismissRequest = dismiss,
                 onOpenChapter = { chapterId -> openChapter(activity, viewModel.state.value, chapterId) },
+                fold = fold,
+                onInsetsChanged = onInsetsChanged,
+                listenContent = if (listenContent != null) {
+                    { listenContent(dismiss) }
+                } else {
+                    null
+                },
             )
             return
         }

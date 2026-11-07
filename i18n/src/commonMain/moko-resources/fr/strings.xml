@@ -1324,4 +1324,10 @@
     <string name="tsz_q8_reader_next">Suivant</string>
     <string name="tsz_q8_reader_here">Ici</string>
     <string name="tsz_q8_reader_rotate">Pivoter</string>
+
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Minuteur de veille</string>
+    <string name="tsz_reader_sleep_off">Désactivé</string>
+    <string name="tsz_reader_sleep_chapter">Fin du chapitre</string>
+    <string name="tsz_reader_listen_paragraphs">Paragraphes</string>
 </resources>
