@@ -218,7 +218,7 @@ installed on tablet + S22, both launch, crash buffers empty.
   label shows a raw locale ("en-US-language"); Updates "Library last updated: Never" is italic body text, not
   uppercased in Dot.
 
-#### V1.1 Selected tab lost after process death (T3) — `ready` (found by Claude in V1, 2026-11-07; release-blocking)
+#### V1.1 Selected tab lost after process death (T3) — `review` (found by Claude in V1, 2026-11-07; release-blocking)
 Repro (preview build `.debug`, tablet, Dot): Library → MANGA tab → Home key → `adb shell am kill
 io.github.manojx2005.tsuzuki.debug` → open the app from **recents** (not the launcher). Expected: Library, MANGA
 selected. Actual: Home. No crash. Evidence: `r2-before.png` / `r2-after2.png` in the repo root (untracked, local).
@@ -231,11 +231,25 @@ state (shelf, search, selection) can be checked; Claude re-tests both on the tab
 batch (none of its cards touch `HomeScreen.kt` or `MainActivity.kt`), but R2's Result claimed the root tab already
 survived process death.
 
+**Result (Codex, 2026-11-07):** `afee7c2e6` on `tsuzuki/v1.1` (`.worktrees/v1.1`).
+- Upstream `presentation/util/Navigator.kt` keys the outer animation by Voyager's saved screen key. The previous default keyed by the screen object, whose identity can change on deserialization and change the saveable composition path under Home.
+- `TsuzukiNavigationTest.kt` checks that a serialized Manga tab resolves to the separate Library tab or the combined Library according to the active setting. Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 934 tests and zero failures.
+- Claude device check: on the tablet and S22, background Library → Manga, kill the background process, then return from Recents and verify both selections. Check another root tab and the R2 in-Library shelf, search and selection state. Android process recreation still needs this device check.
+
+#### HOME-SWIPE Swipe the Home cover stack (T2) — `review` (owner requested 2026-11-07)
+On Home layouts that show the MotionStack cover stack, let a horizontal swipe select the next or previous book. Keep the tap action and existing shuffle and reduced-motion behavior. Use the MotionStack and phone Home boards in Dot and Colour.
+
+**Result (Codex, 2026-11-07):** `a3a8a4220` on `tsuzuki/home-swipe` (`.worktrees/home-swipe`).
+- `TsuzukiCoverStack.kt` uses a horizontal drag detector. A left swipe advances and a right swipe goes back, with wraparound. Taps advance through the same callback. The existing shuffle plays in reverse for the previous book.
+- `TsuzukiHomeScreen.kt` applies the selected index to the title, progress, Resume action and cover tint. The hint lists both inputs in all eight locales. `docs/design/README.md` records the MotionStack status.
+- Per-file Spotless passed twice. All eight string files parsed. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
+- Claude device check: use compact Home with at least three books in Dot and Colour. Swipe left and right through both ends, tap, scroll vertically starting on the stack, and check reduced motion and Resume after a swipe. Tablet layouts that use a single hero have no stack.
+
 #### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; S22 preview from main `3da3254c7`: TTS plays, highlights the spoken paragraph, progress advances, no crash); Mihon part → V2b (Codex); freeze starts when V2b, R6, R7, V1.1 are merged
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
 
-#### V2b Mihon release picks (T3) — `ready` (start from current main; written by Claude 2026-11-07, owner: leave the rest to Codex)
+#### V2b Mihon release picks (T3) — `review` (written by Claude 2026-11-07, owner: leave the rest to Codex)
 Claude ran `scripts/upstream-report.sh mihon`: 224 commits not taken, most already logged as picked or skipped in
 `docs/UPSTREAM.md`. For v0.1 take only these, one `git cherry-pick -x` each on `tsuzuki/v2b` (skip any already in
 main or logged in UPSTREAM.md; if one conflicts with a Tsuzuki hook, resolve keeping the Tsuzuki behaviour, or skip
@@ -251,11 +265,24 @@ it and say why):
 Log each pick (or skip + reason) in `docs/UPSTREAM.md`. Build + unit tests. Result: list, test count, what Claude
 should check on a device (tracker login only if the owner approves; reader paging; Library duplicates; tab badges).
 
-#### V3 Watch teaser check (T1) — `ready` (start from current main) (owner 2026-11-07: keep the Read / Watch switch as a teaser)
+**Result (Codex, 2026-11-07):** `4e214de47` on `tsuzuki/v2b` (`.worktrees/v2b`).
+- `ed17f1112` adapts Mihon `4b48a84ec` to Tsundoku's upstream `MangaRestorer.kt`. A stored tracker entry keeps its linked remote IDs and metadata, and a backup can advance its progress.
+- `2c7bac0b2` cherry-picks Mihon `b19c8abeb` into upstream `Tabs.kt` in presentation-core. Badges get measured before the text.
+- `docs/UPSTREAM.md` records all eight decisions. N2 already covered blank-title matching and header redaction. The current MAL expiry check and extension class loader cover those picks. The GPU viewer and Kitsu score-type code are absent in this fork.
+- Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
+- Claude device check: in a scratch install restore a tracked book over the same tracker with different remote IDs and higher chapter progress. Verify the old link and higher progress. Check long Library tab labels with counts, then smoke-test manga paging and duplicate lookup. Tracker login requires owner approval.
+
+#### V3 Watch teaser check (T1) — `review` (owner 2026-11-07: keep the Read / Watch switch as a teaser)
 `presentation/tsuzuki/home/TsuzukiHomeScreen.kt` `WatchPlaceholder`: the copy must say anime is coming in a later
 version, with no sample numbers, fake titles or controls that look usable; nothing on it may open anime code in a
 release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
 Fix only what fails; list the checks in Result. Claude checks: preview build, Home → Watch, both themes, both devices.
+
+**Result (Codex, 2026-11-07):** `69aa2ad3e` on `tsuzuki/v3` (`.worktrees/v3`).
+- `TsuzukiHomeScreen.kt` keeps the switch and shows a short later-version message with a Back to reading action. Android Back also returns to Read. The feature tiles and their strings were removed in all eight locales. `docs/design/README.md` records the teaser.
+- The Library media switch, Updates tiles and Stats have reading options only. The debug control APK declares both anime activities. The four ABI release APKs and the universal release APK contain neither activity nor the mpv/player/FFmpeg libraries.
+- Per-file Spotless passed twice and the eight teaser strings parsed. `assembleDebug`, `testDebugUnitTest` (933 tests, zero failures) and `assembleRelease` passed.
+- Claude device check: in the preview build, open Home → Watch in Dot and Colour on the S22 and tablet. Check both back paths and verify that Library, Updates and Stats only offer reading features.
 
 #### V4 Telemetry out + Tsuzuki release workflow (T2) — `done` (Claude 2026-11-07; see Result)
 `PRIVACY.md` promises no telemetry. Keep `Config.includeTelemetry` and the Firebase code paths for Tsundoku merges,
@@ -470,19 +497,30 @@ grid; Settings two-pane) and fix only differences (list them). Real data only.
 - `TsuzukiSettingsMain.kt` caps the section list at the board's 360 dp, gives rows the 52 dp minimum and fills the selected row's tile within the accent outline. The existing shared rail and appearance pane remain the entry points.
 - Kept the available real-data tiles and settings. Device review: verify Dot and Colour on tablet portrait and landscape. In landscape confirm the six-cover row and details selection, then check Settings list width, selected outline/fill and preference navigation. Check the separate Library grid and rail at a large font scale.
 
-#### R6 Colour theme parity pass (T2) — `ready` (R3 is in main: start from main)
+#### R6 Colour theme parity pass (T2) — `review` (R3 is in main)
 Every Tsuzuki screen in **Colour** at 360 dp and tablet: sentence case, Instrument Serif headings, book-palette
 accents, no Dot-only artefacts (uppercase, grey `#8A8A8A`, red). Use the Q8 narrow previews in Colour; fix
 differences; list per screen.
-**Result (Codex, 2026-11-07):** R3 passed verification, but its implementation is an uncommitted diff. The Batch R prerequisite requires an R3 commit to merge or its implementation already in main. No changes for this card.
+**Result (Codex, 2026-11-07):** `c004ea917` on `tsuzuki/r6` (`.worktrees/r6`).
+- Upstream `LnrTypography.kt` selects the italic Instrument Serif face in the paired Android typeface. Headings previously rendered upright even though Compose requested italic. The Noto Serif JP fallback stays in the family.
+- `TsuzukiNarrowPreviews.kt` sets the board's night palette and mirrors the app's content locals. Added tablet portrait and landscape variants for Home and the Library, Settings and Updates samples. `docs/design/README.md` records the coverage.
+- The headless 360 dp matrix rendered Home, Library, Browse, Details, More, novel and manga reader chrome, reader settings, Settings, Updates and History samples in both themes. Colour showed italic display text, sentence-case controls and gold default accents. Small uppercase section labels and cover media badges match their Colour boards. Tablet Home showed italic headings in both orientations. Evidence: `.worktrees/r6/app/build/r6-preview-after/`.
+- Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
+- Claude device check: compare live cover accents and full Library, Settings and Updates panes on the tablet. The night preview uses the board palette. The initial day-mode sample showed low contrast where light Material ink met dark Tsuzuki tokens, so also check System, Light and Dark on the device. Full runtime coverage for screens outside the preview matrix is pending.
 
-#### R7 Japanese layout pass (T2) — `ready` (R3 is in main: start from main)
+#### R7 Japanese layout pass (T2) — `review` (R3 is in main)
 Devices are Japanese. Status table: translated layouts never visually checked. Run the narrow previews with the
 `ja` locale; fix truncation, mixed fonts (Japanese must use the partner font via `MaterialTheme.typography`) and
 any hard-coded English in Tsuzuki screens (move to strings, 8 locales).
-**Result (Codex, 2026-11-07):** R3 passed verification, but its implementation is an uncommitted diff. The Batch R prerequisite requires an R3 commit to merge or its implementation already in main. No changes for this card.
+**Result (Codex, 2026-11-07):** `e1502c742` on `tsuzuki/r7` (`.worktrees/r7`).
+- `TsuzukiNav.kt` wraps phone labels inside the existing five cells, up to three lines at large font scales. The selected pill grows with them. `TsuzukiMoreScreen.kt` allows two-line toggle labels.
+- `TsuzukiHomeScreen.kt` formats the date using the app locale and localizes the new-chapter count. `TsuzukiHistoryItem.kt` uses the existing chapter-number translation and allows its timestamp line to wrap.
+- `i18n/` adds the count in eight locales. `i18n-novel/` supplies translations for the existing Manga, Novels, Translate and three reading-status labels. `docs/design/README.md` records the Japanese preview coverage.
+- Reviewed 360 dp Japanese previews at 100%, 130% and 200% in Dot and Colour with the R6 preview harness. Evidence: `.worktrees/r7/app/build/r7-preview/`. Long book titles and Details action tiles retain their designed ellipses. English shelf names in the Library preview are fixtures. Other upstream novel strings still use their existing fallback.
+- Per-file Spotless passed twice and XML checks covered seven keys in eight locales. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
+- Claude device check: select Japanese on the S22 and tablet. At standard and large text scales, check the phone navigation, More toggles, Browse media choices, Home date/new chip, History timestamp and reader controls. Check the tablet rail and remaining runtime settings.
 
-#### R8 Downloads screen + queue vs board (T2) — `ready` (sent back by Claude 2026-11-07; your work is committed as `917f06958` on `tsuzuki/r8`: add a fix commit, don't restart)
+#### R8 Downloads screen + queue vs board (T2) — `review` (reworked on `tsuzuki/r8`)
 **Claude review 2026-11-07 — rework:** the queue UI is good, but upstream `Downloader.kt` (+98/−48) rewrites the scheduler for every download: `collectLatest` → `collect` with `joinAll()` inside the collector (a cancelled job stuck in blocking IO now stalls all scheduling), the per-run job map became a class field, and `distinctUntilChanged` was dropped. Keep Mihon's `collectLatest` loop. Put source pause and targeted retry in `tsuzuki/download/` (e.g. filter paused sources inside `activeMangaDownloads`, and have retry reset statuses + bump a flow the existing `combine` already watches). Target: `Downloader.kt` under ~20 changed lines; drop the `joinAll` wait unless a test shows a real write race.
 Board `Downloads` (+ `DownloadSheet`). Compare the Tsuzuki download queue (N10 Compose rows) with the board: group
 headers, per-group pause/resume, progress, error rows with retry; fix differences.
@@ -491,6 +529,12 @@ headers, per-group pause/resume, progress, error rows with retry; fix difference
 - `DownloadQueueScheduling.kt` and `DownloadQueueSchedulingTest.kt` select one runnable manga download per available source and verify paused-source ordering and targeted worker startup. Upstream `Downloader.kt` re-evaluates when a group changes or a failure is retried, waits for old attempts to finish writing before restarting, and leaves paused groups out of scheduling. Upstream `DownloadManager.kt` exposes the controls. Upstream `DownloadJob.kt` distinguishes a targeted restart from global Start, so the former leaves other failed items alone.
 - Manga groups retain source grouping, novel groups retain book grouping, and source pauses are session-scoped like existing novel pauses. The board's video rows, sample storage and retry countdown were not added. R4 and R8 both edit `DownloadQueueScreen.kt`; preserve both when merging.
 - Claude device review: on Dot and Colour queue from two manga sources and two novels, pause one source and one novel while in flight, confirm others advance, resume, then trigger two errors and retry one. Check retry while the source or whole queue is paused, reordering, and removing items during progress.
+
+**Rework result (Codex, 2026-11-07):** `32dff0c4d` on top of `917f06958` (`.worktrees/r8`).
+- Upstream `Downloader.kt` restores `collectLatest`, distinct active selections and the per-run job map. Cancelled sources release the scheduler without a group join. Queue completion signals let a waiting source resume once the previous attempt exits.
+- `DownloadQueueScheduling.kt` owns the paused-source and retry state, filters source queues and wakes the existing scheduler when the queue list itself stays the same. `DownloadQueueSchedulingTest.kt` adds checks for targeted retry while paused and resuming a source as its cancelled attempt exits.
+- The cumulative `Downloader.kt` change is +36/−20 against the base, above the approximate 20-line target. The extra hooks keep retry and rapid resume from starting a second attempt while the same download is still finishing.
+- Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 925 tests and zero failures. Repeat the device checklist above, including a rapid pause/resume while another source continues downloading.
 
 #### R9 Widgets vs board (T3) — `done` (merged into main via `review/night5` → `3fa896b3e`, 2026-11-07; see V1)
 Board `Widgets`. Continue-reading widget and N28 Listening widget: match sizes/styles, Dot + Colour (follow app
@@ -501,7 +545,7 @@ theme), real data only, tap targets open the right screen. Claude places them on
 - `TsuzukiWidgetTheme.kt` reuses theme tokens and watches app theme, accent and cover-colour changes. Upstream `App.kt` starts that watcher in the main process. Widget typography uses Glance system faces. Time estimates, anime content, and the launcher preview artwork are outside this diff.
 - Claude device review: place both widgets on the tablet, resize Reading short/tall and Listening to one row, toggle Dot/Colour and cover colour, test an in-progress chapter, a completed book, the taller New tile, and Listening chapter/transport with TTS paused, playing and stopped. Verify the two widgets' distinct reader destinations when placed together.
 
-#### R10 Tracker accounts + update schedule vs boards (T2) — `ready` (sent back by Claude 2026-11-07; your work is committed as `7154179d3` on `tsuzuki/r10`: add a fix commit, don't restart)
+#### R10 Tracker accounts + update schedule vs boards (T2) — `review` (reworked on `tsuzuki/r10`)
 **Claude review 2026-11-07 — rework:** `SettingsLibraryScreen.kt` (+72/−41) and `SettingsTrackingScreen.kt` (+45/−24) wrap upstream preference rows in `if (!themed)` and re-indent them, which AGENTS.md rules out. Instead, put one dispatch at the top of each group builder (`if (isTsuzukiStyle()) return tsuzukiLibraryUpdateGroup(...)`) that builds the whole themed group in `presentation/tsuzuki/settings/`, and restore the upstream list byte-for-byte. Also check that the themed group keeps the smart-update manga restrictions (the current themed branch replaces them with Download new chapters).
 Boards `TrackerAccounts`, `UpdateSchedule`. Settings › Tracking and Library update schedule screens: compare and
 fix; never show tokens; no new network calls.
@@ -509,7 +553,13 @@ fix; never show tokens; no new network calls.
 - Novel tracker accounts come first and show locally linked library entries. Token entry is masked and opens empty. No additional network calls. The Update Schedule uses the existing interval, included shelves, download option, device and library restrictions, and scheduler. Detailed source throttling stays on its existing screen.
 - Claude device review: compare Dot and Colour, change the schedule and restrictions, and check account state and link counts after login and logout. Coordinate the `SettingsTrackingScreen.kt` overlap with R4.
 
-#### R11 Reading estimates (T3) — `codex-working, paused (Codex usage limit 2026-11-07): uncommitted WIP in .worktrees/r11, resume there, don't restart`
+**Rework result (Codex, 2026-11-07):** `4b41d9712` on top of `7154179d3` (`.worktrees/r10`).
+- Upstream `SettingsLibraryScreen.kt` and `SettingsTrackingScreen.kt` dispatch the themed groups at their entry points. Both stock preference bodies match the pre-R10 version byte for byte. The earlier empty, masked novel token entry stays in place.
+- `TsuzukiUpdateSchedule.kt` reuses the interval and category dialog and exposes all four existing smart-update restrictions: skip unread, unstarted, completed and outside the release period. Download new chapters is a separate switch.
+- `TsuzukiTrackingPreferences.kt` moves novel-only accounts to the top using tracker IDs and attaches local linked counts. `docs/design/README.md` records both groups.
+- Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 921 tests and zero failures. Check all four smart-update flags independently of the download switch during the device pass above.
+
+#### R11 Reading estimates (T3) — `codex-working` (.worktrees/r11, resumed 2026-11-07)
 Phase 5 "reading estimates (words, speed, time left)". Details Resume tile / reader chrome show **time left in
 chapter** and **in book** only when backed by data: words from downloaded/cached chapter text (count once, cache in
 a Tsuzuki table-free store e.g. prefs/JSON keyed by chapter id — no schema change), reading speed from
