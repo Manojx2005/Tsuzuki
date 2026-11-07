@@ -205,6 +205,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode.get())
 
+        // Tsuzuki: daily background check that notifies about a new app release.
+        eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
+
         // Updates widget update
         WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
 

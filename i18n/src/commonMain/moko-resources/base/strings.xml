@@ -1715,4 +1715,8 @@
     <string name="tsz_reader_sleep_off">Off</string>
     <string name="tsz_reader_sleep_chapter">End of chapter</string>
     <string name="tsz_reader_listen_paragraphs">Paragraphs</string>
+    <!-- App update notification (v0.1) -->
+    <string name="tsz_app_update_channel">App updates</string>
+    <string name="tsz_app_update_available">Tsuzuki %1$s is available</string>
+    <string name="tsz_app_update_tap">Tap to see what's new and update</string>
 </resources>

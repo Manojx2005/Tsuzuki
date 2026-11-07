@@ -396,6 +396,10 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
   holds only the chosen media's three pages, so swipes move Sources ↔ Extensions ↔ Migrate and never cross Novels /
   Manga; the pills switch media and keep the section. Tablet: 4 swipes stop at Novels Migrate; Manga keeps Migrate;
   3 back-swipes stop at Manga Sources. `BrowseHeaderSectionsTest` 4/4.
+- **App update notification (owner 2026-11-07):** `TsuzukiAppUpdateJob` checks GitHub daily (network required, release
+  and preview builds with the updater only) and notifies once per new, unskipped version; tapping opens the existing
+  update screen. Tablet: job scheduled (WorkManager job "TsuzukiAppUpdateJob"), simulated tap opens UPDATE READY with
+  Download / Not now / Open on GitHub / Skip; 946 tests green. First real end-to-end check needs v0.1.0 → a later tag.
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.

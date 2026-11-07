@@ -342,6 +342,7 @@ class MainActivity : BaseActivity() {
                     val result = AppUpdateChecker().checkForUpdate()
                     if (
                         result is GetApplicationRelease.Result.NewUpdate &&
+                        navigator.lastItem !is NewUpdateScreen &&
                         !isAppUpdateSkipped(result.release.version, preferences.skippedAppUpdate.get())
                     ) {
                         val updateScreen = NewUpdateScreen(
@@ -574,6 +575,13 @@ class MainActivity : BaseActivity() {
                     closeActivityOnDone = closeImportScreenOnDone,
                 ),
             )
+            ready = true
+            return true
+        }
+
+        // Tsuzuki: a tapped app update notification opens the update screen.
+        eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.screenFrom(intent)?.let {
+            navigator.push(it)
             ready = true
             return true
         }

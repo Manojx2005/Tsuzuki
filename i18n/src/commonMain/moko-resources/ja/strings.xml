@@ -1350,4 +1350,8 @@
     <string name="tsz_reader_sleep_off">オフ</string>
     <string name="tsz_reader_sleep_chapter">章の終わり</string>
     <string name="tsz_reader_listen_paragraphs">段落</string>
+    <!-- App update notification (v0.1) -->
+    <string name="tsz_app_update_channel">アプリのアップデート</string>
+    <string name="tsz_app_update_available">Tsuzuki %1$s が利用可能です</string>
+    <string name="tsz_app_update_tap">タップして新機能を確認し、アップデート</string>
 </resources>
