@@ -97,7 +97,8 @@ fun TsuzukiSegments(
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
-                        maxLines = 2,
+                        maxLines = 1,
+                        softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                         color = if (highlightedIndex == index) {
                             tokens.background

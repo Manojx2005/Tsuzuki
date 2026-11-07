@@ -143,7 +143,8 @@ internal fun TsuzukiPageColourPicker(
                                 tsuzukiMenuLabel(label),
                                 style = MaterialTheme.typography.labelSmall,
                                 textAlign = TextAlign.Center,
-                                maxLines = 2,
+                                maxLines = 1,
+                                softWrap = false,
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }

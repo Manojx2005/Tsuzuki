@@ -288,7 +288,8 @@ private fun ActionTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = Color.White,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
         )
         sub?.let {

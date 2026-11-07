@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiNavBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiNavItem
@@ -72,6 +73,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Date
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 
 @Preview(name = "EN 100%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "en", fontScale = 1f)
 @Preview(name = "EN 130%", group = "360 dp", widthDp = 360, heightDp = 800, locale = "en", fontScale = 1.3f)
@@ -188,6 +191,19 @@ private fun BrowsePreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme:
 @Composable
 private fun DetailsPreview(@PreviewParameter(TsuzukiNarrowPreviews::class) theme: AppTheme) = PreviewPage(theme) {
     val title = longTitle()
+    MangaActionRow(
+        favorite = true,
+        trackingCount = 0,
+        nextUpdate = Clock.System.now() + 2.days,
+        isUserIntervalMode = false,
+        onAddToLibraryClicked = {},
+        onWebViewClicked = {},
+        onWebViewLongClicked = null,
+        onSearchChaptersClicked = null,
+        onTrackingClicked = {},
+        onEditIntervalClicked = {},
+        onEditCategory = null,
+    )
     TsuzukiDetailsDescription(
         defaultExpanded = false,
         hasSummary = true,
