@@ -1,19 +1,20 @@
 package eu.kanade.tachiyomi.tsuzuki.reader
 
+import androidx.core.graphics.Insets
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class NovelSafeInsetsTest {
     @Test
-    fun `the taller of notch and status bar wins at the top`() {
-        // 3x density: 110 px notch, 90 px status bar -> 37 dp
-        novelSafeInsetsDp(110, 90, 0, 63, 3f) shouldBe NovelSafeInsets(37, 21)
-        novelSafeInsetsDp(0, 72, 0, 0, 3f) shouldBe NovelSafeInsets(24, 0)
+    fun `top novel status bar starts below the notch`() {
+        val safeArea = Insets.of(0, 110, 0, 63)
+        safeArea.withNovelStatusBar(heightPx = 40, atBottom = false) shouldBe Insets.of(0, 150, 0, 63)
     }
 
     @Test
-    fun `no insets or a broken density give nothing`() {
-        novelSafeInsetsDp(0, 0, 0, 0, 2.625f) shouldBe NovelSafeInsets.NONE
-        novelSafeInsetsDp(100, 100, 100, 100, 0f) shouldBe NovelSafeInsets.NONE
+    fun `bottom novel status bar preserves side cutouts`() {
+        val safeArea = Insets.of(96, 60, 44, 24)
+        safeArea.withNovelStatusBar(heightPx = 40, atBottom = true) shouldBe Insets.of(96, 60, 44, 64)
+        safeArea.withNovelStatusBar(heightPx = 0, atBottom = true) shouldBe safeArea
     }
 }
