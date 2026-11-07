@@ -151,7 +151,7 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now (updated 2026-11-07):** V1.1 → V2b → R6 → R7 → V3 → (V4–V6: Claude) → R8 rework →
+**Codex lane 2 order from now (updated 2026-11-07, evening):** V7.5 → V7.4 → V7.3 → (done: V1.1, V2b, R6, R7, V3) → (V4–V6: Claude) → R8 rework →
 R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
 for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
@@ -416,6 +416,32 @@ pill item text is drawn): keep each label on one line (`maxLines = 1`, `softWrap
 item width (auto-size between the current size and ~80 %, or measure and step down) instead of wrapping; never
 break inside a word. Check the other locales' longest labels (de, fr, es, pt-BR) at 360 dp and with font scale
 1.3. Test: a pure function for the label size choice. Claude re-checks on the S22.
+
+#### V7.3 Japanese for the rest of the app (T2) — `ready` (owner 2026-11-07: "some settings are still in English")
+Claude added 87 strings (main-file Settings strings + novel-module headings, commit `5a523840d`). Still missing in
+Japanese: ~120 in `i18n/.../base/strings.xml` and ~860 in `i18n-novel/.../base/strings.xml` (only 6 of 882 novel
+strings had Japanese). Add them to the matching `ja/strings.xml`, novel-reader and settings screens first. Rules: keep
+every placeholder exactly (`%s`, `%d`, `%1$s`, `{TEXT}`…; write a check like Claude's `ja_settings.py`), escape `&`
+and `'`, product names stay Latin (Tsuzuki, Dot, Colour, LNReader, Mihon, Shizuku), titles as short noun phrases,
+descriptions in polite です/ます, match the existing ja file's terms (小説, マンガ, チャプター, ライブラリ, 本棚).
+Claude checks the S22 in Japanese (Settings, novel reader settings, Downloads, Translation).
+
+#### V7.4 Novel reader: keep scrolling text out of the notch / gesture area (T3) — `ready` (owner 2026-11-07)
+Claude's `84d722dce` adds `novelSafeInsets()` to the top/bottom margins, so a chapter starts below the notch. While
+scrolling, text still passes under the camera cutout and the gesture bar because the margin is content padding. Like
+LNReader, reserve the safe area on the scroll viewport in both renderers: TextView (scroll container padding +
+`clipToPadding = true`, padded band painted with the page colour) and WebView (fixed top/bottom bands or viewport
+padding via CSS env(safe-area-inset-*) / JS-provided px). The user's margins stay content padding inside that.
+Paged mode: page height excludes the safe area. Reader menu shown/hidden must not shift text. Test both renderers,
+Dot + Colour, S22 (punch-hole) and tablet; screenshots at chapter start and mid-chapter.
+
+#### V7.5 Novel reader: can't scroll after Previous chapter (T3) — `ready` (owner report 2026-11-07)
+Owner: reading chapter 41 (Lord of the Mysteries, release build), tapped back to the previous chapter (40, already
+read) and could not scroll any more. Reproduce on tablet + S22 in both renderers (TextView, WebView), infinite scroll
+on and off: open chapter N > 1, tap ‹ Previous (bottom bar and chapter-end card), try to scroll up/down, tap, open
+the menu. Suspects: the previous chapter loads at its saved 100 % position and the scroll restore or Q13's
+next-chapter warm-up leaves the container locked/consuming gestures, or the TTS mini-controls overlay intercepts.
+Fix the cause, add a regression test for the position/lock logic. Claude device-checks.
 
 #### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
