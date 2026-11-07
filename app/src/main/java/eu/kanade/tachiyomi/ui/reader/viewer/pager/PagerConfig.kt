@@ -33,6 +33,9 @@ class PagerConfig(
 
     var dualPageSplitChangedListener: ((Boolean) -> Unit)? = null
 
+    var tabletSpreadEnabled = readerPreferences.tabletMangaSpread.get()
+        private set
+    var tabletSpreadChangedListener: (() -> Unit)? = null
     var imageScaleType = 1
         private set
 
@@ -82,6 +85,9 @@ class PagerConfig(
             .drop(1)
             .onEach { navigationModeChangedListener?.invoke() }
             .launchIn(scope)
+
+        readerPreferences.tabletMangaSpread
+            .register({ tabletSpreadEnabled = it }, { tabletSpreadChangedListener?.invoke() })
 
         readerPreferences.dualPageSplitPaged
             .register(

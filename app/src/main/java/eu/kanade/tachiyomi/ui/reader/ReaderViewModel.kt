@@ -6,6 +6,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
+import androidx.core.os.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -154,11 +155,20 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private val mutableState = MutableStateFlow(
         State(
+            dialog = Dialog.Settings.takeIf {
+                savedState.get<android.os.Bundle>("tsuzuki_reader_ui")?.getBoolean("settings") == true
+            },
             isTranslating = translationPreferences.translationEnabled().get() &&
                 translationPreferences.smartAutoTranslate().get(),
         ),
     )
     val state = mutableState.asStateFlow()
+
+    init {
+        savedState.setSavedStateProvider("tsuzuki_reader_ui") {
+            bundleOf("settings" to (state.value.dialog == Dialog.Settings))
+        }
+    }
 
     /**
      * Ids of the manga and chapter the reader was launched with, taken from the activity intent.
@@ -734,7 +744,7 @@ class ReaderViewModel @JvmOverloads constructor(
      * read, update tracking services, enqueue downloaded chapter deletion, and updating the active chapter if this
      * [page]'s chapter is different from the currently active.
      */
-    fun onPageSelected(page: ReaderPage) {
+    fun onPageSelected(page: ReaderPage, spreadStart: Int? = null) {
         // InsertPage doesn't change page progress
         if (page is InsertPage) {
             return
@@ -745,7 +755,7 @@ class ReaderViewModel @JvmOverloads constructor(
 
         // Save last page read and mark as read if needed
         viewModelScope.launchNonCancellable {
-            updateChapterProgress(selectedChapter, page)
+            updateChapterProgress(selectedChapter, page, spreadStart)
         }
 
         if (selectedChapter != getCurrentChapter()) {
@@ -871,7 +881,11 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(novelProgressPercent = clamped) }
         novelScrollProgress = clamped
         if (!readerPreferences.novelInfiniteScroll.get()) {
-            nextChapterWarmup.onProgress(clamped, state.value.viewerChapters?.currChapter?.chapter?.id, viewModelScope) {
+            nextChapterWarmup.onProgress(
+                clamped,
+                state.value.viewerChapters?.currChapter?.chapter?.id,
+                viewModelScope,
+            ) {
                 prepareNextChapterForInfiniteScroll()
             }
         }
@@ -975,11 +989,11 @@ class ReaderViewModel @JvmOverloads constructor(
      * Saves the chapter progress (last read page and whether it's read)
      * if incognito mode isn't on.
      */
-    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page) {
+    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page, spreadStart: Int?) {
         val pageIndex = page.index
 
         mutableState.update {
-            it.copy(currentPage = pageIndex + 1)
+            it.copy(currentPage = pageIndex + 1, mangaSpreadStart = spreadStart)
         }
         readerChapter.requestedPage = pageIndex
         chapterPageIndex = pageIndex
@@ -1629,6 +1643,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val bookmarked: Boolean = false,
         val isLoadingAdjacentChapter: Boolean = false,
         val currentPage: Int = -1,
+        val mangaSpreadStart: Int? = null,
         /**
          * Chapter currently visible in the novel viewer (for app bar display only).
          */

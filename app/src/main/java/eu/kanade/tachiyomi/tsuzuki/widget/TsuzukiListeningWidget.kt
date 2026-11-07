@@ -15,10 +15,12 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartService
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
@@ -41,11 +43,13 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsNowPlaying
+import eu.kanade.tachiyomi.tsuzuki.tts.TtsNowPlayingState
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsStatus
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.service.TtsPlaybackService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +65,7 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.glance.appwidget.action.actionStartActivity as actionStartActivityIntent
 
 /**
  * The "Listening" home-screen widget (board 07-system "Widgets"): the book TTS is reading, its chapter and a
@@ -70,11 +75,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class TsuzukiListeningWidget : GlanceAppWidget() {
 
+    override val sizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val ui = Injekt.get<UiPreferences>()
         val getManga = Injekt.get<GetManga>()
-        val dot = ui.appTheme.get() == AppTheme.DOT
-        val grey = dot && !ui.tsuzukiDotColourCovers.get()
+        val tokens = widgetTheme(ui)
+        val grey = tokens.isDot && !ui.tsuzukiDotColourCovers.get()
         val labels = ListeningLabels(
             listening = context.stringResource(MR.strings.tsz_widget_listening),
             nothing = context.stringResource(MR.strings.tsz_widget_listening_nothing),
@@ -85,6 +92,7 @@ class TsuzukiListeningWidget : GlanceAppWidget() {
         provideContent {
             val now by TtsNowPlaying.state.collectAsState()
             val cover by produceState<Bitmap?>(initialValue = null, now.mangaId, grey) {
+                value = null
                 value = if (now.mangaId > 0) {
                     withContext(Dispatchers.IO) {
                         getManga.await(now.mangaId)?.let { loadWidgetCover(context, it.asMangaCover(), grey) }
@@ -93,7 +101,7 @@ class TsuzukiListeningWidget : GlanceAppWidget() {
                     null
                 }
             }
-            ListeningWidgetContent(context, dot, labels, now.status, now.bookTitle, now.chapterName, cover)
+            ListeningWidgetContent(context, tokens, labels, now, cover)
         }
     }
 }
@@ -122,25 +130,24 @@ private data class ListeningLabels(val listening: String, val nothing: String, v
 @Composable
 private fun ListeningWidgetContent(
     context: Context,
-    dot: Boolean,
+    tokens: TsuzukiTokens,
     labels: ListeningLabels,
-    status: TtsStatus,
-    book: String,
-    chapter: String,
+    now: TtsNowPlayingState,
     cover: Bitmap?,
 ) {
-    val background = if (dot) Color(0xFF000000) else Color(0xFF1C2B4A)
-    val tile = if (dot) Color(0xFF0D0D0D) else Color(0xFF2A3B60)
-    val accent = if (dot) Color(0xFFFF2D2D) else Color(0xFFE9B44C)
-    val onAccent = if (dot) Color.White else Color(0xFF1C2B4A)
-    val muted = if (dot) Color(0xFF8A8A8A) else Color(0xB8FFFFFF)
-    val face = if (dot) FontFamily.Monospace else FontFamily.SansSerif
-    fun up(s: String) = if (dot) s.uppercase() else s
-    val active = status != TtsStatus.STOPPED
-    val playing = status == TtsStatus.PLAYING
+    val compact = LocalSize.current.height < 100.dp
+    val face = if (tokens.isDot) FontFamily.Monospace else FontFamily.SansSerif
+    fun up(s: String) = if (tokens.isDot) s.uppercase() else s
+    val active = now.isActive
+    val playing = now.status == TtsStatus.PLAYING
+    val open = if (active && now.mangaId > 0 && now.chapterId > 0) {
+        actionStartActivityIntent(ReaderActivity.newIntent(context, now.mangaId, now.chapterId))
+    } else {
+        actionStartActivity<MainActivity>()
+    }
     val titleStyle = TextStyle(
-        color = ColorProvider(Color.White),
-        fontSize = 16.sp,
+        color = ColorProvider(tokens.dotOn),
+        fontSize = if (compact) 14.sp else 16.sp,
         fontWeight = FontWeight.Bold,
         fontFamily = face,
     )
@@ -150,13 +157,14 @@ private fun ListeningWidgetContent(
             .fillMaxSize()
             .appWidgetBackground()
             .cornerRadius(24.dp)
-            .background(background)
-            .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
+            .background(tokens.background)
+            .padding(if (compact) 5.dp else 10.dp)
+            .clickable(open),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            GlanceModifier.fillMaxSize().cornerRadius(18.dp).background(tile).padding(12.dp),
+            GlanceModifier.fillMaxSize().cornerRadius(18.dp).background(tokens.tile)
+                .padding(if (compact) 5.dp else 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (active && cover != null) {
@@ -164,18 +172,26 @@ private fun ListeningWidgetContent(
                     provider = ImageProvider(cover),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = GlanceModifier.size(width = 48.dp, height = 72.dp).cornerRadius(8.dp),
+                    modifier = if (compact) {
+                        GlanceModifier.size(width = 32.dp, height = 44.dp).cornerRadius(6.dp)
+                    } else {
+                        GlanceModifier.size(width = 48.dp, height = 72.dp).cornerRadius(8.dp)
+                    },
                 )
                 Spacer(GlanceModifier.width(12.dp))
             }
             Column(GlanceModifier.defaultWeight()) {
-                Text(up(labels.listening), style = small(muted, face))
-                Text(up(if (active) book else labels.nothing), maxLines = 2, style = titleStyle)
-                if (active && chapter.isNotBlank()) {
+                Text(up(labels.listening), maxLines = 1, style = small(tokens.mutedText, face))
+                Text(
+                    up(if (active) now.bookTitle else labels.nothing),
+                    maxLines = if (compact) 1 else 2,
+                    style = titleStyle,
+                )
+                if (active && now.chapterName.isNotBlank()) {
                     Text(
-                        up(chapter),
+                        up(now.chapterName),
                         maxLines = 1,
-                        style = TextStyle(color = ColorProvider(muted), fontSize = 12.sp, fontFamily = face),
+                        style = TextStyle(color = ColorProvider(tokens.mutedText), fontSize = 12.sp, fontFamily = face),
                     )
                 }
             }
@@ -183,9 +199,9 @@ private fun ListeningWidgetContent(
                 Spacer(GlanceModifier.width(8.dp))
                 Box(
                     GlanceModifier
-                        .size(48.dp)
-                        .cornerRadius(24.dp)
-                        .background(accent)
+                        .size(44.dp)
+                        .cornerRadius(22.dp)
+                        .background(tokens.accent)
                         .clickable(actionStartService(transport(context, if (playing) "PAUSE" else "RESUME"))),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -194,7 +210,7 @@ private fun ListeningWidgetContent(
                             if (playing) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp,
                         ),
                         contentDescription = if (playing) labels.pause else labels.play,
-                        colorFilter = ColorFilter.tint(ColorProvider(onAccent)),
+                        colorFilter = ColorFilter.tint(ColorProvider(tokens.onAccent)),
                         modifier = GlanceModifier.size(28.dp),
                     )
                 }

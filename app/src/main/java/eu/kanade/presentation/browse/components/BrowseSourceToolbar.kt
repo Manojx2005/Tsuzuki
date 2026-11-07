@@ -31,6 +31,8 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.RadioMenuItem
 import eu.kanade.presentation.components.SearchToolbar
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuWeight
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.Source
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -133,22 +135,40 @@ fun BrowseSourceToolbar(
                 expanded = selectingDisplayMode,
                 onDismissRequest = { selectingDisplayMode = false },
             ) {
+                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuGroup(
+                    label = stringResource(MR.strings.action_display_mode),
+                )
                 RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_comfortable_grid)) },
+                    text = {
+                        Text(
+                            text = tsuzukiMenuLabel(stringResource(MR.strings.action_display_comfortable_grid)),
+                            fontWeight = tsuzukiMenuWeight(),
+                        )
+                    },
                     isChecked = displayMode == LibraryDisplayMode.ComfortableGrid || displayMode == null,
                 ) {
                     selectingDisplayMode = false
                     onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
                 }
                 RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_grid)) },
+                    text = {
+                        Text(
+                            text = tsuzukiMenuLabel(stringResource(MR.strings.action_display_grid)),
+                            fontWeight = tsuzukiMenuWeight(),
+                        )
+                    },
                     isChecked = displayMode == LibraryDisplayMode.CompactGrid,
                 ) {
                     selectingDisplayMode = false
                     onDisplayModeChange(LibraryDisplayMode.CompactGrid)
                 }
                 RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_list)) },
+                    text = {
+                        Text(
+                            text = tsuzukiMenuLabel(stringResource(MR.strings.action_display_list)),
+                            fontWeight = tsuzukiMenuWeight(),
+                        )
+                    },
                     isChecked = displayMode == LibraryDisplayMode.List,
                 ) {
                     selectingDisplayMode = false

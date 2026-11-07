@@ -2,12 +2,16 @@ package eu.kanade.tachiyomi.ui.manga
 
 import android.app.Application
 import android.content.Context
+import android.os.Bundle
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastAny
+import androidx.core.os.bundleOf
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
@@ -32,6 +36,7 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
+import eu.kanade.presentation.tsuzuki.selection.savedSelection
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.data.download.ChapterContentReader
 import eu.kanade.tachiyomi.data.download.DownloadCache
@@ -150,6 +155,7 @@ class MangaViewModel(
     private val getLibraryManga: GetLibraryManga = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    savedState: SavedStateHandle? = null,
 ) : StateViewModel<MangaViewModel.State>(State.Loading) {
 
     companion object {
@@ -163,6 +169,7 @@ class MangaViewModel(
                     context = Injekt.get<Application>(),
                     mangaId = get(MANGA_ID_KEY)!!,
                     isFromSource = get(IS_FROM_SOURCE_KEY)!!,
+                    savedState = createSavedStateHandle(),
                 )
             }
         }
@@ -197,7 +204,24 @@ class MangaViewModel(
     val isUpdateIntervalEnabled =
         LibraryPreferences.MANGA_OUTSIDE_RELEASE_PERIOD in libraryPreferences.autoUpdateMangaRestrictions.get()
 
-    private val selectedChapterIds: HashSet<Long> = HashSet()
+    private val restoredUi = savedState?.get<Bundle>("tsuzuki_details_ui")?.takeIf { it.getLong("manga_id") == mangaId }
+    private val selectedChapterIds = HashSet(restoredUi?.getLongArray("selected")?.toList().orEmpty())
+
+    init {
+        savedState?.setSavedStateProvider("tsuzuki_details_ui") {
+            val current = successState
+            bundleOf(
+                "manga_id" to mangaId,
+                "selected" to current?.chapters.orEmpty().filter { it.selected }.map { it.id }.savedSelection(),
+                "sheet" to when (current?.dialog) {
+                    Dialog.SettingsSheet -> "filters"
+                    Dialog.TrackSheet -> "tracking"
+                    Dialog.FullCover -> "cover"
+                    else -> null
+                },
+            )
+        }
+    }
 
     override fun onCleared() {
         val currentManga = manga
@@ -302,7 +326,12 @@ class MangaViewModel(
                     // before this state exists, and updateSuccessState drops it.
                     categories = categoriesDeferred.await(),
                     isRefreshingData = needRefreshInfo || needRefreshChapter,
-                    dialog = null,
+                    dialog = when (restoredUi?.getString("sheet")) {
+                        "filters" -> Dialog.SettingsSheet
+                        "tracking" -> Dialog.TrackSheet
+                        "cover" -> Dialog.FullCover
+                        else -> null
+                    },
                     hideMissingChapters = libraryPreferences.hideMissingChapters.get(),
                     isNovel = manga.isNovel,
                     showSourceName = libraryPreferences.showMangaSourceName.get(),

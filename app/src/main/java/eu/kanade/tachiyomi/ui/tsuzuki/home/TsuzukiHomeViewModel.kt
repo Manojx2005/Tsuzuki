@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.tsuzuki.home
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -99,12 +100,12 @@ class TsuzukiHomeViewModel(
 ) : StateViewModel<HomeState>(HomeState()) {
 
     init {
-        combine(
-            getHistory.subscribe(query = "", limit = HISTORY_WINDOW),
-            getLibraryManga.subscribe(),
-            libraryPreferences.newUpdatesCount.changes(),
-        ) { history, library, newCount -> Triple(history, library, newCount) }
-            .mapLatest { (history, library, newCount) -> withIOContext { buildState(history, library, newCount) } }
+        homeStates(
+            history = getHistory.subscribe(query = "", limit = HISTORY_WINDOW),
+            library = getLibraryManga.subscribe(),
+            updates = libraryPreferences.newUpdatesCount.changes(),
+            load = ::buildState,
+        )
             .catch { mutableState.value = HomeState(loading = false) }
             .onEach { mutableState.value = it }
             .launchIn(viewModelScope)
@@ -121,7 +122,6 @@ class TsuzukiHomeViewModel(
     private suspend fun buildState(
         history: List<HistoryWithRelations>,
         library: List<LibraryManga>,
-        newCount: Int,
     ): HomeState {
         val byId = library.associateBy { it.id }
 
@@ -159,28 +159,32 @@ class TsuzukiHomeViewModel(
 
         // Fill the rest of Home with library books that aren't in recent history.
         val seen = recent.mapTo(HashSet()) { it.mangaId }
-        val others = library
-            .filter { it.id !in seen }
-            .sortedWith(compareByDescending<LibraryManga> { it.lastRead }.thenByDescending { it.manga.dateAdded })
-            .take((MAX_BOOKS - recent.size).coerceAtLeast(0))
-            .map { lib ->
-                val chapters = getChaptersByMangaId.await(lib.id)
-                HomeBook(
-                    mangaId = lib.id,
-                    chapterId = null,
-                    title = lib.manga.title,
-                    cover = lib.manga.asMangaCover(),
-                    chapterLabel = null,
-                    progress = lib.progress(),
-                    unread = 0,
-                    isNovel = lib.manga.isNovel,
-                    recentChapters = chapters.toRecent(Long.MAX_VALUE),
-                    meta = listOfNotNull(
-                        "${chapters.size} ch".takeIf { chapters.isNotEmpty() },
-                        sourceManager.getOrStub(lib.manga.source).name,
-                    ).joinToString(" · "),
-                )
-            }
+        val others = if (recent.size == MAX_BOOKS) {
+            emptyList()
+        } else {
+            library
+                .filter { it.id !in seen }
+                .sortedWith(compareByDescending<LibraryManga> { it.lastRead }.thenByDescending { it.manga.dateAdded })
+                .take((MAX_BOOKS - recent.size).coerceAtLeast(0))
+                .map { lib ->
+                    val chapters = getChaptersByMangaId.await(lib.id)
+                    HomeBook(
+                        mangaId = lib.id,
+                        chapterId = null,
+                        title = lib.manga.title,
+                        cover = lib.manga.asMangaCover(),
+                        chapterLabel = null,
+                        progress = lib.progress(),
+                        unread = 0,
+                        isNovel = lib.manga.isNovel,
+                        recentChapters = chapters.toRecent(Long.MAX_VALUE),
+                        meta = listOfNotNull(
+                            "${chapters.size} ch".takeIf { chapters.isNotEmpty() },
+                            sourceManager.getOrStub(lib.manga.source).name,
+                        ).joinToString(" · "),
+                    )
+                }
+        }
         val books = recent + others
 
         val startOfToday = Calendar.getInstance().apply {
@@ -198,7 +202,6 @@ class TsuzukiHomeViewModel(
             books = books,
             fromHistory = recent.isNotEmpty(),
             libraryCount = library.size,
-            newChapters = newCount,
             todayMinutes = (todayMs / 60_000L).toInt(),
         )
     }
@@ -223,3 +226,13 @@ class TsuzukiHomeViewModel(
         private const val MAX_BOOKS = 9
     }
 }
+
+/** Keep badge changes independent of the chapter queries used to build the stack. */
+internal fun homeStates(
+    history: Flow<List<HistoryWithRelations>>,
+    library: Flow<List<LibraryManga>>,
+    updates: Flow<Int>,
+    load: suspend (List<HistoryWithRelations>, List<LibraryManga>) -> HomeState,
+): Flow<HomeState> = combine(history, library, ::Pair)
+    .mapLatest { (historyRows, libraryRows) -> withIOContext { load(historyRows, libraryRows) } }
+    .combine(updates) { home, count -> home.copy(newChapters = count) }

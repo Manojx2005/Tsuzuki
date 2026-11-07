@@ -301,6 +301,9 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                 expanded = sortExpanded && canReorder,
                                 onDismissRequest = onDismissRequest,
                             ) {
+                                eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuGroup(
+                                    label = stringResource(MR.strings.label_download_queue),
+                                )
                                 if (selectedTab == 0) {
                                     // Novel queue sorts (series-level)
                                     DropdownMenuItem(
@@ -349,6 +352,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                         text = {
                                             Text(text = stringResource(MR.strings.action_order_by_upload_date))
                                         },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.sort,
                                         children = { closeMenu ->
                                             DropdownMenuItem(
                                                 text = { Text(text = stringResource(MR.strings.action_newest)) },
@@ -376,6 +380,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                         text = {
                                             Text(text = stringResource(MR.strings.action_order_by_chapter_number))
                                         },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.sort,
                                         children = { closeMenu ->
                                             DropdownMenuItem(
                                                 text = { Text(text = stringResource(MR.strings.action_asc)) },
@@ -404,6 +409,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                         text = {
                                             Text(text = stringResource(TDMR.strings.action_order_by_progress))
                                         },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.sort,
                                         children = { closeMenu ->
                                             DropdownMenuItem(
                                                 text = { Text(text = stringResource(MR.strings.action_desc)) },
@@ -432,6 +438,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                         text = {
                                             Text(text = stringResource(TDMR.strings.action_order_by_extension))
                                         },
+                                        icon = eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuIcons.sort,
                                         children = { closeMenu ->
                                             DropdownMenuItem(
                                                 text = { Text(text = stringResource(MR.strings.action_asc)) },

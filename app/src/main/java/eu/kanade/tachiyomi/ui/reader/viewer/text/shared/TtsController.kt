@@ -3,9 +3,11 @@ package eu.kanade.tachiyomi.ui.reader.viewer.text.shared
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -43,6 +45,13 @@ class TtsController(
         private set
     var ttsChunkStartOffsets: List<Int> = emptyList()
         private set
+    internal var listenParagraphs: List<String> = emptyList()
+        private set
+
+    @Volatile
+    internal var sleepTimer: TtsSleepTimer = TtsSleepTimer.Off
+        private set
+    private var sleepJob: Job? = null
     var ttsCurrentParagraphs: List<TtsTextUtils.ParagraphInfo> = emptyList()
         private set
 
@@ -104,12 +113,24 @@ class TtsController(
             override fun onDone(utteranceId: String?) {
                 val finishedIndex = utteranceId?.removePrefix("tts_utterance_")?.toIntOrNull() ?: -1
                 val isLastChunk = finishedIndex >= ttsChunks.size - 1
-                if (isLastChunk && isTtsAutoPlay && preferences.novelTtsAutoNextChapter.get()) {
+                if (isLastChunk && finishedIndex >= 0 && sleepTimer == TtsSleepTimer.ChapterEnd) {
+                    val chapterId = ttsPlaybackChapterId
+                    callbacks.runOnUiThread {
+                        scope.launch {
+                            delay(LAST_CHUNK_DONE_DELAY_MS)
+                            if (sleepTimer == TtsSleepTimer.ChapterEnd && !isSpeaking() &&
+                                ttsPlaybackChapterId == chapterId && finishedIndex == ttsChunks.lastIndex
+                            ) {
+                                stop()
+                            }
+                        }
+                    }
+                } else if (isLastChunk && isTtsAutoPlay && preferences.novelTtsAutoNextChapter.get()) {
                     callbacks.runOnUiThread {
                         scope.launch {
                             delay(LAST_CHUNK_DONE_DELAY_MS)
                             if (!isSpeaking()) {
-                                callbacks.onLastChunkDone()
+                                if (sleepTimer == TtsSleepTimer.ChapterEnd) stop() else callbacks.onLastChunkDone()
                             }
                         }
                     }
@@ -169,6 +190,7 @@ class TtsController(
             c
         }
         ttsChunks = chunks
+        listenParagraphs = paragraphs.map { it.take(180) }
         ttsChunkParagraphIndexes = chunkParagraphIndexes
 
         // Compute char offset per chunk so Spannable-based highlight can locate the right occurrence.
@@ -223,11 +245,26 @@ class TtsController(
         }
     }
 
+    internal fun setSleepTimer(option: TtsSleepTimer) {
+        sleepJob?.cancel()
+        sleepJob = null
+        sleepTimer = option
+        option.minutes?.let { minutes ->
+            sleepJob = scope.launch {
+                delay(minutes * 60_000L)
+                sleepJob = null
+                stop()
+            }
+        }
+    }
+
     fun stop() {
+        setSleepTimer(TtsSleepTimer.Off)
         isTtsAutoPlay = false
         ttsPaused = false
         pendingStartRequest = null
         ttsChunks = emptyList()
+        listenParagraphs = emptyList()
         ttsChunkParagraphIndexes = emptyList()
         ttsChunkStartOffsets = emptyList()
         ttsCurrentChunkIndex = 0
@@ -337,6 +374,7 @@ class TtsController(
         tts?.voice?.name ?: preferences.novelTtsVoice.get()
 
     fun destroy() {
+        setSleepTimer(TtsSleepTimer.Off)
         tts?.stop()
         callbacks.runOnUiThread { callbacks.onClearHighlights() }
         tts?.shutdown()

@@ -27,4 +27,27 @@ class TsuzukiReaderPanelTest {
         assertNull(panelNoteText("  \n "))
         assertEquals("a note", panelNoteText("  a note\n"))
     }
+
+    @Test
+    fun tabletopDockOnlyUsesHalfOpenedHorizontalFolds() {
+        assertNull(readerFold(halfOpened = false, horizontal = true, top = 500, bottom = 520))
+        assertNull(readerFold(halfOpened = true, horizontal = false, top = 500, bottom = 520))
+        assertNull(readerFold(halfOpened = true, horizontal = true, top = 0, bottom = 20))
+        assertEquals(ReaderFold(500, 520), readerFold(halfOpened = true, horizontal = true, top = 500, bottom = 520))
+    }
+
+    @Test
+    fun tabletopPaneLeavesTheHingeClear() {
+        assertEquals(FoldedReaderPane(500, 480), foldedReaderPane(ReaderFold(500, 520), 1000))
+        assertEquals(FoldedReaderPane(500, 500), foldedReaderPane(ReaderFold(500, 500), 1000))
+        assertNull(foldedReaderPane(ReaderFold(500, 520), 520))
+    }
+
+    @Test
+    fun listeningProgressUsesTheRealParagraphCountAndClampsOffsets() {
+        assertNull(listeningParagraphPosition(0, 0))
+        assertEquals(ListeningParagraphPosition(0, 4), listeningParagraphPosition(-1, 4))
+        assertEquals(0.5f, listeningParagraphPosition(1, 4)?.progress)
+        assertEquals(1f, listeningParagraphPosition(99, 4)?.progress)
+    }
 }

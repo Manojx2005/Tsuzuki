@@ -38,6 +38,7 @@ import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
+import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -114,8 +115,9 @@ data object NovelsTab : Tab {
         val libraryOwner = eu.kanade.presentation.tsuzuki.library.rememberTsuzukiLibraryViewModelStoreOwner(libraryType)
         val viewModel = viewModel<LibraryViewModel>(
             viewModelStoreOwner = libraryOwner,
+            key = "tsuzuki-library-${libraryType.name}",
             factory = LibraryViewModel.Factory,
-            extras = CreationExtras {
+            extras = tsuzukiScreenExtras {
                 set(LibraryViewModel.TYPE_KEY, libraryType)
             },
         )

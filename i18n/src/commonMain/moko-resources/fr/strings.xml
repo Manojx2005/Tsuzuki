@@ -1343,4 +1343,11 @@
     <string name="tsz_tracking_chapter_sync">Synchronisation automatique en fin de chapitre</string>
     <string name="tsz_quotes_saved_count">%1$d enregistrées</string>
     <string name="tsz_quotes_export">Exporter les citations</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Double page sur tablette en paysage</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Minuteur de veille</string>
+    <string name="tsz_reader_sleep_off">Désactivé</string>
+    <string name="tsz_reader_sleep_chapter">Fin du chapitre</string>
+    <string name="tsz_reader_listen_paragraphs">Paragraphes</string>
 </resources>

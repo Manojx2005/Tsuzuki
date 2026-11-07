@@ -1350,4 +1350,11 @@
     <string name="tsz_tracking_chapter_sync">读完一章后自动同步</string>
     <string name="tsz_quotes_saved_count">已保存 %1$d 条</string>
     <string name="tsz_quotes_export">导出摘录</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">平板横屏双页显示</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">睡眠定时器</string>
+    <string name="tsz_reader_sleep_off">关闭</string>
+    <string name="tsz_reader_sleep_chapter">本章结束</string>
+    <string name="tsz_reader_listen_paragraphs">段落</string>
 </resources>

@@ -516,14 +516,16 @@ private fun TabletLandscapeHome(state: HomeState, actions: HomeActions) {
                     }
                 }
             }
-            ShelfSection(
-                state,
-                actions,
-                columns = 5,
-                coverHeight = null,
-                selectedId = selectedId,
-                onSelect = { selectedId = it.mangaId },
-            )
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                ShelfSection(
+                    state,
+                    actions,
+                    columns = if (maxWidth >= 670.dp) 6 else 5,
+                    coverHeight = null,
+                    selectedId = selectedId,
+                    onSelect = { selectedId = it.mangaId },
+                )
+            }
         }
         DetailsPane(selected, actions)
     }

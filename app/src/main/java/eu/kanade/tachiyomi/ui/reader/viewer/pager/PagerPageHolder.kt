@@ -150,8 +150,14 @@ class PagerPageHolder(
         val streamFn = page.stream ?: return
 
         try {
+            val spreadActive = viewer.isTabletSpreadActive
             val (source, isAnimated, background) = withIOContext {
-                val source = streamFn().use { process(item, Buffer().readFrom(it)) }
+                val rawSource = streamFn().use { Buffer().readFrom(it) }
+                if (spreadActive) {
+                    val portrait = !ImageUtil.isWideImage(rawSource)
+                    withUIContext { viewer.onSpreadPageShape(page, portrait) }
+                }
+                val source = if (spreadActive) rawSource else process(item, rawSource)
                 val isAnimated = ImageUtil.isAnimatedAndSupported(source)
                 val background = if (!isAnimated && viewer.config.automaticBackground) {
                     ImageUtil.chooseBackground(context, source.peek().inputStream())

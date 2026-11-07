@@ -68,7 +68,8 @@ fun TsuzukiGlobalSearchTile(sourceCount: Int, onClick: () -> Unit, modifier: Mod
             if (t.isDot) text.uppercase() else text,
             color = muted,
             style = MaterialTheme.typography.bodyMedium,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         )
     }

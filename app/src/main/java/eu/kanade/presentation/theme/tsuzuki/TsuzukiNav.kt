@@ -177,7 +177,8 @@ private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Mod
             text = if (t.isDot) item.shortLabel else item.label,
             style = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot),
             color = if (highlighted) t.background else t.mutedText,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
         )

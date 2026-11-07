@@ -2,12 +2,16 @@
 
 package eu.kanade.tachiyomi.ui.library
 
+import android.os.Bundle
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
+import androidx.core.os.bundleOf
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
@@ -22,7 +26,9 @@ import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.tsuzuki.library.groupLibraryItems
 import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
+import eu.kanade.presentation.tsuzuki.selection.savedSelection
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -120,7 +126,10 @@ class LibraryViewModel(
     private val translatedChapterRepository: TranslatedChapterRepository = Injekt.get(),
     private val mangaRepository: MangaRepository = Injekt.get(),
     private val type: LibraryType = LibraryType.All,
+    private val savedState: SavedStateHandle? = null,
 ) : StateViewModel<LibraryViewModel.State>(State()) {
+
+    private val restoredUi = savedState?.get<Bundle>("tsuzuki_library_ui")
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
 
@@ -139,14 +148,30 @@ class LibraryViewModel(
 
         val Factory = viewModelFactory {
             initializer {
-                LibraryViewModel(type = get(TYPE_KEY) ?: LibraryType.All)
+                LibraryViewModel(type = get(TYPE_KEY) ?: LibraryType.All, savedState = createSavedStateHandle())
             }
         }
     }
 
     init {
         mutableState.update { state ->
-            state.copy(activeCategoryIndex = libraryPreferences.lastUsedCategory.get())
+            state.copy(
+                activeCategoryIndex = restoredUi?.getInt("shelf") ?: libraryPreferences.lastUsedCategory.get(),
+                toolbarQuery = restoredUi?.getString("draft_query"),
+                searchQuery = restoredUi?.getString("search_query"),
+                selection = restoredUi?.getLongArray("selected")?.toSet().orEmpty(),
+                dialog = Dialog.SettingsSheet.takeIf { restoredUi?.getBoolean("filters_open") == true },
+            )
+        }
+        savedState?.setSavedStateProvider("tsuzuki_library_ui") {
+            val current = state.value
+            bundleOf(
+                "shelf" to current.coercedActiveCategoryIndex,
+                "draft_query" to current.toolbarQuery,
+                "search_query" to current.searchQuery,
+                "selected" to current.selection.savedSelection(),
+                "filters_open" to (current.dialog == Dialog.SettingsSheet),
+            )
         }
         // Experimental pagination: nothing is resident at startup, so the category pager (which
         // normally drives lazy loading) never composes while the library looks empty. Drive the
@@ -335,7 +360,7 @@ class LibraryViewModel(
                 }
                 .map { data ->
                     data.favorites
-                        .applyGrouping(data.categories, data.showSystemCategory)
+                        .groupLibraryItems(data.categories, data.showSystemCategory)
                         .applySort(itemCache, data.tracksMap, data.loggedInTrackerIds)
                 }
                 .collectLatest {
@@ -565,35 +590,6 @@ class LibraryViewModel(
     private fun normalizeTag(tag: String, caseSensitive: Boolean): String {
         val trimmedTag = tag.trim()
         return if (caseSensitive) trimmedTag else trimmedTag.lowercase()
-    }
-
-    private fun List<LibraryItem>.applyGrouping(
-        categories: List<Category>,
-        showSystemCategory: Boolean,
-    ): Map<Category, List</* LibraryItem */ Long>> {
-        val visibleCategories = ArrayList<Category>(categories.size)
-        for (category in categories) {
-            if (showSystemCategory || !category.isSystemCategory) {
-                visibleCategories += category
-            }
-        }
-        if (visibleCategories.isEmpty()) return emptyMap()
-
-        val visibleCategoryById = HashMap<Long, Category>(visibleCategories.size * 2)
-        val groupedItems = LinkedHashMap<Category, MutableList<Long>>(visibleCategories.size)
-        for (category in visibleCategories) {
-            visibleCategoryById[category.id] = category
-            groupedItems[category] = mutableListOf()
-        }
-
-        for (item in this) {
-            for (categoryId in item.libraryManga.categories) {
-                val category = visibleCategoryById[categoryId] ?: continue
-                groupedItems[category]?.add(item.id)
-            }
-        }
-
-        return groupedItems
     }
 
     private fun Map<Category, List</* LibraryItem */ Long>>.applySort(

@@ -79,7 +79,8 @@ fun TsuzukiPill(
             color = ink,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.ExtraBold,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )

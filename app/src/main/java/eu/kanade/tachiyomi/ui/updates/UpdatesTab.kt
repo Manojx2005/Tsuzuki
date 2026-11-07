@@ -59,7 +59,7 @@ data object UpdatesTab : Tab {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel<UpdatesViewModel>()
+        val viewModel = viewModel<UpdatesViewModel>(factory = UpdatesViewModel.Factory)
         val settingsViewModel = viewModel<UpdatesSettingsViewModel>()
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val state by viewModel.state.collectAsState()

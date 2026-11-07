@@ -1349,4 +1349,11 @@
     <string name="tsz_tracking_chapter_sync">章を読み終えると自動で同期します</string>
     <string name="tsz_quotes_saved_count">保存済み %1$d 件</string>
     <string name="tsz_quotes_export">引用をエクスポート</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">タブレットの横向きで見開き表示</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">スリープタイマー</string>
+    <string name="tsz_reader_sleep_off">オフ</string>
+    <string name="tsz_reader_sleep_chapter">章の終わり</string>
+    <string name="tsz_reader_listen_paragraphs">段落</string>
 </resources>

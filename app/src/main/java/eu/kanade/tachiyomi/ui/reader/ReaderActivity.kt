@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,6 +65,8 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.hippo.unifile.UniFile
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.EstimatedStatusBarHeight
 import eu.kanade.presentation.reader.NovelStatusBar
@@ -85,6 +88,7 @@ import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
+import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -381,6 +385,9 @@ class ReaderActivity : BaseActivity() {
             .launchIn(lifecycleScope)
     }
 
+    internal val useTsuzukiMangaSpreads: Boolean
+        get() = Injekt.get<UiPreferences>().appTheme.get() in setOf(AppTheme.DOT, AppTheme.COLOUR)
+
     private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setComposeContent {
         val state by viewModel.state.collectAsState()
         val showPageNumber by readerPreferences.showPageNumber.collectAsState()
@@ -450,6 +457,7 @@ class ReaderActivity : BaseActivity() {
             if (!state.menuVisible && showPageNumber && !isNovelMode) {
                 ReaderPageIndicator(
                     currentPage = state.currentPage,
+                    spreadStart = state.mangaSpreadStart,
                     totalPages = state.totalPages,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -518,6 +526,10 @@ class ReaderActivity : BaseActivity() {
                     onHeightChanged = { statusBarHeightPx = it },
                     modifier = Modifier
                         .align(if (statusBarAtBottom) Alignment.BottomCenter else Alignment.TopCenter)
+                        .padding(
+                            end = tsuzukiChromeRequests.panelEndInset,
+                            bottom = if (statusBarAtBottom) tsuzukiChromeRequests.panelBottomInset else 0.dp,
+                        )
                         .then(if (statusBarAtBottom) Modifier else Modifier.statusBarsPadding()),
                 )
             }
@@ -540,7 +552,7 @@ class ReaderActivity : BaseActivity() {
                     },
                 )
             }
-            is ReaderViewModel.Dialog.Settings -> {
+            is ReaderViewModel.Dialog.Settings -> if (state.viewer != null) {
                 ReaderSettingsDialog(
                     onDismissRequest = onDismissRequest,
                     onShowMenus = { setMenuVisibility(true) },
@@ -926,7 +938,12 @@ class ReaderActivity : BaseActivity() {
             var showBottomBarEditor by remember { mutableStateOf(false) }
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
-            val chrome = tsuzukiChromeRequests.bind(viewModel, state)
+            val listenPanel = rememberTsuzukiListenPanel(
+                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused,
+                ::pauseTtsFromNotification, ::resumeTtsFromNotification, ::stepTtsParagraph, ::seekTtsToParagraph,
+                onPausedChanged = { isTtsPaused = it },
+            )
+            val chrome = tsuzukiChromeRequests.bind(viewModel, state, listenPanel.fold, listenPanel.content)
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1060,16 +1077,20 @@ class ReaderActivity : BaseActivity() {
                 onToggleTranslation = viewModel::toggleTranslation,
                 onLongPressTranslation = viewModel::openTranslationLanguageDialog,
                 onRetranslate = if (state.isTranslating) viewModel::retranslateCurrentChapter else null,
-                isTtsActive = isTtsActive,
-                isTtsPaused = isTtsPaused,
+                isTtsActive = listenPanel.sessionActive,
+                isTtsPaused = listenPanel.paused,
                 ttsControlsVisible = ttsControlsVisible,
-                onToggleTtsControls = {
+                onToggleTtsControls = toggle@{
+                    chrome.onToggleListening?.let {
+                        it()
+                        return@toggle
+                    }
                     val nowVisible = !ttsControlsVisible
                     ttsControlsVisible = nowVisible
                     readerPreferences.novelTtsControlsVisible.set(nowVisible)
                     val viewer = state.viewer
                     if (nowVisible) {
-                        if (!isTtsActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
+                        if (!listenPanel.sessionActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
                             when (viewer) {
                                 is NovelViewer -> {
                                     startBackgroundTtsIfEnabled()
@@ -1216,6 +1237,9 @@ class ReaderActivity : BaseActivity() {
                 bottomBarItems = bottomBarItems,
                 onQuotes = ::onQuotesClicked,
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
+                showTtsMiniOverlay = !chrome.listeningVisible,
+                panelEndInset = tsuzukiChromeRequests.panelEndInset,
+                panelBottomInset = tsuzukiChromeRequests.panelBottomInset,
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
                 onOpenContents = chrome.onOpenContents,
@@ -1746,8 +1770,8 @@ class ReaderActivity : BaseActivity() {
      * Called from the viewer whenever a [page] is marked as active. It updates the values of the
      * bottom menu and delegates the change to the presenter.
      */
-    fun onPageSelected(page: ReaderPage) {
-        viewModel.onPageSelected(page)
+    fun onPageSelected(page: ReaderPage, spreadStart: Int? = null) {
+        viewModel.onPageSelected(page, spreadStart)
     }
 
     /**

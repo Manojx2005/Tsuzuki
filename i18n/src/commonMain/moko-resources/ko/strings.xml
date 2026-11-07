@@ -1349,4 +1349,11 @@
     <string name="tsz_tracking_chapter_sync">챕터를 다 읽으면 자동으로 동기화</string>
     <string name="tsz_quotes_saved_count">%1$d개 저장됨</string>
     <string name="tsz_quotes_export">인용구 내보내기</string>
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">태블릿 가로 모드에서 두 페이지 보기</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">취침 타이머</string>
+    <string name="tsz_reader_sleep_off">끄기</string>
+    <string name="tsz_reader_sleep_chapter">챕터 끝</string>
+    <string name="tsz_reader_listen_paragraphs">문단</string>
 </resources>

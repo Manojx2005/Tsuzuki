@@ -258,7 +258,8 @@ private fun ToggleTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = ink,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
@@ -321,7 +322,8 @@ private fun NavTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = Color.White,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
         )
         sub?.let {

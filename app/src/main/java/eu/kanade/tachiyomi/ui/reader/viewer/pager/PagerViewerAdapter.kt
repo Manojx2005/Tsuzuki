@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.view.View
 import android.view.ViewGroup
+import eu.kanade.tachiyomi.tsuzuki.reader.MangaSpread
+import eu.kanade.tachiyomi.tsuzuki.reader.MangaSpreadHolder
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -28,6 +30,8 @@ class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAdapter() {
      */
     private var preprocessed: List<InsertPage> = emptyList()
 
+    fun positionOf(page: ReaderPage): Int = viewer.spreads.positionOf(items, page)
+
     var nextTransition: ChapterTransition.Next? = null
         private set
 
@@ -46,6 +50,7 @@ class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAdapter() {
      */
     fun setChapters(chapters: ViewerChapters, forceTransition: Boolean) {
         val newItems = mutableListOf<Any>()
+        if (viewer.isTabletSpreadActive) preprocessed = emptyList()
 
         // Forces chapter transition if there is missing chapters
         val prevHasMissingChapters = calculateChapterGap(chapters.currChapter, chapters.prevChapter) > 0
@@ -103,19 +108,20 @@ class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAdapter() {
         // Resets double-page splits, else insert pages get misplaced
         items.filterIsInstance<InsertPage>().also { items.removeAll(it) }
 
+        val arrangedItems = viewer.spreads.group(newItems)
         if (viewer is R2LPagerViewer) {
-            newItems.reverse()
+            arrangedItems.reverse()
         }
 
         val adjacentChapterIds = setOfNotNull(chapters.prevChapter?.chapter?.id, chapters.nextChapter?.chapter?.id)
         preprocessed = preprocessed.filter { it.chapter.chapter.id in adjacentChapterIds }
-        items = newItems
+        items = arrangedItems
         notifyDataSetChanged()
 
         // The pager only follows the pages it has created, so before its first layout it would stay at the same
         // position while pages are added in front, e.g. the next chapter's in right to left, and land in another
         // chapter
-        val currentPosition = items.indexOf(currentItem)
+        val currentPosition = viewer.spreads.positionOf(items, currentItem)
         if (currentPosition != -1 && currentPosition != viewer.pager.currentItem) {
             viewer.pager.setCurrentItem(currentPosition, false)
         }
@@ -138,6 +144,7 @@ class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAdapter() {
      */
     override fun createView(container: ViewGroup, position: Int): View {
         return when (val item = items[position]) {
+            is MangaSpread -> MangaSpreadHolder(readerThemedContext, viewer, item)
             is ReaderPage -> PagerPageHolder(readerThemedContext, viewer, item)
             is ChapterTransition -> PagerTransitionHolder(readerThemedContext, viewer, item)
             else -> throw NotImplementedError("Holder for ${item.javaClass} not implemented")
@@ -160,7 +167,7 @@ class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAdapter() {
     }
 
     fun onPageSplit(currentPage: Any?, newPage: InsertPage) {
-        if (currentPage !is ReaderPage) return
+        if (viewer.isTabletSpreadActive || currentPage !is ReaderPage) return
 
         val currentIndex = items.indexOf(currentPage)
 

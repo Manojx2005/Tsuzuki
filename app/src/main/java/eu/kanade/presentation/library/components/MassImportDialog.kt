@@ -43,7 +43,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -94,6 +93,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.IOException
+import eu.kanade.presentation.components.AnchoredDropdownMenu as DropdownMenu
 
 // Clipboard crosses a binder transaction (~1MB cap); past this count a huge list would throw
 // TransactionTooLargeException, so the user is pointed at export-to-file instead.
