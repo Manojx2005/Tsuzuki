@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -866,13 +867,14 @@ private fun RowScope.MangaActionButton(
 ) {
     // Tsuzuki themes: each action is a tile (board "NovelDetails").
     val tokens = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens
+    val themed = tokens.style != TsuzukiStyle.NONE
     val tileShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     TextButton(
         onClick = onClick,
         modifier = Modifier
             .weight(1f)
             .then(
-                if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) {
+                if (themed) {
                     Modifier
                         .padding(horizontal = 3.dp)
                         .heightIn(min = 76.dp)
@@ -888,6 +890,14 @@ private fun RowScope.MangaActionButton(
                 },
             ),
         onLongClick = onLongClick,
+        contentPadding = if (themed) {
+            PaddingValues(
+                horizontal = 4.dp,
+                vertical = 8.dp,
+            )
+        } else {
+            ButtonDefaults.TextButtonContentPadding
+        },
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
@@ -900,10 +910,12 @@ private fun RowScope.MangaActionButton(
             Text(
                 text = tsuzukiMenuLabel(title),
                 color = color,
-                fontSize = if (tokens.style != eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE) 11.sp else 12.sp,
+                fontSize = if (themed) 11.sp else 12.sp,
                 lineHeight = 13.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = if (themed) 1 else 2,
+                softWrap = !themed,
+                overflow = if (themed) TextOverflow.Ellipsis else TextOverflow.Clip,
             )
         }
     }
