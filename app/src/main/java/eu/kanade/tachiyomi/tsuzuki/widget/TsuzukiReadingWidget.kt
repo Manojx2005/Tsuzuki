@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.widget
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -9,19 +10,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
+import androidx.glance.action.Action
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.LinearProgressIndicator
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
@@ -43,39 +50,48 @@ import coil3.imageLoader
 import coil3.request.allowHardware
 import coil3.toBitmap
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.tsuzuki.home.homeChapterNumber
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.withContext
+import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
 import tachiyomi.domain.history.interactor.GetHistory
-import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.history.interactor.GetNextChapters
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
+import androidx.glance.appwidget.action.actionStartActivity as actionStartActivityIntent
 
-/**
- * The "Reading" home-screen widget (board 07-system "Widgets"): Continue (last book and chapter), Streak (days, and
- * today's minutes against the goal) and New (unseen chapters), all from data the app records. Tap opens the app.
- * Dot draws black with the red accent in a monospace face; Colour draws navy with the gold accent; other themes use
- * Colour's look. Glance can't use the app's bundled fonts, so Doto / Instrument Serif become system faces. Left out:
- * the cover (bitmap loading for widgets is a follow-up), Continue watching (anime) and Listening (TTS state).
- */
+/** Continue reading with live history, chapter progress, and optional stats at larger widget sizes. */
 class TsuzukiReadingWidget : GlanceAppWidget() {
+
+    override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val readingDays = Injekt.get<ReadingDays>()
         val library = Injekt.get<LibraryPreferences>()
         val history = Injekt.get<GetHistory>()
         val ui = Injekt.get<UiPreferences>()
-        val dot = ui.appTheme.get() == AppTheme.DOT
-        // Dot covers are greyscale unless the owner keeps their colours (Appearance → Colour covers).
-        val grey = dot && !ui.tsuzukiDotColourCovers.get()
+        val tokens = widgetTheme(ui)
+        val grey = tokens.isDot && !ui.tsuzukiDotColourCovers.get()
+        val getNextChapters = Injekt.get<GetNextChapters>()
+        val getChapters = Injekt.get<GetChaptersByMangaId>()
         val labels = Labels(
             continueLabel = context.stringResource(MR.strings.tsz_continue),
+            resumeLabel = context.stringResource(MR.strings.action_resume),
             streak = context.stringResource(MR.strings.tsz_streak),
             days = context.stringResource(MR.strings.tsz_days),
             today = context.stringResource(MR.strings.tsz_today),
@@ -90,21 +106,42 @@ class TsuzukiReadingWidget : GlanceAppWidget() {
                 .collectAsState(initial = readingDays.dailyGoalMinutes.get())
             val newCount by remember { library.newUpdatesCount.changes() }
                 .collectAsState(initial = library.newUpdatesCount.get())
-            val latest by remember { history.subscribe(query = "", limit = 1) }.collectAsState(initial = emptyList())
-            val cover by remember {
-                history.subscribe(query = "", limit = 1).map { list ->
-                    list.firstOrNull()?.let { loadCover(context, it, grey) }
-                }
+            val book by remember {
+                history.subscribe(query = "", limit = 1).mapLatest { rows ->
+                    val item = rows.firstOrNull() ?: return@mapLatest null
+                    withContext(Dispatchers.IO) {
+                        val resume = getNextChapters.await(item.mangaId, item.chapterId, onlyUnread = false)
+                            .firstOrNull()
+                        val chapters = getChapters.await(item.mangaId)
+                        val chapterNumber = resume?.chapterNumber ?: item.chapterNumber
+                        ReadingWidgetBook(
+                            title = item.title,
+                            chapter = chapterNumber.takeIf { it >= 0 }?.let {
+                                context.stringResource(MR.strings.display_mode_chapter, homeChapterNumber(it))
+                            },
+                            cover = loadWidgetCover(context, item.coverData, grey),
+                            progress = readingWidgetProgress(chapters.count { it.read }, chapters.size),
+                            canResume = resume != null,
+                            destination = if (resume != null) {
+                                ReaderActivity.newIntent(context, resume.mangaId, resume.id)
+                            } else {
+                                Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_MANGA)
+                                    .putExtra(Constants.MANGA_EXTRA, item.mangaId)
+                            },
+                        )
+                    }
+                }.catch { emit(null) }
             }.collectAsState(initial = null)
 
             val today = LocalDate.now()
             val todayMinutes = TimeUnit.MILLISECONDS.toMinutes(days[today] ?: 0L).toInt()
             ReadingWidgetContent(
-                dot = dot,
+                tokens = tokens,
                 labels = labels,
-                title = latest.firstOrNull()?.title,
-                chapterNumber = latest.firstOrNull()?.chapterNumber,
-                cover = cover,
+                book = book,
+                updates = actionStartActivityIntent(
+                    Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_UPDATES),
+                ),
                 streak = ReadingDays.streak(days, today),
                 todayMinutes = todayMinutes,
                 goal = goal,
@@ -120,6 +157,7 @@ class TsuzukiReadingWidgetReceiver : GlanceAppWidgetReceiver() {
 
 private data class Labels(
     val continueLabel: String,
+    val resumeLabel: String,
     val streak: String,
     val days: String,
     val today: String,
@@ -127,82 +165,121 @@ private data class Labels(
     val new: String,
 )
 
+private data class ReadingWidgetBook(
+    val title: String,
+    val chapter: String?,
+    val cover: Bitmap?,
+    val progress: Float?,
+    val canResume: Boolean,
+    val destination: Intent,
+)
+
+internal fun readingWidgetProgress(read: Int, total: Int): Float? =
+    if (total <= 0) null else read.coerceIn(0, total).toFloat() / total
+
 @Composable
 private fun ReadingWidgetContent(
-    dot: Boolean,
+    tokens: TsuzukiTokens,
     labels: Labels,
-    title: String?,
-    chapterNumber: Double?,
-    cover: Bitmap?,
+    book: ReadingWidgetBook?,
+    updates: Action,
     streak: Int,
     todayMinutes: Int,
     goal: Int,
     newCount: Int,
 ) {
-    val background = if (dot) Color(0xFF000000) else Color(0xFF1C2B4A)
-    val tile = if (dot) Color(0xFF0D0D0D) else Color(0xFF2A3B60)
-    val accent = if (dot) Color(0xFFFF2D2D) else Color(0xFFE9B44C)
-    val muted = if (dot) Color(0xFF8A8A8A) else Color(0xB8FFFFFF)
-    val face = if (dot) FontFamily.Monospace else FontFamily.SansSerif
-    fun up(s: String) = if (dot) s.uppercase() else s
+    val height = LocalSize.current.height
+    val tall = height >= 244.dp
+    val compact = height < 140.dp
+    val coverHeight = if (compact) 72.dp else 100.dp
+    val face = if (tokens.isDot) FontFamily.Monospace else FontFamily.SansSerif
+    fun up(s: String) = if (tokens.isDot) s.uppercase() else s
+    val open = book?.let { actionStartActivityIntent(it.destination) } ?: actionStartActivity<MainActivity>()
 
     Column(
-        GlanceModifier
-            .fillMaxSize()
-            .appWidgetBackground()
-            .cornerRadius(24.dp)
-            .background(background)
-            .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
+        GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(24.dp)
+            .background(tokens.background).padding(10.dp),
     ) {
         Row(
-            GlanceModifier.fillMaxWidth().cornerRadius(18.dp).background(tile).padding(12.dp),
+            GlanceModifier.fillMaxWidth().cornerRadius(18.dp).background(tokens.tile)
+                .padding(10.dp).clickable(open),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (cover != null) {
+            if (book?.cover != null) {
                 Image(
-                    provider = ImageProvider(cover),
+                    provider = ImageProvider(book.cover),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = GlanceModifier.size(width = 56.dp, height = 84.dp).cornerRadius(10.dp),
+                    modifier = GlanceModifier.size(width = coverHeight * 0.67f, height = coverHeight)
+                        .cornerRadius(8.dp),
                 )
-                Spacer(GlanceModifier.width(12.dp))
+                Spacer(GlanceModifier.width(10.dp))
             }
-            ContinueText(::up, labels, title, chapterNumber, muted, face)
+            Column(GlanceModifier.defaultWeight()) {
+                Text(up(labels.continueLabel), style = label(tokens.mutedText, face))
+                Text(
+                    up(book?.title ?: "—"),
+                    maxLines = 2,
+                    style = TextStyle(
+                        color = ColorProvider(tokens.dotOn),
+                        fontSize = if (compact) 16.sp else 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = if (tokens.isDot) face else FontFamily.Serif,
+                    ),
+                )
+                book?.chapter?.let {
+                    Text(up(it), maxLines = 1, style = label(tokens.mutedText, face))
+                }
+                book?.progress?.let {
+                    Spacer(GlanceModifier.height(6.dp))
+                    ReadingWidgetProgress(it, tokens)
+                }
+            }
+            if (book?.canResume == true) {
+                Spacer(GlanceModifier.width(8.dp))
+                Box(
+                    GlanceModifier.size(44.dp).cornerRadius(22.dp).background(tokens.accent).clickable(open),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_play_arrow_24dp),
+                        contentDescription = labels.resumeLabel,
+                        colorFilter = ColorFilter.tint(ColorProvider(tokens.onAccent)),
+                        modifier = GlanceModifier.size(24.dp),
+                    )
+                }
+            }
         }
-        Spacer(GlanceModifier.height(8.dp))
-        StatsRow(::up, labels, streak, todayMinutes, goal, newCount, tile, accent, muted, face)
+        if (tall) {
+            Spacer(GlanceModifier.height(8.dp))
+            StatsRow(::up, labels, streak, todayMinutes, goal, newCount, tokens, face, updates)
+        }
     }
 }
 
 @Composable
-private fun ContinueText(
-    up: (String) -> String,
-    labels: Labels,
-    title: String?,
-    chapterNumber: Double?,
-    muted: Color,
-    face: FontFamily,
-) {
-    Column {
-        Text(up(labels.continueLabel), style = label(muted, face))
-        Text(
-            up(title ?: "—"),
-            maxLines = 2,
-            style = TextStyle(
-                color = ColorProvider(Color.White),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = face,
-            ),
+private fun ReadingWidgetProgress(progress: Float, tokens: TsuzukiTokens) {
+    if (!tokens.isDot) {
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = GlanceModifier.fillMaxWidth().height(4.dp).cornerRadius(2.dp),
+            color = ColorProvider(tokens.accent),
+            backgroundColor = ColorProvider(tokens.track),
         )
-        if (chapterNumber != null && chapterNumber >= 0) {
-            val whole = chapterNumber % 1.0 == 0.0
-            val number = if (whole) chapterNumber.toInt().toString() else chapterNumber.toString()
-            Text(
-                up("Ch. $number"),
-                style = TextStyle(color = ColorProvider(muted), fontSize = 12.sp, fontFamily = face),
-            )
+        return
+    }
+    val dotCount = 10
+    val current = (progress * dotCount).roundToInt()
+    Row {
+        repeat(dotCount) { index ->
+            val color = when {
+                index < current -> tokens.dotOn
+                index == current -> tokens.dotHere
+                else -> tokens.dotOff
+            }
+            Box(GlanceModifier.size(7.dp), contentAlignment = Alignment.Center) {
+                Box(GlanceModifier.size(4.dp).cornerRadius(2.dp).background(color)) {}
+            }
         }
     }
 }
@@ -215,19 +292,18 @@ private fun StatsRow(
     todayMinutes: Int,
     goal: Int,
     newCount: Int,
-    tile: Color,
-    accent: Color,
-    muted: Color,
+    tokens: TsuzukiTokens,
     face: FontFamily,
+    updates: Action,
 ) {
     Row(GlanceModifier.fillMaxSize()) {
         Stat(
             label = up(labels.streak),
             value = "$streak",
-            valueColor = accent,
+            valueColor = tokens.accent,
             sub = up("${labels.days} · $todayMinutes/$goal ${labels.min} ${labels.today.lowercase()}"),
-            tile = tile,
-            muted = muted,
+            tile = tokens.tile,
+            muted = tokens.mutedText,
             face = face,
             modifier = GlanceModifier.defaultWeight(),
         )
@@ -237,10 +313,10 @@ private fun StatsRow(
             value = "$newCount",
             valueColor = Color.White,
             sub = null,
-            tile = tile,
-            muted = muted,
+            tile = tokens.tile,
+            muted = tokens.mutedText,
             face = face,
-            modifier = GlanceModifier.defaultWeight(),
+            modifier = GlanceModifier.defaultWeight().clickable(updates),
         )
     }
 }
@@ -265,7 +341,7 @@ private fun Stat(
             value,
             style = TextStyle(
                 color = ColorProvider(valueColor),
-                fontSize = 48.sp,
+                fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = face,
             ),
@@ -283,11 +359,7 @@ private fun Stat(
 private fun label(color: Color, face: FontFamily) =
     TextStyle(color = ColorProvider(color), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = face)
 
-/** The last book's cover, sized for the widget; greyscale in Dot unless covers keep their colours. */
-private fun loadCover(context: Context, item: HistoryWithRelations, grey: Boolean): Bitmap? =
-    loadWidgetCover(context, item.coverData, grey)
-
-/** The cover, sized for a widget; greyscale in Dot unless covers keep their colours. Shared with the Listening widget. */
+/** Loads a widget-sized cover, greyscale in Dot unless the cover-colour setting is on. */
 internal fun loadWidgetCover(context: Context, data: Any?, grey: Boolean): Bitmap? = runCatching {
     val request = coil3.request.ImageRequest.Builder(context)
         .data(data)
