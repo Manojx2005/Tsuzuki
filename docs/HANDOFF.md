@@ -175,11 +175,15 @@ R11–R17, P1.11 storage async migration, Phase 5 features without a card.
 | V11 | Release candidate on all three devices | Claude + owner | V9, V10 | — |
 | V12 | Tag v0.1.0, publish, verify updater | Claude + owner | V11 | — |
 
-#### V0 Owner tasks (owner) — `done` except item 2 (answers below)
+#### V0 Owner tasks (owner) — `done` except item 2: release keystore + secrets (see item 2)
 1. Make `Manojx2005/Tsuzuki` public, or name a separate public releases repo (then `GITHUB_REPO` in
    `AppUpdateChecker.kt` changes in V4). The updater 404s until the repo it reads is public.
-2. Confirm the Actions secrets `tsuzuki-preview.yml` uses exist: `SIGNING_KEY_BASE64`, `KEY_STORE_PASSWORD`,
-   `KEY_ALIAS`, `KEY_PASSWORD`. V4's `release.yml` uses the same names.
+2. **Not done yet (Claude checked 2026-11-07: no secrets, no releases).** Create a release keystore and keep it safe
+   (losing it means users can never update in place). In Git Bash, outside the repo:
+   `keytool -genkeypair -v -keystore tsuzuki-release.jks -alias tsuzuki -keyalg RSA -keysize 4096 -validity 36500`
+   then `base64 -w0 tsuzuki-release.jks > key.b64` and add the secrets (repo → Settings → Secrets → Actions, or
+   `gh secret set NAME -R Manojx2005/Tsuzuki`): `SIGNING_KEY_BASE64` (contents of key.b64), `KEY_STORE_PASSWORD`,
+   `KEY_ALIAS` (`tsuzuki`), `KEY_PASSWORD`. Delete key.b64 afterwards. Both workflows use these names.
 3. Tell Claude which key signed the release app on your phone (`io.github.manojx2005.tsuzuki`): the same keystore
    as the secrets, or a different one. V10 checks it; a different key means v0.1 can't install over your data.
 4. Answer the permission questions (V3 Watch switch, device use, phone upgrade, test installs, language switch,
@@ -245,7 +249,7 @@ version, with no sample numbers, fake titles or controls that look usable; nothi
 release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
 Fix only what fails; list the checks in Result. Claude checks: preview build, Home → Watch, both themes, both devices.
 
-#### V4 Telemetry out + Tsuzuki release workflow (T2) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
+#### V4 Telemetry out + Tsuzuki release workflow (T2) — `done` (Claude 2026-11-07; see Result)
 `PRIVACY.md` promises no telemetry. Keep `Config.includeTelemetry` and the Firebase code paths for Tsundoku merges,
 but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Rewrite `.github/workflows/release.yml` for Tsuzuki: run on tag `v*` pushes, gate
@@ -259,19 +263,56 @@ but the Tsuzuki release must never pass `-Pinclude-telemetry`.
 - Don't run the workflow and don't create tags. Claude checks: `assembleRelease -Penable-updater` locally, then the
   APK has no `com.google.firebase` classes.
 
-#### V5 About, licences, privacy, links (T2) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
+**Result (Claude, 2026-11-07):**
+- `.github/workflows/release.yml` rewritten for Tsuzuki: tag `v*` on `Manojx2005/Tsuzuki`, checks the tag equals
+  `versionName`, `assembleRelease -Penable-updater` (never `-Pinclude-telemetry`), signs through Gradle with the same
+  secrets as `tsuzuki-preview.yml`, fails if any `Lcom/google/firebase/` class is in the APK, renames to
+  `tsuzuki[-<abi>]-<tag>.apk`, notes = the CHANGELOG section + SHA-256 list (checksums in the notes, not as an asset:
+  the updater treats an asset without an ABI in its name as the universal APK), published `--latest`.
+- `app/google-services.json` deleted (owner-approved). The telemetry module already compiles its no-op source set
+  and no Firebase dependency without the flag; local `assembleRelease -Penable-updater`: 0 Firebase classes,
+  `io.github.manojx2005.tsuzuki` 0.1.0 (24), label Tsuzuki.
+- **Updater channel bug fixed (found while doing V4):** preview (`rNNNN`) and stable (`vX.Y.Z`) releases share one
+  repo and both read `/releases/latest`, and the preview workflow published `--latest`. A stable 0.1.0 install seeing
+  `r3000` would compare `3000 > 0` and offer the preview APK; a preview install seeing `v0.1.0` would hit
+  `"0.1.0".toInt()`. Now: `tsuzuki-preview.yml` publishes `--prerelease`; `ReleaseServiceImpl` (data) makes preview
+  builds read `/releases?per_page=30` and take the newest `r…` tag; `GetApplicationRelease.isNewVersion` (domain)
+  ignores a tag from the other channel. 2 new tests in `GetApplicationReleaseTest` (5/5 pass). Note: preview builds
+  installed before this change read `/releases/latest` and won't see new (pre-release) previews; reinstall them once.
+- **Signing (feeds V0 / V10):** the repo has no releases and no Actions secrets yet (`gh release list` / `gh secret
+  list` empty), and this machine has no `keystore.properties`, so local builds (preview and release) are signed with
+  the per-machine **Android debug key** (`CN=Android Debug`, SHA-256 `6c1e396d…e17a`). Claude's recommendation: the
+  owner creates a real release keystore and the four secrets (commands in V0), and the owner's phone does a one-time
+  backup → uninstall → install → restore at V11 (its current install is almost certainly debug-signed on the laptop).
+
+#### V5 About, licences, privacy, links (T2) — `done` (Claude 2026-11-07; see Result; device look at the About credits in V8)
 About screen: app name, version, "Based on Tsundoku and Mihon" credit with links, GitHub link = the V0 releases
 repo, open-source licences list includes the bundled fonts (`docs/licenses/`), QuickJS host and the LNReader plugin
 index terms. `PRIVACY.md`: accurate for v0.1 (no telemetry; network calls: sources, trackers, translation provider if
 configured, updater). `TsuzukiLinks.kt`: no link points at tsundoku-otaku. `NOTICE`/licence files present for
 Apache-2.0. List each check in Result. Claude checks: About + licences on both devices, both themes.
 
-#### V6 CHANGELOG 0.1.0 + version (T1) — `claude-working` (Claude on main, 2026-11-07; Codex: skip)
+**Result (Claude, 2026-11-07):** `PRIVACY.md` is already accurate for v0.1 (sources, repos, trackers,
+translation, fonts, updates; no analytics, now enforced by V4). About (`TsuzukiAboutScreen.kt`) already credits Mihon,
+Tsundoku, LNReader plugins and Keiyoushi with licences, links source code and privacy policy to
+`Manojx2005/Tsuzuki`, and the Licences screen lists Gradle dependencies. Added: credits for the bundled fonts
+(Doto, Instrument Serif, Space Mono, Manrope, Literata; DotGothic16, M PLUS 1 Code, Noto Serif JP, Zen Kaku Gothic
+New: OFL-1.1, texts in `docs/licenses/`). No link points at tsundoku-otaku except the stock-theme Mihon credit. No
+`NOTICE` file needed (Mihon/Tsundoku ship none). V8: look at the About credits rows (long names may wrap).
+
+#### V6 CHANGELOG 0.1.0 + version (T1) — `done` (Claude 2026-11-07; see Result)
 Move Tsundoku's changelog to `docs/CHANGELOG-tsundoku.md` (header: "Inherited from Tsundoku; Tsuzuki's own
 history is in CHANGELOG.md"). New `CHANGELOG.md`: same Keep-a-Changelog format, `## [0.1.0]` written for users
 from this file's log (Dot + Colour themes, Home, library shelves, novel reader + TTS, manga reader, tablet layouts,
 downloads, backups, widgets, Japanese UI); no card IDs, no sample numbers. Leave `versionName = "0.1.0"`;
 `versionCode` stays 24 unless Claude reports in V10 that the phone's install is ≥ 24 (then bump above it).
+
+**Result (Claude, 2026-11-07):** Tsundoku's changelog moved to `docs/CHANGELOG-tsundoku.md`.
+New `CHANGELOG.md` with `## [0.1.0]` (Added / Improved / Fixed / Other), written for users; `release.yml` publishes
+this section as the release notes. `versionName` stays `0.1.0`, `versionCode` 24 (V10 checks the phone's install).
+`docs/UPSTREAM.md`: keep ours for `CHANGELOG.md` conflicts; delete `google-services.json` again if a merge restores it.
+**Before tagging (V11):** confirm the changelog lines that are not device-verified yet: process-death state (needs
+V1.1), the foldable hinge layout (no foldable here; drop the clause if untested), and the two-page spread (Y2).
 
 #### V7 Release-build runtime sweep (Claude) — `ready` after V3–V6
 On an optimised (preview or release-type) build, tablet + S22, Dot + Colour, close every gap in

@@ -1,4 +1,10 @@
+# Tsuzuki stable releases: pushing a tag vX.Y.Z builds the release APKs (no telemetry, updater on), signs them with
+# the owner's key and publishes a GitHub release marked "latest", which installed release builds find through
+# Settings → About → Check for updates. Preview builds (tsuzuki-preview.yml, tags rNNNN) are pre-releases, so they
+# never become "latest". Push only the one tag (`git push origin vX.Y.Z`), never `--tags`: the repo still holds
+# Tsundoku's old v0.x tags.
 name: Release
+
 on:
   push:
     tags:
@@ -8,164 +14,99 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  get_tag:
-    if: github.repository == 'tsundoku-otaku/tsundoku'
-    name: Extract tag name
-    runs-on: 'ubuntu-24.04'
-    outputs:
-      tag: ${{ steps.extract.outputs.tag }}
-
-    steps:
-      - name: Get tag name
-        id: extract
-        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-
-  build:
-    if: github.repository == 'tsundoku-otaku/tsundoku'
-    name: Build
-    runs-on: 'ubuntu-24.04'
-    needs: get_tag
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up JDK
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version-file: .github/.java-version
-          distribution: temurin
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-
-      - name: Build
-        run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
-
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@a391126403df92c6a0a3988a829dd47f79b89ed7
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: '35.0.1'
-
-      - name: Rename APK
-        run: |
-          set -e
-
-          mv app/build/outputs/apk/release/app-universal-release-signed.apk tsundoku-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-arm64-v8a-release-signed.apk tsundoku-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-armeabi-v7a-release-signed.apk tsundoku-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-x86-release-signed.apk tsundoku-x86-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-x86_64-release-signed.apk tsundoku-x86_64-${{ needs.get_tag.outputs.tag }}.apk
-
-      - name: Upload APK
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: tsundoku
-          path: |
-            tsundoku-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-x86-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-x86_64-${{ needs.get_tag.outputs.tag }}.apk
-
-  build_foss:
-    if: github.repository == 'tsundoku-otaku/tsundoku'
-    name: Build (FOSS)
-    runs-on: ubuntu-24.04
-    needs: get_tag
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up JDK
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version-file: .github/.java-version
-          distribution: temurin
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-        with:
-          cache-disabled: true
-
-      - name: Build
-        run: ./gradlew assembleFoss -Penable-updater
-
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@a391126403df92c6a0a3988a829dd47f79b89ed7
-        with:
-          releaseDirectory: app/build/outputs/apk/foss
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: '35.0.1'
-
-      - name: Rename APK
-        run: |
-          set -e
-
-          mv app/build/outputs/apk/foss/app-universal-foss-signed.apk tsundoku-${{ needs.get_tag.outputs.tag }}-foss.apk
-
-      - name: Upload APK
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: tsundoku-foss
-          path: tsundoku-${{ needs.get_tag.outputs.tag }}-foss.apk
-
   release:
-    if: github.repository == 'tsundoku-otaku/tsundoku'
-    name: Create GitHub Release
+    if: github.repository == 'Manojx2005/Tsuzuki'
     runs-on: ubuntu-24.04
-    needs: [get_tag, build, build_foss]
-
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      - name: Checkout (full history, for the commit count)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          merge-multiple: true
+          fetch-depth: 0
 
-      - name: Delete all artifacts
-        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
+      - name: Set up JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
-          failOnError: false
-          name: |
-            tsundoku
-            tsundoku-foss
+          java-version-file: .github/.java-version
+          distribution: temurin
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
-        with:
-          tag_name: ${{ needs.get_tag.outputs.tag }}
-          name: Tsundoku ${{ needs.get_tag.outputs.tag }}
-          body: |
-            Check out the [past release notes](https://github.com/tsundoku-otaku/tsundoku/releases) if you’re upgrading from an earlier version.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
-            <!-->
+      - name: Check the tag matches versionName
+        run: |
+          set -e
+          tag="${GITHUB_REF_NAME}"
+          name=$(grep -E '^\s*versionName = "' app/build.gradle.kts | head -1 | sed -E 's/.*"(.*)".*/\1/')
+          if [ "v$name" != "$tag" ]; then
+            echo "Tag $tag does not match versionName $name in app/build.gradle.kts" >&2
+            exit 1
+          fi
 
+      - name: Build and sign release APKs (no telemetry)
+        env:
+          TSUZUKI_GITHUB_RELEASE: 'true'
+          storeFileBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.KEY_ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        # Never add -Pinclude-telemetry: PRIVACY.md promises no telemetry.
+        run: ./gradlew :app:assembleRelease -Penable-updater
 
+      - name: Check no telemetry code shipped
+        run: |
+          set -e
+          apk=app/build/outputs/apk/release/app-universal-release.apk
+          if unzip -p "$apk" 'classes*.dex' | grep -a -q 'Lcom/google/firebase/'; then
+            echo "Firebase classes found in $apk; release builds must not include telemetry" >&2
+            exit 1
+          fi
 
-            <!-->
+      - name: Rename APKs
+        run: |
+          set -e
+          cd app/build/outputs/apk/release
+          tag="${GITHUB_REF_NAME}"
+          mv app-universal-release.apk "tsuzuki-$tag.apk"
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            mv "app-$abi-release.apk" "tsuzuki-$abi-$tag.apk"
+          done
+          ls -la
 
-            > [!TIP]
-            >
-            > ### If you are unsure which version to download then go with `tsundoku-${{ needs.get_tag.outputs.tag }}.apk`
-          files: |
-            tsundoku-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-${{ needs.get_tag.outputs.tag }}-foss.apk
-            tsundoku-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-x86-${{ needs.get_tag.outputs.tag }}.apk
-            tsundoku-x86_64-${{ needs.get_tag.outputs.tag }}.apk
-          draft: true
-          prerelease: false
-          token: ${{ secrets.TSUNDOKU_BOT_TOKEN }}
+      - name: Write release notes
+        run: |
+          set -e
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          # The matching CHANGELOG.md section, without its heading.
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "No CHANGELOG.md section for $version" >&2
+            exit 1
+          fi
+          # Checksums go in the notes, not as an asset: the updater treats any asset without an ABI in its name as
+          # the universal APK.
+          {
+            echo
+            echo '### SHA-256'
+            echo '```'
+            (cd app/build/outputs/apk/release && sha256sum tsuzuki-*.apk)
+            echo '```'
+          } >> notes.md
+          cat notes.md
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          tag="${GITHUB_REF_NAME}"
+          gh release create "$tag" app/build/outputs/apk/release/tsuzuki-*.apk \
+            --title "Tsuzuki $tag" --notes-file notes.md --verify-tag --latest

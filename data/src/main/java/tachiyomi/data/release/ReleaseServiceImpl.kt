@@ -20,10 +20,18 @@ class ReleaseServiceImpl(
         // GitHub's release API isn't a novel/manga source - exempt it same as the sibling
         // AppUpdateDownloadJob (which downloads the APK this check points to).
         val release = with(json) {
-            networkService.client.rateLimitExempt()
-                .newCall(GET("https://api.github.com/repos/${arguments.repository}/releases/latest"))
-                .awaitSuccess()
-                .parseAs<GithubRelease>()
+            val client = networkService.client.rateLimitExempt()
+            if (arguments.isPreview) {
+                // Tsuzuki: previews are pre-releases, which /releases/latest never returns.
+                client.newCall(GET("https://api.github.com/repos/${arguments.repository}/releases?per_page=30"))
+                    .awaitSuccess()
+                    .parseAs<List<GithubRelease>>()
+                    .firstOrNull { it.version.startsWith("r") } ?: return null
+            } else {
+                client.newCall(GET("https://api.github.com/repos/${arguments.repository}/releases/latest"))
+                    .awaitSuccess()
+                    .parseAs<GithubRelease>()
+            }
         }
 
         val downloadLink = getDownloadLink(release = release, isFoss = arguments.isFoss) ?: return null

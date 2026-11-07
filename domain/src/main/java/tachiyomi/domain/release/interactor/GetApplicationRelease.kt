@@ -28,6 +28,8 @@ class GetApplicationRelease(
         versionName: String,
         versionTag: String,
     ): Boolean {
+        // Tsuzuki: preview (rNNNN) and stable (vX.Y.Z) releases share one repo; never offer the other channel's tag.
+        if (!versionTag.startsWith(if (isPreview) "r" else "v")) return false
         // Removes prefixes like "r" or "v"
         val newVersion = versionTag.replace("[^\\d.]".toRegex(), "")
         return if (isPreview) {

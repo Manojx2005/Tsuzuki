@@ -73,4 +73,4 @@ jobs:
           tag='${{ steps.tag.outputs.tag }}'
           notes="${NOTES:-Preview build $tag}"
           gh release create "$tag" app/build/outputs/apk/preview/tsuzuki-*.apk \
-            --title "Tsuzuki $tag" --notes "$notes" --target "$GITHUB_SHA" --latest
+            --title "Tsuzuki $tag" --notes "$notes" --target "$GITHUB_SHA" --prerelease

@@ -57,7 +57,10 @@ git remote add mihon    https://github.com/mihonapp/mihon.git
    git cherry-pick -x <sha>      # oldest first
    ```
    - Conflict only in `CHANGELOG.md`: keep ours (`git checkout --ours CHANGELOG.md && git add CHANGELOG.md &&
-     git cherry-pick --continue`).
+     git cherry-pick --continue`). Since v0.1 (2026-11-07) `CHANGELOG.md` is Tsuzuki's own; Tsundoku's history lives
+     in `docs/CHANGELOG-tsundoku.md` and upstream changelog lines are never taken.
+   - `app/google-services.json` was deleted for v0.1 (no telemetry, owner 2026-11-07). If a Tsundoku merge brings it
+     back, delete it again (`git rm app/google-services.json`). Never build Tsuzuki releases with `-Pinclude-telemetry`.
    - Any other conflict: `git cherry-pick --abort` and log it below. Don't pull in a big refactor just to make one
      fix fit.
 3. **Build and test**: `./gradlew :app:assembleDebug :app:testDebugUnitTest`. A clean textual pick can still fail
