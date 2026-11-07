@@ -59,6 +59,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -105,7 +106,13 @@ internal fun navIndicatorSpec(reduced: Boolean): FiniteAnimationSpec<Float> = if
 fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(31.dp)
-    val cellHeight = 48.dp + 20.dp * (LocalDensity.current.fontScale - 1f).coerceAtLeast(0f)
+    val density = LocalDensity.current
+    val maxLabelLines = if (density.fontScale >= 1.5f) 3 else 2
+    val labelStyle = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot).copy(lineHeight = 14.sp)
+    val cellHeight = maxOf(
+        48.dp + 20.dp * (density.fontScale - 1f).coerceAtLeast(0f),
+        with(density) { labelStyle.lineHeight.toDp() } * maxLabelLines + 8.dp,
+    )
     val selectedIndex = items.indexOfFirst { it.selected }
     val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
     val position = animateFloatAsState(
@@ -146,6 +153,8 @@ fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
                     NavBarItem(
                         item,
                         selectedIndex >= 0 && index == highlightedIndex,
+                        labelStyle,
+                        maxLabelLines,
                         Modifier.weight(1f).heightIn(min = cellHeight),
                     )
                 }
@@ -155,7 +164,13 @@ fun TsuzukiNavBar(items: List<TsuzukiNavItem>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Modifier = Modifier) {
+private fun NavBarItem(
+    item: TsuzukiNavItem,
+    highlighted: Boolean,
+    labelStyle: TextStyle,
+    maxLines: Int,
+    modifier: Modifier = Modifier,
+) {
     val t = TsuzukiTheme.tokens
     val interactions = remember { MutableInteractionSource() }
     Box(
@@ -175,10 +190,10 @@ private fun NavBarItem(item: TsuzukiNavItem, highlighted: Boolean, modifier: Mod
         Box(Modifier.matchParentSize().clip(RoundedCornerShape(24.dp)).indication(interactions, ripple()))
         Text(
             text = if (t.isDot) item.shortLabel else item.label,
-            style = navLabel(MaterialTheme.typography.labelLarge, dot = t.isDot),
+            style = labelStyle,
             color = if (highlighted) t.background else t.mutedText,
-            maxLines = 1,
-            softWrap = false,
+            textAlign = TextAlign.Center,
+            maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
         )

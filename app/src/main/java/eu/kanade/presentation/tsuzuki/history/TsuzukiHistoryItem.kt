@@ -73,7 +73,11 @@ fun TsuzukiHistoryItem(
     val readAt = remember(history.readAt, timeFormatter) {
         history.readAt?.toTimestampString(timeFormatter).orEmpty()
     }
-    val chapter = if (history.chapterNumber > -1) "Ch. ${formatChapterNumber(history.chapterNumber)}" else null
+    val chapter = if (history.chapterNumber > -1) {
+        stringResource(MR.strings.tsz_reader_chapter_position, formatChapterNumber(history.chapterNumber))
+    } else {
+        null
+    }
 
     Row(
         modifier = modifier
@@ -112,7 +116,7 @@ fun TsuzukiHistoryItem(
                 text = up(listOfNotNull(chapter, readAt.takeIf { it.isNotEmpty() }).joinToString(" · ")),
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = muted,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             progress?.let { TsuzukiProgressBar(it, dots = 16, thickness = 4.dp) }

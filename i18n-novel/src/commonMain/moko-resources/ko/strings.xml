@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_manga">만화</string>
+    <string name="label_novels">소설</string>
+    <string name="action_translate">번역</string>
+    <string name="pref_novel_status_bar">읽기 상태 표시줄</string>
+    <string name="pref_novel_status_bar_customize">상태 표시줄 맞춤설정</string>
+    <string name="pref_novel_status_bar_customize_summary">시간, 챕터, 진행률, 배터리의 표시 여부와 순서를 변경합니다</string>
+</resources>

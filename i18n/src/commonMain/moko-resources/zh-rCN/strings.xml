@@ -940,6 +940,7 @@
     <string name="tsz_start">开始</string>
     <string name="tsz_new_chapters">新章节</string>
     <string name="tsz_new">新增</string>
+    <string name="tsz_home_new_count">新增 %1$d 章</string>
     <string name="tsz_today">今天</string>
     <string name="tsz_min">分钟</string>
     <string name="tsz_library">书架</string>
