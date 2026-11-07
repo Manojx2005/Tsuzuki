@@ -428,7 +428,12 @@ Pull the phone's installed release APK (`pm path io.github.manojx2005.tsuzuki`) 
 Same cert and version code below the new one: in-place upgrade works. Different cert: **stop**, owner decides
 (sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
 
-#### V11 Release candidate (Claude + owner) — `ready` after V9, V10
+#### V11 Release candidate (Claude + owner) — RC1 built 2026-11-07, owner testing on their phone
+**RC1:** commit `0025beca7`, built and signed by GitHub Actions (`release.yml` manual run 42373139062, no publish).
+Verified: `io.github.manojx2005.tsuzuki` 0.1.0 (24), cert `CN=Tsuzuki` SHA-256 `ffcdc743…f6c7`, 0 Firebase classes,
+baseline profile packaged. APKs + SHA256SUMS + owner checklist in `C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc1/`.
+Local signed builds no longer work (the key password left this PC, owner 2026-11-07): build RCs with
+`gh workflow run release.yml` and `gh run download`.
 Build `assembleRelease -Penable-updater` locally with the release key. Tablet + S22: install the release app id,
 smoke test Home, Library, both readers, TTS, downloads, backup + restore, Browse, extensions, settings, widgets.
 Owner's phone (as approved in V0): fresh backup copied to the PC first, then upgrade in place over the real data;
