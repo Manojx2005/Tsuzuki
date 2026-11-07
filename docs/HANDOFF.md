@@ -183,6 +183,18 @@ the tablet + S22. Per card: its "Claude device checks" list. Plus C4: restore R1
 **scratch** install and record `gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse; and R2:
 `adb shell am kill` on every screen in R2's Result. Merge into `main` only what passes; failures go back as fix cards.
 
+**V1 progress (Claude, 2026-11-07):** `review/night5` = main + R3, R1, R2, R4, R5, R9, Y2, Y6 (string conflicts: both
+sides kept; R2 + Y6 combined in `TsuzukiReaderHooks.kt`). `assembleDebug` + 936 unit tests green; `assemblePreview`
+installed on tablet + S22, both launch, crash buffers empty.
+- Pass: **Y6** (tablet landscape docks the LISTEN panel; playback survives rotation; portrait < 900 dp keeps the
+  floating pill by design). **R4** (Library menu: icons, groups, red destructive row). **R5** (tablet Settings two-pane).
+- Found: **V1.1** (selected tab lost after process death; not from this batch).
+- Pending: **Y2** (needs a *paged* manga: the only manga, Nano Machine, opens as a webtoon), **R1/C4** scratch 500-book
+  frame timing, **R2** in-Library state (after V1.1), **R3/R9** on the S22, R9 widgets placed.
+- Polish notes for V8 (existing, not regressions): Dot System/Light/Dark segment not uppercased and in body font;
+  Settings TIME FORMAT label wraps while its value truncates; "GRAYSCALE" vs British "colour"; Listen panel voice
+  label shows a raw locale ("en-US-language").
+
 #### V1.1 Selected tab lost after process death (T3) — `ready` (found by Claude in V1, 2026-11-07; release-blocking)
 Repro (preview build `.debug`, tablet, Dot): Library → MANGA tab → Home key → `adb shell am kill
 io.github.manojx2005.tsuzuki.debug` → open the app from **recents** (not the launcher). Expected: Library, MANGA
