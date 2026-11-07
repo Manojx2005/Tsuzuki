@@ -23,11 +23,12 @@ fun ReaderPageIndicator(
     currentPage: Int,
     totalPages: Int,
     modifier: Modifier = Modifier,
+    spreadStart: Int? = null,
 ) {
     if (currentPage <= 0 || totalPages <= 0) return
 
     if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
-        TsuzukiMangaPageIndicator(currentPage, totalPages, modifier)
+        TsuzukiMangaPageIndicator(currentPage, totalPages, modifier, spreadStart)
         return
     }
 

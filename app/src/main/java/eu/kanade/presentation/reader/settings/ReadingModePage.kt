@@ -121,6 +121,13 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
         pref = viewModel.preferences.navigateToPan,
     )
 
+    if (LocalMangaReaderSettings.current) {
+        CheckboxItem(
+            label = stringResource(MR.strings.tsz_manga_tablet_spread),
+            pref = viewModel.preferences.tabletMangaSpread,
+        )
+    }
+
     val dualPageSplitPaged by viewModel.preferences.dualPageSplitPaged.collectAsState()
     CheckboxItem(
         label = stringResource(MR.strings.pref_dual_page_split),

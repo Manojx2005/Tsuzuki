@@ -1330,4 +1330,7 @@
     <string name="tsz_q8_reader_next">다음</string>
     <string name="tsz_q8_reader_here">여기서</string>
     <string name="tsz_q8_reader_rotate">회전</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">태블릿 가로 모드에서 두 페이지 보기</string>
 </resources>

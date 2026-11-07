@@ -1695,4 +1695,7 @@
     <string name="tsz_q8_reader_next">Next</string>
     <string name="tsz_q8_reader_here">Here</string>
     <string name="tsz_q8_reader_rotate">Rotate</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Two-page spread on landscape tablets</string>
 </resources>

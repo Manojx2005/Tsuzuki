@@ -114,6 +114,8 @@ class ReaderPreferences(
 
     // endregion
 
+    val tabletMangaSpread: Preference<Boolean> = preferenceStore.getBoolean("tsz_tablet_manga_spread", false)
+
     // region Split two-page spread
 
     val dualPageSplitPaged: Preference<Boolean> = preferenceStore.getBoolean("pref_dual_page_split", false)

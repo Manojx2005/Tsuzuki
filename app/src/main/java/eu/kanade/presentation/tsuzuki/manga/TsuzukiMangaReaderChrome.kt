@@ -141,7 +141,12 @@ internal fun TsuzukiMangaReaderActions(
 }
 
 @Composable
-internal fun TsuzukiMangaPageIndicator(currentPage: Int, totalPages: Int, modifier: Modifier) {
+internal fun TsuzukiMangaPageIndicator(
+    currentPage: Int,
+    totalPages: Int,
+    modifier: Modifier,
+    spreadStart: Int? = null,
+) {
     val tokens = TsuzukiTheme.tokens
     Surface(
         modifier = modifier.padding(bottom = 8.dp),
@@ -151,7 +156,7 @@ internal fun TsuzukiMangaPageIndicator(currentPage: Int, totalPages: Int, modifi
         border = tokens.tileBorder?.let { BorderStroke(1.dp, it) },
     ) {
         Text(
-            text = "$currentPage / $totalPages",
+            text = if (spreadStart != null) "$spreadStart–$currentPage / $totalPages" else "$currentPage / $totalPages",
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             style = if (tokens.isDot) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelMedium,
         )

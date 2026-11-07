@@ -1331,4 +1331,7 @@
     <string name="tsz_q8_reader_next">下一段</string>
     <string name="tsz_q8_reader_here">从这里</string>
     <string name="tsz_q8_reader_rotate">旋转</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">平板横屏双页显示</string>
 </resources>

@@ -1331,4 +1331,7 @@
     <string name="tsz_q8_reader_next">Weiter</string>
     <string name="tsz_q8_reader_here">Hier</string>
     <string name="tsz_q8_reader_rotate">Drehen</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Doppelseite auf Tablets im Querformat</string>
 </resources>

@@ -1328,4 +1328,7 @@
     <string name="tsz_q8_reader_next">Próximo</string>
     <string name="tsz_q8_reader_here">Aqui</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Página dupla em tablets na horizontal</string>
 </resources>

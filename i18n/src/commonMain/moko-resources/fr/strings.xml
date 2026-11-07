@@ -1324,4 +1324,7 @@
     <string name="tsz_q8_reader_next">Suivant</string>
     <string name="tsz_q8_reader_here">Ici</string>
     <string name="tsz_q8_reader_rotate">Pivoter</string>
+
+    <!-- Y2 -->
+    <string name="tsz_manga_tablet_spread">Double page sur tablette en paysage</string>
 </resources>
