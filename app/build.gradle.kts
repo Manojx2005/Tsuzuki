@@ -153,6 +153,9 @@ android {
 
     sourceSets {
         getByName("benchmark").res.directories.add("src/debug/res")
+        buildTypes.filter { it.name != "debug" }.forEach {
+            getByName(it.name).kotlin.directories.add("src/nonDebug/java")
+        }
     }
 
     splits {

@@ -61,9 +61,10 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.entries.anime.model.Anime
@@ -79,10 +80,8 @@ internal const val SAVED_ANIME_ID = "saved_anime_id"
 internal const val RESUME_ANIME_EPISODE_ID = "resume_anime_episode_id"
 
 private fun openAnime(context: Context, animeId: Long, resumeId: Long? = null) {
-    val intent = Intent().setClassName(
-        context,
-        "eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeCatalogueActivity",
-    ).putExtra(SAVED_ANIME_ID, animeId)
+    if (!TsuzukiAnime.enabled) return
+    val intent = Intent(context, AnimeCatalogueActivity::class.java).putExtra(SAVED_ANIME_ID, animeId)
     if (resumeId != null) intent.putExtra(RESUME_ANIME_EPISODE_ID, resumeId)
     context.startActivity(intent)
 }
@@ -93,7 +92,7 @@ internal data object AnimeLibraryTab : Tab {
 
     @Composable
     override fun Content() {
-        if (!isDebugBuildType) return
+        if (!TsuzukiAnime.enabled) return
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val store = remember { Injekt.get<AnimeLibraryStore>() }
@@ -179,7 +178,7 @@ private fun AnimeLibraryMedia() {
 
 @Composable
 internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
-    if (!isDebugBuildType) return
+    if (!TsuzukiAnime.enabled) return
     val context = LocalContext.current
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }

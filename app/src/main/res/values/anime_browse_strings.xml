@@ -3,4 +3,5 @@
     <string name="tsz_anime_play_first">Play first episode</string>
     <string name="tsz_anime_play_next">Play next episode</string>
     <string name="tsz_anime_no_episodes">No episodes found</string>
+    <string name="tsz_anime_player_unavailable">Anime player unavailable</string>
 </resources>

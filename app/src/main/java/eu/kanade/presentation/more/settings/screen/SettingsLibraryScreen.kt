@@ -20,7 +20,9 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.presentation.tsuzuki.anime.AnimeShelvesScreen
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
 import tachiyomi.domain.category.interactor.GetCategories
@@ -96,10 +98,10 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     onClick = { navigator.push(CategoryScreen()) },
                 ),
-                if (eu.kanade.tachiyomi.util.system.isDebugBuildType) {
+                if (TsuzukiAnime.enabled) {
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.tsz_anime_shelves),
-                        onClick = { navigator.push(eu.kanade.presentation.tsuzuki.anime.AnimeShelvesScreen()) },
+                        onClick = { navigator.push(AnimeShelvesScreen()) },
                     )
                 } else {
                     null

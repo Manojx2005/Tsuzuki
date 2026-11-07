@@ -3,4 +3,5 @@
     <string name="tsz_anime_play_first">播放第一集</string>
     <string name="tsz_anime_play_next">播放下一集</string>
     <string name="tsz_anime_no_episodes">未找到剧集</string>
+    <string name="tsz_anime_player_unavailable">动漫播放器不可用</string>
 </resources>

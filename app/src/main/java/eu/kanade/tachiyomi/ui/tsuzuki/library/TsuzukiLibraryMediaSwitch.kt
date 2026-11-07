@@ -9,9 +9,9 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
@@ -35,18 +35,18 @@ fun TsuzukiLibraryMediaSwitch(isManga: Boolean) {
     val hideMangaUi by basePreferences.hideMangaUi.collectAsState()
     val tabNavigator = LocalTabNavigator.current
     androidx.compose.foundation.layout.Column {
-        if ((!joined && !hideMangaUi) || isDebugBuildType) {
+        if ((!joined && !hideMangaUi) || TsuzukiAnime.enabled) {
             val labels = buildList {
                 add(stringResource(TDMR.strings.label_novels))
                 if (!joined && !hideMangaUi) add(stringResource(TDMR.strings.label_manga))
-                if (isDebugBuildType) add(stringResource(MR.strings.tsz_anime_media))
+                if (TsuzukiAnime.enabled) add(stringResource(MR.strings.tsz_anime_media))
             }
             TsuzukiPillRow(
                 labels = labels,
                 selected = if (isManga && !joined && !hideMangaUi) 1 else 0,
                 onClick = {
                     tabNavigator.current = when {
-                        isDebugBuildType && it == labels.lastIndex -> AnimeLibraryTab
+                        TsuzukiAnime.enabled && it == labels.lastIndex -> AnimeLibraryTab
                         it == 1 -> LibraryTab
                         else -> NovelsTab
                     }

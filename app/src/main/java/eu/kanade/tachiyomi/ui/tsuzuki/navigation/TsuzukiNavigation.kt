@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.tsuzuki.navigation
 
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -10,7 +11,6 @@ import eu.kanade.tachiyomi.ui.library.NovelsTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.tsuzuki.home.TsuzukiHomeTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
 
 /** The phone bar and tablet rail share destinations; History remains a retained, hidden tab. */
 object TsuzukiNavigation {
@@ -23,7 +23,7 @@ object TsuzukiNavigation {
     }
 
     fun restore(key: String?, joined: Boolean = false): Tab {
-        val retained = if (isDebugBuildType && key == AnimeLibraryTab.key) {
+        val retained = if (isAnimeLibraryKey(key)) {
             AnimeLibraryTab
         } else {
             (tabs + LibraryTab + HistoryTab).firstOrNull { it.key == key } ?: TsuzukiHomeTab
@@ -32,7 +32,7 @@ object TsuzukiNavigation {
     }
 
     fun library(key: String?, joined: Boolean): Tab = when {
-        isDebugBuildType && key == AnimeLibraryTab.key -> AnimeLibraryTab
+        isAnimeLibraryKey(key) -> AnimeLibraryTab
         !joined && key == LibraryTab.key -> LibraryTab
         else -> NovelsTab
     }
@@ -47,3 +47,6 @@ object TsuzukiNavigation {
         is HomeScreen.Tab.More -> MoreTab
     }
 }
+
+internal fun isAnimeLibraryKey(key: String?, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
+    animeEnabled && key == AnimeLibraryTab.key

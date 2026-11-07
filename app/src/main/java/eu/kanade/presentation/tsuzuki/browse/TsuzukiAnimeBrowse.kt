@@ -36,6 +36,8 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -165,8 +167,9 @@ internal const val ANIME_SOURCE_ID = "anime_source_id"
 internal const val ANIME_OPEN_LATEST = "anime_open_latest"
 
 private fun openAnimeCatalogue(context: Context, sourceId: Long, latest: Boolean) {
+    if (!TsuzukiAnime.enabled) return
     context.startActivity(
-        Intent().setClassName(context, "eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeCatalogueActivity")
+        Intent(context, AnimeCatalogueActivity::class.java)
             .putExtra(ANIME_SOURCE_ID, sourceId)
             .putExtra(ANIME_OPEN_LATEST, latest),
     )

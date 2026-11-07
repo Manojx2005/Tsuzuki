@@ -39,7 +39,7 @@ class BrowseHeaderSectionsTest {
 
     @Test
     fun `anime exposes sources and extensions even when manga is hidden`() {
-        browsePagesFor(browsePages(hideManga = true, hasAnime = true), BrowseMedia.ANIME) shouldBe
+        browsePagesFor(browsePages(hideManga = true, hasAnime = true, animeEnabled = true), BrowseMedia.ANIME) shouldBe
             listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_EXTENSIONS)
     }
 }

@@ -3,4 +3,5 @@
     <string name="tsz_anime_play_first">最初のエピソードを再生</string>
     <string name="tsz_anime_play_next">次のエピソードを再生</string>
     <string name="tsz_anime_no_episodes">エピソードが見つかりません</string>
+    <string name="tsz_anime_player_unavailable">アニメプレーヤーを利用できません</string>
 </resources>

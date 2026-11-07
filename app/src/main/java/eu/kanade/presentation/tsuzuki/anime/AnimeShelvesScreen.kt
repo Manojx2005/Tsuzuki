@@ -48,7 +48,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
@@ -62,7 +62,7 @@ import uy.kohesive.injekt.api.get
 internal class AnimeShelvesScreen : Screen() {
     @Composable
     override fun Content() {
-        if (!isDebugBuildType) return
+        if (!TsuzukiAnime.enabled) return
         val navigator = LocalNavigator.currentOrThrow
         val store = remember { Injekt.get<AnimeLibraryStore>() }
         val shelves by remember { store.observeShelves() }.collectAsState(emptyList())

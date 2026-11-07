@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -31,12 +32,16 @@ internal enum class BrowsePage(val media: BrowseMedia, val section: BrowseSectio
     ANIME_EXTENSIONS(BrowseMedia.ANIME, BrowseSection.EXTENSIONS),
 }
 
-internal fun browsePages(hideManga: Boolean, hasAnime: Boolean = false): List<BrowsePage> =
+internal fun browsePages(
+    hideManga: Boolean,
+    hasAnime: Boolean = false,
+    animeEnabled: Boolean = TsuzukiAnime.enabled,
+): List<BrowsePage> =
     BrowsePage.entries.filter {
         when (it.media) {
             BrowseMedia.NOVELS -> true
             BrowseMedia.MANGA -> !hideManga
-            BrowseMedia.ANIME -> hasAnime
+            BrowseMedia.ANIME -> animeEnabled && hasAnime
         }
     }
 

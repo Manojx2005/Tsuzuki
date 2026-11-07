@@ -43,8 +43,10 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtension
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +65,7 @@ class AnimeDebugActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 val flow = remember { AnimeDebugFlow(repository, scope) }
                 LaunchedEffect(flow) { flow.open() }
-                AnimeDebugScreen(flow, ::finish) { video -> AnimeDebugPlayback.launch(this, video) }
+                AnimeDebugScreen(flow, ::finish) { video -> AnimePlayback.launch(this, video) }
             }
         }
     }
@@ -179,7 +181,7 @@ private class AnimeDebugFlow(private val repository: AnimeDebugRepository, priva
         val selected = source ?: return
         run(
             work = {
-                repository.episodes(selected.source, selected.libVersion, anime)
+                AnimeStreamResolver.episodes(selected.source, selected.libVersion, anime)
                     .sortedBy { it.episode_number.takeIf { number -> number >= 0 } ?: Float.POSITIVE_INFINITY }
             },
             success = {
@@ -193,7 +195,7 @@ private class AnimeDebugFlow(private val repository: AnimeDebugRepository, priva
         val episode = episodes?.firstOrNull() ?: return
         val selected = source ?: return
         run(
-            work = { repository.videos(selected.source, selected.libVersion, episode) },
+            work = { AnimeStreamResolver.videos(selected.source, selected.libVersion, episode) },
             success = {
                 videos = it
                 step = AnimeDebugStep.Play
@@ -204,7 +206,7 @@ private class AnimeDebugFlow(private val repository: AnimeDebugRepository, priva
     fun play(video: Video, launch: (Video) -> Unit) {
         val selected = source ?: return
         run(
-            work = { repository.resolve(selected.source, selected.libVersion, video) },
+            work = { AnimeStreamResolver.resolve(selected.source, selected.libVersion, video) },
             success = launch,
         )
     }

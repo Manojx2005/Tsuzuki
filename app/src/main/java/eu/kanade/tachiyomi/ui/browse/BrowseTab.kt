@@ -33,6 +33,7 @@ import eu.kanade.presentation.tsuzuki.browse.rememberAnimeBrowseSources
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.NovelExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
@@ -44,7 +45,6 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.NovelGlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.novelSourcesTab
 import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -102,7 +102,7 @@ data object BrowseTab : Tab {
             novelExtensionsViewModel.search(novelQuery)
         }
 
-        val animeSources = if (themed && isDebugBuildType) rememberAnimeBrowseSources().value else emptyList()
+        val animeSources = if (themed && TsuzukiAnime.enabled) rememberAnimeBrowseSources().value else emptyList()
         val hasAnime = animeSources.isNotEmpty()
         val allPages = remember(hideMangaUi, hasAnime) { browsePages(hideMangaUi, hasAnime) }
         // Tsuzuki: swipes stay inside the chosen media (Sources / Extensions / Migrate); the pills switch media.

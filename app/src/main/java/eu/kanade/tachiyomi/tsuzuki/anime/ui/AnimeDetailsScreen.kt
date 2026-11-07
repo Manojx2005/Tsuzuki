@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.tsuzuki.anime.debug
+package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,6 +57,7 @@ import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +85,6 @@ private sealed interface AnimeDetailsLoad {
 internal fun AnimeDetailsScreen(
     entry: RegisteredAnimeSource,
     anime: SAnime,
-    repository: AnimeDebugRepository,
     library: AnimeLibraryStore,
     resumeUrl: String?,
     onBack: () -> Unit,
@@ -96,7 +96,7 @@ internal fun AnimeDetailsScreen(
     val details by produceState<AnimeDetailsLoad>(AnimeDetailsLoad.Loading, entry, anime, reload) {
         value = AnimeDetailsLoad.Loading
         value = try {
-            withContext(Dispatchers.IO) { loadAnimeDetails(entry, anime, repository) }
+            withContext(Dispatchers.IO) { loadAnimeDetails(entry, anime) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -142,7 +142,7 @@ internal fun AnimeDetailsScreen(
             scope.launch {
                 try {
                     val (video, storedEpisode) = withContext(Dispatchers.IO) {
-                        val video = resolveAnimeVideo(entry, episode, repository)
+                        val video = resolveAnimeVideo(entry, episode)
                         val storedEpisode = if (Injekt.get<BasePreferences>().incognitoMode.get()) {
                             null
                         } else {
@@ -360,7 +360,6 @@ private fun AnimeShelfPicker(
 private suspend fun loadAnimeDetails(
     entry: RegisteredAnimeSource,
     anime: SAnime,
-    repository: AnimeDebugRepository,
 ): AnimeDetailsLoad.Ready {
     val source = entry.source
     val update = if (entry.libVersion >= 17.0) {
@@ -368,7 +367,7 @@ private suspend fun loadAnimeDetails(
     } else {
         eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate(
             source.getAnimeDetails(anime),
-            repository.episodes(source, entry.libVersion, anime),
+            AnimeStreamResolver.episodes(source, entry.libVersion, anime),
         )
     }
     val display = anime.copy().apply {
@@ -389,12 +388,11 @@ private suspend fun loadAnimeDetails(
 private suspend fun resolveAnimeVideo(
     entry: RegisteredAnimeSource,
     episode: SEpisode,
-    repository: AnimeDebugRepository,
 ): Video {
-    val videos = repository.videos(entry.source, entry.libVersion, episode)
+    val videos = AnimeStreamResolver.videos(entry.source, entry.libVersion, episode)
     for (video in videos) {
         try {
-            return repository.resolve(entry.source, entry.libVersion, video)
+            return AnimeStreamResolver.resolve(entry.source, entry.libVersion, video)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

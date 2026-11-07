@@ -37,12 +37,14 @@ import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.NovelGlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -176,8 +178,8 @@ data object NovelsTab : Tab {
                                 mangaCount = state.libraryData.mangaCount,
                                 showCounts = !viewModel.paginationEnabled && !state.isLoading,
                                 onFilterChanged = viewModel::clearSelection,
-                                onOpenAnime = if (eu.kanade.tachiyomi.util.system.isDebugBuildType) {
-                                    { animeTabs.current = eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab }
+                                onOpenAnime = if (TsuzukiAnime.enabled) {
+                                    { animeTabs.current = AnimeLibraryTab }
                                 } else {
                                     null
                                 },

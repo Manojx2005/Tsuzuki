@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.tsuzuki.anime.debug
+package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

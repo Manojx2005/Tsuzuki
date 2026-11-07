@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.tsuzuki.anime.debug
+package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
@@ -66,6 +66,7 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import kotlinx.coroutines.CancellationException
@@ -81,7 +82,7 @@ import uy.kohesive.injekt.api.get
 class AnimeCatalogueActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!intent.hasExtra(ANIME_SOURCE_ID) && !intent.hasExtra(SAVED_ANIME_ID)) {
+        if (!TsuzukiAnime.enabled || (!intent.hasExtra(ANIME_SOURCE_ID) && !intent.hasExtra(SAVED_ANIME_ID))) {
             finish()
             return
         }
@@ -90,7 +91,6 @@ class AnimeCatalogueActivity : BaseActivity() {
         val resumeId = intent.getLongExtra(RESUME_ANIME_EPISODE_ID, -1L)
         val openLatest = intent.getBooleanExtra(ANIME_OPEN_LATEST, false)
         val sources = AnimeSourceManager.create(applicationContext)
-        val repository = AnimeDebugRepository(applicationContext)
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
@@ -146,12 +146,11 @@ class AnimeCatalogueActivity : BaseActivity() {
                             AnimeDetailsScreen(
                                 result.entry,
                                 anime,
-                                repository,
                                 library,
                                 result.resumeUrl,
                                 back,
                             ) { video, ep ->
-                                AnimeDebugPlayback.launch(this, video, ep)
+                                AnimePlayback.launch(this, video, ep)
                             }
                         }
                     }

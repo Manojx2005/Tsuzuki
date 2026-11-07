@@ -76,6 +76,8 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.anime.TsuzukiAnimeWatch
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.tsuzuki.home.ChapterStatus
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeBook
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeState
@@ -113,7 +115,7 @@ fun TsuzukiHomeScreen(
     bottomBarOverlay: Boolean,
 ) {
     val t = TsuzukiTheme.tokens
-    // Read / Watch switch (boards Main, TabletLibrary). Watch is a placeholder until anime lands.
+    // Read / Watch stays visible so builds without anime can show the Watch teaser.
     var watching by rememberSaveable { mutableStateOf(false) }
     Column(
         Modifier
@@ -136,8 +138,8 @@ fun TsuzukiHomeScreen(
         ) {
             val bottomPad = if (bottomBarOverlay) 110.dp else 24.dp
             when {
-                watching && eu.kanade.tachiyomi.util.system.isDebugBuildType -> {
-                    eu.kanade.presentation.tsuzuki.anime.TsuzukiAnimeWatch(bottomPad, actions.onBrowse)
+                showAnimeWatch(watching) -> {
+                    TsuzukiAnimeWatch(bottomPad, actions.onBrowse)
                 }
                 watching -> WatchPlaceholder(onBack = { watching = false })
                 state.loading -> Unit
@@ -149,6 +151,9 @@ fun TsuzukiHomeScreen(
         }
     }
 }
+
+internal fun showAnimeWatch(watching: Boolean, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
+    watching && animeEnabled
 
 @Composable
 private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
