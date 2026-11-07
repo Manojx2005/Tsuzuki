@@ -151,7 +151,7 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now (updated 2026-11-07):** V7.1 first, then V1.1 → V2b → R6 → R7 → V3 → (V4–V6: Claude) → R8 rework →
+**Codex lane 2 order from now (updated 2026-11-07):** V1.1 → V2b → R6 → R7 → V3 → (V4–V6: Claude) → R8 rework →
 R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
 for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
@@ -376,7 +376,7 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
 - Owner's phone `R5GL23ZYE1V` was connected but not visible to adb on this PC (not even "unauthorized"): needs USB
   debugging allowed for this computer before V10/V11.
 
-#### V7.1 Japanese nav label wraps mid-word (T2) — `ready` (found by Claude in V7, 2026-11-07; release-visible)
+#### V7.1 Japanese nav label wraps mid-word (T2) — `done` (Claude 2026-11-07: a label without spaces stays on one line and auto-sizes down to 75 %; labels with spaces still wrap between words; `TsuzukiNavLabelTest` 3/3; S22 Japanese: ライブラリ on one line, no crash)
 S22 (1080 px, 384 dp wide), preview, Colour and Dot, app language Japanese: the bottom pill nav shows ライブラリ as
 "ライブラ" / "リ" on two lines, selected and unselected (evidence: `r7-preview-home.png`, `r7-preview-lib.png` in the
 repo root, untracked). Fix in the Tsuzuki pill-nav label composable (`theme/tsuzuki/TsuzukiNav.kt` or wherever the

@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -188,12 +189,23 @@ private fun NavBarItem(
     ) {
         // Clip the ripple only, so an unread badge is not cut by the cell's rounded corner.
         Box(Modifier.matchParentSize().clip(RoundedCornerShape(24.dp)).indication(interactions, ripple()))
+        val label = if (t.isDot) item.shortLabel else item.label
+        val singleWord = navLabelIsSingleWord(label)
         Text(
-            text = if (t.isDot) item.shortLabel else item.label,
+            text = label,
             style = labelStyle,
             color = if (highlighted) t.background else t.mutedText,
             textAlign = TextAlign.Center,
-            maxLines = maxLines,
+            // A label without spaces (e.g. ライブラリ) can only wrap inside the word, so shrink it to fit instead.
+            maxLines = if (singleWord) 1 else maxLines,
+            autoSize = if (singleWord) {
+                TextAutoSize.StepBased(
+                    minFontSize = labelStyle.fontSize * NAV_LABEL_MIN_SCALE,
+                    maxFontSize = labelStyle.fontSize,
+                )
+            } else {
+                null
+            },
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
@@ -406,6 +418,12 @@ private fun NavBadge(count: Int, modifier: Modifier = Modifier) {
         )
     }
 }
+
+/** Smallest size a one-word nav label may shrink to, as a share of the normal label size. */
+internal const val NAV_LABEL_MIN_SCALE = 0.75f
+
+/** True when [label] has no spaces, so wrapping it would break inside the word (common for Japanese labels). */
+internal fun navLabelIsSingleWord(label: String): Boolean = label.isNotBlank() && label.none { it.isWhitespace() }
 
 private fun navLabel(base: TextStyle, dot: Boolean): TextStyle = if (dot) {
     base.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp)
