@@ -10,6 +10,10 @@ import eu.kanade.tachiyomi.ui.tsuzuki.home.TsuzukiHomeTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 class TsuzukiNavigationTest {
     @Test
@@ -44,6 +48,18 @@ class TsuzukiNavigationTest {
         }
         TsuzukiNavigation.restore(null) shouldBe TsuzukiHomeTab
         TsuzukiNavigation.restore("removed-tab") shouldBe TsuzukiHomeTab
+    }
+
+    @Test
+    fun `restoring a serialized Manga destination uses the current library mode`() {
+        val bytes = ByteArrayOutputStream()
+        ObjectOutputStream(bytes).use { it.writeObject(LibraryTab) }
+        val restoredTab = ObjectInputStream(ByteArrayInputStream(bytes.toByteArray())).use {
+            it.readObject() as LibraryTab
+        }
+
+        TsuzukiNavigation.restore(restoredTab.key) shouldBe LibraryTab
+        TsuzukiNavigation.restore(restoredTab.key, joined = true) shouldBe NovelsTab
     }
 
     @Test
