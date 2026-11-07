@@ -183,6 +183,19 @@ the tablet + S22. Per card: its "Claude device checks" list. Plus C4: restore R1
 **scratch** install and record `gfxinfo framestats` for Home, Library (each tab), Updates, History, Browse; and R2:
 `adb shell am kill` on every screen in R2's Result. Merge into `main` only what passes; failures go back as fix cards.
 
+#### V1.1 Selected tab lost after process death (T3) — `ready` (found by Claude in V1, 2026-11-07; release-blocking)
+Repro (preview build `.debug`, tablet, Dot): Library → MANGA tab → Home key → `adb shell am kill
+io.github.manojx2005.tsuzuki.debug` → open the app from **recents** (not the launcher). Expected: Library, MANGA
+selected. Actual: Home. No crash. Evidence: `r2-before.png` / `r2-after2.png` in the repo root (untracked, local).
+`HomeScreen.kt` keeps `retainedTsuzukiTab` / `retainedLibraryKey` in `rememberSaveable` and feeds
+`TsuzukiNavigation.restore(...)` into `TabNavigator(tab = initialTab)`, so find where the restored value is lost
+(is `savedInstanceState` non-null in `MainActivity.onCreate`? is `isTsuzuki` false on the first frame so
+`initialTab` is computed before the theme resolves? does the startup overlay or Voyager's root `Navigator` rebuild
+Home?). Fix with the smallest upstream change; add a test for `TsuzukiNavigation.restore`. Then R2's in-Library
+state (shelf, search, selection) can be checked; Claude re-tests both on the tablet + S22. Not caused by the V1
+batch (none of its cards touch `HomeScreen.kt` or `MainActivity.kt`), but R2's Result claimed the root tab already
+survived process death.
+
 #### V2 Upstream merge + freeze (Claude) — `ready` after V1, R6, R7
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
