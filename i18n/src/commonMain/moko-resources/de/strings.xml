@@ -964,14 +964,7 @@
     <string name="tsz_import_backup_sub">LNReader, Mihon, Tsundoku</string>
     <string name="tsz_open_epub">EPUB öffnen</string>
     <string name="tsz_open_epub_sub">Von diesem Gerät</string>
-    <string name="tsz_coming_soon">Demnächst</string>
-    <string name="tsz_watch_body">Anime kommt bald: Folgen und Staffeln, ein vollständiger mpv-Player und Anime-Tracking in denselben zwei Designs. Dein Lesefortschritt bleibt erhalten.</string>
-    <string name="tsz_watch_f1">Folgen und Staffeln</string>
-    <string name="tsz_watch_f1_sub">Filler markiert, Countdown zur nächsten Folge</string>
-    <string name="tsz_watch_f2">mpv-Player</string>
-    <string name="tsz_watch_f2_sub">Vorspann überspringen, Untertitel, Audio, Qualität</string>
-    <string name="tsz_watch_f3">Aniyomi-Bibliothek importieren</string>
-    <string name="tsz_watch_f3_sub">Sicherungen und AniList-/MAL-Tracking</string>
+    <string name="tsz_watch_body">Anime kommt in einer späteren Version von Tsuzuki.</string>
     <string name="tsz_back_to_reading">Zurück zum Lesen</string>
     <string name="tsz_search">Suche</string>
     <string name="tsz_font_literata">Literata</string>

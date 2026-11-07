@@ -956,14 +956,7 @@
     <string name="tsz_import_backup_sub">LNReader・Mihon・Tsundoku</string>
     <string name="tsz_open_epub">EPUBを開く</string>
     <string name="tsz_open_epub_sub">この端末から</string>
-    <string name="tsz_coming_soon">近日公開</string>
-    <string name="tsz_watch_body">アニメ対応は準備中です。エピソードとシーズン、mpvプレーヤー、アニメのトラッキングを同じ2つのテーマで。読書はそのまま続けられます。</string>
-    <string name="tsz_watch_f1">エピソードとシーズン</string>
-    <string name="tsz_watch_f1_sub">フィラー表示、次話までのカウントダウン</string>
-    <string name="tsz_watch_f2">mpvプレーヤー</string>
-    <string name="tsz_watch_f2_sub">OPスキップ、字幕、音声、画質</string>
-    <string name="tsz_watch_f3">Aniyomiのライブラリを引き継ぐ</string>
-    <string name="tsz_watch_f3_sub">バックアップとAniList / MALのトラッキング</string>
+    <string name="tsz_watch_body">アニメ視聴は今後のバージョンで追加予定です。</string>
     <string name="tsz_back_to_reading">読書に戻る</string>
     <string name="tsz_search">検索</string>
     <string name="tsz_font_literata">Literata</string>

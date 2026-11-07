@@ -964,14 +964,7 @@
     <string name="tsz_import_backup_sub">LNReader、Mihon、Tsundoku</string>
     <string name="tsz_open_epub">打开 EPUB</string>
     <string name="tsz_open_epub_sub">从此设备</string>
-    <string name="tsz_coming_soon">即将推出</string>
-    <string name="tsz_watch_body">动画功能即将推出：剧集与季度、完整的 mpv 播放器及动画追踪，同样支持这两种主题。你的阅读进度将保持不变。</string>
-    <string name="tsz_watch_f1">剧集与季度</string>
-    <string name="tsz_watch_f1_sub">标记原创集数，倒计时至下一集</string>
-    <string name="tsz_watch_f2">mpv 播放器</string>
-    <string name="tsz_watch_f2_sub">跳过片头，字幕、音轨与画质</string>
-    <string name="tsz_watch_f3">导入 Aniyomi 书库</string>
-    <string name="tsz_watch_f3_sub">备份与 AniList / MAL 追踪</string>
+    <string name="tsz_watch_body">动画观看功能将在 Tsuzuki 的后续版本中推出。</string>
     <string name="tsz_back_to_reading">返回阅读</string>
     <string name="tsz_search">搜索</string>
     <string name="tsz_font_literata">Literata</string>
