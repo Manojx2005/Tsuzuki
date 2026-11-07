@@ -24,7 +24,7 @@ class NovelDownloadPreferences(
      */
     fun requestDelay() = preferenceStore.getInt(
         "novel_request_delay_ms",
-        3000, // Default 3 seconds
+        1000, // Tsuzuki: 1 s (was 3 s; downloads were slow). A source's declared minimum still applies
     )
 
     /**
@@ -34,7 +34,7 @@ class NovelDownloadPreferences(
      */
     fun requestJitter() = preferenceStore.getInt(
         "novel_request_jitter_ms",
-        1000, // Default 0-1 second random
+        500, // Tsuzuki: 0-0.5 s random (was 0-1 s)
     )
 
     /**
@@ -45,7 +45,7 @@ class NovelDownloadPreferences(
      */
     fun requestPermits() = preferenceStore.getInt(
         "novel_request_permits",
-        1, // Default: every request is paced individually, matching pre-burst behavior
+        2, // Tsuzuki: two requests per window before pacing (was 1)
     )
 
     /**
@@ -117,7 +117,7 @@ class NovelDownloadPreferences(
      */
     fun parallelNovelDownloads() = preferenceStore.getInt(
         "novel_parallel_downloads",
-        1, // Default to 1 for rate limiting
+        2, // Tsuzuki: two books at once (was 1); same-site books still share that site's pacing
     )
 
     /**

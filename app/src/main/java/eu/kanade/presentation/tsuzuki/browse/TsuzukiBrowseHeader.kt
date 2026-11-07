@@ -35,6 +35,14 @@ internal fun browsePages(hideManga: Boolean): List<BrowsePage> =
 internal fun List<BrowsePage>.pageIndex(media: BrowseMedia, section: BrowseSection): Int =
     indexOfFirst { it.media == media && it.section == section }
 
+/** Sources and Extensions always; Migrate only while it is the open section. */
+internal fun browseHeaderSections(active: BrowseSection): List<BrowseSection> =
+    if (active == BrowseSection.MIGRATION) {
+        listOf(BrowseSection.SOURCES, BrowseSection.EXTENSIONS, BrowseSection.MIGRATION)
+    } else {
+        listOf(BrowseSection.SOURCES, BrowseSection.EXTENSIONS)
+    }
+
 @Composable
 internal fun TsuzukiBrowseHeader(
     pages: List<BrowsePage>,
@@ -72,17 +80,20 @@ internal fun TsuzukiBrowseHeader(
                 )
             }
         }
+        // Migrate is opened from the overflow menu; while it is open it shows as a third, selected segment so the
+        // header says where you are (with only two segments nothing was selected and the indicator collapsed).
+        val sections = browseHeaderSections(active.section)
+        val migrationLabel = stringResource(MR.strings.label_migration)
         TsuzukiSegments(
-            labels = listOf(stringResource(MR.strings.label_sources), extensionLabel),
-            selected = when (active.section) {
-                BrowseSection.SOURCES -> 0
-                BrowseSection.EXTENSIONS -> 1
-                BrowseSection.MIGRATION -> -1
+            labels = sections.map {
+                when (it) {
+                    BrowseSection.SOURCES -> stringResource(MR.strings.label_sources)
+                    BrowseSection.EXTENSIONS -> extensionLabel
+                    BrowseSection.MIGRATION -> migrationLabel
+                }
             },
-            onClick = { segment ->
-                val section = if (segment == 0) BrowseSection.SOURCES else BrowseSection.EXTENSIONS
-                onSelectPage(pages.pageIndex(active.media, section))
-            },
+            selected = sections.indexOf(active.section),
+            onClick = { segment -> onSelectPage(pages.pageIndex(active.media, sections[segment])) },
         )
     }
 }

@@ -385,6 +385,13 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
 - Still open in V7: backup round trip (needs the system file picker; owner can do it on the release build), EPUB and
   mass import, one extension install/update/uninstall, widget placement, separate-library mode, Y2 spread (needs a
   paged manga), R1 500-book frame timing (scratch install).
+- **Downloads slow (owner report 2026-11-07):** novel pacing defaults were 3 s + 0-1 s jitter per request, 1 permit,
+  1 book at a time (Tsundoku). Now 1 s + 0-0.5 s, 2 permits, 2 books at once; per-source pacing and a source's
+  declared minimum are unchanged. Devices that ever saved their own values keep them (Settings → Novel downloads).
+- **Browse → Migrate bugged (owner report 2026-11-07):** Migrate is the pager's third page but the header had two
+  segments, so nothing was selected and the indicator collapsed; the list was stock-styled. Now Migrate shows as a
+  selected third segment while open, and the list uses the Sources rows (`TsuzukiMigrateSourceList`). Tablet: header,
+  rows, tap → source's books, Sources segment back; `BrowseHeaderSectionsTest` 2/2.
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.

@@ -85,6 +85,19 @@ private fun MigrateSourceList(
     sortingDirection: SetMigrateSorting.Direction,
     onToggleSortingDirection: () -> Unit,
 ) {
+    if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        eu.kanade.presentation.tsuzuki.browse.TsuzukiMigrateSourceList(
+            list,
+            contentPadding,
+            onClickItem,
+            onLongClickItem,
+            sortingMode,
+            onToggleSortingMode,
+            sortingDirection,
+            onToggleSortingDirection,
+        )
+        return
+    }
     ScrollbarLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
     ) {

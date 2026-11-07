@@ -33,6 +33,8 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 - The LNReader plugin index (novels) and Keiyoushi (manga) repositories are added on first launch.
 
 ### Improved
+- Novel chapters download faster: requests wait about 1 second instead of 3, two can go out together, and two books
+  download at once. A source's own minimum delay still applies, and slower per-source settings remain available.
 - Large libraries: Home, Library and Updates do less work when books and badges change.
 - Screens keep their selections, sheets and search text when the system closes the app in the background.
 - Menus have icons, grouped sections and a separate destructive row; long labels wrap between words.
