@@ -64,6 +64,8 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.hippo.unifile.UniFile
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.EstimatedStatusBarHeight
 import eu.kanade.presentation.reader.NovelStatusBar
@@ -380,6 +382,9 @@ class ReaderActivity : BaseActivity() {
             }
             .launchIn(lifecycleScope)
     }
+
+    internal val useTsuzukiMangaSpreads: Boolean
+        get() = Injekt.get<UiPreferences>().appTheme.get() in setOf(AppTheme.DOT, AppTheme.COLOUR)
 
     private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setComposeContent {
         val state by viewModel.state.collectAsState()
