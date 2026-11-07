@@ -21,4 +21,7 @@
     <string name="tsz_anime_extension_repos">Anime-Erweiterungsquellen</string>
     <string name="tsz_anime_aniyomi_format">Aniyomi-Format</string>
     <string name="tsz_anime_extensions_available">Verfügbar</string>
+    <string name="tsz_anime_history_episode">Folge %s</string>
+    <string name="tsz_anime_history_remaining">%s verbleibend</string>
+    <string name="tsz_anime_history_remove_all">Alle Folgen dieses Anime aus dem Verlauf entfernen</string>
 </resources>

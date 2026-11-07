@@ -21,4 +21,7 @@
     <string name="tsz_anime_extension_repos">Repositorios de extensiones de anime</string>
     <string name="tsz_anime_aniyomi_format">Formato Aniyomi</string>
     <string name="tsz_anime_extensions_available">Disponibles</string>
+    <string name="tsz_anime_history_episode">Ep. %s</string>
+    <string name="tsz_anime_history_remaining">Quedan %s</string>
+    <string name="tsz_anime_history_remove_all">Eliminar todos los episodios de este anime del historial</string>
 </resources>

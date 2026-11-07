@@ -412,6 +412,36 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun clearingAnimeHistoryRetainsWatchTimeAndRecomputesLastSeen() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val id = anime.insert(Anime(8, "/show", "Show"))
+            val (earlier, latest) = episodes.insertAll(
+                listOf(
+                    Episode(id, "/1", "Earlier", lastSecondSeen = 10),
+                    Episode(id, "/2", "Latest", lastSecondSeen = 20),
+                ),
+            )
+            history.upsert(earlier, Date(100), 10)
+            history.upsert(latest, Date(200), 20)
+            assertEquals(listOf(latest, earlier), history.subscribeHistory().first().map { it.episodeId })
+
+            history.removeHistory(id, latest)
+            assertEquals(listOf(earlier), history.subscribeHistory().first().map { it.episodeId })
+            assertEquals(20L, history.awaitByEpisodeId(latest)?.timeWatched)
+            assertEquals(100L, anime.awaitById(id)?.lastSeen)
+
+            history.removeHistory(id)
+            assertTrue(history.subscribeHistory().first().isEmpty())
+            assertEquals(0L, anime.awaitById(id)?.lastSeen)
+            assertEquals(10L, history.awaitByEpisodeId(earlier)?.timeWatched)
+            assertEquals(10L, episodes.awaitById(earlier)?.lastSecondSeen)
+        }
+    }
+
+    @Test
     fun historyNullDoesNotPoisonOrClearLastSeen() = runBlocking {
         withDatabase { driver, db ->
             val animes = AnimeRepositoryImpl(db)

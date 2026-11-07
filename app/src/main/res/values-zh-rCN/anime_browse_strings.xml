@@ -21,4 +21,7 @@
     <string name="tsz_anime_extension_repos">动漫扩展仓库</string>
     <string name="tsz_anime_aniyomi_format">Aniyomi 格式</string>
     <string name="tsz_anime_extensions_available">可用</string>
+    <string name="tsz_anime_history_episode">第%s集</string>
+    <string name="tsz_anime_history_remaining">剩余%s</string>
+    <string name="tsz_anime_history_remove_all">从历史记录中移除此动漫的所有剧集</string>
 </resources>

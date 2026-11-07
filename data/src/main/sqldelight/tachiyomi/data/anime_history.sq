@@ -52,6 +52,29 @@ WHERE animes.favorite = 1 AND anime_history.last_seen IS NOT NULL
     )
 ORDER BY anime_history.last_seen DESC, anime_history._id DESC;
 
+getHistory:
+SELECT animes._id AS anime_id, animes.title, animes.thumbnail_url,
+    episodes._id AS episode_id, episodes.name AS episode_name, episodes.episode_number, episodes.preview_url,
+    episodes.seen, episodes.last_second_seen, episodes.total_seconds, anime_history.last_seen
+FROM anime_history
+JOIN episodes ON episodes._id = anime_history.episode_id
+JOIN animes ON animes._id = episodes.anime_id
+WHERE anime_history.last_seen IS NOT NULL
+ORDER BY anime_history.last_seen DESC, anime_history._id DESC;
+
+clearHistory:
+UPDATE anime_history SET last_seen = NULL
+WHERE episode_id IN (SELECT _id FROM episodes WHERE anime_id = :animeId)
+    AND (:episodeId IS NULL OR episode_id = :episodeId);
+
+refreshAnimeLastSeen:
+UPDATE animes SET last_seen = coalesce((
+    SELECT max(CAST(anime_history.last_seen AS INTEGER)) FROM anime_history
+    JOIN episodes ON episodes._id = anime_history.episode_id
+    WHERE episodes.anime_id = :animeId
+), 0)
+WHERE _id = :animeId;
+
 upsert:
 INSERT INTO anime_history(episode_id, last_seen, time_watched)
 VALUES (:episodeId, :lastSeen, :watchSeconds)

@@ -21,4 +21,7 @@
     <string name="tsz_anime_extension_repos">アニメ拡張リポジトリ</string>
     <string name="tsz_anime_aniyomi_format">Aniyomi形式</string>
     <string name="tsz_anime_extensions_available">利用可能</string>
+    <string name="tsz_anime_history_episode">第%s話</string>
+    <string name="tsz_anime_history_remaining">残り%s</string>
+    <string name="tsz_anime_history_remove_all">このアニメのすべての話を履歴から削除</string>
 </resources>
