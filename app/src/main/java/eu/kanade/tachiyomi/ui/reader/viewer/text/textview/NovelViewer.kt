@@ -1755,8 +1755,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val lineHeight = preferences.novelLineHeight.get()
         val marginLeft = preferences.novelMarginLeft.get()
         val marginRight = preferences.novelMarginRight.get()
-        val marginTop = preferences.novelMarginTop.get()
-        val marginBottom = preferences.novelMarginBottom.get()
+        // Tsuzuki: margins start below the notch / status bar area and above the gesture bar.
+        val safe = eu.kanade.tachiyomi.tsuzuki.reader.novelSafeInsets(activity)
+        val marginTop = preferences.novelMarginTop.get() + safe.topDp
+        val marginBottom = preferences.novelMarginBottom.get() + safe.bottomDp
         val theme = preferences.novelTheme.get()
         val textAlign = preferences.novelTextAlign.get()
         val fontFamily = preferences.novelFontFamily.get()

@@ -100,7 +100,8 @@ private fun getThemeColorScheme(
     }
     return colorScheme.getColorScheme(
         isDark = isDark,
-        isAmoled = isAmoled,
+        // Tsuzuki: Dot and Colour ignore pure-black mode (see effectiveAmoled).
+        isAmoled = eu.kanade.presentation.theme.tsuzuki.effectiveAmoled(appTheme, isAmoled),
         overrideDarkSurfaceContainers = appTheme != AppTheme.MONET,
     )
 }

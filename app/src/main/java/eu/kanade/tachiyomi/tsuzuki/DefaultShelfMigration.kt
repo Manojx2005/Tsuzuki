@@ -16,7 +16,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Locale
 
-private const val MIGRATED_KEY = "tsuzuki_legacy_default_shelf_migrated"
+private const val LNREADER_LOCAL_SHELF = "LOCAL"
 private val defaultShelfMigrationMutex = Mutex()
 private val appLocales = listOf("en", "de", "es", "fr", "ja", "ko", "pt-BR", "zh-CN")
 
@@ -43,6 +43,23 @@ internal fun legacyDefaultShelfIds(categories: List<Category>, defaultNames: Set
         .map { it.id }
         .toSet()
 
+/**
+ * LNReader also creates a "Local" shelf. An empty imported one only adds a shelf bar to an otherwise single-shelf
+ * library, so it is removed; a Local shelf that holds books is kept.
+ */
+internal fun emptyImportedLocalShelfIds(categories: List<Category>, memberships: List<Pair<Long, Long>>): Set<Long> {
+    val used = memberships.mapTo(hashSetOf()) { (_, shelfId) -> shelfId }
+    return categories.asSequence()
+        .filter {
+            it.id > Category.UNCATEGORIZED_ID &&
+                (it.contentType == Category.CONTENT_TYPE_NOVEL || it.contentType == Category.CONTENT_TYPE_ALL) &&
+                normalizedShelfName(it.name) == LNREADER_LOCAL_SHELF &&
+                it.id !in used
+        }
+        .map { it.id }
+        .toSet()
+}
+
 internal fun booksToMoveToDefault(
     memberships: List<Pair<Long, Long>>,
     duplicateIds: Set<Long>,
@@ -64,31 +81,37 @@ internal suspend fun migrateDefaultShelfOnce(migrated: Preference<Boolean>, migr
     }
 }
 
-/** Fold LNReader's imported Default into the real shelf in one transaction, leaving other memberships in place. */
+/**
+ * Fold LNReader's imported Default into the real shelf and drop its empty Local shelf, in one transaction, leaving
+ * other memberships in place. Safe to repeat: it runs at every start and after every backup restore (a restore into
+ * a fresh install brings the imported shelves back after the start-up run).
+ */
 internal suspend fun migrateLegacyDefaultShelf(
     context: Context,
     database: Database = Injekt.get(),
-    preferenceStore: PreferenceStore = Injekt.get(),
+    @Suppress("UNUSED_PARAMETER") preferenceStore: PreferenceStore = Injekt.get(),
     libraryPreferences: LibraryPreferences = Injekt.get(),
 ) {
-    migrateDefaultShelfOnce(preferenceStore.getBoolean(MIGRATED_KEY)) {
+    defaultShelfMigrationMutex.withLock {
         val defaultNames = defaultShelfNames(context)
         val removed = database.transactionWithResult {
             val categories = database.categoriesQueries.getCategories { id, name, order, flags, contentType ->
                 Category(id, name, order, flags, contentType.toInt())
             }.awaitAsList()
             val duplicateIds = legacyDefaultShelfIds(categories, defaultNames)
+            val memberships = database.mangas_categoriesQueries.getAllMangaCategoryPairs { bookId, shelfId ->
+                bookId to shelfId
+            }.awaitAsList()
             if (duplicateIds.isNotEmpty()) {
-                val memberships = database.mangas_categoriesQueries.getAllMangaCategoryPairs { bookId, shelfId ->
-                    bookId to shelfId
-                }.awaitAsList()
                 for (bookId in booksToMoveToDefault(memberships, duplicateIds)) {
                     database.mangas_categoriesQueries.insert(bookId, Category.UNCATEGORIZED_ID)
                 }
                 // The database has foreign keys enabled; deleting each shelf cascades only its old memberships.
                 duplicateIds.forEach { database.categoriesQueries.delete(it) }
             }
-            duplicateIds
+            val emptyLocal = emptyImportedLocalShelfIds(categories, memberships)
+            emptyLocal.forEach { database.categoriesQueries.delete(it) }
+            duplicateIds + emptyLocal
         }
         if (libraryPreferences.defaultCategory.get().toLong() in removed) {
             libraryPreferences.defaultCategory.set(Category.UNCATEGORIZED_ID.toInt())

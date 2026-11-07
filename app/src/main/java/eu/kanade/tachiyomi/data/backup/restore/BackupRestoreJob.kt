@@ -42,6 +42,8 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
 
         return try {
             BackupRestorer(context, notifier, isSync).restore(uri, options)
+            // Tsuzuki: a restore can bring back LNReader's Default / empty Local shelves; fold them away.
+            runCatching { eu.kanade.tachiyomi.tsuzuki.migrateLegacyDefaultShelf(context) }
             Result.success()
         } catch (e: Exception) {
             if (e is CancellationException) {

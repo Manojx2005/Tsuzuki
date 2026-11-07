@@ -24,9 +24,36 @@ internal fun blankLineRanges(text: CharSequence): List<Pair<Int, Int>> {
     for (i in 0..text.length) {
         val atEnd = i == text.length
         if (!atEnd && text[i] != '\n') continue
-        val blank = (lineStart until i).all { text[it].isWhitespace() && text[it] != '￼' }
+        val blank = (lineStart until i).all { isBlankChar(text[it]) }
         if (blank && (!atEnd || lineStart < i)) ranges.add(lineStart to if (atEnd) i else i + 1)
         lineStart = i + 1
     }
     return ranges
 }
+
+/**
+ * Whitespace plus the invisible format characters scraped chapters often carry (zero-width space / joiners, word
+ * joiner, BOM, soft hyphen), which would otherwise keep an empty-looking line. An inline image (object replacement
+ * character) is not blank.
+ */
+internal fun isBlankChar(c: Char): Boolean =
+    c != OBJECT_REPLACEMENT && (c.isWhitespace() || c in INVISIBLE_CHARS)
+
+private const val OBJECT_REPLACEMENT = '￼'
+
+// Zero-width space, ZWNJ, ZWJ, word joiner, BOM, soft hyphen.
+private const val INVISIBLE_CHARS = "​‌‍⁠﻿­"
+
+/**
+ * WebView chapters: drop paragraphs that hold nothing visible (`<p>&nbsp;</p>`, `<p><br></p>`, zero-width
+ * characters) and squeeze runs of three or more `<br>` to two, so a chapter never shows a screen-tall blank gap.
+ * Paragraph spacing then comes from the reader setting, as in the TextView renderer.
+ */
+internal fun collapseBlankHtml(html: String): String =
+    html.replace(EMPTY_PARAGRAPH, "").replace(BR_RUN, "<br><br>")
+
+private val EMPTY_PARAGRAPH = Regex(
+    """<p\b[^>]*>(?:\s|&nbsp;|&#160;|&#xa0;|&#8203;|&#x200b;|[ ​‌‍⁠﻿]|<br\s*/?>)*</p>""",
+    RegexOption.IGNORE_CASE,
+)
+private val BR_RUN = Regex("""(?:<br\s*/?>\s*){3,}""", RegexOption.IGNORE_CASE)

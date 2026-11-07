@@ -31,4 +31,16 @@ class NovelBlankLinesTest {
         strip("a\nb\nc") shouldBe "a\nb\nc"
         strip("") shouldBe ""
     }
+
+    @Test
+    fun `lines holding only invisible characters count as blank`() {
+        blankLineRanges("a\n\u200B\u00A0\nb").size shouldBe 1
+    }
+
+    @Test
+    fun `empty html paragraphs and long br runs collapse`() {
+        collapseBlankHtml("<p>a</p><p>&nbsp;</p><P class=x> <br/> </P><p>b</p>") shouldBe "<p>a</p><p>b</p>"
+        collapseBlankHtml("a<br><br/><br /><br>b") shouldBe "a<br><br>b"
+        collapseBlankHtml("<p>keep me</p><p><img src=x></p>") shouldBe "<p>keep me</p><p><img src=x></p>"
+    }
 }

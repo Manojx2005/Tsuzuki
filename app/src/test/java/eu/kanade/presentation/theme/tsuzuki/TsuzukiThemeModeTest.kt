@@ -21,4 +21,12 @@ class TsuzukiThemeModeTest {
             effectiveThemeMode(AppTheme.DEFAULT, mode) shouldBe mode
         }
     }
+
+    @Test
+    fun `pure black only applies to legacy themes`() {
+        effectiveAmoled(AppTheme.DOT, true) shouldBe false
+        effectiveAmoled(AppTheme.COLOUR, true) shouldBe false
+        effectiveAmoled(AppTheme.DEFAULT, true) shouldBe true
+        effectiveAmoled(AppTheme.DEFAULT, false) shouldBe false
+    }
 }

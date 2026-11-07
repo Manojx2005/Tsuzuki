@@ -92,5 +92,19 @@ class DefaultShelfMigrationTest {
         assertEquals(labels.size, labels.map(::normalizedShelfName).toSet().size)
     }
 
+    @Test
+    fun `an empty imported Local shelf is removed but a used one is kept`() {
+        val categories = listOf(
+            shelf(0, "", Category.CONTENT_TYPE_ALL),
+            shelf(4, "Local", Category.CONTENT_TYPE_NOVEL),
+            shelf(5, " local ", Category.CONTENT_TYPE_ALL),
+            shelf(6, "Local", Category.CONTENT_TYPE_MANGA),
+            shelf(7, "Favourites", Category.CONTENT_TYPE_NOVEL),
+        )
+        // Book 10 sits on shelf 5, so that Local shelf stays.
+        val memberships = listOf(10L to 5L, 11L to 7L)
+        assertEquals(setOf(4L), emptyImportedLocalShelfIds(categories, memberships))
+    }
+
     private fun shelf(id: Long, name: String, type: Int) = Category(id, name, id, 0, type)
 }
