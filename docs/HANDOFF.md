@@ -377,6 +377,14 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
   scheme into the dark-only Dot/Colour designs (white Settings pane, invisible labels, dark status icons on black).
   Owner: "just remove it". Dot and Colour now always use night mode and Appearance no longer shows the switch.
   `TsuzukiThemeModeTest` 2/2; tablet with Light stored renders correctly.
+- **Novel reader process death pass** (tablet, TextView): scrolled to 92 %, `am kill`, Recents → same paragraph, 92 %.
+- **Translation (P1.5) pass:** defaults are on-device ML Kit (no key, nothing paid) with target `en`; toggling
+  Translate on an English chapter changes nothing and doesn't crash. Polish note: no hint when source = target.
+- **Manga reader smoke pass** (tablet, webtoon): Nano Machine ch. 1 loads from the source, long-strip scroll to 11/24,
+  page counter updates, no crash.
+- Still open in V7: backup round trip (needs the system file picker; owner can do it on the release build), EPUB and
+  mass import, one extension install/update/uninstall, widget placement, separate-library mode, Y2 spread (needs a
+  paged manga), R1 500-book frame timing (scratch install).
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.
