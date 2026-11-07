@@ -151,7 +151,7 @@ Q1 is Claude's (review/merge tonight). Q10 was done by Claude (AGENTS.md Build +
 V7 sweep + V8 never-seen screens → fixes → V9 perf → V10 signing check → V11 release candidate → V12 tag + publish.
 **Freeze (from V2 until V12):** `main` takes only v0.1 cards and fixes found by V7/V8/V11. Everything else (anime lane,
 R8/R10 reworks, R11–R17) keeps committing on its card branch and merges after the tag.
-**Codex lane 2 order from now (updated 2026-11-07, evening):** V7.5 → V7.4 → V7.3 → (done: V1.1, V2b, R6, R7, V3) → (V4–V6: Claude) → R8 rework →
+**Codex lane 2 order from now (updated 2026-11-08):** V7.6 (new, v0.1) → V7.5 → V7.4 → V7.3 → (done: V1.1, V2b, R6, R7, V3) → (V4–V6: Claude) → R8 rework →
 R10 rework → R11 (resume `.worktrees/r11`) → R12 → … → R17. V3–V6 start from current `main` now (they don't wait
 for V2; Claude reconciles them during V2). Everything after V6 is post-v0.1: commit on the card branch, `review`, done.
 Lane 1 (anime) is unchanged and is v0.2; no anime entry point may appear in a release build.
@@ -401,6 +401,12 @@ error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + re
   update screen. Tablet: job scheduled (WorkManager job "TsuzukiAppUpdateJob"), simulated tap opens UPDATE READY with
   Download / Not now / Open on GitHub / Skip; 946 tests green. First real end-to-end check needs v0.1.0 → a later tag.
 - V8 polish note: when More scrolls, tiles slide under the transparent status bar and the clock overlaps their text.
+  `done` (merged via `review/night7`, 2026-11-08), was `review` (`tsuzuki/v8-more-insets` at `afd41c61f`). `TsuzukiMoreScreen.kt` applies the status-bar inset outside
+  the scroll viewport so tiles stay below the clock and the themed background fills the inset. `docs/design/README.md`
+  records the change. Per-file Spotless passed twice, the debug APK built, and 954 tests passed (0 failures or skips).
+  Claude: scroll More to both ends on the S22 and tablet in Dot then Colour. Check that no tile crosses the clock
+  and that the first title and final tile remain fully visible when scrolled to their respective ends.
+  **Claude 2026-11-08:** S22 Colour, scrolled mid-list: tiles clip below the clock, last tile fully visible. Pass (in `review/night7`).
 - Note for testers: after closing the preview app, a launcher tap opened the owner's `.dev` app by mistake (no
   changes made there). Always start the test app with `monkey -p io.github.manojx2005.tsuzuki.debug`.
 - Owner 2026-11-07: Claude tests on tablet + S22 only; the owner checks the release build on their own phone
@@ -417,7 +423,7 @@ item width (auto-size between the current size and ~80 %, or measure and step do
 break inside a word. Check the other locales' longest labels (de, fr, es, pt-BR) at 360 dp and with font scale
 1.3. Test: a pure function for the label size choice. Claude re-checks on the S22.
 
-#### V7.3 Japanese for the rest of the app (T2) — `ready` (owner 2026-11-07: "some settings are still in English")
+#### V7.3 Japanese for the rest of the app (T2) — `done` (merged via `review/night7`, 2026-11-08)
 Claude added 87 strings (main-file Settings strings + novel-module headings, commit `5a523840d`). Still missing in
 Japanese: ~120 in `i18n/.../base/strings.xml` and ~860 in `i18n-novel/.../base/strings.xml` (only 6 of 882 novel
 strings had Japanese). Add them to the matching `ja/strings.xml`, novel-reader and settings screens first. Rules: keep
@@ -426,7 +432,22 @@ and `'`, product names stay Latin (Tsuzuki, Dot, Colour, LNReader, Mihon, Shizuk
 descriptions in polite です/ます, match the existing ja file's terms (小説, マンガ, チャプター, ライブラリ, 本棚).
 Claude checks the S22 in Japanese (Settings, novel reader settings, Downloads, Translation).
 
-#### V7.4 Novel reader: keep scrolling text out of the notch / gesture area (T3) — `ready` (owner 2026-11-07)
+**Result:** `tsuzuki/v7.3` at `9d066cb97`. Added Japanese for the 129 missing translatable shared strings and
+862 missing novel strings. Moved literal labels in Browse, Appearance, Font Manager, global novel settings,
+and the in-reader settings into resources so they follow the app language.
+
+- `i18n` and `i18n-novel` base and Japanese `strings.xml` files cover the existing and newly resource-backed text.
+- Upstream `SettingsBrowseScreen.kt`, `SettingsAppearanceScreen.kt`, `FontManagerScreen.kt`,
+  `SettingsNovelReaderScreen.kt`, and `NovelPage.kt` use the localized settings labels.
+- `scripts/check-japanese-strings.py` verifies all 2,473 translatable keys for Japanese coverage and checks
+  placeholders and markup. Per-file Spotless passed twice, debug built, and 954 tests passed without failures
+  or skips. `docs/design/README.md` records status.
+- Claude: check S22 in Japanese, including the named Settings pages, novel reader controls in both renderers,
+  Downloads and Translation. Check wrapping at large font scale and confirm the labels also render in English.
+
+**Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 Japanese: Settings main and Novel reader settings fully Japanese. Pass. New keys exist in English + Japanese only (other 6 locales fall back to English). Leftover truncated `ネイティブ（TextVie…` → V7.6 item 5. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
+
+#### V7.4 Novel reader: keep scrolling text out of the notch / gesture area (T3) — `done` (merged via `review/night7`, 2026-11-08)
 Claude's `84d722dce` adds `novelSafeInsets()` to the top/bottom margins, so a chapter starts below the notch. While
 scrolling, text still passes under the camera cutout and the gesture bar because the margin is content padding. Like
 LNReader, reserve the safe area on the scroll viewport in both renderers: TextView (scroll container padding +
@@ -435,13 +456,69 @@ padding via CSS env(safe-area-inset-*) / JS-provided px). The user's margins sta
 Paged mode: page height excludes the safe area. Reader menu shown/hidden must not shift text. Test both renderers,
 Dot + Colour, S22 (punch-hole) and tablet; screenshots at chapter start and mid-chapter.
 
-#### V7.5 Novel reader: can't scroll after Previous chapter (T3) — `ready` (owner report 2026-11-07)
+**Result:** `tsuzuki/v7.4` at `f99094214`. Both renderers use the existing clipped native viewport, so scroll range
+and WebView page height use the same physical safe area. Insets ignore system-bar visibility, and the reserve for
+the app's optional reading status bar sits on its selected edge. The viewport bands use the page background.
+
+- Upstream `ReaderActivity.kt` combines window insets and reading status bar height, anchors that bar in the safe
+  area, and paints the viewport background. `NovelSafeInsets.kt` supplies the stable insets and bar reserve.
+- Upstream `NovelViewer.kt` and `NovelWebViewStyler.kt` use the reader's selected margins as content spacing.
+- `NovelSafeInsetsTest.kt` checks top and bottom placement and preserves rotated side cutouts. Per-file Spotless
+  passed twice, the debug APK built, and all 954 app unit tests passed without failures or skips.
+- Claude: S22 and tablet, Dot and Colour, TextView scroll and WebView scroll/paged. Take screenshots at chapter
+  start and during scroll. Toggle the menu mid-chapter and check the same text stays in place. Check both reading
+  status bar edges, page background continuity, rotation, and a manga fullscreen/cutout smoke check.
+
+**Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22: first line starts below the punch-hole; opening the menu mid-chapter leaves the text in place. Pass. Not yet run: WebView paged, reading status bar at the top edge, rotation. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
+
+#### V7.5 Novel reader: can't scroll after Previous chapter (T3) — `done` (merged via `review/night7`, 2026-11-08)
 Owner: reading chapter 41 (Lord of the Mysteries, release build), tapped back to the previous chapter (40, already
 read) and could not scroll any more. Reproduce on tablet + S22 in both renderers (TextView, WebView), infinite scroll
 on and off: open chapter N > 1, tap ‹ Previous (bottom bar and chapter-end card), try to scroll up/down, tap, open
 the menu. Suspects: the previous chapter loads at its saved 100 % position and the scroll restore or Q13's
 next-chapter warm-up leaves the container locked/consuming gestures, or the TTS mini-controls overlay intercepts.
 Fix the cause, add a regression test for the position/lock logic. Claude device-checks.
+
+**Result:** `tsuzuki/v7.5` at `50319ea66` (includes `3f865b77e`). Both renderers restored a saved 100% position on Previous. Previous now
+opens a completed chapter at its start. A chapter already loaded by infinite scroll becomes active and is positioned
+by its renderer when it receives the chapter. Direct opens and full loads with valid partial progress still restore
+that position. Each Previous request is consumed once so a subsequent renderer switch can restore normal progress.
+
+- `NovelEntryProgress.kt` shares the entry rule, with three regressions in `NovelEntryProgressTest.kt`.
+- Upstream `ReaderViewModel.kt` and `ViewerChapters.kt` carry a distinct request for each Previous tap.
+  `NovelChapterNavigationTest.kt` checks repeat navigation to the same target and renderer redispatch.
+- Upstream `NovelViewer.kt` cancels stale restores and positions a buffered chapter at its visible text block.
+  `NovelWebViewViewer.kt`
+  cancels the superseded content job and reuses a buffered chapter only when its document is ready.
+- `TsuzukiAdjacentChapterHooks.kt` hands the backward jump to the renderer. `docs/design/README.md` records status.
+- Per-file Spotless passed twice. Debug APK built and all 959 app unit tests passed, 0 failures or skips.
+- Claude: on S22 and tablet, use Previous from chapter 41 to already-read chapter 40. Check upward/downward scroll,
+  menu taps, and progress after moving backward twice. Scroll into chapter 41 again and tap Previous again while
+  40 remains loaded. Cover TextView and WebView with infinite scroll on/off, then
+  the WebView paged edge and any available Previous action at chapter end. The original touch symptom awaits device
+  reproduction and verification. The code change addresses the confirmed end-position restore and buffered jump paths.
+
+**Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 TextView, Colour: Ch. 108 → ‹ Previous → Ch. 107 opens at 0 % and scrolls; ‹ again → Ch. 106 scrolls down and up. Pass. Not yet run: WebView renderer, infinite scroll off, tablet. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
+
+#### V7.6 v0.1 polish from the V1 notes (T2) — `ready` (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
+Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
+Boards: the screen's board in `docs/design/boards/INDEX.md` (Settings, Updates, TTS/ListenMini). Dot first, then Colour.
+1. **Updates "Library last updated: Never/…" line** (`UpdatesUiItem.kt:68`, `TsuzukiUpdatesTwoPane.kt:260`): in the
+   Tsuzuki themes it is italic body text. Use the board's caption style through `MaterialTheme.typography`, upright,
+   and uppercase in Dot (`tsuzukiCase()`). Stock themes unchanged (dispatch, no re-indent).
+2. **Settings TIME FORMAT row:** the label wraps while its value truncates on the S22 (360–384 dp). Give the label
+   priority (value takes the remaining width, ellipsis on the value only), in the Tsuzuki preference row, not upstream.
+3. **Listen panel voice label** shows a raw locale like `en-US-language`. Show the voice's display name
+   (`Voice.locale.getDisplayName(appLocale)` + a short quality/network suffix only if the engine gives one); fall back to
+   the engine's label. Same fix in the tablet LISTEN panel (Y6) and the mini player if they share the label.
+4. **"Grayscale" vs British "colour":** the app's English uses British spelling (Colour theme). Change English
+   `pref_grayscale` and any Tsuzuki-only English strings using "gray"/"color" in user-visible text to "greyscale"/
+   "colour". Only `base/strings.xml` English values. Keys unchanged, other locales untouched; don't edit upstream
+   strings that Tsundoku also ships unless they are Tsuzuki-only (list each changed key in Result).
+5. **Novel reader settings, render-mode segment** (Japanese, S22): the left option shows `ネイティブ（TextVie…`. Use a
+   shorter Japanese label (e.g. `ネイティブ`) or let the segment text wrap to two lines; check the other locales.
+Tests: a pure function for the voice label (raw locale → display name; unknown → engine label). Verify per WORKPLAN §0.4
+plus `:app:assemblePreview`. Claude checks on the S22 + tablet in Dot and Colour, English and Japanese.
 
 #### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
@@ -504,7 +581,7 @@ stable → smooth/fast → design complete → Mihon parity → new features; an
 **Owner 2026-11-07: v0.1 ships without anime (anime = v0.2); checklist in WORKPLAN Phase 7.** Lane 2 cards R6 and R7 come first.
 Anime lane rule until v0.2: no anime entry point may appear in a release build (gate with `BuildConfig.BUILD_TYPE == "debug"`, like the anime debug screen).
 
-**Lane 1 — anime (Codex thread 1, in order):** A2.3 → A2.4 → Y2 rework → Y6 rework → R-A1 → R-A2 → R-A3 → R-A4.
+**Lane 1 — anime (Codex thread 1, in order):** superseded 2026-11-08 by the table "Anime lane order from 2026-11-08" in the Anime lane A section: A2.4 → A3.0 → A3.1 → A3.2 → R-A2 → A3.3 → A3.4 → R-A3 → A3.5 → A3.6 → R-A1 → R-A4 → A3.7 → A3.8 → A3.9 → A4.1 → A4.2.
 **Lane 2 — app (Codex thread 2, in order):** R1 → R2 → … → R16 → R17. Lane 2 never touches anime files, and lane 1
 never touches R-card files; both threads: one Gradle build at a time each.
 **Lane 3 — Claude:** reviews, device checks and the C-list at the end of this section.
@@ -653,13 +730,29 @@ fix; never show tokens; no new network calls.
 - `TsuzukiTrackingPreferences.kt` moves novel-only accounts to the top using tracker IDs and attaches local linked counts. `docs/design/README.md` records both groups.
 - Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 921 tests and zero failures. Check all four smart-update flags independently of the download switch during the device pass above.
 
-#### R11 Reading estimates (T3) — `codex-working` (.worktrees/r11, resumed 2026-11-07)
+#### R11 Reading estimates (T3) — `review` (`tsuzuki/r11`)
 Phase 5 "reading estimates (words, speed, time left)". Details Resume tile / reader chrome show **time left in
 chapter** and **in book** only when backed by data: words from downloaded/cached chapter text (count once, cache in
 a Tsuzuki table-free store e.g. prefs/JSON keyed by chapter id — no schema change), reading speed from
 `ReadingDays` minutes ÷ words read (rolling median, needs ≥ 3 sessions). Hide when unknown. Pure helpers + tests.
 Board: NovelDetails / TabletNovel estimate rows (status table says "estimates left out").
-Result: _pending_
+**Result:** `tsuzuki/r11` at `d6c8f5fae`, fast-forwarded to current main before applying the saved work. The Resume tile
+and reader show chapter/book time left when local word counts and three valid reading samples are available.
+
+- `NovelReadingEstimates.kt` caches counts and takes the median of up to nine usable samples.
+  `TsuzukiReadingEstimates.kt` refreshes from real chapter, download and cache changes, subtracts each chapter's
+  saved progress, and suppresses estimates in incognito mode.
+- Upstream `ReaderActivity.kt`, `ReaderViewModel.kt`, `NovelViewer.kt`, `NovelWebViewViewer.kt`, and
+  `TtsController.kt` supply reading windows, word counts and TTS/seek boundaries. The timer can start before
+  initial novel loading finishes. Playback invalidates mixed sessions.
+- Upstream `NovelReaderAppBars.kt` and `presentation/manga/MangaScreen.kt` use the estimate slots in
+  `TsuzukiReaderTitle.kt` and `TsuzukiResumeTile.kt`. `PreferenceModule.kt` registers the local store.
+- Eight locales preserve their placeholders. Per-file Spotless and the debug build passed. All 959 unit tests
+  passed without failures or skips, including five estimate tests. The design status is updated. Pairwise
+  merge checks with V7.3, V7.4 and V7.5 were clean.
+- Claude: use a locally available novel on S22 and tablet in Dot and Colour. Check both renderers, three
+  qualifying visual sessions including a cold entry, a mix of visual and TTS, a seek, incognito, and a
+  missing chapter becoming available after download. Verify the Resume tile and reader use real progress.
 
 #### R12 Source health (T3) — `ready`
 Board `SourceHealth`. Per installed source: last successful request time, average response time, last error
@@ -714,24 +807,55 @@ paged mode (`paged-reader.js` column math) and the chapter-end card. Hook throug
 width math. Claude checks tablet portrait/landscape, docked panel, both renderers, paged + scroll.
 Result: _pending_
 
-#### R-A1 Anime backups (T4) — `ready` (needs A2.4)
+#### R-A1 Anime backups (T4) — `ready` (needs `tsuzuki/a3.6`; order in the Anime lane table)
 ANIME_SCHEMA §4 + §9 Q2 (import only): read Aniyomi backups (fields 500–503) into the anime tables; write anime
 into our own backups in the 8000 range; restore round-trip test with a synthetic file; never change existing
 manga/novel backup fields. Claude: scratch-install restore test.
 Result: _pending_
 
-#### R-A2 Player settings + sheets (T3) — `ready` (needs A2.4)
+#### R-A2 Player settings + sheets (T3) — `review`
 Boards `10-anime/PlayerSettings`, `PlayerSheets`. Subtitles (track pick, size), audio track, speed, decoder
 (hw/sw), gestures (seek/brightness/volume), skip ±85 s; persist per user; Dot + Colour.
-Result: _pending_
 
-#### R-A3 Anime in Updates + "Airing today" (T3) — `ready` (needs A2.4)
+Result (Codex 2026-11-08): `tsuzuki/r-a2` at `11ba0aba4`, includes A3.2.
+
+- `AnimePlayerSettingsScreen.kt` adds a gated Player page for autoplay, speed, subtitle size, decoder and
+  gesture toggles. `AnimePlayerSheets.kt` adds the landscape options panel for subtitles, audio, quality,
+  speed, episodes and video. It shows tracks reported by mpv, including HTTP(S) tracks supplied by the source.
+- `AnimePlayerSettings.kt` stores preferences and matches track metadata across files with different native
+  IDs. The player applies subtitle size/delay, speed and decoder immediately. At non-default speeds,
+  the progress tracker stores elapsed watch seconds separately from position in the video.
+- Player controls include ±85-second seeks. Double-tap seeks and vertical brightness/media-volume gestures
+  respect individual toggles and the controls lock. Upstream hook: `SettingsMainScreen.kt` adds the gated
+  Player entry. The volume permission is declared in the debug manifest.
+- JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest` green, 972 tests, zero failures.
+  Verified placeholders in all eight required locales and the debug-only permission in the merged manifests.
+- Claude device check on S22 and Tab S11 in Dot and Colour: use a show with multiple tracks, switch audio
+  and subtitles, adjust subtitle size/delay and speed, switch decoder, and verify preferences after reopening
+  or changing episodes. Test ±85 seconds and each swipe/tap toggle, including while locked.
+
+#### R-A3 Anime in Updates + "Airing today" (T3) — `review` (tsuzuki/r-a3, 029238bc8)
 New episodes from library anime appear in Updates under the media pills (ANIME pill only when ≥ 1 anime in
 library); "Airing today" strip from source upload dates (real data only). Anime library update job (separate
 worker, respects existing update restrictions).
-Result: _pending_
+Result (Codex 2026-11-08): `tsuzuki/r-a3` at `029238bc8`, includes A3.4.
 
-#### R-A4 Anime episode downloads (T4) — `ready` (needs R-A2)
+- `TsuzukiAnimeUpdates.kt` and `TsuzukiAnimeLibrary.kt` show Airing today only for a saved title with a
+  source upload timestamp in the local day. The Anime media filter lists newly discovered episodes and
+  opens the selected episode. The book filters retain their chapter feeds. Added strings in all eight locales.
+- `AnimeLibraryStore.kt` shares episode refresh with `AnimeDetailsScreenModel.kt` and excludes baseline
+  imports from Updates. Existing episode data retains progress and its new-episode marker across refreshes.
+  `animes.sq` and `episodes.sq` use existing columns and add queries only.
+- `AnimeLibraryUpdateJob.kt` is a separate WorkManager job. It shares the library schedule, device and
+  title restrictions, metadata preference, and throttle. The Anime filter refresh action enqueues it manually.
+- Upstream hooks: `App.kt`, `LibraryUpdateJob.kt`, `UpdatesTab.kt`, `UpdatesScreen.kt` and
+  `TsuzukiUpdatesTwoPane.kt`. JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest`
+  green. 985 tests, zero failures, errors or skips. No schema migration.
+- Claude device check on S22 and Tab S11 in Dot and Colour: favorite one show, check the Anime pill and
+  baseline exclusion, introduce a later episode through an approved extension, refresh and play the row.
+  Verify Airing today appears only for a real upload date, and Wi-Fi and charging restrictions defer the job.
+
+#### R-A4 Anime episode downloads (T4) — `ready` (needs `tsuzuki/r-a1`; order in the Anime lane table)
 WORKPLAN 6.3 third engine: queue in its own store, files under `<downloads>/<source>/<anime>/<episode>/`,
 HLS/segments, pause/resume, Wi-Fi only pref, shown in the Downloads screen as an Anime group. Design note in
 Result first; Claude reviews before merge (T4).
@@ -1228,7 +1352,7 @@ columns kept; no fansub exclusion; no `extension_store` column).
 - No backup proto, season UI, fansub exclusion or extension-store schema changes. Watch time remains in anime history. No Aniyomi implementation files were ported.
 - Claude review gate: review migration line by line. In a scratch tablet profile only, copy and hash the old build's 12-file DB/WAL/SHM, prefs and WorkManager backup, install the migration build, compare all old book rows and schema, confirm only anime shelf 0 is seeded and run integrity/foreign-key checks. Verify the old novel/manga Home, Library, History and Updates still open. Also check fresh startup. For rollback, reinstall the pre-migration APK, restore the 12 backed-up files and verify hashes. SQLite does not support reopening the upgraded DB with the older app. Never run the upgrade or rollback drill on the owner's live data.
 
-#### A2.3 Anime sources + browse catalogue (T3) — `ready` (A1.5 + A2.2 are in main: start from main, no prerequisite merge)
+#### A2.3 Anime sources + browse catalogue (T3) — `review` (`tsuzuki/a2.3`)
 **Claude 2026-11-07:** A1.5 + A2.2 are being merged into main by Claude (string conflicts resolved there); when the A2.2 card says `done`, start A2.3 from main (no prerequisite merge needed).
 Register installed anime extensions as sources in an `AnimeSourceManager` (stub via `anime_sources` when the
 extension is gone). Browse → a WATCH/ANIME media pill alongside novels/manga only when ≥ 1 anime extension is
@@ -1237,9 +1361,23 @@ filters using the existing Tsuzuki browse grid components, cover → anime detai
 episode list from the source, PLAY first/next episode in the player). Boards: `docs/design/boards/png/10-anime/`
 (BrowseAnime, AnimeDetails; Dot + Colour). Tests: source registration + stub fallback.
 
-**Result (Codex, 2026-11-07):** Needs Claude to merge A1.5 first. Merging `tsuzuki/a1.5` at `03038f852` into A2.3 from `main` at `f6cff8b77` conflicted in all eight `i18n/src/commonMain/moko-resources/*/strings.xml` files. The merge was aborted, so A2.2 was not merged and no A2.3 work was committed.
+**Result:** `tsuzuki/a2.3` at `e5ab544`, based on current main with A1.5 and A2.2. Debug Browse shows the Watch
+pill when trusted anime sources are installed. The catalogue supports Popular, Latest where supported, and
+filtered Search. Its details stub shows source metadata and episodes, with first/next playback in the existing
+debug player. Catalogue search and filters are retained when returning from details.
 
-#### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `ready` (needs A2.3 — merge `tsuzuki/a2.3` first per the run rules)
+- `AnimeSourceManager.kt` registers installed sources and persists source stubs for use after uninstall.
+- `TsuzukiAnimeBrowse.kt`, `TsuzukiBrowseHeader.kt`, and upstream `BrowseTab.kt` connect the debug Browse pages.
+- `AnimeCatalogueActivity.kt`, `AnimeDetailsScreen.kt`, `AnimeFilterDialog.kt`, debug manifest and eight debug
+  resource files implement the catalogue and details. Anime library and watch progress remain in A2.4.
+- Source registration/uninstall tests and Browse gate/order tests pass. Per-file Spotless passed twice, debug
+  built, and 957 app unit tests passed without failures or skips. The catalogue activity is registered in the
+  debug manifest only. `docs/design/README.md` records status.
+- Claude: on a debug device check the Watch pill before install, after trusting an extension, and after uninstall.
+  Open its Popular/Latest/Search, apply a filter, open a result and return, then play the first and next episodes.
+  Verify both Dot and Colour and spot-check both novel and manga Browse.
+
+#### A2.4 Anime library + Watch tab + anime shelves (T3/T4) — `review`
 **From the A2.2 review (fix in A2.4):** `AnimeCategoryRepositoryImpl.setForAnime` must not insert a link row for the default shelf `0` when other shelves are chosen; `AnimeRepositoryImpl.insert` returns the existing id for a duplicate (source, url) without updating fields — call `update` after it when adding to the library.
 Boards: `fixes-2026-11/AnimeShelves` + `ColourAnimeShelves` (shelf management), `png/10-anime/AnimeLibrary`, `AnimeHome` (with Q5's nav).
 Add to library from anime details (writes `animes.favorite`, anime categories picker using `anime_categories`).
@@ -1249,7 +1387,265 @@ screen reusing the Tsuzuki category components with the anime repository. Episod
 player (position, seen at ≥ 85 %). Watch minutes recorded separately (not in `ReadingDays`). Boards in
 `png/10-anime/`. Tests: progress threshold, continue-watching ordering, shelf CRUD.
 
-**Result (Codex, 2026-11-07):** Needs A2.3 first. A2.3's A1.5 prerequisite merge conflicted and was aborted. The A2.3 branch contains no catalogue, details or player integration to extend. No A2.4 changes were made.
+**Claude 2026-11-08:** the earlier "Needs A2.3 first" result is superseded: `tsuzuki/a2.3` (`e5ab544`) now has the catalogue, details stub and player hooks. Start from `main`, merge `tsuzuki/a2.3` into the worktree, then do this card. Episode progress here is saved from the existing player; A3.2 replaces the player later.
+
+Result (Codex 2026-11-08): `tsuzuki/a2.4` at `c52c5cffc`, includes A2.3.
+
+- `AnimeLibraryStore.kt` saves anime, favorite/shelf assignments, episode state and watch history transactionally.
+  The existing source/URL row is reused and updated. The read-only membership query and category repository
+  keep Default implicit and prevent renaming it. No schema migration.
+- `TsuzukiAnimeLibrary.kt` adds the anime library, shelf tabs and Watch content. `AnimeShelvesScreen.kt` manages
+  anime shelves separately. Continue Watching picks the most recently played eligible favorite and advances
+  to the next unseen episode in episode order. Airing and updates stay with their respective later cards.
+- `AnimeDetailsScreen.kt` and `AnimeCatalogueActivity.kt` connect favorite actions, shelf selection and exact
+  episode resume. `AnimeDebugPlayback.kt`, `AnimeDebugPlayerActivity.kt` and `AnimePlaybackProgress.kt` restore
+  position, mark seen at 85%, and count played seconds separately from reading days. Incognito skips progress.
+- Upstream hooks: `SettingsLibraryScreen.kt` adds the debug anime shelf entry, `NovelsTab.kt` adds the anime
+  selector and `HomeScreen.kt` restores that selection. `AppModule.kt` registers the store.
+- JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest` green, 960 tests and zero failures.
+  The merged manifests contain the catalogue in debug and omit it in preview/release.
+- Claude device check on Tab S11 and S22: in Dot and Colour, create/reorder/rename/delete a custom anime shelf,
+  verify Default and book shelves, add/remove a favorite, play and resume from Watch, then finish past 85% and
+  verify the next episode. Verify preview/release show the Read/Watch teaser with no anime library or Browse pill.
+
+#### Anime lane order from 2026-11-08 (Claude) — detailed plan in WORKPLAN §6.3–6.5
+
+`main` is frozen for v0.1, so **don't wait for main**: each card starts a worktree from `main` and merges the card
+branch in its **Needs** column (that branch already contains the earlier chain). Gate every entry point with
+`TsuzukiAnime.enabled` (A3.0; until then `BuildConfig.DEBUG`). Release/preview builds must show nothing anime.
+Every card: board first (Dot then Colour), tokens + typography only, real data only, strings in all 8 locales,
+tests named in the card, per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest`, Result + `review`.
+Card format and verify commands: WORKPLAN §0.4 and the appendix skeleton.
+
+| # | Card | Needs (merge this branch) | Tier | Effort |
+|---|---|---|---|---|
+| 1 | A2.4 Library + Watch tab + shelves | `tsuzuki/a2.3` | T3/T4 | high |
+| 2 | A3.0 Anime out of the debug source set, one flag | `tsuzuki/a2.4` | T2 | medium |
+| 3 | A3.1 Anime details + episodes | `tsuzuki/a3.0` | T3 | high |
+| 4 | A3.2 Production player | `tsuzuki/a3.1` | T4 | xhigh |
+| 5 | R-A2 Player settings + sheets | `tsuzuki/a3.2` | T3 | high |
+| 6 | A3.3 Anime extension store | `tsuzuki/r-a2` | T4 | high |
+| 7 | A3.4 Anime history | `tsuzuki/a3.3` | T2 | medium |
+| 8 | R-A3 Updates + Airing today | `tsuzuki/a3.4` | T3 | high |
+| 9 | A3.5 Anime trackers (AniList, MAL) | `tsuzuki/r-a3` | T4 | high |
+| 10 | A3.6 AniSkip | `tsuzuki/a3.5` | T3 | medium |
+| 11 | R-A1 Anime backups | `tsuzuki/a3.6` | T4 | high |
+| 12 | R-A4 Episode downloads | `tsuzuki/r-a1` | T4 | xhigh |
+| 13 | A3.7 Watch-time stats | `tsuzuki/r-a4` | T2 | medium |
+| 14 | A3.8 Anime global search | `tsuzuki/a3.7` | T2 | medium |
+| 15 | A3.9 Continue-watching widget | `tsuzuki/a3.8` | T3 | medium |
+| 16 | A4.1 Anime restyle parity pass | `tsuzuki/a3.9` | T2 | medium |
+| 17 | A4.2 Release packaging for anime | `tsuzuki/a4.1` | T3 | high |
+
+A linear chain keeps merges simple. A merge conflict in the Needs step → `git merge --abort`, set `blocked`
+("needs Claude to merge"), next card. If the Needs branch is not `review`/`done` yet, the card waits (skip it).
+Branch names for R-A cards: `tsuzuki/r-a2`, etc.
+
+#### A3.0 Anime out of the debug source set, one flag (T2) — `review`
+Goal: the anime catalogue, details and player stop being debug-only code so later cards build real features, while
+normal users still see nothing. No UI change.
+Files: move `app/src/debug/.../tsuzuki/anime/debug/{AnimeCatalogueActivity,AnimeDetailsScreen,AnimeFilterDialog,
+AnimeDebugPlayerActivity,AnimeDebugPlayback}.kt` (and what they need) to `app/src/main/.../tsuzuki/anime/ui/`,
+renamed without `Debug`; their manifest entries go to the main manifest, `exported=false`. Keep `AnimeDebugActivity`
+(repo/APK install test screen) in `src/debug`. Add `tsuzuki/anime/TsuzukiAnime.kt` with `val enabled: Boolean`
+(= `BuildConfig.DEBUG` for now; A4.3 turns it into a setting) and route every anime entry point through it: Browse
+Watch pill, Home Watch tab content, Library anime switch, anime shelves (the Read/Watch switch stays a teaser, V3).
+`anime-player` stays `debugImplementation`: put the player behind a small `AnimePlayerLauncher` interface in main,
+the mpv implementation in `src/debug` (bound through a debug-only Injekt module), and a release no-op that reports
+"unavailable". A4.2 changes this.
+Tests: `TsuzukiAnimeGateTest` (flag false → Browse/Home/Library expose no anime destinations); a check that the
+release merged manifest has no exported anime activity. `:app:assemblePreview` must also build.
+Report: moved files, the gate points, preview APK size before/after (must stay within ±0.2 MB).
+
+Result (Codex 2026-11-08): `tsuzuki/a3.0` at `55d5a5aee`, includes A2.4.
+
+- Moved `AnimeCatalogueActivity.kt`, `AnimeDetailsScreen.kt`, `AnimeFilterDialog.kt`, playback request handling,
+  and the player activity to `tsuzuki/anime/ui/` in main. `AnimeStreamResolver.kt` shares the extension API
+  adapter with the debug installer. `AnimePlayerLauncher.kt` separates playback from the native backend.
+  Debug injects mpv. Other variants inject an unavailable launcher with localized feedback.
+- `TsuzukiAnime.enabled` gates the Browse Watch pill, real Home Watch content, the Library switch and saved
+  routes, anime shelf settings, and both activities. The Watch teaser stays visible in preview and release.
+  `AnimeDebugActivity` stays debug-only. Both shared activities are private, so playback starts from an
+  in-app episode selection with a one-use token.
+- Upstream hooks: `App.kt` imports the variant binding, `BrowseTab.kt`, `NovelsTab.kt` and
+  `SettingsLibraryScreen.kt` read the flag, `app/build.gradle.kts` adds the fallback Kotlin source set,
+  and the main/debug manifests declare the activities.
+- JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest :app:assemblePreview` green.
+  962 tests, zero failures. All seven anime activity declarations across the three merged manifests have
+  `exported=false`. The five preview APKs contain neither mpv nor player native libraries.
+- Preview APK size from A2.4 to A3.0: arm64 37,424,059 → 37,446,959 bytes and universal 77,257,922 →
+  77,280,822 bytes. Every preview APK grew by 22,900 bytes, within the 0.2 MB budget.
+- Claude device check on S22 and Tab S11: open a debug catalogue, filter it, play and resume a saved episode,
+  then verify the preview Watch teaser and that Browse, Library and Settings omit anime destinations.
+
+#### A3.1 Anime details + episodes (T3) — `review`
+Board: `docs/design/boards/png/10-anime/AnimeDetails.png` + `dot/AnimeDetails.png` + `html/10-anime/AnimeDetails.html`.
+Goal: replace the A2.3 details stub with the real anime details page, modelled on Tsuzuki's book details (Q6 header,
+`TsuzukiTile`, `TsuzukiPillRow`) but for episodes.
+Steps: (1) `AnimeDetailsScreenModel` loads the anime from `animes` (or the source when not in the library), refreshes
+details + episodes from the source on open and on pull-to-refresh, and upserts `episodes` (new episodes get
+`date_fetch`; removed ones are kept if seen or downloaded, Mihon-style). (2) Header: cover, title, studio/author,
+status, source, genre pills, synopsis expand. (3) Episode list: number, name, date, group, seen state, progress bar
+from `last_second_seen/total_seconds`, bookmark, filler mark only if the source sets it. Sort (number/date, asc/desc)
+and filters (unseen, bookmarked), saved per anime. (4) Actions: PLAY EP n / RESUME EP n (first unseen or last in
+progress), mark seen/unseen (single, multi-select, "previous seen"), bookmark, add/remove library (A2.4 picker), open
+in WebView, share. (5) Season columns ignored (owner Q3).
+Real data: no fillers, groups or ratings unless the source returns them. Tests: episode upsert/removal rule,
+resume-target choice, sort/filter persistence. Claude checks: a real extension's anime, refresh, mark seen, resume.
+
+Result (Codex 2026-11-08): `tsuzuki/a3.1` at `9ef03a1e9`, includes A3.0.
+
+- `AnimeDetailsScreenModel.kt` loads stored metadata and refreshes source details and episodes on open or pull.
+  Cached episodes remain usable when refresh fails. `AnimeLibraryStore.kt` updates source fields while preserving
+  episode IDs and user state. Removed rows with seen state, bookmarks, progress or a supplied offline ID are
+  retained. R-A4 will supply offline IDs from the anime downloader. The SQLDelight changes add queries only.
+- `AnimeDetailsHeader.kt`, `AnimeDetailsScreen.kt`, and `AnimeEpisodeTiles.kt` implement the themed header,
+  synopsis, genres, library and shelf actions, WebView and share, episode art where supplied, group/date/filler
+  metadata, progress, and single or multiple episode watch/bookmark actions. The resume tile picks the latest
+  in-progress episode or the first unseen episode. Season columns and later-card download/track actions are omitted.
+- `AnimeEpisodeDisplay.kt` persists sort and filters per anime in reserved high bits of the episode flags.
+  Source and repository changes are confined to anime files. No schema or migration changes.
+- Per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest` green, 965 tests and zero failures.
+  The database tests exercise refresh/removal, preserving user state, recent resume, and per-anime filter persistence.
+- Claude device check on S22 and Tab S11 in Dot and Colour: open a real extension's title, pull to refresh,
+  check details and thumbnail data, mark seen/unseen and bookmark singly and in a selection, reopen to verify
+  saved sort and filters, then start and resume a partial episode. Try WebView and share from the overflow.
+
+#### A3.2 Production player (T4) — `review`
+Board: `png/10-anime/Player.png` + `dot/Player.png` + `html/10-anime/Player.html` (landscape 844×390).
+Goal: one player that plays an episode from a real source the way Aniyomi users expect.
+Steps: (1) Resolve videos through the anime source API in `source-api` (hosters → videos), pick the preferred quality
+(pref, default highest), pass request headers + referer to mpv, fall back to the next video on load error with a
+snackbar. (2) Controls overlay per board: title/episode, back, seek bar with buffered range, play/pause, ±10 s
+double-tap, prev/next episode, lock, orientation lock, tap to hide (3 s). (3) Resume from
+`episodes.last_second_seen`; save position every 10 s, on pause and on exit; mark seen at ≥ 85 % (reuse A2.4's
+function); write `anime_history` and watch minutes. (4) Audio focus (pause on loss, duck on transient), pause in
+background, keep screen on while playing, immersive mode, rotation without restarting playback (mpv in a retained
+holder), process-death restore to the same episode + position. (5) Auto-play next episode pref (default on) with a
+5 s countdown card at the end.
+Files: `tsuzuki/anime/player/*` in main; the `anime-player` module only through `AnimePlayerLauncher` (A3.0). No GPL
+code. Tests: video choice/fallback order, save cadence, seen threshold, next-episode choice. Claude checks: both
+devices, rotation, background/foreground, audio focus with a notification sound, crash buffer, 16 KB.
+
+Result (Codex 2026-11-08): `tsuzuki/a3.2` at `d41c05204`, includes A3.1.
+
+- `AnimePlayerModel.kt` holds the native session across rotations and resolves each episode's stream queue.
+  The player prefers the highest known resolution by default, remembers a chosen quality, and tries the
+  remaining streams on failure. `MpvAnimePlayerLauncher.kt` passes headers through mpv and stays in debug.
+- `AnimePlayerContent.kt` uses the Dot and Colour themes for the landscape overlay, buffered timeline, seeking,
+  episode navigation, lock, orientation lock, stream fallback snackbar and five-second autoplay countdown.
+  R-A2 owns the track, speed, decoder and gesture settings and sheets.
+- The private player intent carries an episode ID so Android can restore the title and position after process
+  death. The native surface reattaches without loading the current video again. Playback pauses in the
+  background, observes media audio focus and saves progress at ten-second intervals and on pause/exit.
+  The A2.4 85% threshold and separate watch history still apply. Incognito skips history writes.
+- Changes stay in the anime packages and resources. Per-file Spotless twice,
+  `:app:assembleDebug :app:testDebugUnitTest :app:compilePreviewKotlin` green, 969 tests and zero failures.
+  The arm64 debug APK passed `zipalign -c -P 16 4` and all 11 packaged arm64 player libraries passed 16 KB ELF checks.
+- Claude device check on S22 and Tab S11: use a real source with multiple streams, seek and reopen mid-episode,
+  switch quality, rotate and background/foreground, test audio focus with a notification and another media app,
+  restore an episode after process death, and check the countdown, controls lock and crash buffer in Dot and Colour.
+
+#### A3.3 Anime extension store (T4) — `review`
+Boards: `png/10-anime/BrowseAnime.png` (extension stores part) + `dot/BrowseAnime.png`; ExtensionRepos
+(`docs/design/boards/INDEX.md`). If a screen's anime part is missing from its board: `blocked` ("needs a board").
+Goal: install anime extensions from a repo without the debug screen.
+Steps: (1) Owner decision Q6: a small new SQLDelight migration after 36 adds a media flag to the extension-repos table
+(`novel | manga | anime`, existing rows keep their type). (2) Adding a repo accepts Aniyomi-format anime repos
+(`index.min.json`), shown with an ANIME tag. (3) Extensions gets an ANIME group (only when ≥ 1 anime repo):
+available / installed / updates; install through the existing installer path into the private anime dir
+(`files/anime-exts`, A1.5 loader), reuse the signature trust prompt, uninstall, update. (4) `AnimeSourceManager`
+reloads on change. No network in tests. Tests: repo parse (fixture JSON), the media-flag migration from 36,
+install-state mapping. Claude checks with one extension from an owner-approved test repo: install, update,
+uninstall → stub.
+
+Result (Codex 2026-11-08): `tsuzuki/a3.3` at `127d60577`, includes R-A2.
+
+- Migration `37.sqm` adds the media flag and classifies existing stores as manga or novel. The existing
+  reader queries and backup path see the same book-store rows. Anime stores use separate queries.
+- `AnimeExtensionReposScreen.kt` accepts Aniyomi-format HTTPS indexes and shows the anime format tag.
+  `AnimeExtensionsTab.kt` shows available, installed and update groups when an anime repo is configured.
+  Existing installed anime sources remain accessible if the last anime repo is removed.
+- `AnimeExtensionInstaller.kt` shares validation and installation with the debug tool. The private installer
+  validates the archive package, version and signature, stages updates in the private directory and restores
+  the previous APK if loading the replacement fails. The shared trust prompt shows the anime signature.
+  Install, trust and removal refresh the anime sources and retain source stubs for saved shows.
+- Upstream hooks: `SettingsBrowseScreen.kt` opens the anime repository page, `BrowseTab.kt` attaches the
+  anime Extensions group, and `ExtensionsScreen.kt` exposes the existing trust prompt with optional details.
+- JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest :app:compilePreviewKotlin` green.
+  976 tests, zero failures. The repo fixture, install-state mapping, Browse gate and schema upgrade run offline.
+- Claude device check on S22 and Tab S11: add an owner-approved test repo, install and verify the signature
+  prompt, open a source, update from a higher version, uninstall, and open a saved show to confirm its stub.
+  Verify novel and manga repo listings remain available after upgrading an existing installation.
+
+#### A3.4 Anime history (T2) — `review`
+Board: History (`INDEX.md`, anime part; `10-anime/AnimeHome` continue-watching style). History gets an ANIME pill
+beside novels/manga only when `anime_history` has rows. Row: cover, title, "EP n · 12:34 left", time; tap resumes in
+the player; remove one / remove all for an anime; search. A separate repository query, no change to book history.
+Tests: pill visibility, grouping by day, resume target.
+
+Result (Codex 2026-11-08): `tsuzuki/a3.4` at `f399c7eeb`, includes A3.3.
+
+- `TsuzukiAnimeHistory.kt` shows a dedicated anime filter when watch history has visible entries. It groups
+  episodes by local day and filters by anime or episode name. Rows show the artwork, episode, time remaining
+  or watched status, and the timestamp in Dot and Colour.
+- Selecting a partial entry plays that episode. Selecting a finished entry starts the next unseen episode
+  when present, otherwise it replays the selected episode. History removal hides one episode or all episodes
+  of a show and keeps cumulative watch seconds and episode progress.
+- Anime history uses separate SQLDelight queries. `HistoryScreen.kt` adds the pill and dispatches to the
+  anime list. No database migration.
+- JDK 21 per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest` green, 980 tests and zero failures.
+  Tests cover the gate, local-day grouping, search, resume, and history removal with watch-time preservation.
+- Claude device check on S22 and Tab S11: play two episodes, open History and choose Anime, verify date groups
+  and search, resume the partial entry, remove one record, then remove the rest for a show. Check Dot and Colour.
+
+#### A3.5 Anime trackers: AniList + MyAnimeList (T4) — `codex-working` (.worktrees/a3.5, 2026-11-08)
+Board: `png/10-anime/AnimeTracking.png` + `dot/` + html. Goal: the existing AniList and MAL logins also track anime.
+Steps: anime search/bind/update for AniList (GraphQL `type: ANIME`, progress = episodes) and MAL (`/anime`,
+`num_watched_episodes`), stored in `anime_sync`; a tracking sheet on anime details reusing the Tsuzuki tracking UI;
+on episode seen, raise progress only if the tracker's count is lower (Mihon rule); status, score, dates. Simkl left
+out (no client exists). Never log tokens. Tests: request bodies against fixtures, the progress-only-increases rule,
+`anime_sync` mapping. Claude checks with a real account only if the owner logs in.
+
+Result (Codex 2026-11-08, in progress): implementation in .worktrees/a3.5 on tsuzuki/a3.5.
+Anime tracking uses existing AniList and MyAnimeList clients, stores links in anime_sync, and adds
+an optional background progress sync and a tracking sheet. Migration 38 stores the MAL ID returned
+by AniList for A3.6. Debug Kotlin compiled before the final formatting pass. Offline build and tests
+are running; see spotless-a3.5.log and build-a3.5.log in the worktree.
+
+#### A3.6 AniSkip (T3) — `ready` (needs `tsuzuki/a3.5`)
+Boards: `Player` (skip button) + `PlayerSettings` (AniSkip part). Call the AniSkip API
+(`api.aniskip.com/v2/skip-times/<malId>/<ep>`) with the MAL id from an A3.5 binding (an AniList binding gives
+`idMal`); no id → no button. A skip intro/ending/recap button for the segment's length; prefs: off / button /
+auto-skip, intro offset. Cache per episode in memory. Tests: response parsing fixture, segment-at-position logic,
+no id → disabled.
+
+#### A3.7 Watch-time stats (T2) — `ready` (needs `tsuzuki/r-a4`)
+Board: Stats (`INDEX.md`, anime part). Owner Q4: watch minutes stay separate from the reading streak and goal. Stats
+gets a WATCH section only when there is watch data: minutes this week/month/all time, episodes seen, anime completed.
+Data comes from the watch-minute store A2.4/A3.2 write. Tests: aggregation by day/week, empty state hidden.
+
+#### A3.8 Anime global search (T2) — `ready` (needs `tsuzuki/a3.7`)
+Board: GlobalSearch (`INDEX.md`, anime part). An ANIME pill in global search when ≥ 1 anime source; searches
+pinned/all anime sources in parallel (same limits as manga); results open A3.1. Tests: pill gate, source selection.
+
+#### A3.9 Continue-watching widget (T3) — `ready` (needs `tsuzuki/a3.8`)
+Board: Widgets (`INDEX.md`, anime part; R9's widget code is the pattern). Glance widget: the last 1–4 anime in
+progress; tap → resume in the player (or details if the source is gone). Hidden from the widget picker when
+`TsuzukiAnime.enabled` is false. Tests: item selection and order.
+
+#### A4.1 Anime restyle parity pass (T2) — `ready` (needs `tsuzuki/a3.9`)
+Follow the standard restyle rules (WORKPLAN appendix) for every screen on `png/10-anime/` (+ `dot/`, + `DotAnime.png`)
+and `fixes-2026-11/AnimeShelves` / `ColourAnimeShelves`: spacing, type, case, pills, empty states; tablet layouts
+(rail, two-pane details at ≥ 840 dp). Report a table: board → screen → what changed. No new features.
+
+#### A4.2 Release packaging for anime (T3) — `ready` (needs `tsuzuki/a4.1`)
+Goal: anime can ship in a release build (still behind `TsuzukiAnime.enabled`). Steps: `anime-player` becomes
+`implementation` with native libs only in the arm64-v8a split (other ABI splits get the no-op launcher and a "not
+supported on this device" message); R8 keep rules for `is.xyz.mpv.MPVLib` JNI and the `animesource` API extensions
+call; the checksum task still runs; About → licences lists the LGPL libraries with the source offer from
+`docs/licenses/anime-native/README.md`. Verify `assembleRelease` (unsigned is fine) and `assemblePreview`; report each
+APK's size before/after and the 16 KB check (`zipalign -c -P 16 -v 4`). Tests: launcher selection by ABI.
 
 ### Wave Y (owner approved 2026-11-06; after the anime lane)
 

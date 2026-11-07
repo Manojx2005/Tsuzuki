@@ -258,19 +258,58 @@ normal users yet (Watch tab still placeholder).
 | A2.4 | Codex: add to library, Watch tab in Home becomes real (Continue watching, shelf), Library gets Novels / Manga / Anime switch per board `LibraryMixed` |
 | A2.5 | Migration test: upgrade the owner's backup copy in a scratch install; verify novels/manga untouched |
 
-### 6.3 Stage 3 — features (T3–T4)
+### 6.3 Where anime stands (Claude, 2026-11-08)
 
-Details/episodes screen · episode progress + history · Updates with episodes (and "Airing today" strip) ·
-downloads as a **third engine** beside `NovelDownloadEngine` (video segments/HLS, pause/resume, Wi-Fi only) ·
-backups (anime section in proto, Aniyomi backup import) · trackers (AniList/MAL anime lists, Simkl) · AniSkip ·
-player settings (decoder, subtitles, audio track, speed, gestures) · Continue-watching widget · Stats watch time.
-One card each; Claude writes the design card from the matching board first.
+| Stage | Card | State |
+|---|---|---|
+| 1 | A1.1–A1.5 spike re-port, `anime-player` module (libmpv arm64, LGPL `.so`, checksums), `MpvPlayer`, debug install/play screen | in `main` (debug source set only) |
+| 1 | A1.6 device test of playback | **not run** → Claude, with A2.3 review |
+| 2 | A2.1 schema (`ANIME_SCHEMA.md`, owner decisions §9) · A2.2 tables, migration 36, repositories | in `main` |
+| 2 | A2.3 `AnimeSourceManager`, Watch pill in Browse, catalogue, details stub | `review` on `tsuzuki/a2.3` (debug manifest only) |
+| 2 | A2.4 add to library, Watch tab, anime shelves, progress from player | `ready`, branches from `tsuzuki/a2.3` |
 
-### 6.4 Stage 4 — restyle to anime boards (T2–T3)
+**Freeze rule:** `main` takes nothing anime until the v0.1 tag. Each anime card starts from `main` and merges the
+previous anime card branch into its worktree (the run-rules "Needs" step), so the lane is one chain:
+`a2.3 → a2.4 → a3.1 → …`. Claude merges the chain into `main` after v0.1 in order, one review branch per 3–4 cards.
 
-Boards (`10-anime`): AnimeHome, AnimeLibrary, AnimeDetails, BrowseAnime, Player, PlayerSettings, PlayerSheets,
-AnimeTracking, DotAnime; plus anime parts folded into Main, Browse, Extensions, GlobalSearch, History, Updates,
-Downloads, Stats, More, Settings (Player), Backup, TrackerAccounts, Widgets, ExtensionRepos (anime store).
+**Gate until A4.3:** every anime entry point is behind `TsuzukiAnime.enabled` (A3.0), which is `BuildConfig.DEBUG`
+for now. Release and preview builds must show no Watch pill, no anime shelf, no player, no anime settings.
+
+### 6.4 Stage 3 — make it a real feature (debug-gated, one card each, in this order)
+
+| Card | Work | Board | Tier | Needs |
+|---|---|---|---|---|
+| A3.0 | Move catalogue/details/player from `src/debug` to `src/main` behind one `TsuzukiAnime.enabled` flag; release-gate test | — (no UI change) | T2 | A2.4 |
+| A3.1 | Anime details: header, synopsis, genres, status, episode list from the `episodes` table (fetch + store), seen/progress, sort/filter, mark seen, bookmark, multi-select, PLAY / RESUME EP n | `10-anime/AnimeDetails` | T3 | A3.0 |
+| A3.2 | Production player: video/hoster selection, headers to mpv, controls overlay, double-tap seek, lock, prev/next episode, resume position, progress save, audio focus, background pause, rotation | `10-anime/Player` | T4 | A3.1 |
+| R-A2 | Player settings + sheets (subtitles, audio, quality, speed, decoder, gestures) | `PlayerSettings`, `PlayerSheets` | T3 | A3.2 |
+| A3.3 | Anime extension store (non-debug): repos with the media flag (owner Q6 small migration), install/update/trust/uninstall anime extensions, ANIME group in Extensions | `10-anime/BrowseAnime` (stores part), `ExtensionRepos` | T4 | A3.0 |
+| A3.4 | Anime history: History gets the ANIME pill (only with ≥ 1 entry), resume, remove | History board (anime part) | T2 | A3.2 |
+| R-A3 | Updates with episodes + "Airing today"; anime library update worker | Updates board, `AnimeHome` | T3 | A3.1 |
+| A3.5 | Anime trackers: AniList + MyAnimeList anime lists in `anime_sync`, bind/search/progress sync on seen | `10-anime/AnimeTracking` | T4 | A3.2 |
+| A3.6 | AniSkip: intro/ending skip button + auto-skip pref, MAL id from the A3.5 binding | `Player`, `PlayerSettings` (AniSkip part) | T3 | A3.5, R-A2 |
+| R-A1 | Backups: anime in 8000 range, Aniyomi import (500–503) | — | T4 | A3.5 |
+| R-A4 | Episode downloads, third engine | Downloads board (anime group) | T4 | R-A2 |
+| A3.7 | Watch-time stats (separate from reading, owner Q4) | Stats board (anime part) | T2 | A3.2 |
+| A3.8 | Global search across anime sources (ANIME pill) | GlobalSearch board (anime part) | T2 | A3.3 |
+| A3.9 | Continue-watching widget | Widgets board (anime part) | T3 | A3.2 |
+
+Left out of v0.2 unless the owner asks: torrent sources and torrent player settings (shown on BrowseAnime and
+PlayerSettings), Simkl tracker (no client exists yet), seasons UI (owner Q3), fansub exclusion (Q5), PiP.
+Any card whose screen has no anime part on its board is set `blocked: needs a board`, and Claude draws it.
+
+### 6.5 Stage 4 — release anime (v0.2)
+
+| Card | Work | Who |
+|---|---|---|
+| A4.1 | Restyle parity pass on every anime screen against all 10-anime boards (Dot first, then Colour, tablet) | Codex T2 |
+| A4.2 | Release packaging: `anime-player` from `debugImplementation` to `implementation` for arm64 only; other ABIs show "not supported on this device"; R8 keep rules for `MPVLib` JNI + `animesource` API; 16 KB audit; APK size delta; LGPL notice + source offer in About/licences | Codex T3 |
+| A4.3 | Flip `TsuzukiAnime.enabled` to a user setting (off by default, under Settings → Browse); Claude device sweep (A1.6 list + every A3 card), owner sign-off | Claude + owner |
+| A4.4 | Claude: upgrade test of migration 36 on a copy of the owner's backup in a scratch install (old A2.5) | Claude |
+
+Done when: a release build with the setting on installs an anime extension from a repo, browses, adds to library,
+plays with resume, tracks to AniList, shows in History/Updates/Stats, and backs up and restores. With the setting
+off, the app looks exactly like v0.1.
 
 ---
 

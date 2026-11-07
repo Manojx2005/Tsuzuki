@@ -44,6 +44,10 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 
 ### Fixed
 - Text-to-speech highlights the paragraph being read, also when a chapter's text is split into several chunks.
+- Going back to an already-read chapter opens it at its start, and it scrolls normally again.
+- Novel text no longer scrolls under the camera cutout or the gesture bar, and opening the reader menu doesn't move it.
+- The rest of the app's settings, novel reader and font manager are now in Japanese.
+- On More, tiles no longer slide under the clock when the page scrolls.
 
 ### Other
 - No telemetry: release builds contain no analytics or crash-reporting libraries.
