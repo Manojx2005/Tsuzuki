@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">Essai d’un autre flux</string>
+    <string name="tsz_anime_player_lock">Verrouiller les commandes</string>
+    <string name="tsz_anime_player_unlock">Déverrouiller les commandes</string>
+    <string name="tsz_anime_player_next_in">Épisode suivant dans %d s</string>
+    <string name="tsz_anime_player_next">Épisode suivant</string>
+    <string name="tsz_anime_player_previous">Épisode précédent</string>
+    <string name="tsz_anime_player_quality">Qualité vidéo</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">Meilleure disponible</string>
+    <string name="tsz_anime_player_orientation_lock">Verrouiller l’orientation</string>
+    <string name="tsz_anime_player_orientation_unlock">Déverrouiller l’orientation</string>
+    <string name="tsz_anime_player_autoplay_on">Activer la lecture automatique</string>
+    <string name="tsz_anime_player_autoplay_off">Désactiver la lecture automatique</string>
+    <string name="tsz_anime_player_rewind">Reculer de 10 secondes</string>
+    <string name="tsz_anime_player_forward">Avancer de 10 secondes</string>
+</resources>

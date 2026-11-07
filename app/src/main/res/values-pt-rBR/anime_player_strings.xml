@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">Tentando outra transmissão</string>
+    <string name="tsz_anime_player_lock">Bloquear controles</string>
+    <string name="tsz_anime_player_unlock">Desbloquear controles</string>
+    <string name="tsz_anime_player_next_in">Próximo episódio em %d s</string>
+    <string name="tsz_anime_player_next">Próximo episódio</string>
+    <string name="tsz_anime_player_previous">Episódio anterior</string>
+    <string name="tsz_anime_player_quality">Qualidade de vídeo</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">Melhor disponível</string>
+    <string name="tsz_anime_player_orientation_lock">Bloquear orientação</string>
+    <string name="tsz_anime_player_orientation_unlock">Desbloquear orientação</string>
+    <string name="tsz_anime_player_autoplay_on">Ativar reprodução automática</string>
+    <string name="tsz_anime_player_autoplay_off">Desativar reprodução automática</string>
+    <string name="tsz_anime_player_rewind">Voltar 10 segundos</string>
+    <string name="tsz_anime_player_forward">Avançar 10 segundos</string>
+</resources>

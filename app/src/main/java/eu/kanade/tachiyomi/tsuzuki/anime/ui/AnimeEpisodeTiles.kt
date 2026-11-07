@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -125,7 +124,6 @@ internal fun AnimeEpisodeTile(
     source: AnimeSource,
     episode: Episode,
     selected: Boolean,
-    playing: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
     onSelect: () -> Unit,
@@ -189,31 +187,27 @@ internal fun AnimeEpisodeTile(
             if (episode.bookmark) {
                 Icon(Icons.Outlined.Bookmark, stringResource(R.string.tsz_anime_bookmark), tint = tokens.accent)
             }
-            if (playing) {
-                CircularProgressIndicator(Modifier.size(24.dp), color = tokens.accent)
-            } else {
-                Box {
-                    IconButton(onClick = { menu = true }, enabled = enabled) {
-                        Icon(Icons.Outlined.MoreVert, mokoStringResource(MR.strings.label_more), tint = tokens.dotOn)
-                    }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        AnimeEpisodeActions(
-                            seen = episode.seen,
-                            bookmarked = episode.bookmark,
-                            onMarkSeen = {
-                                menu = false
-                                onMarkSeen(it)
-                            },
-                            onBookmark = {
-                                menu = false
-                                onBookmark(it)
-                            },
-                            onMarkPrevious = {
-                                menu = false
-                                onMarkPrevious()
-                            },
-                        )
-                    }
+            Box {
+                IconButton(onClick = { menu = true }, enabled = enabled) {
+                    Icon(Icons.Outlined.MoreVert, mokoStringResource(MR.strings.label_more), tint = tokens.dotOn)
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    AnimeEpisodeActions(
+                        seen = episode.seen,
+                        bookmarked = episode.bookmark,
+                        onMarkSeen = {
+                            menu = false
+                            onMarkSeen(it)
+                        },
+                        onBookmark = {
+                            menu = false
+                            onBookmark(it)
+                        },
+                        onMarkPrevious = {
+                            menu = false
+                            onMarkPrevious()
+                        },
+                    )
                 }
             }
         }

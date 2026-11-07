@@ -9,13 +9,12 @@ import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerLauncher
 import eu.kanade.tsuzuki.animeplayer.MpvPlayer
 import `is`.xyz.mpv.MPVLib
-import tachiyomi.domain.items.episode.model.Episode
 import java.io.File
 
 internal object MpvAnimePlayerLauncher : AnimePlayerLauncher {
-    override fun launch(context: Context, video: Video, episode: Episode?): Boolean {
+    override fun launch(context: Context, request: AnimePlayback.Request): Boolean {
         if (!MpvPlayer.isAvailable) return false
-        AnimePlayback.startActivity(context, video, episode)
+        AnimePlayback.startActivity(context, request)
         return true
     }
 
@@ -24,12 +23,12 @@ internal object MpvAnimePlayerLauncher : AnimePlayerLauncher {
 
 private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var created = false
-    private lateinit var url: String
+    private var defaultUserAgent: String? = null
+    private var originalVolume: Double? = null
     private var eventObserver: MPVLib.EventObserver? = null
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
-    override fun initialize(context: Context, request: AnimePlayback.Request, listener: AnimePlayerBackend.Listener) {
-        url = request.video.videoUrl
+    override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
@@ -60,31 +59,17 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         setOpt("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
         setOpt("input-default-bindings", "yes")
         setOpt("keep-open", "yes")
-        request.episode?.takeUnless { it.seen }?.lastSecondSeen?.takeIf { it > 0 }?.let {
-            setOpt("start", it.toString())
-        }
-        request.video.headers?.let { headers ->
-            // Use the dedicated string options for the headers commonly needed by embed hosts.
-            for ((header, option) in listOf("Referer" to "referrer", "User-Agent" to "user-agent")) {
-                headers[header]?.let { MpvPlayer.optionOrFalse(option, it) }
-            }
-            headers["Origin"]?.takeUnless { ',' in it || '\\' in it }?.let {
-                MpvPlayer.optionOrFalse("http-header-fields", "Origin: $it")
-            }
-        }
+        setOpt("idle", "yes")
         MpvPlayer.init()
 
         // Post-init (BaseMPVView): force-window would crash before the surface is attached.
         setOpt("force-window", "no")
-        // idle=once so the first loadfile works, as in Aniyomi.
-        setOpt("idle", "once")
+        defaultUserAgent = MPVLib.getPropertyString("user-agent")
 
         MpvPlayer.observeProperty("time-pos", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("duration", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
-        MpvPlayer.observeProperty("pause", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
-        MpvPlayer.observeProperty("vo-configured", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
-        MpvPlayer.observeProperty("video-params/w", MPVLib.mpvFormat.MPV_FORMAT_INT64)
-        MpvPlayer.observeProperty("hwdec-current", MPVLib.mpvFormat.MPV_FORMAT_STRING)
+        MpvPlayer.observeProperty("demuxer-cache-time", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
+        MpvPlayer.observeProperty("eof-reached", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
     }
 
     private fun setOpt(name: String, value: String) {
@@ -92,52 +77,29 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     private fun newEventObserver(listener: AnimePlayerBackend.Listener) = object : MPVLib.EventObserver {
-        private var lastLoggedSecond = -1L
+        override fun eventProperty(property: String) = Unit
 
-        override fun eventProperty(property: String) {
-            Log.i(TAG, "prop $property (no value)")
-        }
+        override fun eventProperty(property: String, value: Long) = Unit
 
-        override fun eventProperty(property: String, value: Long) {
-            Log.i(TAG, "prop $property = $value")
-        }
+        override fun eventProperty(property: String, value: String) = Unit
 
         override fun eventProperty(property: String, value: Boolean) {
-            Log.i(TAG, "prop $property = $value")
-        }
-
-        override fun eventProperty(property: String, value: String) {
-            Log.i(TAG, "prop $property = $value")
+            if (property == "eof-reached" && value) listener.onEnded()
         }
 
         override fun eventProperty(property: String, value: Double) {
             when (property) {
                 "duration" -> listener.onDuration(value)
                 "time-pos" -> listener.onPosition(value)
+                "demuxer-cache-time" -> listener.onBuffered(value)
             }
-            // time-pos changes constantly; log it once per second.
-            if (property == "time-pos") {
-                val second = value.toLong()
-                if (second == lastLoggedSecond) return
-                lastLoggedSecond = second
-            }
-            Log.i(TAG, "prop $property = $value")
         }
 
         override fun event(eventId: Int) {
-            if (eventId == MPVLib.mpvEventId.MPV_EVENT_SEEK) listener.onSeek()
-            val name = when (eventId) {
-                MPVLib.mpvEventId.MPV_EVENT_START_FILE -> "start-file"
-                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> "file-loaded"
-                MPVLib.mpvEventId.MPV_EVENT_END_FILE -> "end-file"
-                MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> "playback-restart"
-                MPVLib.mpvEventId.MPV_EVENT_VIDEO_RECONFIG -> "video-reconfig"
-                MPVLib.mpvEventId.MPV_EVENT_AUDIO_RECONFIG -> "audio-reconfig"
-                MPVLib.mpvEventId.MPV_EVENT_SEEK -> "seek"
-                MPVLib.mpvEventId.MPV_EVENT_SHUTDOWN -> "shutdown"
-                else -> "event#$eventId"
+            when (eventId) {
+                MPVLib.mpvEventId.MPV_EVENT_SEEK -> listener.onSeek()
+                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> listener.onLoaded()
             }
-            Log.i(TAG, "event $name")
         }
 
         override fun efEvent(err: String?) {
@@ -145,12 +107,24 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
     }
 
-    override fun attach(surface: Surface, resumePosition: Double?) {
-        Log.i(TAG, "surfaceCreated: attaching surface")
+    override fun load(video: Video, resumePosition: Double) {
+        val headers = video.headers
+        MpvPlayer.property("referrer", headers?.get("Referer").orEmpty())
+        MpvPlayer.property("user-agent", headers?.get("User-Agent") ?: defaultUserAgent.orEmpty())
+        MpvPlayer.command("change-list", "http-header-fields", "clr", "")
+        headers?.forEach { (name, value) ->
+            if (!name.equals("Referer", ignoreCase = true) && !name.equals("User-Agent", ignoreCase = true)) {
+                MpvPlayer.command("change-list", "http-header-fields", "append", "$name: $value")
+            }
+        }
+        setOpt("start", resumePosition.toString())
+        MpvPlayer.command("loadfile", video.videoUrl, "replace")
+    }
+
+    override fun attach(surface: Surface) {
         MpvPlayer.attachSurface(surface)
+        MpvPlayer.property("vo", "gpu")
         setOpt("force-window", "yes")
-        resumePosition?.let { setOpt("start", it.toString()) }
-        MpvPlayer.command("loadfile", url)
     }
 
     override fun resize(width: Int, height: Int) {
@@ -165,22 +139,23 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         MpvPlayer.detachSurface()
     }
 
-    override fun seek(seconds: Int) {
-        MpvPlayer.command("seek", seconds.toString(), "relative")
+    override fun seekTo(seconds: Double) {
+        MpvPlayer.command("seek", seconds.toString(), "absolute+exact")
     }
 
-    override fun togglePause() {
-        MpvPlayer.command("cycle", "pause")
+    override fun setPaused(paused: Boolean) {
+        MPVLib.setPropertyBoolean("pause", paused)
     }
 
-    override fun pause(): Boolean {
-        val wasPlaying = MPVLib.getPropertyBoolean("pause") == false
-        MpvPlayer.property("pause", "yes")
-        return wasPlaying
-    }
-
-    override fun resume() {
-        MpvPlayer.property("pause", "no")
+    override fun setDucked(ducked: Boolean) {
+        if (ducked && originalVolume == null) {
+            val volume = MPVLib.getPropertyDouble("volume") ?: return
+            originalVolume = volume
+            MPVLib.setPropertyDouble("volume", volume * 0.25)
+        } else if (!ducked) {
+            originalVolume?.let { MPVLib.setPropertyDouble("volume", it) }
+            originalVolume = null
+        }
     }
 
     override fun close() {

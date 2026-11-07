@@ -1,35 +1,41 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
-import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimePlaybackProgress
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import tachiyomi.i18n.MR
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerContent
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerModel
+import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class AnimePlayerActivity : Activity(), SurfaceHolder.Callback {
-    private var player: AnimePlayerBackend? = null
-    private var episodeId: Long? = null
-    private val playbackProgress = AnimePlaybackProgress()
+class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
+    private var model: AnimePlayerModel? = null
+    private var orientationLocked by mutableStateOf(false)
 
-    @Volatile
-    private var visible = false
-    private var resumeAfterPause = false
-    private var status: TextView? = null
+    private val systemBars by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,118 +43,134 @@ class AnimePlayerActivity : Activity(), SurfaceHolder.Callback {
             finish()
             return
         }
-        val request = AnimePlayback.take(intent)
-        val backend = Injekt.get<AnimePlayerLauncher>().createBackend()
-        if (request == null || backend == null) {
+
+        val player = try {
+            val factory = viewModelFactory {
+                initializer {
+                    val original = checkNotNull(AnimePlayback.take(intent))
+                    val request = if (original is AnimePlayback.Request.Episode) {
+                        original.copy(id = savedInstanceState?.getLong(EPISODE, original.id) ?: original.id)
+                    } else {
+                        original
+                    }
+                    AnimePlayerModel(
+                        context = applicationContext,
+                        request = request,
+                        backend = checkNotNull(Injekt.get<AnimePlayerLauncher>().createBackend()),
+                        library = Injekt.get(),
+                        preferences = Injekt.get(),
+                        processScope = Injekt.get(),
+                        restoredPosition = savedInstanceState?.takeIf { it.containsKey(POSITION) }?.getDouble(POSITION),
+                        restoredPaused = savedInstanceState?.getBoolean(PAUSED) == true,
+                    )
+                }
+            }
+            ViewModelProvider(this, factory)[AnimePlayerModel::class.java]
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Anime player could not be opened" }
             Toast.makeText(this, R.string.tsz_anime_player_unavailable, Toast.LENGTH_LONG).show()
             finish()
             return
         }
-        episodeId = request.episode?.id
-        try {
-            backend.initialize(this, request, playbackListener())
-            player = backend
-        } catch (e: Exception) {
-            backend.close()
-            Log.e(TAG, "Could not initialize anime playback", e)
-            Toast.makeText(this, MR.strings.tsz_anime_debug_playback_error.resourceId, Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
+        model = player
+        orientationLocked = savedInstanceState?.getBoolean(ORIENTATION_LOCKED) == true
+        applyOrientation()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        systemBars.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        systemBars.hide(WindowInsetsCompat.Type.systemBars())
 
-        val surface = SurfaceView(this).also { it.holder.addCallback(this) }
-        val label = TextView(this).apply {
-            text = request.video.videoTitle.ifBlank { getString(MR.strings.tsz_widget_listening_play.resourceId) }
-        }
-        status = label
-        val controls = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            addView(button("-10 s") { backend.seek(-10) })
-            addView(button("Play / Pause") { backend.togglePause() })
-            addView(button("+10 s") { backend.seek(10) })
-            addView(button("Back") { finish() })
-        }
-        setContentView(
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                addView(label)
-                addView(surface, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-                addView(controls)
-            },
-        )
-    }
-
-    private fun playbackListener() = object : AnimePlayerBackend.Listener {
-        override fun onPosition(seconds: Double) {
-            if (visible && episodeId != null) playbackProgress.onPosition(seconds)
-        }
-
-        override fun onDuration(seconds: Double) {
-            if (episodeId != null) playbackProgress.onDuration(seconds)
-        }
-
-        override fun onSeek() {
-            playbackProgress.skipNextIncrement()
-        }
-
-        override fun onError() {
-            runOnUiThread { status?.setText(MR.strings.tsz_anime_debug_playback_error.resourceId) }
-        }
-    }
-
-    private fun button(text: String, onClick: () -> Unit) = Button(this).apply {
-        this.text = text
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        setOnClickListener { onClick() }
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        player?.attach(holder.surface, playbackProgress.resumePosition())
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        player?.resize(width, height)
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        player?.detach()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        visible = true
-        playbackProgress.skipNextIncrement()
-        if (resumeAfterPause) player?.resume()
-    }
-
-    override fun onPause() {
-        visible = false
-        if (episodeId != null) resumeAfterPause = player?.pause() == true
-        savePlaybackProgress()
-        super.onPause()
-    }
-
-    private fun savePlaybackProgress() {
-        val id = episodeId ?: return
-        val checkpoint = playbackProgress.checkpoint() ?: return
-        Injekt.get<CoroutineScope>().launch {
-            try {
-                Injekt.get<AnimeLibraryStore>().saveProgress(id, checkpoint)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not save episode progress", e)
+        setContent {
+            TachiyomiTheme {
+                val state by player.state.collectAsState()
+                LaunchedEffect(state.playing) {
+                    if (state.playing) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                }
+                AnimePlayerContent(
+                    state = state,
+                    model = player,
+                    onBack = ::finish,
+                    onOrientationLock = { locked ->
+                        orientationLocked = locked
+                        applyOrientation()
+                    },
+                    orientationLocked = orientationLocked,
+                    surface = { modifier ->
+                        AndroidView(
+                            modifier = modifier,
+                            factory = { context ->
+                                SurfaceView(context).also { it.holder.addCallback(this@AnimePlayerActivity) }
+                            },
+                        )
+                    },
+                )
             }
         }
     }
 
+    private fun applyOrientation() {
+        requestedOrientation = if (orientationLocked) {
+            ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            model?.setForeground(true)
+            systemBars.hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        model?.attach(holder.surface)
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        model?.resize(width, height)
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        model?.detach()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        model?.setForeground(true)
+    }
+
+    override fun onPause() {
+        model?.setForeground(false)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        super.onPause()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        model?.let { player ->
+            val state = player.state.value
+            player.targetEpisodeId?.let { outState.putLong(EPISODE, it) }
+            if (state.episode != null) outState.putDouble(POSITION, state.position)
+            outState.putBoolean(PAUSED, !player.shouldResume)
+        }
+        outState.putBoolean(ORIENTATION_LOCKED, orientationLocked)
+    }
+
     override fun onDestroy() {
-        player?.close()
-        player = null
+        model?.detach()
+        model = null
         super.onDestroy()
     }
 
     private companion object {
-        const val TAG = "TsuzukiAnimePlayer"
+        const val EPISODE = "anime_episode"
+        const val POSITION = "anime_position"
+        const val PAUSED = "anime_paused"
+        const val ORIENTATION_LOCKED = "anime_orientation_locked"
     }
 }

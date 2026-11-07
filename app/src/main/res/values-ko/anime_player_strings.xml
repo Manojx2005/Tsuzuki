@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">다른 스트림을 시도하는 중</string>
+    <string name="tsz_anime_player_lock">재생 조작 잠금</string>
+    <string name="tsz_anime_player_unlock">재생 조작 잠금 해제</string>
+    <string name="tsz_anime_player_next_in">%d초 후 다음 회차</string>
+    <string name="tsz_anime_player_next">다음 회차</string>
+    <string name="tsz_anime_player_previous">이전 회차</string>
+    <string name="tsz_anime_player_quality">화질</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">최고 화질</string>
+    <string name="tsz_anime_player_orientation_lock">화면 방향 잠금</string>
+    <string name="tsz_anime_player_orientation_unlock">화면 방향 잠금 해제</string>
+    <string name="tsz_anime_player_autoplay_on">자동 재생 켜기</string>
+    <string name="tsz_anime_player_autoplay_off">자동 재생 끄기</string>
+    <string name="tsz_anime_player_rewind">10초 뒤로</string>
+    <string name="tsz_anime_player_forward">10초 앞으로</string>
+</resources>

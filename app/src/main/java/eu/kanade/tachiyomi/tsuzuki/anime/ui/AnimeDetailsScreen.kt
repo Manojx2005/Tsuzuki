@@ -52,15 +52,11 @@ import eu.kanade.presentation.tsuzuki.anime.displayName
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import eu.kanade.tachiyomi.animesource.model.SEpisode
-import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodes
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
-import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.CancellationException
@@ -87,7 +83,7 @@ internal fun AnimeDetailsScreen(
     library: AnimeLibraryStore,
     resumeUrl: String?,
     onBack: () -> Unit,
-    launchPlayer: (Video, Episode?) -> Unit,
+    launchPlayer: (Episode, Boolean) -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
     val scope = rememberCoroutineScope()
@@ -108,8 +104,6 @@ internal fun AnimeDetailsScreen(
     var shelfSelection by remember { mutableStateOf<Set<Long>?>(null) }
     var selection by rememberSaveable(anime.url) { mutableStateOf(longArrayOf()) }
     val selected = episodeState.items.filter { it.id in selection }
-    var playingRequest by remember { mutableStateOf<Long?>(null) }
-    var playbackError by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
@@ -146,27 +140,7 @@ internal fun AnimeDetailsScreen(
     }
 
     fun play(episode: Episode) {
-        if (playingRequest != null) return
-        playingRequest = episode.id
-        playbackError = false
-        scope.launch {
-            try {
-                val (video, tracked) = withContext(Dispatchers.IO) {
-                    val latest = library.getEpisode(episode.id) ?: episode
-                    val video = resolveAnimeVideo(entry, latest.toSourceEpisode())
-                    val tracked = latest.takeUnless { Injekt.get<BasePreferences>().incognitoMode.get() }
-                    video to tracked
-                }
-                launchPlayer(video, tracked)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logcat(LogPriority.WARN, e) { "Could not play anime episode" }
-                playbackError = true
-            } finally {
-                playingRequest = null
-            }
-        }
+        launchPlayer(episode, !Injekt.get<BasePreferences>().incognitoMode.get())
     }
 
     fun toggleSelection(id: Long) {
@@ -312,10 +286,7 @@ internal fun AnimeDetailsScreen(
                     item { AnimeCatalogueStatus(stringResource(MR.strings.unknown_error), model::refresh) }
                 }
                 episodeState.resume?.let { next ->
-                    item { AnimeResumeTile(next, playingRequest == null && selected.isEmpty()) { play(next) } }
-                }
-                if (playbackError) {
-                    item { AnimeCatalogueStatus(stringResource(MR.strings.tsz_anime_debug_playback_error)) }
+                    item { AnimeResumeTile(next, selected.isEmpty()) { play(next) } }
                 }
                 if (episodeState.items.isNotEmpty()) {
                     item {
@@ -336,8 +307,7 @@ internal fun AnimeDetailsScreen(
                         source = entry.source,
                         episode = episode,
                         selected = episode.id in selection,
-                        playing = playingRequest == episode.id,
-                        enabled = playingRequest == null && !saving,
+                        enabled = !saving,
                         onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
                         onSelect = { toggleSelection(episode.id) },
                         onMarkSeen = { mutate { library.setEpisodesSeen(setOf(episode.id), it) } },
@@ -401,23 +371,6 @@ private fun AnimeShelfPicker(
             TextButton(onClick = onDismiss) { Text(stringResource(MR.strings.action_cancel)) }
         },
     )
-}
-
-private suspend fun resolveAnimeVideo(
-    entry: RegisteredAnimeSource,
-    episode: SEpisode,
-): Video {
-    val videos = AnimeStreamResolver.videos(entry.source, entry.libVersion, episode)
-    for (video in videos) {
-        try {
-            return AnimeStreamResolver.resolve(entry.source, entry.libVersion, video)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            entry.logcat(LogPriority.WARN, e) { "Could not resolve anime stream" }
-        }
-    }
-    error("No playable video")
 }
 
 @Composable

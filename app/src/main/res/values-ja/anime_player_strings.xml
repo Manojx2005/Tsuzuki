@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">別のストリームを試しています</string>
+    <string name="tsz_anime_player_lock">操作をロック</string>
+    <string name="tsz_anime_player_unlock">操作のロックを解除</string>
+    <string name="tsz_anime_player_next_in">%d秒後に次の話を再生</string>
+    <string name="tsz_anime_player_next">次の話</string>
+    <string name="tsz_anime_player_previous">前の話</string>
+    <string name="tsz_anime_player_quality">画質</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">最高画質</string>
+    <string name="tsz_anime_player_orientation_lock">画面の向きを固定</string>
+    <string name="tsz_anime_player_orientation_unlock">画面の向きの固定を解除</string>
+    <string name="tsz_anime_player_autoplay_on">自動再生を有効にする</string>
+    <string name="tsz_anime_player_autoplay_off">自動再生を無効にする</string>
+    <string name="tsz_anime_player_rewind">10秒戻る</string>
+    <string name="tsz_anime_player_forward">10秒進む</string>
+</resources>

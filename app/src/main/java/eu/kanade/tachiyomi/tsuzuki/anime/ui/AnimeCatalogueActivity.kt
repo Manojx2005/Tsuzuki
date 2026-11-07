@@ -149,8 +149,8 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 library,
                                 result.resumeUrl,
                                 back,
-                            ) { video, ep ->
-                                AnimePlayback.launch(this, video, ep)
+                            ) { episode, track ->
+                                AnimePlayback.launchEpisode(this, episode.id, track)
                             }
                         }
                     }
