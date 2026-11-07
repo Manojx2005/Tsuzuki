@@ -354,3 +354,16 @@ No database migration and no backup-format change: the setting is two app prefer
 | `fdc2d40a1` (#3954, skipped in N18) | Still skipped: the setting needs an app restart, as the info text says. |
 
 Strings: 11 new keys in base, ja, zh-rCN, ko, es, pt-rBR, fr, de. The old `pref_category_nsfw_content`, `pref_show_nsfw_source`, `parental_controls_info` and `ext_nsfw_warning` strings are now unused and left in place to keep merges with the other locales simple.
+
+## V2b Mihon release picks (2026-11-07)
+
+| Mihon commit | Disposition |
+|---|---|
+| `35bb84705` | Skipped. The fix releases a GPU texture in Mihon's `WebGpuViewer`. Tsuzuki uses its existing pager, Webtoon and novel viewers. |
+| `a82baac3e` | Skipped. Tsuzuki's Kitsu tracker uses a fixed score list and has no server-provided score-type lookup during login. |
+| `1e054ea14` | Already covered by Tsuzuki's MAL expiry check, which refreshes after the expiry time adjusted by one minute. |
+| `40f552981` | Already applied by N2 in the Tsundoku title lookup. |
+| `4b48a84ec` | Applied as `ed17f1112`. Adapted to Tsundoku's `MangaRestorer`: an existing tracker keeps its stored remote entry and takes only higher chapter progress from the backup. |
+| `6d4ed6cb2` | Already covered by `ExtensionLoader` using `ChildFirstPathClassLoader` on all supported Android versions. |
+| `b19c8abeb` | Applied as `2c7bac0b2`. Shared `TabText` measures the badge first and ellipsizes the label into the remaining width. |
+| `0864ce0f4` | Already applied by N2. Verbose network logging redacts Auth and Authorization by default. |
