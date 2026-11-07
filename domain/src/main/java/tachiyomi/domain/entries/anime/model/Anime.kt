@@ -1,0 +1,48 @@
+package tachiyomi.domain.entries.anime.model
+
+import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.FetchType
+import kotlinx.serialization.json.JsonObject
+
+data class Anime(
+    val source: Long,
+    val url: String,
+    val title: String,
+    val id: Long = -1,
+    val artist: String? = null,
+    val author: String? = null,
+    val description: String? = null,
+    val genre: List<String>? = null,
+    val alternativeTitles: List<String>? = null,
+    val status: Long = 0,
+    val thumbnailUrl: String? = null,
+    val backgroundUrl: String? = null,
+    val favorite: Boolean = false,
+    val lastUpdate: Long? = null,
+    val nextUpdate: Long? = null,
+    val initialized: Boolean = false,
+    val viewer: Long = 0,
+    val episodeFlags: Long = 0,
+    val coverLastModified: Long = 0,
+    val backgroundLastModified: Long = 0,
+    val dateAdded: Long = 0,
+    val updateStrategy: AnimeUpdateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
+    val calculateInterval: Long = 0,
+    val fetchType: FetchType = FetchType.Episodes,
+    val parentId: Long? = null,
+    val seasonFlags: Long = 0,
+    val seasonNumber: Double = -1.0,
+    val seasonSourceOrder: Long = 0,
+    val notes: String = "",
+    val lastModifiedAt: Long = 0,
+    val favoriteModifiedAt: Long? = null,
+    val version: Long = 0,
+    val isSyncing: Long = 0,
+    val memo: JsonObject = JsonObject(emptyMap()),
+    val totalCount: Long = 0,
+    val seenCount: Long = 0,
+    val bookmarkCount: Long = 0,
+    val latestUpload: Long = 0,
+    val episodeFetchedAt: Long = 0,
+    val lastSeen: Long = 0,
+)

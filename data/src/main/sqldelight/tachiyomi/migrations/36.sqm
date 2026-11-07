@@ -1,0 +1,265 @@
+-- Additive anime storage. Existing reader tables are untouched.
+
+CREATE TABLE animes(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    artist TEXT,
+    author TEXT,
+    description TEXT,
+    genre TEXT,
+    title TEXT NOT NULL,
+    alternative_titles TEXT,
+    status INTEGER NOT NULL,
+    thumbnail_url TEXT,
+    background_url TEXT,
+    favorite INTEGER NOT NULL,
+    last_update INTEGER,
+    next_update INTEGER,
+    initialized INTEGER NOT NULL,
+    viewer INTEGER NOT NULL,
+    episode_flags INTEGER NOT NULL,
+    cover_last_modified INTEGER NOT NULL,
+    background_last_modified INTEGER NOT NULL DEFAULT 0,
+    date_added INTEGER NOT NULL,
+    update_strategy INTEGER NOT NULL DEFAULT 0,
+    calculate_interval INTEGER DEFAULT 0 NOT NULL,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    favorite_modified_at INTEGER,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    notes TEXT NOT NULL DEFAULT "",
+    fetch_type INTEGER NOT NULL DEFAULT 1,
+    parent_id INTEGER,
+    season_flags INTEGER NOT NULL DEFAULT 0,
+    season_number REAL NOT NULL DEFAULT -1,
+    season_source_order INTEGER NOT NULL DEFAULT 0,
+    -- Aggregate columns maintained by episode and history triggers.
+    total_count INTEGER NOT NULL DEFAULT 0,
+    seen_count INTEGER NOT NULL DEFAULT 0,
+    latest_upload INTEGER NOT NULL DEFAULT 0,
+    episode_fetched_at INTEGER NOT NULL DEFAULT 0,
+    last_seen INTEGER NOT NULL DEFAULT 0,
+    bookmark_count INTEGER NOT NULL DEFAULT 0,
+    memo BLOB NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX animelib_favorite_index ON animes(favorite) WHERE favorite = 1;
+CREATE INDEX animes_url_index ON animes(url);
+CREATE INDEX animes_source_index ON animes(source);
+CREATE UNIQUE INDEX animes_source_url_index ON animes(source, url);
+
+CREATE TRIGGER update_last_favorited_at_animes
+AFTER UPDATE OF favorite ON animes
+BEGIN
+  UPDATE animes
+  SET favorite_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_last_modified_at_animes
+AFTER UPDATE ON animes
+FOR EACH ROW
+BEGIN
+  UPDATE animes
+  SET last_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_anime_version AFTER UPDATE ON animes
+BEGIN
+    UPDATE animes SET version = version + 1
+    WHERE _id = new._id AND new.is_syncing = 0 AND (
+        new.url != old.url OR
+        new.description IS NOT old.description OR
+        new.favorite != old.favorite
+    );
+END;
+
+CREATE TABLE episodes(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    seen INTEGER NOT NULL,
+    bookmark INTEGER NOT NULL,
+    fillermark INTEGER NOT NULL DEFAULT 0,
+    last_second_seen INTEGER NOT NULL,
+    total_seconds INTEGER NOT NULL,
+    episode_number REAL NOT NULL,
+    source_order INTEGER NOT NULL,
+    date_fetch INTEGER NOT NULL,
+    date_upload INTEGER NOT NULL,
+    summary TEXT,
+    preview_url TEXT,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    memo BLOB NOT NULL DEFAULT '{}',
+    FOREIGN KEY(anime_id) REFERENCES animes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX episodes_anime_id_index ON episodes(anime_id);
+CREATE INDEX episodes_unseen_by_anime_index ON episodes(anime_id, seen) WHERE seen = 0;
+CREATE INDEX episodes_library_aggregate_index ON episodes(anime_id, seen, bookmark, date_upload, date_fetch);
+CREATE INDEX episodes_updates_idx ON episodes(date_fetch DESC, anime_id, date_upload);
+CREATE INDEX episodes_url_index ON episodes(url);
+
+CREATE TRIGGER update_last_modified_at_episodes
+AFTER UPDATE ON episodes
+FOR EACH ROW
+BEGIN
+  UPDATE episodes
+  SET last_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_episode_and_anime_version AFTER UPDATE ON episodes
+WHEN new.is_syncing = 0 AND (
+    new.seen != old.seen OR
+    new.bookmark != old.bookmark OR
+    new.last_second_seen != old.last_second_seen
+)
+BEGIN
+    -- Update the episode version
+    UPDATE episodes SET version = version + 1
+    WHERE _id = new._id;
+
+    -- Update the anime version
+    UPDATE animes SET version = version + 1
+    WHERE _id = new.anime_id AND (SELECT is_syncing FROM animes WHERE _id = new.anime_id) = 0;
+END;
+
+CREATE TRIGGER anime_agg_episode_insert
+AFTER INSERT ON episodes
+BEGIN
+    UPDATE animes SET
+        total_count = total_count + 1,
+        seen_count = seen_count + new.seen,
+        bookmark_count = bookmark_count + new.bookmark,
+        latest_upload = max(latest_upload, new.date_upload),
+        episode_fetched_at = max(episode_fetched_at, new.date_fetch)
+    WHERE _id = new.anime_id;
+END;
+
+CREATE TRIGGER anime_agg_episode_update
+AFTER UPDATE OF seen, bookmark, date_upload, date_fetch ON episodes
+WHEN new.seen != old.seen OR new.bookmark != old.bookmark
+    OR new.date_upload != old.date_upload OR new.date_fetch != old.date_fetch
+BEGIN
+    UPDATE animes SET
+        seen_count = seen_count + new.seen - old.seen,
+        bookmark_count = bookmark_count + new.bookmark - old.bookmark,
+        latest_upload = coalesce((SELECT max(date_upload) FROM episodes WHERE anime_id = new.anime_id), 0),
+        episode_fetched_at = coalesce((SELECT max(date_fetch) FROM episodes WHERE anime_id = new.anime_id), 0)
+    WHERE _id = new.anime_id;
+END;
+
+CREATE TRIGGER anime_agg_episode_delete
+AFTER DELETE ON episodes
+BEGIN
+    UPDATE animes SET
+        total_count = total_count - 1,
+        seen_count = seen_count - old.seen,
+        bookmark_count = bookmark_count - old.bookmark,
+        latest_upload = coalesce((SELECT max(date_upload) FROM episodes WHERE anime_id = old.anime_id), 0),
+        episode_fetched_at = coalesce((SELECT max(date_fetch) FROM episodes WHERE anime_id = old.anime_id), 0),
+        last_seen = coalesce((
+            SELECT max(anime_history.last_seen)
+            FROM anime_history JOIN episodes ON episodes._id = anime_history.episode_id
+            WHERE episodes.anime_id = old.anime_id
+        ), 0)
+    WHERE _id = old.anime_id;
+END;
+
+CREATE TABLE anime_history(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    episode_id INTEGER NOT NULL UNIQUE,
+    last_seen INTEGER,
+    time_watched INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(episode_id) REFERENCES episodes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX anime_history_episode_id_index ON anime_history(episode_id);
+CREATE INDEX idx_anime_history_last_seen ON anime_history(last_seen);
+
+CREATE TRIGGER anime_agg_history_upsert
+AFTER INSERT ON anime_history
+BEGIN
+    UPDATE animes SET last_seen = max(last_seen, ifnull(CAST(new.last_seen AS INTEGER), 0))
+    WHERE _id = (SELECT anime_id FROM episodes WHERE _id = new.episode_id);
+END;
+
+CREATE TRIGGER anime_agg_history_update
+AFTER UPDATE OF last_seen ON anime_history
+BEGIN
+    UPDATE animes SET last_seen = max(last_seen, ifnull(CAST(new.last_seen AS INTEGER), 0))
+    WHERE _id = (SELECT anime_id FROM episodes WHERE _id = new.episode_id);
+END;
+
+CREATE TABLE anime_categories(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    sort INTEGER NOT NULL,
+    flags INTEGER NOT NULL
+);
+
+INSERT INTO anime_categories(_id, name, sort, flags) VALUES (0, '', -1, 0);
+
+CREATE TRIGGER system_anime_category_delete_trigger
+BEFORE DELETE ON anime_categories
+WHEN old._id = 0
+BEGIN
+    SELECT RAISE(ABORT, 'System anime category cannot be deleted');
+END;
+
+CREATE TABLE animes_categories(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY(category_id) REFERENCES anime_categories (_id)
+    ON DELETE CASCADE,
+    FOREIGN KEY(anime_id) REFERENCES animes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX animes_categories_manga_category_index ON animes_categories(anime_id, category_id);
+CREATE INDEX idx_animes_categories_category_id ON animes_categories(category_id);
+
+CREATE TRIGGER insert_anime_category_update_version AFTER INSERT ON animes_categories
+BEGIN
+    UPDATE animes
+    SET version = version + 1
+    WHERE _id = new.anime_id AND (SELECT is_syncing FROM animes WHERE _id = new.anime_id) = 0;
+END;
+
+CREATE TABLE anime_sync(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    anime_id INTEGER NOT NULL,
+    sync_id INTEGER NOT NULL,
+    remote_id INTEGER NOT NULL,
+    library_id INTEGER,
+    title TEXT NOT NULL,
+    last_episode_seen REAL NOT NULL,
+    total_episodes INTEGER NOT NULL,
+    status INTEGER NOT NULL,
+    score REAL NOT NULL,
+    remote_url TEXT NOT NULL,
+    start_date INTEGER NOT NULL,
+    finish_date INTEGER NOT NULL,
+    private INTEGER DEFAULT 0 NOT NULL,
+    UNIQUE (anime_id, sync_id) ON CONFLICT REPLACE,
+    FOREIGN KEY(anime_id) REFERENCES animes (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX idx_anime_sync_anime_id ON anime_sync(anime_id);
+
+CREATE TABLE anime_sources(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    lang TEXT NOT NULL,
+    name TEXT NOT NULL
+);

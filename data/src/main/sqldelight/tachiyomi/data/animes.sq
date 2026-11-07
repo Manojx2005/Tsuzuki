@@ -1,0 +1,120 @@
+import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy;
+import eu.kanade.tachiyomi.animesource.model.FetchType;
+import kotlin.Boolean;
+import kotlin.String;
+import kotlin.collections.List;
+import kotlinx.serialization.json.JsonObject;
+
+CREATE TABLE animes(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    artist TEXT,
+    author TEXT,
+    description TEXT,
+    genre TEXT AS List<String>,
+    title TEXT NOT NULL,
+    alternative_titles TEXT AS List<String>,
+    status INTEGER NOT NULL,
+    thumbnail_url TEXT,
+    background_url TEXT,
+    favorite INTEGER AS Boolean NOT NULL,
+    last_update INTEGER,
+    next_update INTEGER,
+    initialized INTEGER AS Boolean NOT NULL,
+    viewer INTEGER NOT NULL,
+    episode_flags INTEGER NOT NULL,
+    cover_last_modified INTEGER NOT NULL,
+    background_last_modified INTEGER NOT NULL DEFAULT 0,
+    date_added INTEGER NOT NULL,
+    update_strategy INTEGER AS AnimeUpdateStrategy NOT NULL DEFAULT 0,
+    calculate_interval INTEGER DEFAULT 0 NOT NULL,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    favorite_modified_at INTEGER,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    notes TEXT NOT NULL DEFAULT "",
+    fetch_type INTEGER AS FetchType NOT NULL DEFAULT 1,
+    parent_id INTEGER,
+    season_flags INTEGER NOT NULL DEFAULT 0,
+    season_number REAL NOT NULL DEFAULT -1,
+    season_source_order INTEGER NOT NULL DEFAULT 0,
+    -- Aggregate columns maintained by episode and history triggers.
+    total_count INTEGER NOT NULL DEFAULT 0,
+    seen_count INTEGER NOT NULL DEFAULT 0,
+    latest_upload INTEGER NOT NULL DEFAULT 0,
+    episode_fetched_at INTEGER NOT NULL DEFAULT 0,
+    last_seen INTEGER NOT NULL DEFAULT 0,
+    bookmark_count INTEGER NOT NULL DEFAULT 0,
+    memo BLOB AS JsonObject NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX animelib_favorite_index ON animes(favorite) WHERE favorite = 1;
+CREATE INDEX animes_url_index ON animes(url);
+CREATE INDEX animes_source_index ON animes(source);
+CREATE UNIQUE INDEX animes_source_url_index ON animes(source, url);
+
+CREATE TRIGGER update_last_favorited_at_animes
+AFTER UPDATE OF favorite ON animes
+BEGIN
+  UPDATE animes
+  SET favorite_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_last_modified_at_animes
+AFTER UPDATE ON animes
+FOR EACH ROW
+BEGIN
+  UPDATE animes
+  SET last_modified_at = strftime('%s', 'now')
+  WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_anime_version AFTER UPDATE ON animes
+BEGIN
+    UPDATE animes SET version = version + 1
+    WHERE _id = new._id AND new.is_syncing = 0 AND (
+        new.url != old.url OR
+        new.description IS NOT old.description OR
+        new.favorite != old.favorite
+    );
+END;
+
+getById:
+SELECT * FROM animes WHERE _id = :id;
+
+getBySourceAndUrl:
+SELECT * FROM animes WHERE source = :source AND url = :url ORDER BY _id LIMIT 1;
+
+getLibrary:
+SELECT * FROM animes WHERE favorite = 1 ORDER BY title COLLATE NOCASE, _id;
+
+insert:
+INSERT INTO animes (
+    source, url, title, artist, author, description, genre, alternative_titles, status, thumbnail_url, background_url,
+    favorite, last_update, next_update, initialized, viewer, episode_flags, cover_last_modified, background_last_modified,
+    date_added, update_strategy, calculate_interval, fetch_type, parent_id, season_flags, season_number, season_source_order,
+    notes, memo
+) VALUES ?;
+
+update:
+UPDATE animes SET
+    url = :url, title = :title, artist = :artist, author = :author, description = :description, genre = :genre,
+    alternative_titles = :alternativeTitles, status = :status, thumbnail_url = :thumbnailUrl, background_url = :backgroundUrl,
+    favorite = :favorite, last_update = :lastUpdate, next_update = :nextUpdate, initialized = :initialized,
+    viewer = :viewer, episode_flags = :episodeFlags, cover_last_modified = :coverLastModified,
+    background_last_modified = :backgroundLastModified, date_added = :dateAdded, update_strategy = :updateStrategy,
+    calculate_interval = :calculateInterval, fetch_type = :fetchType, parent_id = :parentId, season_flags = :seasonFlags,
+    season_number = :seasonNumber, season_source_order = :seasonSourceOrder, notes = :notes, memo = :memo
+WHERE _id = :id;
+
+setFavorite:
+UPDATE animes SET favorite = :favorite, date_added = CASE WHEN :favorite = 1 THEN :dateAdded ELSE date_added END
+WHERE _id = :id AND favorite != :favorite;
+
+delete:
+DELETE FROM animes WHERE _id = :id;
+
+lastInsertedId:
+SELECT last_insert_rowid();
