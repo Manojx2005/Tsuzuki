@@ -362,6 +362,13 @@ translation safe failure without credentials, P1.6 TTS remaining combos + backgr
 owner-approved extension install/update/uninstall, P1.8 widget, P1.10 separate-library mode, search, empty and
 error states. Each bug → a `V7.n` fix card for Codex (logcat + screenshot + repro). Update RUNTIME_QA.
 
+**V7 progress (Claude, 2026-11-07, preview from `review/night6`):**
+- **R2 pass** (tablet): Library shelf + search text and applied search survive `am kill` → Recents. Library search
+  filters on submit (Enter), not live; that is Tsundoku's existing draft/submitted split, not a regression.
+- **V3 pass** (S22): Watch page says anime is coming in a later version; only a Back to reading button.
+- Owner's phone `R5GL23ZYE1V` was connected but not visible to adb on this PC (not even "unauthorized"): needs USB
+  debugging allowed for this computer before V10/V11.
+
 #### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
 config, download queue Cancel all), mass import batch cards, phone Settings layout. NewUpdate screen moves to V12
