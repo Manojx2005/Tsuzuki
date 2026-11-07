@@ -30,10 +30,10 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -97,6 +97,8 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.tsuzuki.reader.novelSafeInsets
+import eu.kanade.tachiyomi.tsuzuki.reader.withNovelStatusBar
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.AddToLibraryFirst
@@ -170,6 +172,9 @@ class ReaderActivity : BaseActivity() {
     private val tsuzukiChromeRequests = TsuzukiReaderChromeRequests()
     private val tsuzukiAdjacentNavigation = TsuzukiAdjacentNavigation()
     private var assistUrl: String? = null
+    private var novelSystemInsets by mutableStateOf(Insets.NONE)
+    private var novelStatusBarReservePx = 0
+    private var novelStatusBarAtBottom = true
 
     /**
      * Configuration at reader level, like background color or forced orientation.
@@ -426,11 +431,23 @@ class ReaderActivity : BaseActivity() {
         // under it. Reserved while enabled (not on menu visibility) so menu toggles don't resize the
         // WebView and jump its scroll.
         val statusBarReservePx = if (isNovelViewer && novelStatusBarEnabled) statusBarHeightPx else 0
-        LaunchedEffect(statusBarReservePx, statusBarAtBottomEdge) {
-            val top = if (statusBarAtBottomEdge) 0 else statusBarReservePx
-            val bottom = if (statusBarAtBottomEdge) statusBarReservePx else 0
-            val vc = binding.viewerContainer
-            if (vc.paddingTop != top || vc.paddingBottom != bottom) vc.setPadding(0, top, 0, bottom)
+        LaunchedEffect(isNovelViewer, statusBarReservePx, statusBarAtBottomEdge) {
+            novelStatusBarReservePx = statusBarReservePx
+            novelStatusBarAtBottom = statusBarAtBottomEdge
+            if (isNovelViewer) {
+                updateViewerInset(
+                    readerPreferences.fullscreen.get(),
+                    readerPreferences.drawUnderCutout.get(),
+                )
+            }
+        }
+        LaunchedEffect(state.viewer, novelTheme, novelBgColorInt) {
+            val background = if (isNovelViewer) {
+                ThemeUtils.getThemeColors(this@ReaderActivity, readerPreferences, novelTheme).first
+            } else {
+                Color.TRANSPARENT
+            }
+            binding.viewerContainer.setBackgroundColor(background)
         }
 
         // Reader menu bars are transient overlays, so reserving layout for them would churn the
@@ -530,7 +547,12 @@ class ReaderActivity : BaseActivity() {
                             end = tsuzukiChromeRequests.panelEndInset,
                             bottom = if (statusBarAtBottom) tsuzukiChromeRequests.panelBottomInset else 0.dp,
                         )
-                        .then(if (statusBarAtBottom) Modifier else Modifier.statusBarsPadding()),
+                        .absolutePadding(
+                            left = with(density) { novelSystemInsets.left.toDp() },
+                            top = with(density) { if (statusBarAtBottom) 0.dp else novelSystemInsets.top.toDp() },
+                            right = with(density) { novelSystemInsets.right.toDp() },
+                            bottom = with(density) { if (statusBarAtBottom) novelSystemInsets.bottom.toDp() else 0.dp },
+                        ),
                 )
             }
         }
@@ -2039,6 +2061,13 @@ class ReaderActivity : BaseActivity() {
         fullscreen: Boolean,
         drawUnderCutout: Boolean,
     ) {
+        val viewer = viewModel.state.value.viewer
+        if (viewer is NovelViewer || viewer is NovelWebViewViewer) {
+            novelSystemInsets = windowInsets?.novelSafeInsets() ?: Insets.NONE
+            val padding = novelSystemInsets.withNovelStatusBar(novelStatusBarReservePx, novelStatusBarAtBottom)
+            setPadding(padding.left, padding.top, padding.right, padding.bottom)
+            return
+        }
         val insets = when {
             !fullscreen -> windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars())
             !drawUnderCutout -> windowInsets?.getInsets(WindowInsetsCompat.Type.displayCutout())
