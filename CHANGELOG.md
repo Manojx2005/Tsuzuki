@@ -20,9 +20,7 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 - Library with All, Novels and Manga tabs, shelves with book counts, and generated covers for books without art.
 - Novel reader: a quick settings sheet plus an All reader settings page, page colours (Book, Paper, Sepia, Sage,
   Night, Black and Custom), and the next chapter loads ahead so turning a chapter doesn't show a blank page.
-- Listening: text-to-speech with a sleep timer; on tablets in landscape the Listen panel docks beside the text, and
-  on tabletop foldables it sits below the hinge.
-- Manga reader: on wide tablet windows, paged manga can show two pages side by side (off by default; Reading mode).
+- Listening: text-to-speech with a sleep timer; on tablets in landscape the Listen panel docks beside the text.
 - Tablet layouts: navigation rail, and two-pane Settings, Updates (list plus chapter preview) and Browse.
 - Save chapters by chapter-number range; pause and resume novel downloads per book.
 - Home-screen widgets for continuing reading and listening.
@@ -38,6 +36,10 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 - Large libraries: Home, Library and Updates do less work when books and badges change.
 - Screens keep their selections, sheets and search text when the system closes the app in the background.
 - Menus have icons, grouped sections and a separate destructive row; long labels wrap between words.
+- Browse: Novels and Manga each have Sources, Extensions and Migrate; swiping stays inside the one you picked.
+
+### Removed
+- The System / Light / Dark switch: Dot and Colour are dark designs, so the app always uses its dark look.
 
 ### Fixed
 - Text-to-speech highlights the paragraph being read, also when a chapter's text is split into several chunks.

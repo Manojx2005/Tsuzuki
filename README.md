@@ -2,48 +2,112 @@
 
 # Tsuzuki · 続き
 
-**One reader for light novels, web novels, manga and manhwa, with anime on the way.**
+**One reader for light novels, web novels, manga and manhwa.**
 
 *Tsuzuki* means "continuation": what happens next.
 
-![Status](https://img.shields.io/badge/status-early%20development-orange)
-![Platform](https://img.shields.io/badge/platform-Android%208%2B-3DDC84?logo=android&logoColor=white)
+[![Latest release](https://img.shields.io/github/v/release/Manojx2005/Tsuzuki?label=release&color=ff3b30)](https://github.com/Manojx2005/Tsuzuki/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Manojx2005/Tsuzuki/total?color=ff3b30)](https://github.com/Manojx2005/Tsuzuki/releases)
+![Platform](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![No telemetry](https://img.shields.io/badge/telemetry-none-black)
 
-<img src="docs/screenshots/01-home-dot-tablet.png" width="32%" alt="Home in the Dot theme" />
-<img src="docs/screenshots/02-home-colour-tablet.png" width="32%" alt="Home in the Colour theme" />
-<img src="docs/screenshots/05-reader-contents-colour.png" width="32%" alt="Reader contents drawer in Colour" />
+<a href="https://github.com/Manojx2005/Tsuzuki/releases/latest">
+  <img src="https://img.shields.io/badge/Download%20for%20Android-latest%20APK-ff3b30?style=for-the-badge&logo=android&logoColor=white" alt="Download the latest APK" height="44" />
+</a>
+
+<br/><br/>
+
+<img src="docs/screenshots/10-home-dot-phone.png" width="30%" alt="Home in the Dot theme" />
+&nbsp;
+<img src="docs/screenshots/11-home-colour-phone.png" width="30%" alt="Home in the Colour theme" />
+&nbsp;
+<img src="docs/screenshots/12-library-japanese-phone.png" width="30%" alt="Library in Japanese" />
 
 </div>
 
 ---
 
+## Download
+
+1. Open the **[latest release](https://github.com/Manojx2005/Tsuzuki/releases/latest)** on your phone or tablet.
+2. Under **Assets**, pick one APK:
+
+   | File | Use it if |
+   |---|---|
+   | `tsuzuki-arm64-v8a-vX.Y.Z.apk` | **Almost everyone.** Any phone or tablet from the last several years. Smallest download. |
+   | `tsuzuki-vX.Y.Z.apk` | You're not sure, or the one above won't install. Works on every device; bigger. |
+   | `tsuzuki-armeabi-v7a-…`, `tsuzuki-x86…` | Very old 32-bit phones, or emulators / Chromebooks. |
+
+3. Open the downloaded file. If Android asks, allow your browser or Files app to **install unknown apps**, then tap
+   **Install**.
+4. Open Tsuzuki and add sources from **Browse**: the LNReader novel index and Keiyoushi manga repository are already
+   added for you.
+
+**Updates:** Tsuzuki checks GitHub for new releases by itself. You can also check any time in
+**Settings › About › Check for updates**, or track this repo with [Obtainium](https://github.com/ImranR98/Obtainium)
+(add `https://github.com/Manojx2005/Tsuzuki`).
+
+**Coming from another app?** Restore a Mihon or Tsundoku backup, or import an LNReader backup, from
+**Settings › Data and storage**. Tsuzuki installs as its own app, so your old app keeps working while you try it.
+
+<details>
+<summary><b>Check that your download is genuine</b></summary>
+
+Every release lists the SHA-256 of each APK in its notes. Release APKs are signed with this certificate:
+
+```
+SHA-256: FF:CD:C7:43:A6:69:78:AE:24:CD:76:0B:44:78:32:71:A3:CC:18:16:84:4C:6A:78:6C:C9:EF:71:8E:A1:F6:C7
+```
+
+`apksigner verify --print-certs tsuzuki-arm64-v8a-vX.Y.Z.apk` shows it. Android will also refuse an update signed
+with any other key.
+
+</details>
+
+<details>
+<summary><b>Preview builds</b> (newer, less tested)</summary>
+
+Preview builds are published as **pre-releases** tagged `rNNNN`. They install as a separate app
+(`io.github.manojx2005.tsuzuki.debug`) next to the stable one and update themselves to the next preview.
+
+</details>
+
 ## Two themes, one layout
 
-| **Colour** | **Dot** |
+| **Dot** | **Colour** |
 |---|---|
-| The whole app takes on the colours of the book you're reading. Instrument Serif + Manrope. | Monochrome dot-matrix with a single red accent; covers in greyscale. Doto + Space Mono. |
+| Monochrome dot-matrix with a single red accent. Doto + Space Mono. Covers in greyscale or in colour, your choice. | The whole app takes on the colours of the book you're reading. Instrument Serif + Manrope. |
 
-Switch between them instantly in **Settings › Appearance**. Japanese text gets a matching partner font in each theme.
+Switch instantly in **Settings › Appearance**. Japanese text gets a matching partner font in each theme.
 
 ## What's in it
 
-**From Tsundoku / Mihon**
-- Mihon-style extensions for manga and manhwa, plus **300+ LNReader novel sources** running natively
-- Novel reader with text-to-speech, translation, paged or scrolling layout
-- EPUB / TXT import, backups, LNReader backup import, trackers
+**Reading**
+- **300+ LNReader novel sources** running natively, plus Mihon-style extensions for manga and manhwa
+- Novel reader with page colours (Book, Paper, Sepia, Sage, Night, Black, Custom), font, size, spacing and margins,
+  all applied live, and the next chapter loaded ahead so it opens instantly
+- **Listen**: text-to-speech that follows the text, with a sleep timer; on tablets it docks beside the page
+- Manga reader with paged and long-strip modes
+- Translation (on-device by default, or your own engine), EPUB / TXT import
 
-**New in Tsuzuki**
-- **Bento Home**: a "continue reading" hero, today's reading time, and your shelf
-- Redesigned **library** (novels and manga together or apart), **book details**, **history**, **updates**, **browse** and **settings**
-- **Save chapters** sheet: next 1 / 5 / 25, unread, all, or a custom range
-- **Chapter filter & sort** on one page
-- **Reader contents drawer**: jump to any chapter, bookmarks, read and downloaded marks
-- **Reader settings**: page colours (Book, Paper, Sepia, Sage, Night, Black), font, size, line height, margins and controls, all applied live
-- Phone **pill nav** and tablet **rail** layouts
+**Library**
+- **Home** with tonight's stack, one-tap resume, new chapters and today's reading time
+- Library with **All / Novels / Manga**, shelves, filters, and generated covers for books without art
+- **Save chapters** by count, unread, all, or a chapter-number range; downloads pause and resume per book
+- Updates with a chapter preview on tablets, history, statistics and reading time
+- Home-screen widgets for continuing reading and listening
+
+**Everywhere**
+- Phone **pill nav** and tablet **rail** with two-pane Settings, Updates and Browse
+- **English and Japanese** interface
+- Backups, trackers, migration between sources
+- **No telemetry**: release builds contain no analytics or crash-reporting code ([privacy policy](PRIVACY.md))
 
 <div align="center">
+<img src="docs/screenshots/13-listen-dock-tablet.png" width="90%" alt="Listen panel docked beside the text on a tablet" />
+<br/><br/>
 <img src="docs/screenshots/03-save-chapters-colour.png" width="24%" alt="Save chapters sheet" />
 <img src="docs/screenshots/06-chapter-filter-colour.png" width="24%" alt="Chapter filter and sort" />
 <img src="docs/screenshots/04-reader-contents-dot.png" width="24%" alt="Reader contents drawer in Dot" />
@@ -52,22 +116,17 @@ Switch between them instantly in **Settings › Appearance**. Japanese text gets
 
 ## Roadmap
 
-- [ ] Anime: sources and player from Aniyomi, in the same library
-- [ ] Separate download engines for manga, novels and anime, plus Mihon's newer download speed-ups
-- [ ] Motion: shared-element transitions and theme reveal
-- [ ] Reading streaks and goals, a listen tile, source health
+- [x] **v0.1**: first public release (novels, manga, manhwa)
+- [ ] **v0.2**: anime, with sources and player from Aniyomi in the same library
+- [ ] Reading estimates, source health, dictionary lookup, merging sources for one book
+- [ ] Scheduled backups, release notifications for Upcoming
 - [ ] More translations (English and Japanese today)
-- [ ] First release (v0.1)
 
-The full plan is in [`docs/PLAN.md`](docs/PLAN.md); the ordered task queue is in [`AGENTS.md`](AGENTS.md).
-
-## Status
-
-**Early development: not released yet.** Builds run on phones and tablets, but expect rough edges.
+What changed in each version: [`CHANGELOG.md`](CHANGELOG.md). The full plan: [`docs/PLAN.md`](docs/PLAN.md).
 
 ## Building
 
-You need Android Studio's JDK 21 and the Android SDK.
+You need JDK 21 (Android Studio's bundled `jbr` works) and the Android SDK.
 
 ```sh
 export JAVA_HOME="/path/to/Android Studio/jbr"   # JDK 21
@@ -81,7 +140,7 @@ The debug app installs as `io.github.manojx2005.tsuzuki.dev` next to any release
 
 Help is very welcome: Compose UI, downloads, the anime integration, translations, or testing on your devices.
 
-- Start with [`AGENTS.md`](AGENTS.md): build steps, rules, and the task queue (the first unchecked task is the next one).
+- Start with [`AGENTS.md`](AGENTS.md): build steps, rules, and where the task queue lives.
 - Every screen has a design board in [`docs/design/boards/`](docs/design/boards/INDEX.md) (PNG + HTML) with written
   specs in [`docs/design/specs.md`](docs/design/specs.md), so you never have to guess a layout.
 - New UI lives in `tsuzuki` packages and upstream files get only small hooks, which keeps merges clean.
@@ -101,4 +160,5 @@ support; Mihon brought the foundation. Upstream changes reach Tsuzuki users only
 - Bundled fonts (Doto, Space Mono, Instrument Serif, Manrope, Literata, and for Japanese DotGothic16, M PLUS 1 Code,
   Noto Serif JP, Zen Kaku Gothic New): SIL Open Font License 1.1 ([`docs/licenses/`](docs/licenses/)).
 
-Tsuzuki is not affiliated with Mihon, Tsundoku or LNReader.
+Tsuzuki is not affiliated with Mihon, Tsundoku or LNReader. Content comes from the sources you add; you're
+responsible for the sources you use.
