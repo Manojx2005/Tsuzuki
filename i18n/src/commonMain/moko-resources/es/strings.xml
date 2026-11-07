@@ -1318,4 +1318,9 @@
     <string name="tsz_q8_reader_next">Siguiente</string>
     <string name="tsz_q8_reader_here">Aquí</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">Sincronización automática al terminar un capítulo</string>
+    <string name="tsz_quotes_saved_count">%1$d guardadas</string>
+    <string name="tsz_quotes_export">Exportar citas</string>
 </resources>

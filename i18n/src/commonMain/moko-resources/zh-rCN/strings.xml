@@ -1331,4 +1331,9 @@
     <string name="tsz_q8_reader_next">下一段</string>
     <string name="tsz_q8_reader_here">从这里</string>
     <string name="tsz_q8_reader_rotate">旋转</string>
+
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">读完一章后自动同步</string>
+    <string name="tsz_quotes_saved_count">已保存 %1$d 条</string>
+    <string name="tsz_quotes_export">导出摘录</string>
 </resources>

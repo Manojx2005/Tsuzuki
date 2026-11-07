@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.LocalTsuzukiTokens
@@ -59,6 +60,9 @@ import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -78,6 +82,8 @@ internal fun TsuzukiTrackInfoDialogHome(
 ) {
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
+    val syncPreference = remember { runCatching { Injekt.get<TrackPreferences>().autoUpdateTrack }.getOrNull() }
+    val autoSync = syncPreference?.collectAsState()?.value == true
     Column(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
             .windowInsetsPadding(WindowInsets.systemBars).padding(14.dp),
@@ -89,6 +95,13 @@ internal fun TsuzukiTrackInfoDialogHome(
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.semantics { heading() },
         )
+        if (autoSync && trackItems.any { it.track != null }) {
+            Text(
+                text = tsuzukiCase(stringResource(MR.strings.tsz_tracking_chapter_sync)).orEmpty(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         CompositionLocalProvider(LocalTsuzukiTokens provides tokens.copy(tileRadius = 24.dp)) {
             trackItems.forEach { item ->
                 key(item.tracker.id) {

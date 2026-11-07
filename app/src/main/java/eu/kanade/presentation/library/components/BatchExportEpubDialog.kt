@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.tsuzuki.details.TsuzukiBatchExportEpubDialog
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.util.epub.EpubExportNaming
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.translation.model.TranslationMode
@@ -54,6 +56,10 @@ fun BatchExportEpubDialog(
     onDismissRequest: () -> Unit,
     onExport: (Uri, EpubExportOptions) -> Unit,
 ) {
+    if (isTsuzukiStyle()) {
+        TsuzukiBatchExportEpubDialog(mangaList, onDismissRequest, onExport)
+        return
+    }
     val isSingleNovel = mangaList.size == 1
     var filename by remember {
         mutableStateOf(

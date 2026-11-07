@@ -21,4 +21,11 @@ class EpubExportContainerTest {
     fun `separate volumes use ZIP`() {
         epubExportUsesZip(EpubExportOptions(joinVolumes = false)) shouldBe true
     }
+
+    @Test
+    fun batchFilenameFollowsActualOutputContainer() {
+        batchEpubDocumentName("my:books.EPUB", "default.epub", asZip = true) shouldBe "my_books.zip"
+        batchEpubDocumentName("my:books.ZIP", "default.epub", asZip = false) shouldBe "my_books.epub"
+        batchEpubDocumentName("  ", "novels_export.zip", asZip = true) shouldBe "novels_export.zip"
+    }
 }

@@ -57,6 +57,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.reader.TsuzukiQuotesExport
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.quote.Quote
 import tachiyomi.i18n.MR
@@ -74,6 +77,9 @@ fun QuotesSheet(
     onQuoteAdd: (String) -> Unit,
     onQuoteReorder: (List<Quote>) -> Unit,
 ) {
+    val themed = isTsuzukiStyle()
+    val quotesTitle = stringResource(TDMR.strings.action_quotes)
+    val quotesTitleStyle = if (themed) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge
     // State to track which quote is being deleted
     val quoteToDelete = remember { mutableStateOf<Quote?>(null) }
 
@@ -399,8 +405,9 @@ fun QuotesSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(TDMR.strings.action_quotes),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = if (themed) tsuzukiMenuLabel(quotesTitle) else quotesTitle,
+                        modifier = Modifier.weight(1f),
+                        style = quotesTitleStyle,
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -411,7 +418,7 @@ fun QuotesSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Reorder,
-                                contentDescription = "Reorder quotes",
+                                contentDescription = stringResource(MR.strings.tsz_quotes_drag_to_reorder),
                                 tint = if (isReorderMode.value) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
@@ -424,7 +431,7 @@ fun QuotesSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Add,
-                                contentDescription = "Add quote",
+                                contentDescription = stringResource(TDMR.strings.quotes_add_title),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -508,8 +515,9 @@ fun QuotesSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(TDMR.strings.action_quotes),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = if (themed) tsuzukiMenuLabel(quotesTitle) else quotesTitle,
+                        modifier = Modifier.weight(1f),
+                        style = quotesTitleStyle,
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -520,7 +528,7 @@ fun QuotesSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Add,
-                                contentDescription = "Add quote",
+                                contentDescription = stringResource(TDMR.strings.quotes_add_title),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -529,7 +537,7 @@ fun QuotesSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Reorder,
-                                contentDescription = "Reorder quotes",
+                                contentDescription = stringResource(MR.strings.tsz_quotes_drag_to_reorder),
                                 tint = if (isReorderMode.value) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
@@ -549,6 +557,8 @@ fun QuotesSheet(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                if (themed) TsuzukiQuotesExport(novelTitle, quotes)
 
                 // Quotes list
                 LazyColumn(

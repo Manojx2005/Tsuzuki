@@ -1331,4 +1331,9 @@
     <string name="tsz_q8_reader_next">Weiter</string>
     <string name="tsz_q8_reader_here">Hier</string>
     <string name="tsz_q8_reader_rotate">Drehen</string>
+
+    <!-- Y5 -->
+    <string name="tsz_tracking_chapter_sync">Beim Kapitelabschluss automatisch synchronisieren</string>
+    <string name="tsz_quotes_saved_count">%1$d gespeichert</string>
+    <string name="tsz_quotes_export">Zitate exportieren</string>
 </resources>
