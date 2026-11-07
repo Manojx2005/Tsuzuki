@@ -178,7 +178,7 @@ R11–R17, P1.11 storage async migration, Phase 5 features without a card.
 #### V0 Owner tasks (owner) — `done` (item 2 done by Claude at the owner's request, 2026-11-07)
 **Item 2 result:** release keystore `C:/Users/Manoj/Documents/Tsuzuki-signing/tsuzuki-release.jks` (PKCS12, RSA 4096,
 alias `tsuzuki`, `CN=Tsuzuki`, cert SHA-256 `FF:CD:C7:43:A6:69:78:AE:24:CD:76:0B:44:78:32:71:A3:CC:18:16:84:4C:6A:78:6C:C9:EF:71:8E:A1:F6:C7`);
-password only in that folder's `README-KEEP-SECRET.txt` (owner: move it to a password manager and back up the folder).
+owner confirmed 2026-11-07: folder backed up and password moved to a password manager.
 Secrets `SIGNING_KEY_BASE64`, `KEY_STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` set on `Manojx2005/Tsuzuki`. Verified
 by building `assembleRelease -Penable-updater` through the CI env-var signing path: APK signed `CN=Tsuzuki`, same
 fingerprint. **Consequences:** the owner's phone (debug-signed install) needs backup → uninstall → install → restore at
