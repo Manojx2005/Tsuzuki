@@ -24,4 +24,9 @@
     <string name="tsz_anime_history_episode">第%s話</string>
     <string name="tsz_anime_history_remaining">残り%s</string>
     <string name="tsz_anime_history_remove_all">このアニメのすべての話を履歴から削除</string>
+    <string name="tsz_anime_airing_today">今日の配信</string>
+    <string name="tsz_anime_updates_empty">新着のアニメエピソードはありません</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="other">新着エピソード %d 件</item>
+    </plurals>
 </resources>

@@ -79,7 +79,7 @@ import uy.kohesive.injekt.api.get
 internal const val SAVED_ANIME_ID = "saved_anime_id"
 internal const val RESUME_ANIME_EPISODE_ID = "resume_anime_episode_id"
 
-private fun openAnime(context: Context, animeId: Long, resumeId: Long? = null) {
+internal fun openAnime(context: Context, animeId: Long, resumeId: Long? = null) {
     if (!TsuzukiAnime.enabled) return
     val intent = Intent(context, AnimeCatalogueActivity::class.java).putExtra(SAVED_ANIME_ID, animeId)
     if (resumeId != null) intent.putExtra(RESUME_ANIME_EPISODE_ID, resumeId)
@@ -184,6 +184,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     val store = remember { Injekt.get<AnimeLibraryStore>() }
     val next by remember { store.observeContinueWatching() }.collectAsState(null)
     val library by remember { store.observeLibrary() }.collectAsState(emptyList())
+    val airing = rememberAnimeAiringToday(store)
     val tokens = TsuzukiTheme.tokens
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = bottomPad),
@@ -230,6 +231,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
                 }
             }
         }
+        airing?.let { entry -> item(key = "airing_today") { AnimeAiringStrip(entry) } }
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(

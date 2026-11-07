@@ -1,23 +1,17 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
-import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
-import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
@@ -49,11 +43,7 @@ internal class AnimeDetailsScreenModel(
                 val cached = library.getAnime(entry.source.id, initial.url)
                 val show = cached?.toSourceAnime() ?: initial
                 mutableState.update { it.copy(display = show, saved = cached) }
-                val oldEpisodes = cached?.let { library.getEpisodes(it.id) }.orEmpty()
-                val update = withContext(Dispatchers.IO) {
-                    fetchDetails(show, oldEpisodes.map { it.toSourceEpisode() })
-                }
-                val saved = library.syncEpisodes(entry.source.id, update.anime, update.episodes)
+                val saved = checkNotNull(library.refresh(entry, show, fetchDetails = true))
                 mutableState.update { it.copy(display = saved.toSourceAnime(), saved = saved) }
             } catch (e: CancellationException) {
                 throw e
@@ -77,32 +67,5 @@ internal class AnimeDetailsScreenModel(
         library.setEpisodeDisplay(id, display)
         val saved = library.getAnime(id)
         mutableState.update { it.copy(saved = saved) }
-    }
-
-    @Suppress("DEPRECATION")
-    private suspend fun fetchDetails(show: SAnime, episodes: List<SEpisode>): SAnimeEpisodeUpdate {
-        val source = entry.source
-        val update = if (entry.libVersion >= 17) {
-            source.getAnimeEpisodeUpdate(show, episodes, fetchDetails = true, fetchEpisodes = true)
-        } else {
-            SAnimeEpisodeUpdate(
-                source.getAnimeDetails(show),
-                AnimeStreamResolver.episodes(source, entry.libVersion, show),
-            )
-        }
-        val refreshed = show.copy().apply {
-            val remote = update.anime
-            title = runCatching { remote.title }.getOrNull()?.takeIf(String::isNotBlank) ?: title
-            artist = remote.artist ?: artist
-            author = remote.author ?: author
-            status = remote.status.takeUnless { it == SAnime.UNKNOWN } ?: status
-            thumbnail_url = remote.thumbnail_url ?: thumbnail_url
-            background_url = remote.background_url ?: background_url
-            description = remote.description ?: description
-            genre = remote.genre ?: genre
-            initialized = true
-            if (entry.libVersion >= 17) memo = remote.memo
-        }
-        return SAnimeEpisodeUpdate(refreshed, update.episodes)
     }
 }

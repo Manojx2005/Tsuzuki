@@ -1,11 +1,19 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import tachiyomi.data.Database
+import tachiyomi.data.subscribeToList
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.entries.anime.model.Anime
@@ -28,6 +36,29 @@ internal class AnimeLibraryStore(
     private val episodes: EpisodeRepository,
     private val history: AnimeHistoryRepository,
 ) {
+    private val refreshLock = Mutex()
+
+    fun observeHasFavorites() = anime.subscribeLibrary().map { it.isNotEmpty() }
+
+    suspend fun getLibrary() = anime.subscribeLibrary().first().map { it.anime }
+
+    fun observeNewEpisodes(since: Long) = database.episodesQueries.getLibraryUpdates(since) {
+            animeId,
+            title,
+            episodeId,
+            name,
+            previewUrl,
+            dateFetch,
+            memo,
+        ->
+        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to memo
+    }.subscribeToList().map { rows ->
+        rows.mapNotNull { (entry, memo) -> entry.takeIf { memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) } }
+    }
+
+    fun observeAiringEpisodes(start: Long, end: Long) =
+        database.episodesQueries.getLibraryAiring(start, end, ::AnimeUpdateEpisode).subscribeToList()
+
     fun observeShelves() = shelves.subscribeAll()
 
     fun observeLibrary() = combine(anime.subscribeLibrary(), shelves.subscribeMemberships()) { items, memberships ->
@@ -74,6 +105,22 @@ internal class AnimeLibraryStore(
             entry.id
         }
 
+    suspend fun refresh(
+        source: RegisteredAnimeSource,
+        show: SAnime,
+        fetchDetails: Boolean,
+        favoriteOnly: Boolean = false,
+    ): Anime? = refreshLock.withLock {
+        val cached = getAnime(source.source.id, show.url)
+        if (favoriteOnly && cached?.favorite != true) return@withLock null
+        val current = cached?.toSourceAnime() ?: show
+        val existing = cached?.let { getEpisodes(it.id) }.orEmpty()
+        val update = withContext(Dispatchers.IO) {
+            source.fetchUpdate(current, existing.map(Episode::toSourceEpisode), fetchDetails)
+        }
+        syncEpisodes(source.source.id, update.anime, update.episodes)
+    }
+
     suspend fun syncEpisodes(
         source: Long,
         show: SAnime,
@@ -83,6 +130,7 @@ internal class AnimeLibraryStore(
         val entry = saveAnime(source, show)
         val existing = episodes.awaitByAnimeId(entry.id).associateBy(Episode::url)
         val now = System.currentTimeMillis()
+        val hasBaseline = entry.lastUpdate != null || existing.isNotEmpty()
         val incoming = available.distinctBy(SEpisode::url)
         val urls = incoming.mapTo(hashSetOf(), SEpisode::url)
         val additions = ArrayList<Episode>()
@@ -97,7 +145,11 @@ internal class AnimeLibraryStore(
                 dateUpload = episode.date_upload,
                 summary = episode.summary,
                 previewUrl = episode.preview_url,
-                memo = episode.memo,
+                memo = animeEpisodeMemo(
+                    episode.memo,
+                    old?.memo,
+                    isNewUpdate = old == null && entry.favorite && hasBaseline,
+                ),
             )
             if (old == null) {
                 additions += updated
@@ -109,7 +161,8 @@ internal class AnimeLibraryStore(
         existing.values.filter {
             it.url !in urls && it.id !in downloadedEpisodeIds && !it.seen && !it.bookmark && it.lastSecondSeen == 0L
         }.forEach { episodes.delete(it.id) }
-        entry
+        database.animesQueries.recordLibraryRefresh(now, entry.id)
+        entry.copy(lastUpdate = now)
     }
 
     suspend fun setEpisodeDisplay(animeId: Long, display: AnimeEpisodeDisplay) = database.transaction {
@@ -156,6 +209,8 @@ internal class AnimeLibraryStore(
             thumbnailUrl = show.thumbnail_url ?: stored.thumbnailUrl,
             backgroundUrl = show.background_url ?: stored.backgroundUrl,
             initialized = show.initialized || stored.initialized,
+            updateStrategy = if (show.initialized) show.update_strategy else stored.updateStrategy,
+            fetchType = if (show.initialized) show.fetch_type else stored.fetchType,
             favorite = favorite ?: stored.favorite,
             dateAdded = if (favorite == true && !stored.favorite) System.currentTimeMillis() else stored.dateAdded,
             memo = JsonObject(stored.memo + show.memo),
@@ -193,5 +248,55 @@ internal fun Episode.toSourceEpisode(): SEpisode = SEpisode.create().also { sour
     source.date_upload = dateUpload
     source.summary = summary
     source.preview_url = previewUrl
-    source.memo = memo
+    source.memo = JsonObject(memo - UPDATE_MEMO_KEY)
+}
+
+@Suppress("DEPRECATION")
+private suspend fun RegisteredAnimeSource.fetchUpdate(
+    show: SAnime,
+    episodes: List<SEpisode>,
+    fetchDetails: Boolean,
+): SAnimeEpisodeUpdate {
+    val update = if (libVersion >= 17) {
+        source.getAnimeEpisodeUpdate(show, episodes, fetchDetails = fetchDetails, fetchEpisodes = true)
+    } else {
+        SAnimeEpisodeUpdate(
+            if (fetchDetails) source.getAnimeDetails(show) else show,
+            AnimeStreamResolver.episodes(source, libVersion, show),
+        )
+    }
+    if (!fetchDetails) return SAnimeEpisodeUpdate(show, update.episodes)
+    val refreshed = show.copy().apply {
+        val remote = update.anime
+        title = runCatching { remote.title }.getOrNull()?.takeIf(String::isNotBlank) ?: title
+        artist = remote.artist ?: artist
+        author = remote.author ?: author
+        status = remote.status.takeUnless { it == SAnime.UNKNOWN } ?: status
+        thumbnail_url = remote.thumbnail_url ?: thumbnail_url
+        background_url = remote.background_url ?: background_url
+        description = remote.description ?: description
+        genre = remote.genre ?: genre
+        initialized = true
+        update_strategy = remote.update_strategy
+        if (!show.initialized) fetch_type = remote.fetch_type
+        if (libVersion >= 17) memo = remote.memo
+    }
+    return SAnimeEpisodeUpdate(refreshed, update.episodes)
+}
+
+internal data class AnimeUpdateEpisode(
+    val animeId: Long,
+    val title: String,
+    val episodeId: Long,
+    val name: String,
+    val previewUrl: String?,
+    val timestamp: Long,
+)
+
+private const val UPDATE_MEMO_KEY = "tsuzuki:library-update"
+
+internal fun animeEpisodeMemo(remote: JsonObject, stored: JsonObject?, isNewUpdate: Boolean): JsonObject {
+    val sourceMemo = remote - UPDATE_MEMO_KEY
+    val marked = isNewUpdate || stored?.get(UPDATE_MEMO_KEY) == JsonPrimitive(true)
+    return JsonObject(if (marked) sourceMemo + (UPDATE_MEMO_KEY to JsonPrimitive(true)) else sourceMemo)
 }

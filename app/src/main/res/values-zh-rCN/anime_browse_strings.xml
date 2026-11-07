@@ -24,4 +24,9 @@
     <string name="tsz_anime_history_episode">第%s集</string>
     <string name="tsz_anime_history_remaining">剩余%s</string>
     <string name="tsz_anime_history_remove_all">从历史记录中移除此动漫的所有剧集</string>
+    <string name="tsz_anime_airing_today">今日播出</string>
+    <string name="tsz_anime_updates_empty">没有新的动画剧集</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="other">%d 集新剧集</item>
+    </plurals>
 </resources>

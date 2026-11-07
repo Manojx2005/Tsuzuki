@@ -24,4 +24,10 @@
     <string name="tsz_anime_history_episode">Ep. %s</string>
     <string name="tsz_anime_history_remaining">Quedan %s</string>
     <string name="tsz_anime_history_remove_all">Eliminar todos los episodios de este anime del historial</string>
+    <string name="tsz_anime_airing_today">En emisión hoy</string>
+    <string name="tsz_anime_updates_empty">No hay episodios nuevos de anime</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="one">%d episodio nuevo</item>
+        <item quantity="other">%d episodios nuevos</item>
+    </plurals>
 </resources>

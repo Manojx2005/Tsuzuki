@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -150,6 +151,82 @@ class AnimeDatabaseTest {
                 ),
             )
             assertTrue(after.getValue("new").dateFetch > 0)
+        }
+    }
+
+    @Test
+    fun updatesExcludeInitialImportsAndRetainAnEpisodeAcrossRefreshes() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val show = SAnime.create().apply {
+                url = "/updates"
+                title = "Updates"
+            }
+            val first = SEpisode.create().apply {
+                url = "/first"
+                name = "First"
+                memo = JsonObject(mapOf("tsuzuki:library-update" to JsonPrimitive(true)))
+            }
+            val next = SEpisode.create().apply {
+                url = "/next"
+                name = "Next"
+            }
+            assertFalse(store.observeHasFavorites().first())
+            val id = store.setFavorite(8, show, true, emptySet())
+            assertTrue(store.observeHasFavorites().first())
+            val baseline = store.syncEpisodes(8, show, listOf(first))
+            assertNotNull(baseline.lastUpdate)
+            assertEquals(baseline.lastUpdate, anime.awaitById(id)?.lastUpdate)
+            assertTrue(store.observeNewEpisodes(0).first().isEmpty())
+
+            store.syncEpisodes(8, show, listOf(next, first))
+            val update = store.observeNewEpisodes(0).first().single()
+            assertEquals("Next", update.name)
+            next.name = "Next edited"
+            store.syncEpisodes(8, show, listOf(next, first))
+            assertEquals(update.copy(name = "Next edited"), store.observeNewEpisodes(0).first().single())
+            assertTrue(store.observeNewEpisodes(update.timestamp + 1).first().isEmpty())
+
+            store.setFavorite(8, show, false, emptySet())
+            assertFalse(store.observeHasFavorites().first())
+            assertTrue(store.observeNewEpisodes(0).first().isEmpty())
+        }
+    }
+
+    @Test
+    fun airingRequiresAnActualUploadTimestampInTheDayAndAFavorite() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val saved = anime.insert(Anime(source = 8, url = "/saved", title = "Saved", favorite = true))
+            val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
+            episodes.insertAll(
+                listOf(
+                    Episode(saved, "/unknown", "Unknown", dateFetch = 120),
+                    Episode(saved, "/yesterday", "Yesterday", dateUpload = 99),
+                    Episode(saved, "/today", "Today", dateUpload = 100),
+                    Episode(saved, "/today2", "Today late", dateUpload = 199),
+                    Episode(saved, "/tomorrow", "Tomorrow", dateUpload = 200),
+                    Episode(other, "/today", "Other", dateUpload = 150),
+                ),
+            )
+            val airing = store.observeAiringEpisodes(100, 200).first()
+            assertEquals(listOf("Today", "Today late"), airing.map { it.name })
+            assertEquals(listOf(100L, 199L), airing.map { it.timestamp })
         }
     }
 
