@@ -31,7 +31,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +55,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiTrackingPreferences
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
@@ -68,13 +69,9 @@ import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.ui.webview.TrackerWebViewLoginActivity
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.GetTracksPerManga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -100,6 +97,13 @@ object SettingsTrackingScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        if (isTsuzukiStyle()) return tsuzukiTrackingPreferences(getStockPreferences())
+        return getStockPreferences()
+    }
+
+    @Suppress("ktlint:standard:max-line-length")
+    @Composable
+    private fun getStockPreferences(): List<Preference> {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
         val trackerManager = remember { Injekt.get<TrackerManager>() }
@@ -153,9 +157,7 @@ object SettingsTrackingScreen : SearchableSettings {
             enhancedTrackerInfo += "\n\n$missingSourcesInfo"
         }
 
-        val themed = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
-        val novelTrackerTitle = stringResource(MR.strings.tsz_tracker_novel_services)
-        val preferences = listOf(
+        return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.autoUpdateTrack,
                 title = stringResource(MR.strings.pref_auto_update_manga_sync),
@@ -169,14 +171,12 @@ object SettingsTrackingScreen : SearchableSettings {
             Preference.PreferenceItem.EditTextPreference(
                 preference = trackPreferences.minChaptersBeforeTrackingManga,
                 title = "Minimum chapters before tracking (Manga)",
-                subtitle = "Number of chapters that must be read before auto-tracking starts " +
-                    "for manga (0 = always track)",
+                subtitle = "Number of chapters that must be read before auto-tracking starts for manga (0 = always track)",
             ),
             Preference.PreferenceItem.EditTextPreference(
                 preference = trackPreferences.minChaptersBeforeTrackingNovel,
                 title = "Minimum chapters before tracking (Novels)",
-                subtitle = "Number of chapters that must be read before auto-tracking starts " +
-                    "for novels (0 = always track)",
+                subtitle = "Number of chapters that must be read before auto-tracking starts for novels (0 = always track)",
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
@@ -235,7 +235,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 ),
             ),
             Preference.PreferenceGroup(
-                title = novelTrackerTitle,
+                title = "Novel Trackers",
                 preferenceItems = listOf(
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.novelUpdates,
@@ -333,8 +333,7 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.InfoPreference(
                         "Some sources implement their own tracking. They are notified when you mark chapters read, " +
-                            "favorite/unfavorite, or migrate. Failures don't block reading " +
-                            "and don't affect the regular trackers above.",
+                            "favorite/unfavorite, or migrate. Failures don't block reading and don't affect the regular trackers above.",
                     ),
                 ),
             ),
@@ -352,34 +351,6 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
             ),
         )
-
-        if (!themed) return preferences
-        val linkedCounts by remember {
-            Injekt.get<GetTracksPerManga>().subscribe().map { tracks ->
-                tracks.values.asSequence().flatten().groupingBy { it.trackerId }.eachCount()
-            }.flowOn(Dispatchers.Default)
-        }.collectAsState(initial = null)
-        val withCounts = preferences.map { preference ->
-            if (preference !is Preference.PreferenceGroup) return@map preference
-            preference.copy(
-                preferenceItems = preference.preferenceItems.map { item ->
-                    if (item is Preference.PreferenceItem.TrackerPreference) {
-                        item.copy(linkedCount = linkedCounts?.let { it[item.tracker.id] ?: 0 })
-                    } else {
-                        item
-                    }
-                },
-            )
-        }
-        val novelGroup = withCounts.filterIsInstance<Preference.PreferenceGroup>()
-            .first { it.title == novelTrackerTitle }
-        val (accounts, options) = novelGroup.preferenceItems.partition {
-            it is Preference.PreferenceItem.TrackerPreference
-        }
-        return listOf(
-            novelGroup.copy(preferenceItems = accounts),
-            novelGroup.copy(title = stringResource(MR.strings.pref_category_tracking), preferenceItems = options),
-        ) + withCounts.filter { it !== novelGroup }
     }
 
     @Composable
