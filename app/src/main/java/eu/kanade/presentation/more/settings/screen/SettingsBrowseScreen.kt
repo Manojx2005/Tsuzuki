@@ -52,31 +52,26 @@ object SettingsBrowseScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = sourcePreferences.pageLoadDelay,
-                        title = "Page load delay",
-                        subtitle = "Delay between loading pages (helps with rate limits)",
-                        entries = (0..15).associate { it to "${it}s" }.toMap(),
+                        title = stringResource(MR.strings.pref_source_page_load_delay),
+                        subtitle = stringResource(MR.strings.pref_source_page_load_delay_summary),
+                        entries = (0..15).associateWith { stringResource(MR.strings.seconds_short, it) },
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = sourcePreferences.showPageNumber,
-                        title = "Show page number",
-                        subtitle = "Display current page number with jump navigation",
+                        title = stringResource(MR.strings.pref_show_page_number),
+                        subtitle = stringResource(MR.strings.pref_source_page_number_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = sourcePreferences.skipCoverLoading,
-                        title = "Skip cover loading",
-                        subtitle = "Don't load cover images in browse to save bandwidth",
+                        title = stringResource(MR.strings.pref_source_skip_cover_loading),
+                        subtitle = stringResource(MR.strings.pref_source_skip_cover_loading_summary),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = sourcePreferences.confirmBackAfterPages,
-                        title = "Confirm back after pages",
-                        subtitle = "Show confirmation dialog when going back after loading many pages",
-                        entries = mapOf(
-                            0 to "Disabled",
-                            3 to "3 pages",
-                            5 to "5 pages",
-                            10 to "10 pages",
-                            20 to "20 pages",
-                        ).toMap(),
+                        title = stringResource(MR.strings.pref_source_confirm_back_after_pages),
+                        subtitle = stringResource(MR.strings.pref_source_confirm_back_after_pages_summary),
+                        entries = mapOf(0 to stringResource(MR.strings.disabled)) +
+                            listOf(3, 5, 10, 20).associateWith { pluralStringResource(MR.plurals.pref_pages, it, it) },
                     ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.extensionStores),
