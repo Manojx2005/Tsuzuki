@@ -1331,4 +1331,12 @@
     <string name="tsz_q8_reader_next">Weiter</string>
     <string name="tsz_q8_reader_here">Hier</string>
     <string name="tsz_q8_reader_rotate">Drehen</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">Anime-Test</string>
+    <string name="tsz_anime_debug_repo_url">Repository-URL</string>
+    <string name="tsz_anime_debug_load">Laden</string>
+    <string name="tsz_anime_debug_episodes">Folgen</string>
+    <string name="tsz_anime_debug_first_episode">Videos der ersten Folge laden</string>
+    <string name="tsz_anime_debug_playback_error">Wiedergabe fehlgeschlagen</string>
 </resources>

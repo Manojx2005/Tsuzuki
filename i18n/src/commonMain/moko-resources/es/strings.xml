@@ -1318,4 +1318,12 @@
     <string name="tsz_q8_reader_next">Siguiente</string>
     <string name="tsz_q8_reader_here">Aquí</string>
     <string name="tsz_q8_reader_rotate">Girar</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">Prueba de anime</string>
+    <string name="tsz_anime_debug_repo_url">URL del repositorio</string>
+    <string name="tsz_anime_debug_load">Cargar</string>
+    <string name="tsz_anime_debug_episodes">Episodios</string>
+    <string name="tsz_anime_debug_first_episode">Cargar vídeos del primer episodio</string>
+    <string name="tsz_anime_debug_playback_error">Error de reproducción</string>
 </resources>

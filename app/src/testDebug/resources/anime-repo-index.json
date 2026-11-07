@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Fixture source",
+    "pkg": "test.fixture.anime",
+    "apk": "fixture-v14.2.apk",
+    "lang": "en",
+    "code": 2,
+    "version": "14.2",
+    "nsfw": 0,
+    "sources": []
+  }
+]

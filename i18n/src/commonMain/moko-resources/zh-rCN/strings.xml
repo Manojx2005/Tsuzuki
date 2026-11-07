@@ -1331,4 +1331,12 @@
     <string name="tsz_q8_reader_next">下一段</string>
     <string name="tsz_q8_reader_here">从这里</string>
     <string name="tsz_q8_reader_rotate">旋转</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">动画测试</string>
+    <string name="tsz_anime_debug_repo_url">仓库网址</string>
+    <string name="tsz_anime_debug_load">加载</string>
+    <string name="tsz_anime_debug_episodes">剧集</string>
+    <string name="tsz_anime_debug_first_episode">加载首集视频</string>
+    <string name="tsz_anime_debug_playback_error">播放失败</string>
 </resources>

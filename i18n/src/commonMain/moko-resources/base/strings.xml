@@ -1695,4 +1695,12 @@
     <string name="tsz_q8_reader_next">Next</string>
     <string name="tsz_q8_reader_here">Here</string>
     <string name="tsz_q8_reader_rotate">Rotate</string>
+
+    <!-- A1.5 -->
+    <string name="tsz_anime_debug_title">Anime test</string>
+    <string name="tsz_anime_debug_repo_url">Repository URL</string>
+    <string name="tsz_anime_debug_load">Load</string>
+    <string name="tsz_anime_debug_episodes">Episodes</string>
+    <string name="tsz_anime_debug_first_episode">Load first episode videos</string>
+    <string name="tsz_anime_debug_playback_error">Playback failed</string>
 </resources>
