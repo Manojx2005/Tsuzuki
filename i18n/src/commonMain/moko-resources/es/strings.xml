@@ -1339,4 +1339,9 @@
     <string name="tsz_quotes_export">Exportar citas</string>
     <!-- Y2 -->
     <string name="tsz_manga_tablet_spread">Doble página en tabletas en horizontal</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Temporizador de sueño</string>
+    <string name="tsz_reader_sleep_off">Desactivado</string>
+    <string name="tsz_reader_sleep_chapter">Fin del capítulo</string>
+    <string name="tsz_reader_listen_paragraphs">Párrafos</string>
 </resources>

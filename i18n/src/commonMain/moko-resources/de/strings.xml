@@ -1352,4 +1352,9 @@
     <string name="tsz_quotes_export">Zitate exportieren</string>
     <!-- Y2 -->
     <string name="tsz_manga_tablet_spread">Doppelseite auf Tablets im Querformat</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Schlaftimer</string>
+    <string name="tsz_reader_sleep_off">Aus</string>
+    <string name="tsz_reader_sleep_chapter">Kapitelende</string>
+    <string name="tsz_reader_listen_paragraphs">Absätze</string>
 </resources>

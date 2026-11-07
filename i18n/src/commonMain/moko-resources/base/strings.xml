@@ -1716,4 +1716,9 @@
     <string name="tsz_quotes_export">Export quotes</string>
     <!-- Y2 -->
     <string name="tsz_manga_tablet_spread">Two-page spread on landscape tablets</string>
+    <!-- Y6 -->
+    <string name="tsz_reader_sleep_timer">Sleep timer</string>
+    <string name="tsz_reader_sleep_off">Off</string>
+    <string name="tsz_reader_sleep_chapter">End of chapter</string>
+    <string name="tsz_reader_listen_paragraphs">Paragraphs</string>
 </resources>

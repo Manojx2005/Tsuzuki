@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -87,6 +88,7 @@ import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
+import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -524,6 +526,10 @@ class ReaderActivity : BaseActivity() {
                     onHeightChanged = { statusBarHeightPx = it },
                     modifier = Modifier
                         .align(if (statusBarAtBottom) Alignment.BottomCenter else Alignment.TopCenter)
+                        .padding(
+                            end = tsuzukiChromeRequests.panelEndInset,
+                            bottom = if (statusBarAtBottom) tsuzukiChromeRequests.panelBottomInset else 0.dp,
+                        )
                         .then(if (statusBarAtBottom) Modifier else Modifier.statusBarsPadding()),
                 )
             }
@@ -932,7 +938,12 @@ class ReaderActivity : BaseActivity() {
             var showBottomBarEditor by remember { mutableStateOf(false) }
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
-            val chrome = tsuzukiChromeRequests.bind(viewModel, state)
+            val listenPanel = rememberTsuzukiListenPanel(
+                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused,
+                ::pauseTtsFromNotification, ::resumeTtsFromNotification, ::stepTtsParagraph, ::seekTtsToParagraph,
+                onPausedChanged = { isTtsPaused = it },
+            )
+            val chrome = tsuzukiChromeRequests.bind(viewModel, state, listenPanel.fold, listenPanel.content)
 
             NovelReaderAppBars(
                 visible = state.menuVisible,
@@ -1066,16 +1077,20 @@ class ReaderActivity : BaseActivity() {
                 onToggleTranslation = viewModel::toggleTranslation,
                 onLongPressTranslation = viewModel::openTranslationLanguageDialog,
                 onRetranslate = if (state.isTranslating) viewModel::retranslateCurrentChapter else null,
-                isTtsActive = isTtsActive,
-                isTtsPaused = isTtsPaused,
+                isTtsActive = listenPanel.sessionActive,
+                isTtsPaused = listenPanel.paused,
                 ttsControlsVisible = ttsControlsVisible,
-                onToggleTtsControls = {
+                onToggleTtsControls = toggle@{
+                    chrome.onToggleListening?.let {
+                        it()
+                        return@toggle
+                    }
                     val nowVisible = !ttsControlsVisible
                     ttsControlsVisible = nowVisible
                     readerPreferences.novelTtsControlsVisible.set(nowVisible)
                     val viewer = state.viewer
                     if (nowVisible) {
-                        if (!isTtsActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
+                        if (!listenPanel.sessionActive && readerPreferences.novelTtsAutoStartOnPanelOpen.get()) {
                             when (viewer) {
                                 is NovelViewer -> {
                                     startBackgroundTtsIfEnabled()
@@ -1222,6 +1237,9 @@ class ReaderActivity : BaseActivity() {
                 bottomBarItems = bottomBarItems,
                 onQuotes = ::onQuotesClicked,
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
+                showTtsMiniOverlay = !chrome.listeningVisible,
+                panelEndInset = tsuzukiChromeRequests.panelEndInset,
+                panelBottomInset = tsuzukiChromeRequests.panelBottomInset,
                 onTopBarHeight = onTopBarHeight,
                 onBottomBarHeight = onBottomBarHeight,
                 onOpenContents = chrome.onOpenContents,
