@@ -227,7 +227,11 @@ private fun SourcesList(
                         }
                     }
                 }
-                if (mangaFooter != null) item(key = "tsuzuki_manga_repos", content = { mangaFooter() })
+                // Tsuzuki: the "add extension repos" card is only for people with no online manga source yet.
+                val hasOnlineSource = state.items.any { it is SourceUiModel.Item && !it.source.isLocal() }
+                if (mangaFooter != null && !hasOnlineSource) {
+                    item(key = "tsuzuki_manga_repos", content = { mangaFooter() })
+                }
             }
         }
     }
