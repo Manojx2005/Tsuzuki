@@ -21,6 +21,9 @@ class AnimeHistoryRepositoryImpl(database: Database) : AnimeHistoryRepository {
             AnimeHistoryWithRelations(animeId, episodeId, checkNotNull(lastSeen))
         }.subscribeToList()
 
+    override suspend fun latestInProgressEpisodeId(animeId: Long): Long? =
+        queries.getLatestInProgress(animeId).awaitAsOneOrNull()
+
     override suspend fun upsert(episodeId: Long, lastSeen: Date?, watchSeconds: Long) {
         require(watchSeconds >= 0)
         queries.upsert(episodeId, lastSeen, watchSeconds)

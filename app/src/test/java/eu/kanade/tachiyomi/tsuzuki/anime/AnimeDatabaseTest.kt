@@ -5,6 +5,7 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.model.SEpisode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
@@ -94,6 +95,114 @@ class AnimeDatabaseTest {
             store.saveProgress(latest, AnimePlaybackCheckpoint(position = 85.0, duration = 100.0, watchSeconds = 5))
             assertEquals(next, store.observeContinueWatching().first()?.episode?.id)
             assertEquals(35L, history.awaitByEpisodeId(latest)?.timeWatched)
+        }
+    }
+
+    @Test
+    fun episodeSyncUpdatesSourceFieldsAndKeepsLocalStateAndOfflineEpisodes() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val store = AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, history)
+            val show = SAnime.create().apply {
+                url = "/show"
+                title = "Show"
+            }
+            fun sourceEpisode(url: String, number: Int, name: String = url) = SEpisode.create().apply {
+                this.url = url
+                this.name = name
+                episode_number = number.toFloat()
+            }
+            val first = listOf("updated", "seen", "bookmarked", "offline", "started", "removed").mapIndexed { i, url ->
+                sourceEpisode(url, i + 1)
+            }
+            val id = store.syncEpisodes(8, show, first).id
+            val before = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            val updated = before.getValue("updated")
+            episodes.updateProgress(updated.id, seen = false, lastSecondSeen = 20, totalSeconds = 100)
+            episodes.setBookmark(updated.id, true)
+            store.setEpisodesSeen(setOf(before.getValue("seen").id), true)
+            store.setEpisodesBookmarked(setOf(before.getValue("bookmarked").id), true)
+            val started = before.getValue("started")
+            episodes.updateProgress(started.id, seen = false, lastSecondSeen = 30, totalSeconds = 100)
+
+            store.syncEpisodes(
+                8,
+                show,
+                listOf(sourceEpisode("new", 8), sourceEpisode("updated", 1, "Edited")),
+                downloadedEpisodeIds = setOf(before.getValue("offline").id),
+            )
+            val after = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            assertEquals(setOf("updated", "new", "seen", "bookmarked", "offline", "started"), after.keys)
+            assertEquals(
+                updated.copy(
+                    name = "Edited",
+                    sourceOrder = 1,
+                    lastSecondSeen = 20,
+                    totalSeconds = 100,
+                    bookmark = true,
+                ),
+                after.getValue("updated").copy(
+                    lastModifiedAt = updated.lastModifiedAt,
+                    version = updated.version,
+                ),
+            )
+            assertTrue(after.getValue("new").dateFetch > 0)
+        }
+    }
+
+    @Test
+    fun detailsResumesMostRecentlyPlayedUnseenEpisodeBeforeFirstUnseen() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val store = AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, history)
+            val id = anime.insert(Anime(source = 8, url = "/show", title = "Show"))
+            val (first, earlier, latest) = episodes.insertAll(
+                listOf(
+                    Episode(id, "/1", "One", episodeNumber = 1.0),
+                    Episode(id, "/2", "Two", episodeNumber = 2.0, lastSecondSeen = 60),
+                    Episode(id, "/3", "Three", episodeNumber = 3.0, lastSecondSeen = 30),
+                ),
+            )
+            history.upsert(earlier, Date(100), 10)
+            history.upsert(latest, Date(200), 10)
+            assertEquals(latest, store.observeEpisodes(id).first().resume?.id)
+            store.setEpisodesSeen(setOf(latest), true)
+            assertEquals(earlier, store.observeEpisodes(id).first().resume?.id)
+            store.setEpisodesSeen(setOf(earlier), true)
+            assertEquals(first, store.observeEpisodes(id).first().resume?.id)
+        }
+    }
+
+    @Test
+    fun detailsPersistsFiltersAndSortPerAnimeAndPreservesExistingFlags() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/show", title = "Show", episodeFlags = 0x123))
+            val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
+            val display = AnimeEpisodeDisplay(true, true, true, true)
+            store.setEpisodeDisplay(id, display)
+            val flags = checkNotNull(store.getAnime(id)).episodeFlags
+            assertEquals(0x123L, flags and 0xffffL)
+            assertEquals(display, AnimeEpisodeDisplay.fromFlags(flags))
+            assertEquals(0L, store.getAnime(other)?.episodeFlags)
+            val rows = listOf(
+                Episode(id, "/1", "One", dateUpload = 80, bookmark = true),
+                Episode(id, "/2", "Two", dateUpload = 20, bookmark = true),
+                Episode(id, "/3", "Three", dateUpload = 10, bookmark = true, seen = true),
+                Episode(id, "/4", "Four", dateUpload = 30),
+            )
+            assertEquals(listOf("/2", "/1"), display.apply(rows).map(Episode::url))
         }
     }
 

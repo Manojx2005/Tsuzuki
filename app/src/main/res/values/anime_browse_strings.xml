@@ -4,4 +4,18 @@
     <string name="tsz_anime_play_next">Play next episode</string>
     <string name="tsz_anime_no_episodes">No episodes found</string>
     <string name="tsz_anime_player_unavailable">Anime player unavailable</string>
+    <string name="tsz_anime_episode_title">Ep %1$s · %2$s</string>
+    <string name="tsz_anime_play_episode">Play Ep %s</string>
+    <string name="tsz_anime_resume_episode">Resume Ep %s</string>
+    <string name="tsz_anime_episode_number">Episode number</string>
+    <string name="tsz_anime_watched">Watched</string>
+    <string name="tsz_anime_filler">Filler</string>
+    <string name="tsz_anime_mark_seen">Mark as watched</string>
+    <string name="tsz_anime_mark_unseen">Mark as unwatched</string>
+    <string name="tsz_anime_mark_previous">Mark previous as watched</string>
+    <string name="tsz_anime_bookmark">Bookmark</string>
+    <string name="tsz_anime_unbookmark">Remove bookmark</string>
+    <string name="tsz_anime_unseen_only">Unwatched only</string>
+    <string name="tsz_anime_bookmarked_only">Bookmarked only</string>
+    <string name="tsz_anime_upcoming">Upcoming</string>
 </resources>

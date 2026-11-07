@@ -4,4 +4,18 @@
     <string name="tsz_anime_play_next">Lire l’épisode suivant</string>
     <string name="tsz_anime_no_episodes">Aucun épisode trouvé</string>
     <string name="tsz_anime_player_unavailable">Lecteur d’anime indisponible</string>
+    <string name="tsz_anime_episode_title">Ép. %1$s · %2$s</string>
+    <string name="tsz_anime_play_episode">Lire l’épisode %s</string>
+    <string name="tsz_anime_resume_episode">Reprendre l’épisode %s</string>
+    <string name="tsz_anime_episode_number">Numéro d’épisode</string>
+    <string name="tsz_anime_watched">Vu</string>
+    <string name="tsz_anime_filler">Hors-série</string>
+    <string name="tsz_anime_mark_seen">Marquer comme vu</string>
+    <string name="tsz_anime_mark_unseen">Marquer comme non vu</string>
+    <string name="tsz_anime_mark_previous">Marquer les précédents comme vus</string>
+    <string name="tsz_anime_bookmark">Ajouter un signet</string>
+    <string name="tsz_anime_unbookmark">Retirer le signet</string>
+    <string name="tsz_anime_unseen_only">Non vus uniquement</string>
+    <string name="tsz_anime_bookmarked_only">Avec signet uniquement</string>
+    <string name="tsz_anime_upcoming">À venir</string>
 </resources>

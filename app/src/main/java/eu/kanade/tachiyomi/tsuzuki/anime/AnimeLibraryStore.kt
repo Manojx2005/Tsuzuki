@@ -19,6 +19,8 @@ internal data class AnimeLibraryEntry(val anime: Anime, val shelfIds: Set<Long>)
 
 internal data class ContinueAnime(val anime: Anime, val episode: Episode)
 
+internal data class AnimeEpisodes(val items: List<Episode>, val resume: Episode?)
+
 internal class AnimeLibraryStore(
     private val database: Database,
     private val anime: AnimeRepository,
@@ -37,10 +39,7 @@ internal class AnimeLibraryStore(
             val show = anime.awaitById(entry.animeId) ?: return@firstNotNullOfOrNull null
             val last = episodes.awaitById(entry.episodeId) ?: return@firstNotNullOfOrNull null
             if (!last.seen) return@firstNotNullOfOrNull ContinueAnime(show, last)
-            val ordered = episodes.awaitByAnimeId(show.id).sortedWith(
-                compareBy<Episode> { it.episodeNumber.takeIf { number -> number >= 0 } ?: Double.POSITIVE_INFINITY }
-                    .thenBy(Episode::sourceOrder),
-            )
+            val ordered = episodes.awaitByAnimeId(show.id).sortedWith(animeEpisodeNumberOrder)
             val next = ordered.dropWhile { it.id != last.id }.drop(1).firstOrNull { !it.seen }
             next?.let { ContinueAnime(show, it) }
         }
@@ -49,6 +48,12 @@ internal class AnimeLibraryStore(
     suspend fun getAnime(id: Long) = anime.awaitById(id)
     suspend fun getAnime(source: Long, url: String) = anime.awaitBySourceAndUrl(source, url)
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
+    suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
+
+    fun observeEpisodes(animeId: Long) = episodes.subscribeByAnimeId(animeId).map { items ->
+        AnimeEpisodes(items, chooseAnimeEpisode(items, history.latestInProgressEpisodeId(animeId)))
+    }
+
     suspend fun getShelves() = shelves.awaitAll()
     suspend fun shelfIds(animeId: Long) = shelves.awaitByAnimeId(animeId).mapTo(mutableSetOf(), AnimeCategory::id)
 
@@ -69,30 +74,62 @@ internal class AnimeLibraryStore(
             entry.id
         }
 
-    suspend fun saveEpisodes(source: Long, show: SAnime, available: List<SEpisode>): Map<String, Episode> =
-        database.transactionWithResult {
-            val entry = saveAnime(source, show)
-            val existing = episodes.awaitByAnimeId(entry.id).associateBy(Episode::url)
-            val additions = available.distinctBy(SEpisode::url).mapIndexedNotNull { index, episode ->
-                if (episode.url in existing) return@mapIndexedNotNull null
-                Episode(
-                    animeId = entry.id,
-                    url = episode.url,
-                    name = episode.name,
-                    scanlator = episode.scanlator,
-                    fillermark = episode.fillermark,
-                    episodeNumber = episode.episode_number.toDouble(),
-                    sourceOrder = index.toLong(),
-                    dateFetch = System.currentTimeMillis(),
-                    dateUpload = episode.date_upload,
-                    summary = episode.summary,
-                    previewUrl = episode.preview_url,
-                    memo = episode.memo,
-                )
+    suspend fun syncEpisodes(
+        source: Long,
+        show: SAnime,
+        available: List<SEpisode>,
+        downloadedEpisodeIds: Set<Long> = emptySet(),
+    ): Anime = database.transactionWithResult {
+        val entry = saveAnime(source, show)
+        val existing = episodes.awaitByAnimeId(entry.id).associateBy(Episode::url)
+        val now = System.currentTimeMillis()
+        val incoming = available.distinctBy(SEpisode::url)
+        val urls = incoming.mapTo(hashSetOf(), SEpisode::url)
+        val additions = ArrayList<Episode>()
+        incoming.forEachIndexed { index, episode ->
+            val old = existing[episode.url]
+            val updated = (old ?: Episode(entry.id, episode.url, episode.name, dateFetch = now)).copy(
+                name = episode.name,
+                scanlator = episode.scanlator,
+                fillermark = episode.fillermark,
+                episodeNumber = episode.episode_number.toDouble(),
+                sourceOrder = index.toLong(),
+                dateUpload = episode.date_upload,
+                summary = episode.summary,
+                previewUrl = episode.preview_url,
+                memo = episode.memo,
+            )
+            if (old == null) {
+                additions += updated
+            } else if (old != updated) {
+                episodes.updateFromSource(updated)
             }
-            val ids = episodes.insertAll(additions)
-            existing + additions.zip(ids).associate { (episode, id) -> episode.url to episode.copy(id = id) }
         }
+        episodes.insertAll(additions)
+        existing.values.filter {
+            it.url !in urls && it.id !in downloadedEpisodeIds && !it.seen && !it.bookmark && it.lastSecondSeen == 0L
+        }.forEach { episodes.delete(it.id) }
+        entry
+    }
+
+    suspend fun setEpisodeDisplay(animeId: Long, display: AnimeEpisodeDisplay) = database.transaction {
+        val show = anime.awaitById(animeId) ?: return@transaction
+        anime.update(show.copy(episodeFlags = display.toFlags(show.episodeFlags)))
+    }
+
+    suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean) = database.transaction {
+        ids.forEach { id ->
+            val episode = episodes.awaitById(id) ?: return@forEach
+            val position = if (seen) episode.lastSecondSeen else 0
+            if (episode.seen != seen || episode.lastSecondSeen != position) {
+                episodes.updateProgress(id, seen, position, episode.totalSeconds)
+            }
+        }
+    }
+
+    suspend fun setEpisodesBookmarked(ids: Set<Long>, bookmarked: Boolean) = database.transaction {
+        ids.forEach { episodes.setBookmark(it, bookmarked) }
+    }
 
     suspend fun saveProgress(episodeId: Long, progress: AnimePlaybackCheckpoint) = database.transaction {
         val episode = episodes.awaitById(episodeId) ?: return@transaction
@@ -118,6 +155,7 @@ internal class AnimeLibraryStore(
             status = show.status.toLong().takeUnless { it == 0L } ?: stored.status,
             thumbnailUrl = show.thumbnail_url ?: stored.thumbnailUrl,
             backgroundUrl = show.background_url ?: stored.backgroundUrl,
+            initialized = show.initialized || stored.initialized,
             favorite = favorite ?: stored.favorite,
             dateAdded = if (favorite == true && !stored.favorite) System.currentTimeMillis() else stored.dateAdded,
             memo = JsonObject(stored.memo + show.memo),
@@ -143,5 +181,17 @@ internal fun Anime.toSourceAnime(): SAnime = SAnime.create().also { source ->
     source.fetch_type = fetchType
     source.season_number = seasonNumber
     source.initialized = initialized
+    source.memo = memo
+}
+
+internal fun Episode.toSourceEpisode(): SEpisode = SEpisode.create().also { source ->
+    source.url = url
+    source.name = name
+    source.scanlator = scanlator
+    source.fillermark = fillermark
+    source.episode_number = episodeNumber.toFloat()
+    source.date_upload = dateUpload
+    source.summary = summary
+    source.preview_url = previewUrl
     source.memo = memo
 }

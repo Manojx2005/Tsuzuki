@@ -7,6 +7,7 @@ import java.util.Date
 
 interface AnimeHistoryRepository {
     suspend fun awaitByEpisodeId(episodeId: Long): AnimeHistory?
+    suspend fun latestInProgressEpisodeId(animeId: Long): Long?
     fun subscribeContinueWatching(): Flow<List<AnimeHistoryWithRelations>>
     suspend fun upsert(episodeId: Long, lastSeen: Date?, watchSeconds: Long)
 }

@@ -4,4 +4,18 @@
     <string name="tsz_anime_play_next">다음 에피소드 재생</string>
     <string name="tsz_anime_no_episodes">에피소드를 찾을 수 없습니다</string>
     <string name="tsz_anime_player_unavailable">애니메이션 플레이어를 사용할 수 없습니다</string>
+    <string name="tsz_anime_episode_title">%1$s화 · %2$s</string>
+    <string name="tsz_anime_play_episode">%s화 재생</string>
+    <string name="tsz_anime_resume_episode">%s화 이어보기</string>
+    <string name="tsz_anime_episode_number">회차 번호</string>
+    <string name="tsz_anime_watched">시청 완료</string>
+    <string name="tsz_anime_filler">오리지널 회차</string>
+    <string name="tsz_anime_mark_seen">시청 완료로 표시</string>
+    <string name="tsz_anime_mark_unseen">미시청으로 표시</string>
+    <string name="tsz_anime_mark_previous">이전 회차를 시청 완료로 표시</string>
+    <string name="tsz_anime_bookmark">북마크 추가</string>
+    <string name="tsz_anime_unbookmark">북마크 삭제</string>
+    <string name="tsz_anime_unseen_only">미시청만</string>
+    <string name="tsz_anime_bookmarked_only">북마크만</string>
+    <string name="tsz_anime_upcoming">공개 예정</string>
 </resources>

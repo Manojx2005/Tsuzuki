@@ -114,6 +114,14 @@ INSERT INTO episodes (
 updateProgress:
 UPDATE episodes SET seen = :seen, last_second_seen = :lastSecondSeen, total_seconds = :totalSeconds WHERE _id = :id;
 
+updateFromSource:
+UPDATE episodes SET name = :name, scanlator = :scanlator, fillermark = :fillermark,
+    episode_number = :episodeNumber, source_order = :sourceOrder, date_upload = :dateUpload,
+    summary = :summary, preview_url = :previewUrl, memo = :memo WHERE _id = :id;
+
+setBookmark:
+UPDATE episodes SET bookmark = :bookmark WHERE _id = :id;
+
 delete:
 DELETE FROM episodes WHERE _id = :id;
 
