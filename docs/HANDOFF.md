@@ -218,7 +218,7 @@ installed on tablet + S22, both launch, crash buffers empty.
   label shows a raw locale ("en-US-language"); Updates "Library last updated: Never" is italic body text, not
   uppercased in Dot.
 
-#### V1.1 Selected tab lost after process death (T3) — `review` (found by Claude in V1, 2026-11-07; release-blocking)
+#### V1.1 Selected tab lost after process death (T3) — `done` (merged via `review/night6`, 2026-11-07) (found by Claude in V1, 2026-11-07; release-blocking)
 Repro (preview build `.debug`, tablet, Dot): Library → MANGA tab → Home key → `adb shell am kill
 io.github.manojx2005.tsuzuki.debug` → open the app from **recents** (not the launcher). Expected: Library, MANGA
 selected. Actual: Home. No crash. Evidence: `r2-before.png` / `r2-after2.png` in the repo root (untracked, local).
@@ -245,11 +245,16 @@ On Home layouts that show the MotionStack cover stack, let a horizontal swipe se
 - Per-file Spotless passed twice. All eight string files parsed. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
 - Claude device check: use compact Home with at least three books in Dot and Colour. Swipe left and right through both ends, tap, scroll vertically starting on the stack, and check reduced motion and Resume after a swipe. Tablet layouts that use a single hero have no stack.
 
-#### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; S22 preview from main `3da3254c7`: TTS plays, highlights the spoken paragraph, progress advances, no crash); Mihon part → V2b (Codex); freeze starts when V2b, R6, R7, V1.1 are merged
+**V1.1 device check (Claude, 2026-11-07):** tablet preview from `review/night6`: Library → MANGA → Home → `am kill` →
+Recents returns to Library with MANGA selected (before the fix: Home). No crash. 934 tests green.
+Still to check on devices in V7/V8: R2 in-Library state (shelf/search/selection) now that V1.1 is in, V2b tracker
+restore + long tab badges, R6 Colour headings, R7 Japanese labels, V3 Watch teaser.
+
+#### V2 Upstream merge + freeze (Claude) — Tsundoku part `done` 2026-11-07 (1 commit, f118703a2 TTS paragraph split, merged; 933 tests green; S22 preview from main `3da3254c7`: TTS plays, highlights the spoken paragraph, progress advances, no crash); Mihon part → V2b (Codex); **freeze started 2026-11-07** (V2b, R6, R7, V1.1 merged): `main` takes only v0.1 work until the tag
 `scripts/upstream-report.sh`; merge `tsundoku/main`; pick the Mihon fixes listed by the report (log in
 `docs/UPSTREAM.md`). Build, tests, quick device smoke. Then announce the freeze in this file.
 
-#### V2b Mihon release picks (T3) — `review` (written by Claude 2026-11-07, owner: leave the rest to Codex)
+#### V2b Mihon release picks (T3) — `done` (merged via `review/night6`, 2026-11-07) (written by Claude 2026-11-07, owner: leave the rest to Codex)
 Claude ran `scripts/upstream-report.sh mihon`: 224 commits not taken, most already logged as picked or skipped in
 `docs/UPSTREAM.md`. For v0.1 take only these, one `git cherry-pick -x` each on `tsuzuki/v2b` (skip any already in
 main or logged in UPSTREAM.md; if one conflicts with a Tsuzuki hook, resolve keeping the Tsuzuki behaviour, or skip
@@ -272,7 +277,7 @@ should check on a device (tracker login only if the owner approves; reader pagin
 - Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
 - Claude device check: in a scratch install restore a tracked book over the same tracker with different remote IDs and higher chapter progress. Verify the old link and higher progress. Check long Library tab labels with counts, then smoke-test manga paging and duplicate lookup. Tracker login requires owner approval.
 
-#### V3 Watch teaser check (T1) — `review` (owner 2026-11-07: keep the Read / Watch switch as a teaser)
+#### V3 Watch teaser check (T1) — `done` (merged via `review/night6`, 2026-11-07) (owner 2026-11-07: keep the Read / Watch switch as a teaser)
 `presentation/tsuzuki/home/TsuzukiHomeScreen.kt` `WatchPlaceholder`: the copy must say anime is coming in a later
 version, with no sample numbers, fake titles or controls that look usable; nothing on it may open anime code in a
 release build (only Back). `TsuzukiLibraryMediaSwitch.kt`, Updates tiles and Stats: no anime option in release.
@@ -497,7 +502,7 @@ grid; Settings two-pane) and fix only differences (list them). Real data only.
 - `TsuzukiSettingsMain.kt` caps the section list at the board's 360 dp, gives rows the 52 dp minimum and fills the selected row's tile within the accent outline. The existing shared rail and appearance pane remain the entry points.
 - Kept the available real-data tiles and settings. Device review: verify Dot and Colour on tablet portrait and landscape. In landscape confirm the six-cover row and details selection, then check Settings list width, selected outline/fill and preference navigation. Check the separate Library grid and rail at a large font scale.
 
-#### R6 Colour theme parity pass (T2) — `review` (R3 is in main)
+#### R6 Colour theme parity pass (T2) — `done` (merged via `review/night6`, 2026-11-07) (R3 is in main)
 Every Tsuzuki screen in **Colour** at 360 dp and tablet: sentence case, Instrument Serif headings, book-palette
 accents, no Dot-only artefacts (uppercase, grey `#8A8A8A`, red). Use the Q8 narrow previews in Colour; fix
 differences; list per screen.
@@ -508,7 +513,7 @@ differences; list per screen.
 - Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
 - Claude device check: compare live cover accents and full Library, Settings and Updates panes on the tablet. The night preview uses the board palette. The initial day-mode sample showed low contrast where light Material ink met dark Tsuzuki tokens, so also check System, Light and Dark on the device. Full runtime coverage for screens outside the preview matrix is pending.
 
-#### R7 Japanese layout pass (T2) — `review` (R3 is in main)
+#### R7 Japanese layout pass (T2) — `done` (merged via `review/night6`, 2026-11-07) (R3 is in main)
 Devices are Japanese. Status table: translated layouts never visually checked. Run the narrow previews with the
 `ja` locale; fix truncation, mixed fonts (Japanese must use the partner font via `MaterialTheme.typography`) and
 any hard-coded English in Tsuzuki screens (move to strings, 8 locales).
