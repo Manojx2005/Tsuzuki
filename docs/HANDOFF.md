@@ -145,7 +145,7 @@ first, commit on the card branch, Result + `review`, blocked → next row). Boar
 stable → smooth/fast → design complete → Mihon parity → new features; anime has its own lane.
 
 **Lane 1 — anime (Codex thread 1, in order):** A2.3 → A2.4 → Y2 rework → Y6 rework → R-A1 → R-A2 → R-A3 → R-A4.
-**Lane 2 — app (Codex thread 2, in order):** R1 → R2 → … → R16. Lane 2 never touches anime files, and lane 1
+**Lane 2 — app (Codex thread 2, in order):** R1 → R2 → … → R16 → R17. Lane 2 never touches anime files, and lane 1
 never touches R-card files; both threads: one Gradle build at a time each.
 **Lane 3 — Claude:** reviews, device checks and the C-list at the end of this section.
 
@@ -167,6 +167,7 @@ never touches R-card files; both threads: one Gradle build at a time each.
 | 14 | R14 Merge sources for one book | 2 | — | T4 |
 | 15 | R15 Backup: scheduled export + restore polish (Backup board) | 2 | — | T3 |
 | 16 | R16 Upcoming: notify on expected release (optional) | 2 | — | T2 |
+| 16b | R17 Tablet reading line length (cap ~600 dp, centred) | 2 | — | T3 |
 | 17 | R-A1 Anime backups: Aniyomi import + our 8000-range fields | 1 | A2.4 | T4 |
 | 18 | R-A2 Player settings + sheets (subtitles, audio, speed, decoder) | 1 | A2.4 | T3 |
 | 19 | R-A3 Anime in Updates + "Airing today" strip | 1 | A2.4 | T3 |
@@ -250,11 +251,21 @@ hook in `tsuzuki/` (no extra pings; optional manual "Check now" that does one Po
 Tsuzuki store (no DB migration). Show on the Browse source rows (status dot) and a Source health screen.
 Result: _pending_
 
-#### R13 Dictionary lookup (T3) — `ready`
-Board `Dictionary`. Long-press a word in the novel reader (TextView + WebView) → a Tsuzuki sheet with the word and
-actions that use what the device already has: Android `ACTION_PROCESS_TEXT` handlers (Google Translate, installed
-dictionaries), `ACTION_DEFINE` where available, web search. **Ship no dictionary data** (licences). Copy to the
-book's notebook (N27) as a quote. Tests for word extraction at selection edges.
+#### R13 Dictionary lookup — offline packs (T4) — `ready`
+Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
+WebView) → Tsuzuki sheet: headword, reading (JA), part of speech, senses, "Add to notebook" (N27 quote), and the
+device's own handlers (`ACTION_PROCESS_TEXT`, web search) as a fallback row.
+- **Data as optional downloadable packs, not in the APK** (same pattern as the neural-TTS plan): Settings › Reader ›
+  Dictionaries lists packs with size, licence and Download/Delete; stored in app files.
+- Packs: **English = Princeton WordNet 3.x** (WordNet licence, permissive, attribution) and **Japanese = JMdict**
+  (EDRDG licence, CC BY-SA 4.0, attribution; data file kept separate from app code). Convert each to a compact
+  SQLite (FTS/prefix index) with a script in `scripts/` (no network in tests; Codex writes the converter + a tiny
+  fixture; Claude/owner run the real conversion and host the pack on our own GitHub release — Codex never
+  downloads). Licence texts in `docs/licenses/` and About.
+- Lookup: lemmatize English (simple suffix rules + WordNet exception lists) and Japanese (deinflection rules
+  table, Yomichan-style, own implementation — no GPL code). Pure helpers + tests (edges of selection, punctuation,
+  inflected forms).
+- If no pack is installed, the sheet shows the system/web fallback and a "Get offline dictionary" link.
 Result: _pending_
 
 #### R14 Merge sources for one book (T4) — `ready`
@@ -274,6 +285,16 @@ Result: _pending_
 #### R16 Upcoming: notify on expected release (T2) — `ready`
 Optional per-book toggle on Upcoming: a notification on the expected date from the existing interval estimate;
 off by default; uses the existing notification channel; no new background polling.
+Result: _pending_
+
+#### R17 Tablet reading line length (T3) — `ready`
+Owner 2026-11-07: **cap the novel text column at ~600 dp, centred**, on wide windows (board `11-tablet/TabletReader`:
+~512 dp column with ~64 dp margins). Phones unchanged; the user's own side margins remain the minimum. TextView:
+measure the real content width (not `screenWidthDp` — the N25 side panel can be docked) and centre the chunk views
+(e.g. `maxWidth` + centred gravity in the chapter block container) without changing Tsundoku's padding logic.
+WebView: CSS `max-width` on the content wrapper with auto side margins, keeping the user margins as padding; check
+paged mode (`paged-reader.js` column math) and the chapter-end card. Hook through `tsuzuki/reader/`; tests for the
+width math. Claude checks tablet portrait/landscape, docked panel, both renderers, paged + scroll.
 Result: _pending_
 
 #### R-A1 Anime backups (T4) — `ready` (needs A2.4)
@@ -303,7 +324,7 @@ Result: _pending_
 non-owner debug install: build debug with a temporary `.scratch` suffix, install one yuzono extension, play an
 episode, uninstall) · C3 Q1 frame timing + recording on the owner's phone when it is connected · C4 restore R1's
 500-book backup into a scratch install and record jank · C5 Tsundoku + Mihon upstream merge (`scripts/upstream-
-report.sh`) · C6 N28/R9 widgets placed and checked · C7 tablet line-length decision (owner) · C8 release v0.1
+report.sh`) · C6 N28/R9 widgets placed and checked · C8 release v0.1
 prep when the owner says go (signing, telemetry removal, changelog).
 
 **Prompts for the owner:**
@@ -1267,6 +1288,10 @@ Result: _pending_
   if you prefer the stock behaviour.
 
 ## Owner decisions in force
+
+- 2026-11-07: run Batch R as **two Codex threads in parallel** (lane 1 anime, lane 2 app); tablet novel text
+  **capped at ~600 dp, centred** (R17); **no cloud sync** for now (local backups only, R15); dictionary =
+  **offline downloadable packs** (WordNet EN, JMdict JA; R13), not bundled in the APK.
 
 - Nav (2026-11-06): HOME · LIBRARY · UPDATES · BROWSE · MORE with plain-word labels; History moves into More and
   Home's recent row (card Q5). Only Colour and Dot themes ship (card Q12). Reader settings follow the batch Q boards.
