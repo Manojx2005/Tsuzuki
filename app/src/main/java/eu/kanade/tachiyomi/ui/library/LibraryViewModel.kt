@@ -22,6 +22,7 @@ import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.tsuzuki.library.groupLibraryItems
 import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
@@ -335,7 +336,7 @@ class LibraryViewModel(
                 }
                 .map { data ->
                     data.favorites
-                        .applyGrouping(data.categories, data.showSystemCategory)
+                        .groupLibraryItems(data.categories, data.showSystemCategory)
                         .applySort(itemCache, data.tracksMap, data.loggedInTrackerIds)
                 }
                 .collectLatest {
@@ -565,35 +566,6 @@ class LibraryViewModel(
     private fun normalizeTag(tag: String, caseSensitive: Boolean): String {
         val trimmedTag = tag.trim()
         return if (caseSensitive) trimmedTag else trimmedTag.lowercase()
-    }
-
-    private fun List<LibraryItem>.applyGrouping(
-        categories: List<Category>,
-        showSystemCategory: Boolean,
-    ): Map<Category, List</* LibraryItem */ Long>> {
-        val visibleCategories = ArrayList<Category>(categories.size)
-        for (category in categories) {
-            if (showSystemCategory || !category.isSystemCategory) {
-                visibleCategories += category
-            }
-        }
-        if (visibleCategories.isEmpty()) return emptyMap()
-
-        val visibleCategoryById = HashMap<Long, Category>(visibleCategories.size * 2)
-        val groupedItems = LinkedHashMap<Category, MutableList<Long>>(visibleCategories.size)
-        for (category in visibleCategories) {
-            visibleCategoryById[category.id] = category
-            groupedItems[category] = mutableListOf()
-        }
-
-        for (item in this) {
-            for (categoryId in item.libraryManga.categories) {
-                val category = visibleCategoryById[categoryId] ?: continue
-                groupedItems[category]?.add(item.id)
-            }
-        }
-
-        return groupedItems
     }
 
     private fun Map<Category, List</* LibraryItem */ Long>>.applySort(

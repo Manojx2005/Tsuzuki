@@ -8,7 +8,6 @@ import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.viewModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
-import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.tsuzuki.selection.awaitTsuzukiUndo
@@ -35,6 +34,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import logcat.LogPriority
@@ -111,9 +111,6 @@ class UpdatesViewModel(
         private const val GROUPED_NOVEL_TARGET = 30
     }
 
-    @Volatile
-    private var latestUpdates: List<UpdatesWithRelations> = emptyList()
-
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
     val events: Flow<Event> = _events.receiveAsFlow()
 
@@ -153,36 +150,41 @@ class UpdatesViewModel(
                 downloadManager.queueState,
                 libraryPreferences.lastUpdatesClearedTimestamp.changes(),
                 // needed for Kotlin filters (downloaded)
-                getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
-                    old.filterDownloaded == new.filterDownloaded
-                },
-            ) { updates, _, _, clearedAt, itemPreferences ->
+                combine(
+                    getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
+                        old.filterDownloaded == new.filterDownloaded
+                    },
+                    state.map { it.filter }.distinctUntilChanged(),
+                    ::Pair,
+                ),
+            ) { updates, _, _, clearedAt, (itemPreferences, filter) ->
                 val filteredUpdates = if (clearedAt > 0L) {
                     updates.filter { it.dateFetch > clearedAt }
                 } else {
                     updates
                 }
-                latestUpdates = filteredUpdates
                 val items = filteredUpdates
-                    .toUpdateItems()
+                    .toUpdateItems(filter)
                     .applyFilters(itemPreferences)
                     .toList()
                 // If returned items fill the limit, there may be more
                 val hasMore = updates.size.toLong() >= currentLimit.value
-                items to hasMore
+                Triple(items, hasMore, filter)
             }
                 .catch {
                     logcat(LogPriority.ERROR, it)
                     mutableState.update { it.copy(isLoading = false, isLoadingMore = false, hasMorePages = false) }
                     _events.send(Event.InternalError)
                 }
-                .collectLatest { (updateItems, hasMore) ->
+                .collectLatest { (updateItems, hasMore, filter) ->
+                    if (state.value.filter != filter) return@collectLatest
                     val shouldPrefetchForGroupedView =
                         state.value.groupByNovel &&
                             hasMore &&
                             updateItems.distinctBy { it.update.mangaId }.size < GROUPED_NOVEL_TARGET
 
                     mutableState.update {
+                        if (it.filter != filter) return@update it
                         it.copy(
                             isLoading = false,
                             isLoadingMore = shouldPrefetchForGroupedView,
@@ -190,7 +192,9 @@ class UpdatesViewModel(
                             hasMorePages = hasMore,
                         )
                     }
-                    if (shouldPrefetchForGroupedView) currentLimit.value += GetUpdates.PAGE_SIZE
+                    if (shouldPrefetchForGroupedView && state.value.filter == filter) {
+                        currentLimit.value += GetUpdates.PAGE_SIZE
+                    }
                 }
         }
 
@@ -235,8 +239,7 @@ class UpdatesViewModel(
         }
     }
 
-    private fun List<UpdatesWithRelations>.toUpdateItems(): List<UpdatesItem> {
-        val filter = state.value.filter
+    private fun List<UpdatesWithRelations>.toUpdateItems(filter: UpdatesFilter): List<UpdatesItem> {
         // Cache source lookups to avoid repeated getOrStub + isNovelSource calls
         val novelSourceCache = mutableMapOf<Long, Boolean>()
         val queuedDownloads = downloadManager.getQueuedDownloadsByChapterId()
@@ -646,38 +649,25 @@ class UpdatesViewModel(
                 .sortedByDescending { it.latestChapterDate }
         }
 
-        fun getUiModel(): List<UpdatesUiModel> {
-            return items
-                .map { UpdatesUiModel.Item(it) }
-                .insertSeparators { before, after ->
-                    val beforeDate = before?.item?.update?.dateFetch?.toLocalDate()
-                    val afterDate = after?.item?.update?.dateFetch?.toLocalDate()
-                    when {
-                        beforeDate != afterDate && afterDate != null -> UpdatesUiModel.Header(afterDate)
-                        // Return null to avoid adding a separator between two items.
-                        else -> null
-                    }
-                }
+        fun getUiModel(): List<UpdatesUiModel> = buildList {
+            var previousDate: LocalDate? = null
+            for (item in items) {
+                val date = item.update.dateFetch.toLocalDate()
+                if (date != previousDate) add(UpdatesUiModel.Header(date))
+                add(UpdatesUiModel.Item(item))
+                previousDate = date
+            }
         }
     }
 
     fun setFilter(filter: UpdatesFilter) {
         mutableState.update { it.copy(filter = filter) }
-        mutableState.update {
-            it.copy(items = latestUpdates.toUpdateItems().toList())
-        }
-        // Reset pagination when filter changes
+        // Reset pagination when filter changes.
         currentLimit.value = GetUpdates.PAGE_SIZE
     }
 
     fun syncFilterWithHideManga(hideMangaUi: Boolean) {
-        if (!hideMangaUi || state.value.filter == UpdatesFilter.ALL) return
-
-        mutableState.update { it.copy(filter = UpdatesFilter.ALL) }
-        mutableState.update {
-            it.copy(items = latestUpdates.toUpdateItems().toList())
-        }
-        currentLimit.value = GetUpdates.PAGE_SIZE
+        if (hideMangaUi && state.value.filter != UpdatesFilter.ALL) setFilter(UpdatesFilter.ALL)
     }
 
     sealed interface Dialog {
