@@ -1305,7 +1305,7 @@
     <string name="tsz_recent">recent</string>
     <string name="tsz_shelf">Shelf · %1$d</string>
     <string name="tsz_all_books">All books →</string>
-    <string name="tsz_tap_stack">Tap the stack to switch</string>
+    <string name="tsz_switch_stack">Tap or swipe the stack</string>
     <string name="tsz_show_next_book">Show next book</string>
     <string name="tsz_open">Open</string>
     <string name="tsz_chapters">Chapters</string>

@@ -297,7 +297,7 @@ private fun PhoneHome(state: HomeState, actions: HomeActions, bottomPad: Dp) {
         val heroModifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 6.dp)
         val cover: @Composable () -> Unit = {
             Box(Modifier.height(236.dp)) {
-                TsuzukiCoverStack(stack, activeIndex) { stackIndex = (activeIndex + 1) % stack.size }
+                TsuzukiCoverStack(stack, activeIndex) { stackIndex = it }
             }
         }
         if (stacked) {
@@ -379,7 +379,7 @@ private fun PhoneHeroText(book: HomeBook, count: Int, activeIndex: Int, modifier
         if (book.unread > 0) UnreadChip(book.unread)
         if (count > 1) {
             Text(
-                t.case(stringResource(MR.strings.tsz_tap_stack)),
+                t.case(stringResource(MR.strings.tsz_switch_stack)),
                 style = bodyStyle(12.sp, FontWeight.SemiBold),
                 color = muted(t),
             )
