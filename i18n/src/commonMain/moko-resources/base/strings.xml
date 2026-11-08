@@ -1736,4 +1736,16 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_dictionary_lookup">Dictionary</string>
+    <string name="tsz_dictionary_packs">Dictionaries</string>
+    <string name="tsz_dictionary_english">English</string>
+    <string name="tsz_dictionary_japanese">Japanese</string>
+    <string name="tsz_dictionary_get_pack">Get offline dictionary</string>
+    <string name="tsz_dictionary_no_handler">No app can handle this action.</string>
+    <string name="tsz_dictionary_no_match">No definition found.</string>
+    <string name="tsz_dictionary_pack_error">Could not load or update this dictionary.</string>
+    <string name="tsz_dictionary_pack_unavailable">No pack has been published yet.</string>
+    <string name="tsz_dictionary_save">Add to notebook</string>
+    <string name="tsz_dictionary_update">Update</string>
+    <string name="tsz_dictionary_web_search">Web search</string>
 </resources>

@@ -1357,4 +1357,16 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_dictionary_lookup">Wörterbuch</string>
+    <string name="tsz_dictionary_packs">Wörterbücher</string>
+    <string name="tsz_dictionary_english">Englisch</string>
+    <string name="tsz_dictionary_japanese">Japanisch</string>
+    <string name="tsz_dictionary_get_pack">Offline-Wörterbuch laden</string>
+    <string name="tsz_dictionary_no_handler">Keine App kann diese Aktion ausführen.</string>
+    <string name="tsz_dictionary_no_match">Keine Definition gefunden.</string>
+    <string name="tsz_dictionary_pack_error">Dieses Wörterbuch konnte nicht geladen oder aktualisiert werden.</string>
+    <string name="tsz_dictionary_pack_unavailable">Es wurde noch kein Paket veröffentlicht.</string>
+    <string name="tsz_dictionary_save">Zum Notizbuch hinzufügen</string>
+    <string name="tsz_dictionary_update">Aktualisieren</string>
+    <string name="tsz_dictionary_web_search">Websuche</string>
 </resources>

@@ -1354,4 +1354,16 @@
     <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
     <string name="tsz_tracker_signed_out">Não conectado</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_dictionary_lookup">Dicionário</string>
+    <string name="tsz_dictionary_packs">Dicionários</string>
+    <string name="tsz_dictionary_english">Inglês</string>
+    <string name="tsz_dictionary_japanese">Japonês</string>
+    <string name="tsz_dictionary_get_pack">Obter dicionário offline</string>
+    <string name="tsz_dictionary_no_handler">Nenhum app pode executar esta ação.</string>
+    <string name="tsz_dictionary_no_match">Nenhuma definição encontrada.</string>
+    <string name="tsz_dictionary_pack_error">Não foi possível carregar ou atualizar este dicionário.</string>
+    <string name="tsz_dictionary_pack_unavailable">Nenhum pacote foi publicado ainda.</string>
+    <string name="tsz_dictionary_save">Adicionar ao caderno</string>
+    <string name="tsz_dictionary_update">Atualizar</string>
+    <string name="tsz_dictionary_web_search">Pesquisa na web</string>
 </resources>

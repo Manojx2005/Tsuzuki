@@ -1344,4 +1344,16 @@
     <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
     <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_dictionary_lookup">Diccionario</string>
+    <string name="tsz_dictionary_packs">Diccionarios</string>
+    <string name="tsz_dictionary_english">Inglés</string>
+    <string name="tsz_dictionary_japanese">Japonés</string>
+    <string name="tsz_dictionary_get_pack">Obtener diccionario sin conexión</string>
+    <string name="tsz_dictionary_no_handler">Ninguna aplicación puede realizar esta acción.</string>
+    <string name="tsz_dictionary_no_match">No se encontró ninguna definición.</string>
+    <string name="tsz_dictionary_pack_error">No se pudo cargar o actualizar este diccionario.</string>
+    <string name="tsz_dictionary_pack_unavailable">Todavía no se ha publicado ningún paquete.</string>
+    <string name="tsz_dictionary_save">Añadir al cuaderno</string>
+    <string name="tsz_dictionary_update">Actualizar</string>
+    <string name="tsz_dictionary_web_search">Buscar en la web</string>
 </resources>

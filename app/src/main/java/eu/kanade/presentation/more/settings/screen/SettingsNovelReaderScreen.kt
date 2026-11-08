@@ -58,6 +58,10 @@ object SettingsNovelReaderScreen : SearchableSettings {
             getContentGroup(readerPref),
             getStatusBarGroup(readerPref, navigator),
             getTtsGroup(readerPref),
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(MR.strings.tsz_dictionary_packs),
+                onClick = { navigator.push(eu.kanade.presentation.tsuzuki.dictionary.DictionaryPacksScreen()) },
+            ),
         )
     }
 

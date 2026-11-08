@@ -28,6 +28,8 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.annotation.Keep
 import androidx.lifecycle.Lifecycle
+import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
+import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -612,11 +614,16 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                             )
                                 .setIcon(android.R.drawable.ic_menu_save)
                                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                            menu.addDictionaryAction(activity)
                             return result
                         }
                         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean =
                             callback.onPrepareActionMode(mode, menu)
                         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                            if (item.itemId == DICTIONARY_SELECTION_MENU_ID) {
+                                onRememberSelectedText(mode, forDictionary = true)
+                                return true
+                            }
                             if (item.itemId == REMEMBER_MENU_ITEM_ID) {
                                 onRememberSelectedText(mode) // pass mode in
                                 return true
@@ -642,11 +649,16 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                             )
                                 .setIcon(android.R.drawable.ic_menu_save)
                                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                            menu.addDictionaryAction(activity)
                             return result
                         }
                         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean =
                             callback.onPrepareActionMode(mode, menu)
                         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                            if (item.itemId == DICTIONARY_SELECTION_MENU_ID) {
+                                onRememberSelectedText(mode, forDictionary = true)
+                                return true
+                            }
                             if (item.itemId == REMEMBER_MENU_ITEM_ID) {
                                 onRememberSelectedText()
                                 mode.finish()
@@ -3316,7 +3328,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     /**
      * Handle the "Remember" action from text selection menu
      */
-    private fun onRememberSelectedText(actionMode: ActionMode? = null) {
+    private fun onRememberSelectedText(actionMode: ActionMode? = null, forDictionary: Boolean = false) {
         evaluateJavascriptSafe(
             """
         (function() {
@@ -3371,9 +3383,13 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                 }
 
                 if (!selectedText.isNullOrBlank()) {
-                    pendingSelectedText = selectedText
-                    pendingParagraphIndex = paragraphIndex
-                    activity.onRememberSelectedText()
+                    if (forDictionary) {
+                        activity.openReaderDictionary(selectedText, getCurrentChapterName(), paragraphIndex)
+                    } else {
+                        pendingSelectedText = selectedText
+                        pendingParagraphIndex = paragraphIndex
+                        activity.onRememberSelectedText()
+                    }
                     clearTextSelection()
                 } else {
                     activity.toast("No text selected")

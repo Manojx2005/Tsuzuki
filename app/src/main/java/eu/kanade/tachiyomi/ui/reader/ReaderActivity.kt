@@ -85,6 +85,8 @@ import eu.kanade.presentation.reader.appbars.bottomBarItemInfo
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
+import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySelection
+import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySheet
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
@@ -252,6 +254,7 @@ class ReaderActivity : BaseActivity() {
 
     // Quotes functionality
     private var showQuotesSheet by mutableStateOf(false)
+    private var dictionarySelection by mutableStateOf<ReaderDictionarySelection?>(null)
 
     /**
      * Called when the activity is created. Initializes the presenter and configuration.
@@ -684,6 +687,13 @@ class ReaderActivity : BaseActivity() {
                     viewModel.reorderQuotes(reorderedQuotes)
                     quotesState.value = viewModel.getQuotes()
                 },
+            )
+        }
+        dictionarySelection?.let { selection ->
+            ReaderDictionarySheet(
+                selection = selection,
+                onDismiss = { dictionarySelection = null },
+                onSave = { viewModel.saveQuote(selection.term.value, selection.chapterName, selection.paragraphIndex) },
             )
         }
     }
@@ -2010,6 +2020,15 @@ class ReaderActivity : BaseActivity() {
      */
     fun onQuotesClicked() {
         showQuotesSheet = true
+    }
+
+    internal fun openReaderDictionary(text: String, chapterName: String?, paragraphIndex: Int?) {
+        val term = eu.kanade.tachiyomi.tsuzuki.dictionary.dictionaryTerm(text) ?: return
+        dictionarySelection = ReaderDictionarySelection(
+            term,
+            chapterName.orEmpty(),
+            paragraphIndex,
+        )
     }
 
     /**

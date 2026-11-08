@@ -1357,4 +1357,16 @@
     <string name="tsz_tracker_novel_services">小说追踪服务</string>
     <string name="tsz_tracker_signed_out">未登录</string>
     <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
+    <string name="tsz_dictionary_lookup">词典</string>
+    <string name="tsz_dictionary_packs">词典包</string>
+    <string name="tsz_dictionary_english">英语</string>
+    <string name="tsz_dictionary_japanese">日语</string>
+    <string name="tsz_dictionary_get_pack">获取离线词典</string>
+    <string name="tsz_dictionary_no_handler">没有应用可处理此操作。</string>
+    <string name="tsz_dictionary_no_match">未找到释义。</string>
+    <string name="tsz_dictionary_pack_error">无法加载或更新此词典。</string>
+    <string name="tsz_dictionary_pack_unavailable">词典包尚未发布。</string>
+    <string name="tsz_dictionary_save">添加到笔记本</string>
+    <string name="tsz_dictionary_update">更新</string>
+    <string name="tsz_dictionary_web_search">网页搜索</string>
 </resources>
