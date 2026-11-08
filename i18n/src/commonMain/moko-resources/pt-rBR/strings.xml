@@ -1354,4 +1354,9 @@
     <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
     <string name="tsz_tracker_signed_out">Não conectado</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_stats_listening">Escuta</string>
+    <string name="tsz_stats_listen_today">Hoje</string>
+    <string name="tsz_stats_listen_week">Esta semana</string>
+    <string name="tsz_stats_listened_chapters">Capítulos nesta semana</string>
+    <string name="tsz_stats_minutes_read_listened">Minutos de leitura ou escuta</string>
 </resources>

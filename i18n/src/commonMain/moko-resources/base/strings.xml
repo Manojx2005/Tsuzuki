@@ -1736,4 +1736,9 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_stats_listening">Listening</string>
+    <string name="tsz_stats_listen_today">Today</string>
+    <string name="tsz_stats_listen_week">This week</string>
+    <string name="tsz_stats_listened_chapters">Chapters this week</string>
+    <string name="tsz_stats_minutes_read_listened">Minutes read or listened</string>
 </resources>

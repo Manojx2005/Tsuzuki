@@ -1576,4 +1576,9 @@
     <string name="tsz_tracker_novel_services">小説トラッカー</string>
     <string name="tsz_tracker_signed_out">未ログイン</string>
     <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
+    <string name="tsz_stats_listening">読み上げ</string>
+    <string name="tsz_stats_listen_today">今日</string>
+    <string name="tsz_stats_listen_week">今週</string>
+    <string name="tsz_stats_listened_chapters">今週聴いた話数</string>
+    <string name="tsz_stats_minutes_read_listened">読書・読み上げ時間</string>
 </resources>

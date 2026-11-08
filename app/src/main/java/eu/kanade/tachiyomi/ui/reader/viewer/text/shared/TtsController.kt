@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.reader.viewer.text.shared
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
@@ -13,11 +14,13 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import logcat.logcat
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 
-class TtsController(
+class TtsController internal constructor(
     private val context: Context,
     private val preferences: ReaderPreferences,
     private val scope: CoroutineScope,
+    private val listening: ListeningSession,
     private val callbacks: Callbacks,
 ) : TextToSpeech.OnInitListener {
 
@@ -34,6 +37,8 @@ class TtsController(
     enum class StartRequest { NORMAL, VIEWPORT }
 
     private var tts: TextToSpeech? = null
+
+    @Volatile private var playbackQueue: Long? = null
     var ttsInitialized = false
         private set
 
@@ -96,13 +101,15 @@ class TtsController(
     private fun setupListener() {
         tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
-                utteranceId?.removePrefix("tts_utterance_")?.toIntOrNull()?.let { chunkIndex ->
-                    ttsCurrentChunkIndex = chunkIndex
-                    if (preferences.novelTtsEnableHighlight.get()) {
-                        val chunk = ttsChunks.getOrNull(chunkIndex) ?: return
-                        val startOffset = ttsChunkStartOffsets.getOrElse(chunkIndex) { 0 }
-                        val paragraphIndex = ttsChunkParagraphIndexes.getOrElse(chunkIndex) { chunkIndex }
-                        callbacks.runOnUiThread {
+                val (queue, chunkIndex) = currentChunk(utteranceId) ?: return
+                listening.startChunk(queue, chunkIndex)
+                ttsCurrentChunkIndex = chunkIndex
+                if (preferences.novelTtsEnableHighlight.get()) {
+                    val chunk = ttsChunks.getOrNull(chunkIndex) ?: return
+                    val startOffset = ttsChunkStartOffsets.getOrElse(chunkIndex) { 0 }
+                    val paragraphIndex = ttsChunkParagraphIndexes.getOrElse(chunkIndex) { chunkIndex }
+                    callbacks.runOnUiThread {
+                        if (playbackQueue == queue) {
                             callbacks.onHighlightChunk(chunkIndex, chunk, startOffset, paragraphIndex)
                         }
                     }
@@ -110,14 +117,15 @@ class TtsController(
             }
 
             override fun onDone(utteranceId: String?) {
-                val finishedIndex = utteranceId?.removePrefix("tts_utterance_")?.toIntOrNull() ?: -1
-                val isLastChunk = finishedIndex >= ttsChunks.size - 1
-                if (isLastChunk && finishedIndex >= 0 && sleepTimer == TtsSleepTimer.ChapterEnd) {
+                val (queue, finishedIndex) = currentChunk(utteranceId) ?: return
+                val isLastChunk = finishedIndex == ttsChunks.lastIndex
+                listening.endChunk(queue, finishedIndex, completedChapter = isLastChunk && ttsPlaybackChapterId != null)
+                if (isLastChunk && sleepTimer == TtsSleepTimer.ChapterEnd) {
                     val chapterId = ttsPlaybackChapterId
                     callbacks.runOnUiThread {
                         scope.launch {
                             delay(LAST_CHUNK_DONE_DELAY_MS)
-                            if (sleepTimer == TtsSleepTimer.ChapterEnd && !isSpeaking() &&
+                            if (playbackQueue == queue && sleepTimer == TtsSleepTimer.ChapterEnd && !isSpeaking() &&
                                 ttsPlaybackChapterId == chapterId && finishedIndex == ttsChunks.lastIndex
                             ) {
                                 stop()
@@ -128,23 +136,48 @@ class TtsController(
                     callbacks.runOnUiThread {
                         scope.launch {
                             delay(LAST_CHUNK_DONE_DELAY_MS)
-                            if (!isSpeaking()) {
+                            if (playbackQueue == queue && !isSpeaking()) {
                                 if (sleepTimer == TtsSleepTimer.ChapterEnd) stop() else callbacks.onLastChunkDone()
                             }
                         }
                     }
                 } else if (isLastChunk) {
                     callbacks.runOnUiThread {
-                        callbacks.onClearHighlights()
+                        if (playbackQueue == queue) callbacks.onClearHighlights()
                     }
                 }
             }
 
             @Deprecated("Deprecated in Java")
             override fun onError(utteranceId: String?) {
+                endInterruptedChunk(utteranceId)
                 logcat(LogPriority.ERROR) { "TTS error on utterance: $utteranceId" }
             }
+
+            override fun onStop(utteranceId: String?, interrupted: Boolean) {
+                endInterruptedChunk(utteranceId)
+            }
         })
+    }
+
+    private fun currentChunk(utteranceId: String?): Pair<Long, Int>? {
+        val queue = playbackQueue ?: return null
+        val prefix = "tts_utterance_${queue}_"
+        if (utteranceId?.startsWith(prefix) != true) return null
+        val index = utteranceId.substring(prefix.length).toIntOrNull() ?: return null
+        return queue to index
+    }
+
+    private fun endInterruptedChunk(utteranceId: String?) {
+        val (queue, index) = currentChunk(utteranceId) ?: return
+        listening.endChunk(queue, index, completedChapter = false)
+        listening.flush()
+    }
+
+    private fun closePlaybackQueue() {
+        val queue = playbackQueue ?: return
+        playbackQueue = null
+        listening.endQueue(queue)
     }
 
     /**
@@ -161,6 +194,7 @@ class TtsController(
             logcat(LogPriority.WARN) { "TTS not initialized, cannot speak" }
             return
         }
+        closePlaybackQueue()
         ttsPlaybackChapterIndex = chapterIndex
         ttsPlaybackChapterId = chapterId
         applySettings()
@@ -221,11 +255,15 @@ class TtsController(
     fun speakChunksFrom(startIndex: Int) {
         if (ttsChunks.isEmpty() || startIndex >= ttsChunks.size) return
         val engine = tts ?: return
+        closePlaybackQueue()
+        val queue = nextQueue.incrementAndGet()
+        listening.beginQueue(queue)
+        playbackQueue = queue
         callbacks.onPlaybackStarted()
         ttsChunks.drop(startIndex).forEachIndexed { i, chunk ->
             val actualIndex = startIndex + i
             val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            engine.speak(chunk, mode, null, "tts_utterance_$actualIndex")
+            engine.speak(chunk, mode, null, "tts_utterance_${queue}_$actualIndex")
         }
     }
 
@@ -233,6 +271,7 @@ class TtsController(
         if (ttsInitialized && tts?.isSpeaking == true) {
             ttsPaused = true
             ttsResumeChunkIndex = ttsCurrentChunkIndex
+            closePlaybackQueue()
             tts?.stop()
         }
     }
@@ -258,6 +297,7 @@ class TtsController(
     }
 
     fun stop() {
+        closePlaybackQueue()
         setSleepTimer(TtsSleepTimer.Off)
         isTtsAutoPlay = false
         ttsPaused = false
@@ -309,6 +349,7 @@ class TtsController(
         ttsResumeChunkIndex = target
         ttsCurrentChunkIndex = target
         ttsPaused = false
+        closePlaybackQueue()
         tts?.stop()
         speakChunksFrom(target)
     }
@@ -364,6 +405,7 @@ class TtsController(
         tts?.voice?.name ?: preferences.novelTtsVoice.get()
 
     fun destroy() {
+        closePlaybackQueue()
         setSleepTimer(TtsSleepTimer.Off)
         tts?.stop()
         callbacks.runOnUiThread { callbacks.onClearHighlights() }
@@ -374,5 +416,6 @@ class TtsController(
 
     companion object {
         private const val LAST_CHUNK_DONE_DELAY_MS = 500L
+        private val nextQueue = AtomicLong()
     }
 }

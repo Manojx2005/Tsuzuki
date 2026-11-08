@@ -1357,4 +1357,9 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_stats_listening">Hören</string>
+    <string name="tsz_stats_listen_today">Heute</string>
+    <string name="tsz_stats_listen_week">Diese Woche</string>
+    <string name="tsz_stats_listened_chapters">Kapitel diese Woche</string>
+    <string name="tsz_stats_minutes_read_listened">Gelesene oder gehörte Minuten</string>
 </resources>

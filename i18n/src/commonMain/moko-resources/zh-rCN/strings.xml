@@ -1357,4 +1357,9 @@
     <string name="tsz_tracker_novel_services">小说追踪服务</string>
     <string name="tsz_tracker_signed_out">未登录</string>
     <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
+    <string name="tsz_stats_listening">听书</string>
+    <string name="tsz_stats_listen_today">今天</string>
+    <string name="tsz_stats_listen_week">本周</string>
+    <string name="tsz_stats_listened_chapters">本周听完的章节</string>
+    <string name="tsz_stats_minutes_read_listened">阅读或听书分钟数</string>
 </resources>
