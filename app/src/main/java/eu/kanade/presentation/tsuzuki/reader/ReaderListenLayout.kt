@@ -18,6 +18,8 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.TtsController
 import eu.kanade.tachiyomi.ui.reader.viewer.text.textview.NovelViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewViewer
 import kotlinx.coroutines.delay
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 internal data class ReaderFold(val top: Int, val bottom: Int)
 
@@ -69,24 +71,29 @@ internal data class ReaderListeningState(
 internal fun rememberReaderListeningState(
     controller: TtsController?,
     enabled: Boolean,
-): State<ReaderListeningState?> = produceState<ReaderListeningState?>(null, controller, enabled) {
-    value = null
-    if (controller == null || !enabled) return@produceState
-    while (true) {
-        val paused = controller.isPaused()
-        value = if (paused || controller.isTtsAutoPlay || controller.isSpeaking() || controller.isStarting()) {
-            val (index, count) = controller.getParagraphProgress()
-            ReaderListeningState(
-                paused = paused,
-                position = listeningParagraphPosition(index, count),
-                paragraphs = controller.listenParagraphs,
-                voice = controller.getCurrentVoiceName(),
-                timer = controller.sleepTimer,
-            )
-        } else {
-            null
+): State<ReaderListeningState?> {
+    val appLocale = LocalConfiguration.current.locales[0]
+    val offlineLabel = stringResource(MR.strings.tsz_tts_voice_offline)
+    val onlineLabel = stringResource(MR.strings.tsz_tts_voice_online)
+    return produceState<ReaderListeningState?>(null, controller, enabled, appLocale) {
+        value = null
+        if (controller == null || !enabled) return@produceState
+        while (true) {
+            val paused = controller.isPaused()
+            value = if (paused || controller.isTtsAutoPlay || controller.isSpeaking() || controller.isStarting()) {
+                val (index, count) = controller.getParagraphProgress()
+                ReaderListeningState(
+                    paused = paused,
+                    position = listeningParagraphPosition(index, count),
+                    paragraphs = controller.listenParagraphs,
+                    voice = controller.getCurrentVoiceLabel(appLocale, offlineLabel, onlineLabel),
+                    timer = controller.sleepTimer,
+                )
+            } else {
+                null
+            }
+            delay(300)
         }
-        delay(300)
     }
 }
 
