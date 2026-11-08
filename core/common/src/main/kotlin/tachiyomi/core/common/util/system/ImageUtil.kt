@@ -123,6 +123,9 @@ object ImageUtil {
         return options.outWidth > options.outHeight
     }
 
+    fun getImageDimensions(imageSource: BufferedSource): Pair<Int, Int> =
+        with(extractImageOptions(imageSource)) { outWidth to outHeight }
+
     /**
      * Extract the 'side' part from [BufferedSource] and return it as [BufferedSource].
      */

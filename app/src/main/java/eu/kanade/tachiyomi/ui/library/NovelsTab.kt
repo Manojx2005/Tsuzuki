@@ -129,6 +129,7 @@ data object NovelsTab : Tab {
             },
         )
         val state by viewModel.state.collectAsState()
+        val manhwaOnly by viewModel.manhwaOnly.collectAsState()
         val titleMaxLines by settingsViewModel.libraryPreferences.titleMaxLines.changes().collectAsState(
             settingsViewModel.libraryPreferences.titleMaxLines.get(),
         )
@@ -173,7 +174,10 @@ data object NovelsTab : Tab {
                             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
                                 novelCount = state.libraryData.novelCount,
                                 mangaCount = state.libraryData.mangaCount,
+                                manhwaCount = state.libraryData.manhwaCount,
                                 showCounts = !viewModel.paginationEnabled && !state.isLoading,
+                                manhwaOnly = manhwaOnly,
+                                onManhwaOnlyChanged = viewModel::setManhwaOnly,
                                 onFilterChanged = viewModel::clearSelection,
                             )
                         } else {

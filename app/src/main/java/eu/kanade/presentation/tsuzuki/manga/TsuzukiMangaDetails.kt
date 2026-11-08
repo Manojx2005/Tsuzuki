@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,16 +32,20 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.manga.model.readingMode
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
+import eu.kanade.tachiyomi.tsuzuki.manhwa.ManhwaStore
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -49,11 +54,20 @@ import uy.kohesive.injekt.api.get
 @Composable
 internal fun TsuzukiMangaReadingMode(manga: Manga, onChange: ((ReadingMode) -> Unit)? = null) {
     var showPicker by remember(manga.id) { mutableStateOf(false) }
+    val store = remember { Injekt.get<ManhwaStore>() }
+    val sourceManager = remember { Injekt.get<SourceManager>() }
+    val classification by remember(store) { store.observe() }.collectAsState(initial = store.snapshot())
+    val manualOverride = classification.overrideFor(manga.id)
+    val autoWebtoon = classification.isManhwa(manga, sourceManager.get(manga.source)?.lang)
     val configuredMode = ReadingMode.fromPreference(manga.readingMode.toInt())
     val mode = if (configuredMode == ReadingMode.DEFAULT) {
-        val preferences = remember { Injekt.get<ReaderPreferences>() }
-        val defaultMode by preferences.defaultReadingMode.collectAsState()
-        ReadingMode.fromPreference(defaultMode)
+        if (autoWebtoon) {
+            ReadingMode.WEBTOON
+        } else {
+            val preferences = remember { Injekt.get<ReaderPreferences>() }
+            val defaultMode by preferences.defaultReadingMode.collectAsState()
+            ReadingMode.fromPreference(defaultMode)
+        }
     } else {
         configuredMode
     }
@@ -83,8 +97,15 @@ internal fun TsuzukiMangaReadingMode(manga: Manga, onChange: ((ReadingMode) -> U
                     style = MaterialTheme.typography.titleSmall,
                 )
                 if (onChange != null) {
+                    val changeModeLabel = if (
+                        configuredMode == ReadingMode.DEFAULT && autoWebtoon && manualOverride == null
+                    ) {
+                        MR.strings.tsz_manga_long_strip_detected
+                    } else {
+                        MR.strings.tsz_manga_change_mode
+                    }
                     Text(
-                        text = tsuzukiCase(stringResource(MR.strings.tsz_manga_change_mode)).orEmpty(),
+                        text = tsuzukiCase(stringResource(changeModeLabel)).orEmpty(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -101,6 +122,21 @@ internal fun TsuzukiMangaReadingMode(manga: Manga, onChange: ((ReadingMode) -> U
     if (showPicker && onChange != null) {
         TsuzukiAdaptiveSheet(onDismissRequest = { showPicker = false }) { close ->
             Column(Modifier.padding(vertical = 16.dp)) {
+                val formats = listOf(null, false, true)
+                Text(
+                    text = tsuzukiCase(stringResource(MR.strings.tsz_manga_format)).orEmpty(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                TsuzukiPillRow(
+                    labels = listOf(
+                        stringResource(MR.strings.tsz_manga_format_auto),
+                        stringResource(TDMR.strings.label_manga),
+                        stringResource(MR.strings.tsz_manhwa),
+                    ),
+                    selected = formats.indexOf(manualOverride),
+                    onClick = { store.setOverride(manga.id, formats[it]) },
+                )
                 TsuzukiReadingModeGrid(configuredMode) { selected ->
                     onChange(selected)
                     close { showPicker = false }

@@ -108,15 +108,25 @@ fun TsuzukiMixedLibraryGrid(
                         shape = shape,
                     )
                     Text(
-                        text = if (manga.isNovel) "LN" else stringResource(TDMR.strings.label_manga).uppercase(),
+                        text = when {
+                            manga.isNovel -> "LN"
+                            item.isManhwa -> stringResource(MR.strings.tsz_manhwa).uppercase()
+                            else -> stringResource(TDMR.strings.label_manga).uppercase()
+                        },
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(4.dp)
                             .height(20.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(if (manga.isNovel) tokens.accent else tokens.background.copy(alpha = 0.9f))
+                            .background(
+                                when {
+                                    manga.isNovel -> tokens.accent
+                                    item.isManhwa -> tokens.dotOn
+                                    else -> tokens.background.copy(alpha = 0.9f)
+                                },
+                            )
                             .then(
-                                if (manga.isNovel) {
+                                if (manga.isNovel || item.isManhwa) {
                                     Modifier
                                 } else {
                                     Modifier.border(
@@ -127,7 +137,11 @@ fun TsuzukiMixedLibraryGrid(
                                 },
                             )
                             .padding(horizontal = 5.dp, vertical = 2.dp),
-                        color = if (manga.isNovel) tokens.onAccent else tokens.dotOn,
+                        color = when {
+                            manga.isNovel -> tokens.onAccent
+                            item.isManhwa -> tokens.background
+                            else -> tokens.dotOn
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.ExtraBold,

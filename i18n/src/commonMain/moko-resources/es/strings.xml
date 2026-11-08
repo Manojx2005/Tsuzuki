@@ -1357,4 +1357,9 @@
     <string name="tsz_backup_history_entries">Entradas del historial</string>
     <string name="tsz_backup_checking">Comprobando copia de seguridad…</string>
     <string name="tsz_backup_unreadable">No se pudo abrir el archivo. Comprueba que esté disponible y vuelve a seleccionarlo.</string>
+    <string name="tsz_manhwa">Manhwa</string>
+    <string name="tsz_library_manhwa_count">%1$d manhwas</string>
+    <string name="tsz_manga_format">Formato del cómic</string>
+    <string name="tsz_manga_format_auto">Automático</string>
+    <string name="tsz_manga_long_strip_detected">Modo webtoon automático · cambiar para esta serie</string>
 </resources>

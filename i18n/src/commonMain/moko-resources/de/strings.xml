@@ -1370,4 +1370,9 @@
     <string name="tsz_backup_history_entries">Verlaufseinträge</string>
     <string name="tsz_backup_checking">Sicherung wird geprüft…</string>
     <string name="tsz_backup_unreadable">Die Datei konnte nicht geöffnet werden. Prüfe, ob sie verfügbar ist, und wähle sie erneut aus.</string>
+    <string name="tsz_manhwa">Manhwa</string>
+    <string name="tsz_library_manhwa_count">%1$d Manhwa</string>
+    <string name="tsz_manga_format">Comicformat</string>
+    <string name="tsz_manga_format_auto">Automatisch</string>
+    <string name="tsz_manga_long_strip_detected">Automatischer Webtoon-Modus · für diese Serie ändern</string>
 </resources>

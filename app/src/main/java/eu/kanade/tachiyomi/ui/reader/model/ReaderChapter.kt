@@ -9,6 +9,7 @@ import tachiyomi.core.common.util.system.logcat
 data class ReaderChapter(val chapter: Chapter) {
 
     val stateFlow = MutableStateFlow<State>(State.Wait)
+    internal val manhwaEvidence by lazy { eu.kanade.tachiyomi.tsuzuki.manhwa.ManhwaChapterEvidence() }
     var state: State
         get() = stateFlow.value
         set(value) {

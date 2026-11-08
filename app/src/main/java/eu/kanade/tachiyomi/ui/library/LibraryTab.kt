@@ -109,6 +109,7 @@ data object LibraryTab : Tab {
             },
         )
         val state by viewModel.state.collectAsState()
+        val manhwaOnly by viewModel.manhwaOnly.collectAsState()
         val titleMaxLines by settingsViewModel.libraryPreferences.titleMaxLines.changes().collectAsState(
             settingsViewModel.libraryPreferences.titleMaxLines.get(),
         )
@@ -139,7 +140,13 @@ data object LibraryTab : Tab {
                     page = state.coercedActiveCategoryIndex,
                 )
                 LibraryToolbar(
-                    below = { eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(isManga = true) },
+                    below = {
+                        eu.kanade.tachiyomi.ui.tsuzuki.library.TsuzukiLibraryMediaSwitch(
+                            isManga = true,
+                            manhwaOnly = manhwaOnly,
+                            onManhwaOnlyChanged = viewModel::setManhwaOnly,
+                        )
+                    },
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
                     title = title,
