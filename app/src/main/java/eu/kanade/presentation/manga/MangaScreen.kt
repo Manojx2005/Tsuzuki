@@ -68,6 +68,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.details.TsuzukiDetailsResumeTile
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReadingMode
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaScanlatorFilter
+import eu.kanade.presentation.tsuzuki.novel.novelTitleChapterNumber
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.formatChapterNumber
@@ -1092,26 +1093,28 @@ private fun LazyListScope.sharedChapterItems(
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val chapter = item.chapter
+                val sourceNumber = if (isNovel && isTsuzukiStyle()) novelTitleChapterNumber(chapter.name) else null
                 MangaChapterListItem(
                     title = when (manga.displayMode) {
                         Manga.CHAPTER_DISPLAY_NUMBER -> stringResource(
                             MR.strings.display_mode_chapter,
-                            formatChapterNumber(item.chapter.chapterNumber),
+                            formatChapterNumber(sourceNumber ?: chapter.chapterNumber),
                         )
-                        Manga.CHAPTER_DISPLAY_BOTH -> {
+                        Manga.CHAPTER_DISPLAY_BOTH -> if (sourceNumber != null) {
+                            chapter.name
+                        } else {
                             val chapterNum = stringResource(
                                 MR.strings.display_mode_chapter,
-                                formatChapterNumber(item.chapter.chapterNumber),
+                                formatChapterNumber(chapter.chapterNumber),
                             )
-                            if (item.chapter.name.isNotBlank() &&
-                                !item.chapter.name.equals(chapterNum, ignoreCase = true)
-                            ) {
-                                "$chapterNum - ${item.chapter.name}"
+                            if (chapter.name.isNotBlank() && !chapter.name.equals(chapterNum, ignoreCase = true)) {
+                                "$chapterNum - ${chapter.name}"
                             } else {
                                 chapterNum
                             }
                         }
-                        else -> item.chapter.name
+                        else -> chapter.name
                     },
                     date = if (item.chapter.dateUpload == 0L && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
                         null
