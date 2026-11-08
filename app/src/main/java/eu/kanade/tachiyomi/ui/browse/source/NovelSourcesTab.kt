@@ -51,6 +51,10 @@ fun Screen.novelSourcesTab(): TabContent {
                 icon = Icons.Outlined.Edit,
                 onClick = { navigator.push(CustomSourcesScreen()) },
             ),
+        ) + listOfNotNull(
+            eu.kanade.presentation.tsuzuki.browse.sourceHealthAction {
+                navigator.push(eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHealthScreen())
+            },
         ),
         content = { contentPadding, snackbarHostState ->
             val mappedDialog = when (val d = state.dialog) {

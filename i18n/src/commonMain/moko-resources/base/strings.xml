@@ -1736,4 +1736,20 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_source_health">Source health</string>
+    <string name="tsz_source_health_working">Working</string>
+    <string name="tsz_source_health_slow">Slow</string>
+    <string name="tsz_source_health_down">Down</string>
+    <string name="tsz_source_health_unknown">Unmeasured</string>
+    <string name="tsz_source_health_history">Last 7 days</string>
+    <string name="tsz_source_health_average">%1$d ms average</string>
+    <string name="tsz_source_health_success">Last success · %1$s</string>
+    <string name="tsz_source_health_failure">Last error · %1$s · %2$s</string>
+    <string name="tsz_source_health_http">HTTP %1$d</string>
+    <string name="tsz_source_health_cloudflare">Cloudflare challenge</string>
+    <string name="tsz_source_health_timeout">Request timed out</string>
+    <string name="tsz_source_health_network">Network error</string>
+    <string name="tsz_source_health_outage">%1$s is down</string>
+    <string name="tsz_source_health_migrate">Migrate (%1$d)</string>
+    <string name="tsz_source_health_passive">Based on requests this device already made.</string>
 </resources>

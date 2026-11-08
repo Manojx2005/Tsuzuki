@@ -208,7 +208,7 @@ class JsSource(
             }
             if (existing != null) return@withLock existing
 
-            val runtime = PluginRuntime(pluginId, context, jsDispatcher, baseUrl)
+            val runtime = PluginRuntime(pluginId, context, jsDispatcher, baseUrl, id)
             val newInstance = try {
                 runtime.executePlugin(jsCode)
             } catch (e: Exception) {
