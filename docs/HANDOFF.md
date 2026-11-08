@@ -113,7 +113,7 @@ ready, then the next.` A reviewer never reviews a card it implemented in the sam
    cards merged, cards failed, test counts, evidence folder), set the RV card `done`, update the status table in
    `docs/design/README.md`. No push. Delete the review worktree, keep the branches.
 
-#### RV1 Review: app lane batch 1 (T3) — `ready`
+#### RV1 Review: app lane batch 1 (T3) — `codex-working` (.worktrees/rv1, 2026-11-08)
 Cards, in order: **V7.6, V7.7, R12, R16, R17** (all `review`; each branch is 2 commits off `main`). R17 is
 tablet-only: check line length on the tablet in portrait and landscape and that the S22 is unchanged.
 Review: _pending_
