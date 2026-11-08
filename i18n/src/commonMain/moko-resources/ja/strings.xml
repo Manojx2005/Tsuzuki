@@ -929,6 +929,8 @@
     <string name="tsz_continue">続きから</string>
     <string name="tsz_start_reading">読み始める</string>
     <string name="tsz_resume">再開</string>
+    <string name="tsz_time_left_chapter">章の残り%1$s</string>
+    <string name="tsz_time_left_book">本の残り%1$s</string>
     <string name="tsz_start">開始</string>
     <string name="tsz_new_chapters">新着チャプター</string>
     <string name="tsz_new">新着</string>

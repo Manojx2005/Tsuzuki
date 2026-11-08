@@ -936,6 +936,8 @@
     <string name="tsz_continue">계속</string>
     <string name="tsz_start_reading">읽기 시작</string>
     <string name="tsz_resume">계속</string>
+    <string name="tsz_time_left_chapter">챕터 남은 시간 %1$s</string>
+    <string name="tsz_time_left_book">책 남은 시간 %1$s</string>
     <string name="tsz_start">시작</string>
     <string name="tsz_new_chapters">새 챕터</string>
     <string name="tsz_new">새 항목</string>

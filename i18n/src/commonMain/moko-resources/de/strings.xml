@@ -937,6 +937,8 @@
     <string name="tsz_continue">Fortfahren</string>
     <string name="tsz_start_reading">Lesen beginnen</string>
     <string name="tsz_resume">Fortfahren</string>
+    <string name="tsz_time_left_chapter">Noch %1$s im Kapitel</string>
+    <string name="tsz_time_left_book">Noch %1$s im Buch</string>
     <string name="tsz_start">Starten</string>
     <string name="tsz_new_chapters">Neue Kapitel</string>
     <string name="tsz_new">Neu</string>

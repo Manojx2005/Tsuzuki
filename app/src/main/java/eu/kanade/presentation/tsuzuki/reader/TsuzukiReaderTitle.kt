@@ -15,7 +15,12 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 
 /** Compact body-face reader chrome from the Reader and MangaPaged boards. */
 @Composable
-fun TsuzukiReaderTitle(title: String?, subtitle: String?, novel: Boolean = false) {
+fun TsuzukiReaderTitle(
+    title: String?,
+    subtitle: String?,
+    novel: Boolean = false,
+    estimates: @Composable () -> Unit = {},
+) {
     val tokens = TsuzukiTheme.tokens
     if (tokens.style == TsuzukiStyle.NONE) {
         AppBarTitle(title = title, subtitle = subtitle)
@@ -47,5 +52,6 @@ fun TsuzukiReaderTitle(title: String?, subtitle: String?, novel: Boolean = false
                 modifier = if (novel) Modifier else Modifier.basicMarquee(repeatDelayMillis = 2_000),
             )
         }
+        estimates()
     }
 }

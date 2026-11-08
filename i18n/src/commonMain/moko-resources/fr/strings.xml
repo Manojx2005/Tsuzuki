@@ -930,6 +930,8 @@
     <string name="tsz_continue">Continuer</string>
     <string name="tsz_start_reading">Commencer la lecture</string>
     <string name="tsz_resume">Reprendre</string>
+    <string name="tsz_time_left_chapter">%1$s restantes dans le chapitre</string>
+    <string name="tsz_time_left_book">%1$s restantes dans le livre</string>
     <string name="tsz_start">Commencer</string>
     <string name="tsz_new_chapters">Nouveaux chapitres</string>
     <string name="tsz_new">Nouveau</string>

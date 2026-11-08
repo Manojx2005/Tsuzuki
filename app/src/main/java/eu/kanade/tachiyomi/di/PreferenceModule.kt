@@ -87,6 +87,7 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory {
             eu.kanade.tachiyomi.tsuzuki.ReadingDays(get())
         }
+        addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.NovelReadingEstimates(get()) }
         addSingletonFactory {
             BasePreferences(app, get())
         }
