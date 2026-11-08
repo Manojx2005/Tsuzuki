@@ -349,7 +349,7 @@ survived process death.
 - `TsuzukiNavigationTest.kt` checks that a serialized Manga tab resolves to the separate Library tab or the combined Library according to the active setting. Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 934 tests and zero failures.
 - Claude device check: on the tablet and S22, background Library → Manga, kill the background process, then return from Recents and verify both selections. Check another root tab and the R2 in-Library shelf, search and selection state. Android process recreation still needs this device check.
 
-#### HOME-SWIPE Swipe the Home cover stack (T2) — `review` (owner requested 2026-11-07)
+#### HOME-SWIPE Swipe the Home cover stack (T2) — `done` (merged via `review/post-v01`, 2026-11-08)
 On Home layouts that show the MotionStack cover stack, let a horizontal swipe select the next or previous book. Keep the tap action and existing shuffle and reduced-motion behavior. Use the MotionStack and phone Home boards in Dot and Colour.
 
 **Result (Codex, 2026-11-07):** `a3a8a4220` on `tsuzuki/home-swipe` (`.worktrees/home-swipe`).
@@ -827,7 +827,7 @@ any hard-coded English in Tsuzuki screens (move to strings, 8 locales).
 - Per-file Spotless passed twice and XML checks covered seven keys in eight locales. `assembleDebug` and `testDebugUnitTest` passed with 933 tests and zero failures.
 - Claude device check: select Japanese on the S22 and tablet. At standard and large text scales, check the phone navigation, More toggles, Browse media choices, Home date/new chip, History timestamp and reader controls. Check the tablet rail and remaining runtime settings.
 
-#### R8 Downloads screen + queue vs board (T2) — `review` (reworked on `tsuzuki/r8`)
+#### R8 Downloads screen + queue vs board (T2) — `done` (merged via `review/post-v01`, 2026-11-08)
 **Claude review 2026-11-07 — rework:** the queue UI is good, but upstream `Downloader.kt` (+98/−48) rewrites the scheduler for every download: `collectLatest` → `collect` with `joinAll()` inside the collector (a cancelled job stuck in blocking IO now stalls all scheduling), the per-run job map became a class field, and `distinctUntilChanged` was dropped. Keep Mihon's `collectLatest` loop. Put source pause and targeted retry in `tsuzuki/download/` (e.g. filter paused sources inside `activeMangaDownloads`, and have retry reset statuses + bump a flow the existing `combine` already watches). Target: `Downloader.kt` under ~20 changed lines; drop the `joinAll` wait unless a test shows a real write race.
 Board `Downloads` (+ `DownloadSheet`). Compare the Tsuzuki download queue (N10 Compose rows) with the board: group
 headers, per-group pause/resume, progress, error rows with retry; fix differences.
@@ -852,7 +852,7 @@ theme), real data only, tap targets open the right screen. Claude places them on
 - `TsuzukiWidgetTheme.kt` reuses theme tokens and watches app theme, accent and cover-colour changes. Upstream `App.kt` starts that watcher in the main process. Widget typography uses Glance system faces. Time estimates, anime content, and the launcher preview artwork are outside this diff.
 - Claude device review: place both widgets on the tablet, resize Reading short/tall and Listening to one row, toggle Dot/Colour and cover colour, test an in-progress chapter, a completed book, the taller New tile, and Listening chapter/transport with TTS paused, playing and stopped. Verify the two widgets' distinct reader destinations when placed together.
 
-#### R10 Tracker accounts + update schedule vs boards (T2) — `review` (reworked on `tsuzuki/r10`)
+#### R10 Tracker accounts + update schedule vs boards (T2) — `done` (merged via `review/post-v01`, 2026-11-08; Claude restored the upstream token dialog)
 **Claude review 2026-11-07 — rework:** `SettingsLibraryScreen.kt` (+72/−41) and `SettingsTrackingScreen.kt` (+45/−24) wrap upstream preference rows in `if (!themed)` and re-indent them, which AGENTS.md rules out. Instead, put one dispatch at the top of each group builder (`if (isTsuzukiStyle()) return tsuzukiLibraryUpdateGroup(...)`) that builds the whole themed group in `presentation/tsuzuki/settings/`, and restore the upstream list byte-for-byte. Also check that the themed group keeps the smart-update manga restrictions (the current themed branch replaces them with Download new chapters).
 Boards `TrackerAccounts`, `UpdateSchedule`. Settings › Tracking and Library update schedule screens: compare and
 fix; never show tokens; no new network calls.
@@ -866,7 +866,7 @@ fix; never show tokens; no new network calls.
 - `TsuzukiTrackingPreferences.kt` moves novel-only accounts to the top using tracker IDs and attaches local linked counts. `docs/design/README.md` records both groups.
 - Per-file Spotless passed twice. `assembleDebug` and `testDebugUnitTest` passed with 921 tests and zero failures. Check all four smart-update flags independently of the download switch during the device pass above.
 
-#### R11 Reading estimates (T3) — `review` (`tsuzuki/r11`)
+#### R11 Reading estimates (T3) — `done` (merged via `review/post-v01`, 2026-11-08)
 Phase 5 "reading estimates (words, speed, time left)". Details Resume tile / reader chrome show **time left in
 chapter** and **in book** only when backed by data: words from downloaded/cached chapter text (count once, cache in
 a Tsuzuki table-free store e.g. prefs/JSON keyed by chapter id — no schema change), reading speed from
@@ -2296,6 +2296,15 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-08 10:35 Claude — post-v0.1 merges: R11, HOME-SWIPE, R8, R10 into `main` via `review/post-v01`.**
+  String files union-merged. R10 had removed the tracker token dialog's show/hide toggle and its pre-filled saved
+  token (not in the card); Claude restored upstream's dialog, leaving only the theme dispatch in
+  `SettingsTrackingScreen.kt`. `assembleDebug` + **968 tests, 0 failures**; `assemblePreview` installed on the S22
+  (tablet disconnected): Home cover stack swipes to the next book (HOME-SWIPE); "next 5 chapters" of Mother of
+  Learning downloaded through R8's scheduler (5 complete zips, no `_tmp` left; R8's pause/resume-while-in-flight
+  checklist still to do on the tablet); Library settings show the four smart-update switches separately (R10);
+  crash buffer empty. Also: signing key alias moved out of secrets (logs no longer show `***`).
 
 - **2026-11-08 09:10 Claude — RC3 bug: chapter-end NEXT CHAPTER did nothing (owner screen recording).**
   Text reader (`NovelViewer`) only. After a fling into the chapter end, `NestedScrollView` still had an
