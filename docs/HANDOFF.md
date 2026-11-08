@@ -1089,12 +1089,27 @@ and reader show chapter/book time left when local word counts and three valid re
   qualifying visual sessions including a cold entry, a mix of visual and TTS, a seek, incognito, and a
   missing chapter becoming available after download. Verify the Resume tile and reader use real progress.
 
-#### R12 Source health (T3) — `ready`
+#### R12 Source health (T3) — `review` (2026-11-08, `.worktrees/r12`)
 Board `SourceHealth`. Per installed source: last successful request time, average response time, last error
 (HTTP code / Cloudflare / timeout), measured passively from real Browse/Updates traffic via an OkHttp interceptor
 hook in `tsuzuki/` (no extra pings; optional manual "Check now" that does one Popular request). Store in a small
 Tsuzuki store (no DB migration). Show on the Browse source rows (status dot) and a Source health screen.
-Result: _pending_
+**Result (Codex, 2026-11-08):** `tsuzuki/r12` at `b77043aee` (base `c0a0015a4`).
+
+- `SourceHealthRequest.kt`, `HttpSource.kt`, `JsSource.kt`, `PluginRuntime.kt` and `JSLibraryProvider.kt` carry the source ID in an in-process request tag. The standard HTTP catalogue, details and chapter-list paths are covered. The LNReader runtime tags its plugin fetches, including reader fetches. A native extension that bypasses these request paths can remain unmeasured.
+- `NetworkHelper.kt`, `CloudflareInterceptor.kt`, `AppModule.kt` and `SourceHealthInterceptor.kt` measure tagged network responses after pacing, classify failures, skip cache-only responses and ignore cancelled calls. No background probes or manual checks are scheduled.
+- `SourceHealthStore.kt` persists seven daily buckets per source in app-state preferences. The latest failed observation marks a source Down, a successful-response average of at least 1.5 seconds marks it Slow, and dates without observations stay Unmeasured. Last success and last error survive the rolling history.
+- `TsuzukiSourceHealthScreen.kt`, `TsuzukiSourceRow.kt`, `TsuzukiTokens.kt` and the Browse tab hooks show health dots, seven-day history and a real outage card with migration and WebView actions when available.
+- The eight locale files add 16 health strings with matching format arguments. `docs/design/README.md` records the implementation status.
+
+JDK 21, two targeted Spotless passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed
+(972 passed, 0 failed). `SourceHealthStoreTest.kt` checks source isolation, persistence, recovery
+and expiry, request tags, and failure classification.
+
+Claude device review on the S22 and Tab S11 in Dot and Colour. Open a real LNReader and Keiyoushi
+catalogue, then check the source row and Browse overflow screen. Verify the same source updates
+from library traffic, a never-used source stays unmeasured, and recovery keeps its last error while
+updating its status. Check outage actions only when a real failure is present.
 
 #### R13 Dictionary lookup — offline packs (T4) — `ready`
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +

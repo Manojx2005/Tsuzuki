@@ -269,6 +269,7 @@ private fun SourceItem(
     if (isTsuzukiStyle()) {
         TsuzukiSourceRow(
             source = source,
+            showHealth = true,
             showLanguage = alwaysShowLanguage || groupSection != null,
             onOpen = { onClickItem(source, Listing.Popular) },
             onOptions = { onLongClickItem(source) },

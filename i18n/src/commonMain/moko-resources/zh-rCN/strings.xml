@@ -1359,4 +1359,20 @@
     <string name="tsz_tracker_novel_services">小说追踪服务</string>
     <string name="tsz_tracker_signed_out">未登录</string>
     <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
+    <string name="tsz_source_health">来源状态</string>
+    <string name="tsz_source_health_working">正常</string>
+    <string name="tsz_source_health_slow">缓慢</string>
+    <string name="tsz_source_health_down">故障</string>
+    <string name="tsz_source_health_unknown">未测量</string>
+    <string name="tsz_source_health_history">最近 7 天</string>
+    <string name="tsz_source_health_average">平均 %1$d 毫秒</string>
+    <string name="tsz_source_health_success">上次成功 · %1$s</string>
+    <string name="tsz_source_health_failure">上次错误 · %1$s · %2$s</string>
+    <string name="tsz_source_health_http">HTTP %1$d</string>
+    <string name="tsz_source_health_cloudflare">Cloudflare 验证</string>
+    <string name="tsz_source_health_timeout">请求超时</string>
+    <string name="tsz_source_health_network">网络错误</string>
+    <string name="tsz_source_health_outage">%1$s 出现故障</string>
+    <string name="tsz_source_health_migrate">迁移（%1$d）</string>
+    <string name="tsz_source_health_passive">根据此设备已发出的请求统计。</string>
 </resources>
