@@ -57,6 +57,8 @@ import eu.kanade.tachiyomi.data.backup.restore.LNReaderImportJob
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.export.LibraryExportJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
+import eu.kanade.tachiyomi.tsuzuki.backup.TsuzukiBackupPreferences
+import eu.kanade.tachiyomi.tsuzuki.backup.backupRetentionChoices
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
@@ -241,6 +243,8 @@ object SettingsDataScreen : SearchableSettings {
         var pendingLNReaderUri by remember { mutableStateOf<Uri?>(null) }
 
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
+        val tsuzukiBackupPreferences = remember { TsuzukiBackupPreferences(Injekt.get()) }
+        val isTsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
 
         val chooseBackup = rememberLauncherForActivityResult(
             object : ActivityResultContracts.GetContent() {
@@ -319,6 +323,7 @@ object SettingsDataScreen : SearchableSettings {
                     // Tsuzuki themes: two action tiles (board 07-system "Backup")
                     if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
                         eu.kanade.presentation.tsuzuki.settings.TsuzukiBackupTiles(
+                            lastAutoBackup = lastAutoBackup,
                             onCreate = { navigator.push(CreateBackupScreen()) },
                             onRestore = {
                                 if (!BackupRestoreJob.isRunning(context)) {
@@ -402,9 +407,18 @@ object SettingsDataScreen : SearchableSettings {
                         true
                     },
                 ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = tsuzukiBackupPreferences.retention,
+                    entries = backupRetentionChoices.associateWith { it.toString() },
+                    title = stringResource(MR.strings.tsz_backup_retention),
+                ),
                 Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.backup_info) + "\n\n" +
-                        stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup)),
+                    if (isTsuzuki) {
+                        stringResource(MR.strings.backup_info)
+                    } else {
+                        stringResource(MR.strings.backup_info) + "\n\n" +
+                            stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup))
+                    },
                 ),
             ),
         )

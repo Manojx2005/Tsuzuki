@@ -1741,4 +1741,12 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_backup_last_export">Last backup</string>
+    <string name="tsz_backup_retention">Automatic backups to keep</string>
+    <string name="tsz_backup_contents">Backup contents</string>
+    <string name="tsz_backup_books">Books</string>
+    <string name="tsz_backup_shelves">Shelves</string>
+    <string name="tsz_backup_history_entries">History entries</string>
+    <string name="tsz_backup_checking">Checking backup…</string>
+    <string name="tsz_backup_unreadable">Could not open this file. Check that it is available and select it again.</string>
 </resources>

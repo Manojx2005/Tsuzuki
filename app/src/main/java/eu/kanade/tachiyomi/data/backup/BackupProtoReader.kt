@@ -9,6 +9,7 @@ import okio.gzip
 import okio.source
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import java.io.FileNotFoundException
 import java.io.IOException
 
 class BackupProtoReader(
@@ -16,7 +17,8 @@ class BackupProtoReader(
 ) {
     suspend fun read(uri: Uri, onField: suspend (fieldNumber: Int, data: ByteArray) -> Unit) {
         withContext(Dispatchers.IO) {
-            context.contentResolver.openInputStream(uri)!!.use { inputStream ->
+            val stream = context.contentResolver.openInputStream(uri) ?: throw FileNotFoundException()
+            stream.use { inputStream ->
                 val source = inputStream.source().buffer()
 
                 val peeked = source.peek().apply {
@@ -36,12 +38,15 @@ class BackupProtoReader(
                     val tag = readVarint(payloadSource) ?: break
                     val wireType = (tag and 0x07).toInt()
                     val fieldNumber = (tag ushr 3).toInt()
+                    if (fieldNumber <= 0 || tag ushr 32 != 0L) {
+                        throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
+                    }
 
                     when (wireType) {
                         WIRE_TYPE_LENGTH_DELIMITED -> {
                             val length = readVarint(payloadSource)
                                 ?: throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
-                            if (length > Int.MAX_VALUE) {
+                            if (length !in 0..Int.MAX_VALUE.toLong()) {
                                 throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
                             }
                             val bytes = payloadSource.readByteArray(length)

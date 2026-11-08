@@ -1362,4 +1362,12 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_backup_last_export">Letzte Sicherung</string>
+    <string name="tsz_backup_retention">Anzahl automatischer Sicherungen</string>
+    <string name="tsz_backup_contents">Inhalt der Sicherung</string>
+    <string name="tsz_backup_books">Bücher</string>
+    <string name="tsz_backup_shelves">Regale</string>
+    <string name="tsz_backup_history_entries">Verlaufseinträge</string>
+    <string name="tsz_backup_checking">Sicherung wird geprüft…</string>
+    <string name="tsz_backup_unreadable">Die Datei konnte nicht geöffnet werden. Prüfe, ob sie verfügbar ist, und wähle sie erneut aus.</string>
 </resources>

@@ -1187,11 +1187,32 @@ equivalent — keep it Tsuzuki-only. If it can't be done without schema changes,
 schema for Claude.
 Result: _pending_
 
-#### R15 Backup: scheduled export + restore polish (T3) — `ready`
+#### R15 Backup: scheduled export + restore polish (T3) — `review` (2026-11-08, `.worktrees/r15`)
 Board `Backup`. Data and storage › Backup: last backup time + size, scheduled frequency (existing pref), keep-N
 rotation, restore preview (what's inside before restoring: counts of books/shelves/history from the file header),
 clear errors. No cloud sync in this card (owner decision needed for Drive/WebDAV).
-Result: _pending_
+Result: `5e18bf6b4`. Two per-file Spotless passes and `:app:assembleDebug :app:testDebugUnitTest` passed
+with JDK 21 offline (977 tests, including 9 new). Dot and Colour Backup boards checked offline.
+
+- `SettingsDataScreen.kt` keeps the existing frequency preference and adds retention choices.
+- `TsuzukiBackupTiles.kt` shows the last successful export time and compressed size. Older records show the
+  saved automatic backup timestamp when it exists.
+- `RestoreBackupScreen.kt` shows validation progress, readable errors and the contents tile before confirmation.
+- `TsuzukiRestorePreview.kt` displays file-wide book, shelf and history counts independently of restore options.
+- `BackupFileValidator.kt` computes those counts during the existing streaming decode.
+- `BackupProtoReader.kt` reports an unavailable stream and rejects invalid tags or lengths.
+- `BackupCreateJob.kt` surfaces export errors, including scheduled write failures.
+- `BackupCreator.kt` measures the compressed export and validates it before publication and rotation.
+- `AutomaticBackupFiles.kt` stages scheduled exports, supports providers without rename, and prunes after success.
+- `TsuzukiBackupName.kt` sorts both current and legacy automatic names chronologically.
+- `TsuzukiBackupPreferences.kt` stores export metadata and the retention count (2, 4, 8 or 12, default 4).
+- `BackupRestorePreviewTest.kt` covers real fixture counts, truncation and an unavailable provider stream.
+- `BackupRotationTest.kt` covers retention, naming, size, and successful or failed publication without rename.
+- Eight shared locale files add labels and errors. `docs/design/README.md` records the implemented board scope.
+
+Claude device review: on the tablet and S22, use a disposable backup directory to verify schedule and retention,
+an older and a new file, valid and corrupt restore previews, and the last backup tile in Dot and Colour. Check that
+a failed scheduled write keeps existing copies. Drive and WebDAV are outside this card.
 
 #### R16 Upcoming: notify on expected release (T2) — `done` (2026-11-08, `.worktrees/r16`)
 Optional per-book toggle on Upcoming: a notification on the expected date from the existing interval estimate;

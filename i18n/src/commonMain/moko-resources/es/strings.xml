@@ -1349,4 +1349,12 @@
     <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
     <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_backup_last_export">Última copia de seguridad</string>
+    <string name="tsz_backup_retention">Copias automáticas que se conservan</string>
+    <string name="tsz_backup_contents">Contenido de la copia</string>
+    <string name="tsz_backup_books">Libros</string>
+    <string name="tsz_backup_shelves">Estantes</string>
+    <string name="tsz_backup_history_entries">Entradas del historial</string>
+    <string name="tsz_backup_checking">Comprobando copia de seguridad…</string>
+    <string name="tsz_backup_unreadable">No se pudo abrir el archivo. Comprueba que esté disponible y vuelve a seleccionarlo.</string>
 </resources>

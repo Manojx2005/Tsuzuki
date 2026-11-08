@@ -1359,4 +1359,12 @@
     <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
     <string name="tsz_tracker_signed_out">Não conectado</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_backup_last_export">Último backup</string>
+    <string name="tsz_backup_retention">Backups automáticos a manter</string>
+    <string name="tsz_backup_contents">Conteúdo do backup</string>
+    <string name="tsz_backup_books">Livros</string>
+    <string name="tsz_backup_shelves">Prateleiras</string>
+    <string name="tsz_backup_history_entries">Entradas do histórico</string>
+    <string name="tsz_backup_checking">Verificando backup…</string>
+    <string name="tsz_backup_unreadable">Não foi possível abrir o arquivo. Confira se ele está disponível e selecione-o novamente.</string>
 </resources>

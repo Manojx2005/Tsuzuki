@@ -17,12 +17,16 @@ import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.source.isNovelSource
+import eu.kanade.tachiyomi.tsuzuki.backup.AutomaticBackupFiles
+import eu.kanade.tachiyomi.tsuzuki.backup.BackupSizeSink
+import eu.kanade.tachiyomi.tsuzuki.backup.TsuzukiBackupPreferences
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
 import okio.gzip
 import okio.sink
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.manga.interactor.GetFavorites
@@ -75,20 +79,10 @@ class BackupCreator(
 
     suspend fun backup(uri: Uri, options: BackupOptions, onProgress: ((Int, Int) -> Unit)? = null): String {
         var file: UniFile? = null
+        val automaticFiles = if (isAutoBackup) UniFile.fromUri(context, uri)?.let(::AutomaticBackupFiles) else null
         try {
             file = if (isAutoBackup) {
-                // Get dir of file and create
-                val dir = UniFile.fromUri(context, uri)
-
-                // Delete older backups
-                dir?.listFiles { _, filename -> FILENAME_REGEX.matches(filename) }
-                    .orEmpty()
-                    .sortedByDescending { it.name }
-                    .drop(MAX_AUTO_BACKUPS - 1)
-                    .forEach { it.delete() }
-
-                // Create new file to place backup
-                dir?.createFile(getFilename())
+                automaticFiles?.createStagingFile()
             } else {
                 UniFile.fromUri(context, uri)
             }
@@ -104,7 +98,8 @@ class BackupCreator(
 
             val outputStream = file.openOutputStream()
             (outputStream as? FileOutputStream)?.channel?.truncate(0)
-            val gzipOut = outputStream.sink().gzip().buffer()
+            val sizeSink = BackupSizeSink(outputStream.sink())
+            val gzipOut = sizeSink.gzip().buffer()
 
             // Track source IDs as we process manga for backupSources field
             val sourceIds = mutableSetOf<Long>()
@@ -195,17 +190,22 @@ class BackupCreator(
                 gzipOut.close()
             }
 
-            val fileUri = file.uri
             logcat(LogPriority.INFO) { "Backup: Write complete, validating..." }
 
-            // Make sure it's a valid backup file
-            BackupFileValidator(context).validate(fileUri)
+            BackupFileValidator(context).validate(file.uri)
 
-            if (isAutoBackup) {
-                backupPreferences.lastAutoBackupTimestamp.set(Clock.System.now().toEpochMilliseconds())
-            }
-
-            return fileUri.toString()
+            val published = automaticFiles?.publish(file) ?: file
+            file = published
+            // Export succeeded. A status or rotation failure must never remove the valid copy.
+            runCatching {
+                val prefs = TsuzukiBackupPreferences(Injekt.get<PreferenceStore>())
+                if (automaticFiles != null) {
+                    backupPreferences.lastAutoBackupTimestamp.set(Clock.System.now().toEpochMilliseconds())
+                }
+                prefs.recordExport(sizeSink.bytesWritten)
+                automaticFiles?.prune(prefs.retentionCount(), published)
+            }.onFailure { logcat(LogPriority.WARN, it) { "Could not update backup status or rotation" } }
+            return published.uri.toString()
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             try {
@@ -260,11 +260,6 @@ class BackupCreator(
     }
 
     companion object {
-        private const val MAX_AUTO_BACKUPS: Int = 4
-
-        // Tsuzuki: "Tsuzuki_<date>.tachibk"; the regex also matches the old package-id names for rotation.
-        private val FILENAME_REGEX = eu.kanade.tachiyomi.tsuzuki.backup.backupFileRegex(BuildConfig.APPLICATION_ID)
-
         fun getFilename(): String {
             val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.ENGLISH).format(Date())
             return "${eu.kanade.tachiyomi.tsuzuki.backup.backupFilePrefix(BuildConfig.APPLICATION_ID)}_$date.tachibk"
