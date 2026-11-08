@@ -536,7 +536,12 @@ Same cert and version code below the new one: in-place upgrade works. Different 
 (sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
 
 #### V11 Release candidate (Claude + owner) — RC2 built 2026-11-07, owner testing on their phone
-**RC2 (current):** commit `2b9911b76` (adds the app update notification), Actions run 42375424770; same checks as RC1
+**RC3 (current, 2026-11-08):** commit `000cb1ce6` (main + V7.3–V7.5 + V8 More insets), Actions run 42423861828,
+0.1.0 (24), cert `ffcdc743…f6c7`. Installed on tablet + S22 (release app id): launches, Japanese onboarding renders,
+crash buffers empty; reading not yet checked in this build (fresh install stops at the system folder picker). Owner
+is testing it on their phone (debug-signed install → backup, uninstall, install, restore). Files:
+`C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc3/tsuzuki-rc-000cb1ce6/`. V7.6 polish → 0.1.1. Tag only after the owner's OK.
+**RC2 (superseded):** commit `2b9911b76` (adds the app update notification), Actions run 42375424770; same checks as RC1
 pass (0.1.0 (24), cert `ffcdc743…`, 0 Firebase classes, `TsuzukiAppUpdateJob` kept by R8). Files + checklist:
 `C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc2/tsuzuki-rc-2b9911b76/`. RC1 below is superseded.
 **RC1:** commit `0025beca7`, built and signed by GitHub Actions (`release.yml` manual run 42373139062, no publish).
@@ -2147,6 +2152,15 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-08 09:10 Claude — RC3 bug: chapter-end NEXT CHAPTER did nothing (owner screen recording).**
+  Text reader (`NovelViewer`) only. After a fling into the chapter end, `NestedScrollView` still had an
+  unsettled overscroll stretch, so each new touch "caught" it and the scroll view took the gesture: the
+  card's Compose buttons never clicked, and the tap fell through to the menu toggle. Fix: finish the edge
+  effects on ACTION_DOWN before the intercept check, and skip the menu toggle for taps that start on the
+  card (`tsuzuki/reader/NovelChapterEndTouch.kt`; 17-line hook in `NovelViewer.kt`). Tablet `.dev`,
+  Mother of Learning: before the fix, fling-to-end then tap → 0/2 loads; after → 3/3 loads, no menu flash,
+  text taps still toggle the menu, crash buffer empty. Uncommitted on `main`; needs an RC4 before tagging.
 
 - **2026-11-07 11:35 Claude — Codex review: A1.5, A2.2, Y3, Y4, Y5 merged (`c7c805cf2`); Y2, Y6 sent back.**
   `review/night4` = main + a1.5, a2.2, y3, y4, y5 (string files union-merged). **921 tests, 0 failures.**

@@ -26,8 +26,10 @@ import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.tsuzuki.reader.isOnChapterEndCard
 import eu.kanade.tachiyomi.tsuzuki.reader.keepGlyphOverhangVisible
 import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
+import eu.kanade.tachiyomi.tsuzuki.reader.settleNovelEdgeEffects
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -165,6 +167,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         const val PROGRESS_SAVE_DEBOUNCE_MS = 500L
     }
 
+    private var touchDownOnEndCard = false
+
     private val gestureDetector = GestureDetector(
         activity,
         object : GestureDetector.SimpleOnGestureListener() {
@@ -193,6 +197,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 // Without this guard, releasing after a long-press (which starts text selection)
                 // also fires onSingleTapConfirmed and toggles the app bars.
                 if (e.eventTime - e.downTime >= android.view.ViewConfiguration.getLongPressTimeout()) return true
+                // The chapter-end card's buttons handle their own taps; don't also toggle the menu.
+                if (touchDownOnEndCard) return true
                 // Never toggle menu while text is selected
                 if (loadedChapters.any { it.block.hasSelection() }) return false
 
@@ -251,8 +257,19 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     private fun initViews() {
         scrollView = object : NestedScrollView(activity) {
             override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+                if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+                    touchDownOnEndCard =
+                        isOnChapterEndCard(contentContainer.findViewWithTag(NEXT_CHAPTER_BUTTON_TAG), ev)
+                }
                 gestureDetector.onTouchEvent(ev)
                 return super.dispatchTouchEvent(ev)
+            }
+
+            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+                // A fling into the chapter end can leave the overscroll stretch unsettled; a touch
+                // that "catches" it is taken by the scroll view, so the end card's buttons never click.
+                if (ev.actionMasked == MotionEvent.ACTION_DOWN) settleNovelEdgeEffects()
+                return super.onInterceptTouchEvent(ev)
             }
 
             override fun draw(canvas: Canvas) {
