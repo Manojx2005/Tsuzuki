@@ -1736,4 +1736,9 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_manhwa">Manhwa</string>
+    <string name="tsz_library_manhwa_count">%1$d manhwa</string>
+    <string name="tsz_manga_format">Comic format</string>
+    <string name="tsz_manga_format_auto">Automatic</string>
+    <string name="tsz_manga_long_strip_detected">Auto webtoon · change for this series</string>
 </resources>

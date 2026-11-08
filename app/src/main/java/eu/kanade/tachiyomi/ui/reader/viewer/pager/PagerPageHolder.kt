@@ -153,6 +153,7 @@ class PagerPageHolder(
             val spreadActive = viewer.isTabletSpreadActive
             val (source, isAnimated, background) = withIOContext {
                 val rawSource = streamFn().use { Buffer().readFrom(it) }
+                eu.kanade.tachiyomi.tsuzuki.manhwa.recordManhwaPage(page, rawSource)
                 if (spreadActive) {
                     val portrait = !ImageUtil.isWideImage(rawSource)
                     withUIContext { viewer.onSpreadPageShape(page, portrait) }

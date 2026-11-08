@@ -1576,4 +1576,9 @@
     <string name="tsz_tracker_novel_services">小説トラッカー</string>
     <string name="tsz_tracker_signed_out">未ログイン</string>
     <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
+    <string name="tsz_manhwa">マンファ</string>
+    <string name="tsz_library_manhwa_count">マンファ %1$d冊</string>
+    <string name="tsz_manga_format">コミック形式</string>
+    <string name="tsz_manga_format_auto">自動</string>
+    <string name="tsz_manga_long_strip_detected">縦読みを自動選択 · この作品の設定を変更</string>
 </resources>

@@ -1357,4 +1357,9 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_manhwa">Manhwa</string>
+    <string name="tsz_library_manhwa_count">%1$d Manhwa</string>
+    <string name="tsz_manga_format">Comicformat</string>
+    <string name="tsz_manga_format_auto">Automatisch</string>
+    <string name="tsz_manga_long_strip_detected">Automatischer Webtoon-Modus · für diese Serie ändern</string>
 </resources>

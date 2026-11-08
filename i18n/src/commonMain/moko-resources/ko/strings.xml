@@ -1356,4 +1356,9 @@
     <string name="tsz_tracker_novel_services">소설 트래커</string>
     <string name="tsz_tracker_signed_out">로그인하지 않음</string>
     <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
+    <string name="tsz_manhwa">웹툰</string>
+    <string name="tsz_library_manhwa_count">웹툰 %1$d권</string>
+    <string name="tsz_manga_format">만화 형식</string>
+    <string name="tsz_manga_format_auto">자동</string>
+    <string name="tsz_manga_long_strip_detected">웹툰 모드 자동 선택 · 이 작품에 대해 변경</string>
 </resources>
