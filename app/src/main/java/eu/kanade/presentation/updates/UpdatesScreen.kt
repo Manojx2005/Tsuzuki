@@ -2,9 +2,6 @@ package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -59,9 +56,8 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.active
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdateScreen(
+internal fun UpdateScreen(
     state: UpdatesViewModel.State,
     snackbarHostState: SnackbarHostState,
     showFilterChips: Boolean = true,
@@ -85,10 +81,7 @@ fun UpdateScreen(
     onToggleGroupByNovel: () -> Unit = {},
     onClickNovelGroup: (Long) -> Unit = {},
     onLoadMore: () -> Unit = {},
-    animeSelected: Boolean = false,
-    animePill: (@Composable () -> Unit)? = null,
-    airingStrip: (@Composable () -> Unit)? = null,
-    animeContent: (@Composable (PaddingValues, @Composable () -> Unit) -> Unit)? = null,
+    anime: eu.kanade.presentation.tsuzuki.updates.AnimeUpdatesSlots? = null,
 ) {
     BackHandler(enabled = state.selectionMode) {
         onSelectAll(false)
@@ -98,37 +91,7 @@ fun UpdateScreen(
     var selectedPreviewKey by rememberSaveable { mutableStateOf<Long?>(null) }
     val tsuzukiTwoPane = eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesTwoPaneEnabled()
 
-    val pills: @Composable () -> Unit = {
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (tsuzukiTwoPane && !animeSelected) 4.dp else 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            if (showAllFilter) {
-                eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
-                    text = stringResource(MR.strings.all),
-                    selected = !animeSelected && state.filter == UpdatesFilter.ALL,
-                    onClick = { onFilterSelected(UpdatesFilter.ALL) },
-                )
-            }
-            if (showMangaFilter) {
-                eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
-                    text = stringResource(TDMR.strings.label_manga),
-                    selected = !animeSelected && state.filter == UpdatesFilter.MANGA,
-                    onClick = { onFilterSelected(UpdatesFilter.MANGA) },
-                )
-            }
-            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
-                text = stringResource(TDMR.strings.label_novels),
-                selected = !animeSelected && state.filter == UpdatesFilter.NOVELS,
-                onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
-            )
-            animePill?.invoke()
-        }
-    }
-    val showPills = showFilterChips || animePill != null
+    anime?.screen?.let { return it(snackbarHostState) }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -137,7 +100,6 @@ fun UpdateScreen(
                 onUpdateLibrary = { onUpdateLibrary() },
                 onToggleGroupByNovel = onToggleGroupByNovel,
                 groupByNovel = state.groupByNovel,
-                animeSelected = animeSelected,
                 onFilterClicked = { onFilterClicked() },
                 hasFilters = hasActiveFilters,
                 actionModeCounter = state.selected.size,
@@ -165,7 +127,6 @@ fun UpdateScreen(
         },
     ) { contentPadding ->
         when {
-            animeSelected && animeContent != null -> animeContent(contentPadding, pills)
             state.isLoading && !tsuzuki -> LoadingScreen(Modifier.padding(contentPadding))
             tsuzukiTwoPane && !state.isLoading -> eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTwoPane(
                 state = state,
@@ -173,8 +134,10 @@ fun UpdateScreen(
                 onSelectKey = { selectedPreviewKey = it },
                 contentPadding = contentPadding,
                 lastUpdated = lastUpdated,
-                mediaPills = pills.takeIf { showPills },
-                airingStrip = airingStrip,
+                showFilterChips = showFilterChips,
+                showAllFilter = showAllFilter,
+                showMangaFilter = showMangaFilter,
+                onFilterSelected = onFilterSelected,
                 onClickCover = onClickCover,
                 onUpdateSelected = onUpdateSelected,
                 onOpenChapter = onOpenChapter,
@@ -182,6 +145,7 @@ fun UpdateScreen(
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                 onClickNovelGroup = onClickNovelGroup,
                 onLoadMore = onLoadMore,
+                anime = anime,
             )
             else -> {
                 val scope = rememberCoroutineScope()
@@ -222,15 +186,42 @@ fun UpdateScreen(
                         contentPadding = contentPadding,
                         state = lazyListState,
                     ) {
-                        if (showPills) {
+                        if (showFilterChips || anime?.mediaPills != null) {
                             item(key = "filter_chips") {
-                                if (tsuzuki) {
-                                    pills()
-                                } else {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                anime?.mediaPills?.let {
+                                    it(false)
+                                    return@item
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
+                                        eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
                                     ) {
+                                        // Tsuzuki themes: pills (board "Updates").
+                                        if (showAllFilter) {
+                                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                                text = stringResource(MR.strings.all),
+                                                selected = state.filter == UpdatesFilter.ALL,
+                                                onClick = { onFilterSelected(UpdatesFilter.ALL) },
+                                            )
+                                        }
+                                        if (showMangaFilter) {
+                                            eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                                text = stringResource(TDMR.strings.label_manga),
+                                                selected = state.filter == UpdatesFilter.MANGA,
+                                                onClick = { onFilterSelected(UpdatesFilter.MANGA) },
+                                            )
+                                        }
+                                        eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                            text = stringResource(TDMR.strings.label_novels),
+                                            selected = state.filter == UpdatesFilter.NOVELS,
+                                            onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
+                                        )
+                                    } else {
                                         if (showAllFilter) {
                                             FilterChip(
                                                 selected = state.filter == UpdatesFilter.ALL,
@@ -254,9 +245,8 @@ fun UpdateScreen(
                                 }
                             }
                         }
-                        if (airingStrip != null) {
-                            item(key = "airing_today") { airingStrip() }
-                        }
+
+                        anime?.airingStrip?.let { strip -> item(key = "airing_today") { strip() } }
 
                         // Tsuzuki themes: stat tiles above the list (board "Updates").
                         if (state.items.isNotEmpty()) {
@@ -328,7 +318,6 @@ private fun UpdatesAppBar(
     onUpdateLibrary: () -> Unit,
     onToggleGroupByNovel: () -> Unit,
     groupByNovel: Boolean,
-    animeSelected: Boolean,
     onFilterClicked: () -> Unit,
     hasFilters: Boolean,
     // For action mode
@@ -344,40 +333,29 @@ private fun UpdatesAppBar(
         title = stringResource(MR.strings.label_recent_updates),
         actions = {
             AppBarActions(
-                buildList {
-                    if (!animeSelected) {
-                        val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
-                        add(
-                            AppBar.Action(
-                                title = stringResource(MR.strings.action_filter),
-                                icon = Icons.Outlined.FilterList,
-                                iconTint = filterTint,
-                                onClick = onFilterClicked,
-                            ),
-                        )
-                        add(
-                            AppBar.Action(
-                                title = if (groupByNovel) "List View" else "Group by Novel",
-                                icon = if (groupByNovel) Icons.Outlined.ViewList else Icons.Outlined.GridView,
-                                onClick = onToggleGroupByNovel,
-                            ),
-                        )
-                        add(
-                            AppBar.Action(
-                                title = stringResource(MR.strings.action_view_upcoming),
-                                icon = Icons.Outlined.CalendarMonth,
-                                onClick = onCalendarClicked,
-                            ),
-                        )
-                    }
-                    add(
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_update_library),
-                            icon = Icons.Outlined.Refresh,
-                            onClick = onUpdateLibrary,
-                        ),
-                    )
-                },
+                listOf(
+                    AppBar.Action(
+                        title = stringResource(MR.strings.action_filter),
+                        icon = Icons.Outlined.FilterList,
+                        iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                        onClick = onFilterClicked,
+                    ),
+                    AppBar.Action(
+                        title = if (groupByNovel) "List View" else "Group by Novel",
+                        icon = if (groupByNovel) Icons.Outlined.ViewList else Icons.Outlined.GridView,
+                        onClick = onToggleGroupByNovel,
+                    ),
+                    AppBar.Action(
+                        title = stringResource(MR.strings.action_view_upcoming),
+                        icon = Icons.Outlined.CalendarMonth,
+                        onClick = onCalendarClicked,
+                    ),
+                    AppBar.Action(
+                        title = stringResource(MR.strings.action_update_library),
+                        icon = Icons.Outlined.Refresh,
+                        onClick = onUpdateLibrary,
+                    ),
+                ),
             )
         },
         actionModeCounter = actionModeCounter,

@@ -83,8 +83,8 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
         internal const val MANUAL = "tsuzuki-anime-library-manual"
         private val updateLock = Mutex()
 
-        fun setupTask(context: Context, prefInterval: Int? = null) {
-            if (!TsuzukiAnime.enabled) return
+        fun setupTask(context: Context, prefInterval: Int? = null, enabled: Boolean = TsuzukiAnime.enabled) {
+            if (!enabled) return
             val preferences = Injekt.get<LibraryPreferences>()
             val interval = prefInterval ?: preferences.autoUpdateInterval.get()
             if (interval <= 0) {
@@ -136,7 +136,7 @@ internal fun shouldUpdateAnime(
     }
 }
 
-internal fun libraryUpdateConstraints(restrictions: Set<String>): Constraints {
+private fun libraryUpdateConstraints(restrictions: Set<String>): Constraints {
     val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {
         NetworkType.UNMETERED
     } else {

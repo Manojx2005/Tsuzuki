@@ -59,6 +59,8 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
+import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime

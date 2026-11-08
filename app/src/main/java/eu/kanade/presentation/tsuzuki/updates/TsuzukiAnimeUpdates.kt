@@ -1,4 +1,4 @@
-package eu.kanade.presentation.tsuzuki.anime
+package eu.kanade.presentation.tsuzuki.updates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +43,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore

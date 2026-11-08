@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
-import eu.kanade.presentation.tsuzuki.anime.airingDay
+import android.content.Context
+import eu.kanade.presentation.tsuzuki.updates.airingDay
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import io.mockk.confirmVerified
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,6 +24,13 @@ class AnimeLibraryUpdatePolicyTest {
     private val show = Anime(source = 1, url = "/show", title = "Show", favorite = true)
     private val now = TimeUnit.DAYS.toMillis(10)
     private val end = TimeUnit.DAYS.toMillis(11)
+
+    @Test
+    fun schedulingDoesNotTouchWorkManagerWhenAnimeIsDisabled() {
+        val context = mockk<Context>()
+        AnimeLibraryUpdateJob.setupTask(context, prefInterval = 24, enabled = false)
+        confirmVerified(context)
+    }
 
     @Test
     fun excludesOnlyShowsMatchingSourceAndLibraryRestrictions() {
