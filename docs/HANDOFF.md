@@ -29,7 +29,17 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ---
 
-## Current state (2026-11-07 evening, Claude)
+## Current state (2026-11-08, Claude)
+
+- **v0.1.0 is released** (2026-11-08, https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.1.0). **The freeze is
+  lifted**: `main` takes reviewed cards again, anime included (still behind `TsuzukiAnime.enabled` until A4.3).
+- **Codex runs two lanes** (prompts in "Batch S" at the top of the Codex queue): lane 1 = anime chain (A3.5 →
+  R-A5 → A3.6 → ... → A4.2 → A5.x), lane 2 = app (V7.6 → V7.7 → R12 → ... → S4). Claude reviews,
+  device-checks, merges.
+- Claude next: merge `review/post-v01` (R11, HOME-SWIPE, R8, R10) after device checks; merge the anime chain into
+  `main` once R-A5 is done; U1 after 0.1.1 is tagged.
+
+## Earlier state (2026-11-07 evening, Claude)
 
 - **Goal: v0.1 release (no anime).** Plan and every card: "v0.1 release — every card" in the Codex queue below.
 - V1 merged (`3fa896b3e`): Y2, Y6, R1–R5, R9 are in main. Codex: V1.1 → R6 → R7 → V3–V6, then post-v0.1 cards.
@@ -52,6 +62,109 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
   cards into `main` locally and pushes main. Codex never waits on this.
 
 ## Codex queue
+
+### Batch S — after v0.1.0 (Claude, 2026-11-08) — read this first
+
+The v0.1 freeze is over. Two Codex threads, one per lane; never two cards that list the same files. Each card:
+worktree from **current `main`**, merge the branch in its Needs (if any), board first (Dot, then Colour), tokens +
+`MaterialTheme.typography` only, real data only, strings in all 8 locales, tests named in the card, per-file Spotless
+twice, `:app:assembleDebug :app:testDebugUnitTest`, Result + commit on `tsuzuki/<card>` + `review`, stop. Card
+format: WORKPLAN §0.4. Upstream files: small dispatch hooks only (AGENTS.md "Keep Tsundoku mergeable").
+
+**Lane 1 prompt (anime):** `Read AGENTS.md and docs/HANDOFF.md. You are the anime lane: finish A3.5 if it is still
+yours, then take the next ready card in the "Anime lane order" table, in order.`
+
+**Lane 2 prompt (app):** `Read AGENTS.md and docs/HANDOFF.md. You are the app lane: take the next ready card from
+the Batch S app order, in order.`
+
+**App lane order:** V7.6 → V7.7 → R12 → R16 → R17 → R15 → S1 → S2 → S3 → R13 → R14 → S4. (R13, R14 and S4 are T4;
+take them only when the earlier ones are in `review`.)
+
+#### R-A5 Anime chain: upstream-diff fixes from Claude's review (T3) — `ready` (needs `tsuzuki/a3.5`; lane 1)
+Claude reviewed A2.4 → R-A3 on 2026-11-08: 985 tests pass and release builds hide anime, but these must change
+before the chain merges into `main`. Start from `main`, merge `tsuzuki/a3.5` (it contains the whole chain).
+1. **`data/library/LibraryUpdateJob.kt`** (chain diff +7/−25): Tsundoku's own update code was moved out of the file.
+   Put upstream's code back exactly as on `main`, and add **one** hook line that calls a Tsuzuki function in
+   `tsuzuki/anime/` for the anime part. Target: ≤ 5 changed lines.
+2. **`presentation/updates/UpdatesScreen.kt`** (chain diff +93/−85): move the anime / "Airing today" UI into
+   `presentation/tsuzuki/updates/` and dispatch at the top of the upstream composable (the `HistoryItem` pattern).
+   Upstream body unchanged; target ≤ 15 changed lines, no re-indent. Same check for `UpdatesViewModel.kt`.
+3. **Migration numbering:** `36.sqm` (anime tables) already shipped in v0.1.0. `37.sqm` (repo media flag, A3.3) has
+   not. Add a short "Tsuzuki-owned migrations" table to `docs/UPSTREAM.md` (36 = anime tables, shipped 0.1.0;
+   37 = extension repo media flag, unshipped) with the rule: before each Tsundoku merge, compare migration numbers;
+   a clash on an **unshipped** Tsuzuki migration is fixed by renumbering ours above theirs. No schema change here.
+4. Confirm no anime string or resource files are left in `app/src/debug/res/values*` (only `colors.xml` today).
+Tests: existing anime update + Updates tests still pass; add one test that the hook is a no-op when
+`TsuzukiAnime.enabled` is false. Result must list the final `git diff --stat main` for those upstream files.
+Result: _pending_
+
+#### S1 Manhwa: classify long-strip comics (T3) — `ready` (lane 2)
+Boards `09-manga/LibraryMixed` (novels · manga · manhwa) and `09-manga/MangaDetails` ("auto webtoon"). Mark a
+manga as manhwa/long-strip from real data only: source genre/tags (manhwa, manhua, webtoon, long strip), the
+source's language hint, and, once chapters are read, the measured page aspect ratio (height ≥ 2.5 × width on most
+pages). Store the result in a Tsuzuki preference-backed store keyed by manga id (no DB migration); a manual
+override on the details screen wins. Use it for: a Manhwa pill on the Library Manga tab, the details "auto webtoon"
+line, and the default reading mode (webtoon) for manhwa when the user hasn't set one. Pure classifier + tests (tags,
+aspect ratios, override precedence). Claude device-checks with a known manhwa from Keiyoushi on the S22.
+Result: _pending_
+
+#### S2 Listening stats (T2) — `ready` (lane 2)
+Board `07-system/Stats` (Dot: `07-system/dot/Stats`). Owner Q4 keeps reading and watch time apart; listening counts
+with reading. Count TTS minutes from real playback (`TtsController` start/stop/pause, chapter hand-offs) into the
+existing reading-days store as a separate "listened" field (no DB migration), and show the board's listen row on
+Stats (minutes today / this week, chapters listened). Hide the row until there is data. Tests: minute accounting
+across pause, sleep timer, chapter hand-off, and a flush on pause (process death).
+Result: _pending_
+
+#### S3 Chapter recap at the start of a chapter (T3) — `ready` (lane 2)
+Board `06-reader/ChapterEnd` (recap block). Offline and extractive only (no AI, no network): when a novel chapter is
+opened after ≥ 24 h away from that book, show a dismissible "Previously" card above the text with the last 2–3
+paragraphs of the previous chapter (from downloaded/cached text; hide when not available). Reader setting, default
+on. Both renderers (TextView + WebView; WebView via the `chapter-end-card.js` asset pattern). Tests: paragraph
+picking (skips author notes such as "A note from …", blank and very short paragraphs) and the 24 h rule.
+Result: _pending_
+
+#### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `ready` (lane 2, last)
+Research is done: `docs/research/neural-tts.md` (GO-WITH-CONDITIONS). The conditions are hard rules: sherpa-onnx
+≥ v2.0.1 **without espeak-ng** (GPL); **lexicon voices only** (Kokoro int8 multi-lang v1.1), the pack re-zipped
+**without `espeak-ng-data/`**; system TTS stays the default engine; 16 KB alignment check on the new `.so` files;
+licence texts in `docs/licenses/`. This card: a second engine behind `TtsController` (system engine unchanged),
+synthesis on a background thread one ~150–200-char chunk ahead (reuse `TtsTextUtils` chunking), and a
+**debug-only** developer entry that loads a voice pack from app files and plays a chapter. No download UI and no
+voice picker yet (no board; Claude draws them after the owner's listening test). Codex never downloads the model;
+Claude side-loads it for the test. Tests: chunk queueing, stop/pause/seek, fallback to system TTS on load failure.
+Result: _pending_
+
+#### A5.1 Anime: picture-in-picture (T3) — `ready` (needs `tsuzuki/a4.2`; lane 1; v0.3)
+No board needed (system PiP window). The player enters PiP on Home/recents while playing (setting, default on),
+keeps playing, offers play/pause and ±10 s remote actions, returns to the full player on tap, and pauses when the
+PiP window is closed. Respect `TsuzukiAnime.enabled`. Tests for the action set and state restore.
+Result: _pending_
+
+#### A5.2 Anime: seasons grouping (T3) — `ready` (needs `tsuzuki/a5.1`; lane 1; v0.3)
+Owner Q3 kept the four season columns and ignored them in v1. Board `10-anime/AnimeDetails` (seasons row). When a
+source or an Aniyomi import fills `parent_id` / `season_number`, show seasons as a row on the parent's details and
+group child entries under the parent in the anime library (setting "Group seasons", default on). No schema change
+(the columns exist). Tests for grouping and orphaned children.
+Result: _pending_
+
+#### A5.3 Anime: fansub / group filter (T2) — `ready` (needs `tsuzuki/a5.2`; lane 1; v0.3)
+Owner Q5 left this out of v1. Board `10-anime/AnimeDetails` (groups). A per-anime exclude list of fansub groups
+(`episodes.scanlator`), like manga's excluded scanlators: filter sheet on details; excluded groups hidden from the
+episode list, Updates and next-episode logic. If this needs a new table, stop and set `blocked` (Claude writes the
+migration). Tests for filtering and next-episode.
+Result: _pending_
+
+#### A5.4 Anime: Simkl tracker (T3) — `blocked` (owner: register a Simkl API client; then needs `tsuzuki/a5.3`)
+Board `10-anime/AnimeTracking` (Simkl row). Needs a Simkl client id/secret registered by the owner and stored as
+build secrets, never in the repo. Then: OAuth login, search/bind, episode progress sync on seen, stored in
+`anime_sync` like AniList/MAL (A3.5). Torrent sources and torrent player settings stay out (owner has not asked).
+Result: _pending_
+
+#### U1 In-app updater end-to-end (Claude) — `blocked` until 0.1.1 is tagged
+Install v0.1.0 from the release on the tablet (release app id), tag 0.1.1, then confirm the daily check and Settings
+› About › Check for updates both find 0.1.1, the notification opens `NewUpdateScreen`, Download installs in place,
+and Skip this version hides it. Record in V8/V12.
 
 ### Overnight batch Q — run rules (2026-11-06 night; overrides the batch Q "How to run" and prompt below)
 
@@ -500,8 +613,8 @@ that position. Each Previous request is consumed once so a subsequent renderer s
 
 **Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 TextView, Colour: Ch. 108 → ‹ Previous → Ch. 107 opens at 0 % and scrolls; ‹ again → Ch. 106 scrolls down and up. Pass. Not yet run: WebView renderer, infinite scroll off, tablet. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
 
-#### V7.7 Smoother chapter-end Next chapter (T2) — `blocked` (owner 2026-11-08: 0.1.1, after the v0.1.0 tag)
-Owner: RC4's fix works but the tap → next chapter switch should feel smoother. Text reader (`NovelViewer`) with
+#### V7.7 Smoother chapter-end Next chapter (T2) — `ready` (owner 2026-11-08: 0.1.1; v0.1.0 is tagged)
+Owner: RC4's fix works but the tap → next chapter switch should feel smoother. Board: `06-reader/ChapterEnd`. Text reader (`NovelViewer`) with
 infinite scroll **off** (now non-default). Today the tap clears the page and the new chapter pops in at the top.
 Look at the chapter-end card board, then: show press feedback at once, keep the card until the next chapter's
 content is ready (no blank frame), and bring the new chapter in with the reader's existing transition
@@ -1433,8 +1546,8 @@ Result (Codex 2026-11-08): `tsuzuki/a2.4` at `c52c5cffc`, includes A2.3.
 
 #### Anime lane order from 2026-11-08 (Claude) — detailed plan in WORKPLAN §6.3–6.5
 
-`main` is frozen for v0.1, so **don't wait for main**: each card starts a worktree from `main` and merges the card
-branch in its **Needs** column (that branch already contains the earlier chain). Gate every entry point with
+(2026-11-08: the v0.1 freeze is over; Claude merges the chain into `main` after R-A5.) **Don't wait for main**: each
+card starts a worktree from `main` and merges the card branch in its **Needs** column (that branch already contains the earlier chain). Gate every entry point with
 `TsuzukiAnime.enabled` (A3.0; until then `BuildConfig.DEBUG`). Release/preview builds must show nothing anime.
 Every card: board first (Dot then Colour), tokens + typography only, real data only, strings in all 8 locales,
 tests named in the card, per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest`, Result + `review`.
@@ -1451,7 +1564,8 @@ Card format and verify commands: WORKPLAN §0.4 and the appendix skeleton.
 | 7 | A3.4 Anime history | `tsuzuki/a3.3` | T2 | medium |
 | 8 | R-A3 Updates + Airing today | `tsuzuki/a3.4` | T3 | high |
 | 9 | A3.5 Anime trackers (AniList, MAL) | `tsuzuki/r-a3` | T4 | high |
-| 10 | A3.6 AniSkip | `tsuzuki/a3.5` | T3 | medium |
+| 9b | R-A5 Anime chain upstream-diff fixes | `tsuzuki/a3.5` | T3 | medium |
+| 10 | A3.6 AniSkip | `tsuzuki/r-a5` | T3 | medium |
 | 11 | R-A1 Anime backups | `tsuzuki/a3.6` | T4 | high |
 | 12 | R-A4 Episode downloads | `tsuzuki/r-a1` | T4 | xhigh |
 | 13 | A3.7 Watch-time stats | `tsuzuki/r-a4` | T2 | medium |
@@ -1459,6 +1573,11 @@ Card format and verify commands: WORKPLAN §0.4 and the appendix skeleton.
 | 15 | A3.9 Continue-watching widget | `tsuzuki/a3.8` | T3 | medium |
 | 16 | A4.1 Anime restyle parity pass | `tsuzuki/a3.9` | T2 | medium |
 | 17 | A4.2 Release packaging for anime | `tsuzuki/a4.1` | T3 | high |
+| — | A4.3 / A4.4 setting flip, device sweep, migration upgrade test | Claude + owner | — | — |
+| 18 | A5.1 Picture-in-picture | `tsuzuki/a4.2` | T3 | medium |
+| 19 | A5.2 Seasons grouping | `tsuzuki/a5.1` | T3 | high |
+| 20 | A5.3 Fansub / group filter | `tsuzuki/a5.2` | T2 | medium |
+| 21 | A5.4 Simkl tracker | `tsuzuki/a5.3` | T3 | high (blocked on owner) |
 
 A linear chain keeps merges simple. A merge conflict in the Needs step → `git merge --abort`, set `blocked`
 ("needs Claude to merge"), next card. If the Needs branch is not `review`/`done` yet, the card waits (skip it).
@@ -1636,7 +1755,7 @@ an optional background progress sync and a tracking sheet. Migration 38 stores t
 by AniList for A3.6. Debug Kotlin compiled before the final formatting pass. Offline build and tests
 are running; see spotless-a3.5.log and build-a3.5.log in the worktree.
 
-#### A3.6 AniSkip (T3) — `ready` (needs `tsuzuki/a3.5`)
+#### A3.6 AniSkip (T3) — `ready` (needs `tsuzuki/r-a5`)
 Boards: `Player` (skip button) + `PlayerSettings` (AniSkip part). Call the AniSkip API
 (`api.aniskip.com/v2/skip-times/<malId>/<ep>`) with the MAL id from an A3.5 binding (an AniList binding gives
 `idMal`); no id → no button. A skip intro/ending/recap button for the segment's length; prefs: off / button /
@@ -2135,6 +2254,8 @@ Result: _pending_
   if you prefer the stock behaviour.
 
 ## Owner decisions in force
+
+- 2026-11-08: **v0.1 freeze lifted** after the v0.1.0 release. Codex: two lanes (anime, app), cards in Batch S.
 
 - 2026-11-08: **Novel infinite scroll is on by default** (`ReaderPreferences.novelInfiniteScroll`; a saved
   choice is kept). Smoother chapter-end Next chapter → V7.7 in 0.1.1.
