@@ -26,6 +26,8 @@ import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.tsuzuki.reader.NovelIllustrationTextView
+import eu.kanade.tachiyomi.tsuzuki.reader.NovelReadingColumn
 import eu.kanade.tachiyomi.tsuzuki.reader.isOnChapterEndCard
 import eu.kanade.tachiyomi.tsuzuki.reader.keepGlyphOverhangVisible
 import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
@@ -75,12 +77,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     private val container = FrameLayout(activity)
     private lateinit var scrollView: NestedScrollView
-    private lateinit var contentContainer: LinearLayout
+    private lateinit var contentContainer: NovelReadingColumn
     private val inlineFeedback by lazy {
         NovelTextViewInlineFeedback(activity, contentContainer, scope)
     }
     private val textRenderer by lazy {
-        NovelTextRenderer(activity, preferences, scope)
+        NovelTextRenderer(activity, preferences, scope, contentContainer::illustrationWidth)
     }
     private val preferences: ReaderPreferences by injectLazy()
     private val libraryPreferences: tachiyomi.domain.library.service.LibraryPreferences by injectLazy()
@@ -288,7 +290,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             isHorizontalScrollBarEnabled = false
         }
 
-        contentContainer = LinearLayout(activity).apply {
+        contentContainer = NovelReadingColumn(activity, preferences).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -729,7 +731,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun createSelectableTextView(): TextView {
-        return TextView(activity).apply {
+        return NovelIllustrationTextView(activity).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,

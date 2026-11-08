@@ -5,6 +5,7 @@ package eu.kanade.tachiyomi.ui.reader.viewer.text.webview
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import android.view.ActionMode
 import android.view.GestureDetector
@@ -595,6 +596,11 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         }.also(container::addOnAttachStateChangeListener)
 
         webView = object : WebView(activity) {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                super.onConfigurationChanged(newConfig)
+                if (::styler.isInitialized) styler.updateReadingColumn(newConfig.smallestScreenWidthDp)
+            }
+
             override fun startActionMode(callback: ActionMode.Callback?, type: Int): ActionMode? {
                 if (!preferences.novelTextSelectable.get() || callback == null) {
                     return super.startActionMode(callback, type)

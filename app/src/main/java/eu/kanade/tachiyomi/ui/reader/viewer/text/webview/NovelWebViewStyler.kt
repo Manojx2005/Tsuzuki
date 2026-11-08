@@ -8,6 +8,8 @@ import eu.kanade.presentation.reader.settings.CodeSnippet
 import eu.kanade.presentation.reader.settings.safeTitle
 import eu.kanade.presentation.tsuzuki.reader.chapterEndDownloaded
 import eu.kanade.presentation.tsuzuki.reader.webChapterEndPayload
+import eu.kanade.tachiyomi.tsuzuki.reader.novelReadingColumnCss
+import eu.kanade.tachiyomi.tsuzuki.reader.usesNovelReadingColumn
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
@@ -33,6 +35,8 @@ internal class NovelWebViewStyler(
     private val container: View,
     private val evaluateJs: (String) -> Unit,
 ) {
+
+    private var useReadingColumn = usesNovelReadingColumn(activity.resources.configuration.smallestScreenWidthDp)
 
     data class CustomStylePayload(
         val css: String,
@@ -85,6 +89,11 @@ internal class NovelWebViewStyler(
         val sourceCssPriority = preferences.novelSourceCssPriority.get()
         val styleImportance = if (sourceCssPriority) "" else " !important"
         val fontFamilyLine = if (useOriginalFonts) "" else "font-family: $effectiveFontFamily $styleImportance;"
+        val readingColumnCss = if (useReadingColumn) {
+            novelReadingColumnCss(marginLeft, marginRight, PAGED_BODY_CLASS, styleImportance)
+        } else {
+            ""
+        }
 
         val textSelect = if (preferences.novelTextSelectable.get()) "text" else "none"
 
@@ -123,6 +132,7 @@ internal class NovelWebViewStyler(
             }
             $headingSizeRules
             $hideChapterTitleCss
+            $readingColumnCss
             $customCss
             $enabledSnippetsCss
         """.trimIndent().replace("\n", " ")
@@ -204,6 +214,13 @@ internal class NovelWebViewStyler(
             logcat(LogPriority.ERROR) { "Failed to read custom font: ${e.message}" }
             null
         }
+    }
+
+    fun updateReadingColumn(smallestWidthDp: Int) {
+        val enabled = usesNovelReadingColumn(smallestWidthDp)
+        if (useReadingColumn == enabled) return
+        useReadingColumn = enabled
+        injectStyles()
     }
 
     fun injectStyles() {
