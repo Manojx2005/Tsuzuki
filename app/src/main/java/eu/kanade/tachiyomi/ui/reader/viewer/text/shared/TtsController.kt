@@ -360,8 +360,11 @@ class TtsController(
             Pair(voice.name, "${voice.locale.displayLanguage} (${voice.name})")
         }?.sortedBy { it.second } ?: emptyList()
 
-    fun getCurrentVoiceName(): String =
-        tts?.voice?.name ?: preferences.novelTtsVoice.get()
+    internal fun getCurrentVoiceLabel(appLocale: Locale, offlineLabel: String, onlineLabel: String): String {
+        val voice = tts?.voice ?: return preferences.novelTtsVoice.get()
+        val connectionLabel = if (voice.isNetworkConnectionRequired) onlineLabel else offlineLabel
+        return eu.kanade.tachiyomi.tsuzuki.tts.ttsVoiceLabel(voice.name, voice.locale, appLocale, connectionLabel)
+    }
 
     fun destroy() {
         setSleepTimer(TtsSleepTimer.Off)

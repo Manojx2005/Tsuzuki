@@ -435,7 +435,7 @@
     <string name="novel_align_center">Center</string>
     <string name="novel_align_right">Right</string>
     <string name="novel_align_justify">Justify</string>
-    <string name="novel_render_default">Default (TextView)</string>
+    <string name="novel_render_default">TextView</string>
     <string name="novel_render_webview">WebView</string>
     <string name="novel_color_default">Default</string>
     <string name="novel_color_black">Black</string>

@@ -42,6 +42,8 @@ import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterDownloadIndicator
 import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesLastUpdated
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
@@ -64,6 +66,10 @@ internal fun LazyListScope.updatesLastUpdatedItem(
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         ) {
+            if (isTsuzukiStyle()) {
+                TsuzukiUpdatesLastUpdated(lastUpdated)
+                return@Box
+            }
             Text(
                 text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
                 fontStyle = FontStyle.Italic,

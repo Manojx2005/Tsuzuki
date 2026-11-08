@@ -1157,6 +1157,8 @@
     <string name="tsz_picker_title">Sélecteur de site</string>
     <string name="tsz_picker_step">Étape %1$d sur %2$d · %3$s</string>
     <!-- c5 -->
+    <string name="tsz_tts_voice_offline">Hors ligne</string>
+    <string name="tsz_tts_voice_online">En ligne</string>
     <string name="tsz_tts_read_from_here">Lire à partir d'ici</string>
     <!-- d1 -->
     <string name="tsz_updates_preview">Aperçu · %1$s</string>

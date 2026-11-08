@@ -1151,6 +1151,8 @@
     <string name="tsz_picker_title">Selector del sitio</string>
     <string name="tsz_picker_step">Paso %1$d de %2$d · %3$s</string>
     <!-- c5 -->
+    <string name="tsz_tts_voice_offline">Sin conexión</string>
+    <string name="tsz_tts_voice_online">En línea</string>
     <string name="tsz_tts_read_from_here">Leer desde aquí</string>
     <!-- d1 -->
     <string name="tsz_updates_preview">Vista previa · %1$s</string>

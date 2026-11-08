@@ -394,7 +394,7 @@
     <string name="novel_align_center">中央</string>
     <string name="novel_align_right">右揃え</string>
     <string name="novel_align_justify">両端揃え</string>
-    <string name="novel_render_default">標準（TextView）</string>
+    <string name="novel_render_default">ネイティブ</string>
     <string name="novel_render_webview">WebView</string>
     <string name="novel_color_default">既定</string>
     <string name="novel_color_black">黒</string>
@@ -886,7 +886,7 @@
     <string name="novel_status_bar_element_progress">進捗</string>
     <string name="novel_status_bar_element_battery">バッテリー</string>
     <!-- Novel reader settings and font management -->
-    <string name="pref_novel_native_renderer">ネイティブ（TextView）</string>
+    <string name="pref_novel_native_renderer">ネイティブ</string>
     <string name="pref_novel_text_group">テキスト</string>
     <string name="pref_novel_formatting_group">書式</string>
     <string name="pref_novel_content_group">コンテンツ</string>

@@ -427,7 +427,7 @@
     <string name="pref_display_profile">Custom display profile</string>
     <string name="pref_crop_borders">Crop borders</string>
     <string name="pref_custom_brightness">Custom brightness</string>
-    <string name="pref_grayscale">Grayscale</string>
+    <string name="pref_grayscale">Greyscale</string>
     <string name="pref_inverted_colors">Inverted</string>
     <string name="pref_custom_color_filter">Custom color filter</string>
     <string name="pref_color_filter_mode">Color filter blend mode</string>
@@ -1528,6 +1528,8 @@
     <string name="tsz_picker_title">Site picker</string>
     <string name="tsz_picker_step">Step %1$d of %2$d · %3$s</string>
     <!-- c5 -->
+    <string name="tsz_tts_voice_offline">Offline</string>
+    <string name="tsz_tts_voice_online">Online</string>
     <string name="tsz_tts_read_from_here">Read from here</string>
     <!-- d1 -->
     <string name="tsz_updates_preview">Preview · %1$s</string>

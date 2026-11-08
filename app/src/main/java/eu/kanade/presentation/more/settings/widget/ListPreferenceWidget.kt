@@ -23,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.settings.TsuzukiValuePreferenceRow
+import eu.kanade.presentation.tsuzuki.settings.showsValueLabel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
@@ -38,16 +41,16 @@ fun <T> ListPreferenceWidget(
 ) {
     var isDialogShown by remember { mutableStateOf(false) }
 
-    // Tsuzuki (TabletSettings / SettingsAppearance boards): a plain "current value" subtitle is shown as an
-    // accent value on the right instead.
-    val accentValue = eu.kanade.presentation.tsuzuki.settings.tsuzukiValueLabel(subtitle, entries[value])
-    TextPreferenceWidget(
-        title = title,
-        subtitle = subtitle.takeIf { accentValue == null },
-        icon = icon,
-        widget = accentValue,
-        onPreferenceClick = { isDialogShown = true },
-    )
+    if (subtitle != null && showsValueLabel(TsuzukiTheme.tokens.style, subtitle, entries[value])) {
+        TsuzukiValuePreferenceRow(title, subtitle, icon) { isDialogShown = true }
+    } else {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = subtitle,
+            icon = icon,
+            onPreferenceClick = { isDialogShown = true },
+        )
+    }
 
     if (isDialogShown) {
         AlertDialog(

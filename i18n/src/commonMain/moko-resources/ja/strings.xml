@@ -1163,6 +1163,8 @@
     <string name="tsz_picker_title">サイトピッカー</string>
     <string name="tsz_picker_step">ステップ %1$d / %2$d · %3$s</string>
     <!-- c5 -->
+    <string name="tsz_tts_voice_offline">オフライン</string>
+    <string name="tsz_tts_voice_online">オンライン</string>
     <string name="tsz_tts_read_from_here">ここから読み上げ</string>
     <!-- d1 -->
     <string name="tsz_updates_preview">プレビュー · %1$s</string>

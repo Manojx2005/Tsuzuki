@@ -2,20 +2,38 @@ package eu.kanade.presentation.tsuzuki.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
+import eu.kanade.presentation.more.settings.LocalPreferenceMinHeight
+import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
+import eu.kanade.presentation.more.settings.widget.PrefsVerticalPadding
+import eu.kanade.presentation.more.settings.widget.TitleFontSize
+import eu.kanade.presentation.more.settings.widget.highlightBackground
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
@@ -49,16 +67,47 @@ fun tsuzukiValueLabel(subtitle: String?, selectedEntry: String?): (@Composable (
     if (!showsValueLabel(tokens.style, subtitle, selectedEntry)) return null
     if (subtitle == null) return null
     return {
-        androidx.compose.material3.Text(
-            if (tokens.isDot) subtitle.uppercase() else subtitle,
-            modifier = Modifier.padding(start = 12.dp, end = 16.dp).widthIn(max = 180.dp),
-            color = tokens.accent,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-        )
+        PreferenceValueText(subtitle, Modifier.padding(start = 12.dp, end = 16.dp).widthIn(max = 180.dp))
     }
+}
+
+@Composable
+internal fun TsuzukiValuePreferenceRow(title: String, value: String, icon: ImageVector?, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .highlightBackground(LocalPreferenceHighlighted.current)
+            .sizeIn(minHeight = LocalPreferenceMinHeight.current)
+            .clickable(onClick = onClick)
+            .fillMaxWidth()
+            .padding(horizontal = PrefsHorizontalPadding, vertical = PrefsVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = TsuzukiTheme.tokens.accent)
+        }
+        Text(
+            text = tsuzukiCase(title) ?: title,
+            style = MaterialTheme.typography.titleLarge,
+            fontSize = TitleFontSize,
+            fontWeight = FontWeight.Bold,
+        )
+        PreferenceValueText(value, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun PreferenceValueText(value: String, modifier: Modifier) {
+    Text(
+        text = tsuzukiCase(value) ?: value,
+        modifier = modifier,
+        color = TsuzukiTheme.tokens.accent,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 /**

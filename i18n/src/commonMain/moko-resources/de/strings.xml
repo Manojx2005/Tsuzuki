@@ -1164,6 +1164,8 @@
     <string name="tsz_picker_title">Seiten-Auswahl</string>
     <string name="tsz_picker_step">Schritt %1$d von %2$d · %3$s</string>
     <!-- c5 -->
+    <string name="tsz_tts_voice_offline">Offline</string>
+    <string name="tsz_tts_voice_online">Online</string>
     <string name="tsz_tts_read_from_here">Ab hier vorlesen</string>
     <!-- d1 -->
     <string name="tsz_updates_preview">Vorschau · %1$s</string>

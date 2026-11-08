@@ -114,7 +114,7 @@ internal fun TsuzukiReaderListenPanel(
                     Text(tsuzukiMenuLabel(title), style = MaterialTheme.typography.titleLarge)
                 }
                 Text(
-                    "$voice · ${rateFormat.format(speed)}×",
+                    tsuzukiMenuLabel("$voice · ${rateFormat.format(speed)}×"),
                     style = MaterialTheme.typography.labelMedium,
                     color = tokens.accent,
                     maxLines = 2,
