@@ -64,7 +64,8 @@ jobs:
           TSUZUKI_GITHUB_RELEASE: 'true'
           storeFileBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyAlias: ${{ secrets.KEY_ALIAS }}
+          # The alias is not sensitive; as a secret its value ("tsuzuki") was masked as *** across the logs.
+          keyAlias: tsuzuki
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         # Never add -Pinclude-telemetry: PRIVACY.md promises no telemetry.
         run: ./gradlew :app:assembleRelease -Penable-updater

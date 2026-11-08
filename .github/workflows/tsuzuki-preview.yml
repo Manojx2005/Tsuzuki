@@ -2,7 +2,7 @@
 # GitHub release tagged rNNNN (commit count). Installed preview builds find it through Settings → About →
 # Check for updates (and the check on app start). Needs these repository secrets (Settings → Secrets → Actions):
 #   SIGNING_KEY_BASE64  base64 of the .jks keystore
-#   KEY_STORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+#   KEY_STORE_PASSWORD, KEY_PASSWORD (alias is set in the workflow)
 # Run it from the Actions tab ("Run workflow"), optionally with release notes.
 name: Tsuzuki preview release
 
@@ -49,7 +49,8 @@ jobs:
           TSUZUKI_GITHUB_RELEASE: 'true'
           storeFileBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyAlias: ${{ secrets.KEY_ALIAS }}
+          # The alias is not sensitive; as a secret its value ("tsuzuki") was masked as *** across the logs.
+          keyAlias: tsuzuki
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew :app:assemblePreview
 
