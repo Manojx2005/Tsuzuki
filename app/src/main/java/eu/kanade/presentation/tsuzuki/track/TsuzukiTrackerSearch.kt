@@ -94,6 +94,7 @@ internal fun TsuzukiTrackerSearch(
     onDismissRequest: () -> Unit,
     supportsPrivateTracking: Boolean,
     altTitles: List<String>,
+    countLabel: (@Composable (Long) -> String)? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val focusManager = LocalFocusManager.current
@@ -158,7 +159,7 @@ internal fun TsuzukiTrackerSearch(
                             items(tracks, key = {
                                 "${it.tracker_id}-${it.remote_id}"
                             }, contentType = { "track_result" }) { track ->
-                                TrackerSearchResult(track, selected = track == selected) {
+                                TrackerSearchResult(track, selected = track == selected, countLabel = countLabel) {
                                     focusManager.clearFocus()
                                     onSelectedChange(track)
                                 }
@@ -288,7 +289,12 @@ private fun TrackerSearchField(
 }
 
 @Composable
-private fun TrackerSearchResult(track: TrackSearch, selected: Boolean, onClick: () -> Unit) {
+private fun TrackerSearchResult(
+    track: TrackSearch,
+    selected: Boolean,
+    countLabel: (@Composable (Long) -> String)?,
+    onClick: () -> Unit,
+) {
     val tokens = TsuzukiTheme.tokens
     val muted = tokens.dotOn.copy(alpha = 0.72f)
     val shape = RoundedCornerShape(tokens.tileRadius)
@@ -301,7 +307,12 @@ private fun TrackerSearchResult(track: TrackSearch, selected: Boolean, onClick: 
     val details = listOfNotNull(
         type.takeIf { it.isNotBlank() },
         track.start_date.takeIf { it.isNotBlank() },
-        if (track.total_chapters > 0) stringResource(MR.strings.duplicate_n_chapters, track.total_chapters) else null,
+        if (track.total_chapters > 0) {
+            countLabel?.invoke(track.total_chapters)
+                ?: stringResource(MR.strings.duplicate_n_chapters, track.total_chapters)
+        } else {
+            null
+        },
         status.takeIf { it.isNotBlank() },
     ).joinToString(" · ")
     val credits = (track.authors + track.artists).distinct().joinToString()

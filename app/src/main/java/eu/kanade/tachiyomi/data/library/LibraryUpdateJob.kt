@@ -2,17 +2,13 @@ package eu.kanade.tachiyomi.data.library
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.os.Build
 import android.util.Log
 import androidx.work.BackoffPolicy
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -26,6 +22,8 @@ import eu.kanade.tachiyomi.network.interceptor.withRateLimitWaitUpdates
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.source.rateLimitHost
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.libraryUpdateConstraints
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.source.getMangaUrlOrNull
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -57,8 +55,6 @@ import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.download.service.NovelDownloadPreferences
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_HAS_UNREAD
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_NON_COMPLETED
@@ -657,29 +653,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         ) {
             val preferences = Injekt.get<LibraryPreferences>()
             val interval = prefInterval ?: preferences.autoUpdateInterval.get()
+            AnimeLibraryUpdateJob.setupTask(context, interval)
             if (interval > 0) {
-                val restrictions = preferences.autoUpdateDeviceRestrictions.get()
-                val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {
-                    NetworkType.UNMETERED
-                } else {
-                    NetworkType.CONNECTED
-                }
-                val networkRequest = NetworkRequest.Builder().apply {
-                    removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-                    if (DEVICE_ONLY_ON_WIFI in restrictions) {
-                        addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                    }
-                    if (DEVICE_NETWORK_NOT_METERED in restrictions) {
-                        addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-                    }
-                }
-                    .build()
-                val constraints = Constraints.Builder()
-                    // 'networkRequest' only applies to Android 9+, otherwise 'networkType' is used
-                    .setRequiredNetworkRequest(networkRequest, networkType)
-                    .setRequiresCharging(DEVICE_CHARGING in restrictions)
-                    .setRequiresBatteryNotLow(true)
-                    .build()
+                val constraints = libraryUpdateConstraints(preferences.autoUpdateDeviceRestrictions.get())
 
                 val request = PeriodicWorkRequestBuilder<LibraryUpdateJob>(
                     interval.toLong(),

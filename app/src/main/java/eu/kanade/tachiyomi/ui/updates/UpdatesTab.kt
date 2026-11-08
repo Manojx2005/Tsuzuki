@@ -1,15 +1,22 @@
 package eu.kanade.tachiyomi.ui.updates
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -17,12 +24,19 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.tsuzuki.anime.AnimeAiringStrip
+import eu.kanade.presentation.tsuzuki.anime.TsuzukiAnimeUpdates
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeAiringToday
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.updates.UpdateScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -72,6 +86,21 @@ data object UpdatesTab : Tab {
         }
 
         val tsuzuki = isTsuzukiStyle()
+        val animeStore = if (tsuzuki && TsuzukiAnime.enabled) remember { Injekt.get<AnimeLibraryStore>() } else null
+        val hasAnime = if (animeStore != null) {
+            val hasFavorites by remember(animeStore) { animeStore.observeHasFavorites() }.collectAsState(null)
+            hasFavorites
+        } else {
+            false
+        }
+        var animeFilter by rememberSaveable { mutableStateOf(false) }
+        val animeSelected = hasAnime == true && animeFilter
+        BackHandler(enabled = animeSelected) { animeFilter = false }
+        LaunchedEffect(hasAnime) {
+            if (hasAnime == false) animeFilter = false
+        }
+        val airing = if (animeStore != null && hasAnime == true) rememberAnimeAiringToday(animeStore) else null
+
         UpdateScreen(
             state = state,
             snackbarHostState = viewModel.snackbarHostState,
@@ -80,7 +109,11 @@ data object UpdatesTab : Tab {
             onClickCover = { item -> navigator.push(MangaScreen(item.update.mangaId)) },
             onSelectAll = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
-            onUpdateLibrary = viewModel::updateLibrary,
+            onUpdateLibrary = if (animeSelected) {
+                { AnimeLibraryUpdateJob.start(context) }
+            } else {
+                viewModel::updateLibrary
+            },
             onDownloadChapter = viewModel::downloadChapters,
             onMultiBookmarkClicked = viewModel::bookmarkUpdates,
             onMultiMarkAsReadClicked = { items, read -> viewModel.markUpdatesRead(items, read, offerUndo = tsuzuki) },
@@ -95,7 +128,10 @@ data object UpdatesTab : Tab {
                 context.startActivity(intent)
             },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
-            onFilterSelected = viewModel::setFilter,
+            onFilterSelected = {
+                animeFilter = false
+                viewModel.setFilter(it)
+            },
             onFilterClicked = viewModel::showFilterDialog,
             hasActiveFilters = state.hasActiveFilters,
             showAllFilter = !hideMangaUi,
@@ -103,6 +139,22 @@ data object UpdatesTab : Tab {
             onToggleGroupByNovel = viewModel::toggleGroupByNovel,
             onClickNovelGroup = { mangaId -> navigator.push(MangaScreen(mangaId)) },
             onLoadMore = viewModel::loadMore,
+            animeSelected = animeSelected,
+            animePill = if (hasAnime == true && !state.selectionMode) {
+                {
+                    TsuzukiPill(
+                        text = stringResource(MR.strings.tsz_anime_media),
+                        selected = animeSelected,
+                        onClick = { animeFilter = true },
+                    )
+                }
+            } else {
+                null
+            },
+            airingStrip = airing?.let { entry -> { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) } },
+            animeContent = animeStore?.let { store ->
+                { padding, pills -> TsuzukiAnimeUpdates(store, padding, pills, airing) }
+            },
         )
 
         val onDismissDialog = { viewModel.setDialog(null) }

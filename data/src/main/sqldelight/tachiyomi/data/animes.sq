@@ -118,3 +118,6 @@ DELETE FROM animes WHERE _id = :id;
 
 lastInsertedId:
 SELECT last_insert_rowid();
+
+recordLibraryRefresh:
+UPDATE animes SET last_update = :timestamp WHERE _id = :id;

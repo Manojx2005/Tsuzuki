@@ -80,7 +80,7 @@ the Batch S app order, in order.`
 **App lane order:** V7.6 → V7.7 → R12 → R16 → R17 → R15 → S1 → S2 → S3 → R13 → R14 → S4. (R13, R14 and S4 are T4;
 take them only when the earlier ones are in `review`.)
 
-#### R-A5 Anime chain: upstream-diff fixes from Claude's review (T3) — `ready` (needs `tsuzuki/a3.5`; lane 1)
+#### R-A5 Anime chain: upstream-diff fixes from Claude's review (T3) — `codex-working` (2026-11-08, `.worktrees/r-a5`; lane 1)
 Claude reviewed A2.4 → R-A3 on 2026-11-08: 985 tests pass and release builds hide anime, but these must change
 before the chain merges into `main`. Start from `main`, merge `tsuzuki/a3.5` (it contains the whole chain).
 1. **`data/library/LibraryUpdateJob.kt`** (chain diff +7/−25): Tsundoku's own update code was moved out of the file.
@@ -1741,7 +1741,7 @@ Result (Codex 2026-11-08): `tsuzuki/a3.4` at `f399c7eeb`, includes A3.3.
 - Claude device check on S22 and Tab S11: play two episodes, open History and choose Anime, verify date groups
   and search, resume the partial entry, remove one record, then remove the rest for a show. Check Dot and Colour.
 
-#### A3.5 Anime trackers: AniList + MyAnimeList (T4) — `codex-working` (.worktrees/a3.5, 2026-11-08)
+#### A3.5 Anime trackers: AniList + MyAnimeList (T4) — `review` (2026-11-08, `.worktrees/a3.5`)
 Board: `png/10-anime/AnimeTracking.png` + `dot/` + html. Goal: the existing AniList and MAL logins also track anime.
 Steps: anime search/bind/update for AniList (GraphQL `type: ANIME`, progress = episodes) and MAL (`/anime`,
 `num_watched_episodes`), stored in `anime_sync`; a tracking sheet on anime details reusing the Tsuzuki tracking UI;
@@ -1749,11 +1749,22 @@ on episode seen, raise progress only if the tracker's count is lower (Mihon rule
 out (no client exists). Never log tokens. Tests: request bodies against fixtures, the progress-only-increases rule,
 `anime_sync` mapping. Claude checks with a real account only if the owner logs in.
 
-Result (Codex 2026-11-08, in progress): implementation in .worktrees/a3.5 on tsuzuki/a3.5.
-Anime tracking uses existing AniList and MyAnimeList clients, stores links in anime_sync, and adds
-an optional background progress sync and a tracking sheet. Migration 38 stores the MAL ID returned
-by AniList for A3.6. Debug Kotlin compiled before the final formatting pass. Offline build and tests
-are running; see spotless-a3.5.log and build-a3.5.log in the worktree.
+Result: `87860e93b`. Two per-file Spotless passes (app, data, domain) and
+`:app:assembleDebug :app:testDebugUnitTest` passed with JDK 21 offline (990 tests, zero failures).
+
+- `AnimeTrackingSheet.kt`, `AnimeDetailsScreen.kt` and `TsuzukiTrackerSearch.kt` add themed linking, progress,
+  status, score and date editing to debug anime details. Eight locales provide new labels.
+- `AniListAnimeApi.kt` and `MyAnimeListAnimeApi.kt` use the existing logins and authenticated clients through
+  thin hooks in the four existing tracker classes. `AnimeTrackerApi.kt` defines the shared anime API and progress rule.
+- `AnimeTracking.kt` serializes sync and editing. `AnimeTrackProgressJob.kt`, `AnimePlayerModel.kt`,
+  `AnimeLibraryStore.kt` and `AppModule.kt` wire optional updates when an episode first becomes seen.
+- `AnimeTrack.kt`, `AnimeTrackRepository.kt`, `AnimeTrackRepositoryImpl.kt`, `anime_sync.sq` and migration
+  `38.sqm` store the binding and optional MAL ID that A3.6 needs.
+- `AnimeTrackApiTest.kt` exercises requests and monotonic progress. `AnimeDatabaseTest.kt` checks persisted
+  bindings and agreement between upgraded and fresh schemas. `docs/design/README.md` records device review pending.
+
+Claude device review: with owner-approved tracker logins, check search/link/edit/unlink in Dot and Colour and
+verify that watching an earlier episode preserves higher remote progress. Simkl is deferred.
 
 #### A3.6 AniSkip (T3) — `ready` (needs `tsuzuki/r-a5`)
 Boards: `Player` (skip button) + `PlayerSettings` (AniSkip part). Call the AniSkip API

@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
+import eu.kanade.tachiyomi.tsuzuki.anime.track.MyAnimeListAnimeApi
 import eu.kanade.tachiyomi.util.PkceUtil
 import kotlinx.serialization.json.Json
 import okhttp3.FormBody
@@ -39,6 +40,8 @@ class MyAnimeListApi(
     private val json: Json by injectLazy()
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
+
+    internal val anime by lazy { MyAnimeListAnimeApi(authClient, json) }
 
     suspend fun getAccessToken(authCode: String): MALOAuth {
         return withIOContext {

@@ -697,17 +697,20 @@ private fun ExtensionHeader(
 }
 
 @Composable
-private fun ExtensionTrustDialog(
+internal fun ExtensionTrustDialog(
     onClickConfirm: () -> Unit,
     onClickDismiss: () -> Unit,
     onDismissRequest: () -> Unit,
+    details: String? = null,
+    dismissLabel: String? = null,
 ) {
     AlertDialog(
         title = {
             Text(text = stringResource(MR.strings.untrusted_extension))
         },
         text = {
-            Text(text = stringResource(MR.strings.untrusted_extension_message))
+            val warning = stringResource(MR.strings.untrusted_extension_message)
+            Text(text = if (details == null) warning else "$details\n\n$warning")
         },
         confirmButton = {
             TextButton(onClick = onClickConfirm) {
@@ -716,7 +719,7 @@ private fun ExtensionTrustDialog(
         },
         dismissButton = {
             TextButton(onClick = onClickDismiss) {
-                Text(text = stringResource(MR.strings.ext_uninstall))
+                Text(text = dismissLabel ?: stringResource(MR.strings.ext_uninstall))
             }
         },
         onDismissRequest = onDismissRequest,

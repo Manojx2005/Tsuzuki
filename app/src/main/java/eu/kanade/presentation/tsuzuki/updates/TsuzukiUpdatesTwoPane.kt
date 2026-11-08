@@ -64,13 +64,11 @@ import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.model.Download
-import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import eu.kanade.tachiyomi.ui.updates.UpdatesNovelGroup
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import uy.kohesive.injekt.Injekt
@@ -101,10 +99,8 @@ fun TsuzukiUpdatesTwoPane(
     onSelectKey: (Long) -> Unit,
     contentPadding: PaddingValues,
     lastUpdated: Long,
-    showFilterChips: Boolean,
-    showAllFilter: Boolean,
-    showMangaFilter: Boolean,
-    onFilterSelected: (UpdatesFilter) -> Unit,
+    mediaPills: (@Composable () -> Unit)?,
+    airingStrip: (@Composable () -> Unit)?,
     onClickCover: (UpdatesItem) -> Unit,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onOpenChapter: (UpdatesItem) -> Unit,
@@ -152,33 +148,11 @@ fun TsuzukiUpdatesTwoPane(
             state = listState,
             contentPadding = PaddingValues(bottom = 8.dp),
         ) {
-            if (showFilterChips) {
-                item(key = "filters") {
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        if (showAllFilter) {
-                            TsuzukiPill(
-                                text = stringResource(MR.strings.all),
-                                selected = state.filter == UpdatesFilter.ALL,
-                                onClick = { onFilterSelected(UpdatesFilter.ALL) },
-                            )
-                        }
-                        if (showMangaFilter) {
-                            TsuzukiPill(
-                                text = stringResource(TDMR.strings.label_manga),
-                                selected = state.filter == UpdatesFilter.MANGA,
-                                onClick = { onFilterSelected(UpdatesFilter.MANGA) },
-                            )
-                        }
-                        TsuzukiPill(
-                            text = stringResource(TDMR.strings.label_novels),
-                            selected = state.filter == UpdatesFilter.NOVELS,
-                            onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
-                        )
-                    }
-                }
+            if (mediaPills != null) {
+                item(key = "filters") { mediaPills() }
+            }
+            if (airingStrip != null) {
+                item(key = "airing_today") { airingStrip() }
             }
             if (state.items.isNotEmpty()) {
                 item(key = "tiles") {

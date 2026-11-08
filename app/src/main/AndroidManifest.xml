@@ -60,6 +60,15 @@
         android:theme="@style/Theme.Tachiyomi">
 
         <activity
+            android:name=".tsuzuki.anime.ui.AnimeCatalogueActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tsuzuki.anime.ui.AnimePlayerActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"

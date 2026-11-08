@@ -6,6 +6,7 @@ import tachiyomi.domain.category.anime.model.AnimeCategory
 interface AnimeCategoryRepository {
     suspend fun awaitAll(): List<AnimeCategory>
     fun subscribeAll(): Flow<List<AnimeCategory>>
+    fun subscribeMemberships(): Flow<Map<Long, Set<Long>>>
     suspend fun awaitByAnimeId(animeId: Long): List<AnimeCategory>
     suspend fun insert(name: String, flags: Long = 0): Long
     suspend fun update(category: AnimeCategory)

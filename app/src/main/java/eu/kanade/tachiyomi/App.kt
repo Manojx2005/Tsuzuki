@@ -43,6 +43,7 @@ import eu.kanade.tachiyomi.di.PreferenceModule
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.interceptor.rateLimitExempt
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerModule
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
@@ -123,6 +124,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(AppModule(this))
+        Injekt.importModule(AnimePlayerModule())
         Injekt.importModule(DomainModule())
         eu.kanade.tachiyomi.tsuzuki.migrateStoredThemes(Injekt.get<PreferenceStore>())
         if (isMainProcess) {
@@ -207,6 +209,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         // Tsuzuki: daily background check that notifies about a new app release.
         eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
+        eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob.setupTask(this)
 
         // Updates widget update
         WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }

@@ -1,8 +1,10 @@
 package tachiyomi.data.anime
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import kotlinx.coroutines.flow.map
 import tachiyomi.data.Anime_sync
 import tachiyomi.data.Database
+import tachiyomi.data.subscribeToList
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 
@@ -11,6 +13,9 @@ class AnimeTrackRepositoryImpl(database: Database) : AnimeTrackRepository {
 
     override suspend fun awaitByAnimeId(animeId: Long): List<AnimeTrack> =
         queries.getByAnimeId(animeId).awaitAsList().map(Anime_sync::toDomain)
+
+    override fun subscribeByAnimeId(animeId: Long) =
+        queries.getByAnimeId(animeId).subscribeToList().map { rows -> rows.map(Anime_sync::toDomain) }
 
     override suspend fun upsert(track: AnimeTrack) {
         queries.upsert(track.toRow())
@@ -36,6 +41,7 @@ private fun Anime_sync.toDomain() = AnimeTrack(
     startDate = start_date,
     finishDate = finish_date,
     isPrivate = private_,
+    malId = mal_id,
 )
 
 private fun AnimeTrack.toRow() = Anime_sync(
@@ -53,4 +59,5 @@ private fun AnimeTrack.toRow() = Anime_sync(
     start_date = startDate,
     finish_date = finishDate,
     private_ = isPrivate,
+    mal_id = malId,
 )

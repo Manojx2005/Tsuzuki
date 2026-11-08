@@ -34,6 +34,25 @@ class EpisodeRepositoryImpl(private val database: Database) : EpisodeRepository 
         queries.updateProgress(seen = seen, lastSecondSeen = lastSecondSeen, totalSeconds = totalSeconds, id = id)
     }
 
+    override suspend fun updateFromSource(episode: Episode) {
+        queries.updateFromSource(
+            name = episode.name,
+            scanlator = episode.scanlator,
+            fillermark = episode.fillermark,
+            episodeNumber = episode.episodeNumber,
+            sourceOrder = episode.sourceOrder,
+            dateUpload = episode.dateUpload,
+            summary = episode.summary,
+            previewUrl = episode.previewUrl,
+            memo = episode.memo,
+            id = episode.id,
+        )
+    }
+
+    override suspend fun setBookmark(id: Long, bookmark: Boolean) {
+        queries.setBookmark(bookmark, id)
+    }
+
     override suspend fun delete(id: Long) {
         queries.delete(id)
     }

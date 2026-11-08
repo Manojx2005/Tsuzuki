@@ -29,6 +29,7 @@ fun TsuzukiMixedLibraryHeader(
     mangaCount: Int,
     showCounts: Boolean,
     onFilterChanged: () -> Unit,
+    onOpenAnime: (() -> Unit)? = null,
 ) {
     val preferences = remember { Injekt.get<LibraryPreferences>() }
     val filter by preferences.filterNovel().collectAsState()
@@ -49,17 +50,25 @@ fun TsuzukiMixedLibraryHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (!hideMangaUi) {
+        if (!hideMangaUi || onOpenAnime != null) {
+            val labels = buildList {
+                add(stringResource(MR.strings.tsz_library_all))
+                if (!hideMangaUi) {
+                    add(stringResource(TDMR.strings.label_novels))
+                    add(stringResource(TDMR.strings.label_manga))
+                }
+                if (onOpenAnime != null) add(stringResource(MR.strings.tsz_anime_media))
+            }
             TsuzukiPillRow(
-                labels = listOf(
-                    stringResource(MR.strings.tsz_library_all),
-                    stringResource(TDMR.strings.label_novels),
-                    stringResource(TDMR.strings.label_manga),
-                ),
-                selected = filters.indexOf(filter),
+                labels = labels,
+                selected = if (hideMangaUi) 0 else filters.indexOf(filter),
                 onClick = {
-                    onFilterChanged()
-                    preferences.filterNovel().set(filters[it])
+                    if (onOpenAnime != null && it == labels.lastIndex) {
+                        onOpenAnime()
+                    } else {
+                        onFilterChanged()
+                        preferences.filterNovel().set(filters[it])
+                    }
                 },
             )
         }

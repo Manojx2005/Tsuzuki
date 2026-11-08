@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">正在尝试其他播放源</string>
+    <string name="tsz_anime_player_lock">锁定播放控件</string>
+    <string name="tsz_anime_player_unlock">解锁播放控件</string>
+    <string name="tsz_anime_player_next_in">%d秒后播放下一集</string>
+    <string name="tsz_anime_player_next">下一集</string>
+    <string name="tsz_anime_player_previous">上一集</string>
+    <string name="tsz_anime_player_quality">画质</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">最高画质</string>
+    <string name="tsz_anime_player_orientation_lock">锁定屏幕方向</string>
+    <string name="tsz_anime_player_orientation_unlock">解锁屏幕方向</string>
+    <string name="tsz_anime_player_autoplay_on">开启自动播放</string>
+    <string name="tsz_anime_player_autoplay_off">关闭自动播放</string>
+    <string name="tsz_anime_player_rewind">后退10秒</string>
+    <string name="tsz_anime_player_forward">前进10秒</string>
+    <string name="tsz_anime_player_audio">音频</string>
+    <string name="tsz_anime_player_autoplay">自动播放下一集</string>
+    <string name="tsz_anime_player_brightness">亮度</string>
+    <string name="tsz_anime_player_close_options">关闭选项</string>
+    <string name="tsz_anime_player_decoder_hardware">硬件解码</string>
+    <string name="tsz_anime_player_decoder_software">软件解码</string>
+    <string name="tsz_anime_player_decrease">减小</string>
+    <string name="tsz_anime_player_episodes">剧集</string>
+    <string name="tsz_anime_player_gestures">手势</string>
+    <string name="tsz_anime_player_increase">增大</string>
+    <string name="tsz_anime_player_no_options">暂无可用选项</string>
+    <string name="tsz_anime_player_seek_gesture">双击快进或后退</string>
+    <string name="tsz_anime_player_skip">%+d秒</string>
+    <string name="tsz_anime_player_speed">播放速度</string>
+    <string name="tsz_anime_player_subtitle_delay">字幕延迟</string>
+    <string name="tsz_anime_player_subtitle_size">字幕大小</string>
+    <string name="tsz_anime_player_subtitles">字幕</string>
+    <string name="tsz_anime_player_track_number">轨道 %d</string>
+    <string name="tsz_anime_player_track_off">关闭</string>
+    <string name="tsz_anime_player_video">视频</string>
+    <string name="tsz_anime_player_volume">音量</string>
+</resources>

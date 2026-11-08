@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">最初のエピソードを再生</string>
+    <string name="tsz_anime_play_next">次のエピソードを再生</string>
+    <string name="tsz_anime_no_episodes">エピソードが見つかりません</string>
+    <string name="tsz_anime_player_unavailable">アニメプレーヤーを利用できません</string>
+    <string name="tsz_anime_episode_title">第%1$s話 · %2$s</string>
+    <string name="tsz_anime_play_episode">第%s話を再生</string>
+    <string name="tsz_anime_resume_episode">第%s話の続きを再生</string>
+    <string name="tsz_anime_episode_number">話数</string>
+    <string name="tsz_anime_watched">視聴済み</string>
+    <string name="tsz_anime_filler">アニメオリジナル</string>
+    <string name="tsz_anime_mark_seen">視聴済みにする</string>
+    <string name="tsz_anime_mark_unseen">未視聴に戻す</string>
+    <string name="tsz_anime_mark_previous">前の話を視聴済みにする</string>
+    <string name="tsz_anime_bookmark">ブックマークに追加</string>
+    <string name="tsz_anime_unbookmark">ブックマークを削除</string>
+    <string name="tsz_anime_unseen_only">未視聴のみ</string>
+    <string name="tsz_anime_bookmarked_only">ブックマークのみ</string>
+    <string name="tsz_anime_upcoming">配信予定</string>
+    <string name="tsz_anime_extension_repos">アニメ拡張リポジトリ</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi形式</string>
+    <string name="tsz_anime_extensions_available">利用可能</string>
+    <string name="tsz_anime_history_episode">第%s話</string>
+    <string name="tsz_anime_history_remaining">残り%s</string>
+    <string name="tsz_anime_history_remove_all">このアニメのすべての話を履歴から削除</string>
+    <string name="tsz_anime_airing_today">今日の配信</string>
+    <string name="tsz_anime_updates_empty">新着のアニメエピソードはありません</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="other">新着エピソード %d 件</item>
+    </plurals>
+    <string name="tsz_anime_track_linked_count">連携済み %d 件</string>
+    <string name="tsz_anime_track_auto_update">エピソードごとに更新</string>
+    <string name="tsz_anime_track_login">トラッキング設定からログインしてください</string>
+    <string name="tsz_anime_track_unlink">連携を解除</string>
+    <string name="tsz_anime_track_episode_count">エピソード数：%d</string>
+    <string name="tsz_anime_track_watching">視聴中</string>
+    <string name="tsz_anime_track_planning">視聴予定</string>
+    <string name="tsz_anime_track_rewatching">再視聴中</string>
+</resources>
