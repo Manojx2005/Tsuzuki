@@ -622,7 +622,7 @@ content is ready (no blank frame), and bring the new chapter in with the reader'
 `tsuzuki/reader/NovelChapterEndTouch.kt` (fling into the end, then tap: must load on the first tap, no menu flash).
 Check the WebView reader's card (`chapter-end-card.js`) for the same feel. Device check on the tablet + S22.
 
-#### V7.6 v0.1 polish from the V1 notes (T2) — `ready` (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
+#### V7.6 v0.1 polish from the V1 notes (T2) — `review` (2026-11-08, `.worktrees/v7.6`) (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
 Boards: the screen's board in `docs/design/boards/INDEX.md` (Settings, Updates, TTS/ListenMini). Dot first, then Colour.
 1. **Updates "Library last updated: Never/…" line** (`UpdatesUiItem.kt:68`, `TsuzukiUpdatesTwoPane.kt:260`): in the
@@ -641,6 +641,24 @@ Boards: the screen's board in `docs/design/boards/INDEX.md` (Settings, Updates, 
    shorter Japanese label (e.g. `ネイティブ`) or let the segment text wrap to two lines; check the other locales.
 Tests: a pure function for the voice label (raw locale → display name; unknown → engine label). Verify per WORKPLAN §0.4
 plus `:app:assemblePreview`. Claude checks on the S22 + tablet in Dot and Colour, English and Japanese.
+
+**Result (Codex, 2026-11-08):** `tsuzuki/v7.6` at `2f482f4de` (base `c0a0015a4`).
+
+- `UpdatesUiItem.kt`, `TsuzukiUpdatesTwoPane.kt`, `TsuzukiUpdatesLastUpdated.kt` share an upright, muted caption with Dot casing.
+- `ListPreferenceWidget.kt` and `TsuzukiSettingsPane.kt` give the title first claim on width in themed rows that show a selected value. The value uses the remaining width with ellipsis.
+- `TtsController.kt`, `TtsVoiceLabel.kt`, `ReaderListenLayout.kt` and `TsuzukiReaderListenPanel.kt` use the engine's voice locale and connection requirement for the docked Listen label. The engine label is the fallback. The phone mini player is controls-only.
+- `TtsVoiceLabelTest.kt` covers app-locale display and unknown-locale fallback. `i18n` adds `tsz_tts_voice_offline` and `tsz_tts_voice_online` in all eight locales. `pref_grayscale` is the only existing English key changed in `i18n`.
+- `i18n-novel` shortens `novel_render_default` in English and Japanese and `pref_novel_native_renderer` in Japanese. The six other shipped locales use the English `novel_render_default` fallback.
+- `GuidesStep.kt` sends onboarding and empty Novel/Manga library links to the Tsuzuki README's Download section. Verified HTTP 200 and the published `#download` anchor.
+- `docs/design/README.md` records the implementation status.
+
+JDK 21, two per-file Spotless passes, `:app:assembleDebug`, `:app:testDebugUnitTest` (970 passed, 0 skipped)
+and `:app:assemblePreview` passed. The serial build used `--no-parallel --max-workers=2` and a 6 GB Kotlin
+daemon heap after the combined build exhausted the compiler heap.
+
+Claude device review on the S22 and Tab S11 in Dot and Colour, English and Japanese. Verify the Updates
+caption, Time format row and picker, the active voice label on tablet, the native renderer segment and
+the Getting started guide from the empty library. R-A5 awaits the A3.5 commit.
 
 #### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
