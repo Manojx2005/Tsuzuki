@@ -347,13 +347,30 @@ Claude device review: on tablet and S22, play both novel renderers, pause and re
 chapter handoff, then check the Stats tile in Dot and Colour. Check that background TTS adds listening time
 once, and that incognito playback leaves the totals unchanged.
 
-#### S3 Chapter recap at the start of a chapter (T3) — `ready` (lane 2)
+#### S3 Chapter recap at the start of a chapter (T3) — `review` (2026-11-08, `.worktrees/s3`; lane 2)
 Board `06-reader/ChapterEnd` (recap block). Offline and extractive only (no AI, no network): when a novel chapter is
 opened after ≥ 24 h away from that book, show a dismissible "Previously" card above the text with the last 2–3
 paragraphs of the previous chapter (from downloaded/cached text; hide when not available). Reader setting, default
 on. Both renderers (TextView + WebView; WebView via the `chapter-end-card.js` asset pattern). Tests: paragraph
 picking (skips author notes such as "A note from …", blank and very short paragraphs) and the 24 h rule.
-Result: _pending_
+Result: `ba61418a0`. Two per-file Spotless passes, JavaScript syntax checks and offline JDK 21
+`:app:assembleDebug :app:testDebugUnitTest` passed (973 tests, including 5 new).
+
+- `NovelRecap.kt` selects the last two or three prose paragraphs, strips markup, and skips short text and
+  trailing author notes. `NovelRecapTest.kt` covers HTML, plain text, note filtering and the exact 24 h threshold.
+- `NovelRecapSession.kt` reads existing history and local chapter text. It can reuse in-memory pages, downloaded
+  chapters, a local EPUB or up to 64 cached excerpts. The cache stores only the extracted paragraphs in the app's
+  cache directory. Recap preparation and cache writes skip incognito. Lookup makes no source requests.
+- `ReaderViewModel.kt` prepares the first chapter's recap before the reader stamps its new history entry.
+  `ReaderPreferences.kt` and `SettingsNovelReaderScreen.kt` add the default-on switch. Eight locales add labels.
+- `TsuzukiNovelRecapCard.kt` renders the native card and supplies a safe WebView payload. `NovelViewer.kt`
+  places and removes the card with its chapter block. `NovelWebViewViewer.kt`, `chapter-recap-card.js` and
+  `scroll-tracking.js` handle insertion, dismissal, TTS exclusion and continuous-scroll position.
+  `docs/design/README.md` records the recap scope.
+
+Claude device review: reopen a novel after 24 h with a previous offline chapter and check the card and dismissal
+in both renderers and themes. Check disabled, no-cache and first-chapter cases, and try WebView paged mode and
+TextView infinite scroll. A mid-chapter resume keeps its reading position and the card remains at the chapter top.
 
 #### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `ready` (lane 2, last)
 Research is done: `docs/research/neural-tts.md` (GO-WITH-CONDITIONS). The conditions are hard rules: sherpa-onnx

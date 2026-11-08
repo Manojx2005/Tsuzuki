@@ -361,6 +361,13 @@ object SettingsNovelReaderScreen : SearchableSettings {
             preferenceItems = buildList {
                 add(
                     Preference.PreferenceItem.SwitchPreference(
+                        preference = readerPreferences.novelChapterRecap,
+                        title = stringResource(MR.strings.tsz_reader_recap_setting),
+                        subtitle = stringResource(MR.strings.tsz_reader_recap_setting_summary),
+                    ),
+                )
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
                         preference = readerPreferences.novelInfiniteScroll,
                         title = stringResource(TDMR.strings.pref_novel_infinite_scroll_label),
                         subtitle = stringResource(TDMR.strings.pref_novel_infinite_scroll_summary),

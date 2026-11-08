@@ -1380,4 +1380,8 @@
     <string name="tsz_stats_listen_week">本周</string>
     <string name="tsz_stats_listened_chapters">本周听完的章节</string>
     <string name="tsz_stats_minutes_read_listened">阅读或听书分钟数</string>
+    <string name="tsz_reader_recap_setting">章节回顾</string>
+    <string name="tsz_reader_recap_setting_summary">离开本书满 24 小时后，如果上一章的文本可离线读取，则显示片段。</string>
+    <string name="tsz_reader_recap_previously">前情回顾</string>
+    <string name="tsz_reader_recap_dismiss">关闭</string>
 </resources>

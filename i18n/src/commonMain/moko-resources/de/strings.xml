@@ -1380,4 +1380,8 @@
     <string name="tsz_stats_listen_week">Diese Woche</string>
     <string name="tsz_stats_listened_chapters">Kapitel diese Woche</string>
     <string name="tsz_stats_minutes_read_listened">Gelesene oder gehörte Minuten</string>
+    <string name="tsz_reader_recap_setting">Kapitelrückblick</string>
+    <string name="tsz_reader_recap_setting_summary">Zeigt nach 24 Stunden Pause Auszüge aus dem vorherigen Kapitel, wenn der Text offline verfügbar ist.</string>
+    <string name="tsz_reader_recap_previously">Bisher</string>
+    <string name="tsz_reader_recap_dismiss">Schließen</string>
 </resources>

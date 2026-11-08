@@ -1759,4 +1759,8 @@
     <string name="tsz_stats_listen_week">This week</string>
     <string name="tsz_stats_listened_chapters">Chapters this week</string>
     <string name="tsz_stats_minutes_read_listened">Minutes read or listened</string>
+    <string name="tsz_reader_recap_setting">Chapter recap</string>
+    <string name="tsz_reader_recap_setting_summary">Show excerpts from the previous chapter after 24 hours away when the text is available offline.</string>
+    <string name="tsz_reader_recap_previously">Previously</string>
+    <string name="tsz_reader_recap_dismiss">Dismiss</string>
 </resources>

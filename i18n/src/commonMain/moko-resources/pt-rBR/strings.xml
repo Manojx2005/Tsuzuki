@@ -1377,4 +1377,8 @@
     <string name="tsz_stats_listen_week">Esta semana</string>
     <string name="tsz_stats_listened_chapters">Capítulos nesta semana</string>
     <string name="tsz_stats_minutes_read_listened">Minutos de leitura ou escuta</string>
+    <string name="tsz_reader_recap_setting">Recapitulação do capítulo</string>
+    <string name="tsz_reader_recap_setting_summary">Após 24 horas de pausa, mostra trechos do capítulo anterior se o texto estiver disponível offline.</string>
+    <string name="tsz_reader_recap_previously">Anteriormente</string>
+    <string name="tsz_reader_recap_dismiss">Fechar</string>
 </resources>
