@@ -108,13 +108,34 @@ line, and the default reading mode (webtoon) for manhwa when the user hasn't set
 aspect ratios, override precedence). Claude device-checks with a known manhwa from Keiyoushi on the S22.
 Result: _pending_
 
-#### S2 Listening stats (T2) — `ready` (lane 2)
+#### S2 Listening stats (T2) — `review` (2026-11-08, `.worktrees/s2`; lane 2)
 Board `07-system/Stats` (Dot: `07-system/dot/Stats`). Owner Q4 keeps reading and watch time apart; listening counts
 with reading. Count TTS minutes from real playback (`TtsController` start/stop/pause, chapter hand-offs) into the
 existing reading-days store as a separate "listened" field (no DB migration), and show the board's listen row on
 Stats (minutes today / this week, chapters listened). Hide the row until there is data. Tests: minute accounting
 across pause, sleep timer, chapter hand-off, and a flush on pause (process death).
-Result: _pending_
+Result: `3a49d8ac7`. Two per-file Spotless passes and offline JDK 21
+`:app:assembleDebug :app:testDebugUnitTest` passed (975 tests, including 7 new).
+
+- `ListeningSession.kt` measures utterances with a monotonic clock, splits time at local midnight and flushes
+  on stop, pause and chapter completion. It keeps speaking time and foreground visual time disjoint.
+- `TtsController.kt` identifies each playback queue so callbacks from an interrupted queue cannot count
+  toward a new one. `NovelViewer.kt` and `NovelWebViewViewer.kt` use the same session.
+- `ReaderActivity.kt` flushes when the reader loses visibility, including during background TTS.
+  `ReaderViewModel.kt` records visual time only while the reader is visible and preserves existing history
+  duration and incognito behavior.
+- `ReadingDays.kt` reads the original daily totals and stores new listening duration and chapter counts in
+  the same preference. Goals, chart and streak count both forms of reading. A listened chapter is counted
+  when its final utterance completes, including when playback started partway through the chapter.
+- `TsuzukiStatsScreen.kt` shows listening minutes today and this week and completed chapters this week
+  after playback is recorded. Eight locale files add labels and `docs/design/README.md` records the tile.
+- `ListeningSessionTest.kt` and `ReadingDaysTest.kt` cover pause, sleep-stop accounting, handoffs, persistence,
+  foreground/background separation, midnight, incognito, and older records. `TtsSleepTimerTest.kt` still
+  exercises the controller's real timed stop with a test scheduler.
+
+Claude device review: on tablet and S22, play both novel renderers, pause and resume, try the sleep timer and a
+chapter handoff, then check the Stats tile in Dot and Colour. Check that background TTS adds listening time
+once, and that incognito playback leaves the totals unchanged.
 
 #### S3 Chapter recap at the start of a chapter (T3) — `ready` (lane 2)
 Board `06-reader/ChapterEnd` (recap block). Offline and extractive only (no AI, no network): when a novel chapter is
