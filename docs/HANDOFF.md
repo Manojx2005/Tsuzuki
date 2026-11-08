@@ -149,25 +149,27 @@ finished them) and run it. The anime chain stays one review per 3–4 cards.
 
 Use a clearly stated chapter number in the source title when showing a novel chapter number. The Perfect Run
 lists “2: Story Branching” while the stored number is 1. Apply the correction to the tablet details chapter
-list and the reader’s chapter labels in both themes. Keep stored numbers and chapter ordering intact.
-Boards: TabletNovel, TabletReader and Q2 ChapterEnd. Test explicit decimal and volume/chapter headings,
+list, Home’s right-hand chapter list and the reader’s chapter labels in both themes. Keep stored numbers and chapter ordering intact.
+Boards: TabletLibrary, TabletNovel, TabletReader and Q2 ChapterEnd. Test explicit decimal and volume/chapter headings,
 unnumbered titles, and manga fallback behavior.
 
-**Result (Codex, 2026-11-08):** `706affe00` on `tsuzuki/chapter-numbers`.
+**Result (Codex, 2026-11-08):** `706affe00` and `512fd1972` on `tsuzuki/chapter-numbers`.
 
 - `NovelChapterNumber.kt` recognises explicit source headings, including the Royal Road form
   `2: Story Branching`, decimals, volume/chapter headings and Japanese chapter markers.
+- `TsuzukiHomeViewModel.kt` uses the source number in the sidebar’s number column and passes
+  the title without its number to the title column. Volume labels stay with the title.
 - `MangaScreen.kt` uses the recognised source number in the novel chapter list’s number-only
   mode and the original numbered title once in number-and-title mode.
 - `ReaderActivity.kt` applies the same rule to the reader toolbar and optional status bar.
   `TsuzukiChapterEnd.kt` keeps the full numbered title and suppresses its redundant number label.
 - `NovelChapterNumberTest.kt` covers the reported mismatch, duplicate suppression, both display
-  modes, explicit decimals and fallback for titles with incidental numbers.
+  modes, explicit decimals, fallback for titles with incidental numbers, and sidebar number/title splitting.
 
 Stored chapter numbers still drive ordering and existing reading state. JDK 21, two scoped Spotless
-passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed (971 tests, zero failures or skips).
-Independent device review: open The Perfect Run on the tablet in Dot and Colour. Check the right-side
-list, the reader toolbar and the chapter-end card, then switch the details/reader to number-only.
+passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed (972 tests, zero failures or skips).
+Independent device review: open The Perfect Run on the tablet in Dot and Colour. Check the right-hand
+Home list, details list, reader toolbar and chapter-end card, then check number-only mode.
 Verify that a manga and a novel whose source title has no number keep their previous labels.
 
 ### Batch T anime cards (written 2026-11-08) — lane 1, after A5.3
