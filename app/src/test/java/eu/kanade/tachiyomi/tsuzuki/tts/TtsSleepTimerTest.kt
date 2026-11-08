@@ -15,7 +15,8 @@ class TtsSleepTimerTest {
     fun replacementCancelsTheOldTimerAndTheNewTimerStopsPlayback() = runTest {
         val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
         every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
-        val controller = TtsController(mockk(), mockk(), this, callbacks)
+        val listening = mockk<ListeningSession>(relaxed = true)
+        val controller = TtsController(mockk(), mockk(), this, listening, callbacks)
 
         controller.setSleepTimer(TtsSleepTimer.Fifteen)
         advanceTimeBy(10 * 60_000L)

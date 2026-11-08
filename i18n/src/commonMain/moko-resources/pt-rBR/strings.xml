@@ -1372,4 +1372,9 @@
     <string name="tsz_manga_format">Formato do quadrinho</string>
     <string name="tsz_manga_format_auto">Automático</string>
     <string name="tsz_manga_long_strip_detected">Modo webtoon automático · alterar para esta série</string>
+    <string name="tsz_stats_listening">Escuta</string>
+    <string name="tsz_stats_listen_today">Hoje</string>
+    <string name="tsz_stats_listen_week">Esta semana</string>
+    <string name="tsz_stats_listened_chapters">Capítulos nesta semana</string>
+    <string name="tsz_stats_minutes_read_listened">Minutos de leitura ou escuta</string>
 </resources>

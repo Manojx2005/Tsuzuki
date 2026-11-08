@@ -69,7 +69,7 @@ import java.util.Locale
 
 /**
  * The "Stats & goals" board: daily goal ring, minutes chart (week / month / year) and chapter count, all from
- * [ReadingDays] and history. Tiles the app has no data for (words, speed, listening, anime) are left out.
+ * [ReadingDays] and history. The listening tile appears after TTS records playback.
  * "All statistics" opens Mihon's library statistics.
  */
 class TsuzukiStatsScreen : Screen() {
@@ -85,6 +85,7 @@ class TsuzukiStatsScreen : Screen() {
             .collectAsState(initial = emptyList())
         var period by rememberSaveable { mutableIntStateOf(0) }
         val today = LocalDate.now()
+        val listening = remember(raw, today) { readingDays.listeningSummary(today) }
         val locale = Locale.getDefault()
         val bars = remember(days, period, today) {
             ReadingChart.bars(
@@ -189,7 +190,15 @@ class TsuzukiStatsScreen : Screen() {
                 Tile {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            cased(stringResource(MR.strings.tsz_stats_minutes_read)),
+                            cased(
+                                stringResource(
+                                    if (listening == null) {
+                                        MR.strings.tsz_stats_minutes_read
+                                    } else {
+                                        MR.strings.tsz_stats_minutes_read_listened
+                                    },
+                                ),
+                            ),
                             Modifier.weight(1f),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -215,10 +224,43 @@ class TsuzukiStatsScreen : Screen() {
                         fontSize = 12.sp,
                     )
                 }
+                if (listening != null) ListeningTile(listening)
 
                 TextButton(onClick = { navigator.push(StatsScreen()) }, modifier = Modifier.align(Alignment.End)) {
                     Icon(Icons.Outlined.QueryStats, null, Modifier.padding(end = 8.dp).size(18.dp))
                     Text(cased(stringResource(MR.strings.tsz_stats_all)))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListeningTile(listening: ReadingDays.ListeningSummary) {
+    val tokens = TsuzukiTheme.tokens
+    val minutes = stringResource(MR.strings.tsz_min)
+    val figures = listOf(
+        "${listening.todayMs / 60_000L} $minutes" to stringResource(MR.strings.tsz_stats_listen_today),
+        "${listening.weekMs / 60_000L} $minutes" to stringResource(MR.strings.tsz_stats_listen_week),
+        listening.weekChapters.toString() to stringResource(MR.strings.tsz_stats_listened_chapters),
+    )
+    Tile {
+        val title = stringResource(MR.strings.tsz_stats_listening)
+        Text(
+            text = if (tokens.isDot) title.uppercase() else title,
+            style = MaterialTheme.typography.labelLarge,
+            color = tokens.mutedText,
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            figures.forEach { (value, label) ->
+                Column(Modifier.weight(1f)) {
+                    Text(value, style = MaterialTheme.typography.titleLarge, color = tokens.dotOn)
+                    Text(
+                        text = if (tokens.isDot) label.uppercase() else label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = tokens.mutedText,
+                    )
                 }
             }
         }

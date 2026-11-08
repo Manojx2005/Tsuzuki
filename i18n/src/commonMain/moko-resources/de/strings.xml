@@ -1375,4 +1375,9 @@
     <string name="tsz_manga_format">Comicformat</string>
     <string name="tsz_manga_format_auto">Automatisch</string>
     <string name="tsz_manga_long_strip_detected">Automatischer Webtoon-Modus · für diese Serie ändern</string>
+    <string name="tsz_stats_listening">Hören</string>
+    <string name="tsz_stats_listen_today">Heute</string>
+    <string name="tsz_stats_listen_week">Diese Woche</string>
+    <string name="tsz_stats_listened_chapters">Kapitel diese Woche</string>
+    <string name="tsz_stats_minutes_read_listened">Gelesene oder gehörte Minuten</string>
 </resources>

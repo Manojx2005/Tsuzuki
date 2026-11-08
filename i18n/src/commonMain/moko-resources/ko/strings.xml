@@ -1374,4 +1374,9 @@
     <string name="tsz_manga_format">만화 형식</string>
     <string name="tsz_manga_format_auto">자동</string>
     <string name="tsz_manga_long_strip_detected">웹툰 모드 자동 선택 · 이 작품에 대해 변경</string>
+    <string name="tsz_stats_listening">듣기</string>
+    <string name="tsz_stats_listen_today">오늘</string>
+    <string name="tsz_stats_listen_week">이번 주</string>
+    <string name="tsz_stats_listened_chapters">이번 주에 들은 화</string>
+    <string name="tsz_stats_minutes_read_listened">읽거나 들은 시간(분)</string>
 </resources>

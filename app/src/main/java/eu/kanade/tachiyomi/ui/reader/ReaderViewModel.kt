@@ -229,6 +229,10 @@ class ReaderViewModel @JvmOverloads constructor(
      */
     private var chapterReadStartTime: Long? = null
     private val novelReadingSession = NovelReadingSession()
+    internal val listeningSession = eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession(
+        readingDays = { Injekt.get() },
+        canRecord = { !incognitoMode },
+    )
     private val novelEstimates by lazy { Injekt.get<NovelReadingEstimates>() }
 
     private var chapterToDownload: Download? = null
@@ -1089,6 +1093,7 @@ class ReaderViewModel @JvmOverloads constructor(
         // contribute progress, so the timer can start before the book is known.
         novelReadingSession.start()
         chapterReadStartTime = Clock.System.now().toEpochMilliseconds()
+        listeningSession.beginReadingWindow()
     }
 
     /**
@@ -1125,7 +1130,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val chapterId = readerChapter.chapter.id!!
         val endTime = Date()
         val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
-        recordTsuzukiReadingTime(sessionReadDuration)
+        recordTsuzukiReadingTime(listeningSession.endReadingWindow())
         if (manga?.isNovel == true) {
             novelEstimates.recordSession(sessionReadDuration, novelReadingSession.finish())
         }

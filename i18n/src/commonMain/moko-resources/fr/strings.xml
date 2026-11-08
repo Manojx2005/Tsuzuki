@@ -1368,4 +1368,9 @@
     <string name="tsz_manga_format">Format de la bande dessinée</string>
     <string name="tsz_manga_format_auto">Automatique</string>
     <string name="tsz_manga_long_strip_detected">Mode webtoon automatique · modifier pour cette série</string>
+    <string name="tsz_stats_listening">Écoute</string>
+    <string name="tsz_stats_listen_today">Aujourd’hui</string>
+    <string name="tsz_stats_listen_week">Cette semaine</string>
+    <string name="tsz_stats_listened_chapters">Chapitres cette semaine</string>
+    <string name="tsz_stats_minutes_read_listened">Minutes de lecture ou d’écoute</string>
 </resources>

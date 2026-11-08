@@ -1594,4 +1594,9 @@
     <string name="tsz_manga_format">コミック形式</string>
     <string name="tsz_manga_format_auto">自動</string>
     <string name="tsz_manga_long_strip_detected">縦読みを自動選択 · この作品の設定を変更</string>
+    <string name="tsz_stats_listening">読み上げ</string>
+    <string name="tsz_stats_listen_today">今日</string>
+    <string name="tsz_stats_listen_week">今週</string>
+    <string name="tsz_stats_listened_chapters">今週聴いた話数</string>
+    <string name="tsz_stats_minutes_read_listened">読書・読み上げ時間</string>
 </resources>

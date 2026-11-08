@@ -1,10 +1,12 @@
 package eu.kanade.tachiyomi.tsuzuki
 
 import tachiyomi.core.common.preference.PreferenceStore
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 /**
- * Minutes read per calendar day, for the reading streak (History and Home boards).
+ * Reading and listening time per calendar day, for stats, goals and the reading streak.
  *
  * The history table keeps one row per chapter and overwrites its last-read time, so past days can't be rebuilt
  * from it. This keeps a small day → milliseconds map in preferences instead of a new table, so Tsundoku's
@@ -22,15 +24,54 @@ class ReadingDays(preferenceStore: PreferenceStore) {
     @Synchronized
     fun add(day: LocalDate, durationMs: Long) {
         if (durationMs <= 0) return
-        val days = decode(pref.get()).toMutableMap()
-        days[day] = (days[day] ?: 0L) + durationMs
-        val oldest = day.minusDays(KEEP_DAYS - 1)
-        pref.set(encode(days.filterKeys { !it.isBefore(oldest) }))
+        val days = decodeEntries(pref.get()).toMutableMap()
+        val previous = days[day] ?: Day()
+        days[day] = previous.copy(readMs = previous.readMs + durationMs)
+        save(days, day)
+    }
+
+    @Synchronized
+    internal fun addListening(deltas: Map<LocalDate, ListeningDay>) {
+        val newest = deltas.keys.maxOrNull() ?: return
+        val days = decodeEntries(pref.get()).toMutableMap()
+        deltas.forEach { (date, delta) ->
+            val previous = days[date] ?: Day()
+            days[date] = previous.copy(
+                listening = ListeningDay(
+                    durationMs = previous.listening.durationMs + delta.durationMs,
+                    chapters = previous.listening.chapters + delta.chapters,
+                ),
+            )
+        }
+        save(days, newest)
+    }
+
+    private fun save(days: Map<LocalDate, Day>, today: LocalDate) {
+        val oldest = today.minusDays(KEEP_DAYS - 1)
+        pref.set(encodeEntries(days.filterKeys { !it.isBefore(oldest) }))
     }
 
     fun days(): Map<LocalDate, Long> = decode(pref.get())
 
     fun changes() = pref.changes()
+
+    internal data class ListeningDay(val durationMs: Long = 0, val chapters: Int = 0)
+
+    internal data class ListeningSummary(val todayMs: Long, val weekMs: Long, val weekChapters: Int)
+
+    internal fun listeningSummary(today: LocalDate): ListeningSummary? {
+        val days = decodeEntries(pref.get())
+        if (days.values.none { it.listening != ListeningDay() }) return null
+        val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val week = days.filterKeys { it in weekStart..today }.values
+        return ListeningSummary(
+            todayMs = days[today]?.listening?.durationMs ?: 0L,
+            weekMs = week.sumOf { it.listening.durationMs },
+            weekChapters = week.sumOf { it.listening.chapters },
+        )
+    }
+
+    private data class Day(val readMs: Long = 0, val listening: ListeningDay = ListeningDay())
 
     companion object {
         const val KEEP_DAYS = 400L
@@ -38,13 +79,29 @@ class ReadingDays(preferenceStore: PreferenceStore) {
         /** A day counts toward the streak once at least this much was read. */
         const val MIN_STREAK_MS = 60_000L
 
-        internal fun encode(days: Map<LocalDate, Long>): String =
-            days.entries.sortedBy { it.key }.joinToString(";") { "${it.key}=${it.value}" }
+        internal fun encode(days: Map<LocalDate, Long>): String = encodeEntries(days.mapValues { Day(it.value) })
 
-        internal fun decode(raw: String): Map<LocalDate, Long> = raw.split(';').mapNotNull { entry ->
-            val (day, ms) = entry.split('=').takeIf { it.size == 2 } ?: return@mapNotNull null
+        internal fun decode(raw: String): Map<LocalDate, Long> =
+            decodeEntries(raw).mapValues { (_, entry) -> entry.readMs + entry.listening.durationMs }
+
+        private fun encodeEntries(days: Map<LocalDate, Day>): String =
+            days.entries.sortedBy { it.key }.joinToString(";") { (date, day) ->
+                val listening = day.listening
+                if (listening == ListeningDay()) {
+                    "$date=${day.readMs}"
+                } else {
+                    "$date=${day.readMs},${listening.durationMs},${listening.chapters}"
+                }
+            }
+
+        private fun decodeEntries(raw: String): Map<LocalDate, Day> = raw.split(';').mapNotNull { entry ->
+            val (day, data) = entry.split('=').takeIf { it.size == 2 } ?: return@mapNotNull null
             val date = runCatching { LocalDate.parse(day) }.getOrNull() ?: return@mapNotNull null
-            date to (ms.toLongOrNull() ?: return@mapNotNull null)
+            val values = data.split(',')
+            val readMs = values[0].toLongOrNull() ?: return@mapNotNull null
+            val listenMs = values.getOrNull(1)?.toLongOrNull()?.coerceAtLeast(0L) ?: 0L
+            val chapters = values.getOrNull(2)?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+            date to Day(readMs, ListeningDay(listenMs, chapters))
         }.toMap()
 
         /**

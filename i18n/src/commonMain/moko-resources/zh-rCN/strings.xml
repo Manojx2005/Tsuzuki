@@ -1375,4 +1375,9 @@
     <string name="tsz_manga_format">漫画格式</string>
     <string name="tsz_manga_format_auto">自动</string>
     <string name="tsz_manga_long_strip_detected">自动选择条漫模式 · 为本作修改</string>
+    <string name="tsz_stats_listening">听书</string>
+    <string name="tsz_stats_listen_today">今天</string>
+    <string name="tsz_stats_listen_week">本周</string>
+    <string name="tsz_stats_listened_chapters">本周听完的章节</string>
+    <string name="tsz_stats_minutes_read_listened">阅读或听书分钟数</string>
 </resources>
