@@ -22,7 +22,6 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
-import tachiyomi.core.common.tsuzuki.SourceHealthRequest
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -47,7 +46,6 @@ import javax.crypto.spec.SecretKeySpec
 class JSLibraryProvider(
     private val pluginId: String,
     private val siteUrl: String? = null,
-    private val sourceId: Long? = null,
 ) {
     private val networkHelper: NetworkHelper = Injekt.get()
     private val client = networkHelper.client
@@ -324,7 +322,6 @@ class JSLibraryProvider(
                 }
 
                 val requestBuilder = Request.Builder().url(normalizedUrl)
-                sourceId?.let { requestBuilder.tag(SourceHealthRequest::class.java, SourceHealthRequest(it)) }
 
                 // Build headers - skip certain headers that OkHttp handles
                 val headersBuilder = Headers.Builder()

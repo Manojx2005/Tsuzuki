@@ -1355,20 +1355,4 @@
     <string name="tsz_tracker_novel_services">Suivi des romans</string>
     <string name="tsz_tracker_signed_out">Non connecté</string>
     <string name="tsz_tracker_linked_count">%1$d liés</string>
-    <string name="tsz_source_health">État des sources</string>
-    <string name="tsz_source_health_working">Disponible</string>
-    <string name="tsz_source_health_slow">Lente</string>
-    <string name="tsz_source_health_down">En panne</string>
-    <string name="tsz_source_health_unknown">Non mesuré</string>
-    <string name="tsz_source_health_history">7 derniers jours</string>
-    <string name="tsz_source_health_average">%1$d ms en moyenne</string>
-    <string name="tsz_source_health_success">Dernier succès · %1$s</string>
-    <string name="tsz_source_health_failure">Dernière erreur · %1$s · %2$s</string>
-    <string name="tsz_source_health_http">HTTP %1$d</string>
-    <string name="tsz_source_health_cloudflare">Vérification Cloudflare</string>
-    <string name="tsz_source_health_timeout">Délai dépassé</string>
-    <string name="tsz_source_health_network">Erreur réseau</string>
-    <string name="tsz_source_health_outage">%1$s est en panne</string>
-    <string name="tsz_source_health_migrate">Migrer (%1$d)</string>
-    <string name="tsz_source_health_passive">D’après les requêtes déjà effectuées par cet appareil.</string>
 </resources>

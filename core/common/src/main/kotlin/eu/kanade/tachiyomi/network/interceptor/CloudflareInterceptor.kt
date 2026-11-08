@@ -277,4 +277,4 @@ private fun HttpUrl.origin(): String {
 private val SERVER_CHECK = arrayOf("cloudflare-nginx", "cloudflare")
 private val COOKIE_NAMES = listOf("cf_clearance")
 
-class CloudflareBypassException : Exception()
+private class CloudflareBypassException : Exception()
