@@ -1354,4 +1354,8 @@
     <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
     <string name="tsz_tracker_signed_out">Não conectado</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_reader_recap_setting">Recapitulação do capítulo</string>
+    <string name="tsz_reader_recap_setting_summary">Após 24 horas de pausa, mostra trechos do capítulo anterior se o texto estiver disponível offline.</string>
+    <string name="tsz_reader_recap_previously">Anteriormente</string>
+    <string name="tsz_reader_recap_dismiss">Fechar</string>
 </resources>

@@ -25,6 +25,7 @@ import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
+import eu.kanade.presentation.tsuzuki.reader.createNovelRecapView
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.tsuzuki.reader.isOnChapterEndCard
 import eu.kanade.tachiyomi.tsuzuki.reader.keepGlyphOverhangVisible
@@ -102,6 +103,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val chapter: ReaderChapter,
         val block: ChapterTextBlock,
         val headerView: TextView,
+        val recapView: View? = null,
         var separatorView: View? = null,
         var isLoaded: Boolean = false,
         // True once the chunk views received text - guards against false short-chapter
@@ -494,7 +496,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         // Don't mark while the block still shows empty layout (text set hasn't completed yet).
         if (!loaded.isTextSet) return
         val textHeight = loaded.block.container.height
-        if (textHeight <= 0 || textHeight > scrollView.height) return
+        val recapHeight = loaded.recapView?.takeIf { it.isVisible }?.height ?: 0
+        if (textHeight <= 0 || textHeight + recapHeight > scrollView.height) return
 
         lastSavedProgress = 1f
         saveProgress(1f)
@@ -1187,6 +1190,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
             removedHeight += lc.headerView.height
             contentContainer.removeView(lc.headerView)
+            removedHeight += removeRecapView(lc)
             removedHeight += lc.block.container.height
             contentContainer.removeView(lc.block.container)
         }
@@ -1552,6 +1556,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             chapter = chapter,
             block = block,
             headerView = headerView,
+            recapView = activity.createNovelRecapView(chapter.chapter.id, preferences),
             isLoaded = true,
         )
 
@@ -1592,6 +1597,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
 
         contentContainer.addView(headerView)
+        loadedChapter.recapView?.let { contentContainer.addView(it) }
         contentContainer.addView(block.container)
 
         val cfg = ContentConfig.from(
@@ -1624,6 +1630,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     "NovelViewer: Chapter ${chapter.chapter.name} extracted to unusable content"
                 }
                 contentContainer.removeView(headerView)
+                removeRecapView(loadedChapter)
                 contentContainer.removeView(block.container)
                 loadedChapter.separatorView?.let { contentContainer.removeView(it) }
                 chapterQueue.removeById(chapter.chapter.id)
@@ -1722,7 +1729,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val maxChapters = 3
         while (loadedChapters.size > maxChapters && currentChapterIndex > 0) {
             val toRemove = loadedChapters.first()
-            var removedHeight = toRemove.headerView.height + toRemove.block.container.height
+            var removedHeight = toRemove.headerView.height + toRemove.block.container.height + removeRecapView(toRemove)
 
             toRemove.separatorView?.let { sep ->
                 removedHeight += sep.height
@@ -1745,6 +1752,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
             logcat(LogPriority.DEBUG) { "NovelViewer: Removed distant chapter, adjusted scroll by -$removedHeight" }
         }
+    }
+
+    private fun removeRecapView(chapter: LoadedChapter): Int {
+        val recap = chapter.recapView ?: return 0
+        val height = if (recap.isVisible) recap.height else 0
+        contentContainer.removeView(recap)
+        return height
     }
 
     private fun restoreProgress(page: ReaderPage, enteredViaPrevious: Boolean) {

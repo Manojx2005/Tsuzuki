@@ -1356,4 +1356,8 @@
     <string name="tsz_tracker_novel_services">소설 트래커</string>
     <string name="tsz_tracker_signed_out">로그인하지 않음</string>
     <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
+    <string name="tsz_reader_recap_setting">이전 화 돌아보기</string>
+    <string name="tsz_reader_recap_setting_summary">24시간 이상 읽지 않았을 때 이전 화의 텍스트를 오프라인에서 이용할 수 있으면 발췌문을 표시합니다.</string>
+    <string name="tsz_reader_recap_previously">지난 이야기</string>
+    <string name="tsz_reader_recap_dismiss">닫기</string>
 </resources>

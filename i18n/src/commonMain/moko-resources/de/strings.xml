@@ -1357,4 +1357,8 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_reader_recap_setting">Kapitelrückblick</string>
+    <string name="tsz_reader_recap_setting_summary">Zeigt nach 24 Stunden Pause Auszüge aus dem vorherigen Kapitel, wenn der Text offline verfügbar ist.</string>
+    <string name="tsz_reader_recap_previously">Bisher</string>
+    <string name="tsz_reader_recap_dismiss">Schließen</string>
 </resources>

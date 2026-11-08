@@ -311,6 +311,7 @@ class ReaderPreferences(
     // Infinite scroll - automatically load next/previous chapters
     // Tsuzuki (owner 2026-11-08): infinite scroll on by default.
     val novelInfiniteScroll: Preference<Boolean> = preferenceStore.getBoolean("pref_novel_infinite_scroll", true)
+    val novelChapterRecap: Preference<Boolean> = preferenceStore.getBoolean("pref_novel_chapter_recap", true)
 
     // Paged mode (webview only) - swipe/tap left-right turns a page instead of scrolling;
     // chapter navigation happens only when a page turn overflows past the first/last page.

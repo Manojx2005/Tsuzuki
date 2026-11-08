@@ -1576,4 +1576,8 @@
     <string name="tsz_tracker_novel_services">小説トラッカー</string>
     <string name="tsz_tracker_signed_out">未ログイン</string>
     <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
+    <string name="tsz_reader_recap_setting">前回までの振り返り</string>
+    <string name="tsz_reader_recap_setting_summary">24時間以上空いたとき、前の章がオフラインで読める場合は、その一部を表示します。</string>
+    <string name="tsz_reader_recap_previously">前回まで</string>
+    <string name="tsz_reader_recap_dismiss">閉じる</string>
 </resources>

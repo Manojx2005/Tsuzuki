@@ -28,6 +28,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.annotation.Keep
 import androidx.lifecycle.Lifecycle
+import eu.kanade.presentation.tsuzuki.reader.webNovelRecapScript
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -107,12 +108,12 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                 });
                 if (!els.length) {
                     els = Array.from(document.body.children).filter(function(el) {
-                        return !!el && !!el.innerText && el.innerText.trim().length > 0;
+                        return el.id !== 'tsuzuki-novel-recap' && !!el.innerText && el.innerText.trim().length > 0;
                     });
                 }
                 if (!els.length) {
                     var body = document.body;
-                    return body ? body.innerText || body.textContent : '';
+                    return body && !document.getElementById('tsuzuki-novel-recap') ? body.innerText || body.textContent : '';
                 }
                 return els.map(function(el) {
                     return el.innerText.trim().replace(/\s*\n\s*/g, ' ');
@@ -429,7 +430,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                 });
                 if (!paragraphs.length) {
                     paragraphs = Array.from(document.body.children).filter(function(el) {
-                        return !!el && !!el.innerText && el.innerText.trim().length > 0;
+                        return el.id !== 'tsuzuki-novel-recap' && !!el.innerText && el.innerText.trim().length > 0;
                     });
                 }
 
@@ -554,6 +555,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         val js = """
             (function() {
                 var ids = [$idsJsonArray];
+                var recap = document.getElementById('tsuzuki-novel-recap');
+                if (recap && ids.indexOf(recap.dataset.chapterId) !== -1) recap.remove();
                 ids.forEach(function(id) {
                     var el = document.querySelector('$CHAPTER_TAG_NAME[$CHAPTER_ID_ATTR="' + id + '"]');
                     var div = document.querySelector('.$CHAPTER_DIVIDER_CLASS[$CHAPTER_ID_ATTR="' + id + '"]');
@@ -947,7 +950,11 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     }
                     function apply() {
                         var r = range();
-                        if (r > 0) { window.scrollTo(0, r * target); return true; }
+                        if (r > 0) {
+                            var recap = window.__tszNovelRecapHeight ? window.__tszNovelRecapHeight() : 0;
+                            window.scrollTo(0, Math.min(r, recap + Math.max(0, r - recap) * target));
+                            return true;
+                        }
                         return false;
                     }
                     if (apply()) {
@@ -1596,7 +1603,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             chapter = chapter,
             style = stylePayload,
             themeTokens = ThemeUtils.getThemeTokens(activity, preferences, preferences.novelTheme.get()),
-            tsundokuScript = buildTsundokuScript(),
+            tsundokuScript = buildTsundokuScript() + "\n" + activity.webNovelRecapScript(chapterId),
             infiniteScrollEnabled = preferences.novelInfiniteScroll.get(),
             blockMedia = preferences.novelBlockMedia.get(),
         )
@@ -2109,6 +2116,12 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     @Keep
     @Suppress("unused")
     inner class WebViewInterface {
+        @JavascriptInterface
+        fun dismissNovelRecap(chapterId: String) {
+            val id = chapterId.toLongOrNull() ?: return
+            activity.runOnUiThread { activity.viewModel.dismissNovelRecap(id) }
+        }
+
         @JavascriptInterface
         fun markChapterEndRead(chapterId: String) {
             activity.runOnUiThread {
@@ -3050,7 +3063,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                         document.documentElement.scrollHeight,
                         document.body ? document.body.scrollHeight : 0
                     );
-                    window.scrollTo(0, (docHeight - viewport) * frac);
+                    var range = docHeight - viewport;
+                    var recap = window.__tszNovelRecapHeight ? window.__tszNovelRecapHeight() : 0;
+                    window.scrollTo(0, frac === 0 ? 0 : Math.min(range, recap + Math.max(0, range - recap) * frac));
                 }
                 // A programmatic scrollTo does not reliably fire the page's 'scroll' listener, so the
                 // infinite-scroll threshold check (which lives there) never runs. Dispatch one so a
@@ -3228,7 +3243,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                 });
                 if (!elements.length) {
                     elements = Array.from(document.body.children).filter(function(el) {
-                        return !!el && !!el.innerText && el.innerText.trim().length > 0;
+                        return el.id !== 'tsuzuki-novel-recap' && !!el.innerText && el.innerText.trim().length > 0;
                     });
                 }
                 var viewportHeight = window.innerHeight || document.documentElement.clientHeight;

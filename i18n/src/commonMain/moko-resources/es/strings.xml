@@ -1344,4 +1344,8 @@
     <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
     <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_reader_recap_setting">Resumen del capítulo</string>
+    <string name="tsz_reader_recap_setting_summary">Tras 24 horas de pausa, muestra fragmentos del capítulo anterior si el texto está disponible sin conexión.</string>
+    <string name="tsz_reader_recap_previously">Anteriormente</string>
+    <string name="tsz_reader_recap_dismiss">Cerrar</string>
 </resources>
