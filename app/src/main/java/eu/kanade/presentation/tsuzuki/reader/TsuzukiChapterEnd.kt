@@ -78,8 +78,6 @@ internal fun ReaderActivity.createChapterEndCard(
     chapters: ViewerChapters,
     preferences: ReaderPreferences,
     tag: String,
-    isLeaving: () -> Boolean,
-    onNext: () -> Unit,
 ): ComposeView? {
     val next = chapters.nextChapter ?: return null
     if (chapterEndTokens().style == TsuzukiStyle.NONE) return null
@@ -129,16 +127,10 @@ internal fun ReaderActivity.createChapterEndCard(
                             Text(labels.downloaded, color = foreground, style = MaterialTheme.typography.labelMedium)
                         }
                         Button(
-                            onClick = onNext,
-                            enabled = !isLeaving(),
+                            onClick = ::loadNextChapter,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primary,
-                                contentColor = onPrimary,
-                                disabledContainerColor = lerp(primary, fill, 0.25f),
-                                disabledContentColor = onPrimary,
-                            ),
+                            colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = onPrimary),
                         ) {
                             Text(labels.next, style = MaterialTheme.typography.labelLarge)
                         }
