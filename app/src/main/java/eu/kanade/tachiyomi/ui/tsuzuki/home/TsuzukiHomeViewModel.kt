@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.tsuzuki.home
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
+import eu.kanade.presentation.tsuzuki.novel.novelChapterHeading
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -147,7 +148,7 @@ class TsuzukiHomeViewModel(
                     progress = lib?.progress(),
                     unread = chapters.count { !it.read && it.dateFetch > lastRead },
                     isNovel = h.isNovel,
-                    recentChapters = chapters.toRecent(lastRead),
+                    recentChapters = chapters.toRecent(lastRead, h.isNovel),
                     meta = listOfNotNull(
                         "${chapters.size} ch".takeIf {
                             chapters.isNotEmpty()
@@ -177,7 +178,7 @@ class TsuzukiHomeViewModel(
                         progress = lib.progress(),
                         unread = 0,
                         isNovel = lib.manga.isNovel,
-                        recentChapters = chapters.toRecent(Long.MAX_VALUE),
+                        recentChapters = chapters.toRecent(Long.MAX_VALUE, lib.manga.isNovel),
                         meta = listOfNotNull(
                             "${chapters.size} ch".takeIf { chapters.isNotEmpty() },
                             sourceManager.getOrStub(lib.manga.source).name,
@@ -206,14 +207,15 @@ class TsuzukiHomeViewModel(
         )
     }
 
-    private fun List<Chapter>.toRecent(lastRead: Long): List<HomeChapter> =
+    private fun List<Chapter>.toRecent(lastRead: Long, isNovel: Boolean): List<HomeChapter> =
         sortedBy { it.sourceOrder } // source order 0 = newest chapter
             .take(5)
             .map { c ->
+                val heading = if (isNovel) novelChapterHeading(c.name) else null
                 HomeChapter(
                     id = c.id,
-                    number = homeChapterNumber(c.chapterNumber),
-                    name = c.name,
+                    number = homeChapterNumber(heading?.number ?: c.chapterNumber),
+                    name = heading?.title ?: c.name,
                     status = homeChapterStatus(c.read, c.lastPageRead, c.dateFetch, lastRead),
                 )
             }

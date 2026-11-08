@@ -6,6 +6,17 @@ import org.junit.jupiter.api.Test
 
 class NovelChapterNumberTest {
     @Test
+    fun `tablet sidebar separates the source number and title without duplicating either`() {
+        assertEquals(NovelChapterHeading(129.0, "The Gate & The Key"), novelChapterHeading("129: The Gate & The Key"))
+        assertEquals(
+            NovelChapterHeading(12.5, "Volume 4 · Return"),
+            novelChapterHeading("Volume 4 — Chapter 12.5: Return"),
+        )
+        assertEquals(NovelChapterHeading(3.0, "再会"), novelChapterHeading("第3話　再会"))
+        assertEquals(NovelChapterHeading(1.0, ""), novelChapterHeading("Chapter 1"))
+    }
+
+    @Test
     fun `numbered source title takes precedence over the stored index`() {
         val title = "2: Story Branching"
 
