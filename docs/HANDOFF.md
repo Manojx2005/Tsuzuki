@@ -113,10 +113,10 @@ ready, then the next.` A reviewer never reviews a card it implemented in the sam
    cards merged, cards failed, test counts, evidence folder), set the RV card `done`, update the status table in
    `docs/design/README.md`. No push. Delete the review worktree, keep the branches.
 
-#### RV1 Review: app lane batch 1 (T3) — `codex-working` (.worktrees/rv1, 2026-11-08)
+#### RV1 Review: app lane batch 1 (T3) — `done` (2026-11-08)
 Cards, in order: **V7.6, V7.7, R12, R16, R17** (all `review`; each branch is 2 commits off `main`). R17 is
 tablet-only: check line length on the tablet in portrait and landscape and that the S22 is unchanged.
-Review: _pending_
+Review: V7.6, R16 and R17 passed. V7.7 and R12 were reverted, with fix cards below. The full candidate built Debug and Preview and passed 981 tests. After the reverts, Preview built and 977 tests passed with no failures or skips. Both devices launched the accepted Preview. The tablet stayed on Dot Home. The S22 crash buffer contained a UI automation process failure during a dump, with no Tsuzuki crash. Evidence is in `app/build/review-evidence/rv1/`.
 
 #### RV2 Review: app lane batch 2 (T3) — `ready` (after RV1 is `done`)
 Cards, in order: **R15, S1, S2, S3, R13**. R15 changes backups and S1 classifies the library: back up first. R13
@@ -144,6 +144,31 @@ Review: _pending_
 #### RV4+ Keep going
 After RV3, each time 4–5 cards reach `review`, write the next RV card here (same format, same order the lanes
 finished them) and run it. The anime chain stays one review per 3–4 cards.
+
+#### CHAPNUM Novel chapter labels (owner 2026-11-08) — `codex-working` (.worktrees/chapter-numbers)
+
+Use a clearly stated chapter number in the source title when showing a novel chapter number. The Perfect Run
+lists “2: Story Branching” while the stored number is 1. Apply the correction to the tablet details chapter
+list and the reader’s chapter labels in both themes. Keep stored numbers and chapter ordering intact.
+Boards: TabletNovel, TabletReader and Q2 ChapterEnd. Test explicit decimal and volume/chapter headings,
+unnumbered titles, and manga fallback behavior.
+
+**Result (Codex, 2026-11-08):** `706affe00` on `tsuzuki/chapter-numbers`.
+
+- `NovelChapterNumber.kt` recognises explicit source headings, including the Royal Road form
+  `2: Story Branching`, decimals, volume/chapter headings and Japanese chapter markers.
+- `MangaScreen.kt` uses the recognised source number in the novel chapter list’s number-only
+  mode and the original numbered title once in number-and-title mode.
+- `ReaderActivity.kt` applies the same rule to the reader toolbar and optional status bar.
+  `TsuzukiChapterEnd.kt` keeps the full numbered title and suppresses its redundant number label.
+- `NovelChapterNumberTest.kt` covers the reported mismatch, duplicate suppression, both display
+  modes, explicit decimals and fallback for titles with incidental numbers.
+
+The first pass is verified. The Home right-hand chapter list is being added on the same branch. Stored chapter numbers still drive ordering and existing reading state. JDK 21, two scoped Spotless
+passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed (971 tests, zero failures or skips).
+Independent device review: open The Perfect Run on the tablet in Dot and Colour. Check the right-side
+list, the reader toolbar and the chapter-end card, then switch the details/reader to number-only.
+Verify that a manga and a novel whose source title has no number keep their previous labels.
 
 ### Batch T anime cards (written 2026-11-08) — lane 1, after A5.3
 
@@ -776,7 +801,7 @@ that position. Each Previous request is consumed once so a subsequent renderer s
 
 **Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 TextView, Colour: Ch. 108 → ‹ Previous → Ch. 107 opens at 0 % and scrolls; ‹ again → Ch. 106 scrolls down and up. Pass. Not yet run: WebView renderer, infinite scroll off, tablet. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
 
-#### V7.7 Smoother chapter-end Next chapter (T2) — `review` (2026-11-08, `.worktrees/v7.7`) (owner 2026-11-08: 0.1.1; v0.1.0 is tagged)
+#### V7.7 Smoother chapter-end Next chapter (T2) — `blocked` (2026-11-08, `.worktrees/v7.7`) (owner 2026-11-08: 0.1.1; v0.1.0 is tagged)
 Owner: RC4's fix works but the tap → next chapter switch should feel smoother. Board: `06-reader/ChapterEnd`. Text reader (`NovelViewer`) with
 infinite scroll **off** (now non-default). Today the tap clears the page and the new chapter pops in at the top.
 Look at the chapter-end card board, then: show press feedback at once, keep the card until the next chapter's
@@ -803,7 +828,18 @@ the chapter end and tap Next once. Check immediate feedback, no menu flash, and 
 both cached and slow chapters in TextView and scrolling WebView. Check reduced motion, a failed
 load and retry, and paged and infinite-scroll navigation.
 
-#### V7.6 v0.1 polish from the V1 notes (T2) — `review` (2026-11-08, `.worktrees/v7.6`) (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
+**Review (Codex RV1, 2026-11-08):** Fail. Native Dot advances on the first tap and holds the outgoing frame. In scrolling WebView Colour, one Next chapter tap loads the right chapter but reveals the hidden reader chrome. The frame sheet shows the controls entering during the handoff. `NovelWebViewViewer.kt:302` handles the same tap as a native navigation gesture while the JS button handles it. Evidence: `v77-native-dot-frames.png` and `v77-web-colour-frames.png`. Reverted in `dc4b7d563`.
+
+#### V7.7-F Keep the WebView chapter-end tap in the card (T3) — `ready` (app lane)
+
+Reapply V7.7 by reverting `dc4b7d563` on a fix branch from the reviewed main. A tap on an interactive
+chapter-end control should reach the DOM action once and should preserve reader chrome visibility and scroll
+position. Keep ordinary text taps and paged gestures working. Verify on the tablet and S22 with both renderers,
+including a fling to the card and a slow or failed chapter load.
+
+Result: _pending_
+
+#### V7.6 v0.1 polish from the V1 notes (T2) — `done` (2026-11-08, `.worktrees/v7.6`) (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
 Boards: the screen's board in `docs/design/boards/INDEX.md` (Settings, Updates, TTS/ListenMini). Dot first, then Colour.
 1. **Updates "Library last updated: Never/…" line** (`UpdatesUiItem.kt:68`, `TsuzukiUpdatesTwoPane.kt:260`): in the
@@ -840,6 +876,8 @@ daemon heap after the combined build exhausted the compiler heap.
 Claude device review on the S22 and Tab S11 in Dot and Colour, English and Japanese. Verify the Updates
 caption, Time format row and picker, the active voice label on tablet, the native renderer segment and
 the Getting started guide from the empty library. R-A5 awaits the A3.5 commit.
+
+**Review (Codex RV1, 2026-11-08):** Pass. S22 Time format kept its title on one line in Japanese and English, with only the English Dot value ellipsised. The Japanese Native chip fits. The Updates caption is upright on both displays, and tablet Listen shows the localised offline voice name. Earshot measured the 13.71 s local capture at −19.6 LUFS (AudioSet Speech 0.72; 92.55% digital silence). The unrelated GuidesStep URL change was dropped in `a8cfedf0f`. Evidence: `v76-*` in the RV1 evidence folder.
 
 #### V8 Built-but-never-seen screens (Claude) — `ready` after V3–V6
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
@@ -1089,7 +1127,7 @@ and reader show chapter/book time left when local word counts and three valid re
   qualifying visual sessions including a cold entry, a mix of visual and TTS, a seek, incognito, and a
   missing chapter becoming available after download. Verify the Resume tile and reader use real progress.
 
-#### R12 Source health (T3) — `review` (2026-11-08, `.worktrees/r12`)
+#### R12 Source health (T3) — `blocked` (2026-11-08, `.worktrees/r12`)
 Board `SourceHealth`. Per installed source: last successful request time, average response time, last error
 (HTTP code / Cloudflare / timeout), measured passively from real Browse/Updates traffic via an OkHttp interceptor
 hook in `tsuzuki/` (no extra pings; optional manual "Check now" that does one Popular request). Store in a small
@@ -1110,6 +1148,17 @@ Claude device review on the S22 and Tab S11 in Dot and Colour. Open a real LNRea
 catalogue, then check the source row and Browse overflow screen. Verify the same source updates
 from library traffic, a never-used source stays unmeasured, and recovery keeps its last error while
 updating its status. Check outage actions only when a real failure is present.
+
+**Review (Codex RV1, 2026-11-08):** Fail. Real Royal Road requests set a healthy dot, last success and latency. An Archive of Our Own request recorded HTTP 418 and showed the WebView outage action. On the S22, Asura Scans loaded both Popular and Latest but remained unmeasured. `HttpSource.kt:127` tags the legacy request builders. Modern Keiyoushi suspend methods can issue OkHttp requests directly, outside those builders. Evidence: `r12-health-observed-dot-tablet.png`, `r12-health-colour-tablet.png`, `r12-manga-latest-dot-s22.png` and `r12-health-manga-dot-s22.png`. Reverted in `1d6554c94`.
+
+#### R12-F Measure current Keiyoushi sources (T3) — `ready` (app lane)
+
+Reapply R12 by reverting `1d6554c94` on a fix branch from the reviewed main. Pass source identity through
+native suspend catalogue and update paths that bypass HttpSource request builders. Keep cache-only requests,
+cancellations and non-source calls out of the measurements. No probes or per-host source guesses. Verify one
+real Keiyoushi source and one LNReader plugin on device, including unmeasured and observed states.
+
+Result: _pending_
 
 #### R13 Dictionary lookup — offline packs (T4) — `ready`
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
@@ -1142,7 +1191,7 @@ rotation, restore preview (what's inside before restoring: counts of books/shelv
 clear errors. No cloud sync in this card (owner decision needed for Drive/WebDAV).
 Result: _pending_
 
-#### R16 Upcoming: notify on expected release (T2) — `review` (2026-11-08, `.worktrees/r16`)
+#### R16 Upcoming: notify on expected release (T2) — `done` (2026-11-08, `.worktrees/r16`)
 Optional per-book toggle on Upcoming: a notification on the expected date from the existing interval estimate;
 off by default; uses the existing notification channel; no new background polling.
 **Result (Codex, 2026-11-08):** `tsuzuki/r16` at `6954716eb` (base `c0a0015a4`).
@@ -1161,7 +1210,9 @@ denial and tapping through to the book with a real scheduled estimate. Test an e
 while the app process is running, then verify a pending reminder survives process exit. WorkManager
 delivery is inexact. A reminder that runs after the expected date expires.
 
-#### R17 Tablet reading line length (T3) — `review` (2026-11-08, `.worktrees/r17`)
+**Review (Codex RV1, 2026-11-08):** Pass. A real 11 November forecast on the S22 showed the bell off by default. Opt-in added a one-time JobScheduler entry approximately 2 days and 1 hour out. Opt-out removed it and restored the bell. The same forecast row rendered in Colour. The fresh tablet library showed the empty calendar state. Actual delivery, notification deep link and permission denial were not exercised. Evidence: `r16-*` in the RV1 evidence folder.
+
+#### R17 Tablet reading line length (T3) — `done` (2026-11-08, `.worktrees/r17`)
 Owner 2026-11-07: **cap the novel text column at ~600 dp, centred**, on wide windows (board `11-tablet/TabletReader`:
 ~512 dp column with ~64 dp margins). Phones unchanged; the user's own side margins remain the minimum. TextView:
 measure the real content width (not `screenWidthDp` — the N25 side panel can be docked) and centre the chunk views
@@ -1186,6 +1237,8 @@ Result: `4642ed752` on `tsuzuki/r17`.
 - Claude device review remains for Dot and Colour on the tablet in portrait and landscape, with the panel
   docked and undocked. Check TextView reflow on a chapter with an illustration, WebView paging and scrolling,
   the chapter-end card in scrolling mode, and a phone comparison.
+
+**Review (Codex RV1, 2026-11-08):** Pass. Native tablet text spans measured 1343 px including two 16 dp margins at 340 dpi, in portrait and landscape. The dock re-centred the text inside the remaining pane. Colour WebView scrolling and paged layouts showed the same centred column, including a turn to page 2 of 16. The S22 native reader continued to occupy the full phone-width view. An illustration reflow fixture was unavailable. Evidence: `r17-*` and `v76-listen-dot-tablet.png` in the RV1 evidence folder.
 
 #### R-A1 Anime backups (T4) — `ready` (needs `tsuzuki/a3.6`; order in the Anime lane table)
 ANIME_SCHEMA §4 + §9 Q2 (import only): read Aniyomi backups (fields 500–503) into the anime tables; write anime
@@ -2550,6 +2603,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-08 RV1 (Codex review).** Passed V7.6, R16 and R17. V7.7’s WebView tap exposed reader controls and R12 missed native Asura Scans traffic, so both were reverted and queued for fixes. Accepted Preview assembled and 977 unit tests passed. Dot tablet and Colour S22 launched the accepted Preview. Screenshots, frames and the local Earshot report are in `app/build/review-evidence/rv1/`.
 
 - **2026-11-08 Claude — Batch T: Codex reviews Codex.** Owner: Claude is out of usage; a Codex review thread
   may merge into `main` locally (no push) and use the tablet + S22. Wrote RV1 (V7.6, V7.7, R12, R16, R17), RV2
