@@ -1132,6 +1132,9 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">书库的预计更新</string>
     <string name="tsz_upcoming_no_updates">没有预计更新</string>
+    <string name="tsz_upcoming_reminder_toggle">%1$s 预计发布提醒</string>
+    <string name="tsz_upcoming_reminder_message">预计今天会发布新章节。</string>
+    <string name="tsz_upcoming_reminder_permission">请在 Android 设置中开启章节通知，以接收提醒。</string>
     <!-- media step -->
     <string name="tsz_onboarding_media">你读什么？</string>
     <string name="tsz_onboarding_media_body">任选其一或多个，我们只显示你用到的。</string>
