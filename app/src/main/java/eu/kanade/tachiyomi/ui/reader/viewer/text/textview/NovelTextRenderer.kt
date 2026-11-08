@@ -5,6 +5,7 @@ import android.text.Selection
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.ImageSpan
 import android.widget.TextView
 import androidx.core.text.PrecomputedTextCompat
 import androidx.core.widget.TextViewCompat
@@ -22,6 +23,7 @@ internal class NovelTextRenderer(
     private val activity: ReaderActivity,
     private val preferences: ReaderPreferences,
     private val scope: CoroutineScope,
+    private val illustrationWidth: () -> Int?,
 ) {
 
     fun render(
@@ -54,11 +56,11 @@ internal class NovelTextRenderer(
 
         scope.launch {
             val imageGetter = if (!blockMedia && !plainTextMode) {
-                val widthPx = block.chunkViews.firstOrNull()
+                val widthPx = illustrationWidth() ?: block.chunkViews.firstOrNull()
                     ?.let { it.width - it.paddingLeft - it.paddingRight }
                     ?.takeIf { it > 0 }
                     ?: activity.resources.displayMetrics.widthPixels
-                CoilImageGetter(activity, scope, widthPx, block::chunkViewFor)
+                NovelImageGetter(activity, scope, widthPx, block::chunkViewFor)
             } else {
                 null
             }
@@ -99,7 +101,14 @@ internal class NovelTextRenderer(
             val selectable = preferences.novelTextSelectable.get()
             val params = if (selectable) null else TextViewCompat.getTextMetricsParams(block.chunkViews.first())
             val (precomputed, fullText) = withContext(Dispatchers.Default) {
-                params?.let { p -> chunks.map { PrecomputedTextCompat.create(it, p) } } to spannable.toString()
+                val measured = params?.let { p ->
+                    chunks.map { chunk ->
+                        // ImageSpan metrics depend on the pane width and can change after this render.
+                        chunk.takeIf { it.getSpans(0, it.length, ImageSpan::class.java).isEmpty() }
+                            ?.let { PrecomputedTextCompat.create(it, p) }
+                    }
+                }
+                measured to spannable.toString()
             }
 
             if (token != block.renderToken || !block.container.isAttachedToWindow) return@launch
@@ -112,16 +121,18 @@ internal class NovelTextRenderer(
             }
 
             block.clearSelections()
-            if (precomputed != null) {
-                precomputed.forEachIndexed { i, text ->
+            chunks.forEachIndexed { i, chunk ->
+                val view = block.chunkViews[i]
+                val measured = precomputed?.get(i)
+                if (measured != null) {
                     try {
-                        TextViewCompat.setPrecomputedText(block.chunkViews[i], text)
+                        TextViewCompat.setPrecomputedText(view, measured)
+                        return@forEachIndexed
                     } catch (_: IllegalArgumentException) {
-                        block.chunkViews[i].text = chunks[i]
+                        // Text preferences can change while this chunk is being measured.
                     }
                 }
-            } else {
-                chunks.forEachIndexed { i, chunk -> block.chunkViews[i].text = chunk }
+                view.text = chunk
             }
             block.chunkStarts = starts
             block.fullText = fullText

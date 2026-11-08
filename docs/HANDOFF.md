@@ -1161,7 +1161,7 @@ denial and tapping through to the book with a real scheduled estimate. Test an e
 while the app process is running, then verify a pending reminder survives process exit. WorkManager
 delivery is inexact. A reminder that runs after the expected date expires.
 
-#### R17 Tablet reading line length (T3) — `ready`
+#### R17 Tablet reading line length (T3) — `review` (2026-11-08, `.worktrees/r17`)
 Owner 2026-11-07: **cap the novel text column at ~600 dp, centred**, on wide windows (board `11-tablet/TabletReader`:
 ~512 dp column with ~64 dp margins). Phones unchanged; the user's own side margins remain the minimum. TextView:
 measure the real content width (not `screenWidthDp` — the N25 side panel can be docked) and centre the chunk views
@@ -1169,7 +1169,23 @@ measure the real content width (not `screenWidthDp` — the N25 side panel can b
 WebView: CSS `max-width` on the content wrapper with auto side margins, keeping the user margins as padding; check
 paged mode (`paged-reader.js` column math) and the chapter-end card. Hook through `tsuzuki/reader/`; tests for the
 width math. Claude checks tablet portrait/landscape, docked panel, both renderers, paged + scroll.
-Result: _pending_
+Result: `4642ed752` on `tsuzuki/r17`.
+
+- `tsuzuki/reader/NovelReadingColumn.kt` and `NovelViewer.kt` measure the actual pane and split the excess width
+  around the chapter blocks. Chunks retain their existing padding, including asymmetric margins. The cap applies
+  in the 600 dp smallest-width class and above, which keeps landscape phones on their existing layout.
+- `NovelIllustrations.kt`, `NovelImageGetter.kt` and `NovelTextRenderer.kt` size embedded images to the measured
+  column and refit loaded spans when it resizes. Image-bearing chunks remeasure their span metrics during reflow.
+- `NovelWebViewStyler.kt` and `NovelWebViewViewer.kt` apply the same cap using the WebView's viewport width.
+  Scrolling uses auto margins and user padding. Paged gutters sit outside the clipped body, so the existing
+  pager derives the column width and page stride from `body.clientWidth`.
+- Scoped Spotless and `:app:assembleDebug :app:testDebugUnitTest` passed with 972 tests, including four new
+  width tests. Headless Chromium checked phone portrait and landscape, tablet portrait and landscape, the
+  exact threshold, asymmetric margins, dock resize, page clipping and stride, and the scrolling chapter-end
+  card. The 550 px docked pane yielded 518 px of text with the default margins.
+- Claude device review remains for Dot and Colour on the tablet in portrait and landscape, with the panel
+  docked and undocked. Check TextView reflow on a chapter with an illustration, WebView paging and scrolling,
+  the chapter-end card in scrolling mode, and a phone comparison.
 
 #### R-A1 Anime backups (T4) — `ready` (needs `tsuzuki/a3.6`; order in the Anime lane table)
 ANIME_SCHEMA §4 + §9 Q2 (import only): read Aniyomi backups (fields 500–503) into the anime tables; write anime
