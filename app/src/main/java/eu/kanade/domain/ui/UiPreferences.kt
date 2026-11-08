@@ -24,7 +24,8 @@ class UiPreferences(
 
     val appTheme: Preference<AppTheme> = preferenceStore.getObjectFromString(
         key = APP_THEME_KEY,
-        defaultValue = AppTheme.COLOUR,
+        // Tsuzuki (owner 2026-11-08): new installs, and so onboarding, start in Dot.
+        defaultValue = AppTheme.DOT,
         serializer = { appThemeFromStorage(it.name).name },
         deserializer = ::appThemeFromStorage,
     )

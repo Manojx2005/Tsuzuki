@@ -536,7 +536,11 @@ Same cert and version code below the new one: in-place upgrade works. Different 
 (sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
 
 #### V11 Release candidate (Claude + owner) — RC2 built 2026-11-07, owner testing on their phone
-**RC3 (current, 2026-11-08):** commit `000cb1ce6` (main + V7.3–V7.5 + V8 More insets), Actions run 42423861828,
+**RC5 (current, 2026-11-08):** RC4 + Dot as the default theme (onboarding in Dot). Built after RC4; see log.
+**RC4 (superseded, 2026-11-08):** commit `8be1ba942` (RC3 + chapter-end Next chapter fix), Actions run 42429219360,
+0.1.0 (24), cert `ffcdc743…f6c7`. Installed on tablet + S22 (release app id): launches, crash buffers empty. Files:
+`C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc4/tsuzuki-rc-8be1ba942/`. Tag only after the owner's OK.
+**RC3 (superseded, 2026-11-08):** commit `000cb1ce6` (main + V7.3–V7.5 + V8 More insets), Actions run 42423861828,
 0.1.0 (24), cert `ffcdc743…f6c7`. Installed on tablet + S22 (release app id): launches, Japanese onboarding renders,
 crash buffers empty; reading not yet checked in this build (fresh install stops at the system folder picker). Owner
 is testing it on their phone (debug-signed install → backup, uninstall, install, restore). Files:
@@ -2117,6 +2121,9 @@ Result: _pending_
   if you prefer the stock behaviour.
 
 ## Owner decisions in force
+
+- 2026-11-08: **Dot is the default app theme** for new installs, so onboarding starts in Dot (`UiPreferences`
+  default; a stored Colour choice and legacy themes → Colour are unchanged).
 
 - 2026-11-07: run Batch R as **two Codex threads in parallel** (lane 1 anime, lane 2 app); tablet novel text
   **capped at ~600 dp, centred** (R17); **no cloud sync** for now (local backups only, R15); dictionary =
