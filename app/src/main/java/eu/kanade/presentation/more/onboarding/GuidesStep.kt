@@ -56,7 +56,7 @@ internal class GuidesStep(
     }
 }
 
-const val GETTING_STARTED_URL = "https://github.com/Manojx2005/Tsuzuki#download"
+const val GETTING_STARTED_URL = "https://tsundoku-otaku.github.io/docs/guides/getting-started"
 
 @PreviewLightDark
 @Composable
