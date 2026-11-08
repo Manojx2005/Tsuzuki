@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -106,6 +107,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
         val mangaList by viewModel.state.collectAsState()
         val novelList by viewModel.novelState.collectAsState()
         val pausedGroups by viewModel.pausedNovelMangaIds.collectAsState()
+        val pausedMangaSources by viewModel.pausedMangaSourceIds.collectAsState(initial = emptySet())
         val titleMaxLines by viewModel.titleMaxLines.collectAsState()
 
         val translationService = remember { Injekt.get<TranslationService>() }
@@ -591,6 +593,9 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                 onReorder = viewModel::reorder,
                                 onCancel = viewModel::cancel,
                                 coverFor = viewModel::coverFor,
+                                pausedSources = pausedMangaSources,
+                                onPauseSource = viewModel::setMangaSourcePaused,
+                                onRetry = { viewModel.retryFailedDownloads(listOf(it)) },
                             )
                         } else if (selectedTab == 1) {
                             AndroidView(
@@ -659,6 +664,11 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                                                 viewModel.pauseNovelGroup(item.mangaId)
                                             }
                                         },
+                                        onRetryErrors = if (themed) {
+                                            { viewModel.retryFailedDownloads(item.erroredDownloads) }
+                                        } else {
+                                            null
+                                        },
                                         onCancel = { viewModel.cancel(item.subItems) },
                                         onMoveToTop = {
                                             viewModel.reorder(
@@ -695,6 +705,7 @@ private fun NovelDownloadCard(
     titleMaxLines: Int,
     isPaused: Boolean,
     onPauseResume: () -> Unit,
+    onRetryErrors: (() -> Unit)?,
     onCancel: () -> Unit,
     onMoveToTop: () -> Unit,
     onMoveToBottom: () -> Unit,
@@ -902,7 +913,17 @@ private fun NovelDownloadCard(
                         ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error,
+                        modifier = if (onRetryErrors != null) Modifier.weight(1f) else Modifier,
                     )
+                    if (onRetryErrors != null) {
+                        IconButton(onClick = onRetryErrors) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = stringResource(MR.strings.action_retry),
+                                tint = eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.accent,
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = { context.copyToClipboard(errorLabel, item.fullErrorReport) },
                         modifier = Modifier.size(28.dp),
