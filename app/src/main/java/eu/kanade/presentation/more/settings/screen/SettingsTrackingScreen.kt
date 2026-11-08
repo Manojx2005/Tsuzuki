@@ -54,6 +54,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiTrackingPreferences
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
@@ -95,6 +97,13 @@ object SettingsTrackingScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        if (isTsuzukiStyle()) return tsuzukiTrackingPreferences(getStockPreferences())
+        return getStockPreferences()
+    }
+
+    @Suppress("ktlint:standard:max-line-length")
+    @Composable
+    private fun getStockPreferences(): List<Preference> {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
         val trackerManager = remember { Injekt.get<TrackerManager>() }

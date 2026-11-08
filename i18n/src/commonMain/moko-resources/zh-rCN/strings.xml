@@ -1353,4 +1353,8 @@
     <string name="tsz_reader_sleep_off">关闭</string>
     <string name="tsz_reader_sleep_chapter">本章结束</string>
     <string name="tsz_reader_listen_paragraphs">段落</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">小说追踪服务</string>
+    <string name="tsz_tracker_signed_out">未登录</string>
+    <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
 </resources>

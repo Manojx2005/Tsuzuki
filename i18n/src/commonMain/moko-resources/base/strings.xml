@@ -1732,4 +1732,8 @@
     <string name="pref_library_layout">Library layout</string>
     <string name="pref_combined_library">Combined library</string>
     <string name="pref_combined_library_summary">Merge Novels and Manga into a single Library tab</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Novel trackers</string>
+    <string name="tsz_tracker_signed_out">Not signed in</string>
+    <string name="tsz_tracker_linked_count">Linked %1$d</string>
 </resources>

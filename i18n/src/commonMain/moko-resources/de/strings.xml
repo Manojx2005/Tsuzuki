@@ -1353,4 +1353,8 @@
     <string name="tsz_reader_sleep_off">Aus</string>
     <string name="tsz_reader_sleep_chapter">Kapitelende</string>
     <string name="tsz_reader_listen_paragraphs">Absätze</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Roman-Tracker</string>
+    <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
+    <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
 </resources>

@@ -1572,4 +1572,8 @@
     <string name="pref_library_layout">ライブラリのレイアウト</string>
     <string name="pref_combined_library">統合ライブラリ</string>
     <string name="pref_combined_library_summary">小説とマンガを 1 つのライブラリタブにまとめます</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">小説トラッカー</string>
+    <string name="tsz_tracker_signed_out">未ログイン</string>
+    <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
 </resources>

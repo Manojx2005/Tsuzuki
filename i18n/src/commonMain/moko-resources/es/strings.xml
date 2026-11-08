@@ -1340,4 +1340,8 @@
     <string name="tsz_reader_sleep_off">Desactivado</string>
     <string name="tsz_reader_sleep_chapter">Fin del capítulo</string>
     <string name="tsz_reader_listen_paragraphs">Párrafos</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
+    <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
+    <string name="tsz_tracker_linked_count">%1$d vinculados</string>
 </resources>
