@@ -145,6 +145,31 @@ Review: _pending_
 After RV3, each time 4–5 cards reach `review`, write the next RV card here (same format, same order the lanes
 finished them) and run it. The anime chain stays one review per 3–4 cards.
 
+#### CHAPNUM Novel chapter labels (owner 2026-11-08) — `review` (.worktrees/chapter-numbers)
+
+Use a clearly stated chapter number in the source title when showing a novel chapter number. The Perfect Run
+lists “2: Story Branching” while the stored number is 1. Apply the correction to the tablet details chapter
+list and the reader’s chapter labels in both themes. Keep stored numbers and chapter ordering intact.
+Boards: TabletNovel, TabletReader and Q2 ChapterEnd. Test explicit decimal and volume/chapter headings,
+unnumbered titles, and manga fallback behavior.
+
+**Result (Codex, 2026-11-08):** `706affe00` on `tsuzuki/chapter-numbers`.
+
+- `NovelChapterNumber.kt` recognises explicit source headings, including the Royal Road form
+  `2: Story Branching`, decimals, volume/chapter headings and Japanese chapter markers.
+- `MangaScreen.kt` uses the recognised source number in the novel chapter list’s number-only
+  mode and the original numbered title once in number-and-title mode.
+- `ReaderActivity.kt` applies the same rule to the reader toolbar and optional status bar.
+  `TsuzukiChapterEnd.kt` keeps the full numbered title and suppresses its redundant number label.
+- `NovelChapterNumberTest.kt` covers the reported mismatch, duplicate suppression, both display
+  modes, explicit decimals and fallback for titles with incidental numbers.
+
+Stored chapter numbers still drive ordering and existing reading state. JDK 21, two scoped Spotless
+passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed (971 tests, zero failures or skips).
+Independent device review: open The Perfect Run on the tablet in Dot and Colour. Check the right-side
+list, the reader toolbar and the chapter-end card, then switch the details/reader to number-only.
+Verify that a manga and a novel whose source title has no number keep their previous labels.
+
 ### Batch T anime cards (written 2026-11-08) — lane 1, after A5.3
 
 All follow the anime lane rules (Needs merge, `TsuzukiAnime.enabled` gate, board first, tokens + typography,
