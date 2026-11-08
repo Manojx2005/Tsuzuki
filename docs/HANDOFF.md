@@ -500,6 +500,15 @@ that position. Each Previous request is consumed once so a subsequent renderer s
 
 **Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 TextView, Colour: Ch. 108 → ‹ Previous → Ch. 107 opens at 0 % and scrolls; ‹ again → Ch. 106 scrolls down and up. Pass. Not yet run: WebView renderer, infinite scroll off, tablet. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
 
+#### V7.7 Smoother chapter-end Next chapter (T2) — `blocked` (owner 2026-11-08: 0.1.1, after the v0.1.0 tag)
+Owner: RC4's fix works but the tap → next chapter switch should feel smoother. Text reader (`NovelViewer`) with
+infinite scroll **off** (now non-default). Today the tap clears the page and the new chapter pops in at the top.
+Look at the chapter-end card board, then: show press feedback at once, keep the card until the next chapter's
+content is ready (no blank frame), and bring the new chapter in with the reader's existing transition
+(`TsuzukiReaderTransition.kt`) rather than a hard cut. Don't regress the touch fix in
+`tsuzuki/reader/NovelChapterEndTouch.kt` (fling into the end, then tap: must load on the first tap, no menu flash).
+Check the WebView reader's card (`chapter-end-card.js`) for the same feel. Device check on the tablet + S22.
+
 #### V7.6 v0.1 polish from the V1 notes (T2) — `ready` (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
 Boards: the screen's board in `docs/design/boards/INDEX.md` (Settings, Updates, TTS/ListenMini). Dot first, then Colour.
@@ -536,7 +545,8 @@ Same cert and version code below the new one: in-place upgrade works. Different 
 (sign v0.1 with the phone's key, or backup → uninstall → install → restore on the phone).
 
 #### V11 Release candidate (Claude + owner) — RC2 built 2026-11-07, owner testing on their phone
-**RC5 (current, 2026-11-08):** RC4 + Dot as the default theme (onboarding in Dot). Built after RC4; see log.
+**RC6 (current, 2026-11-08):** RC4 + Dot as the default theme (onboarding in Dot) + infinite scroll on by
+default. RC5 (Dot only, run 42431102954) was cancelled before it finished.
 **RC4 (superseded, 2026-11-08):** commit `8be1ba942` (RC3 + chapter-end Next chapter fix), Actions run 42429219360,
 0.1.0 (24), cert `ffcdc743…f6c7`. Installed on tablet + S22 (release app id): launches, crash buffers empty. Files:
 `C:/Users/Manoj/Desktop/Tsuzuki-v0.1.0-rc4/tsuzuki-rc-8be1ba942/`. Tag only after the owner's OK.
@@ -2122,6 +2132,8 @@ Result: _pending_
 
 ## Owner decisions in force
 
+- 2026-11-08: **Novel infinite scroll is on by default** (`ReaderPreferences.novelInfiniteScroll`; a saved
+  choice is kept). Smoother chapter-end Next chapter → V7.7 in 0.1.1.
 - 2026-11-08: **Dot is the default app theme** for new installs, so onboarding starts in Dot (`UiPreferences`
   default; a stored Colour choice and legacy themes → Colour are unchanged).
 
