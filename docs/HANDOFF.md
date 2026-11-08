@@ -568,7 +568,11 @@ smoke test Home, Library, both readers, TTS, downloads, backup + restore, Browse
 Owner's phone (as approved in V0): fresh backup copied to the PC first, then upgrade in place over the real data;
 check library, progress, shelves, history and prefs survived; crash buffer empty on all three.
 
-#### V12 Tag + publish (Claude + owner) — `ready` after V11
+#### V12 Tag + publish (Claude + owner) — `done` 2026-11-08
+**Published:** https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.1.0 — tag `v0.1.0` → `5a65307c9` (RC6 code +
+changelog), run 42432617196. Not draft/pre-release; `/releases/latest` returns v0.1.0; 5 APKs with SHA-256 lines in the
+notes; arm64 APK verified: cert `ffcdc743…f6c7`, 0.1.0 (24). Tachiyomi's 2016 local `v0.1.0` tag (`bba727ec8`, never on
+origin) was deleted first. Still open: the in-app updater end-to-end check (needs a later tag), lifting the freeze.
 Owner OK → `git tag v0.1.0` on frozen main → push **only that tag** (`git push origin v0.1.0`; never `--tags`: the
 repo holds Tsundoku's `v0.8.4`–`v0.9.2`, which would look newer to the updater). Watch the workflow, check the
 release assets and SHA-256 file. On the tablet, install a build reporting an older version and confirm the in-app
