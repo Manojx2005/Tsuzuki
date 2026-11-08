@@ -32,7 +32,8 @@ It is a fork of Tsundoku (itself a Mihon fork). Read these before changing anyth
 4. Record the result in `docs/HANDOFF.md` (card Result / log), update the status table in `docs/design/README.md`,
    then report what changed and what you saw on the devices. Codex commits only on its own card branch
    (`tsuzuki/<card>`, owner approved 2026-11-07); Claude reviews and merges into `main` (owner as sole author,
-   no push unless asked).
+   no push unless asked). **Owner 2026-11-08:** while Claude is out of usage, the Codex *review lane* (HANDOFF
+   "Batch T") does Claude's review: it merges passed cards into `main` locally (no push) and uses the tablet and S22.
 
 ## Build
 
@@ -82,6 +83,8 @@ done
 
 - The devices are set to Japanese, so system strings and Tsundoku's own strings show in Japanese.
 - Native libraries are 16 KB-aligned since quickjs-kt 1.0.15; re-check after dependency bumps (see the 16 KB task in the queue).
+- Who may use adb: Claude, and the Codex review lane (HANDOFF "Batch T", owner 2026-11-08) on the tablet and S22
+  only. Implementer Codex threads never use adb. Nobody installs on `R5GL23ZYE1V` without asking.
 - The owner may be using a device while you work. If the screen isn't what you expect, don't tap through system pickers or permission dialogs; ask instead.
 
 ## Rules
@@ -124,7 +127,8 @@ done
 - **Additional upstream WebView files:** `core/common/.../network/NetworkHelper.kt`, `network/interceptor/CloudflareInterceptor.kt`, `network/interceptor/WebViewInterceptor.kt`, `util/system/WebViewUtil.kt`, `app/.../di/AppModule.kt`, `ui/webview/WebViewActivity.kt`, `ui/webview/WebViewViewModel.kt` (Mihon robustness group; existing rate limiting and Injekt retained).
 - **Additional WebView screen adapter:** `ui/webview/WebViewScreen.kt` (header readiness and a separate ViewModel key for each browser route).
 - **Restoring a file:** use `git show HEAD:<file> > <file>`.
-- **Commits:** Claude only when asked; Codex on its own `tsuzuki/<card>` branch when a card is done (never `main`,
+- **Commits:** Claude only when asked; Codex on its own `tsuzuki/<card>` branch when a card is done (never `main` — except the review
+  lane merging reviewed cards, Batch T —
   never another card's branch, never amend or rebase someone else's commit). The owner is the sole author: no
   `Co-Authored-By` or "Generated with" trailers.
 - **Licences:** Apache-2.0 app. Don't copy GPL code (NovelDokusha and similar); see PLAN.md §1.

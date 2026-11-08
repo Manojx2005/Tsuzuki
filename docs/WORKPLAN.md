@@ -44,6 +44,8 @@ Rule of thumb: if the card needs judgement about *what* to build, Claude writes 
    `git -c core.longpaths=true worktree add -b tsuzuki/<task> .worktrees/<task> <base>` and copy `local.properties`.
    Never let two agents edit the same worktree.
 2. **Devices are a single resource owned by Claude.** Codex never runs adb. Claude batches device checks.
+   Exception (owner 2026-11-08): the Codex review lane (HANDOFF "Batch T") does Claude's review, devices and
+   merges into `main`, while Claude is out of usage.
 3. **At most two Gradle builds at once** on this Windows machine (RAM/IO). Prefer one heavy Codex task plus
    read-only agents.
 4. **Upstream merges and anything touching shared upstream hook files are serial on `main`**, done by Claude.

@@ -19,6 +19,8 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
   If blocked, set `blocked` and write the question.
 - **Claude:** reviews `review` cards (checklist in WORKPLAN §0.5), tests on devices, merges into `main` as the owner, moves
   the card to the log, writes the next cards. Claude also owns upstream merges and everything on devices.
+  **From 2026-11-08 (owner): the Codex review lane does this job** (Batch T): it reviews, uses the tablet and
+  S22, and merges into `main` locally. Implementer threads still never touch `main` or adb.
 - Statuses: `ready` · `codex-working` · `claude-working` · `review` · `blocked` · `done`.
 - **Several Codex threads at once (owner may open more than one):** give each thread a card explicitly, e.g.
   `Read AGENTS.md and docs/HANDOFF.md, then do card P0.4 only.` A thread must re-read this file and claim its card
@@ -31,6 +33,10 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Current state (2026-11-08, Claude)
 
+- **Claude is out of usage (owner, 2026-11-08). Codex now reviews too:** open a third Codex thread with the
+  review lane prompt in "Batch T". Waiting for review: app lane V7.6, V7.7, R12, R13, R15, R16, R17, S1, S2, S3
+  (RV1, RV2) and the anime chain up to R-A5 on `tsuzuki/r-a5` (RV3). Ten new anime cards (A4.3a, A6.1–A6.9)
+  are in the anime lane table.
 - **v0.1.0 is released** (2026-11-08, https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.1.0). **The freeze is
   lifted**: `main` takes reviewed cards again, anime included (still behind `TsuzukiAnime.enabled` until A4.3).
 - **Codex runs two lanes** (prompts in "Batch S" at the top of the Codex queue): lane 1 = anime chain (A3.5 →
@@ -63,7 +69,164 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Codex queue
 
-### Batch S — after v0.1.0 (Claude, 2026-11-08) — read this first
+### Batch T — Codex reviews Codex (owner 2026-11-08; Claude is out of usage) — read this first
+
+Owner decisions (2026-11-08): **a Codex review thread does Claude's review job**: it may merge passed cards into
+`main` locally (owner as sole author, no trailers, **no push**) and may use adb on the tablet `R52Y90HA77L` and
+the S22 `RZCWA139X1X` (**never** the owner's phone `R5GL23ZYE1V`). The implementer lanes (Batch S lane 1 and 2)
+are unchanged: they still commit only on `tsuzuki/<card>` and never touch `main` or adb.
+
+**Review lane prompt:** `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: do the first RV card that is
+ready, then the next.` A reviewer never reviews a card it implemented in the same thread.
+
+**How a review card runs (every RV card):**
+1. Claim it (`codex-working`, worktree `.worktrees/<rv>`, date). Worktree from current `main` on branch
+   `review/<rv>`; copy `local.properties`.
+2. For each card in the RV card's list, in order: `git merge --no-ff tsuzuki/<card>`. Conflicts in
+   `docs/HANDOFF.md`: keep `main`'s text and copy in only that card's status line + Result. Conflicts in string
+   files: union (keep both keys; duplicates → keep one). Any other conflict you can't resolve in a few lines →
+   `git merge --abort`, the card fails review ("needs a rebase on main"), go on.
+3. Checklist per card (WORKPLAN §0.5 items 1–7): `git diff --stat main...tsuzuki/<card>` stays inside the card's
+   files; upstream files have only a small hook (no re-indent, no stray Spotless; restore with
+   `git show main:<file> > <file>`), and each new upstream file is added to the AGENTS.md "already touched" list;
+   tokens + `MaterialTheme.typography` only; Dot uppercase + red only; real data only; no blocking on main,
+   `CancellationException` rethrown, no swallowed errors without a log; strings in all 8 locales with the same
+   placeholders. Read the whole diff, not only the Result.
+4. Build the merged branch once: `:app:assembleDebug :app:assemblePreview :app:testDebugUnitTest`. Gradle limit:
+   at most two builds at once across all threads; on a daemon OOM, wait and rerun.
+5. Devices (AGENTS.md "Test on devices"): install the **preview** APK on the tablet and the S22; Dot first, then
+   Colour; follow each card's "Claude device check" list; save screenshots to
+   `app/build/review-evidence/<rv>/<card>-<device>-<what>.png` and look at them; `logcat -d -b crash` must be
+   empty. Before a card that changes data (backup, migrations, library classification), export an in-app backup
+   first and restore it after. Anime is hidden in preview: check anime with the **debug** APK on the S22 only, after
+   an in-app backup of the `.dev` app (restore if anything changed). If the screen isn't what you expect (owner
+   using the device, system picker, permission dialog), don't tap through it: skip that check and write it down.
+   Leave the tablet on Dot Home; `svc power stayon usb` on both.
+6. Verdict per card, written in that card's section as `Review (Codex RV, date):` with pass/fail, findings as
+   `file:line — what`, test counts and evidence paths.
+   - **Pass:** small fixes (stray formatting, a missing locale string, a missing AGENTS.md line, an upstream
+     re-indent) go in a separate commit on the review branch, `review: <card> <fix>`. Card → `done`.
+   - **Fail:** `git revert -m 1` that merge on the review branch (or never merge it); card → `blocked` with the
+     findings; add a fix card `<card>-F` (`ready`, same lane, T2/T3) right under it, listing exactly what to change.
+7. When every card in the list has a verdict: `git merge --ff-only review/<rv>` from the main worktree (if `main`
+   moved, merge `main` into the review branch, rebuild, then fast-forward). Add one log entry (newest first:
+   cards merged, cards failed, test counts, evidence folder), set the RV card `done`, update the status table in
+   `docs/design/README.md`. No push. Delete the review worktree, keep the branches.
+
+#### RV1 Review: app lane batch 1 (T3) — `ready`
+Cards, in order: **V7.6, V7.7, R12, R16, R17** (all `review`; each branch is 2 commits off `main`). R17 is
+tablet-only: check line length on the tablet in portrait and landscape and that the S22 is unchanged.
+Review: _pending_
+
+#### RV2 Review: app lane batch 2 (T3) — `ready` (after RV1 is `done`)
+Cards, in order: **R15, S1, S2, S3, R13**. R15 changes backups and S1 classifies the library: back up first. R13
+is T4 (offline dictionary packs): read every storage and download path line by line; the pack itself is not in the
+repo, so check the "no pack installed" state and that nothing downloads without a tap.
+Review: _pending_
+
+#### RV3 Review: anime chain A2.3 → R-A5 (T4) — `ready` (after RV2 is `done`)
+Merge **one** branch: `tsuzuki/r-a5` (it contains A2.3, A2.4, A3.0–A3.5, R-A2, R-A3, R-A5; 14 commits). Review it
+per card using each card's commits (`git log main..tsuzuki/r-a5`). Extra checks:
+1. Release gate: in the preview APK there is no Watch pill, no anime shelf, no anime settings, no anime in
+   Updates/History; `TsuzukiAnime.enabled` is the only gate.
+2. Upstream diff: `git diff --stat main...tsuzuki/r-a5` for `LibraryUpdateJob.kt` (≤ 5 lines),
+   `UpdatesScreen.kt` (≤ 15), `UpdatesViewModel.kt`, and every other upstream file. Compare with R-A5's Result.
+3. Migrations: `36.sqm` unchanged from v0.1.0 (`git diff v0.1.0 -- '*36.sqm'` is empty); `37.sqm` is the only new one;
+   the `docs/UPSTREAM.md` "Tsuzuki-owned migrations" table exists.
+4. Debug APK on the S22 (after a `.dev` backup): install an anime extension from a repo, browse, add to library,
+   open details, play with resume, change subtitle/audio, History and Updates show it. Tracker logins only if the
+   owner has already logged in; never type the owner's credentials.
+5. 16 KB check on the debug APK's `.so` files (`zipalign -c -P 16 -v 4`).
+Pass → `main` gets the chain, and the anime lane cards from A3.6 onwards start from `main` (their Needs merge is
+then a no-op). Fail → the fix card goes to lane 1 before A3.6.
+Review: _pending_
+
+#### RV4+ Keep going
+After RV3, each time 4–5 cards reach `review`, write the next RV card here (same format, same order the lanes
+finished them) and run it. The anime chain stays one review per 3–4 cards.
+
+### Batch T anime cards (written 2026-11-08) — lane 1, after A5.3
+
+All follow the anime lane rules (Needs merge, `TsuzukiAnime.enabled` gate, board first, tokens + typography,
+8 locales, per-file Spotless twice, `:app:assembleDebug :app:testDebugUnitTest`, Result + `review`). A card whose
+screen has no part on its board: reuse the nearest existing Tsuzuki layout exactly (named in the card); if none
+fits, set `blocked: needs a board` and go to the next card.
+
+#### A4.3a Anime: user setting instead of the debug flag (T2) — `ready` (needs `tsuzuki/a4.2`; lane 1)
+The code half of A4.3 (the device sweep and owner sign-off stay with the owner/RV). `TsuzukiAnime.enabled` reads a
+new preference `tsuzuki_anime_enabled` (default **off**) instead of `BuildConfig.DEBUG`; Settings → Browse gets an
+"Anime (beta)" switch (existing switch preference widget) with a one-line summary, shown only on arm64-v8a
+(A4.2's ABI check); other ABIs show nothing. Turning it on shows the Watch pill/shelves without a restart; turning
+it off hides every anime entry point and stops the anime update work, but never deletes anime data. Tests: gate
+off → no anime entry point, no worker; on/off/on keeps the library; non-arm64 hides the switch.
+Result: _pending_
+
+#### A6.1 Anime: Kitsu tracker (T3) — `ready` (needs `tsuzuki/a5.3`; lane 1)
+Board `10-anime/AnimeTracking`; if it has no Kitsu row, copy the AniList row's layout. Reuse the Kitsu client
+already in the app (manga tracker: same public client id, login, token refresh); add the anime library
+endpoints (search anime, library entry by anime id, update progress/status/score), stored in `anime_sync` like
+A3.5. Progress syncs on episode seen. No new secrets. Tests: response parsing fixtures, status mapping, progress
+never goes backwards.
+Result: _pending_
+
+#### A6.2 Anime: migrate an anime to another source (T3) — `ready` (needs `tsuzuki/a6.1`; lane 1)
+Like manga migration, for anime: from details (overflow) and from Browse › Migrate (an ANIME pill only when ≥ 1
+anime in the library). Layout: reuse `tsuzuki/browse/TsuzukiMigrateSourceList.kt` and the existing migration
+search/config screens, no new layout. Carry over seen flags and positions matched by episode number, shelves,
+tracker bindings, and the A5.3 group excludes; options "copy" or "replace" like manga. Tests: episode matching by
+number (decimals, missing numbers), what each option carries.
+Result: _pending_
+
+#### A6.3 Anime: duplicate check when adding to the library (T2) — `ready` (needs `tsuzuki/a6.2`; lane 1)
+Adding an anime whose normalised title (or tracker id) matches one already in the library from another source
+shows the existing duplicate dialog pattern used for manga (open existing · add anyway · migrate → A6.2). Tests:
+title normalisation (case, punctuation, season suffixes), tracker-id match beats title.
+Result: _pending_
+
+#### A6.4 Anime: preferred audio and subtitle languages (T2) — `ready` (needs `tsuzuki/a6.3`; lane 1)
+Board `10-anime/PlayerSettings` (tracks part; if absent, a row in R-A2's player settings page). Two ordered language
+lists (audio, subtitles; subtitles also "off"). On load the player picks the first matching track; when the user
+changes a track by hand, remember that choice for this anime only (preference store keyed by anime id, no
+migration). Tests: track selection with tags like `ja`, `jpn`, `Japanese`, forced/signs subtitle handling,
+per-anime override wins.
+Result: _pending_
+
+#### A6.5 Anime: open episodes in an external player (T2) — `ready` (needs `tsuzuki/a6.4`; lane 1)
+A PlayerSettings row "Play with": Tsuzuki · external app. External: `ACTION_VIEW` with the resolved stream URL,
+type `video/*`, the hoster's headers and title as the extras mpv-android, VLC and MX Player read; resume position
+passed in and, when the app returns a position (MX/mpv), saved as progress and seen at ≥ 90 %. No external app →
+snackbar, play in Tsuzuki. Tests: intent extras per player, position result handling.
+Result: _pending_
+
+#### A6.6 Anime: next-episode airing times from AniList (T3) — `ready` (needs `tsuzuki/a6.5`; lane 1)
+For anime bound to AniList (A3.5), read `nextAiringEpisode { episode airingAt }` in the existing tracker refresh
+(no extra polling: at most once per anime per library update). Show "EP n · in 2d" on the details header and use the
+real time in R-A3's "Airing today", replacing the estimate only when AniList has a time. Unbound anime keep R-A3's
+behaviour. Hide when unknown. Tests: parsing, "today" in the device time zone, estimate vs real precedence.
+Result: _pending_
+
+#### A6.7 Anime: player screenshot (T2) — `ready` (needs `tsuzuki/a6.6`; lane 1)
+A camera action in the player options sheet (R-A2 `AnimePlayerSheets.kt`): mpv `screenshot-to-file` (video only,
+no subtitles toggle) into the cache, then MediaStore `Pictures/Tsuzuki/`, snackbar with Share. No storage
+permission on Android 10+. Tests: file naming (title, episode, timestamp), MediaStore insert on IO.
+Result: _pending_
+
+#### A6.8 Anime: local anime source (T3) — `ready` (needs `tsuzuki/a6.7`; lane 1)
+Like the local manga source: `<storage>/localanime/<Title>/<episode files>` (mp4, mkv, webm), optional `cover.jpg`
+and `details.json` (same keys as local manga). Episode number from the file name; sidecar `.srt`/`.ass` with the
+same base name become subtitle tracks. Shows in Browse › Watch only when the folder exists. Reads on IO via the
+existing storage-access helpers. Tests: file-name → episode number, subtitle pairing, empty folder.
+Result: _pending_
+
+#### A6.9 Anime: playback robustness pass (T3) — `ready` (needs `tsuzuki/a6.8`; lane 1)
+No new UI beyond existing snackbars/error states. Cover: hoster returns no video → next hoster, then the error state
+with Retry and "Open in WebView"; network lost mid-stream → pause with a retry snackbar, keep the position; mpv
+init failure → error state, never a crash; process death in the player → reopen the same episode and position
+(A3.2 already restores; add the missing cases you find). Add a fake-source test harness for these paths. Report
+every case as a table: case → behaviour → test.
+Result: _pending_
+
+### Batch S — after v0.1.0 (Claude, 2026-11-08)
 
 The v0.1 freeze is over. Two Codex threads, one per lane; never two cards that list the same files. Each card:
 worktree from **current `main`**, merge the branch in its Needs (if any), board first (Dot, then Colour), tokens +
@@ -135,7 +298,7 @@ voice picker yet (no board; Claude draws them after the owner's listening test).
 Claude side-loads it for the test. Tests: chunk queueing, stop/pause/seek, fallback to system TTS on load failure.
 Result: _pending_
 
-#### A5.1 Anime: picture-in-picture (T3) — `ready` (needs `tsuzuki/a4.2`; lane 1; v0.3)
+#### A5.1 Anime: picture-in-picture (T3) — `ready` (needs `tsuzuki/a4.3a`; lane 1; v0.3)
 No board needed (system PiP window). The player enters PiP on Home/recents while playing (setting, default on),
 keeps playing, offers play/pause and ±10 s remote actions, returns to the full player on tap, and pauses when the
 PiP window is closed. Respect `TsuzukiAnime.enabled`. Tests for the action set and state restore.
@@ -1573,11 +1736,21 @@ Card format and verify commands: WORKPLAN §0.4 and the appendix skeleton.
 | 15 | A3.9 Continue-watching widget | `tsuzuki/a3.8` | T3 | medium |
 | 16 | A4.1 Anime restyle parity pass | `tsuzuki/a3.9` | T2 | medium |
 | 17 | A4.2 Release packaging for anime | `tsuzuki/a4.1` | T3 | high |
-| — | A4.3 / A4.4 setting flip, device sweep, migration upgrade test | Claude + owner | — | — |
-| 18 | A5.1 Picture-in-picture | `tsuzuki/a4.2` | T3 | medium |
+| 17b | A4.3a Anime user setting instead of the debug flag (Batch T) | `tsuzuki/a4.2` | T2 | medium |
+| — | A4.3 / A4.4 device sweep, owner sign-off, migration upgrade test | review lane + owner | — | — |
+| 18 | A5.1 Picture-in-picture | `tsuzuki/a4.3a` | T3 | medium |
 | 19 | A5.2 Seasons grouping | `tsuzuki/a5.1` | T3 | high |
 | 20 | A5.3 Fansub / group filter | `tsuzuki/a5.2` | T2 | medium |
 | 21 | A5.4 Simkl tracker | `tsuzuki/a5.3` | T3 | high (blocked on owner) |
+| 22 | A6.1 Kitsu tracker | `tsuzuki/a5.3` | T3 | high |
+| 23 | A6.2 Migrate anime to another source | `tsuzuki/a6.1` | T3 | high |
+| 24 | A6.3 Duplicate check on add | `tsuzuki/a6.2` | T2 | medium |
+| 25 | A6.4 Preferred audio/subtitle languages | `tsuzuki/a6.3` | T2 | medium |
+| 26 | A6.5 External player | `tsuzuki/a6.4` | T2 | medium |
+| 27 | A6.6 Airing times from AniList | `tsuzuki/a6.5` | T3 | medium |
+| 28 | A6.7 Player screenshot | `tsuzuki/a6.6` | T2 | low |
+| 29 | A6.8 Local anime source | `tsuzuki/a6.7` | T3 | high |
+| 30 | A6.9 Playback robustness pass | `tsuzuki/a6.8` | T3 | high |
 
 A linear chain keeps merges simple. A merge conflict in the Needs step → `git merge --abort`, set `blocked`
 ("needs Claude to merge"), next card. If the Needs branch is not `review`/`done` yet, the card waits (skip it).
@@ -2296,6 +2469,11 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-08 Claude — Batch T: Codex reviews Codex.** Owner: Claude is out of usage; a Codex review thread
+  may merge into `main` locally (no push) and use the tablet + S22. Wrote RV1 (V7.6, V7.7, R12, R16, R17), RV2
+  (R15, S1, S2, S3, R13), RV3 (anime chain on `tsuzuki/r-a5`) and anime cards A4.3a, A6.1–A6.9; A5.1 now
+  needs A4.3a. AGENTS.md and WORKPLAN §0.3 updated for the review lane.
 
 - **2026-11-08 10:35 Claude — post-v0.1 merges: R11, HOME-SWIPE, R8, R10 into `main` via `review/post-v01`.**
   String files union-merged. R10 had removed the tracker token dialog's show/hide toggle and its pre-filled saved
