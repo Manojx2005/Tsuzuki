@@ -170,31 +170,32 @@ internal class AnimeLibraryStore(
         anime.update(show.copy(episodeFlags = display.toFlags(show.episodeFlags)))
     }
 
-    suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean) = database.transaction {
+    suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean): List<Episode> = database.transactionWithResult {
+        val newlySeen = mutableListOf<Episode>()
         ids.forEach { id ->
             val episode = episodes.awaitById(id) ?: return@forEach
             val position = if (seen) episode.lastSecondSeen else 0
             if (episode.seen != seen || episode.lastSecondSeen != position) {
                 episodes.updateProgress(id, seen, position, episode.totalSeconds)
             }
+            if (seen && !episode.seen) newlySeen += episode
         }
+        newlySeen
     }
 
     suspend fun setEpisodesBookmarked(ids: Set<Long>, bookmarked: Boolean) = database.transaction {
         ids.forEach { episodes.setBookmark(it, bookmarked) }
     }
 
-    suspend fun saveProgress(episodeId: Long, progress: AnimePlaybackCheckpoint) = database.transaction {
-        val episode = episodes.awaitById(episodeId) ?: return@transaction
-        val duration = progress.duration.takeIf { it > 0.0 } ?: episode.totalSeconds.toDouble()
-        episodes.updateProgress(
-            episode.id,
-            episode.seen || animeEpisodeSeen(progress.position, duration),
-            progress.position.toLong(),
-            duration.toLong(),
-        )
-        history.upsert(episode.id, Date(), progress.watchSeconds)
-    }
+    suspend fun saveProgress(episodeId: Long, progress: AnimePlaybackCheckpoint): Episode? =
+        database.transactionWithResult {
+            val episode = episodes.awaitById(episodeId) ?: return@transactionWithResult null
+            val duration = progress.duration.takeIf { it > 0.0 } ?: episode.totalSeconds.toDouble()
+            val seen = episode.seen || animeEpisodeSeen(progress.position, duration)
+            episodes.updateProgress(episode.id, seen, progress.position.toLong(), duration.toLong())
+            history.upsert(episode.id, Date(), progress.watchSeconds)
+            episode.takeIf { seen && !episode.seen }
+        }
 
     private suspend fun saveAnime(source: Long, show: SAnime, favorite: Boolean? = null): Anime {
         val stored = anime.awaitBySourceAndUrl(source, show.url)

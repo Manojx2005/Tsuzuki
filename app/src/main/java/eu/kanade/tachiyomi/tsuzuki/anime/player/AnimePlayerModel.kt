@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
+import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
 import kotlinx.coroutines.CancellationException
@@ -112,7 +113,7 @@ internal class AnimePlayerModel(
         processScope.launch {
             for ((episodeId, checkpoint) in writes) {
                 try {
-                    library.saveProgress(episodeId, checkpoint)
+                    library.saveProgress(episodeId, checkpoint)?.let { AnimeTrackProgressJob.enqueue(context, it) }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

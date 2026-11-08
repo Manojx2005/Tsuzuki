@@ -29,4 +29,12 @@
     <plurals name="tsz_anime_new_episodes">
         <item quantity="other">%d 集新剧集</item>
     </plurals>
+    <string name="tsz_anime_track_linked_count">已关联 %d 个</string>
+    <string name="tsz_anime_track_auto_update">每集结束后更新</string>
+    <string name="tsz_anime_track_login">请在追踪设置中登录</string>
+    <string name="tsz_anime_track_unlink">取消关联追踪服务</string>
+    <string name="tsz_anime_track_episode_count">剧集数：%d</string>
+    <string name="tsz_anime_track_watching">正在观看</string>
+    <string name="tsz_anime_track_planning">计划观看</string>
+    <string name="tsz_anime_track_rewatching">重新观看</string>
 </resources>

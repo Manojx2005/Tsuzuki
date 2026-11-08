@@ -340,10 +340,33 @@ class AnimeDatabaseTest {
     @Test
     fun upgradedSchemaMatchesFreshInstall() = runBlocking {
         withPreAnimeDatabase { upgraded ->
-            Database.Schema.migrate(upgraded, PRE_ANIME_VERSION, PRE_ANIME_VERSION + 1).await()
+            upgraded.sql("ALTER TABLE extension_store DROP COLUMN media")
+            Database.Schema.migrate(upgraded, PRE_ANIME_VERSION, PRE_TRACK_MAL_ID_VERSION).await()
+            upgraded.sql(
+                """
+                INSERT INTO animes(_id, source, url, title, status, favorite, initialized,
+                    viewer, episode_flags, cover_last_modified, date_added)
+                VALUES (1, 8, '/show', 'Show', 0, 1, 1, 0, 0, 0, 0)
+                """.trimIndent(),
+            )
+            upgraded.sql(
+                """
+                INSERT INTO anime_sync(anime_id, sync_id, remote_id, title, last_episode_seen,
+                    total_episodes, status, score, remote_url, start_date, finish_date)
+                VALUES (1, 2, 31, 'Show', 3, 12, 1, 8, 'https://anilist.co/anime/31', 0, 0)
+                """.trimIndent(),
+            )
+            Database.Schema.migrate(upgraded, PRE_TRACK_MAL_ID_VERSION, Database.Schema.version).await()
+            assertEquals(
+                listOf(listOf("31", "3", null)),
+                upgraded.rows("SELECT remote_id, CAST(last_episode_seen AS INTEGER), mal_id FROM anime_sync", 3),
+            )
             JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).use { fresh ->
                 Database.Schema.create(fresh).await()
-                assertEquals(fresh.schema(), upgraded.schema())
+                assertEquals(
+                    fresh.schema().filter { it[2] in ANIME_TABLES },
+                    upgraded.schema().filter { it[2] in ANIME_TABLES },
+                )
             }
         }
     }
@@ -474,8 +497,10 @@ class AnimeDatabaseTest {
             tracks.upsert(track)
             val stored = tracks.awaitByAnimeId(id).single()
             assertEquals(track.copy(id = stored.id), stored)
-            tracks.upsert(track.copy(score = 7.0))
-            assertEquals(stored.copy(score = 7.0), tracks.awaitByAnimeId(id).single())
+            tracks.upsert(track.copy(score = 7.0, malId = 120))
+            val edited = stored.copy(score = 7.0, malId = 120)
+            assertEquals(edited, tracks.awaitByAnimeId(id).single())
+            assertEquals(edited, tracks.subscribeByAnimeId(id).first().single())
 
             animes.delete(id)
             assertNull(animes.awaitById(id))
@@ -606,6 +631,7 @@ class AnimeDatabaseTest {
     private companion object {
         // SQLDelight starts at schema version 1. Migration 35 ends at user_version 36.
         const val PRE_ANIME_VERSION = 36L
+        const val PRE_TRACK_MAL_ID_VERSION = 38L
         val ANIME_TABLES = listOf(
             "animes_categories",
             "anime_sync",

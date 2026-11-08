@@ -30,4 +30,12 @@
         <item quantity="one">%d new episode</item>
         <item quantity="other">%d new episodes</item>
     </plurals>
+    <string name="tsz_anime_track_linked_count">%d linked</string>
+    <string name="tsz_anime_track_auto_update">Update after each episode</string>
+    <string name="tsz_anime_track_login">Sign in from Tracking settings</string>
+    <string name="tsz_anime_track_unlink">Unlink tracker</string>
+    <string name="tsz_anime_track_episode_count">Episodes: %d</string>
+    <string name="tsz_anime_track_watching">Watching</string>
+    <string name="tsz_anime_track_planning">Plan to watch</string>
+    <string name="tsz_anime_track_rewatching">Rewatching</string>
 </resources>

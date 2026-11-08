@@ -29,4 +29,12 @@
     <plurals name="tsz_anime_new_episodes">
         <item quantity="other">새 에피소드 %d개</item>
     </plurals>
+    <string name="tsz_anime_track_linked_count">%d개 연결됨</string>
+    <string name="tsz_anime_track_auto_update">에피소드마다 업데이트</string>
+    <string name="tsz_anime_track_login">추적 설정에서 로그인하세요</string>
+    <string name="tsz_anime_track_unlink">추적 연결 해제</string>
+    <string name="tsz_anime_track_episode_count">에피소드: %d</string>
+    <string name="tsz_anime_track_watching">시청 중</string>
+    <string name="tsz_anime_track_planning">시청 예정</string>
+    <string name="tsz_anime_track_rewatching">다시 보는 중</string>
 </resources>

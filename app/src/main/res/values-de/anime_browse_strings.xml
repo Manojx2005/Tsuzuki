@@ -30,4 +30,12 @@
         <item quantity="one">%d neue Folge</item>
         <item quantity="other">%d neue Folgen</item>
     </plurals>
+    <string name="tsz_anime_track_linked_count">%d verknüpft</string>
+    <string name="tsz_anime_track_auto_update">Nach jeder Folge aktualisieren</string>
+    <string name="tsz_anime_track_login">In den Tracking-Einstellungen anmelden</string>
+    <string name="tsz_anime_track_unlink">Verknüpfung aufheben</string>
+    <string name="tsz_anime_track_episode_count">Folgen: %d</string>
+    <string name="tsz_anime_track_watching">Wird angesehen</string>
+    <string name="tsz_anime_track_planning">Vorgemerkt</string>
+    <string name="tsz_anime_track_rewatching">Wird erneut angesehen</string>
 </resources>

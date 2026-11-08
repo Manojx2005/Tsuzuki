@@ -13,6 +13,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -57,6 +59,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodes
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
+import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.CancellationException
@@ -106,6 +109,7 @@ internal fun AnimeDetailsScreen(
     val selected = episodeState.items.filter { it.id in selection }
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf(false) }
+    var showTracking by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showSelectionMenu by remember { mutableStateOf(false) }
@@ -147,10 +151,19 @@ internal fun AnimeDetailsScreen(
         selection = if (id in selection) selection.filterNot { it == id }.toLongArray() else selection + id
     }
 
+    suspend fun markSeen(ids: Set<Long>, seen: Boolean) {
+        val changed = library.setEpisodesSeen(ids, seen)
+        if (!Injekt.get<BasePreferences>().incognitoMode.get()) {
+            changed.filter { it.episodeNumber.isFinite() }
+                .maxByOrNull(Episode::episodeNumber)
+                ?.let { AnimeTrackProgressJob.enqueue(context, it) }
+        }
+    }
+
     fun markPrevious(episode: Episode) {
         val preceding = ordered.takeWhile { it.id != episode.id }.mapTo(mutableSetOf(), Episode::id)
         mutate {
-            library.setEpisodesSeen(preceding, true)
+            markSeen(preceding, true)
             selection = longArrayOf()
         }
     }
@@ -163,6 +176,9 @@ internal fun AnimeDetailsScreen(
         play(requested)
     }
     BackHandler(enabled = selected.isNotEmpty()) { selection = longArrayOf() }
+    if (showTracking && saved != null) {
+        AnimeTrackingSheet(saved, onDismiss = { showTracking = false })
+    }
 
     Scaffold(
         modifier = Modifier.tsuzukiBackground(tokens),
@@ -172,6 +188,9 @@ internal fun AnimeDetailsScreen(
                 title = null,
                 navigateUp = onBack,
                 actions = {
+                    IconButton(onClick = { showTracking = true }, enabled = saved != null && !saving) {
+                        Icon(Icons.Outlined.Sync, stringResource(MR.strings.action_track))
+                    }
                     IconButton(onClick = { showFilter = true }, enabled = saved != null && !saving) {
                         Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
                     }
@@ -224,7 +243,7 @@ internal fun AnimeDetailsScreen(
                                 onMarkSeen = { seen ->
                                     showSelectionMenu = false
                                     mutate {
-                                        library.setEpisodesSeen(ids, seen)
+                                        markSeen(ids, seen)
                                         selection = longArrayOf()
                                     }
                                 },
@@ -310,7 +329,7 @@ internal fun AnimeDetailsScreen(
                         enabled = !saving,
                         onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
                         onSelect = { toggleSelection(episode.id) },
-                        onMarkSeen = { mutate { library.setEpisodesSeen(setOf(episode.id), it) } },
+                        onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
                         onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
                         onMarkPrevious = { markPrevious(episode) },
                     )
