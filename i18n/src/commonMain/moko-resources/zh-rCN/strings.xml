@@ -937,6 +937,8 @@
     <string name="tsz_continue">继续</string>
     <string name="tsz_start_reading">开始阅读</string>
     <string name="tsz_resume">继续</string>
+    <string name="tsz_time_left_chapter">本章剩余 %1$s</string>
+    <string name="tsz_time_left_book">本书剩余 %1$s</string>
     <string name="tsz_start">开始</string>
     <string name="tsz_new_chapters">新章节</string>
     <string name="tsz_new">新增</string>
@@ -949,7 +951,7 @@
     <string name="tsz_recent">最近</string>
     <string name="tsz_shelf">书架 · %1$d</string>
     <string name="tsz_all_books">全部书籍 →</string>
-    <string name="tsz_tap_stack">轻触书堆以切换</string>
+    <string name="tsz_switch_stack">轻触或滑动书堆以切换</string>
     <string name="tsz_show_next_book">显示下一本书</string>
     <string name="tsz_open">打开</string>
     <string name="tsz_chapters">章节</string>
@@ -1351,4 +1353,8 @@
     <string name="tsz_reader_sleep_off">关闭</string>
     <string name="tsz_reader_sleep_chapter">本章结束</string>
     <string name="tsz_reader_listen_paragraphs">段落</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">小说追踪服务</string>
+    <string name="tsz_tracker_signed_out">未登录</string>
+    <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
 </resources>

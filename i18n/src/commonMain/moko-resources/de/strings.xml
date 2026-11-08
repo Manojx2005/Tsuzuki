@@ -937,6 +937,8 @@
     <string name="tsz_continue">Fortfahren</string>
     <string name="tsz_start_reading">Lesen beginnen</string>
     <string name="tsz_resume">Fortfahren</string>
+    <string name="tsz_time_left_chapter">Noch %1$s im Kapitel</string>
+    <string name="tsz_time_left_book">Noch %1$s im Buch</string>
     <string name="tsz_start">Starten</string>
     <string name="tsz_new_chapters">Neue Kapitel</string>
     <string name="tsz_new">Neu</string>
@@ -949,7 +951,7 @@
     <string name="tsz_recent">zuletzt</string>
     <string name="tsz_shelf">Regal · %1$d</string>
     <string name="tsz_all_books">Alle Bücher →</string>
-    <string name="tsz_tap_stack">Zum Wechseln auf den Stapel tippen</string>
+    <string name="tsz_switch_stack">Stapel antippen oder wischen</string>
     <string name="tsz_show_next_book">Nächstes Buch anzeigen</string>
     <string name="tsz_open">Öffnen</string>
     <string name="tsz_chapters">Kapitel</string>
@@ -1351,4 +1353,8 @@
     <string name="tsz_reader_sleep_off">Aus</string>
     <string name="tsz_reader_sleep_chapter">Kapitelende</string>
     <string name="tsz_reader_listen_paragraphs">Absätze</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Roman-Tracker</string>
+    <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
+    <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
 </resources>

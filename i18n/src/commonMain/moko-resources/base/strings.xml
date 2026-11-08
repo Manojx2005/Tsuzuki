@@ -1294,6 +1294,8 @@
     <string name="tsz_continue">Continue</string>
     <string name="tsz_start_reading">Start reading</string>
     <string name="tsz_resume">Resume</string>
+    <string name="tsz_time_left_chapter">%1$s left in chapter</string>
+    <string name="tsz_time_left_book">%1$s left in book</string>
     <string name="tsz_start">Start</string>
     <string name="tsz_new_chapters">New chapters</string>
     <string name="tsz_new">New</string>
@@ -1306,7 +1308,7 @@
     <string name="tsz_recent">recent</string>
     <string name="tsz_shelf">Shelf · %1$d</string>
     <string name="tsz_all_books">All books →</string>
-    <string name="tsz_tap_stack">Tap the stack to switch</string>
+    <string name="tsz_switch_stack">Tap or swipe the stack</string>
     <string name="tsz_show_next_book">Show next book</string>
     <string name="tsz_open">Open</string>
     <string name="tsz_chapters">Chapters</string>
@@ -1730,4 +1732,8 @@
     <string name="pref_library_layout">Library layout</string>
     <string name="pref_combined_library">Combined library</string>
     <string name="pref_combined_library_summary">Merge Novels and Manga into a single Library tab</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">Novel trackers</string>
+    <string name="tsz_tracker_signed_out">Not signed in</string>
+    <string name="tsz_tracker_linked_count">Linked %1$d</string>
 </resources>

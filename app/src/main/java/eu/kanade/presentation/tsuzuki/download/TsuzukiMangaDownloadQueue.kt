@@ -19,7 +19,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.DragHandle
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -85,6 +88,9 @@ internal fun TsuzukiMangaDownloadQueue(
     onReorder: (List<Download>) -> Unit,
     onCancel: (List<Download>) -> Unit,
     coverFor: suspend (Long) -> CoverData?,
+    pausedSources: Set<Long>,
+    onPauseSource: (Long, Boolean) -> Unit,
+    onRetry: (Download) -> Unit,
 ) {
     val bySource = remember(groups) { groups.associate { it.id to it.subItems.map(DownloadItem::download) } }
     val downloads = remember(bySource) { bySource.values.flatten() }
@@ -135,8 +141,24 @@ internal fun TsuzukiMangaDownloadQueue(
     ) {
         groups.forEach { group ->
             val rows = draggedOrder?.takeIf { it.firstOrNull()?.source?.id == group.id } ?: bySource.getValue(group.id)
-            item(key = "download-source-${group.id}") { TsuzukiSectionLabel(group.name) }
-            itemsIndexed(rows, key = { _, download -> download.chapterId }) { index, download ->
+            val paused = group.id in pausedSources
+            item(key = "download-source-${group.id}", contentType = "source_header") {
+                Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TsuzukiSectionLabel(group.name, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { onPauseSource(group.id, !paused) }) {
+                        Icon(
+                            imageVector = if (paused) Icons.Filled.PlayArrow else Icons.Outlined.Pause,
+                            contentDescription = stringResource(
+                                if (paused) MR.strings.action_resume else MR.strings.action_pause,
+                            ),
+                            tint = TsuzukiTheme.tokens.accent,
+                        )
+                    }
+                }
+            }
+            itemsIndexed(rows, key = { _, download ->
+                download.chapterId
+            }, contentType = { _, _ -> "chapter" }) { index, download ->
                 ReorderableItem(reorderState, key = download.chapterId) { isDragging ->
                     val series = remember(downloads, download.mangaId) {
                         downloads.filter {
@@ -153,6 +175,8 @@ internal fun TsuzukiMangaDownloadQueue(
                     }
                     MangaQueueRow(
                         download = download,
+                        paused = paused,
+                        onRetry = { onRetry(download) },
                         cover = covers[download.mangaId],
                         dragHandle = dragHandle,
                         isDragging = isDragging,
@@ -178,6 +202,8 @@ internal fun TsuzukiMangaDownloadQueue(
 @Composable
 private fun MangaQueueRow(
     download: Download,
+    paused: Boolean,
+    onRetry: () -> Unit,
     cover: CoverData?,
     dragHandle: Modifier?,
     isDragging: Boolean,
@@ -198,7 +224,7 @@ private fun MangaQueueRow(
         Download.State.DOWNLOADING -> stringResource(MR.strings.downloading_with_progress, progress)
         Download.State.ERROR -> error?.lineSequence()?.firstOrNull() ?: errorLabel
         Download.State.DOWNLOADED -> stringResource(MR.strings.completed)
-        else -> stringResource(MR.strings.tsz_downloads_queued)
+        else -> stringResource(if (paused) MR.strings.paused else MR.strings.tsz_downloads_queued)
     }
     Row(
         modifier = modifier
@@ -249,6 +275,15 @@ private fun MangaQueueRow(
                     Modifier
                 },
             )
+        }
+        if (status == Download.State.ERROR) {
+            IconButton(onClick = onRetry) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = stringResource(MR.strings.action_retry),
+                    tint = tokens.accent,
+                )
+            }
         }
         MangaQueueMenu(canReorder, canMoveUp, canMoveDown, onMove, onCancel)
     }

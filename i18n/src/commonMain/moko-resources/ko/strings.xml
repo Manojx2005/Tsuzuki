@@ -936,6 +936,8 @@
     <string name="tsz_continue">계속</string>
     <string name="tsz_start_reading">읽기 시작</string>
     <string name="tsz_resume">계속</string>
+    <string name="tsz_time_left_chapter">챕터 남은 시간 %1$s</string>
+    <string name="tsz_time_left_book">책 남은 시간 %1$s</string>
     <string name="tsz_start">시작</string>
     <string name="tsz_new_chapters">새 챕터</string>
     <string name="tsz_new">새 항목</string>
@@ -948,7 +950,7 @@
     <string name="tsz_recent">최근</string>
     <string name="tsz_shelf">책장 · %1$d</string>
     <string name="tsz_all_books">모든 책 →</string>
-    <string name="tsz_tap_stack">책 더미를 눌러 전환</string>
+    <string name="tsz_switch_stack">책 더미를 탭하거나 밀어서 전환</string>
     <string name="tsz_show_next_book">다음 책 표시</string>
     <string name="tsz_open">열기</string>
     <string name="tsz_chapters">회차</string>
@@ -1350,4 +1352,8 @@
     <string name="tsz_reader_sleep_off">끄기</string>
     <string name="tsz_reader_sleep_chapter">챕터 끝</string>
     <string name="tsz_reader_listen_paragraphs">문단</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">소설 트래커</string>
+    <string name="tsz_tracker_signed_out">로그인하지 않음</string>
+    <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
 </resources>

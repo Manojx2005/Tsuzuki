@@ -351,6 +351,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
 
                 override fun getCurrentPage(): ReaderPage? = currentPage
 
+                override fun onPlaybackStarted() = activity.discardNovelReadingSample()
+
                 override fun onHighlightChunk(chunkIndex: Int, chunk: String, startOffset: Int, paragraphIndex: Int) {
                     applyTtsHighlight(chunkIndex, paragraphIndex)
                     saveTtsProgressForChunk(chunkIndex)
@@ -1069,6 +1071,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             } else {
                 10
             }
+            activity.noteNovelReadingProgress(page, progressValue, listening = ttsController.isTtsAutoPlay)
             activity.saveNovelProgress(page, progressValue, backwardJumpAllowance)
             logcat(LogPriority.DEBUG) { "NovelWebViewViewer: Saving progress $progressValue%" }
         }
@@ -1321,6 +1324,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         }
 
         val chapterId = chapter.chapter.id ?: return
+        activity.cacheNovelEstimateWords(chapterId, rawContent)
 
         val translator: (suspend (String) -> String)? =
             if (activity.isTranslationEnabled()) { c -> activity.translateContentIfEnabled(c, chapterId) } else null
@@ -2507,6 +2511,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         }
 
         val chapterId = chapter.chapter.id ?: return false
+        activity.cacheNovelEstimateWords(chapterId, rawContent)
 
         val cfg = ContentConfig.from(
             preferences,
@@ -2798,6 +2803,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
      * Scroll to the top of the content
      */
     fun scrollToTop() {
+        activity.discardNovelReadingSample()
         webView.scrollTo(0, 0)
     }
 
@@ -3001,6 +3007,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     fun setProgressPercent(percent: Int) {
+        activity.discardNovelReadingSample()
         val progress = percent.coerceIn(0, 100)
         lastSavedProgress = progress / 100f
         // An explicit user seek is a real sample, so drop the backward-entry baseline hold or a

@@ -116,6 +116,7 @@ fun NovelReaderAppBars(
     onReloadLocal: () -> Unit,
     onReloadSource: () -> Unit,
     onEditBottomBar: () -> Unit,
+    estimates: @Composable () -> Unit = {},
 
     // Progress slider
     showProgressSlider: Boolean,
@@ -223,6 +224,7 @@ fun NovelReaderAppBars(
                         .clickable(onClick = onClickTopAppBar),
                     novelTitle = novelTitle,
                     chapterTitle = chapterTitle,
+                    estimates = estimates,
                     navigateUp = navigateUp,
                     bookmarked = bookmarked,
                     onToggleBookmarked = onToggleBookmarked,
@@ -385,12 +387,18 @@ private fun NovelReaderTopBar(
     modifier: Modifier = Modifier,
     onOpenContents: (() -> Unit)? = null,
     onFind: (() -> Unit)? = null,
+    estimates: @Composable () -> Unit = {},
 ) {
     AppBar(
         modifier = modifier,
         backgroundColor = Color.Transparent,
         titleContent = {
-            eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderTitle(novelTitle, chapterTitle, novel = true)
+            eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderTitle(
+                novelTitle,
+                chapterTitle,
+                novel = true,
+                estimates = estimates,
+            )
         },
         navigateUp = navigateUp,
         actions = {

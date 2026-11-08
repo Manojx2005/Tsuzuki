@@ -929,6 +929,8 @@
     <string name="tsz_continue">続きから</string>
     <string name="tsz_start_reading">読み始める</string>
     <string name="tsz_resume">再開</string>
+    <string name="tsz_time_left_chapter">章の残り%1$s</string>
+    <string name="tsz_time_left_book">本の残り%1$s</string>
     <string name="tsz_start">開始</string>
     <string name="tsz_new_chapters">新着チャプター</string>
     <string name="tsz_new">新着</string>
@@ -941,7 +943,7 @@
     <string name="tsz_recent">件</string>
     <string name="tsz_shelf">本棚 · %1$d</string>
     <string name="tsz_all_books">すべての本 →</string>
-    <string name="tsz_tap_stack">スタックをタップして切り替え</string>
+    <string name="tsz_switch_stack">タップまたはスワイプで切り替え</string>
     <string name="tsz_show_next_book">次の本を表示</string>
     <string name="tsz_open">開く</string>
     <string name="tsz_chapters">チャプター</string>
@@ -1570,4 +1572,8 @@
     <string name="pref_library_layout">ライブラリのレイアウト</string>
     <string name="pref_combined_library">統合ライブラリ</string>
     <string name="pref_combined_library_summary">小説とマンガを 1 つのライブラリタブにまとめます</string>
+    <!-- R10 -->
+    <string name="tsz_tracker_novel_services">小説トラッカー</string>
+    <string name="tsz_tracker_signed_out">未ログイン</string>
+    <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
 </resources>

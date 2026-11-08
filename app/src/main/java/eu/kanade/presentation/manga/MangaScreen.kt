@@ -65,7 +65,7 @@ import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
-import eu.kanade.presentation.tsuzuki.details.TsuzukiResumeTile
+import eu.kanade.presentation.tsuzuki.details.TsuzukiDetailsResumeTile
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaReadingMode
 import eu.kanade.presentation.tsuzuki.manga.TsuzukiMangaScanlatorFilter
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
@@ -552,10 +552,8 @@ private fun MangaScreenSmallImpl(
 
                     if (hasResumeTile) {
                         item(key = RESUME_TILE_KEY, contentType = RESUME_TILE_KEY) {
-                            TsuzukiResumeTile(
-                                readCount = state.chapters.count { it.chapter.read },
-                                total = state.chapters.size,
-                                nextChapter = state.chapters.getNextUnread(state.manga)?.name,
+                            TsuzukiDetailsResumeTile(
+                                state = state,
                                 onClick = onContinueReading,
                             )
                         }
@@ -871,10 +869,8 @@ fun MangaScreenLargeImpl(
                             onEditCategory = onEditCategoryClicked,
                         )
                         if (hasResumeTile) {
-                            TsuzukiResumeTile(
-                                readCount = state.chapters.count { it.chapter.read },
-                                total = state.chapters.size,
-                                nextChapter = state.chapters.getNextUnread(state.manga)?.name,
+                            TsuzukiDetailsResumeTile(
+                                state = state,
                                 onClick = onContinueReading,
                                 modifier = Modifier.onVisibilityChanged(minFractionVisible = 0.01f) {
                                     resumeTileVisible = it

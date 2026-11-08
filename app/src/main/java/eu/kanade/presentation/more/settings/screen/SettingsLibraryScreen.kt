@@ -20,6 +20,8 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.settings.tsuzukiLibraryUpdateGroup
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
@@ -119,6 +121,20 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     private fun getGlobalUpdateGroup(
+        allCategories: List<Category>,
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        if (isTsuzukiStyle()) {
+            return tsuzukiLibraryUpdateGroup(
+                getStockGlobalUpdateGroup(allCategories, libraryPreferences),
+                libraryPreferences,
+            )
+        }
+        return getStockGlobalUpdateGroup(allCategories, libraryPreferences)
+    }
+
+    @Composable
+    private fun getStockGlobalUpdateGroup(
         allCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
