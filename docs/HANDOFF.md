@@ -1179,6 +1179,24 @@ ANIME_SCHEMA §7); Apache-2.0 only — Aniyomi files may be ported only if their
 ported file + upstream revision in Result; nothing visible to normal users in release builds until A2.4 (Watch
 tab already exists as a placeholder). No GPL. Never download or install anything yourself — no network in tests.
 
+#### A3.5 Anime trackers: AniList + MyAnimeList (T4) — `review` (2026-11-08, `.worktrees/a3.5`)
+Result: `87860e93b`. Two per-file Spotless passes (app, data, domain) and
+`:app:assembleDebug :app:testDebugUnitTest` passed with JDK 21 offline (990 tests, zero failures).
+
+- `AnimeTrackingSheet.kt`, `AnimeDetailsScreen.kt` and `TsuzukiTrackerSearch.kt` add themed linking, progress,
+  status, score and date editing to debug anime details. Eight locales provide new labels.
+- `AniListAnimeApi.kt` and `MyAnimeListAnimeApi.kt` use the existing logins and authenticated clients through
+  thin hooks in the four existing tracker classes. `AnimeTrackerApi.kt` defines the shared anime API and progress rule.
+- `AnimeTracking.kt` serializes sync and editing. `AnimeTrackProgressJob.kt`, `AnimePlayerModel.kt`,
+  `AnimeLibraryStore.kt` and `AppModule.kt` wire optional updates when an episode first becomes seen.
+- `AnimeTrack.kt`, `AnimeTrackRepository.kt`, `AnimeTrackRepositoryImpl.kt`, `anime_sync.sq` and migration
+  `38.sqm` store the binding and optional MAL ID that A3.6 needs.
+- `AnimeTrackApiTest.kt` exercises requests and monotonic progress. `AnimeDatabaseTest.kt` checks persisted
+  bindings and agreement between upgraded and fresh schemas. `docs/design/README.md` records device review pending.
+
+Claude device review: with owner-approved tracker logins, check search/link/edit/unlink in Dot and Colour and
+verify that watching an earlier episode preserves higher remote progress. Simkl is deferred.
+
 #### A1.5 Anime: debug extension install → list sources → play (T3) — `done` (Claude reviewed, merged into main 2026-11-07 via `review/night4` → `c7c805cf2`)
 Board: `docs/design/boards/fixes-2026-11/AnimeDebug.html` / `png/AnimeDebug.png` (Dot only).
 Goal: from a **debug-only** developer screen, add an Aniyomi-format extension repo URL, list its extensions, install
