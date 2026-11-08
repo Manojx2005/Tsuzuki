@@ -613,7 +613,7 @@ that position. Each Previous request is consumed once so a subsequent renderer s
 
 **Claude review 2026-11-08 (`review/night7` = main + V7.5 + V7.4 + V7.3 + V8-more-insets, clean merges, not in main yet):** code reviewed, 959 unit tests green, `assemblePreview` installed on the tablet + S22, crash buffers empty. S22 TextView, Colour: Ch. 108 → ‹ Previous → Ch. 107 opens at 0 % and scrolls; ‹ again → Ch. 106 scrolls down and up. Pass. Not yet run: WebView renderer, infinite scroll off, tablet. Merge into main waits for the owner (freeze: v0.1 fixes allowed).
 
-#### V7.7 Smoother chapter-end Next chapter (T2) — `ready` (owner 2026-11-08: 0.1.1; v0.1.0 is tagged)
+#### V7.7 Smoother chapter-end Next chapter (T2) — `review` (2026-11-08, `.worktrees/v7.7`) (owner 2026-11-08: 0.1.1; v0.1.0 is tagged)
 Owner: RC4's fix works but the tap → next chapter switch should feel smoother. Board: `06-reader/ChapterEnd`. Text reader (`NovelViewer`) with
 infinite scroll **off** (now non-default). Today the tap clears the page and the new chapter pops in at the top.
 Look at the chapter-end card board, then: show press feedback at once, keep the card until the next chapter's
@@ -621,6 +621,24 @@ content is ready (no blank frame), and bring the new chapter in with the reader'
 (`TsuzukiReaderTransition.kt`) rather than a hard cut. Don't regress the touch fix in
 `tsuzuki/reader/NovelChapterEndTouch.kt` (fling into the end, then tap: must load on the first tap, no menu flash).
 Check the WebView reader's card (`chapter-end-card.js`) for the same feel. Device check on the tablet + S22.
+
+**Result (Codex, 2026-11-08):** `tsuzuki/v7.7` at `16f713ff8` (base `c0a0015a4`).
+
+- `TsuzukiChapterEnd.kt` shows a pressed state and disables repeat taps while the chapter-end request is pending.
+- `NovelChapterEndTransition.kt` keeps an in-memory copy of the drawn viewport above the reader and applies the existing enter and outgoing animations after the destination can draw. It releases the frame on errors, superseded loads and viewer teardown. If the window cannot be copied, navigation proceeds without the frame transition.
+- `NovelViewer.kt` reveals after the next text layout and progress restore. The RC4 touch handling still owns the first tap after a fling.
+- `chapter-end-card.js` and `NovelWebViewViewer.kt` share the pending feedback and wait for visual readiness before revealing the next page. The WebView keeps its old document while fetching and processing the next one.
+- `ReaderActivity.kt` validates the outgoing chapter before forwarding the card request to the existing chapter loader.
+- `docs/design/README.md` records the implementation status.
+
+JDK 21, two per-file Spotless passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed
+(968 tests, 0 skipped). A local JavaScript smoke test covered duplicate activation,
+the chapter ID on all three actions and a fresh button after card reinjection.
+
+Claude device review on the S22 and Tab S11 in Dot and Colour. Turn infinite scroll off, fling to
+the chapter end and tap Next once. Check immediate feedback, no menu flash, and the reveal for
+both cached and slow chapters in TextView and scrolling WebView. Check reduced motion, a failed
+load and retry, and paged and infinite-scroll navigation.
 
 #### V7.6 v0.1 polish from the V1 notes (T2) — `ready` (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
