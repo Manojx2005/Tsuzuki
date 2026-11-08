@@ -1357,4 +1357,12 @@
     <string name="tsz_tracker_novel_services">小说追踪服务</string>
     <string name="tsz_tracker_signed_out">未登录</string>
     <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
+    <string name="tsz_backup_last_export">上次备份</string>
+    <string name="tsz_backup_retention">保留的自动备份数量</string>
+    <string name="tsz_backup_contents">备份内容</string>
+    <string name="tsz_backup_books">作品</string>
+    <string name="tsz_backup_shelves">书架</string>
+    <string name="tsz_backup_history_entries">历史记录条目</string>
+    <string name="tsz_backup_checking">正在检查备份…</string>
+    <string name="tsz_backup_unreadable">无法打开此文件。请确认文件可用，然后重新选择。</string>
 </resources>

@@ -1350,4 +1350,12 @@
     <string name="tsz_tracker_novel_services">Suivi des romans</string>
     <string name="tsz_tracker_signed_out">Non connecté</string>
     <string name="tsz_tracker_linked_count">%1$d liés</string>
+    <string name="tsz_backup_last_export">Dernière sauvegarde</string>
+    <string name="tsz_backup_retention">Sauvegardes automatiques à conserver</string>
+    <string name="tsz_backup_contents">Contenu de la sauvegarde</string>
+    <string name="tsz_backup_books">Livres</string>
+    <string name="tsz_backup_shelves">Étagères</string>
+    <string name="tsz_backup_history_entries">Entrées de l’historique</string>
+    <string name="tsz_backup_checking">Vérification de la sauvegarde…</string>
+    <string name="tsz_backup_unreadable">Impossible d’ouvrir ce fichier. Vérifiez qu’il est disponible, puis sélectionnez-le de nouveau.</string>
 </resources>

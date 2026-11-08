@@ -17,5 +17,19 @@ internal fun backupFilePrefix(applicationId: String): String = when {
  */
 internal fun backupFileRegex(applicationId: String): Regex {
     val prefixes = listOf(Regex.escape(backupFilePrefix(applicationId)), Regex.escape(applicationId))
-    return Regex("""(?:${prefixes.joinToString("|")})_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""")
+    return Regex("""(?:${prefixes.joinToString("|")})_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}(?:-\d{2}-\d{3})?)\.tachibk""")
 }
+
+internal fun <T> backupsToPrune(
+    backups: Iterable<T>,
+    regex: Regex,
+    keep: Int,
+    newestName: String,
+    nameOf: (T) -> String?,
+): List<T> = backups.mapNotNull { file ->
+    val name = nameOf(file)?.takeUnless { it == newestName } ?: return@mapNotNull null
+    val date = regex.matchEntire(name)?.groupValues?.get(1) ?: return@mapNotNull null
+    date to file
+}.sortedByDescending { it.first }
+    .drop(keep - 1)
+    .map { it.second }
