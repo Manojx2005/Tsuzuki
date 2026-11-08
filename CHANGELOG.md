@@ -15,7 +15,7 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 
 ### Added
 - Two app themes: **Dot**, monochrome with one red accent and a dot-matrix display face, and **Colour**, which takes
-  its colours from the book you read last. Earlier Mihon and Tsundoku themes now open in Colour.
+  its colours from the book you read last. New installs start in Dot; earlier Mihon and Tsundoku themes open in Colour.
 - A new Home: tonight's stack of books, resume with one tap, new chapters, today's reading time and your shelf.
 - Library with All, Novels and Manga tabs, shelves with book counts, and generated covers for books without art.
 - Novel reader: a quick settings sheet plus an All reader settings page, page colours (Book, Paper, Sepia, Sage,
@@ -34,6 +34,7 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 ### Improved
 - Novel chapters download faster: requests wait about 1 second instead of 3, two can go out together, and two books
   download at once. A source's own minimum delay still applies, and slower per-source settings remain available.
+- Novels scroll straight from one chapter into the next by default (infinite scroll; it can be turned off).
 - Large libraries: Home, Library and Updates do less work when books and badges change.
 - Screens keep their selections, sheets and search text when the system closes the app in the background.
 - Menus have icons, grouped sections and a separate destructive row; long labels wrap between words.
@@ -48,6 +49,7 @@ The first Tsuzuki release: a reader for light novels, web novels, manga and manh
 - Novel text no longer scrolls under the camera cutout or the gesture bar, and opening the reader menu doesn't move it.
 - The rest of the app's settings, novel reader and font manager are now in Japanese.
 - On More, tiles no longer slide under the clock when the page scrolls.
+- The Next chapter button at the end of a chapter works after a fast scroll to the end, and no longer opens the menu.
 
 ### Other
 - No telemetry: release builds contain no analytics or crash-reporting libraries.
