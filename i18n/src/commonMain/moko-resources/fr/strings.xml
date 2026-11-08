@@ -944,7 +944,7 @@
     <string name="tsz_recent">récents</string>
     <string name="tsz_shelf">Étagère · %1$d</string>
     <string name="tsz_all_books">Tous les livres →</string>
-    <string name="tsz_tap_stack">Touchez la pile pour changer</string>
+    <string name="tsz_switch_stack">Touchez ou balayez la pile</string>
     <string name="tsz_show_next_book">Afficher le livre suivant</string>
     <string name="tsz_open">Ouvrir</string>
     <string name="tsz_chapters">Chapitres</string>

@@ -2,7 +2,7 @@ package eu.kanade.presentation.tsuzuki.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
@@ -11,10 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -28,11 +30,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.abs
 
 /** Temporary Home selection; never changes reading history or the Continue chapter. */
 val LocalShelfPaletteCover = androidx.compose.runtime.staticCompositionLocalOf<(Any?) -> Unit> { {} }
 
 private data class StackSlot(val x: Float, val y: Float, val rotation: Float, val scale: Float, val alpha: Float)
+
+private data class StackShuffle(val flyingBookId: Long, val reversed: Boolean)
 
 // MotionStack's slots, scaled to the existing Home cover width (142 dp versus the demo's 220 dp).
 private val slots = listOf(
@@ -43,50 +48,75 @@ private val slots = listOf(
 )
 
 @Composable
-fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onAdvance: () -> Unit) {
+fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onSelect: (Int) -> Unit) {
     val reduced = rememberReduceMotion()
     val spec = tsuzukiTween<Float>(TsuzukiMotion.STACK_MS)
     val progress = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
-    var outgoing by remember { mutableStateOf<Long?>(null) }
+    var shuffle by remember { mutableStateOf<StackShuffle?>(null) }
     var busy by remember { mutableStateOf(false) }
     val fadeClock = remember {
         object : MotionDurationScale {
             override val scaleFactor = 1f
         }
     }
-    Box(
-        Modifier.width(162.dp).fillMaxHeight().tsuzukiClickable(
-            role = Role.Button,
-            enabled = books.size > 1,
-            onClickLabel = stringResource(MR.strings.tsz_show_next_book),
-        ) {
-            // The board ignores a second shuffle until the current 400 ms deal completes.
-            if (!busy) {
-                busy = true
-                scope.launch {
-                    try {
-                        outgoing = books[selectedIndex].mangaId
-                        progress.snapTo(0f)
-                        onAdvance()
-                        if (reduced) {
-                            withContext(fadeClock) { progress.animateTo(1f, tween(TsuzukiMotion.REDUCED_MS)) }
-                        } else {
-                            progress.animateTo(1f, spec)
-                        }
-                    } finally {
-                        outgoing = null
-                        busy = false
+    val canShuffle = books.size > 1
+    val onShuffle: (Int) -> Unit = { step ->
+        // The board ignores a second shuffle until the current 400 ms deal completes.
+        if (canShuffle && !busy) {
+            busy = true
+            val next = (selectedIndex + step).mod(books.size)
+            val reversed = step < 0
+            val flyingBook = books[if (reversed) next else selectedIndex]
+            scope.launch {
+                try {
+                    progress.snapTo(0f)
+                    shuffle = StackShuffle(flyingBook.mangaId, reversed)
+                    onSelect(next)
+                    if (reduced) {
+                        withContext(fadeClock) { progress.animateTo(1f, tween(TsuzukiMotion.REDUCED_MS)) }
+                    } else {
+                        progress.animateTo(1f, spec)
                     }
+                } finally {
+                    shuffle = null
+                    busy = false
                 }
             }
-        },
+        }
+    }
+    val latestShuffle by rememberUpdatedState(onShuffle)
+    val activeShuffle = shuffle
+    val reversed = activeShuffle?.reversed == true
+    Box(
+        Modifier.width(162.dp).fillMaxHeight()
+            .pointerInput(canShuffle) {
+                if (!canShuffle) return@pointerInput
+                var drag = 0f
+                val minimumTravel = 24.dp.toPx()
+                detectHorizontalDragGestures(
+                    onDragStart = { drag = 0f },
+                    onDragEnd = {
+                        if (abs(drag) >= minimumTravel) latestShuffle(if (drag < 0f) 1 else -1)
+                    },
+                    onHorizontalDrag = { _, amount -> drag += amount },
+                )
+            }
+            .tsuzukiClickable(
+                role = Role.Button,
+                enabled = canShuffle,
+                onClickLabel = stringResource(MR.strings.tsz_show_next_book),
+            ) { onShuffle(1) },
     ) {
         books.forEachIndexed { index, book ->
             val slot = (index - selectedIndex + books.size) % books.size
-            val target = slots[slot]
-            val previous = slots[(slot + 1) % books.size]
-            val flying = outgoing == book.mangaId
+            val originalSlot = (slot + if (reversed) -1 else 1).mod(books.size)
+            // Run the same deal backwards so the previous book returns from the back of the stack.
+            val endSlot = if (reversed) originalSlot else slot
+            val target = slots[endSlot]
+            val previous = slots[if (reversed) slot else originalSlot]
+            val flying = activeShuffle?.flyingBookId == book.mangaId
+            fun motionProgress() = if (reversed) 1f - progress.value else progress.value
             MangaCover.Book(
                 data = book.cover,
                 generatedTitle = book.title,
@@ -97,20 +127,25 @@ fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onAdvance: () -
                     .layout { measurable, constraints ->
                         val placeable = measurable.measure(constraints)
                         layout(placeable.width, placeable.height) {
-                            val depth = if (flying && progress.value < .65f) 10f else (books.size - slot).toFloat()
+                            val depth = when {
+                                reduced -> books.size - slot
+                                flying && motionProgress() < .65f -> 10
+                                else -> books.size - endSlot
+                            }.toFloat()
                             placeable.placeRelative(0, 0, zIndex = depth)
                         }
                     }
                     .graphicsLayer {
-                        val p = progress.value
+                        val p = motionProgress()
                         transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .5f)
                         if (reduced) {
-                            translationX = target.x.dp.toPx()
-                            translationY = target.y.dp.toPx()
-                            rotationZ = target.rotation
-                            scaleX = target.scale
-                            scaleY = target.scale
-                            alpha = target.alpha * p
+                            val resting = slots[slot]
+                            translationX = resting.x.dp.toPx()
+                            translationY = resting.y.dp.toPx()
+                            rotationZ = resting.rotation
+                            scaleX = resting.scale
+                            scaleY = resting.scale
+                            alpha = resting.alpha * progress.value
                         } else if (flying && p < .65f) {
                             val fly = p / .65f
                             translationX = (slots[0].x + 271f * fly).dp.toPx()
@@ -120,7 +155,7 @@ fun TsuzukiCoverStack(books: List<HomeBook>, selectedIndex: Int, onAdvance: () -
                             scaleY = scaleX
                             alpha = 1f - fly
                         } else {
-                            val moving = outgoing != null && !flying
+                            val moving = activeShuffle != null && !flying
                             fun mix(a: Float, b: Float) = if (moving) a + (b - a) * p else b
                             translationX = mix(previous.x, target.x).dp.toPx()
                             translationY = mix(previous.y, target.y).dp.toPx()

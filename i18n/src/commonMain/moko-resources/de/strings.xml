@@ -951,7 +951,7 @@
     <string name="tsz_recent">zuletzt</string>
     <string name="tsz_shelf">Regal · %1$d</string>
     <string name="tsz_all_books">Alle Bücher →</string>
-    <string name="tsz_tap_stack">Zum Wechseln auf den Stapel tippen</string>
+    <string name="tsz_switch_stack">Stapel antippen oder wischen</string>
     <string name="tsz_show_next_book">Nächstes Buch anzeigen</string>
     <string name="tsz_open">Öffnen</string>
     <string name="tsz_chapters">Kapitel</string>

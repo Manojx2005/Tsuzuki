@@ -948,7 +948,7 @@
     <string name="tsz_recent">recentes</string>
     <string name="tsz_shelf">Estante · %1$d</string>
     <string name="tsz_all_books">Todos os livros →</string>
-    <string name="tsz_tap_stack">Toque na pilha para trocar</string>
+    <string name="tsz_switch_stack">Toque ou deslize a pilha</string>
     <string name="tsz_show_next_book">Mostrar o próximo livro</string>
     <string name="tsz_open">Abrir</string>
     <string name="tsz_chapters">Capítulos</string>
