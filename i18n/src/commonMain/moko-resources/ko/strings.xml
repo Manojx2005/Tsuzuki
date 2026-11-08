@@ -1131,6 +1131,9 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">라이브러리의 업데이트 예정</string>
     <string name="tsz_upcoming_no_updates">예정된 업데이트 없음</string>
+    <string name="tsz_upcoming_reminder_toggle">%1$s 공개 예정 알림</string>
+    <string name="tsz_upcoming_reminder_message">오늘 새 챕터가 공개될 예정입니다.</string>
+    <string name="tsz_upcoming_reminder_permission">알림을 받으려면 Android 설정에서 챕터 알림을 켜세요.</string>
     <!-- media step -->
     <string name="tsz_onboarding_media">무엇을 읽나요?</string>
     <string name="tsz_onboarding_media_body">원하는 만큼 고르세요. 사용하는 것만 보여드려요.</string>

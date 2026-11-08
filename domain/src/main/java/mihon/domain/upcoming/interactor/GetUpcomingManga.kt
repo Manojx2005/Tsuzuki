@@ -14,6 +14,9 @@ class GetUpcomingManga(
         SManga.PUBLISHING_FINISHED.toLong(),
     )
 
+    suspend fun findEligible(id: Long): Manga? =
+        mangaRepository.getMangaByIdOrNull(id)?.takeIf { it.favorite && it.status in includedStatuses }
+
     suspend fun subscribe(
         excludedCategories: List<Long>,
         includedCategories: List<Long>,

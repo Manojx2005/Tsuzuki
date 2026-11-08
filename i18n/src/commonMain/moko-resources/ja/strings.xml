@@ -1131,6 +1131,9 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">ライブラリの更新予定</string>
     <string name="tsz_upcoming_no_updates">更新予定はありません</string>
+    <string name="tsz_upcoming_reminder_toggle">%1$s の公開予定リマインダー</string>
+    <string name="tsz_upcoming_reminder_message">本日、新しい章の公開が予定されています。</string>
+    <string name="tsz_upcoming_reminder_permission">リマインダーを受け取るには、Android の設定で章の通知を有効にしてください。</string>
     <!-- media step -->
     <string name="tsz_onboarding_media">何を読みますか？</string>
     <string name="tsz_onboarding_media_body">使うものだけを表示します。</string>

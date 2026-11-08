@@ -1,5 +1,10 @@
 package eu.kanade.presentation.tsuzuki.upcoming
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,14 +30,19 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -40,6 +50,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -48,6 +60,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -62,6 +75,9 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
 import eu.kanade.presentation.util.isTabletUi
+import eu.kanade.tachiyomi.tsuzuki.upcoming.UpcomingReminderPreferences
+import eu.kanade.tachiyomi.tsuzuki.upcoming.canPostUpcomingRelease
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -81,6 +97,8 @@ import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -101,6 +119,7 @@ internal fun TsuzukiUpcomingScreen(
     val tokens = TsuzukiTheme.tokens
     val navigator = LocalNavigator.currentOrThrow
     val uriHandler = LocalUriHandler.current
+    val (reminders, setReminder) = upcomingReminderControls()
     val month = state.selectedYearMonth
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     var pickedDay by rememberSaveable(month.toString()) { mutableIntStateOf(0) }
@@ -161,18 +180,51 @@ internal fun TsuzukiUpcomingScreen(
                 },
                 endContent = {
                     FastScrollLazyColumn(contentPadding = PaddingValues(bottom = 12.dp)) {
-                        upcomingDayRows(selectedDate, books, onClickUpcoming)
+                        upcomingDayRows(selectedDate, books, onClickUpcoming, reminders, setReminder)
                     }
                 },
             )
         } else {
             FastScrollLazyColumn(contentPadding = paddingValues) {
                 item(key = "upcoming-calendar", content = { calendar() })
-                upcomingDayRows(selectedDate, books, onClickUpcoming)
+                upcomingDayRows(selectedDate, books, onClickUpcoming, reminders, setReminder)
                 item(key = "upcoming-spacer") { Spacer(Modifier.height(12.dp)) }
             }
         }
     }
+}
+
+@Composable
+private fun upcomingReminderControls(): Pair<Set<String>, (Long, Boolean) -> Unit> {
+    if (LocalInspectionMode.current) return emptySet<String>() to { _, _ -> }
+    val context = LocalContext.current
+    val reminderPrefs = remember { UpcomingReminderPreferences(Injekt.get()) }
+    val reminders by remember(reminderPrefs) { reminderPrefs.enabled.changes() }.collectAsState(initial = emptySet())
+    var pendingPermission by rememberSaveable { mutableStateOf<Long?>(null) }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        pendingPermission?.let { id ->
+            if (granted && canPostUpcomingRelease(context)) {
+                reminderPrefs.setEnabled(id, true)
+            } else {
+                context.toast(MR.strings.tsz_upcoming_reminder_permission)
+            }
+        }
+        pendingPermission = null
+    }
+    val setReminder: (Long, Boolean) -> Unit = { id, enabled ->
+        when {
+            !enabled -> reminderPrefs.setEnabled(id, false)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED -> {
+                pendingPermission = id
+                permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            canPostUpcomingRelease(context) -> reminderPrefs.setEnabled(id, true)
+            else -> context.toast(MR.strings.tsz_upcoming_reminder_permission)
+        }
+    }
+    return reminders to setReminder
 }
 
 @Composable
@@ -303,6 +355,8 @@ private fun LazyListScope.upcomingDayRows(
     date: LocalDate,
     books: List<Manga>,
     onClickUpcoming: (Manga) -> Unit,
+    reminders: Set<String>,
+    setReminder: (Long, Boolean) -> Unit,
 ) {
     item(key = "upcoming-date") {
         val locale = Locale.getDefault()
@@ -328,22 +382,35 @@ private fun LazyListScope.upcomingDayRows(
                 .fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth()
-                    .tsuzukiClickable(role = Role.Button, onClick = { onClickUpcoming(book) })
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                MangaCover.Book(data = book.asMangaCover(), modifier = Modifier.width(36.dp))
-                Text(
-                    text = tsuzukiCase(book.title).orEmpty(),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = tokens.dotOn,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
+                Row(
+                    modifier = Modifier.weight(1f)
+                        .tsuzukiClickable(role = Role.Button, onClick = { onClickUpcoming(book) })
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    MangaCover.Book(data = book.asMangaCover(), modifier = Modifier.width(36.dp))
+                    Text(
+                        text = tsuzukiCase(book.title).orEmpty(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = tokens.dotOn,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                val enabled = book.id.toString() in reminders
+                IconToggleButton(checked = enabled, onCheckedChange = { setReminder(book.id, it) }) {
+                    Icon(
+                        if (enabled) Icons.Outlined.NotificationsActive else Icons.Outlined.Notifications,
+                        contentDescription = stringResource(MR.strings.tsz_upcoming_reminder_toggle, book.title),
+                        tint = if (enabled) tokens.accent else tokens.mutedText,
+                    )
+                }
             }
             if (index != books.lastIndex) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(tokens.tileBorder ?: tokens.track))

@@ -1119,6 +1119,9 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">Actualizaciones previstas para tu biblioteca</string>
     <string name="tsz_upcoming_no_updates">No hay actualizaciones previstas</string>
+    <string name="tsz_upcoming_reminder_toggle">Recordatorio de publicación prevista de %1$s</string>
+    <string name="tsz_upcoming_reminder_message">Se espera un nuevo capítulo hoy.</string>
+    <string name="tsz_upcoming_reminder_permission">Activa las notificaciones de capítulos en los ajustes de Android para recibir recordatorios.</string>
     <!-- media step -->
     <string name="tsz_onboarding_media">¿Qué lees?</string>
     <string name="tsz_onboarding_media_body">Elige lo que quieras. Solo mostramos lo que usas.</string>

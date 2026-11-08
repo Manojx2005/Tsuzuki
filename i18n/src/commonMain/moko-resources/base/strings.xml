@@ -1496,6 +1496,9 @@
     <!-- B6 -->
     <string name="tsz_upcoming_subtitle">Expected updates for your library</string>
     <string name="tsz_upcoming_no_updates">No expected updates</string>
+    <string name="tsz_upcoming_reminder_toggle">Expected release reminder for %1$s</string>
+    <string name="tsz_upcoming_reminder_message">A new chapter is expected today.</string>
+    <string name="tsz_upcoming_reminder_permission">Enable chapter notifications in Android settings to receive reminders.</string>
     <!-- media step -->
     <string name="tsz_onboarding_media">What do you read?</string>
     <string name="tsz_onboarding_media_body">Pick any. We only show what you use.</string>
