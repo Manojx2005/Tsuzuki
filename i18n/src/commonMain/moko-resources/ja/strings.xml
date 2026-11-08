@@ -1603,4 +1603,16 @@
     <string name="tsz_reader_recap_setting_summary">24時間以上空いたとき、前の章がオフラインで読める場合は、その一部を表示します。</string>
     <string name="tsz_reader_recap_previously">前回まで</string>
     <string name="tsz_reader_recap_dismiss">閉じる</string>
+    <string name="tsz_dictionary_lookup">辞書</string>
+    <string name="tsz_dictionary_packs">辞書パック</string>
+    <string name="tsz_dictionary_english">英語</string>
+    <string name="tsz_dictionary_japanese">日本語</string>
+    <string name="tsz_dictionary_get_pack">オフライン辞書を入手</string>
+    <string name="tsz_dictionary_no_handler">この操作に対応するアプリがありません。</string>
+    <string name="tsz_dictionary_no_match">定義が見つかりませんでした。</string>
+    <string name="tsz_dictionary_pack_error">辞書を読み込むか更新できませんでした。</string>
+    <string name="tsz_dictionary_pack_unavailable">辞書パックはまだ公開されていません。</string>
+    <string name="tsz_dictionary_save">ノートに追加</string>
+    <string name="tsz_dictionary_update">更新</string>
+    <string name="tsz_dictionary_web_search">ウェブ検索</string>
 </resources>

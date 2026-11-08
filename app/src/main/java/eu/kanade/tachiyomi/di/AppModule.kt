@@ -156,6 +156,7 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { TrackerManager() }
         addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.manhwa.ManhwaStore(get()) }
+        addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.dictionary.DictionaryPacks(app, get<NetworkHelper>().client) }
         addSingletonFactory { DelayedTrackingStore(app) }
         addSingletonFactory { SourceTrackerDispatcher(get(), get(), get(), get()) }
 

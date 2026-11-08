@@ -1220,7 +1220,7 @@ real Keiyoushi source and one LNReader plugin on device, including unmeasured an
 
 Result: _pending_
 
-#### R13 Dictionary lookup — offline packs (T4) — `ready`
+#### R13 Dictionary lookup — offline packs (T4) — `review` (2026-11-08, `.worktrees/r13`)
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
 WebView) → Tsuzuki sheet: headword, reading (JA), part of speech, senses, "Add to notebook" (N27 quote), and the
 device's own handlers (`ACTION_PROCESS_TEXT`, web search) as a fallback row.
@@ -1235,7 +1235,27 @@ device's own handlers (`ACTION_PROCESS_TEXT`, web search) as a fallback row.
   table, Yomichan-style, own implementation — no GPL code). Pure helpers + tests (edges of selection, punctuation,
   inflected forms).
 - If no pack is installed, the sheet shows the system/web fallback and a "Get offline dictionary" link.
-Result: _pending_
+Result: `e9e315cfb`. Two per-file Spotless passes and offline JDK 21
+`:app:assembleDebug :app:testDebugUnitTest` passed (971 tests, including 3 new). Two Python converter
+fixture tests passed.
+
+- `DictionaryTerms.kt` normalizes selections and generates independent English and Japanese lookup forms.
+  `DictionaryTermsTest.kt` covers punctuation, width, phrases and common inflections.
+- `DictionaryPacks.kt` uses indexed, read-only SQLite for lookup and WordNet exception forms. It validates size,
+  SHA-256, schema and version before replacing a pack. `AppModule.kt` registers the shared pack service.
+- `ReaderDictionary.kt` shows definitions, readings, parts of speech, device handlers and a web-search action.
+  `NovelViewer.kt`, `NovelWebViewViewer.kt` and `ReaderActivity.kt` connect selection actions and the notebook.
+- `DictionaryPacksScreen.kt` and `SettingsNovelReaderScreen.kt` manage optional downloads, updates and deletion.
+  Eight locales add labels. `TsuzukiAboutScreen.kt` and the two `docs/licenses/` notices record data attribution.
+- `build_dictionary_pack.py`, `jmdict-tiny.xml` and `test_build_dictionary_pack.py` implement and exercise the
+  converter with synthetic data. `docs/DICTIONARY_PACKS.md` gives release filenames and publishing steps.
+  The full source licence supplied to the converter is embedded in its pack and readable from Dictionaries.
+- `docs/design/README.md` records the implemented board scope. The board's pronunciation, word frequency and
+  flashcards are outside this card. Selection opens the sheet through the Dictionary menu action.
+
+Claude device review: generate a fixture pack or publish owner-built packs to the `dictionaries-v1` release.
+Check Download, Update, Delete, offline lookup, notebook and the fallbacks on S22 in both renderers and themes.
+The real packs have not been built or published in this worktree.
 
 #### R14 Merge sources for one book (T4) — `ready`
 Board `MergeSources`. Start the Result with a short design note, then build it: link 2+ library entries of the same book from different sources into one "merged" view (chapter

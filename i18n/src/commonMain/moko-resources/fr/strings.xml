@@ -1377,4 +1377,16 @@
     <string name="tsz_reader_recap_setting_summary">Après 24 heures d’absence, affiche des extraits du chapitre précédent si le texte est disponible hors ligne.</string>
     <string name="tsz_reader_recap_previously">Précédemment</string>
     <string name="tsz_reader_recap_dismiss">Fermer</string>
+    <string name="tsz_dictionary_lookup">Dictionnaire</string>
+    <string name="tsz_dictionary_packs">Dictionnaires</string>
+    <string name="tsz_dictionary_english">Anglais</string>
+    <string name="tsz_dictionary_japanese">Japonais</string>
+    <string name="tsz_dictionary_get_pack">Obtenir un dictionnaire hors ligne</string>
+    <string name="tsz_dictionary_no_handler">Aucune application ne peut effectuer cette action.</string>
+    <string name="tsz_dictionary_no_match">Aucune définition trouvée.</string>
+    <string name="tsz_dictionary_pack_error">Impossible de charger ou de mettre à jour ce dictionnaire.</string>
+    <string name="tsz_dictionary_pack_unavailable">Aucun pack n’a encore été publié.</string>
+    <string name="tsz_dictionary_save">Ajouter au carnet</string>
+    <string name="tsz_dictionary_update">Mettre à jour</string>
+    <string name="tsz_dictionary_web_search">Recherche Web</string>
 </resources>

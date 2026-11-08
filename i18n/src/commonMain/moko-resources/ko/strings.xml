@@ -1383,4 +1383,16 @@
     <string name="tsz_reader_recap_setting_summary">24시간 이상 읽지 않았을 때 이전 화의 텍스트를 오프라인에서 이용할 수 있으면 발췌문을 표시합니다.</string>
     <string name="tsz_reader_recap_previously">지난 이야기</string>
     <string name="tsz_reader_recap_dismiss">닫기</string>
+    <string name="tsz_dictionary_lookup">사전</string>
+    <string name="tsz_dictionary_packs">사전 팩</string>
+    <string name="tsz_dictionary_english">영어</string>
+    <string name="tsz_dictionary_japanese">일본어</string>
+    <string name="tsz_dictionary_get_pack">오프라인 사전 받기</string>
+    <string name="tsz_dictionary_no_handler">이 작업을 처리할 앱이 없습니다.</string>
+    <string name="tsz_dictionary_no_match">정의를 찾을 수 없습니다.</string>
+    <string name="tsz_dictionary_pack_error">이 사전을 불러오거나 업데이트할 수 없습니다.</string>
+    <string name="tsz_dictionary_pack_unavailable">아직 공개된 팩이 없습니다.</string>
+    <string name="tsz_dictionary_save">노트에 추가</string>
+    <string name="tsz_dictionary_update">업데이트</string>
+    <string name="tsz_dictionary_web_search">웹 검색</string>
 </resources>

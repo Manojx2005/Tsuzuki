@@ -1381,4 +1381,16 @@
     <string name="tsz_reader_recap_setting_summary">Após 24 horas de pausa, mostra trechos do capítulo anterior se o texto estiver disponível offline.</string>
     <string name="tsz_reader_recap_previously">Anteriormente</string>
     <string name="tsz_reader_recap_dismiss">Fechar</string>
+    <string name="tsz_dictionary_lookup">Dicionário</string>
+    <string name="tsz_dictionary_packs">Dicionários</string>
+    <string name="tsz_dictionary_english">Inglês</string>
+    <string name="tsz_dictionary_japanese">Japonês</string>
+    <string name="tsz_dictionary_get_pack">Obter dicionário offline</string>
+    <string name="tsz_dictionary_no_handler">Nenhum app pode executar esta ação.</string>
+    <string name="tsz_dictionary_no_match">Nenhuma definição encontrada.</string>
+    <string name="tsz_dictionary_pack_error">Não foi possível carregar ou atualizar este dicionário.</string>
+    <string name="tsz_dictionary_pack_unavailable">Nenhum pacote foi publicado ainda.</string>
+    <string name="tsz_dictionary_save">Adicionar ao caderno</string>
+    <string name="tsz_dictionary_update">Atualizar</string>
+    <string name="tsz_dictionary_web_search">Pesquisa na web</string>
 </resources>

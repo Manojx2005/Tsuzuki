@@ -24,6 +24,8 @@ import androidx.core.net.toUri
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
+import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.presentation.tsuzuki.reader.createNovelRecapView
 import eu.kanade.tachiyomi.source.model.Page
@@ -759,6 +761,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                         )
                         rememberItem.setIcon(android.R.drawable.ic_menu_save)
                         rememberItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                        menu.addDictionaryAction(activity)
                         return true
                     }
 
@@ -770,6 +773,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                         return when (item.itemId) {
                             1 -> {
                                 onRememberSelectedText()
+                                mode.finish()
+                                true
+                            }
+                            DICTIONARY_SELECTION_MENU_ID -> {
+                                getSelectedText()?.let {
+                                    activity.openReaderDictionary(
+                                        it,
+                                        getCurrentChapterName(),
+                                        getSelectedParagraphIndex(),
+                                    )
+                                }
                                 mode.finish()
                                 true
                             }

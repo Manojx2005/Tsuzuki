@@ -1384,4 +1384,16 @@
     <string name="tsz_reader_recap_setting_summary">离开本书满 24 小时后，如果上一章的文本可离线读取，则显示片段。</string>
     <string name="tsz_reader_recap_previously">前情回顾</string>
     <string name="tsz_reader_recap_dismiss">关闭</string>
+    <string name="tsz_dictionary_lookup">词典</string>
+    <string name="tsz_dictionary_packs">词典包</string>
+    <string name="tsz_dictionary_english">英语</string>
+    <string name="tsz_dictionary_japanese">日语</string>
+    <string name="tsz_dictionary_get_pack">获取离线词典</string>
+    <string name="tsz_dictionary_no_handler">没有应用可处理此操作。</string>
+    <string name="tsz_dictionary_no_match">未找到释义。</string>
+    <string name="tsz_dictionary_pack_error">无法加载或更新此词典。</string>
+    <string name="tsz_dictionary_pack_unavailable">词典包尚未发布。</string>
+    <string name="tsz_dictionary_save">添加到笔记本</string>
+    <string name="tsz_dictionary_update">更新</string>
+    <string name="tsz_dictionary_web_search">网页搜索</string>
 </resources>
