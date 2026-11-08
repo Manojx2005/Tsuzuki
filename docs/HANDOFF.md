@@ -928,10 +928,24 @@ rotation, restore preview (what's inside before restoring: counts of books/shelv
 clear errors. No cloud sync in this card (owner decision needed for Drive/WebDAV).
 Result: _pending_
 
-#### R16 Upcoming: notify on expected release (T2) — `ready`
+#### R16 Upcoming: notify on expected release (T2) — `review` (2026-11-08, `.worktrees/r16`)
 Optional per-book toggle on Upcoming: a notification on the expected date from the existing interval estimate;
 off by default; uses the existing notification channel; no new background polling.
-Result: _pending_
+**Result (Codex, 2026-11-08):** `tsuzuki/r16` at `6954716eb` (base `c0a0015a4`).
+
+- `TsuzukiUpcomingScreen.kt` adds a trailing per-book bell with an accessible checked state, separate from the book navigation target. It requests notification permission only on opt-in and explains how to enable chapter notifications when Android blocks them.
+- `UpcomingReleaseReminders.kt` stores opt-ins locally and follows changes from the existing Upcoming query. It enqueues one-time work per forecast and cancels superseded work it is tracking. Each worker rechecks the opt-in, eligible book, current estimate, local date and delivery marker before using the existing New chapters channel. Tapping the notification opens the book.
+- `App.kt` starts the observer in the main process, and `GetUpcomingManga.kt` shares its eligible-status rule with the worker’s single-book lookup.
+- Three resource keys ship in all eight locales. `docs/design/README.md` records the implementation status.
+
+JDK 21, two per-file Spotless passes, `:app:assembleDebug` and `:app:testDebugUnitTest` passed
+(971 passed, 0 failed). `UpcomingReleaseRemindersTest.kt` covers default-off persistence, changed
+and stale estimates, Tokyo date boundaries and same-day deduplication.
+
+Claude device review on the S22 and Tab S11 in Dot and Colour. Verify opt-in, opt-out, permission
+denial and tapping through to the book with a real scheduled estimate. Test an estimate change
+while the app process is running, then verify a pending reminder survives process exit. WorkManager
+delivery is inexact. A reminder that runs after the expected date expires.
 
 #### R17 Tablet reading line length (T3) — `ready`
 Owner 2026-11-07: **cap the novel text column at ~600 dp, centred**, on wide windows (board `11-tablet/TabletReader`:
