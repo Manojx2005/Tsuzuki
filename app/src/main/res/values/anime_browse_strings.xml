@@ -38,4 +38,5 @@
     <string name="tsz_anime_track_watching">Watching</string>
     <string name="tsz_anime_track_planning">Plan to watch</string>
     <string name="tsz_anime_track_rewatching">Rewatching</string>
+    <string name="tsz_anime_player_unsupported_device">Anime playback isn’t supported on this device</string>
 </resources>

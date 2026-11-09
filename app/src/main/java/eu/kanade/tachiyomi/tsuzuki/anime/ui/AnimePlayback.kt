@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import uy.kohesive.injekt.Injekt
@@ -27,8 +26,9 @@ internal object AnimePlayback {
     fun launchEpisode(context: Context, id: Long, track: Boolean) = launch(context, Request.Episode(id, track))
 
     private fun launch(context: Context, request: Request) {
-        if (!TsuzukiAnime.enabled || !Injekt.get<AnimePlayerLauncher>().launch(context, request)) {
-            Toast.makeText(context, R.string.tsz_anime_player_unavailable, Toast.LENGTH_LONG).show()
+        val launcher = Injekt.get<AnimePlayerLauncher>()
+        if (!TsuzukiAnime.enabled || !launcher.launch(context, request)) {
+            Toast.makeText(context, launcher.unavailableMessage, Toast.LENGTH_LONG).show()
         }
     }
 

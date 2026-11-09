@@ -38,4 +38,5 @@
     <string name="tsz_anime_track_watching">Assistindo</string>
     <string name="tsz_anime_track_planning">Pretendo assistir</string>
     <string name="tsz_anime_track_rewatching">Reassistindo</string>
+    <string name="tsz_anime_player_unsupported_device">Este dispositivo não oferece suporte à reprodução de anime</string>
 </resources>

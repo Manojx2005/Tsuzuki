@@ -37,4 +37,5 @@
     <string name="tsz_anime_track_watching">視聴中</string>
     <string name="tsz_anime_track_planning">視聴予定</string>
     <string name="tsz_anime_track_rewatching">再視聴中</string>
+    <string name="tsz_anime_player_unsupported_device">この端末ではアニメを再生できません</string>
 </resources>

@@ -2,12 +2,15 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.content.Context
 import android.view.Surface
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettings
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeTrackKind
 
 internal interface AnimePlayerLauncher {
+    val unavailableMessage: Int get() = R.string.tsz_anime_player_unavailable
+
     fun launch(context: Context, request: AnimePlayback.Request): Boolean
     fun createBackend(): AnimePlayerBackend?
 }

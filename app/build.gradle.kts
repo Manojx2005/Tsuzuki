@@ -153,9 +153,6 @@ android {
 
     sourceSets {
         getByName("benchmark").res.directories.add("src/debug/res")
-        buildTypes.filter { it.name != "debug" }.forEach {
-            getByName(it.name).kotlin.directories.add("src/nonDebug/java")
-        }
     }
 
     splits {
@@ -236,6 +233,12 @@ baselineProfile {
     mergeIntoMain = true
 }
 
+aboutLibraries {
+    collect {
+        configPath.set(layout.projectDirectory.dir("aboutlibraries"))
+    }
+}
+
 dependencies {
     baselineProfile(projects.baselineProfile)
 
@@ -264,7 +267,7 @@ dependencies {
     implementation(libs.androidx.palette)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
-    debugImplementation(projects.animePlayer)
+    implementation(projects.animePlayer)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
 

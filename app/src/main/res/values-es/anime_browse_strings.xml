@@ -38,4 +38,5 @@
     <string name="tsz_anime_track_watching">Viendo</string>
     <string name="tsz_anime_track_planning">Planeo ver</string>
     <string name="tsz_anime_track_rewatching">Volviendo a ver</string>
+    <string name="tsz_anime_player_unsupported_device">Este dispositivo no admite la reproducción de anime</string>
 </resources>

@@ -1,12 +1,9 @@
-package eu.kanade.tachiyomi.tsuzuki.anime.debug
+package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import android.content.Context
 import android.util.Log
 import android.view.Surface
 import eu.kanade.tachiyomi.animesource.model.Video
-import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettings
-import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
-import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeTrackKind
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerLauncher

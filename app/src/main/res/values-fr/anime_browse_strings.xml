@@ -38,4 +38,5 @@
     <string name="tsz_anime_track_watching">En cours</string>
     <string name="tsz_anime_track_planning">À regarder</string>
     <string name="tsz_anime_track_rewatching">Visionnage à nouveau</string>
+    <string name="tsz_anime_player_unsupported_device">Cet appareil ne prend pas en charge la lecture d’animes</string>
 </resources>

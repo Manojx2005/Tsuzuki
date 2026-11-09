@@ -22,6 +22,10 @@
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
 -keep,allowoptimization class com.squareup.zstd.** { public protected *; }
 
+# Native mpv resolves Java members through JNI. Anime extensions call the source API across class loaders.
+-keep class is.xyz.mpv.MPVLib** { *; }
+-keep class eu.kanade.tachiyomi.animesource.** { *; }
+
 # From extensions-lib
 -keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
