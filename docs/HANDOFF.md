@@ -830,14 +830,22 @@ load and retry, and paged and infinite-scroll navigation.
 
 **Review (Codex RV1, 2026-11-08):** Fail. Native Dot advances on the first tap and holds the outgoing frame. In scrolling WebView Colour, one Next chapter tap loads the right chapter but reveals the hidden reader chrome. The frame sheet shows the controls entering during the handoff. `NovelWebViewViewer.kt:302` handles the same tap as a native navigation gesture while the JS button handles it. Evidence: `v77-native-dot-frames.png` and `v77-web-colour-frames.png`. Reverted in `dc4b7d563`.
 
-#### V7.7-F Keep the WebView chapter-end tap in the card (T3) — `ready` (app lane)
+#### V7.7-F Keep the WebView chapter-end tap in the card (T3) — `review` (.worktrees/v7.7-f, 2026-11-09)
 
 Reapply V7.7 by reverting `dc4b7d563` on a fix branch from the reviewed main. A tap on an interactive
 chapter-end control should reach the DOM action once and should preserve reader chrome visibility and scroll
 position. Keep ordinary text taps and paged gestures working. Verify on the tablet and S22 with both renderers,
 including a fling to the card and a slow or failed chapter load.
 
-Result: _pending_
+**Result (Codex, 2026-11-09):** `tsuzuki/v7.7-f` at `06224334e` (transition restored in `f8111f792`).
+
+- `NovelWebViewViewer.kt` checks the DOM target at single-tap release before WebView handles the event. The native tap zone runs on confirmation only for a non-card hit. Paged drag, fling, and the native TextView tap path remain separate.
+- `chapter-end-card.js` marks the card so the DOM keeps its own Next, Mark read and Contents clicks, including disabled Next while a request is pending.
+- The revert-of-revert restores `NovelChapterEndTransition.kt`, `TsuzukiChapterEnd.kt`, and the existing `ReaderActivity.kt` / `NovelViewer.kt` handoff. `docs/design/README.md` records the current status.
+
+Verification: JDK 21, two per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (977 tests, 0 failures, errors or skips), and a Node DOM smoke check covering the three buttons, pending Next, nested targets, ordinary content and card reinjection.
+
+Device review: on Tab S11 and S22, Dot then Colour, fling to the card and tap Next with chrome hidden and shown in TextView and scrolling WebView. Check one action, stable chrome and outgoing scroll position, plus slow/failed loads and retry. Check Mark read, Contents, ordinary text taps and paged swipes.
 
 #### V7.6 v0.1 polish from the V1 notes (T2) — `done` (2026-11-08, `.worktrees/v7.6`) (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
