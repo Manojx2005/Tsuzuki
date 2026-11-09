@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.network.interceptor.withRateLimitWaitUpdates
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -1043,14 +1044,18 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
             if (fetchChapters) {
                 try {
                     val sChapters = withTimeoutOrNull(FETCH_TIMEOUT_MS) {
-                        source.getMangaUpdate(
-                            manga.toSManga(),
-                            emptyList(),
-                            fetchDetails = false,
-                            fetchChapters = true,
-                        ).chapters
+                        source.withSourceHealth {
+                            source.getMangaUpdate(
+                                manga.toSManga(),
+                                emptyList(),
+                                fetchDetails = false,
+                                fetchChapters = true,
+                            ).chapters
+                        }
                     } ?: throw java.io.IOException("Timed out fetching chapters for $url")
                     syncChaptersWithSource.await(sChapters, manga.copy(favorite = true), source)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     logcat(LogPriority.WARN, e) { "Failed to sync chapters for $url" }
                 }

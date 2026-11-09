@@ -10,6 +10,7 @@ import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import tachiyomi.core.common.tsuzuki.sourceHealthCallTags
 import java.io.File
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -72,7 +73,12 @@ class NetworkHelper(
     }
 
     val client = clientBuilder
-        .apply { sourceHealthInterceptor?.let(::addInterceptor) }
+        .apply {
+            if (sourceHealthInterceptor != null) {
+                eventListenerFactory(sourceHealthCallTags)
+                addInterceptor(sourceHealthInterceptor)
+            }
+        }
         .addInterceptor(
             CloudflareInterceptor(context, cookieJar, scope, ::defaultUserAgentProvider),
         )

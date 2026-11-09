@@ -43,6 +43,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.CancellationException
@@ -130,7 +131,8 @@ private fun CataloguePreview(source: Source, contentPadding: PaddingValues, onOp
         value = Preview.Loading
         value = try {
             val books = withIOContext {
-                (sourceManager.get(source.id) as? CatalogueSource)?.getPopularManga(1)?.mangas.orEmpty()
+                val catalogue = sourceManager.get(source.id) as? CatalogueSource
+                catalogue?.withSourceHealth { catalogue.getPopularManga(1).mangas }.orEmpty()
             }
             Preview.Ready(books)
         } catch (e: CancellationException) {

@@ -17,7 +17,10 @@ internal class SourceHealthInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val source = request.tag(SourceHealthRequest::class.java) ?: return chain.proceed(request)
+        val call = chain.call()
+        val source = request.tag(SourceHealthRequest::class.java)
+            ?: call.tag(SourceHealthRequest::class.java)
+        if (source == null || request.cacheControl.onlyIfCached) return chain.proceed(request)
         val start = TimeSource.Monotonic.markNow()
 
         fun record(error: SourceHealthError? = null, httpCode: Int? = null) {
@@ -29,8 +32,8 @@ internal class SourceHealthInterceptor(
 
         return try {
             chain.proceed(request).also { response ->
-                // A cache hit has no measured network latency.
-                if (response.networkResponse == null && response.cacheResponse != null) return@also
+                // Cache hits and synthetic responses have no measured network latency.
+                if (response.networkResponse == null || call.isCanceled()) return@also
                 when {
                     response.header("cf-mitigated") == "challenge" -> record(SourceHealthError.CLOUDFLARE)
                     response.isSuccessful -> record()
@@ -38,7 +41,7 @@ internal class SourceHealthInterceptor(
                 }
             }
         } catch (error: IOException) {
-            if (!chain.call().isCanceled()) record(classifySourceHealthError(error))
+            if (!call.isCanceled()) record(classifySourceHealthError(error))
             throw error
         }
     }
