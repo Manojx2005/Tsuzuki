@@ -1581,4 +1581,11 @@
     <string name="tsz_tracker_novel_services">小説トラッカー</string>
     <string name="tsz_tracker_signed_out">未ログイン</string>
     <string name="tsz_tracker_linked_count">連携 %1$d 件</string>
+    <string name="tsz_merge_sources">ソースを統合</string>
+    <string name="tsz_merge_combined">統合した章</string>
+    <string name="tsz_merge_other_count">他のソースから %1$d 章</string>
+    <string name="tsz_merge_priority">優先順位 · ドラッグして並べ替え</string>
+    <string name="tsz_merge_add">別のソースを追加</string>
+    <string name="tsz_merge_library_required">先に、この小説の別の版をライブラリに追加してください。</string>
+    <string name="tsz_merge_save_error">リンクしたソースを保存できませんでした。</string>
 </resources>

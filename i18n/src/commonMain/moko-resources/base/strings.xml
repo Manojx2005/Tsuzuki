@@ -1741,4 +1741,11 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_merge_sources">Merge sources</string>
+    <string name="tsz_merge_combined">Combined chapters</string>
+    <string name="tsz_merge_other_count">%1$d chapters from other sources</string>
+    <string name="tsz_merge_priority">Priority · Drag to reorder</string>
+    <string name="tsz_merge_add">Add another source</string>
+    <string name="tsz_merge_library_required">Save another edition of this novel to your library first.</string>
+    <string name="tsz_merge_save_error">Could not save linked sources.</string>
 </resources>

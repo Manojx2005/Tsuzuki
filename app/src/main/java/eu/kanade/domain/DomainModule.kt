@@ -212,6 +212,7 @@ class DomainModule : InjektModule {
         addFactory { SyncChapterProgressWithTrack(get(), get(), get()) }
 
         addSingletonFactory<ChapterRepository> { ChapterRepositoryImpl(get()) }
+        addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.novel.MergedNovelSources(get(), get(), get()) }
         addSingletonFactory<EpisodeRepository> { EpisodeRepositoryImpl(get()) }
         addFactory { GetEpisodesByAnimeId(get()) }
         addFactory { InsertEpisodes(get()) }

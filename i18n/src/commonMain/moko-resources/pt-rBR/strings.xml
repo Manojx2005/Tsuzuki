@@ -1359,4 +1359,11 @@
     <string name="tsz_tracker_novel_services">Rastreadores de romances</string>
     <string name="tsz_tracker_signed_out">Não conectado</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_merge_sources">Combinar fontes</string>
+    <string name="tsz_merge_combined">Capítulos combinados</string>
+    <string name="tsz_merge_other_count">%1$d capítulos de outras fontes</string>
+    <string name="tsz_merge_priority">Prioridade · Arraste para reordenar</string>
+    <string name="tsz_merge_add">Adicionar outra fonte</string>
+    <string name="tsz_merge_library_required">Salve primeiro outra edição deste romance na biblioteca.</string>
+    <string name="tsz_merge_save_error">Não foi possível salvar as fontes vinculadas.</string>
 </resources>

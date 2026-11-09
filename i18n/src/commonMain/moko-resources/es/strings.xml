@@ -1349,4 +1349,11 @@
     <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
     <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_merge_sources">Combinar fuentes</string>
+    <string name="tsz_merge_combined">Capítulos combinados</string>
+    <string name="tsz_merge_other_count">%1$d capítulos de otras fuentes</string>
+    <string name="tsz_merge_priority">Prioridad · Arrastra para reordenar</string>
+    <string name="tsz_merge_add">Añadir otra fuente</string>
+    <string name="tsz_merge_library_required">Guarda primero otra edición de esta novela en tu biblioteca.</string>
+    <string name="tsz_merge_save_error">No se pudieron guardar las fuentes vinculadas.</string>
 </resources>

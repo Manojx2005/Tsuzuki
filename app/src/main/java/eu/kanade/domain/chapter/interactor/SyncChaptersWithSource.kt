@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.tsuzuki.novel.MergedNovelSources
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -26,6 +27,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.translation.repository.TranslatedChapterRepository
 import tachiyomi.source.local.isLocal
+import uy.kohesive.injekt.injectLazy
 import java.lang.Long.max
 import java.util.TreeSet
 import kotlin.time.Clock
@@ -42,6 +44,7 @@ class SyncChaptersWithSource(
     private val libraryPreferences: LibraryPreferences,
     private val translatedChapterRepository: TranslatedChapterRepository,
 ) {
+    private val mergedNovelSources: MergedNovelSources by injectLazy()
 
     /**
      * Method to synchronize db chapters with source ones
@@ -238,7 +241,13 @@ class SyncChaptersWithSource(
         }
 
         if (updatedToAdd.isNotEmpty()) {
-            updatedToAdd = chapterRepository.addAll(updatedToAdd)
+            updatedToAdd = if (manga.isNovel && manga.favorite) {
+                mergedNovelSources.insertChapters(manga, updatedToAdd).also { added ->
+                    added.filter(Chapter::read).mapTo(changedOrDuplicateReadUrls, Chapter::url)
+                }
+            } else {
+                chapterRepository.addAll(updatedToAdd)
+            }
         }
 
         if (updatedChapters.isNotEmpty()) {

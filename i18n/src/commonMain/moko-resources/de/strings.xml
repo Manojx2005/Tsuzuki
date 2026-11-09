@@ -1362,4 +1362,11 @@
     <string name="tsz_tracker_novel_services">Roman-Tracker</string>
     <string name="tsz_tracker_signed_out">Nicht angemeldet</string>
     <string name="tsz_tracker_linked_count">%1$d verknüpft</string>
+    <string name="tsz_merge_sources">Quellen zusammenführen</string>
+    <string name="tsz_merge_combined">Kombinierte Kapitel</string>
+    <string name="tsz_merge_other_count">%1$d Kapitel aus anderen Quellen</string>
+    <string name="tsz_merge_priority">Priorität · Zum Sortieren ziehen</string>
+    <string name="tsz_merge_add">Weitere Quelle hinzufügen</string>
+    <string name="tsz_merge_library_required">Speichere zuerst eine weitere Ausgabe dieses Romans in deiner Bibliothek.</string>
+    <string name="tsz_merge_save_error">Die verknüpften Quellen konnten nicht gespeichert werden.</string>
 </resources>

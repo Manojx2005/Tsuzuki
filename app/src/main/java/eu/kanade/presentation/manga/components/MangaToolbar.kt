@@ -71,6 +71,7 @@ fun MangaToolbar(
     modifier: Modifier = Modifier,
     // Tsuzuki: replaces the download dropdown with a sheet when set.
     downloadSheet: (@Composable (onDismissRequest: () -> Unit) -> Unit)? = null,
+    mergeSourcesAction: AppBar.OverflowAction? = null,
 ) {
     val isActionMode = actionModeCounter > 0
     val scrollActionsInOverflow by remember { Injekt.get<UiPreferences>().mangaScrollActionsInOverflow }
@@ -188,6 +189,7 @@ fun MangaToolbar(
                             ),
                         )
                     }
+                    mergeSourcesAction?.let(::add)
                     if (onClickMigrate != null) {
                         add(
                             AppBar.OverflowAction(

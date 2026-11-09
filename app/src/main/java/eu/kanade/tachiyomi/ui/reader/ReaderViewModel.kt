@@ -850,13 +850,16 @@ class ReaderViewModel @JvmOverloads constructor(
                     deleteChapterIfNeeded(selectedChapter)
                 }
 
-                updateChapter.await(
-                    ChapterUpdate(
-                        id = selectedChapter.chapter.id!!,
-                        read = selectedChapter.chapter.read,
-                        lastPageRead = selectedChapter.chapter.last_page_read.toLong(),
-                    ),
+                val chapterUpdate = ChapterUpdate(
+                    id = selectedChapter.chapter.id!!,
+                    read = selectedChapter.chapter.read.takeIf { it != wasRead },
+                    lastPageRead = selectedChapter.chapter.last_page_read.toLong(),
                 )
+                if (!wasRead && selectedChapter.chapter.read) {
+                    saveLinkedNovelCompletion(selectedChapter, chapterUpdate)
+                } else {
+                    updateChapter.await(chapterUpdate)
+                }
 
                 // Notify library of badge changes (important for unread count accuracy)
                 if (selectedChapter.chapter.read != wasRead) {
@@ -905,6 +908,16 @@ class ReaderViewModel @JvmOverloads constructor(
         isTsuzukiChapterOnDisk(downloadManager, manga, readerChapter)
 
     internal fun markNovelChapterRead(chapter: ReaderChapter) = markTsuzukiChapterRead(chapter, ::saveNovelProgress)
+
+    private suspend fun saveLinkedNovelCompletion(chapter: ReaderChapter, update: ChapterUpdate) {
+        val mergedSources = Injekt.get<eu.kanade.tachiyomi.tsuzuki.novel.MergedNovelSources>()
+        mergedSources.writeReadStatus(
+            listOf(chapter.chapter.toDomainChapter()!!),
+            true,
+            listOf(update),
+            updateChapter::awaitAll,
+        )
+    }
 
     private fun downloadNextChapters() {
         if (downloadAheadAmount == 0) return
@@ -1010,19 +1023,24 @@ class ReaderViewModel @JvmOverloads constructor(
             // For novel chapters each chapter has exactly 1 page (the full text).
             // Marking complete via page-index would always fire on selection.
             // Novel completion is handled by saveNovelProgress (marks at >=95%).
-            val isNovelChapter = manga?.isNovel == true && (readerChapter.pages?.size ?: 0) <= 1
-            val isComplete = !isNovelChapter && readerChapter.pages?.lastIndex == pageIndex
+            val isNovel = manga?.isNovel == true
+            val isSinglePageNovel = isNovel && (readerChapter.pages?.size ?: 0) <= 1
+            val isComplete = !isSinglePageNovel && readerChapter.pages?.lastIndex == pageIndex
+            val completedNovel = isNovel && isComplete && !readerChapter.chapter.read
             if (isComplete) {
                 readerChapter.chapter.read = true
             }
 
-            updateChapter.await(
-                ChapterUpdate(
-                    id = readerChapter.chapter.id!!,
-                    read = readerChapter.chapter.read,
-                    lastPageRead = readerChapter.chapter.last_page_read.toLong(),
-                ),
+            val chapterUpdate = ChapterUpdate(
+                id = readerChapter.chapter.id!!,
+                read = readerChapter.chapter.read.takeIf { !isNovel || completedNovel },
+                lastPageRead = readerChapter.chapter.last_page_read.toLong(),
             )
+            if (completedNovel) {
+                saveLinkedNovelCompletion(readerChapter, chapterUpdate)
+            } else {
+                updateChapter.await(chapterUpdate)
+            }
 
             if (isComplete) {
                 updateChapterProgressOnComplete(readerChapter)

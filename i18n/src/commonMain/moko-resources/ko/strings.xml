@@ -1361,4 +1361,11 @@
     <string name="tsz_tracker_novel_services">소설 트래커</string>
     <string name="tsz_tracker_signed_out">로그인하지 않음</string>
     <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
+    <string name="tsz_merge_sources">소스 병합</string>
+    <string name="tsz_merge_combined">통합된 챕터</string>
+    <string name="tsz_merge_other_count">다른 소스의 챕터 %1$d개</string>
+    <string name="tsz_merge_priority">우선순위 · 끌어서 순서 변경</string>
+    <string name="tsz_merge_add">다른 소스 추가</string>
+    <string name="tsz_merge_library_required">먼저 이 소설의 다른 판본을 라이브러리에 추가하세요.</string>
+    <string name="tsz_merge_save_error">연결된 소스를 저장하지 못했습니다.</string>
 </resources>
