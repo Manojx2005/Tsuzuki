@@ -1151,14 +1151,23 @@ updating its status. Check outage actions only when a real failure is present.
 
 **Review (Codex RV1, 2026-11-08):** Fail. Real Royal Road requests set a healthy dot, last success and latency. An Archive of Our Own request recorded HTTP 418 and showed the WebView outage action. On the S22, Asura Scans loaded both Popular and Latest but remained unmeasured. `HttpSource.kt:127` tags the legacy request builders. Modern Keiyoushi suspend methods can issue OkHttp requests directly, outside those builders. Evidence: `r12-health-observed-dot-tablet.png`, `r12-health-colour-tablet.png`, `r12-manga-latest-dot-s22.png` and `r12-health-manga-dot-s22.png`. Reverted in `1d6554c94`.
 
-#### R12-F Measure current Keiyoushi sources (T3) — `ready` (app lane)
+#### R12-F Measure current Keiyoushi sources (T3) — `review` (.worktrees/r12-f, 2026-11-09)
 
 Reapply R12 by reverting `1d6554c94` on a fix branch from the reviewed main. Pass source identity through
 native suspend catalogue and update paths that bypass HttpSource request builders. Keep cache-only requests,
 cancellations and non-source calls out of the measurements. No probes or per-host source guesses. Verify one
 real Keiyoushi source and one LNReader plugin on device, including unmeasured and observed states.
 
-Result: _pending_
+**Result (Codex, 2026-11-09):** `tsuzuki/r12-f` at `8246bccd7` (R12 restored in `57794a62f`).
+
+- `SourceHealthRequest.kt` scopes the native source ID to the caller coroutine. `NetworkHelper.kt` attaches it to the OkHttp call at start, preserving explicit request tags and leaving HTTP headers alone. `SourceHealthInterceptor.kt` retains the same store and excludes cache-only, synthetic, cancelled and untagged calls.
+- `source/tsuzuki/SourceHealth.kt` scopes native HTTP sources. `SourcePagingSource.kt`, `TsuzukiTabletBrowse.kt`, `SearchViewModel.kt`, `SmartSourceSearchEngine.kt` and `DeeplinkResolver.kt` use it for catalogue and search calls. `UpdateMangaFromRemote.kt`, `MassImport.kt` and `MassImportJob.kt` use it for native update calls. LNReader keeps its explicit request tags.
+- Calls using the shared client or clients derived from it keep the tag factory. Calls made through an independent client or one that replaces the factory have no ambient measurement. No polling or source-host inference was added.
+- `SourceHealthInterceptorTest.kt` covers concurrent sources on one host across dispatchers, explicit-tag precedence and cache/cancellation filtering. `docs/design/README.md` records the new coverage.
+
+Verification: JDK 21, two scoped Spotless passes per fix file and `:app:assembleDebug :app:testDebugUnitTest` passed (984 tests, 0 failures, errors or skips).
+
+Device review: on Tab S11 and S22, open Popular, Latest and Search for a live modern Keiyoushi source such as Asura Scans, then refresh one of its library entries. Check its observed status, latency and last success. Repeat with a live LNReader plugin in Dot and Colour, and verify an unused source remains unmeasured.
 
 #### R13 Dictionary lookup — offline packs (T4) — `ready`
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
