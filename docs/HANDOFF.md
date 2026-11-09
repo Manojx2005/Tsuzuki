@@ -1327,11 +1327,37 @@ Result (Codex 2026-11-08): `tsuzuki/r-a3` at `029238bc8`, includes A3.4.
   baseline exclusion, introduce a later episode through an approved extension, refresh and play the row.
   Verify Airing today appears only for a real upload date, and Wi-Fi and charging restrictions defer the job.
 
-#### R-A4 Anime episode downloads (T4) — `ready` (needs `tsuzuki/r-a1`; order in the Anime lane table)
+#### R-A4 Anime episode downloads (T4) — `review` (.worktrees/r-a4, 2026-11-09)
 WORKPLAN 6.3 third engine: queue in its own store, files under `<downloads>/<source>/<anime>/<episode>/`,
 HLS/segments, pause/resume, Wi-Fi only pref, shown in the Downloads screen as an Anime group. Design note in
 Result first; Claude reviews before merge (T4).
-Result: _pending_
+
+**Result (Codex, 2026-11-09):** `bc88b73e6` on `tsuzuki/r-a4`. Design: one atomically persisted
+anime-only queue and a serial foreground WorkManager job. Video files use app-scoped Downloads
+under `anime/<sourceId>/<animeId>/<episodeId>/` so the existing native player can open local HLS
+segments by relative path. Manga and novel downloads keep their existing storage and scheduler.
+
+- `AnimeDownloads.kt` and `AnimeDownloadJob.kt` persist queue order, pause and Wi-Fi policy. An
+  episode can be retried or removed, and the worker can reopen the queue after process death.
+- `AnimeVideoTransfer.kt` and `OfflineHls.kt` stage HTTP video and finite HLS. Direct files resume
+  with a matching strong ETag and byte range. HLS reuses completed assets by URL hash and publishes
+  a local playlist last. Supported fixtures cover MPEG-TS, fragmented MP4, byte ranges, and AES-128.
+- `TsuzukiAnimeDownloadQueue.kt` and `DownloadQueueScreen.kt` add a gated Anime tab with grouped
+  progress, downloaded bytes, pause/resume and Wi-Fi-only. `AnimeDetailsScreen.kt` and
+  `AnimeEpisodeTiles.kt` queue one or several episodes and show their status. `AnimePlayerModel.kt`
+  opens saved files through the existing episode playback and progress path.
+- Live streams, DRM, separate HLS audio renditions and extension-provided external tracks are
+  outside this implementation. App-scoped video storage is separate from the configurable
+  manga/novel folder and is removed on uninstall.
+
+Verification: JDK 21, two clean scoped Spotless passes, `:app:assembleDebug :app:testDebugUnitTest`
+(1,030 tests, zero failures, errors or skips), and matching keys in all eight locales. Desktop
+FFmpeg decoded synthetic MPEG-TS, fragmented MP4 and AES-128 HLS using only file/crypto protocols.
+
+Device review: back up the S22 Debug install first. In Dot and Colour, queue a direct file and an
+HLS episode. Pause and resume each, toggle Wi-Fi-only, interrupt and reopen the app, retry or cancel
+a failed item, then disable networking and play the saved episodes. Confirm the existing resume
+position survives, remove a saved episode, and check that the Anime tab is absent in Preview.
 
 **Claude list (lane 3):** C1 review + device-check every card above as it lands · C2 A1.5 device test (needs a
 non-owner debug install: build debug with a temporary `.scratch` suffix, install one yuzono extension, play an
