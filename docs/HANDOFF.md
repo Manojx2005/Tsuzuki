@@ -2184,9 +2184,33 @@ Device review: on a backed-up S22 Debug install, check Stats in Dot and Colour b
 watching an episode. Compare week, month, lifetime and episode counts, check a finished anime and
 confirm the reading goal did not advance. Preview should have no Watch section.
 
-#### A3.8 Anime global search (T2) — `ready` (needs `tsuzuki/a3.7`)
+#### A3.8 Anime global search (T2) — `review` (.worktrees/a3.8, 2026-11-09)
 Board: GlobalSearch (`INDEX.md`, anime part). An ANIME pill in global search when ≥ 1 anime source; searches
 pinned/all anime sources in parallel (same limits as manga); results open A3.1. Tests: pill gate, source selection.
+
+**Result (Codex, 2026-11-09):** `c65233360` on `tsuzuki/a3.8`.
+
+- `TsuzukiAnimeGlobalSearch.kt` adds the Anime pill when the gate is enabled and at least one
+  trusted anime source is installed. It searches all or pinned anime sources with at most five
+  concurrent requests and keeps per-source results and elapsed time. Switching search inputs
+  cancels the previous anime request.
+- `TsuzukiAnimeBrowse.kt` adds persistent anime source pins. Selecting a result uses
+  `AnimeLibraryStore.kt` to reuse or cache the entry, then opens the existing Anime Details
+  route. Selecting the source opens its catalogue with the same query.
+- The manga and novel search routes expose Anime alongside their existing media. They retain
+  their separate result lists and extension-specific search behavior. The upstream UI changes
+  are small slots in `GlobalSearchScreen.kt` and `GlobalSearchToolbar.kt`. Existing localized
+  labels cover all eight required locales.
+
+Verification: JDK 21, two clean scoped Spotless passes, and
+`:app:assembleDebug :app:testDebugUnitTest` (1,036 tests, zero failures, errors or skips).
+Fixtures cover the pill gate, pin selection and order, request concurrency and source failure
+isolation, duplicate results, and preservation of saved details and extension metadata.
+
+Device review: on a backed-up S22 Debug install, check Dot then Colour. With no trusted anime
+extension, check the pill is absent. Install a fixture extension, pin and unpin its source in
+Browse, try All, Pinned and With results, then open a title and a source catalogue. Check that
+manga and novel searches still work and that Preview omits the Anime pill.
 
 #### A3.9 Continue-watching widget (T3) — `ready` (needs `tsuzuki/a3.8`)
 Board: Widgets (`INDEX.md`, anime part; R9's widget code is the pattern). Glance widget: the last 1–4 anime in
