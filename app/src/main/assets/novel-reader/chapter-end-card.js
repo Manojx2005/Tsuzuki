@@ -21,6 +21,7 @@
         'text-align:start;text-indent:0;line-height:1.35;letter-spacing:normal;' +
         'font:14px/1.35 ' + (dot ? 'monospace' : 'sans-serif') + ';color:' + ink);
     container.id = '__BTN_CONTAINER_ID__';
+    container.dataset.chapterEndCard = '';
     container.dataset.chapterId = data.chapterId;
 
     element(container, 'div', data.end, 'margin-bottom:20px;text-align:center;color:' + pageInk);

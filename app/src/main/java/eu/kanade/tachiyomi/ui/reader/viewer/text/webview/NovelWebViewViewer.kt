@@ -68,6 +68,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta.unescapeJsResult
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -275,7 +276,32 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         activity,
         object : GestureDetector.SimpleOnGestureListener() {
 
-            override fun onDown(e: MotionEvent): Boolean = false
+            private var chapterEndHit: CompletableDeferred<Boolean>? = null
+
+            override fun onDown(e: MotionEvent): Boolean {
+                chapterEndHit = null
+                return false
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (isEditingMode || docState != DocState.READY || isPagedModeActive() ||
+                    preferences.novelInfiniteScroll.get() || currentChapters?.nextChapter == null || webView.width == 0
+                ) {
+                    return false
+                }
+
+                // Ask before WebView processes the up event. Its click can replace the DOM
+                // before GestureDetector confirms the tap and runs the reader's tap zones.
+                val hit = CompletableDeferred<Boolean>()
+                chapterEndHit = hit
+                val x = e.x / webView.width
+                val y = e.y / webView.width
+                evaluateJavascriptSafe(
+                    """Boolean(document.elementFromPoint($x * innerWidth, $y * innerWidth)
+                        ?.closest('[data-chapter-end-card] button'))""",
+                ) { result -> hit.complete(result == "false") }
+                return false
+            }
 
             override fun onFling(
                 e1: MotionEvent?,
@@ -308,12 +334,30 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     e.y / container.height.toFloat(),
                 )
 
+                val hit = chapterEndHit
+                if (hit == null) {
+                    handleTapZone(pos)
+                } else {
+                    val chapter = currentChapters?.currChapter
+                    scope.launch {
+                        val outsideCard = withTimeoutOrNull(500L) { hit.await() } == true
+                        if (outsideCard && chapterEndHit === hit && currentChapters?.currChapter === chapter &&
+                            !isEditingMode
+                        ) {
+                            handleTapZone(pos)
+                        }
+                    }
+                }
+                return true
+            }
+
+            private fun handleTapZone(pos: android.graphics.PointF) {
                 if (preferences.navigationModeNovel.get() in ReaderPreferences.TAPZONE_ZONE_ONLY_MODES) {
                     val menuZone = navigator.getRegions().firstOrNull()?.rectF
                     if (menuZone != null && menuZone.contains(pos.x, pos.y)) {
                         activity.toggleMenu()
                     }
-                    return true
+                    return
                 }
 
                 when (navigator.getAction(pos)) {
@@ -331,8 +375,6 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                         pageScrollBy(-1)
                     }
                 }
-
-                return true
             }
         },
     ).apply {
