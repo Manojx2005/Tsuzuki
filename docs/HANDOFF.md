@@ -2212,10 +2212,32 @@ extension, check the pill is absent. Install a fixture extension, pin and unpin 
 Browse, try All, Pinned and With results, then open a title and a source catalogue. Check that
 manga and novel searches still work and that Preview omits the Anime pill.
 
-#### A3.9 Continue-watching widget (T3) — `ready` (needs `tsuzuki/a3.8`)
+#### A3.9 Continue-watching widget (T3) — `review` (.worktrees/a3.9, 2026-11-09)
 Board: Widgets (`INDEX.md`, anime part; R9's widget code is the pattern). Glance widget: the last 1–4 anime in
 progress; tap → resume in the player (or details if the source is gone). Hidden from the widget picker when
 `TsuzukiAnime.enabled` is false. Tests: item selection and order.
+
+**Result (Codex, 2026-11-09):** `484ae89bd` on `tsuzuki/a3.9`.
+
+- `TsuzukiWatchingWidget.kt` shows the newest in-progress episode per anime, with one to four
+  titles depending on widget height. It reuses the Reading widget's cover and progress styling,
+  and shows remaining time only when the episode duration is known.
+- `AnimePlayerModel.kt` refreshes the widget after playback progress is saved on leaving the
+  player. `TsuzukiWidgetTheme.kt` refreshes it on theme changes.
+- Widget taps open the existing episode resume route. If the source is removed,
+  `AnimeCatalogueActivity.kt` shows cached title details and the source message.
+- The provider is registered in the Debug manifest while the anime gate is Debug-only. The
+  user setting card will need to move provider registration behind the runtime gate.
+
+Verification: JDK 21, two clean per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest`
+(1,038 tests, zero failures, errors or skips), and matching keys in all eight locales. Selection
+tests cover newest first, duplicate anime, watched and untouched episodes, unknown durations,
+and one to four rows. The merged Debug manifest includes the provider and Preview omits it.
+
+Device review: on the backed-up S22 Debug build, add the widget and resize it in Dot and Colour.
+Watch part of an episode, leave the player, and check progress and remaining time. Tap two
+distinct rows and verify each resumes its own episode. Uninstall the disposable fixture source
+and check the cached detail fallback. Check the Preview widget picker separately.
 
 #### A4.1 Anime restyle parity pass (T2) — `ready` (needs `tsuzuki/a3.9`)
 Follow the standard restyle rules (WORKPLAN appendix) for every screen on `png/10-anime/` (+ `dot/`, + `DotAnime.png`)
