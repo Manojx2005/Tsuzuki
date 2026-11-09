@@ -1362,4 +1362,6 @@
     <string name="tsz_tracker_novel_services">小说追踪服务</string>
     <string name="tsz_tracker_signed_out">未登录</string>
     <string name="tsz_tracker_linked_count">已关联 %1$d 项</string>
+    <string name="tsz_neural_tts_debug">Kokoro 试听测试</string>
+    <string name="tsz_neural_tts_debug_summary">使用本地 Kokoro 语音包朗读小说。</string>
 </resources>

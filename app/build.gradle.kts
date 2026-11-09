@@ -4,6 +4,8 @@ import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import java.io.FileInputStream
+import java.security.MessageDigest
+import java.util.HexFormat
 import java.util.Properties
 import kotlin.io.encoding.Base64
 
@@ -24,9 +26,22 @@ if (Config.includeTelemetry) {
     }
 }
 
+val neuralTtsRuntime = layout.projectDirectory.file("libs/sherpa-onnx-2.0.1.aar")
+val verifyNeuralTtsRuntime = tasks.register("verifyNeuralTtsRuntime") {
+    inputs.file(neuralTtsRuntime)
+    doLast {
+        val digest = MessageDigest.getInstance("SHA-256").digest(neuralTtsRuntime.asFile.readBytes())
+        check(HexFormat.of().formatHex(digest) == "a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7") {
+            "Unexpected Sherpa ONNX runtime. Reaudit the native libraries and update the pinned SHA-256 before changing it."
+        }
+    }
+}
+tasks.matching { it.name == "preDebugBuild" }.configureEach { dependsOn(verifyNeuralTtsRuntime) }
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 
 android {
+    sourceSets.getByName("debug").assets.srcDir(rootProject.file("docs/licenses/neural-tts"))
     namespace = "eu.kanade.tachiyomi"
     testBuildType = providers.gradleProperty("tsuzukiTestBuildType").getOrElse("debug")
 
@@ -262,6 +277,7 @@ dependencies {
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
     debugImplementation(projects.animePlayer)
+    debugImplementation(files(neuralTtsRuntime))
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
 

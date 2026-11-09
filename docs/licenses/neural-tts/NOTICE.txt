@@ -1,0 +1,13 @@
+Tsuzuki Debug neural TTS listening test
+
+Sherpa ONNX v2.0.1 is distributed under Apache License 2.0.
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1
+
+The bundled ONNX Runtime v1.28.2 library is distributed under the MIT
+License. See onnxruntime-MIT.txt and onnxruntime-ThirdPartyNotices.txt.
+https://github.com/microsoft/onnxruntime/tree/v1.28.2
+
+Kokoro-82M v1.1 weights are published by hexgrad under Apache License 2.0.
+The optional developer pack carries the licence from the supplied model
+archive. The APK contains the engine and notices.
+https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh

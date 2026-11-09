@@ -1355,4 +1355,6 @@
     <string name="tsz_tracker_novel_services">Suivi des romans</string>
     <string name="tsz_tracker_signed_out">Non connecté</string>
     <string name="tsz_tracker_linked_count">%1$d liés</string>
+    <string name="tsz_neural_tts_debug">Test d’écoute Kokoro</string>
+    <string name="tsz_neural_tts_debug_summary">Écouter des romans avec un pack vocal Kokoro local.</string>
 </resources>

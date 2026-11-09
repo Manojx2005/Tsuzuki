@@ -1361,4 +1361,6 @@
     <string name="tsz_tracker_novel_services">소설 트래커</string>
     <string name="tsz_tracker_signed_out">로그인하지 않음</string>
     <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
+    <string name="tsz_neural_tts_debug">Kokoro 청취 테스트</string>
+    <string name="tsz_neural_tts_debug_summary">기기에 저장한 Kokoro 음성 팩으로 소설을 읽어 줍니다.</string>
 </resources>

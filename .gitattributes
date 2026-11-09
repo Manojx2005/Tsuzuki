@@ -4,8 +4,9 @@
 # Windows forced line-endings
 /.idea/* text eol=crlf
 
-# Gradle wrapper
+# Gradle archives
 *.jar binary
+*.aar binary
 
 # Images
 *.webp binary

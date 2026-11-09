@@ -1349,4 +1349,6 @@
     <string name="tsz_tracker_novel_services">Seguimiento de novelas</string>
     <string name="tsz_tracker_signed_out">Sin iniciar sesión</string>
     <string name="tsz_tracker_linked_count">%1$d vinculados</string>
+    <string name="tsz_neural_tts_debug">Prueba de escucha de Kokoro</string>
+    <string name="tsz_neural_tts_debug_summary">Lee novelas con un paquete de voz local de Kokoro.</string>
 </resources>

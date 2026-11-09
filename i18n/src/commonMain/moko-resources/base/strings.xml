@@ -1741,4 +1741,6 @@
     <string name="tsz_tracker_novel_services">Novel trackers</string>
     <string name="tsz_tracker_signed_out">Not signed in</string>
     <string name="tsz_tracker_linked_count">Linked %1$d</string>
+    <string name="tsz_neural_tts_debug">Kokoro listening test</string>
+    <string name="tsz_neural_tts_debug_summary">Play novels with a local Kokoro voice pack.</string>
 </resources>
