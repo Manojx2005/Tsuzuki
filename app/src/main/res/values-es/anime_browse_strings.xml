@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">Reproducir primer episodio</string>
+    <string name="tsz_anime_play_next">Reproducir siguiente episodio</string>
+    <string name="tsz_anime_no_episodes">No se encontraron episodios</string>
+    <string name="tsz_anime_player_unavailable">Reproductor de anime no disponible</string>
+    <string name="tsz_anime_episode_title">Ep. %1$s · %2$s</string>
+    <string name="tsz_anime_play_episode">Reproducir ep. %s</string>
+    <string name="tsz_anime_resume_episode">Continuar ep. %s</string>
+    <string name="tsz_anime_episode_number">Número de episodio</string>
+    <string name="tsz_anime_watched">Visto</string>
+    <string name="tsz_anime_filler">Relleno</string>
+    <string name="tsz_anime_mark_seen">Marcar como visto</string>
+    <string name="tsz_anime_mark_unseen">Marcar como no visto</string>
+    <string name="tsz_anime_mark_previous">Marcar anteriores como vistos</string>
+    <string name="tsz_anime_bookmark">Añadir marcador</string>
+    <string name="tsz_anime_unbookmark">Quitar marcador</string>
+    <string name="tsz_anime_unseen_only">Solo no vistos</string>
+    <string name="tsz_anime_bookmarked_only">Solo con marcador</string>
+    <string name="tsz_anime_upcoming">Próximamente</string>
+    <string name="tsz_anime_extension_repos">Repositorios de extensiones de anime</string>
+    <string name="tsz_anime_aniyomi_format">Formato Aniyomi</string>
+    <string name="tsz_anime_extensions_available">Disponibles</string>
+    <string name="tsz_anime_history_episode">Ep. %s</string>
+    <string name="tsz_anime_history_remaining">Quedan %s</string>
+    <string name="tsz_anime_history_remove_all">Eliminar todos los episodios de este anime del historial</string>
+    <string name="tsz_anime_airing_today">En emisión hoy</string>
+    <string name="tsz_anime_updates_empty">No hay episodios nuevos de anime</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="one">%d episodio nuevo</item>
+        <item quantity="other">%d episodios nuevos</item>
+    </plurals>
+    <string name="tsz_anime_track_linked_count">%d vinculados</string>
+    <string name="tsz_anime_track_auto_update">Actualizar después de cada episodio</string>
+    <string name="tsz_anime_track_login">Inicia sesión en los ajustes de seguimiento</string>
+    <string name="tsz_anime_track_unlink">Desvincular servicio</string>
+    <string name="tsz_anime_track_episode_count">Episodios: %d</string>
+    <string name="tsz_anime_track_watching">Viendo</string>
+    <string name="tsz_anime_track_planning">Planeo ver</string>
+    <string name="tsz_anime_track_rewatching">Volviendo a ver</string>
+</resources>

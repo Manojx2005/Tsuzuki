@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_player_fallback">다른 스트림을 시도하는 중</string>
+    <string name="tsz_anime_player_lock">재생 조작 잠금</string>
+    <string name="tsz_anime_player_unlock">재생 조작 잠금 해제</string>
+    <string name="tsz_anime_player_next_in">%d초 후 다음 회차</string>
+    <string name="tsz_anime_player_next">다음 회차</string>
+    <string name="tsz_anime_player_previous">이전 회차</string>
+    <string name="tsz_anime_player_quality">화질</string>
+    <string name="tsz_anime_player_quality_value">%dp</string>
+    <string name="tsz_anime_player_best">최고 화질</string>
+    <string name="tsz_anime_player_orientation_lock">화면 방향 잠금</string>
+    <string name="tsz_anime_player_orientation_unlock">화면 방향 잠금 해제</string>
+    <string name="tsz_anime_player_autoplay_on">자동 재생 켜기</string>
+    <string name="tsz_anime_player_autoplay_off">자동 재생 끄기</string>
+    <string name="tsz_anime_player_rewind">10초 뒤로</string>
+    <string name="tsz_anime_player_forward">10초 앞으로</string>
+    <string name="tsz_anime_player_audio">오디오</string>
+    <string name="tsz_anime_player_autoplay">다음 회차 자동 재생</string>
+    <string name="tsz_anime_player_brightness">밝기</string>
+    <string name="tsz_anime_player_close_options">옵션 닫기</string>
+    <string name="tsz_anime_player_decoder_hardware">하드웨어 디코딩</string>
+    <string name="tsz_anime_player_decoder_software">소프트웨어 디코딩</string>
+    <string name="tsz_anime_player_decrease">줄이기</string>
+    <string name="tsz_anime_player_episodes">회차</string>
+    <string name="tsz_anime_player_gestures">제스처</string>
+    <string name="tsz_anime_player_increase">늘리기</string>
+    <string name="tsz_anime_player_no_options">사용 가능한 옵션 없음</string>
+    <string name="tsz_anime_player_seek_gesture">두 번 탭하여 탐색</string>
+    <string name="tsz_anime_player_skip">%+d초</string>
+    <string name="tsz_anime_player_speed">재생 속도</string>
+    <string name="tsz_anime_player_subtitle_delay">자막 지연</string>
+    <string name="tsz_anime_player_subtitle_size">자막 크기</string>
+    <string name="tsz_anime_player_subtitles">자막</string>
+    <string name="tsz_anime_player_track_number">트랙 %d</string>
+    <string name="tsz_anime_player_track_off">끄기</string>
+    <string name="tsz_anime_player_video">동영상</string>
+    <string name="tsz_anime_player_volume">볼륨</string>
+</resources>

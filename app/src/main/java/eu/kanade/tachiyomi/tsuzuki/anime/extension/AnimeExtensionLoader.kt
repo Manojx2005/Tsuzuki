@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.extension.util.ContentWarningPolicy
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
 import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -59,60 +60,74 @@ internal object AnimeExtensionLoader {
 
     private fun getPrivateExtensionDir(context: Context) = File(context.filesDir, "anime-exts")
 
-    fun installPrivateExtensionFile(
-        context: Context,
-        file: File,
-        onInstalled: (packageName: String, replaced: Boolean) -> Unit,
-    ): Boolean {
-        val extension = context.packageManager.getPackageArchiveInfo(
-            file.absolutePath,
-            PACKAGE_FLAGS,
-        )
-            ?.takeIf { isPackageAnExtension(it) } ?: return false
-        val currentExtension = getAnimeExtensionPackageInfoFromPkgName(
-            context,
-            extension.packageName,
-        )
+    suspend fun installPrivateExtensionFile(context: Context, file: File): AnimeLoadResult {
+        val extension = context.packageManager.getPackageArchiveInfo(file.absolutePath, PACKAGE_FLAGS)
+            ?.takeIf(::isPackageAnExtension) ?: return AnimeLoadResult.Error
+        val signatures = getSignatures(extension).orEmpty()
+        if (signatures.isEmpty()) return AnimeLoadResult.Error
 
-        if (currentExtension != null) {
-            if (PackageInfoCompat.getLongVersionCode(extension) <
-                PackageInfoCompat.getLongVersionCode(currentExtension)
-            ) {
-                logcat(LogPriority.ERROR) { "Installed extension version is higher. Downgrading is not allowed." }
-                return false
+        val pkgName = extension.packageName
+        val current = getAnimeExtensionPackageInfoFromPkgName(context, pkgName)
+        if (current != null) {
+            if (PackageInfoCompat.getLongVersionCode(extension) < PackageInfoCompat.getLongVersionCode(current)) {
+                return AnimeLoadResult.Error
             }
-
-            val extensionSignatures = getSignatures(extension)
-            if (extensionSignatures.isNullOrEmpty()) {
-                logcat(LogPriority.ERROR) { "Extension to be installed is not signed." }
-                return false
-            }
-
-            if (!extensionSignatures.containsAll(getSignatures(currentExtension)!!)) {
-                logcat(LogPriority.ERROR) { "Installed extension signature is not matched." }
-                return false
+            val installedSignatures = getSignatures(current).orEmpty()
+            if (installedSignatures.isEmpty() || !signatures.containsAll(installedSignatures)) {
+                return AnimeLoadResult.Error
             }
         }
 
-        val target = File(
-            getPrivateExtensionDir(context),
-            "${extension.packageName}.$PRIVATE_EXTENSION_EXTENSION",
-        )
-        return try {
-            target.delete()
-            file.copyAndSetReadOnlyTo(target, overwrite = true)
-            onInstalled(extension.packageName, currentExtension != null)
-            true
+        val target = privateExtensionFile(context, pkgName)
+        val directory = checkNotNull(target.parentFile)
+        var staged: File? = null
+        var backup: File? = null
+        var replaced = false
+        try {
+            check(directory.isDirectory || directory.mkdirs())
+            staged = File.createTempFile(target.name, ".part", directory)
+            file.copyAndSetReadOnlyTo(staged, overwrite = true)
+            if (target.isFile) {
+                backup = File.createTempFile(target.name, ".previous", directory)
+                target.copyAndSetReadOnlyTo(backup, overwrite = true)
+            }
+            check(staged.renameTo(target)) { "Unable to replace anime extension" }
+            replaced = true
+            val installed = loadExtensionFromPkgName(context, pkgName)
+            if (installed != AnimeLoadResult.Error) {
+                replaced = false
+                return installed
+            }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to copy extension file." }
-            target.delete()
-            false
+            logcat(LogPriority.ERROR, e) { "Could not install anime extension" }
+        } finally {
+            staged?.delete()
+            if (replaced) {
+                val restored = backup?.renameTo(target) ?: target.delete()
+                if (!restored) {
+                    logcat(LogPriority.ERROR) { "Could not restore the previous anime extension" }
+                }
+            } else {
+                backup?.delete()
+            }
         }
+        return AnimeLoadResult.Error
     }
 
-    fun uninstallPrivateExtension(context: Context, pkgName: String) {
-        File(getPrivateExtensionDir(context), "$pkgName.$PRIVATE_EXTENSION_EXTENSION").delete()
-    }
+    fun isPrivateExtension(context: Context, pkgName: String): Boolean = privateExtensionFile(context, pkgName).isFile
+
+    fun privateExtensionPackages(context: Context): List<String> =
+        getPrivateExtensionDir(context).listFiles().orEmpty()
+            .filter { it.isFile && it.extension == PRIVATE_EXTENSION_EXTENSION }
+            .map(File::nameWithoutExtension)
+
+    fun uninstallPrivateExtension(context: Context, pkgName: String): Boolean =
+        privateExtensionFile(context, pkgName).delete()
+
+    private fun privateExtensionFile(context: Context, pkgName: String) =
+        File(getPrivateExtensionDir(context), "$pkgName.$PRIVATE_EXTENSION_EXTENSION")
 
     /**
      * Return a list of all the available extensions initialized concurrently.
@@ -193,10 +208,7 @@ internal object AnimeExtensionLoader {
     }
 
     private fun getAnimeExtensionInfoFromPkgName(context: Context, pkgName: String): AnimeExtensionInfo? {
-        val privateExtensionFile = File(
-            getPrivateExtensionDir(context),
-            "$pkgName.$PRIVATE_EXTENSION_EXTENSION",
-        )
+        val privateExtensionFile = privateExtensionFile(context, pkgName)
         val privatePkg = if (privateExtensionFile.isFile) {
             context.packageManager.getPackageArchiveInfo(
                 privateExtensionFile.absolutePath,

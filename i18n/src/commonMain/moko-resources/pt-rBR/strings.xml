@@ -927,6 +927,15 @@
     <string name="tsz_home">Início</string>
     <string name="tsz_read">Ler</string>
     <string name="tsz_watch">Assistir</string>
+    <string name="tsz_anime_media">Anime</string>
+    <string name="tsz_anime_shelves">Prateleiras de anime</string>
+    <string name="tsz_anime_player_settings">Reprodutor</string>
+    <string name="tsz_anime_shelves_hint">Prateleiras para animes. Romances e mangás têm suas próprias prateleiras.</string>
+    <string name="tsz_anime_new_shelf">Nova prateleira de anime</string>
+    <string name="tsz_anime_continue_watching">Continuar assistindo</string>
+    <string name="tsz_anime_library_empty">Sua biblioteca de animes está vazia</string>
+    <string name="tsz_anime_shelf_count">%1$d animes</string>
+    <string name="tsz_anime_episode_progress">%1$d / %2$d episódios</string>
     <string name="tsz_greeting_morning">Esta manhã</string>
     <string name="tsz_greeting_afternoon">Esta tarde</string>
     <string name="tsz_greeting_night">Esta noite</string>

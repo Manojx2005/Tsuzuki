@@ -71,6 +71,18 @@ git remote add mihon    https://github.com/mihonapp/mihon.git
 
 When Tsundoku itself later merges Mihon, commits already picked here usually merge cleanly (same patch).
 
+## Tsuzuki-owned migrations
+
+| File | Change | First release |
+|---|---|---|
+| `36.sqm` | Anime tables | 0.1.0 |
+| `37.sqm` | Extension repository media flag | Unshipped |
+| `38.sqm` | MAL ID for anime tracker bindings | Unshipped |
+
+Before each Tsundoku merge, compare migration numbers. If an unshipped Tsuzuki migration conflicts with a
+number upstream uses, renumber the Tsuzuki migration above the upstream migrations and verify the upgrade path.
+Keep shipped migration numbers and their contents fixed.
+
 ## Big refactors in Mihon not taken (as of 2026-11-03)
 
 Mihon after v0.20.4 redid the reader (Compose-drawn, viewer out of the ViewModel), stores dates as `Instant`,

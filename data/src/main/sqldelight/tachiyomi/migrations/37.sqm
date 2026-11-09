@@ -1,0 +1,4 @@
+ALTER TABLE extension_store ADD COLUMN media TEXT NOT NULL DEFAULT 'manga'
+    CHECK (media IN ('novel', 'manga', 'anime'));
+
+UPDATE extension_store SET media = CASE WHEN is_novel THEN 'novel' ELSE 'manga' END;

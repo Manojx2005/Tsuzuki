@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
@@ -47,6 +48,8 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettingsScreen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -242,7 +245,7 @@ object SettingsMainScreen : Screen() {
         val isMangaOnly: Boolean = false,
     )
 
-    private val items = listOf(
+    private val items = listOfNotNull(
         Item(
             titleRes = MR.strings.pref_category_appearance,
             subtitleRes = MR.strings.pref_appearance_summary,
@@ -268,6 +271,15 @@ object SettingsMainScreen : Screen() {
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsNovelReaderScreen,
         ),
+        if (TsuzukiAnime.enabled) {
+            Item(
+                titleRes = MR.strings.tsz_anime_player_settings,
+                icon = Icons.Outlined.PlayCircle,
+                screen = AnimePlayerSettingsScreen,
+            )
+        } else {
+            null
+        },
         Item(
             titleRes = MR.strings.pref_category_downloads,
             subtitleRes = MR.strings.pref_downloads_summary,

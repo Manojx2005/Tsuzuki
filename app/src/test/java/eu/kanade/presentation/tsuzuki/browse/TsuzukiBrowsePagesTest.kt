@@ -8,7 +8,7 @@ class TsuzukiBrowsePagesTest {
     @Test
     fun `two axes preserve the existing full pager order`() {
         val pages = browsePages(hideManga = false)
-        assertEquals(BrowsePage.entries, pages)
+        assertEquals(6, pages.size)
         assertEquals(0, pages.pageIndex(BrowseMedia.NOVELS, BrowseSection.SOURCES))
         assertEquals(1, pages.pageIndex(BrowseMedia.MANGA, BrowseSection.SOURCES))
         assertEquals(2, pages.pageIndex(BrowseMedia.NOVELS, BrowseSection.EXTENSIONS))

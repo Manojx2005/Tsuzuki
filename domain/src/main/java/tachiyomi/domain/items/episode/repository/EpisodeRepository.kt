@@ -8,6 +8,8 @@ interface EpisodeRepository {
     suspend fun awaitByAnimeId(animeId: Long): List<Episode>
     fun subscribeByAnimeId(animeId: Long): Flow<List<Episode>>
     suspend fun insertAll(episodes: List<Episode>): List<Long>
+    suspend fun updateFromSource(episode: Episode)
+    suspend fun setBookmark(id: Long, bookmark: Boolean)
     suspend fun updateProgress(id: Long, seen: Boolean, lastSecondSeen: Long, totalSeconds: Long)
     suspend fun delete(id: Long)
 }

@@ -36,6 +36,8 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
 
     private val api by lazy { AnilistApi(client, interceptor) }
 
+    internal val anime get() = api.anime
+
     override val supportsReadingDates: Boolean = true
 
     override val supportsPrivateTracking: Boolean = true

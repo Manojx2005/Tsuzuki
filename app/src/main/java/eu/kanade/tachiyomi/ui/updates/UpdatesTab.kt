@@ -18,6 +18,7 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.tsuzuki.updates.rememberAnimeUpdatesSlots
 import eu.kanade.presentation.updates.UpdateScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
@@ -72,6 +73,7 @@ data object UpdatesTab : Tab {
         }
 
         val tsuzuki = isTsuzukiStyle()
+
         UpdateScreen(
             state = state,
             snackbarHostState = viewModel.snackbarHostState,
@@ -103,6 +105,7 @@ data object UpdatesTab : Tab {
             onToggleGroupByNovel = viewModel::toggleGroupByNovel,
             onClickNovelGroup = { mangaId -> navigator.push(MangaScreen(mangaId)) },
             onLoadMore = viewModel::loadMore,
+            anime = rememberAnimeUpdatesSlots(state, hideMangaUi, viewModel::setFilter),
         )
 
         val onDismissDialog = { viewModel.setDialog(null) }
