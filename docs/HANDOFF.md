@@ -1177,13 +1177,24 @@ device's own handlers (`ACTION_PROCESS_TEXT`, web search) as a fallback row.
 - If no pack is installed, the sheet shows the system/web fallback and a "Get offline dictionary" link.
 Result: _pending_
 
-#### R14 Merge sources for one book (T4) — `ready`
+#### R14 Merge sources for one book (T4) — `review` (.worktrees/r14, 2026-11-09)
 Board `MergeSources`. Start the Result with a short design note, then build it: link 2+ library entries of the same book from different sources into one "merged" view (chapter
 list unified by chapter number, preferred source per chapter, read state synced across). Must not change the DB
 schema in this card: store links in a Tsuzuki store; reading progress sync via existing interactors. Mihon has no
 equivalent — keep it Tsuzuki-only. If it can't be done without schema changes, set `blocked` with the proposed
 schema for Claude.
-Result: _pending_
+**Result (Codex, 2026-11-09):** `tsuzuki/r14` at `0ed0a6f18`. Design: link saved novel editions by source ID and source URL in local preferences. Project a single list from the existing chapters, using source priority for each recognised number and keeping unnumbered chapters separate.
+
+- `MergeNovelSourcesScreen.kt` renders the Dot and Colour board, provides a saved-edition picker, drag and accessible reorder actions, removal, real coverage, and a combined list that opens each selected chapter through the normal reader.
+- `MergedNovelSources.kt` validates distinct sources and rejects stale edits. It selects the first unlocked copy by priority, mirrors initial read flags on linking, and writes corresponding read/unread updates in one chapter transaction. New matching copies inherit read flags during refresh. Read progress offsets stay per edition, with explicit mark-unread resetting them on matching copies.
+- `MangaScreen.kt` and `MangaToolbar.kt` add the novel-details overflow action. `DomainModule.kt`, `SetReadStatus.kt`, `SyncChaptersWithSource.kt` and `ReaderViewModel.kt` provide the data and read-state hooks.
+- `MergedNovelSourcesTest.kt` covers priority, gaps, decimals, unnumbered rows, shared read state and late-arriving chapters. Seven new strings are present in all eight locales. `docs/design/README.md` records the implementation.
+
+Links are local app state. The combined list routes to the preferred edition per row. Next/Previous inside the reader follow the open edition.
+
+Verification: JDK 21, two clean per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (981 tests, 0 failures, errors or skips), eight-locale placeholder check.
+
+Device review: back up first. On Tab S11 and S22 in Dot and Colour, link two disposable saved editions with overlapping, missing and unnumbered chapters. Reorder and remove an edition, reopen the screen and check persistence, open a fallback row in the reader, mark a matching chapter read/unread in details, finish one in the reader and refresh for a late-arriving copy. Compare the read flags in both editions.
 
 #### R15 Backup: scheduled export + restore polish (T3) — `ready`
 Board `Backup`. Data and storage › Backup: last backup time + size, scheduled frequency (existing pref), keep-N
