@@ -312,7 +312,7 @@ on. Both renderers (TextView + WebView; WebView via the `chapter-end-card.js` as
 picking (skips author notes such as "A note from …", blank and very short paragraphs) and the 24 h rule.
 Result: _pending_
 
-#### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `ready` (lane 2, last)
+#### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `review` (.worktrees/s4, 2026-11-09)
 Research is done: `docs/research/neural-tts.md` (GO-WITH-CONDITIONS). The conditions are hard rules: sherpa-onnx
 ≥ v2.0.1 **without espeak-ng** (GPL); **lexicon voices only** (Kokoro int8 multi-lang v1.1), the pack re-zipped
 **without `espeak-ng-data/`**; system TTS stays the default engine; 16 KB alignment check on the new `.so` files;
@@ -321,7 +321,16 @@ synthesis on a background thread one ~150–200-char chunk ahead (reuse `TtsText
 **debug-only** developer entry that loads a voice pack from app files and plays a chapter. No download UI and no
 voice picker yet (no board; Claude draws them after the owner's listening test). Codex never downloads the model;
 Claude side-loads it for the test. Tests: chunk queueing, stop/pause/seek, fallback to system TTS on load failure.
-Result: _pending_
+**Result (Codex, 2026-11-09):** `tsuzuki/s4` at `b68d437e1`.
+
+- `TtsController.kt` and `TtsTextUtils.kt` let the Debug opt-in use the existing Listen, highlight, stop, pause, resume and seek path with a 180-character limit. Android TTS is the default and receives the interrupted chunk on failure.
+- `NeuralTtsClient.kt`, `NeuralChunkQueue.kt` and `KokoroTtsService.kt` send chapter chunks to a private Debug process, prefetch one chunk on a worker, and play its PCM with AudioTrack. `App.kt` bypasses database and app setup in the worker process. `DebugInfoScreen.kt` adds the opt-in in eight locales.
+- `app/build.gradle.kts` packages the official Sherpa ONNX 2.0.1 AAR and licence assets in Debug only. The published SHA-256 matches the working copy and committed blob. `.gitattributes` prevents Git newline conversion. `docs/licenses/neural-tts/` contains runtime and model licences and ONNX notices.
+- `scripts/package-kokoro-test-pack.py` creates an allowlisted zip from an owner-supplied archive. No model was fetched. `docs/research/neural-tts.md` gives the side-load path and listening steps.
+
+Verification: JDK 21, two scoped Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (981 tests, 0 failures, errors or skips). Queue tests cover one-ahead synthesis, stop/restart/seek, initial and prefetch failures and surrogate-safe chunking. The pack fixture excludes eSpeak data. All five Debug APKs pass `zipalign -c -P 16 -v 4`, and the packaged Sherpa/ONNX ELF load segments pass 16 KB alignment. The AAR scan found no checked eSpeak API or phontab markers. The Gradle audit confirms the AAR and service are absent from Preview and Release runtime dependencies and merged manifests.
+
+Device review: with a backed-up S22 Debug install, first try the opt-in with no pack and confirm system fallback. Side-load the owner-supplied pack, reopen the reader, and try Listen in both renderers. Check pause/resume, paragraph seek, chapter advance, sleep timer and proper names. The prototype uses US English speaker 0 and the existing speech-rate preference. Real synthesis, sound quality and device timing await the listening test.
 
 #### A5.1 Anime: picture-in-picture (T3) — `ready` (needs `tsuzuki/a4.3a`; lane 1; v0.3)
 No board needed (system PiP window). The player enters PiP on Home/recents while playing (setting, default on),
