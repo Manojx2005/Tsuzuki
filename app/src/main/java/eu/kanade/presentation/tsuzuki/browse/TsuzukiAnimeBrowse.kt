@@ -13,12 +13,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,6 +49,8 @@ import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionRepos
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
+import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -77,11 +84,19 @@ internal fun rememberAnimeBrowseRepos(): State<List<AnimeExtensionRepo>> {
     return remember(repository) { repository.observe() }.collectAsState(emptyList())
 }
 
+@Composable
+internal fun rememberAnimeSourcePins(): Pair<Preference<Set<String>>, Set<String>> {
+    val preference = remember { Injekt.get<PreferenceStore>().getStringSet("tsuzuki_anime_pinned_sources") }
+    val pins by remember(preference) { preference.changes() }.collectAsState(initial = preference.get())
+    return preference to pins
+}
+
 internal fun animeSourcesTab(
     sources: List<RegisteredAnimeSource>,
 ) = TabContent(MR.strings.label_sources) { padding, _ ->
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
+    val (pinPreference, pins) = rememberAnimeSourcePins()
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (sources.isEmpty()) {
             item {
@@ -92,7 +107,7 @@ internal fun animeSourcesTab(
                 )
             }
         }
-        items(sources, key = { it.source.id }) { entry ->
+        items(sources.sortedBy { it.source.id.toString() !in pins }, key = { it.source.id }) { entry ->
             val source = entry.source
             Row(
                 modifier = Modifier
@@ -137,6 +152,18 @@ internal fun animeSourcesTab(
                         }
                     }
                 }
+                val id = source.id.toString()
+                val pinned = id in pins
+                IconButton(onClick = {
+                    val current = pinPreference.get()
+                    pinPreference.set(if (id in current) current - id else current + id)
+                }) {
+                    Icon(
+                        Icons.Outlined.PushPin,
+                        stringResource(if (pinned) MR.strings.action_unpin else MR.strings.action_pin),
+                        tint = if (pinned) tokens.accent else tokens.mutedText,
+                    )
+                }
                 if (source.supportsLatest) {
                     TsuzukiPill(
                         text = stringResource(MR.strings.latest),
@@ -153,11 +180,19 @@ internal fun animeSourcesTab(
 internal const val ANIME_SOURCE_ID = "anime_source_id"
 internal const val ANIME_OPEN_LATEST = "anime_open_latest"
 
-private fun openAnimeCatalogue(context: Context, sourceId: Long, latest: Boolean) {
+internal const val ANIME_SEARCH_QUERY = "anime_search_query"
+
+internal fun openAnimeCatalogue(
+    context: Context,
+    sourceId: Long,
+    latest: Boolean = false,
+    query: String? = null,
+) {
     if (!TsuzukiAnime.enabled) return
     context.startActivity(
         Intent(context, AnimeCatalogueActivity::class.java)
             .putExtra(ANIME_SOURCE_ID, sourceId)
-            .putExtra(ANIME_OPEN_LATEST, latest),
+            .putExtra(ANIME_OPEN_LATEST, latest)
+            .putExtra(ANIME_SEARCH_QUERY, query),
     )
 }

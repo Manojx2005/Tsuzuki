@@ -59,6 +59,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
 import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
+import eu.kanade.presentation.tsuzuki.browse.ANIME_SEARCH_QUERY
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
@@ -90,6 +91,7 @@ class AnimeCatalogueActivity : BaseActivity() {
         val savedId = intent.getLongExtra(SAVED_ANIME_ID, -1L)
         val resumeId = intent.getLongExtra(RESUME_ANIME_EPISODE_ID, -1L)
         val openLatest = intent.getBooleanExtra(ANIME_OPEN_LATEST, false)
+        val initialQuery = intent.getStringExtra(ANIME_SEARCH_QUERY).orEmpty()
         val sources = AnimeSourceManager.create(applicationContext)
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
@@ -134,6 +136,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 AnimeCatalogueScreen(
                                     source = result.entry.source,
                                     openLatest = openLatest,
+                                    initialQuery = initialQuery,
                                     appliedFilters = appliedFilters,
                                     onApplyFilters = { appliedFilters = it },
                                     onBack = ::finish,
@@ -176,6 +179,7 @@ private enum class AnimeCatalogueMode { POPULAR, LATEST, SEARCH }
 private fun AnimeCatalogueScreen(
     source: AnimeSource,
     openLatest: Boolean,
+    initialQuery: String,
     appliedFilters: AnimeFilterList,
     onApplyFilters: (AnimeFilterList) -> Unit,
     onBack: () -> Unit,
@@ -184,9 +188,17 @@ private fun AnimeCatalogueScreen(
     val modes = remember(source) {
         AnimeCatalogueMode.entries.filter { it != AnimeCatalogueMode.LATEST || source.supportsLatest }
     }
-    var mode by rememberSaveable { mutableStateOf(if (openLatest && source.supportsLatest) modes[1] else modes[0]) }
-    var query by rememberSaveable { mutableStateOf("") }
-    var appliedQuery by rememberSaveable { mutableStateOf("") }
+    var mode by rememberSaveable {
+        mutableStateOf(
+            when {
+                initialQuery.isNotBlank() -> AnimeCatalogueMode.SEARCH
+                openLatest && source.supportsLatest -> AnimeCatalogueMode.LATEST
+                else -> AnimeCatalogueMode.POPULAR
+            },
+        )
+    }
+    var query by rememberSaveable { mutableStateOf(initialQuery) }
+    var appliedQuery by rememberSaveable { mutableStateOf(initialQuery) }
     var editingFilters by remember { mutableStateOf<AnimeFilterList?>(null) }
     val keyboard = LocalSoftwareKeyboardController.current
     val submitSearch = {

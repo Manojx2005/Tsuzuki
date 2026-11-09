@@ -358,6 +358,36 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun openingASearchResultKeepsSourceMetadataAndReusesTheSavedEntry() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val result = SAnime.create().apply {
+                url = "/result"
+                title = "Anime result"
+                memo = JsonObject(mapOf("source" to JsonPrimitive("metadata")))
+            }
+            val id = store.cacheSearchResult(8, result)
+            val cached = checkNotNull(anime.awaitById(id))
+            assertFalse(cached.favorite)
+            assertEquals(result.memo, cached.memo)
+
+            assertEquals(id, store.setFavorite(8, result, true, emptySet()))
+            val outdated = result.copy().apply { title = "Outdated title" }
+            assertEquals(id, store.cacheSearchResult(8, outdated))
+            val saved = checkNotNull(anime.awaitById(id))
+            assertTrue(saved.favorite)
+            assertEquals(result.title, saved.title)
+        }
+    }
+
+    @Test
     fun updatesExcludeInitialImportsAndRetainAnEpisodeAcrossRefreshes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

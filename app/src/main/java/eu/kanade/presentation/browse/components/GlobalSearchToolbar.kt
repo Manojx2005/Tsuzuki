@@ -57,6 +57,8 @@ fun GlobalSearchToolbar(
     onlyShowHasResults: Boolean,
     onToggleResults: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
+    mediaSelector: (@Composable () -> Unit)? = null,
+    sourceFilters: (@Composable () -> Unit)? = null,
 ) {
     var showGroupRow by remember { mutableStateOf(false) }
 
@@ -84,6 +86,12 @@ fun GlobalSearchToolbar(
                         .fillMaxWidth(),
                 )
             }
+        }
+
+        mediaSelector?.invoke()
+        if (sourceFilters != null) {
+            sourceFilters()
+            return@Column
         }
 
         Row(

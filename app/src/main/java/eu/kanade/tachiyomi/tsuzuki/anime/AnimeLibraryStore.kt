@@ -80,6 +80,10 @@ internal class AnimeLibraryStore(
 
     suspend fun getAnime(id: Long) = anime.awaitById(id)
     suspend fun getAnime(source: Long, url: String) = anime.awaitBySourceAndUrl(source, url)
+    suspend fun cacheSearchResult(source: Long, result: SAnime): Long = database.transactionWithResult {
+        (anime.awaitBySourceAndUrl(source, result.url) ?: saveAnime(source, result)).id
+    }
+
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
