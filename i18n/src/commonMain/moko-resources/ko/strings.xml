@@ -1361,4 +1361,20 @@
     <string name="tsz_tracker_novel_services">소설 트래커</string>
     <string name="tsz_tracker_signed_out">로그인하지 않음</string>
     <string name="tsz_tracker_linked_count">%1$d개 연결됨</string>
+    <string name="tsz_source_health">소스 상태</string>
+    <string name="tsz_source_health_working">정상</string>
+    <string name="tsz_source_health_slow">느림</string>
+    <string name="tsz_source_health_down">장애</string>
+    <string name="tsz_source_health_unknown">측정 안 됨</string>
+    <string name="tsz_source_health_history">최근 7일</string>
+    <string name="tsz_source_health_average">평균 %1$d ms</string>
+    <string name="tsz_source_health_success">마지막 성공 · %1$s</string>
+    <string name="tsz_source_health_failure">마지막 오류 · %1$s · %2$s</string>
+    <string name="tsz_source_health_http">HTTP %1$d</string>
+    <string name="tsz_source_health_cloudflare">Cloudflare 인증</string>
+    <string name="tsz_source_health_timeout">요청 시간 초과</string>
+    <string name="tsz_source_health_network">네트워크 오류</string>
+    <string name="tsz_source_health_outage">%1$s에 장애가 발생했습니다</string>
+    <string name="tsz_source_health_migrate">이전 (%1$d)</string>
+    <string name="tsz_source_health_passive">이 기기에서 이미 보낸 요청을 기준으로 표시합니다.</string>
 </resources>

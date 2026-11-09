@@ -20,6 +20,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 import rx.Observable
+import tachiyomi.core.common.tsuzuki.forSourceHealth
 import tachiyomi.core.common.util.lang.awaitSingle
 import uy.kohesive.injekt.injectLazy
 import java.net.URI
@@ -126,7 +127,7 @@ abstract class HttpSource : CatalogueSource {
     @Suppress("DEPRECATION")
     @Deprecated("Use the suspend API instead", ReplaceWith("getPopularManga"))
     override fun fetchPopularManga(page: Int): Observable<MangasPage> {
-        return client.newCall(popularMangaRequest(page))
+        return client.newCall(popularMangaRequest(page).forSourceHealth(id))
             .asObservableSuccess()
             .map { response ->
                 popularMangaParse(response)
@@ -166,7 +167,7 @@ abstract class HttpSource : CatalogueSource {
     @Suppress("DEPRECATION")
     @Deprecated("Use the suspend API instead", ReplaceWith("getSearchManga"))
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> {
-        return client.newCall(searchMangaRequest(page, query, filters))
+        return client.newCall(searchMangaRequest(page, query, filters).forSourceHealth(id))
             .asObservableSuccess()
             .map { response ->
                 searchMangaParse(response)
@@ -209,7 +210,7 @@ abstract class HttpSource : CatalogueSource {
     @Suppress("DEPRECATION")
     @Deprecated("Use the suspend API instead", ReplaceWith("getLatestUpdates"))
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> {
-        return client.newCall(latestUpdatesRequest(page))
+        return client.newCall(latestUpdatesRequest(page).forSourceHealth(id))
             .asObservableSuccess()
             .map { response ->
                 latestUpdatesParse(response)
@@ -247,7 +248,7 @@ abstract class HttpSource : CatalogueSource {
     @Suppress("DEPRECATION")
     @Deprecated("Use the combined suspend API instead", replaceWith = ReplaceWith("getMangaUpdate"))
     override fun fetchMangaDetails(manga: SManga): Observable<SManga> {
-        return client.newCall(mangaDetailsRequest(manga))
+        return client.newCall(mangaDetailsRequest(manga).forSourceHealth(id))
             .asObservableSuccess()
             .map { response ->
                 mangaDetailsParse(response).apply { initialized = true }
@@ -311,7 +312,7 @@ abstract class HttpSource : CatalogueSource {
 
     @Deprecated("Use the non-RxJava API instead", replaceWith = ReplaceWith("getChapterList"))
     override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
-        return client.newCall(chapterListRequest(manga))
+        return client.newCall(chapterListRequest(manga).forSourceHealth(id))
             .asObservableSuccess()
             .map { response ->
                 chapterListParse(response)
