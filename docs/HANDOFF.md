@@ -2097,12 +2097,25 @@ Result: `87860e93b`. Two per-file Spotless passes (app, data, domain) and
 Claude device review: with owner-approved tracker logins, check search/link/edit/unlink in Dot and Colour and
 verify that watching an earlier episode preserves higher remote progress. Simkl is deferred.
 
-#### A3.6 AniSkip (T3) — `ready` (needs `tsuzuki/r-a5`)
+#### A3.6 AniSkip (T3) — `review` (.worktrees/a3.6, 2026-11-09; needs `tsuzuki/r-a5`)
 Boards: `Player` (skip button) + `PlayerSettings` (AniSkip part). Call the AniSkip API
 (`api.aniskip.com/v2/skip-times/<malId>/<ep>`) with the MAL id from an A3.5 binding (an AniList binding gives
 `idMal`); no id → no button. A skip intro/ending/recap button for the segment's length; prefs: off / button /
 auto-skip, intro offset. Cache per episode in memory. Tests: response parsing fixture, segment-at-position logic,
 no id → disabled.
+
+**Result (Codex, 2026-11-09):** `tsuzuki/a3.6` at `f4b6a0822` after clean Needs merge `90e708281`.
+
+- `AniSkip.kt` looks up opening, ending, and recap intervals with the stored tracker MAL ID and a whole episode number. It validates and clips returned intervals, and caches successful or empty results in memory by MAL ID, episode and rounded playback duration.
+- `AnimePlayerModel.kt` loads metadata only with AniSkip enabled and an eligible episode. Button mode seeks to the active segment's end. Auto mode honours the opening delay and skips each segment at most once per playback. Existing seek handling accounts for watch progress.
+- `AnimePlayerContent.kt` adds the timeline markers and an active-segment pill that stays available with the chrome hidden. `AnimePlayerSettings.kt` and `AnimePlayerSettingsScreen.kt` provide Off by default, Show button, Auto-skip, and a 0–30 second opening delay. Eight labels are translated in all eight locales.
+- `AppModule.kt` and `AnimePlayerActivity.kt` wire the lookup into the existing anime gate. `docs/design/README.md` records the status.
+
+Verification: JDK 21, two per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (1,019 tests, 0 failures, errors or skips), and locale placeholder validation. `AniSkipTest.kt` covers the response fixture, interval boundaries, opening delay, tracker IDs, no-ID network suppression, cache reuse and saved settings.
+
+Device review: on the backed-up S22 Debug install, use an episode with a linked MAL or AniList binding and confirmed provider intervals. Check the pill in Dot and Colour with chrome shown and hidden, marker alignment, manual and automatic seeks, delay, replay into a skipped interval, and no button for an unlinked episode. Live provider playback awaits review.
+
+RV3 checklist note: the R-A5 prerequisite already contains both unshipped migrations `37.sqm` and `38.sqm`. The latter provides tracker MAL IDs and is documented in `docs/UPSTREAM.md`. A3.6 adds zero schema changes.
 
 #### A3.7 Watch-time stats (T2) — `ready` (needs `tsuzuki/r-a4`)
 Board: Stats (`INDEX.md`, anime part). Owner Q4: watch minutes stay separate from the reading streak and goal. Stats
