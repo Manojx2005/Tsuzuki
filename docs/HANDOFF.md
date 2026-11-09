@@ -2158,10 +2158,31 @@ Device review: on the backed-up S22 Debug install, use an episode with a linked 
 
 RV3 checklist note: the R-A5 prerequisite already contains both unshipped migrations `37.sqm` and `38.sqm`. The latter provides tracker MAL IDs and is documented in `docs/UPSTREAM.md`. A3.6 adds zero schema changes.
 
-#### A3.7 Watch-time stats (T2) — `ready` (needs `tsuzuki/r-a4`)
+#### A3.7 Watch-time stats (T2) — `review` (.worktrees/a3.7, 2026-11-09)
 Board: Stats (`INDEX.md`, anime part). Owner Q4: watch minutes stay separate from the reading streak and goal. Stats
 gets a WATCH section only when there is watch data: minutes this week/month/all time, episodes seen, anime completed.
 Data comes from the watch-minute store A2.4/A3.2 write. Tests: aggregation by day/week, empty state hidden.
+
+**Result (Codex, 2026-11-09):** `4d7a7a28a` on `tsuzuki/a3.7`.
+
+- `anime_watch_days.sq` and migration `39.sqm` keep local-day watch seconds per episode. New tracked
+  playback updates the day and the existing lifetime history in the same transaction. Existing and
+  restored episode history still contributes to lifetime totals. Its older seconds lack a reliable
+  day breakdown, so they are excluded from week and month.
+- `AnimeHistoryRepositoryImpl.kt` totals the calendar week (Monday start), calendar month, lifetime
+  history and actual watched episodes. An anime counts as completed if its source status is
+  Completed and all its known episodes are watched.
+- `TsuzukiWatchStats.kt` adds a gated Watch section only when there is watch data. Duration units,
+  counts and five labels are localized. The reading chart, goal and streak use their existing data.
+
+Verification: JDK 21, two clean per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest`
+(1,032 tests, zero failures, errors or skips), and matching keys in all eight locales. The database
+tests cover a week crossing a month boundary, repeat checkpoints, empty data, episode state, history
+clearing and migration from schema 39 without losing lifetime totals.
+
+Device review: on a backed-up S22 Debug install, check Stats in Dot and Colour before and after
+watching an episode. Compare week, month, lifetime and episode counts, check a finished anime and
+confirm the reading goal did not advance. Preview should have no Watch section.
 
 #### A3.8 Anime global search (T2) — `ready` (needs `tsuzuki/a3.7`)
 Board: GlobalSearch (`INDEX.md`, anime part). An ANIME pill in global search when ≥ 1 anime source; searches
