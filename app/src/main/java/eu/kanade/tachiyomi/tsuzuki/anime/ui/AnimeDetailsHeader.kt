@@ -4,17 +4,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
@@ -44,7 +49,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime) {
+internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth: Dp = 104.dp) {
     val tokens = TsuzukiTheme.tokens
     val status = when (anime.status) {
         SAnime.ONGOING -> stringResource(MR.strings.ongoing)
@@ -67,7 +72,7 @@ internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime) {
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            AnimeCover(source, anime, Modifier.width(104.dp))
+            AnimeCover(source, anime, Modifier.width(coverWidth))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     tsuzukiMenuLabel(anime.title),
@@ -122,36 +127,46 @@ internal fun AnimeLibraryActions(
     favorite: Boolean,
     enabled: Boolean,
     onFavorite: () -> Unit,
-    onShelves: () -> Unit,
+    onTrack: (() -> Unit)?,
+    onSave: (() -> Unit)?,
     onExternal: (() -> Unit)?,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         AnimeDetailAction(
             label = stringResource(if (favorite) MR.strings.in_library else MR.strings.add_to_library),
             icon = if (favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             enabled = enabled,
             active = favorite,
             onClick = onFavorite,
         )
-        if (favorite) {
+        if (onTrack != null) {
             AnimeDetailAction(
-                label = stringResource(MR.strings.tsz_anime_shelves),
-                icon = Icons.Outlined.FolderOpen,
-                modifier = Modifier.weight(1f),
+                label = stringResource(MR.strings.action_track),
+                icon = Icons.Outlined.Sync,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 enabled = enabled,
-                onClick = onShelves,
+                onClick = onTrack,
+            )
+        }
+        if (onSave != null) {
+            AnimeDetailAction(
+                label = stringResource(MR.strings.action_save),
+                icon = Icons.Outlined.Download,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                enabled = enabled,
+                onClick = onSave,
             )
         }
         if (onExternal != null) {
             AnimeDetailAction(
                 label = stringResource(MR.strings.action_open_in_web_view),
                 icon = Icons.Outlined.Link,
-                modifier = Modifier.weight(1f),
-                enabled = true,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                enabled = enabled,
                 onClick = onExternal,
             )
         }
@@ -184,6 +199,8 @@ private fun AnimeDetailAction(
                 color = color,
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

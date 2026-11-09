@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,10 +12,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.SkipNext
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -71,21 +84,29 @@ internal object AnimePlayerSettingsScreen : Screen() {
             },
         ) { padding ->
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(165.dp),
+                columns = GridCells.Adaptive(if (LocalDensity.current.fontScale >= 1.5f) 220.dp else 158.dp),
                 modifier = Modifier.padding(padding),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_aniskip)) {
-                        TextButton(onClick = { showAniSkip = true }) {
+                    PlayerSettingCard(
+                        stringResource(R.string.tsz_anime_aniskip),
+                        Icons.Outlined.SkipNext,
+                        active = settings.aniSkipMode != AniSkipMode.OFF,
+                    ) { color ->
+                        TextButton(
+                            onClick = { showAniSkip = true },
+                            colors = ButtonDefaults.textButtonColors(contentColor = color),
+                        ) {
                             Text(tsuzukiMenuLabel(aniSkipModeLabel(settings.aniSkipMode)))
                         }
                         if (settings.aniSkipMode == AniSkipMode.AUTO) {
                             AnimePlayerStepper(
                                 label = stringResource(R.string.tsz_anime_skip_intro_delay),
                                 value = stringResource(R.string.tsz_anime_skip_seconds, settings.aniSkipIntroDelay),
+                                contentColor = color,
                                 decrease = {
                                     update(settings.copy(aniSkipIntroDelay = settings.aniSkipIntroDelay - 1))
                                 },
@@ -97,17 +118,31 @@ internal object AnimePlayerSettingsScreen : Screen() {
                     }
                 }
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_autoplay)) {
-                        Switch(checked = autoplay, onCheckedChange = preferences.autoplay::set)
+                    PlayerSettingCard(
+                        stringResource(R.string.tsz_anime_player_autoplay),
+                        Icons.Outlined.PlayArrow,
+                        active = autoplay,
+                    ) {
+                        Switch(
+                            checked = autoplay,
+                            onCheckedChange = preferences.autoplay::set,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = tokens.onAccent,
+                                checkedTrackColor = tokens.onAccent.copy(alpha = 0.24f),
+                            ),
+                        )
                     }
                 }
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_speed)) {
+                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_speed), Icons.Outlined.Speed) {
                         TextButton(onClick = { showSpeed = true }) { Text(formatAnimeSpeed(settings.speed)) }
                     }
                 }
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_subtitle_size)) {
+                    PlayerSettingCard(
+                        stringResource(R.string.tsz_anime_player_subtitle_size),
+                        Icons.Outlined.TextFields,
+                    ) {
                         AnimePlayerStepper(
                             label = null,
                             value = formatAnimePercent(settings.subtitleScale),
@@ -117,7 +152,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
                     }
                 }
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_video)) {
+                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_video), Icons.Outlined.Videocam) {
                         PlayerSettingSwitch(
                             label = stringResource(R.string.tsz_anime_player_decoder_hardware),
                             checked = settings.hardwareDecoding,
@@ -126,7 +161,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
                     }
                 }
                 item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_gestures)) {
+                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_gestures), Icons.Outlined.TouchApp) {
                         PlayerSettingSwitch(
                             stringResource(R.string.tsz_anime_player_seek_gesture),
                             settings.seekGesture,
@@ -198,12 +233,23 @@ private fun aniSkipModeLabel(mode: AniSkipMode): String = stringResource(
 )
 
 @Composable
-private fun PlayerSettingCard(title: String, content: @Composable () -> Unit) {
+private fun PlayerSettingCard(
+    title: String,
+    icon: ImageVector,
+    active: Boolean = false,
+    content: @Composable (Color) -> Unit,
+) {
     val tokens = TsuzukiTheme.tokens
-    TsuzukiTile(Modifier.fillMaxWidth(), padding = 12.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(tsuzukiMenuLabel(title), color = tokens.dotOn, style = MaterialTheme.typography.titleSmall)
-            content()
+    val ink = if (active) tokens.onAccent else tokens.dotOn
+    TsuzukiTile(Modifier.fillMaxWidth(), padding = 0.dp) {
+        Column(
+            Modifier.fillMaxWidth().heightIn(min = 108.dp)
+                .background(if (active) tokens.accent else Color.Transparent).padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(icon, contentDescription = null, tint = ink)
+            Text(tsuzukiMenuLabel(title), color = ink, style = MaterialTheme.typography.titleSmall)
+            content(ink)
         }
     }
 }

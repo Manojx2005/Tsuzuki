@@ -11,15 +11,17 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -36,7 +38,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import eu.kanade.presentation.components.TabContent
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
@@ -97,17 +99,27 @@ internal fun animeSourcesTab(
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
     val (pinPreference, pins) = rememberAnimeSourcePins()
+    val ordered = remember(sources, pins) { sources.sortedBy { it.source.id.toString() !in pins } }
+    val pinnedCount = ordered.count { it.source.id.toString() in pins }
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (sources.isEmpty()) {
             item {
                 Text(
-                    stringResource(MR.strings.no_results_found),
+                    tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = tokens.mutedText,
                     modifier = Modifier.padding(16.dp),
                 )
             }
         }
-        items(sources.sortedBy { it.source.id.toString() !in pins }, key = { it.source.id }) { entry ->
+        itemsIndexed(ordered, key = { _, entry -> entry.source.id }) { index, entry ->
+            if (index == 0 && pinnedCount > 0) {
+                TsuzukiSectionLabel(
+                    "${stringResource(MR.strings.pinned_sources)} · ${stringResource(MR.strings.tsz_anime_media)}",
+                )
+            } else if (index == pinnedCount) {
+                TsuzukiSectionLabel(stringResource(MR.strings.label_sources))
+            }
             val source = entry.source
             Row(
                 modifier = Modifier
@@ -165,12 +177,15 @@ internal fun animeSourcesTab(
                     )
                 }
                 if (source.supportsLatest) {
-                    TsuzukiPill(
-                        text = stringResource(MR.strings.latest),
-                        selected = false,
+                    TextButton(
                         onClick = { openAnimeCatalogue(context, source.id, latest = true) },
-                        role = Role.Button,
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = tokens.accent),
+                    ) {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(MR.strings.latest)),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             }
         }

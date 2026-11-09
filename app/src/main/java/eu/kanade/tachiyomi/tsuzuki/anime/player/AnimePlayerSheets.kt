@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
@@ -70,7 +72,7 @@ internal fun AnimePlayerSheets(
     val settings = state.settings
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val isWide = maxWidth > 540.dp
-        val panelWidth = if (isWide) maxWidth * 0.52f else maxWidth
+        val panelWidth = if (isWide) (maxWidth * 0.52f).coerceAtMost(520.dp) else maxWidth
         Row(Modifier.fillMaxSize()) {
             if (isWide) {
                 Box(
@@ -80,7 +82,7 @@ internal fun AnimePlayerSheets(
             }
             Surface(
                 modifier = Modifier.width(panelWidth).fillMaxHeight(),
-                shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp),
+                shape = if (isWide) RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp) else RectangleShape,
                 color = tokens.background,
                 contentColor = tokens.dotOn,
             ) {
@@ -254,20 +256,47 @@ internal fun AnimePlayerOption(
 }
 
 @Composable
-internal fun AnimePlayerStepper(label: String?, value: String, decrease: () -> Unit, increase: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            tsuzukiMenuLabel(label.orEmpty()),
-            modifier = Modifier.weight(1f),
-            color = TsuzukiTheme.tokens.mutedText,
-            style = MaterialTheme.typography.labelMedium,
-        )
-        IconButton(onClick = decrease) {
-            Icon(Icons.Outlined.Remove, stringResource(R.string.tsz_anime_player_decrease))
-        }
-        Text(value, style = MaterialTheme.typography.titleSmall)
-        IconButton(onClick = increase) {
-            Icon(Icons.Outlined.Add, stringResource(R.string.tsz_anime_player_increase))
+internal fun AnimePlayerStepper(
+    label: String?,
+    value: String,
+    decrease: () -> Unit,
+    increase: () -> Unit,
+    contentColor: Color? = null,
+) {
+    val tokens = TsuzukiTheme.tokens
+    val ink = contentColor ?: tokens.dotOn
+    val labelColor = contentColor ?: tokens.mutedText
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val stacked = maxWidth < 300.dp
+        Column {
+            if (stacked && label != null) {
+                Text(
+                    tsuzukiMenuLabel(label),
+                    color = labelColor,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (!stacked && label != null) {
+                    Text(
+                        tsuzukiMenuLabel(label),
+                        modifier = Modifier.weight(1f),
+                        color = labelColor,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+                IconButton(onClick = decrease) {
+                    Icon(Icons.Outlined.Remove, stringResource(R.string.tsz_anime_player_decrease), tint = ink)
+                }
+                Text(tsuzukiMenuLabel(value), color = ink, style = MaterialTheme.typography.titleSmall)
+                IconButton(onClick = increase) {
+                    Icon(Icons.Outlined.Add, stringResource(R.string.tsz_anime_player_increase), tint = ink)
+                }
+            }
         }
     }
 }
@@ -275,7 +304,7 @@ internal fun AnimePlayerStepper(label: String?, value: String, decrease: () -> U
 @Composable
 private fun AnimePlayerEmptyOptions() {
     Text(
-        stringResource(R.string.tsz_anime_player_no_options),
+        tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_no_options)),
         modifier = Modifier.padding(12.dp),
         color = TsuzukiTheme.tokens.mutedText,
         style = MaterialTheme.typography.bodySmall,

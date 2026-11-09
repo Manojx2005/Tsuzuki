@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -193,6 +194,7 @@ internal fun AnimePlayerContent(
                     AnimePlayerTimeline(state, onSeek = model::seekTo, onInteract = { interaction++ })
                     AnimePlayerControlsRow(
                         settings = settings,
+                        tracks = state.tracks,
                         enabled = state.duration > 0 && !state.loading,
                         onLock = { locked = true },
                         onSheet = { sheet = it },
@@ -451,13 +453,19 @@ private fun AnimePlayerTransport(
 @Composable
 private fun AnimePlayerControlsRow(
     settings: AnimePlayerSettings,
+    tracks: List<AnimePlayerTrack>,
     enabled: Boolean,
     onLock: () -> Unit,
     onSheet: (AnimePlayerSheet) -> Unit,
     onSeek: (Int) -> Unit,
 ) {
+    val languages = remember(tracks) {
+        tracks.filter(AnimePlayerTrack::selected).associate { it.kind to it.language?.takeIf(String::isNotBlank) }
+    }
+    val subs = stringResource(R.string.tsz_anime_player_subtitles)
+    val audio = stringResource(R.string.tsz_anime_player_audio)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val compact = maxWidth < 560.dp
+        val compact = maxWidth < 680.dp || LocalDensity.current.fontScale >= 1.3f
         Row(
             modifier = if (compact) Modifier.horizontalScroll(rememberScrollState()) else Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -471,13 +479,13 @@ private fun AnimePlayerControlsRow(
                 role = Role.Button,
             )
             TsuzukiPill(
-                text = stringResource(R.string.tsz_anime_player_subtitles),
+                text = languages[AnimeTrackKind.SUBTITLE]?.let { "$subs · ${it.uppercase()}" } ?: subs,
                 selected = false,
                 onClick = { onSheet(AnimePlayerSheet.SUBTITLES) },
                 role = Role.Button,
             )
             TsuzukiPill(
-                text = stringResource(R.string.tsz_anime_player_audio),
+                text = languages[AnimeTrackKind.AUDIO]?.let { "$audio · ${it.uppercase()}" } ?: audio,
                 selected = false,
                 onClick = { onSheet(AnimePlayerSheet.AUDIO) },
                 role = Role.Button,

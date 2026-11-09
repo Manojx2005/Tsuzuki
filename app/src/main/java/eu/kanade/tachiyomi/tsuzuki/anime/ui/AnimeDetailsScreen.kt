@@ -3,17 +3,21 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -59,6 +63,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodes
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -198,9 +203,6 @@ internal fun AnimeDetailsScreen(
                 title = null,
                 navigateUp = onBack,
                 actions = {
-                    IconButton(onClick = { showTracking = true }, enabled = saved != null && !saving) {
-                        Icon(Icons.Outlined.Sync, stringResource(MR.strings.action_track))
-                    }
                     IconButton(onClick = { showFilter = true }, enabled = saved != null && !saving) {
                         Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
                     }
@@ -209,6 +211,15 @@ internal fun AnimeDetailsScreen(
                             Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.label_more))
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                            if (saved?.favorite == true) {
+                                TsuzukiMenuItem(
+                                    text = stringResource(MR.strings.tsz_anime_shelves),
+                                    onClick = {
+                                        showMenu = false
+                                        scope.launch { shelfSelection = library.shelfIds(saved.id) }
+                                    },
+                                )
+                            }
                             TsuzukiMenuItem(
                                 text = stringResource(MR.strings.action_webview_refresh),
                                 onClick = {
@@ -298,12 +309,18 @@ internal fun AnimeDetailsScreen(
             onRefresh = model::refresh,
             indicatorPadding = padding,
         ) {
-            LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                item { AnimeDetailsHeader(entry.source, display) }
-                item {
+            fun LazyListScope.overview(expanded: Boolean) {
+                item(key = "anime-overview") {
+                    AnimeDetailsHeader(entry.source, display, coverWidth = if (expanded) 156.dp else 104.dp)
+                }
+                item(key = "anime-actions") {
+                    val eligible = filtered.filter { episode ->
+                        val status = downloadStatuses[episode.id]
+                        status == null || status == AnimeDownloadStatus.Failed
+                    }
                     AnimeLibraryActions(
                         favorite = saved?.favorite == true,
-                        enabled = !saving,
+                        enabled = !saving && selected.isEmpty(),
                         onFavorite = {
                             if (saved?.favorite == true) {
                                 mutate { model.setFavorite(false, emptySet()) }
@@ -313,15 +330,28 @@ internal fun AnimeDetailsScreen(
                                 }
                             }
                         },
-                        onShelves = { scope.launch { saved?.let { shelfSelection = library.shelfIds(it.id) } } },
+                        onTrack = if (saved != null) ({ showTracking = true }) else null,
+                        onSave = if (eligible.isNotEmpty()) {
+                            {
+                                selection = eligible.map(Episode::id).toLongArray()
+                                showSelectionMenu = true
+                            }
+                        } else {
+                            null
+                        },
                         onExternal = externalUrl?.let { url ->
                             { context.startActivity(WebViewActivity.newIntent(context, url, title = display.title)) }
                         },
                     )
                 }
                 if (details.refreshFailed || saveError) {
-                    item { AnimeCatalogueStatus(stringResource(MR.strings.unknown_error), model::refresh) }
+                    item(key = "anime-detail-error") {
+                        AnimeCatalogueStatus(stringResource(MR.strings.unknown_error), model::refresh)
+                    }
                 }
+            }
+
+            fun LazyListScope.episodes() {
                 episodeState.resume?.let { next ->
                     item { AnimeResumeTile(next, selected.isEmpty()) { play(next) } }
                 }
@@ -353,6 +383,35 @@ internal fun AnimeDetailsScreen(
                         downloadStatus = downloadStatuses[episode.id],
                         onDownload = { enqueue(listOf(episode)) },
                     )
+                }
+            }
+
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                if (maxWidth >= 840.dp) {
+                    Row(
+                        Modifier.fillMaxSize().padding(padding).padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.weight(0.43f).fillMaxHeight(),
+                            contentPadding = PaddingValues(vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            overview(expanded = true)
+                        }
+                        LazyColumn(
+                            modifier = Modifier.weight(0.57f).fillMaxHeight(),
+                            contentPadding = PaddingValues(vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            episodes()
+                        }
+                    }
+                } else {
+                    LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        overview(expanded = false)
+                        episodes()
+                    }
                 }
             }
         }
