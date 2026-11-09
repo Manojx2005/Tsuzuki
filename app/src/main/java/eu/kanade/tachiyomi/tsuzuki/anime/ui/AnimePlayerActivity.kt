@@ -63,6 +63,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                         request = request,
                         backend = checkNotNull(Injekt.get<AnimePlayerLauncher>().createBackend()),
                         library = Injekt.get(),
+                        downloads = Injekt.get(),
                         preferences = Injekt.get(),
                         aniSkip = Injekt.get(),
                         processScope = Injekt.get(),

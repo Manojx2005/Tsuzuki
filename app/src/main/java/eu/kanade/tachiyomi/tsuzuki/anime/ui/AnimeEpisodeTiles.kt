@@ -20,7 +20,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -54,6 +57,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import java.text.DateFormat
@@ -130,6 +134,8 @@ internal fun AnimeEpisodeTile(
     onMarkSeen: (Boolean) -> Unit,
     onBookmark: (Boolean) -> Unit,
     onMarkPrevious: () -> Unit,
+    downloadStatus: AnimeDownloadStatus?,
+    onDownload: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
     var menu by remember { mutableStateOf(false) }
@@ -186,6 +192,19 @@ internal fun AnimeEpisodeTile(
             }
             if (episode.bookmark) {
                 Icon(Icons.Outlined.Bookmark, stringResource(R.string.tsz_anime_bookmark), tint = tokens.accent)
+            }
+            val (downloadIcon, downloadLabel) = when (downloadStatus) {
+                null -> Icons.Outlined.Download to MR.strings.manga_download
+                AnimeDownloadStatus.Saved -> Icons.Outlined.Check to MR.strings.label_downloaded
+                AnimeDownloadStatus.Queued -> Icons.Outlined.Schedule to MR.strings.tsz_downloads_queued
+                AnimeDownloadStatus.Failed -> Icons.Outlined.Refresh to MR.strings.action_retry
+                AnimeDownloadStatus.Removing -> Icons.Outlined.Schedule to MR.strings.action_delete
+            }
+            IconButton(
+                onClick = onDownload,
+                enabled = enabled && (downloadStatus == null || downloadStatus == AnimeDownloadStatus.Failed),
+            ) {
+                Icon(downloadIcon, mokoStringResource(downloadLabel))
             }
             Box {
                 IconButton(onClick = { menu = true }, enabled = enabled) {

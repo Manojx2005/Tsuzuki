@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
@@ -74,6 +75,7 @@ internal class AnimePlayerModel(
     private val request: AnimePlayback.Request,
     private val backend: AnimePlayerBackend,
     private val library: AnimeLibraryStore,
+    private val downloads: AnimeDownloads,
     preferences: PreferenceStore,
     private val aniSkip: AniSkipLookup,
     processScope: CoroutineScope,
@@ -334,6 +336,12 @@ internal class AnimePlayerModel(
                         next = next,
                         position = start,
                     )
+                }
+                val offline = downloads.offlineVideo(anime.source, anime.id, episode.id)
+                if (offline != null) {
+                    pendingVideo = offline
+                    loadPending()
+                    return@launch
                 }
                 val (entry, videos) = withContext(Dispatchers.IO) {
                     val sources = AnimeSourceManager.create(context)

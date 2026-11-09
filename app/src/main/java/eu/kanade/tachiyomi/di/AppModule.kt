@@ -32,6 +32,7 @@ import eu.kanade.tachiyomi.network.interceptor.RequestRateLimitPolicy
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.custom.CustomSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -145,6 +146,7 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { NetworkHelper(app, get(), get()) }
         addSingletonFactory { AnimeLibraryStore(get(), get(), get(), get(), get()) }
+        addSingletonFactory { AnimeDownloads(app, get(), get(), get(), get()) }
         addSingletonFactory {
             eu.kanade.tachiyomi.tsuzuki.anime.player.AniSkipLookup(get<NetworkHelper>().client, get())
         }

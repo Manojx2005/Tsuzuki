@@ -59,6 +59,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodes
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
@@ -93,6 +94,11 @@ internal fun AnimeDetailsScreen(
     val context = LocalContext.current
     val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
     val details by model.state.collectAsState()
+    val downloads = remember { Injekt.get<AnimeDownloads>() }
+    val downloadQueue by downloads.state.collectAsState()
+    val downloadStatuses = remember(downloadQueue.entries) {
+        downloadQueue.entries.associate { it.episodeId to it.status }
+    }
     val saved = details.saved
     val emptyEpisodes = remember { AnimeEpisodes(emptyList(), null) }
     val episodeState by remember(saved?.id) {
@@ -145,6 +151,10 @@ internal fun AnimeDetailsScreen(
 
     fun play(episode: Episode) {
         launchPlayer(episode, !Injekt.get<BasePreferences>().incognitoMode.get())
+    }
+
+    fun enqueue(episodes: List<Episode>) {
+        downloads.enqueue(entry.source.id, entry.source.name, display.title, episodes)
     }
 
     fun toggleSelection(id: Long) {
@@ -262,6 +272,14 @@ internal fun AnimeDetailsScreen(
                                 },
                             )
                             TsuzukiMenuItem(
+                                text = stringResource(MR.strings.action_save),
+                                onClick = {
+                                    showSelectionMenu = false
+                                    enqueue(ordered.filter { it.id in ids })
+                                    selection = longArrayOf()
+                                },
+                            )
+                            TsuzukiMenuItem(
                                 text = stringResource(MR.strings.action_select_all),
                                 onClick = {
                                     showSelectionMenu = false
@@ -332,6 +350,8 @@ internal fun AnimeDetailsScreen(
                         onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
                         onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
                         onMarkPrevious = { markPrevious(episode) },
+                        downloadStatus = downloadStatuses[episode.id],
+                        onDownload = { enqueue(listOf(episode)) },
                     )
                 }
             }
