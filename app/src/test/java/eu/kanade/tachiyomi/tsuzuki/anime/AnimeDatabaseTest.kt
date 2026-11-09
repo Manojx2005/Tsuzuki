@@ -7,10 +7,27 @@ import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import eu.kanade.tachiyomi.data.backup.BackupProtoReader
+import eu.kanade.tachiyomi.data.backup.create.BackupOptions
+import eu.kanade.tachiyomi.data.backup.models.Backup
+import eu.kanade.tachiyomi.data.backup.models.BackupManga
+import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupCategory
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupEntry
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupEpisode
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupFormat
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupHistory
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSource
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupStore
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSummary
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupTrack
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.protobuf.ProtoNumber
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -37,9 +54,193 @@ import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.domain.track.anime.model.AnimeTrack
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.util.Date
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 class AnimeDatabaseTest {
+    @Test
+    fun animeBackupRoundTripsAlongsideExistingBookFields() = runBlocking {
+        val fixture = ByteArrayOutputStream()
+        GZIPOutputStream(fixture).use { gzip ->
+            gzip.backupField(1, ProtoBuf.encodeToByteArray(BackupManga.serializer(), BackupManga(42, "/manga")))
+            val novel = BackupManga(42, "/novel", isNovel = true)
+            gzip.backupField(1, ProtoBuf.encodeToByteArray(BackupManga.serializer(), novel))
+            withDatabase { _, db ->
+                val store = AnimeBackupStore(db)
+                val shelfIds = store.restoreCategories(listOf(AnimeBackupCategory("Watch later", id = 81, flags = 2)))
+                val source = AnimeBackupSource("Anime catalogue", 42, "en")
+                val season = store.restoreEntry(
+                    AnimeBackupEntry(
+                        source = 42,
+                        url = "/season",
+                        title = "Season",
+                        seasonNumber = 2.5,
+                        notes = "Keep this note",
+                        alternativeTitles = listOf("Alternate"),
+                        categories = listOf(81),
+                        episodes = listOf(
+                            AnimeBackupEpisode(
+                                "/episode",
+                                "Special",
+                                bookmark = true,
+                                resumeSeconds = 60,
+                                durationSeconds = 600,
+                            ),
+                            AnimeBackupEpisode("/finished", "Finished", seen = true, preciseNumber = 1.123456789),
+                        ),
+                        history = listOf(AnimeBackupHistory("/episode", 50_000, 70)),
+                        tracks = listOf(AnimeBackupTrack(service = 2, mediaId = 120, malId = 121, progress = 1.5)),
+                    ),
+                    shelfIds,
+                    source,
+                )
+                val parent = store.restoreEntry(AnimeBackupEntry(42, "/show", "Show"), emptyMap(), source)
+                store.restoreParents(mapOf(82L to parent), mapOf(season to 82L))
+                store.export(BackupOptions(), ProtoBuf) { field, bytes -> gzip.backupField(field, bytes) }
+            }
+        }
+        val file = fixture.toByteArray()
+        val oldReader = GZIPInputStream(file.inputStream()).use {
+            ProtoBuf.decodeFromByteArray(Backup.serializer(), it.readBytes())
+        }
+        assertEquals(listOf("/manga", "/novel"), oldReader.backupManga.map { it.url })
+        assertEquals(listOf(false, true), oldReader.backupManga.map { it.isNovel })
+
+        withDatabase { _, db ->
+            val store = AnimeBackupStore(db)
+            val shelfIds = store.restoreCategories(listOf(AnimeBackupCategory("Other shelf", id = 4)))
+            store.restoreEntry(AnimeBackupEntry(100, "/other"), emptyMap(), null)
+            val seasonId = store.restoreEntry(
+                AnimeBackupEntry(
+                    42,
+                    "/season",
+                    favorite = false,
+                    categories = listOf(4),
+                    episodes = listOf(AnimeBackupEpisode("/episode", "Special", resumeSeconds = 100)),
+                    history = listOf(AnimeBackupHistory("/episode", 40_000, 90)),
+                ),
+                shelfIds,
+                AnimeBackupSource("Anime catalogue", 42, "en"),
+            )
+            assertEquals(AnimeBackupFormat.TSUZUKI, restoreAnimeFixture(store, file))
+            restoreAnimeFixture(store, file)
+            val anime = AnimeRepositoryImpl(db)
+            val season = checkNotNull(anime.awaitBySourceAndUrl(42, "/season"))
+            assertEquals(seasonId, season.id)
+            assertTrue(season.favorite)
+            assertEquals(anime.awaitBySourceAndUrl(42, "/show")?.id, season.parentId)
+            assertEquals(2.5, season.seasonNumber)
+            assertEquals("Keep this note", season.notes)
+            assertEquals(listOf("Alternate"), season.alternativeTitles)
+            val shelves = AnimeCategoryRepositoryImpl(db).awaitByAnimeId(seasonId)
+            assertEquals(setOf("Other shelf", "Watch later"), shelves.map { it.name }.toSet())
+            val episodes = EpisodeRepositoryImpl(db).awaitByAnimeId(seasonId).associateBy { it.url }
+            val episode = episodes.getValue("/episode")
+            assertTrue(episode.bookmark)
+            assertTrue(episodes.getValue("/finished").seen)
+            assertEquals(1.123456789, episodes.getValue("/finished").episodeNumber)
+            assertEquals(100L, episode.lastSecondSeen)
+            assertEquals(600L, episode.totalSeconds)
+            val history = checkNotNull(AnimeHistoryRepositoryImpl(db).awaitByEpisodeId(episode.id))
+            assertEquals(90L, history.timeWatched)
+            assertEquals(Date(50_000), history.lastSeen)
+            val track = AnimeTrackRepositoryImpl(db).awaitByAnimeId(seasonId).single()
+            assertEquals(121L, track.malId)
+            assertEquals(1.5, track.lastEpisodeSeen)
+            assertEquals("Anime catalogue", AnimeSourceRepositoryImpl(db).awaitById(42)?.name)
+        }
+    }
+
+    @Test
+    fun aniyomiAnimeImportsFromBothWireLayouts() = runBlocking {
+        val externalEpisode = AniyomiEpisodeFixture("/episode", "Special", 61_000, 1.5f, 600_000)
+        val externalEntry = AniyomiEntryFixture(42, "/season", listOf(externalEpisode), listOf(31))
+        val externalShelf = AnimeBackupCategory("Aniyomi", id = 31)
+        val entry = ProtoBuf.encodeToByteArray(AniyomiEntryFixture.serializer(), externalEntry)
+        val shelf = ProtoBuf.encodeToByteArray(AnimeBackupCategory.serializer(), externalShelf)
+        val source = ProtoBuf.encodeToByteArray(AnimeBackupSource.serializer(), AnimeBackupSource("External anime", 42))
+        for (modern in listOf(true, false)) {
+            val fixture = ByteArrayOutputStream()
+            GZIPOutputStream(fixture).use { gzip ->
+                if (modern) {
+                    gzip.writeBackupVarint(500L shl 3)
+                    gzip.writeBackupVarint(0)
+                }
+                gzip.backupField(if (modern) 501 else 3, entry)
+                gzip.backupField(if (modern) 502 else 4, shelf)
+                gzip.backupField(if (modern) 503 else 103, source)
+            }
+            withDatabase { _, db ->
+                val expected = if (modern) AnimeBackupFormat.ANIYOMI else AnimeBackupFormat.LEGACY_ANIYOMI
+                assertEquals(expected, restoreAnimeFixture(AnimeBackupStore(db), fixture.toByteArray()))
+                val anime = checkNotNull(AnimeRepositoryImpl(db).awaitBySourceAndUrl(42, "/season"))
+                val episode = EpisodeRepositoryImpl(db).awaitByAnimeId(anime.id).single()
+                assertEquals(1.5, episode.episodeNumber)
+                assertEquals(61L, episode.lastSecondSeen)
+                assertEquals(600L, episode.totalSeconds)
+                assertEquals("Aniyomi", AnimeCategoryRepositoryImpl(db).awaitByAnimeId(anime.id).single().name)
+                assertEquals("External anime", AnimeSourceRepositoryImpl(db).awaitById(42)?.name)
+            }
+        }
+    }
+
+    @Test
+    fun oldBackupOptionArraysDefaultAnimeOn() {
+        assertTrue(BackupOptions.fromBooleanArray(BackupOptions().asBooleanArray().copyOf(12)).includeAnime)
+        assertTrue(RestoreOptions.fromBooleanArray(RestoreOptions().asBooleanArray().copyOf(7)).includeAnime)
+        assertFalse(BackupOptions.fromBooleanArray(BackupOptions(includeAnime = false).asBooleanArray()).includeAnime)
+        assertFalse(RestoreOptions.fromBooleanArray(RestoreOptions(includeAnime = false).asBooleanArray()).includeAnime)
+    }
+
+    private suspend fun restoreAnimeFixture(store: AnimeBackupStore, file: ByteArray): AnimeBackupFormat? {
+        val summary = AnimeBackupSummary()
+        BackupProtoReader.readFields(file.inputStream()) { field, bytes -> summary.record(field, bytes, ProtoBuf) }
+        store.restore(
+            summary,
+            ProtoBuf,
+            includeEntries = true,
+            includeCategories = true,
+            read = { callback -> BackupProtoReader.readFields(file.inputStream(), onField = callback) },
+            onEntry = { _, error -> if (error != null) throw error },
+        )
+        return summary.format
+    }
+
+    private fun OutputStream.backupField(field: Int, data: ByteArray) {
+        writeBackupVarint((field.toLong() shl 3) or 2)
+        writeBackupVarint(data.size.toLong())
+        write(data)
+    }
+
+    private fun OutputStream.writeBackupVarint(value: Long) {
+        var remaining = value
+        while (remaining > 127) {
+            write((remaining.toInt() and 127) or 128)
+            remaining = remaining ushr 7
+        }
+        write(remaining.toInt())
+    }
+
+    @Serializable
+    private data class AniyomiEntryFixture(
+        @ProtoNumber(1) val source: Long,
+        @ProtoNumber(2) val url: String,
+        @ProtoNumber(16) val episodes: List<AniyomiEpisodeFixture>,
+        @ProtoNumber(17) val categories: List<Long>,
+    )
+
+    @Serializable
+    private data class AniyomiEpisodeFixture(
+        @ProtoNumber(1) val url: String,
+        @ProtoNumber(2) val name: String,
+        @ProtoNumber(6) val position: Long,
+        @ProtoNumber(9) val number: Float,
+        @ProtoNumber(16) val duration: Long,
+    )
+
     @Test
     fun animeShelfEditsKeepDefaultImplicitAndUpdateAnExistingFavorite() = runBlocking {
         withDatabase { _, db ->
