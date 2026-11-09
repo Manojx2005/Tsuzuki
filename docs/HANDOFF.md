@@ -1264,11 +1264,26 @@ Result: `4642ed752` on `tsuzuki/r17`.
 
 **Review (Codex RV1, 2026-11-08):** Pass. Native tablet text spans measured 1343 px including two 16 dp margins at 340 dpi, in portrait and landscape. The dock re-centred the text inside the remaining pane. Colour WebView scrolling and paged layouts showed the same centred column, including a turn to page 2 of 16. The S22 native reader continued to occupy the full phone-width view. An illustration reflow fixture was unavailable. Evidence: `r17-*` and `v76-listen-dot-tablet.png` in the RV1 evidence folder.
 
-#### R-A1 Anime backups (T4) — `ready` (needs `tsuzuki/a3.6`; order in the Anime lane table)
+#### R-A1 Anime backups (T4) — `review` (`tsuzuki/r-a1`, `81bb813bd`)
 ANIME_SCHEMA §4 + §9 Q2 (import only): read Aniyomi backups (fields 500–503) into the anime tables; write anime
 into our own backups in the 8000 range; restore round-trip test with a synthetic file; never change existing
 manga/novel backup fields. Claude: scratch-install restore test.
-Result: _pending_
+Result (Codex 2026-11-09): `tsuzuki/r-a1` at `81bb813bd`, based on A3.6.
+
+- `AnimeBackupWire.kt` reads modern and legacy Aniyomi layouts and writes Tsuzuki anime fields 8000–8002. It
+  converts Aniyomi's millisecond episode position and duration to seconds. The existing manga and novel field
+  numbers are retained. The SQLDelight change adds a paged query.
+- `AnimeBackupStore.kt` maps titles by source and URL, episodes within each title, shelves by name, and season
+  parents when both entries are in the file. Restore keeps local shelf memberships, the furthest episode position,
+  and the greater watch time. Repeating a restore does not double-count history.
+- The debug create and restore dialogs have an Anime option, enabled by default. Validation checks source and
+  tracker availability. Backups carry source names and tracker IDs. Install the relevant extensions and sign in
+  separately to play or sync.
+- JDK 21, scoped Spotless clean on pass 2, `:app:assembleDebug :app:testDebugUnitTest` passed all 1,022 tests.
+  The synthetic gzip fixtures cover both Aniyomi layouts, the old reader's manga/novel fields, season remapping,
+  and restore into existing progress. The Anime option reuses the label in all eight required locales.
+- Scratch-install review on S22 and Tab S11 in Dot and Colour: create and restore a mixed Tsuzuki backup, import
+  a sample Aniyomi file, and check Anime off, shelf placement, episode resume and missing-source messaging.
 
 #### R-A2 Player settings + sheets (T3) — `review`
 Boards `10-anime/PlayerSettings`, `PlayerSheets`. Subtitles (track pick, size), audio track, speed, decoder
