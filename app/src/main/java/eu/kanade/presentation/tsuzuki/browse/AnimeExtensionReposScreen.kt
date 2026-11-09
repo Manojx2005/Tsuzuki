@@ -31,13 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
-import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -61,7 +61,7 @@ internal object AnimeExtensionReposScreen : Screen() {
         val repository = remember(context) { AnimeExtensionRepos(Injekt.get(), AnimeExtensionInstaller(context)) }
         val repos by remember(repository) { repository.observe() }.collectAsState(emptyList())
         val scope = rememberCoroutineScope()
-        val back = LocalBackPress.currentOrThrow
+        val navigator = LocalNavigator.currentOrThrow
         val tokens = TsuzukiTheme.tokens
         var input by rememberSaveable { mutableStateOf("") }
         var busy by remember { mutableStateOf(false) }
@@ -92,7 +92,7 @@ internal object AnimeExtensionReposScreen : Screen() {
             topBar = {
                 AppBar(
                     title = androidStringResource(R.string.tsz_anime_extension_repos),
-                    navigateUp = back::invoke,
+                    navigateUp = navigator::pop,
                 )
             },
         ) { padding ->

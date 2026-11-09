@@ -265,7 +265,7 @@ private suspend fun RegisteredAnimeSource.fetchUpdate(
     show: SAnime,
     episodes: List<SEpisode>,
     fetchDetails: Boolean,
-): SAnimeEpisodeUpdate {
+): SAnimeEpisodeUpdate = callAnimeSource {
     val update = if (libVersion >= 17) {
         source.getAnimeEpisodeUpdate(show, episodes, fetchDetails = fetchDetails, fetchEpisodes = true)
     } else {
@@ -274,7 +274,7 @@ private suspend fun RegisteredAnimeSource.fetchUpdate(
             AnimeStreamResolver.episodes(source, libVersion, show),
         )
     }
-    if (!fetchDetails) return SAnimeEpisodeUpdate(show, update.episodes)
+    if (!fetchDetails) return@callAnimeSource SAnimeEpisodeUpdate(show, update.episodes)
     val refreshed = show.copy().apply {
         val remote = update.anime
         title = runCatching { remote.title }.getOrNull()?.takeIf(String::isNotBlank) ?: title
@@ -290,7 +290,7 @@ private suspend fun RegisteredAnimeSource.fetchUpdate(
         if (!show.initialized) fetch_type = remote.fetch_type
         if (libVersion >= 17) memo = remote.memo
     }
-    return SAnimeEpisodeUpdate(refreshed, update.episodes)
+    SAnimeEpisodeUpdate(refreshed, update.episodes)
 }
 
 internal data class AnimeUpdateEpisode(

@@ -69,6 +69,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.callAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import kotlinx.coroutines.CancellationException
@@ -333,10 +334,12 @@ private class AnimeCataloguePagingSource(
         val page = params.key ?: 1
         return try {
             val result = withContext(Dispatchers.IO) {
-                when (mode) {
-                    AnimeCatalogueMode.POPULAR -> source.getPopularAnime(page)
-                    AnimeCatalogueMode.LATEST -> source.getLatestUpdates(page)
-                    AnimeCatalogueMode.SEARCH -> source.getSearchAnime(page, query, filters)
+                callAnimeSource {
+                    when (mode) {
+                        AnimeCatalogueMode.POPULAR -> source.getPopularAnime(page)
+                        AnimeCatalogueMode.LATEST -> source.getLatestUpdates(page)
+                        AnimeCatalogueMode.SEARCH -> source.getSearchAnime(page, query, filters)
+                    }
                 }
             }
             LoadResult.Page(

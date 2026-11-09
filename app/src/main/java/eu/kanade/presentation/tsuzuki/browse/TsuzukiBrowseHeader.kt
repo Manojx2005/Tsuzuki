@@ -34,7 +34,6 @@ internal enum class BrowsePage(val media: BrowseMedia, val section: BrowseSectio
 
 internal fun browsePages(
     hideManga: Boolean,
-    hasAnime: Boolean = false,
     animeEnabled: Boolean = TsuzukiAnime.enabled,
     hasAnimeRepos: Boolean = false,
 ): List<BrowsePage> =
@@ -42,11 +41,7 @@ internal fun browsePages(
         when (it.media) {
             BrowseMedia.NOVELS -> true
             BrowseMedia.MANGA -> !hideManga
-            BrowseMedia.ANIME -> animeEnabled && if (it.section == BrowseSection.EXTENSIONS) {
-                hasAnimeRepos
-            } else {
-                hasAnime || hasAnimeRepos
-            }
+            BrowseMedia.ANIME -> animeEnabled && (it.section != BrowseSection.EXTENSIONS || hasAnimeRepos)
         }
     }
 

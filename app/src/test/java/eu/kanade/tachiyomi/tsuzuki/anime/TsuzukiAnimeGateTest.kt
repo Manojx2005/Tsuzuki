@@ -19,7 +19,7 @@ import tachiyomi.core.common.preference.Preference
 class TsuzukiAnimeGateTest {
     @Test
     fun disabledHidesBrowseWatchAndLibraryDestinations() {
-        val browse = browsePages(hideManga = false, hasAnime = true, animeEnabled = false, hasAnimeRepos = true)
+        val browse = browsePages(hideManga = false, animeEnabled = false, hasAnimeRepos = true)
         assertFalse(browse.any { it.media == BrowseMedia.ANIME })
         assertFalse(showAnimeWatch(watching = true, animeEnabled = false))
         assertFalse(isAnimeLibraryKey(AnimeLibraryTab.key, animeEnabled = false))
@@ -27,7 +27,7 @@ class TsuzukiAnimeGateTest {
 
     @Test
     fun enabledRetainsAnimeDestinations() {
-        val browse = browsePages(hideManga = false, hasAnime = true, animeEnabled = true)
+        val browse = browsePages(hideManga = false, animeEnabled = true)
         assertTrue(browse.any { it.media == BrowseMedia.ANIME })
         assertTrue(showAnimeWatch(watching = true, animeEnabled = true))
         assertTrue(isAnimeLibraryKey(AnimeLibraryTab.key, animeEnabled = true))

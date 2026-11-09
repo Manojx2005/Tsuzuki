@@ -103,12 +103,12 @@ data object BrowseTab : Tab {
             novelExtensionsViewModel.search(novelQuery)
         }
 
-        val animeSources = if (themed && TsuzukiAnime.enabled) rememberAnimeBrowseSources().value else emptyList()
-        val animeRepos = if (themed && TsuzukiAnime.enabled) rememberAnimeBrowseRepos().value else emptyList()
-        val hasAnime = animeSources.isNotEmpty() || animeRepos.isNotEmpty()
+        val animeEnabled = themed && TsuzukiAnime.enabled
+        val animeSources = if (animeEnabled) rememberAnimeBrowseSources().value else emptyList()
+        val animeRepos = if (animeEnabled) rememberAnimeBrowseRepos().value else emptyList()
         val hasAnimeRepos = animeRepos.isNotEmpty()
-        val allPages = remember(hideMangaUi, hasAnime, hasAnimeRepos) {
-            browsePages(hideMangaUi, hasAnime, hasAnimeRepos = hasAnimeRepos)
+        val allPages = remember(hideMangaUi, animeEnabled, hasAnimeRepos) {
+            browsePages(hideMangaUi, animeEnabled = animeEnabled, hasAnimeRepos = hasAnimeRepos)
         }
         // Tsuzuki: swipes stay inside the chosen media (Sources / Extensions / Migrate); the pills switch media.
         var media by rememberSaveable { mutableStateOf(BrowseMedia.NOVELS) }
@@ -155,7 +155,7 @@ data object BrowseTab : Tab {
                             media = it
                         },
                         onSelectSection = { onSelectPage(pages.pageIndex(activeMedia, it)) },
-                        hasAnime = hasAnime,
+                        hasAnime = animeEnabled,
                         hasAnimeRepos = hasAnimeRepos,
                     )
                 }

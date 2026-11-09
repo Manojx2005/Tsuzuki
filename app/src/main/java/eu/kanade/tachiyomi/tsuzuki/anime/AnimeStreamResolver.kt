@@ -7,23 +7,33 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
+internal inline fun <T> callAnimeSource(block: () -> T): T = try {
+    block()
+} catch (e: LinkageError) {
+    throw IllegalStateException("Incompatible anime source", e)
+}
+
 internal object AnimeStreamResolver {
     @Suppress("DEPRECATION")
-    suspend fun episodes(source: AnimeSource, libVersion: Double, anime: SAnime): List<SEpisode> =
+    suspend fun episodes(source: AnimeSource, libVersion: Double, anime: SAnime): List<SEpisode> = callAnimeSource {
         if (libVersion >= 17) {
             source.getAnimeEpisodeUpdate(anime, emptyList(), fetchDetails = false, fetchEpisodes = true).episodes
         } else {
             source.getEpisodeList(anime)
         }
-
-    @Suppress("DEPRECATION")
-    suspend fun videos(source: AnimeSource, libVersion: Double, episode: SEpisode): List<Video> {
-        if (libVersion < 16) return source.getVideoList(episode)
-        return source.getHosterList(episode).flatMap { it.videoList ?: source.getVideoList(it) }
     }
 
     @Suppress("DEPRECATION")
-    suspend fun resolve(source: AnimeSource, libVersion: Double, video: Video): Video {
+    suspend fun videos(source: AnimeSource, libVersion: Double, episode: SEpisode): List<Video> = callAnimeSource {
+        if (libVersion < 16) {
+            source.getVideoList(episode)
+        } else {
+            source.getHosterList(episode).flatMap { it.videoList ?: source.getVideoList(it) }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    suspend fun resolve(source: AnimeSource, libVersion: Double, video: Video): Video = callAnimeSource {
         val result = when {
             source !is AnimeHttpSource -> video
             libVersion < 16 && video.videoUrl.toHttpUrlOrNull() == null -> video.copy(
@@ -33,6 +43,6 @@ internal object AnimeStreamResolver {
             else -> video
         }
         require(result.videoUrl.toHttpUrlOrNull() != null) { "The video has no HTTP(S) stream URL" }
-        return result
+        result
     }
 }

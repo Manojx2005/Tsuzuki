@@ -208,12 +208,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode.get())
 
-        // Tsuzuki: daily background check that notifies about a new app release.
-        eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
-        if (isMainProcess) eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime.initialize(this, scope)
+        if (isMainProcess) {
+            // Tsuzuki: daily background check that notifies about a new app release.
+            eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
+            eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime.initialize(this, scope)
 
-        // Updates widget update
-        WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+            // Updates widget update
+            WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+        }
 
         if (!LogcatLogger.isInstalled) {
             val minLogPriority = when {
@@ -225,7 +227,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
         }
 
-        initializeMigrator()
+        if (isMainProcess) initializeMigrator()
     }
 
     private fun initializeMigrator() {

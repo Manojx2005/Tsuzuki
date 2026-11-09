@@ -31,7 +31,7 @@
 -keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
+-keep class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
 -keepclassmembers class * implements java.io.Serializable {

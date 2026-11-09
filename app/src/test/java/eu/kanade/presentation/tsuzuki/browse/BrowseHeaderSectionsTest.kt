@@ -46,7 +46,7 @@ class BrowseHeaderSectionsTest {
 
     @Test
     fun `installed anime sources remain accessible when there are no repos`() {
-        val pages = browsePages(hideManga = true, hasAnime = true, animeEnabled = true)
+        val pages = browsePages(hideManga = true, animeEnabled = true)
         browsePagesFor(pages, BrowseMedia.ANIME) shouldBe listOf(BrowsePage.ANIME_SOURCES)
     }
 }

@@ -37,11 +37,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -58,6 +61,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
 internal fun rememberAnimeBrowseSources(): State<List<RegisteredAnimeSource>> {
@@ -104,12 +108,17 @@ internal fun animeSourcesTab(
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (sources.isEmpty()) {
             item {
-                Text(
-                    tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = tokens.mutedText,
-                    modifier = Modifier.padding(16.dp),
-                )
+                val navigator = LocalNavigator.currentOrThrow
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.mutedText,
+                    )
+                    TextButton(onClick = { navigator.push(AnimeExtensionReposScreen) }) {
+                        Text(tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_extension_repos)))
+                    }
+                }
             }
         }
         itemsIndexed(ordered, key = { _, entry -> entry.source.id }) { index, entry ->

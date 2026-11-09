@@ -25,7 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,11 +58,10 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
@@ -117,9 +116,11 @@ internal data object AnimeLibraryTab : Tab {
         val library by remember { store.observeLibrary() }.collectAsState(emptyList())
         val shelves by remember { store.observeShelves() }.collectAsState(emptyList())
         var selectedShelf by rememberSaveable { mutableLongStateOf(0L) }
-        var menu by remember { mutableStateOf(false) }
+        var query by rememberSaveable { mutableStateOf<String?>(null) }
         val activeShelf = shelves.indexOfFirst { it.id == selectedShelf }.coerceAtLeast(0)
-        val filtered = library.filter { (shelves.getOrNull(activeShelf)?.id ?: 0L) in it.shelfIds }
+        val shelfId = shelves.getOrNull(activeShelf)?.id ?: 0L
+        val search = query.orEmpty().trim()
+        val filtered = library.filter { shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) }
         val tokens = TsuzukiTheme.tokens
         val compact = LocalConfiguration.current.screenWidthDp < 600
         val bottomPad = if (compact) 108.dp else 24.dp
@@ -127,17 +128,13 @@ internal data object AnimeLibraryTab : Tab {
             modifier = Modifier.tsuzukiBackground(tokens),
             containerColor = Color.Transparent,
             topBar = {
-                AppBar(
-                    title = stringResource(MR.strings.label_library),
+                SearchToolbar(
+                    searchQuery = query,
+                    onChangeSearchQuery = { query = it },
+                    titleContent = { AppBarTitle(stringResource(MR.strings.label_library)) },
                     actions = {
-                        IconButton(onClick = { menu = true }) {
-                            Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.action_menu))
-                        }
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            TsuzukiMenuItem(stringResource(MR.strings.tsz_anime_shelves), onClick = {
-                                menu = false
-                                navigator.push(AnimeShelvesScreen())
-                            })
+                        IconButton(onClick = { navigator.push(AnimeShelvesScreen()) }) {
+                            Icon(Icons.Outlined.FilterList, stringResource(MR.strings.tsz_anime_shelves))
                         }
                     },
                 )
@@ -188,13 +185,21 @@ private fun AnimeLibraryMedia() {
     val joined by preferences.joinedLibrary.collectAsState()
     val hideManga by remember { Injekt.get<BasePreferences>().hideMangaUi }.collectAsState()
     val labels = buildList {
-        add(stringResource(TDMR.strings.label_novels))
+        if (joined) add(stringResource(MR.strings.tsz_library_all))
+        if (!joined || !hideManga) add(stringResource(TDMR.strings.label_novels))
         if (!hideManga) add(stringResource(TDMR.strings.label_manga))
         add(stringResource(MR.strings.tsz_anime_media))
     }
     TsuzukiSegments(labels, selected = labels.lastIndex, onClick = { selected ->
         if (selected != labels.lastIndex) {
-            if (joined) preferences.filterNovel().set(if (selected == 0) TriState.ENABLED_IS else TriState.ENABLED_NOT)
+            if (joined) {
+                val filter = when (selected) {
+                    0 -> TriState.DISABLED
+                    1 -> TriState.ENABLED_IS
+                    else -> TriState.ENABLED_NOT
+                }
+                preferences.filterNovel().set(filter)
+            }
             tabNavigator.current = if (joined || selected == 0) NovelsTab else LibraryTab
         }
     })

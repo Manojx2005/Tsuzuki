@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
@@ -35,21 +36,23 @@ fun TsuzukiMixedLibraryHeader(
     val filter by preferences.filterNovel().collectAsState()
     val filters = listOf(TriState.DISABLED, TriState.ENABLED_IS, TriState.ENABLED_NOT)
     val hideMangaUi by remember { Injekt.get<BasePreferences>().hideMangaUi }.collectAsState()
-    val tokens = TsuzukiTheme.tokens
-    Column {
+    val countSummary: @Composable () -> Unit = {
         if (showCounts && novelCount + mangaCount > 0) {
             val counts = listOfNotNull(
                 stringResource(MR.strings.tsz_library_novel_count, novelCount).takeIf { novelCount > 0 },
                 stringResource(MR.strings.tsz_library_manga_count, mangaCount).takeIf { mangaCount > 0 },
             ).joinToString(" · ")
             Text(
-                text = if (tokens.isDot) counts.uppercase() else counts,
+                text = tsuzukiMenuLabel(counts),
                 modifier = Modifier.padding(horizontal = 16.dp),
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+    Column {
+        if (onOpenAnime == null) countSummary()
         if (!hideMangaUi || onOpenAnime != null) {
             val labels = buildList {
                 add(stringResource(MR.strings.tsz_library_all))
@@ -59,19 +62,22 @@ fun TsuzukiMixedLibraryHeader(
                 }
                 if (onOpenAnime != null) add(stringResource(MR.strings.tsz_anime_media))
             }
-            TsuzukiPillRow(
-                labels = labels,
-                selected = if (hideMangaUi) 0 else filters.indexOf(filter),
-                onClick = {
-                    if (onOpenAnime != null && it == labels.lastIndex) {
-                        onOpenAnime()
-                    } else {
-                        onFilterChanged()
-                        preferences.filterNovel().set(filters[it])
-                    }
-                },
-            )
+            val selected = if (hideMangaUi) 0 else filters.indexOf(filter)
+            val onSelect: (Int) -> Unit = {
+                if (onOpenAnime != null && it == labels.lastIndex) {
+                    onOpenAnime()
+                } else {
+                    onFilterChanged()
+                    preferences.filterNovel().set(filters[it])
+                }
+            }
+            if (onOpenAnime != null) {
+                TsuzukiSegments(labels, selected, onSelect)
+            } else {
+                TsuzukiPillRow(labels, selected, onSelect)
+            }
         }
+        if (onOpenAnime != null) countSummary()
         TsuzukiLibraryQueryPills(onApplied = onFilterChanged)
     }
 }

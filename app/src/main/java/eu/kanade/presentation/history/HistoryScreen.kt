@@ -78,7 +78,7 @@ fun HistoryScreen(
     onRemoveSelected: ((List<HistoryWithRelations>) -> Unit)? = null,
 ) {
     val tsuzuki = isTsuzukiStyle()
-    val animeHistory = if (tsuzuki && showFilterChips) rememberAnimeHistory() else emptyList()
+    val animeHistory = if (tsuzuki) rememberAnimeHistory() else emptyList()
     val hasAnimeHistory = showAnimeHistory(animeHistory.isNotEmpty())
     var animeSelected by rememberSaveable { mutableStateOf(false) }
     val showingAnime = hasAnimeHistory && animeSelected
@@ -161,7 +161,7 @@ fun HistoryScreen(
         Column(
             modifier = Modifier.padding(contentPadding),
         ) {
-            if (showFilterChips) {
+            if (showFilterChips || hasAnimeHistory) {
                 val filterScroll = if (hasAnimeHistory) Modifier.horizontalScroll(rememberScrollState()) else Modifier
                 Row(
                     modifier = Modifier

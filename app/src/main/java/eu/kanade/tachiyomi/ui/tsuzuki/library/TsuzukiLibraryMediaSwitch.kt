@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
@@ -41,17 +42,19 @@ fun TsuzukiLibraryMediaSwitch(isManga: Boolean) {
                 if (!joined && !hideMangaUi) add(stringResource(TDMR.strings.label_manga))
                 if (TsuzukiAnime.enabled) add(stringResource(MR.strings.tsz_anime_media))
             }
-            TsuzukiPillRow(
-                labels = labels,
-                selected = if (isManga && !joined && !hideMangaUi) 1 else 0,
-                onClick = {
-                    tabNavigator.current = when {
-                        TsuzukiAnime.enabled && it == labels.lastIndex -> AnimeLibraryTab
-                        it == 1 -> LibraryTab
-                        else -> NovelsTab
-                    }
-                },
-            )
+            val selected = if (isManga && !joined && !hideMangaUi) 1 else 0
+            val onSelect: (Int) -> Unit = {
+                tabNavigator.current = when {
+                    TsuzukiAnime.enabled && it == labels.lastIndex -> AnimeLibraryTab
+                    it == 1 -> LibraryTab
+                    else -> NovelsTab
+                }
+            }
+            if (TsuzukiAnime.enabled) {
+                TsuzukiSegments(labels, selected, onSelect)
+            } else {
+                TsuzukiPillRow(labels, selected, onSelect)
+            }
         }
         if (!isManga) eu.kanade.presentation.tsuzuki.library.TsuzukiLibraryQueryPills()
     }
