@@ -64,6 +64,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                         backend = checkNotNull(Injekt.get<AnimePlayerLauncher>().createBackend()),
                         library = Injekt.get(),
                         preferences = Injekt.get(),
+                        aniSkip = Injekt.get(),
                         processScope = Injekt.get(),
                         restoredPosition = savedInstanceState?.takeIf { it.containsKey(POSITION) }?.getDouble(POSITION),
                         restoredPaused = savedInstanceState?.getBoolean(PAUSED) == true,

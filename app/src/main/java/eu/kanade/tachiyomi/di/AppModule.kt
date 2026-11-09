@@ -145,6 +145,9 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { NetworkHelper(app, get(), get()) }
         addSingletonFactory { AnimeLibraryStore(get(), get(), get(), get(), get()) }
+        addSingletonFactory {
+            eu.kanade.tachiyomi.tsuzuki.anime.player.AniSkipLookup(get<NetworkHelper>().client, get())
+        }
         addSingletonFactory { AnimeTracking(get(), get(), get()) }
         addSingletonFactory { JavaScriptEngine(app) }
 

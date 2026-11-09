@@ -36,4 +36,12 @@
     <string name="tsz_anime_player_track_off">关闭</string>
     <string name="tsz_anime_player_video">视频</string>
     <string name="tsz_anime_player_volume">音量</string>
+    <string name="tsz_anime_aniskip">AniSkip</string>
+    <string name="tsz_anime_skip_opening">跳过片头</string>
+    <string name="tsz_anime_skip_ending">跳过片尾</string>
+    <string name="tsz_anime_skip_recap">跳过前情回顾</string>
+    <string name="tsz_anime_skip_button">显示按钮</string>
+    <string name="tsz_anime_skip_auto">自动跳过</string>
+    <string name="tsz_anime_skip_intro_delay">片头等待时间</string>
+    <string name="tsz_anime_skip_seconds">%1$d 秒</string>
 </resources>

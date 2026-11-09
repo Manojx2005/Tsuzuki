@@ -52,6 +52,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
         var settings by remember { mutableStateOf(preferences.get()) }
         val autoplay by preferences.autoplay.collectAsState()
         var showSpeed by remember { mutableStateOf(false) }
+        var showAniSkip by remember { mutableStateOf(false) }
         val tokens = TsuzukiTheme.tokens
 
         fun update(settingsUpdate: AnimePlayerSettings) {
@@ -76,6 +77,25 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    PlayerSettingCard(stringResource(R.string.tsz_anime_aniskip)) {
+                        TextButton(onClick = { showAniSkip = true }) {
+                            Text(tsuzukiMenuLabel(aniSkipModeLabel(settings.aniSkipMode)))
+                        }
+                        if (settings.aniSkipMode == AniSkipMode.AUTO) {
+                            AnimePlayerStepper(
+                                label = stringResource(R.string.tsz_anime_skip_intro_delay),
+                                value = stringResource(R.string.tsz_anime_skip_seconds, settings.aniSkipIntroDelay),
+                                decrease = {
+                                    update(settings.copy(aniSkipIntroDelay = settings.aniSkipIntroDelay - 1))
+                                },
+                                increase = {
+                                    update(settings.copy(aniSkipIntroDelay = settings.aniSkipIntroDelay + 1))
+                                },
+                            )
+                        }
+                    }
+                }
                 item {
                     PlayerSettingCard(stringResource(R.string.tsz_anime_player_autoplay)) {
                         Switch(checked = autoplay, onCheckedChange = preferences.autoplay::set)
@@ -144,8 +164,38 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 },
             )
         }
+        if (showAniSkip) {
+            AlertDialog(
+                onDismissRequest = { showAniSkip = false },
+                title = { Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_aniskip))) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        AniSkipMode.entries.forEach { mode ->
+                            AnimePlayerOption(aniSkipModeLabel(mode), selected = settings.aniSkipMode == mode) {
+                                update(settings.copy(aniSkipMode = mode))
+                                showAniSkip = false
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showAniSkip = false }) {
+                        Text(mokoStringResource(MR.strings.action_cancel))
+                    }
+                },
+            )
+        }
     }
 }
+
+@Composable
+private fun aniSkipModeLabel(mode: AniSkipMode): String = stringResource(
+    when (mode) {
+        AniSkipMode.OFF -> R.string.tsz_anime_player_track_off
+        AniSkipMode.BUTTON -> R.string.tsz_anime_skip_button
+        AniSkipMode.AUTO -> R.string.tsz_anime_skip_auto
+    },
+)
 
 @Composable
 private fun PlayerSettingCard(title: String, content: @Composable () -> Unit) {

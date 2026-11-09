@@ -36,4 +36,12 @@
     <string name="tsz_anime_player_track_off">Desactivado</string>
     <string name="tsz_anime_player_video">Vídeo</string>
     <string name="tsz_anime_player_volume">Volumen</string>
+    <string name="tsz_anime_aniskip">AniSkip</string>
+    <string name="tsz_anime_skip_opening">Saltar apertura</string>
+    <string name="tsz_anime_skip_ending">Saltar cierre</string>
+    <string name="tsz_anime_skip_recap">Saltar resumen</string>
+    <string name="tsz_anime_skip_button">Mostrar botón</string>
+    <string name="tsz_anime_skip_auto">Saltar automáticamente</string>
+    <string name="tsz_anime_skip_intro_delay">Espera de apertura</string>
+    <string name="tsz_anime_skip_seconds">%1$d s</string>
 </resources>

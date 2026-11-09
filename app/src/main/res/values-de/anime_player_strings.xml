@@ -36,4 +36,12 @@
     <string name="tsz_anime_player_track_off">Aus</string>
     <string name="tsz_anime_player_video">Video</string>
     <string name="tsz_anime_player_volume">Lautstärke</string>
+    <string name="tsz_anime_aniskip">AniSkip</string>
+    <string name="tsz_anime_skip_opening">Intro überspringen</string>
+    <string name="tsz_anime_skip_ending">Abspann überspringen</string>
+    <string name="tsz_anime_skip_recap">Rückblick überspringen</string>
+    <string name="tsz_anime_skip_button">Schaltfläche anzeigen</string>
+    <string name="tsz_anime_skip_auto">Automatisch überspringen</string>
+    <string name="tsz_anime_skip_intro_delay">Intro-Verzögerung</string>
+    <string name="tsz_anime_skip_seconds">%1$d s</string>
 </resources>

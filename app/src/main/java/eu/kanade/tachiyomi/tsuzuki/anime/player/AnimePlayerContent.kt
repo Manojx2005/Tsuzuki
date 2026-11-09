@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -57,8 +58,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -200,6 +203,23 @@ internal fun AnimePlayerContent(
                     )
                 }
             }
+        }
+        val segment = state.activeAniSkip
+        if (!locked && sheet == null && segment != null) {
+            val label = when (segment.kind) {
+                AniSkipKind.OPENING -> R.string.tsz_anime_skip_opening
+                AniSkipKind.ENDING -> R.string.tsz_anime_skip_ending
+                AniSkipKind.RECAP -> R.string.tsz_anime_skip_recap
+            }
+            TsuzukiPill(
+                text = stringResource(label),
+                selected = true,
+                onClick = model::skipCurrentSegment,
+                role = Role.Button,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(end = 16.dp, bottom = if (showControls) 100.dp else 16.dp),
+            )
         }
         if (locked) {
             Box(Modifier.align(Alignment.BottomStart).windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)) {
@@ -508,6 +528,21 @@ private fun AnimePlayerTimeline(state: AnimePlayerState, onSeek: (Double) -> Uni
                 spreadDots = true,
                 thickness = 5.dp,
             )
+            if (duration > 0 && state.settings.aniSkipMode != AniSkipMode.OFF && state.aniSkipSegments.isNotEmpty()) {
+                Canvas(Modifier.fillMaxWidth().height(14.dp)) {
+                    state.aniSkipSegments.forEach { segment ->
+                        val start = (segment.start / duration).toFloat().coerceIn(0f, 1f) * size.width
+                        val end = (segment.end / duration).toFloat().coerceIn(0f, 1f) * size.width
+                        drawLine(
+                            tokens.accent.copy(alpha = 0.65f),
+                            Offset(start, 0f),
+                            Offset(end, 0f),
+                            3.dp.toPx(),
+                            StrokeCap.Round,
+                        )
+                    }
+                }
+            }
             Slider(
                 value = current,
                 onValueChange = {

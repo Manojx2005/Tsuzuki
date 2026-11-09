@@ -35,6 +35,8 @@ internal data class AnimePlayerSettings(
     val seekGesture: Boolean = true,
     val brightnessGesture: Boolean = true,
     val volumeGesture: Boolean = true,
+    val aniSkipMode: AniSkipMode = AniSkipMode.OFF,
+    val aniSkipIntroDelay: Int = 3,
 )
 
 internal class AnimePlayerPreferences(store: PreferenceStore) {
@@ -49,6 +51,8 @@ internal class AnimePlayerPreferences(store: PreferenceStore) {
     private val seekGesture = store.getBoolean("tsuzuki_anime_player_seek_gesture", true)
     private val brightnessGesture = store.getBoolean("tsuzuki_anime_player_brightness_gesture", true)
     private val volumeGesture = store.getBoolean("tsuzuki_anime_player_volume_gesture", true)
+    private val aniSkipMode = store.getString("tsuzuki_anime_player_aniskip", AniSkipMode.OFF.name)
+    private val aniSkipIntroDelay = store.getInt("tsuzuki_anime_player_aniskip_intro_delay", 3)
 
     fun get() = AnimePlayerSettings(
         speed = speed.get().bounded(0.25f, 3f, 1f),
@@ -58,6 +62,8 @@ internal class AnimePlayerPreferences(store: PreferenceStore) {
         seekGesture = seekGesture.get(),
         brightnessGesture = brightnessGesture.get(),
         volumeGesture = volumeGesture.get(),
+        aniSkipMode = AniSkipMode.entries.firstOrNull { it.name == aniSkipMode.get() } ?: AniSkipMode.OFF,
+        aniSkipIntroDelay = aniSkipIntroDelay.get().coerceIn(0, 30),
     )
 
     fun set(settings: AnimePlayerSettings) {
@@ -68,6 +74,8 @@ internal class AnimePlayerPreferences(store: PreferenceStore) {
         seekGesture.set(settings.seekGesture)
         brightnessGesture.set(settings.brightnessGesture)
         volumeGesture.set(settings.volumeGesture)
+        aniSkipMode.set(settings.aniSkipMode.name)
+        aniSkipIntroDelay.set(settings.aniSkipIntroDelay.coerceIn(0, 30))
     }
 
     companion object {

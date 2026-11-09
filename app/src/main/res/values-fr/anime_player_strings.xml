@@ -36,4 +36,12 @@
     <string name="tsz_anime_player_track_off">Désactivé</string>
     <string name="tsz_anime_player_video">Vidéo</string>
     <string name="tsz_anime_player_volume">Volume</string>
+    <string name="tsz_anime_aniskip">AniSkip</string>
+    <string name="tsz_anime_skip_opening">Passer le générique de début</string>
+    <string name="tsz_anime_skip_ending">Passer le générique de fin</string>
+    <string name="tsz_anime_skip_recap">Passer le récapitulatif</string>
+    <string name="tsz_anime_skip_button">Afficher le bouton</string>
+    <string name="tsz_anime_skip_auto">Passer automatiquement</string>
+    <string name="tsz_anime_skip_intro_delay">Délai du générique de début</string>
+    <string name="tsz_anime_skip_seconds">%1$d s</string>
 </resources>

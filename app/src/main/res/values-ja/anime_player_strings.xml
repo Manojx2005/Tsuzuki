@@ -36,4 +36,12 @@
     <string name="tsz_anime_player_track_off">オフ</string>
     <string name="tsz_anime_player_video">映像</string>
     <string name="tsz_anime_player_volume">音量</string>
+    <string name="tsz_anime_aniskip">AniSkip</string>
+    <string name="tsz_anime_skip_opening">オープニングをスキップ</string>
+    <string name="tsz_anime_skip_ending">エンディングをスキップ</string>
+    <string name="tsz_anime_skip_recap">あらすじをスキップ</string>
+    <string name="tsz_anime_skip_button">ボタンを表示</string>
+    <string name="tsz_anime_skip_auto">自動スキップ</string>
+    <string name="tsz_anime_skip_intro_delay">オープニングの待機時間</string>
+    <string name="tsz_anime_skip_seconds">%1$d 秒</string>
 </resources>

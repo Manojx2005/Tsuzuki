@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimePlaybackProgress
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
@@ -36,6 +37,7 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.items.episode.model.Episode
 import kotlin.math.abs
+import kotlin.math.roundToLong
 
 internal data class AnimePlayerState(
     val title: String = "",
@@ -57,7 +59,15 @@ internal data class AnimePlayerState(
     val failed: Boolean = false,
     val nextIn: Int? = null,
     val fallbackNotice: Int = 0,
-)
+    val aniSkipSegments: List<AniSkipSegment> = emptyList(),
+) {
+    val activeAniSkip: AniSkipSegment?
+        get() = if (loading || failed || ended || settings.aniSkipMode == AniSkipMode.OFF) {
+            null
+        } else {
+            aniSkipSegments.atPosition(position)
+        }
+}
 
 internal class AnimePlayerModel(
     private val context: Context,
@@ -65,6 +75,7 @@ internal class AnimePlayerModel(
     private val backend: AnimePlayerBackend,
     private val library: AnimeLibraryStore,
     preferences: PreferenceStore,
+    private val aniSkip: AniSkipLookup,
     processScope: CoroutineScope,
     restoredPosition: Double?,
     restoredPaused: Boolean,
@@ -104,6 +115,9 @@ internal class AnimePlayerModel(
     private var streams: AnimeStreamQueue? = null
     private var source: RegisteredAnimeSource? = null
     private var candidates = emptyList<Video>()
+    private var aniSkipJob: Job? = null
+    private var aniSkipAttempt: Pair<Long, Long>? = null
+    private val skippedSegments = mutableSetOf<AniSkipSegment>()
 
     val shouldResume: Boolean get() = wantsPlayback
     var targetEpisodeId: Long? = (request as? AnimePlayback.Request.Episode)?.id
@@ -216,6 +230,18 @@ internal class AnimePlayerModel(
         if (updated.speed != state.value.settings.speed) tracker.skipNextIncrement()
         mutableState.update { it.copy(settings = updated) }
         if (initialized) backend.applySettings(updated)
+        if (updated.aniSkipMode == AniSkipMode.OFF) {
+            resetAniSkip()
+        } else {
+            loadAniSkip()
+            autoSkipIfReady()
+        }
+    }
+
+    fun skipCurrentSegment() {
+        val segment = state.value.activeAniSkip ?: return
+        skippedSegments.add(segment)
+        seekTo(segment.end)
     }
 
     fun setTrack(kind: AnimeTrackKind, track: AnimePlayerTrack?) {
@@ -269,6 +295,8 @@ internal class AnimePlayerModel(
 
     private fun openEpisode(id: Long, restoredPosition: Double? = null) {
         targetEpisodeId = id
+        resetAniSkip()
+        skippedSegments.clear()
         saveProgress()
         cancelCountdown()
         cancelledCountdown = false
@@ -378,12 +406,14 @@ internal class AnimePlayerModel(
             if (abs(state.value.position - seconds) >= 0.1) {
                 mutableState.update { it.copy(position = seconds) }
             }
+            autoSkipIfReady()
         }
 
         override fun onDuration(seconds: Double) = onMain {
             if (!seconds.isFinite() || seconds <= 0 || (!waitingForFile && state.value.loading)) return@onMain
             tracker.onDuration(seconds)
             mutableState.update { it.copy(duration = seconds) }
+            loadAniSkip()
         }
 
         override fun onBuffered(seconds: Double) = onMain {
@@ -400,6 +430,7 @@ internal class AnimePlayerModel(
             mutableState.update { it.copy(loading = false) }
             refreshTracks()
             syncPause()
+            loadAniSkip()
         }
 
         override fun onTracksChanged() = onMain {
@@ -424,6 +455,51 @@ internal class AnimePlayerModel(
 
     private fun onMain(block: () -> Unit) {
         viewModelScope.launch(Dispatchers.Main) { block() }
+    }
+
+    private fun resetAniSkip() {
+        aniSkipJob?.cancel()
+        aniSkipJob = null
+        aniSkipAttempt = null
+        mutableState.update { it.copy(aniSkipSegments = emptyList()) }
+    }
+
+    private fun loadAniSkip() {
+        val current = state.value
+        val episode = current.episode ?: return
+        if (!TsuzukiAnime.enabled || current.loading || current.failed || current.duration < 1.0 ||
+            current.settings.aniSkipMode == AniSkipMode.OFF
+        ) {
+            return
+        }
+        val attempt = episode.id to current.duration.roundToLong()
+        if (aniSkipAttempt == attempt) return
+        resetAniSkip()
+        aniSkipAttempt = attempt
+        aniSkipJob = viewModelScope.launch {
+            try {
+                val segments = aniSkip.segments(episode, current.duration)
+                if (aniSkipAttempt == attempt) {
+                    mutableState.update { it.copy(aniSkipSegments = segments) }
+                    autoSkipIfReady()
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logcat(LogPriority.WARN, error) { "AniSkip interval lookup failed" }
+            }
+        }
+    }
+
+    private fun autoSkipIfReady() {
+        val current = state.value
+        val segment = current.activeAniSkip ?: return
+        if (current.settings.aniSkipMode == AniSkipMode.AUTO && current.playing &&
+            segment.canAutoSkip(current.position, current.settings.aniSkipIntroDelay) &&
+            skippedSegments.add(segment)
+        ) {
+            seekTo(segment.end)
+        }
     }
 
     private fun refreshTracks() {
