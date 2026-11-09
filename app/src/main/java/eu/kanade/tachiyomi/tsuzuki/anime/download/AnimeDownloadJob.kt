@@ -73,6 +73,7 @@ internal class AnimeDownloadJob(context: Context, parameters: WorkerParameters) 
         private const val WIFI_ONLY = "wifi_only"
 
         fun schedule(context: Context, wifiOnly: Boolean, policy: ExistingWorkPolicy) {
+            if (!TsuzukiAnime.enabled) return
             val constraints = Constraints.Builder().apply {
                 if (wifiOnly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     val wifi = NetworkRequest.Builder()

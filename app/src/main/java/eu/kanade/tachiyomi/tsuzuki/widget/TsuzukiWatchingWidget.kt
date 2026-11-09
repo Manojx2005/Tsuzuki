@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.tsuzuki.widget
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.text.format.DateUtils
 import androidx.compose.runtime.Composable
@@ -129,6 +131,20 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
             }
         }
     }
+}
+
+internal fun setWatchingWidgetAvailable(context: Context, available: Boolean) {
+    val component = ComponentName(context, TsuzukiWatchingWidgetReceiver::class.java)
+    val packageManager = context.packageManager
+    val isEnabled =
+        packageManager.getComponentEnabledSetting(component) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+    if (available == isEnabled) return
+    val state = if (available) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+    } else {
+        PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
+    }
+    packageManager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
 }
 
 class TsuzukiWatchingWidgetReceiver : GlanceAppWidgetReceiver() {

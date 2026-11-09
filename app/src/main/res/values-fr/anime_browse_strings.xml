@@ -39,4 +39,6 @@
     <string name="tsz_anime_track_planning">À regarder</string>
     <string name="tsz_anime_track_rewatching">Visionnage à nouveau</string>
     <string name="tsz_anime_player_unsupported_device">Cet appareil ne prend pas en charge la lecture d’animes</string>
+    <string name="tsz_anime_beta">Anime (bêta)</string>
+    <string name="tsz_anime_beta_summary">Afficher les étagères, les sources et le lecteur d’animes</string>
 </resources>

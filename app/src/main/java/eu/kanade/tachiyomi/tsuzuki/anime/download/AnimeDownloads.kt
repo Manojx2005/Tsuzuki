@@ -94,7 +94,6 @@ internal class AnimeDownloads(
     val progress = mutableProgress.asStateFlow()
 
     private val initialized = scope.async(Dispatchers.IO) {
-        if (!TsuzukiAnime.enabled) return@async
         mutableState.value = try {
             Json.decodeFromString<AnimeDownloadQueue>(stored.readFully().decodeToString())
         } catch (_: FileNotFoundException) {
@@ -108,12 +107,6 @@ internal class AnimeDownloads(
     init {
         scope.launch(Dispatchers.IO) {
             initialized.await()
-            if (!TsuzukiAnime.enabled) return@launch
-            val restored = state.value
-            restored.entries.filter { it.status == AnimeDownloadStatus.Removing }.forEach(::deleteAsync)
-            if (restored.hasQueuedEpisodes && !restored.paused) {
-                AnimeDownloadJob.schedule(context, restored.wifiOnly, ExistingWorkPolicy.KEEP)
-            }
             for (action in commands) {
                 try {
                     action()
@@ -123,6 +116,15 @@ internal class AnimeDownloads(
                     logcat(LogPriority.ERROR, e) { "Could not update the anime download queue" }
                 }
             }
+        }
+    }
+
+    fun restoreWhenEnabled() = command {
+        if (!TsuzukiAnime.enabled) return@command
+        val restored = state.value
+        restored.entries.filter { it.status == AnimeDownloadStatus.Removing }.forEach(::deleteAsync)
+        if (restored.hasQueuedEpisodes && !restored.paused) {
+            AnimeDownloadJob.schedule(context, restored.wifiOnly, ExistingWorkPolicy.KEEP)
         }
     }
 
@@ -291,6 +293,10 @@ internal class AnimeDownloads(
             initialized.await()
             try {
                 disk.withLock {
+                    val removing = state.value.entries.any {
+                        it.episodeId == entry.episodeId && it.status == AnimeDownloadStatus.Removing
+                    }
+                    if (!removing) return@withLock
                     val folder = episodeFolder(entry)
                     val deleted = folder != null && (playableFile(folder)?.delete() != false) &&
                         folder.deleteRecursively()

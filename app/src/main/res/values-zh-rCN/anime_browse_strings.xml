@@ -38,4 +38,6 @@
     <string name="tsz_anime_track_planning">计划观看</string>
     <string name="tsz_anime_track_rewatching">重新观看</string>
     <string name="tsz_anime_player_unsupported_device">此设备不支持播放动漫</string>
+    <string name="tsz_anime_beta">动漫（测试版）</string>
+    <string name="tsz_anime_beta_summary">显示动漫书架、来源和播放器</string>
 </resources>

@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.ui.tsuzuki.navigation
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -45,6 +48,16 @@ object TsuzukiNavigation {
         HomeScreen.Tab.History -> HistoryTab
         is HomeScreen.Tab.Browse -> BrowseTab
         is HomeScreen.Tab.More -> MoreTab
+    }
+}
+
+@Composable
+internal fun keepAnimeLibraryTabAvailable(tabNavigator: TabNavigator) {
+    val animeEnabled = TsuzukiAnime.enabled
+    LaunchedEffect(animeEnabled, tabNavigator.current) {
+        if (!animeEnabled && tabNavigator.current == AnimeLibraryTab) {
+            tabNavigator.current = NovelsTab
+        }
     }
 }
 

@@ -103,6 +103,11 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
             context.workManager.enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.UPDATE, request)
         }
 
+        fun cancel(context: Context) {
+            context.workManager.cancelUniqueWork(PERIODIC)
+            context.workManager.cancelUniqueWork(MANUAL)
+        }
+
         fun start(context: Context): Boolean {
             if (!TsuzukiAnime.enabled) return false
             val restrictions = Injekt.get<LibraryPreferences>().autoUpdateDeviceRestrictions.get()

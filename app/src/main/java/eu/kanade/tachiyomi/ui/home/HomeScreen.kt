@@ -178,6 +178,7 @@ object HomeScreen : Screen() {
                 key = TabNavigatorKey,
             ) { tabNavigator ->
                 if (isTsuzuki) {
+                    eu.kanade.tachiyomi.ui.tsuzuki.navigation.keepAnimeLibraryTabAvailable(tabNavigator)
                     androidx.compose.runtime.SideEffect {
                         retainedTsuzukiTab = tabNavigator.current.key
                         if (TsuzukiNavigation.selected(tabNavigator.current) == NovelsTab) {

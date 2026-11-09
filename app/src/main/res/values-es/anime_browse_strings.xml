@@ -39,4 +39,6 @@
     <string name="tsz_anime_track_planning">Planeo ver</string>
     <string name="tsz_anime_track_rewatching">Volviendo a ver</string>
     <string name="tsz_anime_player_unsupported_device">Este dispositivo no admite la reproducción de anime</string>
+    <string name="tsz_anime_beta">Anime (beta)</string>
+    <string name="tsz_anime_beta_summary">Mostrar estanterías y fuentes de anime y el reproductor</string>
 </resources>

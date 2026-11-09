@@ -38,4 +38,6 @@
     <string name="tsz_anime_track_planning">視聴予定</string>
     <string name="tsz_anime_track_rewatching">再視聴中</string>
     <string name="tsz_anime_player_unsupported_device">この端末ではアニメを再生できません</string>
+    <string name="tsz_anime_beta">アニメ（ベータ版）</string>
+    <string name="tsz_anime_beta_summary">アニメの本棚、配信元、プレーヤーを表示します</string>
 </resources>

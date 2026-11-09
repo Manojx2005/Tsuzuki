@@ -120,9 +120,11 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
         val translationQueue by translationService.queueState.collectAsState()
         val currentTranslatingChapterId by translationService.currentTranslatingChapterId.collectAsState()
 
-        val animeDownloads = remember { if (TsuzukiAnime.enabled) Injekt.get<AnimeDownloads>() else null }
+        val animeEnabled = TsuzukiAnime.enabled
+        val animeDownloads = if (animeEnabled) remember { Injekt.get<AnimeDownloads>() } else null
         val animeQueue = animeDownloads?.state?.collectAsState()?.value
-        var selectedTab by remember { mutableStateOf(initialTab.coerceIn(0, if (animeDownloads == null) 2 else 3)) }
+        var requestedTab by remember { mutableStateOf(initialTab) }
+        val selectedTab = requestedTab.coerceIn(0, if (animeEnabled) 3 else 2)
         val animeSelected = selectedTab == 3 && animeDownloads != null
         var filterMode by remember { mutableStateOf(DownloadQueueFilter.All) }
         val canReorder = filterMode == DownloadQueueFilter.All
@@ -550,14 +552,14 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                         counts = counts,
                         showSharedSummary = !animeSelected,
                         selected = selectedTab,
-                        onSelect = { selectedTab = it },
+                        onSelect = { requestedTab = it },
                     )
                 } else {
                     TabRow(selectedTabIndex = selectedTab) {
                         tabs.forEachIndexed { index, titleRes ->
                             Tab(
                                 selected = selectedTab == index,
-                                onClick = { selectedTab = index },
+                                onClick = { requestedTab = index },
                                 text = { Text(titleRes) },
                             )
                         }

@@ -91,6 +91,15 @@ object SettingsBrowseScreen : SearchableSettings {
                             navigator.push(NovelExtensionReposScreen())
                         },
                     ),
+                    if (TsuzukiAnime.supported) {
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = remember { TsuzukiAnime.preference(Injekt.get()) },
+                            title = androidStringResource(R.string.tsz_anime_beta),
+                            subtitle = androidStringResource(R.string.tsz_anime_beta_summary),
+                        )
+                    } else {
+                        null
+                    },
                     if (TsuzukiAnime.enabled) {
                         Preference.PreferenceItem.TextPreference(
                             title = androidStringResource(R.string.tsz_anime_extension_repos),
