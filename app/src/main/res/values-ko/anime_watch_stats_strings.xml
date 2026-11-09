@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_watch_stats_week">이번 주</string>
+    <string name="tsz_anime_watch_stats_month">이번 달</string>
+    <string name="tsz_anime_watch_stats_all_time">전체 기간</string>
+    <string name="tsz_anime_watch_stats_episodes">시청한 에피소드</string>
+    <string name="tsz_anime_watch_stats_completed">완주한 애니메이션</string>
+</resources>

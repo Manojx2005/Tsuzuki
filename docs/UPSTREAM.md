@@ -78,6 +78,7 @@ When Tsundoku itself later merges Mihon, commits already picked here usually mer
 | `36.sqm` | Anime tables | 0.1.0 |
 | `37.sqm` | Extension repository media flag | Unshipped |
 | `38.sqm` | MAL ID for anime tracker bindings | Unshipped |
+| `39.sqm` | Anime watch seconds per episode and local day | Unshipped |
 
 Before each Tsundoku merge, compare migration numbers. If an unshipped Tsuzuki migration conflicts with a
 number upstream uses, renumber the Tsuzuki migration above the upstream migrations and verify the upgrade path.

@@ -51,11 +51,13 @@ import tachiyomi.data.anime.AnimeSourceRepositoryImpl
 import tachiyomi.data.anime.AnimeTrackRepositoryImpl
 import tachiyomi.data.anime.EpisodeRepositoryImpl
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.history.anime.model.AnimeWatchStats
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.time.LocalDate
 import java.util.Date
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
@@ -565,8 +567,8 @@ class AnimeDatabaseTest {
             JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).use { fresh ->
                 Database.Schema.create(fresh).await()
                 assertEquals(
-                    fresh.schema().filter { it[2] in ANIME_TABLES },
-                    upgraded.schema().filter { it[2] in ANIME_TABLES },
+                    fresh.schema().filter { it[2] in ANIME_TABLES || it[2] == "anime_watch_days" },
+                    upgraded.schema().filter { it[2] in ANIME_TABLES || it[2] == "anime_watch_days" },
                 )
             }
         }
@@ -765,11 +767,78 @@ class AnimeDatabaseTest {
         }
     }
 
+    @Test
+    fun watchStatsKeepCalendarPeriodsSeparateFromLifetimeHistory() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val today = LocalDate.of(2026, 11, 1)
+            val empty = history.subscribeWatchStats(today).first()
+            assertEquals(AnimeWatchStats(0, 0, 0, 0, 0), empty)
+            assertFalse(empty.hasWatchData)
+
+            val ended = anime.insert(Anime(1, "/ended", "Ended", status = SAnime.COMPLETED.toLong()))
+            val airing = anime.insert(Anime(1, "/airing", "Airing", status = SAnime.ONGOING.toLong()))
+            anime.insert(Anime(1, "/empty", "Empty", status = SAnime.COMPLETED.toLong()))
+            val (first, last) = episodes.insertAll(
+                listOf(Episode(ended, "/1", "First", seen = true), Episode(ended, "/2", "Last")),
+            )
+            episodes.insertAll(listOf(Episode(airing, "/1", "First", seen = true)))
+            history.upsert(first, Date(1), 7_200) // A legacy total with no trustworthy per-day breakdown.
+            for ((day, seconds) in listOf(
+                today.minusDays(7) to 60L,
+                today.minusDays(6) to 61L,
+                today.minusDays(1) to 120L,
+                today to 180L,
+                today to 30L,
+                today.plusDays(1) to 240L,
+            )) {
+                db.transaction {
+                    history.upsert(first, Date(2), seconds)
+                    history.recordWatchDay(first, day, seconds)
+                }
+            }
+            val before = history.subscribeWatchStats(today).first()
+            assertEquals(AnimeWatchStats(391, 210, 7_891, 2, 0), before)
+            assertTrue(before.hasWatchData)
+
+            episodes.updateProgress(last, seen = true, lastSecondSeen = 0, totalSeconds = 600)
+            history.removeHistory(ended)
+            assertEquals(AnimeWatchStats(391, 210, 7_891, 3, 1), history.subscribeWatchStats(today).first())
+            anime.delete(ended)
+            assertEquals(AnimeWatchStats(0, 0, 0, 1, 0), history.subscribeWatchStats(today).first())
+        }
+    }
+
+    @Test
+    fun watchDayMigrationPreservesUndatedHistoryAndStartsWithAnEmptyCalendar() = runBlocking {
+        withDatabase { driver, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val id = anime.insert(Anime(1, "/show", "Show"))
+            val episode = episodes.insertAll(listOf(Episode(id, "/1", "Episode", seen = true))).single()
+            history.upsert(episode, Date(1), 750)
+            val before = driver.tableRows("anime_history")
+            driver.sql("DROP TABLE anime_watch_days")
+
+            Database.Schema.migrate(driver, 39, Database.Schema.version).await()
+
+            assertEquals(before, driver.tableRows("anime_history"))
+            assertTrue(driver.rows("SELECT episode_id FROM anime_watch_days").isEmpty())
+            val today = LocalDate.of(2026, 11, 1)
+            assertEquals(AnimeWatchStats(0, 0, 750, 1, 0), history.subscribeWatchStats(today).first())
+            assertTrue(driver.rows("PRAGMA foreign_key_check", 4).isEmpty())
+        }
+    }
+
     private suspend fun withPreAnimeDatabase(block: suspend (JdbcSqliteDriver) -> Unit) {
         JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).use { driver ->
             Database.Schema.create(driver).await()
             // No historical schema snapshot exists. Migration 36 is additive, so removing its
-            // seven tables (and their attached indexes and triggers) reconstructs the prior schema.
+            // tables (and their attached indexes and triggers) reconstructs the prior schema.
+            driver.sql("DROP TABLE anime_watch_days")
             ANIME_TABLES.forEach { driver.sql("DROP TABLE $it") }
             driver.sql("PRAGMA user_version = $PRE_ANIME_VERSION")
             driver.sql("PRAGMA foreign_keys = ON")

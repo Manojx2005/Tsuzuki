@@ -21,6 +21,8 @@ import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.repository.EpisodeRepository
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Date
 
 internal data class AnimeLibraryEntry(val anime: Anime, val shelfIds: Set<Long>)
@@ -193,7 +195,9 @@ internal class AnimeLibraryStore(
             val duration = progress.duration.takeIf { it > 0.0 } ?: episode.totalSeconds.toDouble()
             val seen = episode.seen || animeEpisodeSeen(progress.position, duration)
             episodes.updateProgress(episode.id, seen, progress.position.toLong(), duration.toLong())
-            history.upsert(episode.id, Date(), progress.watchSeconds)
+            val now = Instant.now()
+            history.upsert(episode.id, Date.from(now), progress.watchSeconds)
+            history.recordWatchDay(episode.id, now.atZone(ZoneId.systemDefault()).toLocalDate(), progress.watchSeconds)
             episode.takeIf { seen && !episode.seen }
         }
 

@@ -1,12 +1,18 @@
 package tachiyomi.data.anime
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import eu.kanade.tachiyomi.animesource.model.SAnime
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
+import tachiyomi.data.subscribeToOne
 import tachiyomi.domain.history.anime.model.AnimeHistory
 import tachiyomi.domain.history.anime.model.AnimeHistoryDisplay
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
+import tachiyomi.domain.history.anime.model.AnimeWatchStats
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 import java.util.Date
 
 class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryRepository {
@@ -52,6 +58,20 @@ class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryR
             checkNotNull(lastSeen),
         )
     }.subscribeToList()
+
+    override fun subscribeWatchStats(today: LocalDate) = database.anime_watch_daysQueries.getWatchStats(
+        weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toEpochDay(),
+        today = today.toEpochDay(),
+        monthStart = today.withDayOfMonth(1).toEpochDay(),
+        completedStatus = SAnime.COMPLETED.toLong(),
+        mapper = ::AnimeWatchStats,
+    ).subscribeToOne()
+
+    override suspend fun recordWatchDay(episodeId: Long, day: LocalDate, watchSeconds: Long) {
+        if (watchSeconds > 0) {
+            database.anime_watch_daysQueries.recordWatchDay(episodeId, day.toEpochDay(), watchSeconds)
+        }
+    }
 
     override suspend fun removeHistory(animeId: Long, episodeId: Long?) = database.transaction {
         queries.clearHistory(animeId, episodeId)
