@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -75,6 +76,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -110,7 +112,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 resume?.takeIf { it.animeId == savedId }?.url,
                             )
                         } else {
-                            AnimeCatalogueLocation.Missing(sources.stub(actualSource)?.name)
+                            AnimeCatalogueLocation.Missing(sources.stub(actualSource)?.name, saved)
                         }
                     } catch (e: CancellationException) {
                         throw e
@@ -122,9 +124,13 @@ class AnimeCatalogueActivity : BaseActivity() {
                 when (val result = location) {
                     AnimeCatalogueLocation.Loading -> AnimeCatalogueNotice(null, null, ::finish)
                     is AnimeCatalogueLocation.Missing -> AnimeCatalogueNotice(
-                        result.name,
-                        stringResource(MR.strings.source_not_installed, result.name ?: sourceId.toString()),
-                        ::finish,
+                        title = result.anime?.title ?: result.name,
+                        message = stringResource(
+                            MR.strings.source_not_installed,
+                            result.name ?: (result.anime?.source ?: sourceId).toString(),
+                        ),
+                        onBack = ::finish,
+                        cached = result.anime?.toSourceAnime(),
                     )
                     is AnimeCatalogueLocation.Ready -> {
                         val catalogueState = rememberSaveableStateHolder()
@@ -170,7 +176,7 @@ private sealed interface AnimeCatalogueLocation {
         val saved: SAnime?,
         val resumeUrl: String?,
     ) : AnimeCatalogueLocation
-    data class Missing(val name: String?) : AnimeCatalogueLocation
+    data class Missing(val name: String?, val anime: Anime? = null) : AnimeCatalogueLocation
 }
 
 private enum class AnimeCatalogueMode { POPULAR, LATEST, SEARCH }
@@ -349,13 +355,25 @@ private class AnimeCataloguePagingSource(
 }
 
 @Composable
-private fun AnimeCatalogueNotice(title: String?, message: String?, onBack: () -> Unit) {
+private fun AnimeCatalogueNotice(
+    title: String?,
+    message: String?,
+    onBack: () -> Unit,
+    cached: SAnime? = null,
+) {
     Scaffold(
         modifier = Modifier.tsuzukiBackground(TsuzukiTheme.tokens),
         containerColor = Color.Transparent,
         topBar = { AppBar(title = title?.let { tsuzukiMenuLabel(it) }, navigateUp = onBack) },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) { AnimeCatalogueStatus(message) }
+        if (cached == null) {
+            Column(Modifier.fillMaxSize().padding(padding)) { AnimeCatalogueStatus(message) }
+        } else {
+            LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item { AnimeDetailsHeader(source = null, anime = cached) }
+                item { AnimeCatalogueStatus(message) }
+            }
+        }
     }
 }
 

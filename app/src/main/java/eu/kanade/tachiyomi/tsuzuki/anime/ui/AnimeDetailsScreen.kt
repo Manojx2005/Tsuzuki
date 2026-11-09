@@ -413,12 +413,12 @@ private fun AnimeShelfPicker(
 }
 
 @Composable
-internal fun AnimeCover(source: AnimeSource, anime: SAnime, modifier: Modifier = Modifier) {
+internal fun AnimeCover(source: AnimeSource?, anime: SAnime, modifier: Modifier = Modifier) {
     MangaCover.Book(rememberAnimeImage(source, anime.thumbnail_url), modifier = modifier, generatedTitle = anime.title)
 }
 
 @Composable
-internal fun rememberAnimeImage(source: AnimeSource, url: String?): ImageRequest {
+internal fun rememberAnimeImage(source: AnimeSource?, url: String?): ImageRequest {
     val context = LocalContext.current
     return remember(context, source, url) {
         val httpSource = source as? AnimeHttpSource

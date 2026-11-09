@@ -8,5 +8,17 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTop" />
+
+        <receiver
+            android:name="eu.kanade.tachiyomi.tsuzuki.widget.TsuzukiWatchingWidgetReceiver"
+            android:exported="false"
+            android:label="@string/tsz_anime_continue_watching">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tsz_watching_widget_info" />
+        </receiver>
     </application>
 </manifest>

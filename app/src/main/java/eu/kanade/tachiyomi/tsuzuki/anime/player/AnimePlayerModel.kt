@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
+import eu.kanade.tachiyomi.tsuzuki.widget.refreshWatchingWidget
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -90,7 +91,7 @@ internal class AnimePlayerModel(
     )
     val state = mutableState.asStateFlow()
 
-    private val writes = Channel<Pair<Long, AnimePlaybackCheckpoint>>(Channel.UNLIMITED)
+    private val writes = Channel<PlaybackWrite>(Channel.UNLIMITED)
     private val audio = context.getSystemService(AudioManager::class.java)
     private val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(
@@ -127,13 +128,17 @@ internal class AnimePlayerModel(
 
     init {
         processScope.launch {
-            for ((episodeId, checkpoint) in writes) {
+            for (write in writes) {
                 try {
-                    library.saveProgress(episodeId, checkpoint)?.let { AnimeTrackProgressJob.enqueue(context, it) }
+                    when (write) {
+                        is PlaybackWrite.Progress -> library.saveProgress(write.episodeId, write.checkpoint)
+                            ?.let { AnimeTrackProgressJob.enqueue(context, it) }
+                        PlaybackWrite.RefreshWidget -> refreshWatchingWidget(context)
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "Could not save anime playback progress" }
+                    logcat(LogPriority.WARN, e) { "Could not apply anime playback update" }
                 }
             }
         }
@@ -183,6 +188,7 @@ internal class AnimePlayerModel(
             cancelCountdown()
             abandonFocus()
             saveProgress()
+            writes.trySend(PlaybackWrite.RefreshWidget)
         }
         syncPause()
     }
@@ -599,7 +605,12 @@ internal class AnimePlayerModel(
         if ((request as? AnimePlayback.Request.Episode)?.track != true) return
         val episodeId = state.value.episode?.id ?: return
         val checkpoint = tracker.checkpoint() ?: return
-        writes.trySend(episodeId to checkpoint)
+        writes.trySend(PlaybackWrite.Progress(episodeId, checkpoint))
+    }
+
+    private sealed interface PlaybackWrite {
+        data class Progress(val episodeId: Long, val checkpoint: AnimePlaybackCheckpoint) : PlaybackWrite
+        data object RefreshWidget : PlaybackWrite
     }
 
     override fun onCleared() {

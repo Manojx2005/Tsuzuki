@@ -6,6 +6,7 @@ import androidx.glance.appwidget.updateAll
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,9 @@ internal fun watchWidgetTheme(context: Context, ui: UiPreferences) {
             ui.tsuzukiDotColourCovers.changes(),
             ::Triple,
         ).drop(1).collect {
-            for (widget in listOf(TsuzukiReadingWidget(), TsuzukiListeningWidget())) {
+            val widgets = listOf(TsuzukiReadingWidget(), TsuzukiListeningWidget()) +
+                if (TsuzukiAnime.enabled) listOf(TsuzukiWatchingWidget()) else emptyList()
+            for (widget in widgets) {
                 try {
                     widget.updateAll(context)
                 } catch (error: CancellationException) {

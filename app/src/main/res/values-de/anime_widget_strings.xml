@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_watching_widget_description">Kürzlich gesehene Anime über den Startbildschirm fortsetzen.</string>
+    <string name="tsz_watching_widget_empty">Kein Anime in Bearbeitung</string>
+</resources>

@@ -44,7 +44,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AnimeDetailsHeader(source: AnimeSource, anime: SAnime) {
+internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime) {
     val tokens = TsuzukiTheme.tokens
     val status = when (anime.status) {
         SAnime.ONGOING -> stringResource(MR.strings.ongoing)
@@ -56,7 +56,7 @@ internal fun AnimeDetailsHeader(source: AnimeSource, anime: SAnime) {
         SAnime.UPCOMING -> androidx.compose.ui.res.stringResource(R.string.tsz_anime_upcoming)
         else -> null
     }
-    val metadata = listOfNotNull(anime.author, anime.artist, status, source.name)
+    val metadata = listOfNotNull(anime.author, anime.artist, status, source?.name)
         .map(String::trim).filter(String::isNotEmpty).distinct()
     var expanded by rememberSaveable(anime.url) { mutableStateOf(false) }
     Column(
