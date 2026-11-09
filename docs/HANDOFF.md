@@ -2239,10 +2239,34 @@ Watch part of an episode, leave the player, and check progress and remaining tim
 distinct rows and verify each resumes its own episode. Uninstall the disposable fixture source
 and check the cached detail fallback. Check the Preview widget picker separately.
 
-#### A4.1 Anime restyle parity pass (T2) — `ready` (needs `tsuzuki/a3.9`)
+#### A4.1 Anime restyle parity pass (T2) — `review` (.worktrees/a4.1, 2026-11-09)
 Follow the standard restyle rules (WORKPLAN appendix) for every screen on `png/10-anime/` (+ `dot/`, + `DotAnime.png`)
 and `fixes-2026-11/AnimeShelves` / `ColourAnimeShelves`: spacing, type, case, pills, empty states; tablet layouts
 (rail, two-pane details at ≥ 840 dp). Report a table: board → screen → what changed. No new features.
+
+**Result (Codex, 2026-11-09):** `12ed776cd` on `tsuzuki/a4.1`. Scoped Spotless was clean,
+`:app:assembleDebug` passed, and all 1,038 Debug unit tests passed.
+
+| Board | Screen | Change |
+|---|---|---|
+| AnimeHome | Watch home | Landscape artwork, title and episode progress with remaining time when available. |
+| AnimeLibrary | Watch shelf | Three columns on compact screens, responsive columns on wider screens, and an empty state for the selected shelf. |
+| AnimeDetails | Anime detail | Overview and episode list side by side at 840 dp, with Favorite, Track, Save and External actions. Save uses existing episode selection. |
+| BrowseAnime | Browse → Anime | Pinned and remaining source groups, with the existing Latest and pin actions. |
+| PlayerSettings | Player → Settings | Icon cards for player preferences, with AniSkip and Autoplay highlighted. |
+| Player | Episode player | Audio and subtitle pills reflect selected track languages, with scrolling on narrow layouts. |
+| PlayerSheets | Player sheets | Bounded panel width on large displays, with responsive controls and clear selection states. |
+| AnimeTracking | Tracking sheet | Tracker identity and status, with progress from the linked record. |
+| AnimeShelves / ColourAnimeShelves | Manage anime shelves | Grouped rows, reorder handles, item counts, and a wider Add action. |
+
+Watch, Library and Browse use the existing adaptive app navigation. The standalone detail route
+keeps its own navigation. Board samples such as the New badge and unbacked schedule information
+were omitted. Player sheets use the actions already supported by the player.
+
+**Device review:** Compare the arm64 Debug APK in Dot and Colour on the S22 and tablet. Check the
+tablet rail on Watch and Browse, and rotate to reach 840 dp for the detail split. Use a title with
+artwork, multiple episodes and a linked tracker. Check Save eligibility, shelf reordering, and
+selected tracks and player sheets in landscape and with larger text.
 
 #### A4.2 Release packaging for anime (T3) — `ready` (needs `tsuzuki/a4.1`)
 Goal: anime can ship in a release build (still behind `TsuzukiAnime.enabled`). Steps: `anime-player` becomes
@@ -2759,6 +2783,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-09 A4.1 (Codex).** Anime restyle parity implementation (`12ed776cd`) is in review. Debug assembly and 1,038 tests passed. Dot and Colour device checks are pending.
 
 - **2026-11-08 RV1 (Codex review).** Passed V7.6, R16 and R17. V7.7’s WebView tap exposed reader controls and R12 missed native Asura Scans traffic, so both were reverted and queued for fixes. Accepted Preview assembled and 977 unit tests passed. Dot tablet and Colour S22 launched the accepted Preview. Screenshots, frames and the local Earshot report are in `app/build/review-evidence/rv1/`.
 
