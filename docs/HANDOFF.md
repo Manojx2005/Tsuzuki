@@ -2268,13 +2268,43 @@ tablet rail on Watch and Browse, and rotate to reach 840 dp for the detail split
 artwork, multiple episodes and a linked tracker. Check Save eligibility, shelf reordering, and
 selected tracks and player sheets in landscape and with larger text.
 
-#### A4.2 Release packaging for anime (T3) — `ready` (needs `tsuzuki/a4.1`)
+#### A4.2 Release packaging for anime (T3) — `review` (.worktrees/a4.2, 2026-11-10)
 Goal: anime can ship in a release build (still behind `TsuzukiAnime.enabled`). Steps: `anime-player` becomes
 `implementation` with native libs only in the arm64-v8a split (other ABI splits get the no-op launcher and a "not
 supported on this device" message); R8 keep rules for `is.xyz.mpv.MPVLib` JNI and the `animesource` API extensions
 call; the checksum task still runs; About → licences lists the LGPL libraries with the source offer from
 `docs/licenses/anime-native/README.md`. Verify `assembleRelease` (unsigned is fine) and `assemblePreview`; report each
 APK's size before/after and the 16 KB check (`zipalign -c -P 16 -v 4`). Tests: launcher selection by ABI.
+
+**Result (Codex, 2026-11-10):** `70ddd61c4` on `tsuzuki/a4.2`. Debug, Release and Preview
+assembled, all 1,040 Debug unit tests passed, and scoped Spotless was clean. The first Preview
+baseline ran out of disk space. Its retry from the unchanged A4.1 commit passed.
+
+- `app/build.gradle.kts` includes the anime player in all build types. The JNI payload is in
+  `lib/arm64-v8a` in the ARM64 and universal APKs. The other splits contain none of the ten
+  player-specific libraries. The TLS trust bundle and audio permission come from the player module.
+- `AnimePlayerModule.kt` selects mpv for a 64-bit ARM64 process and the no-op launcher otherwise.
+  `AnimePlayerModuleTest.kt` checks both selections, including a 32-bit process on ARM64.
+  The unsupported-device message is translated in all eight locales. This card leaves the
+  Debug feature gate in place for A4.3a.
+- R8 keeps the mpv JNI bridge and the anime extension API. Both optimized mappings retain their
+  names, and `:anime-player:verifyNativeChecksums` ran in all three builds.
+- About → Open source licences includes FFmpeg, mpv, FriBidi and libplacebo. The APK bundles the
+  LGPL text and links to the pinned corresponding-source and build notes.
+
+**APK sizes (bytes):** all ten APKs below passed `zipalign -c -P 16 -v 4`. Debug ARM64 passed too.
+Logs and raw CSVs are under `.worktrees/a4.2/app/build/`.
+
+| ABI | Release before | Release after | Preview before | Preview after |
+|---|---:|---:|---:|---:|
+| arm64-v8a | 37,748,915 | 69,267,749 | 37,755,031 | 69,273,861 |
+| armeabi-v7a | 34,733,237 | 34,908,676 | 34,739,353 | 34,914,788 |
+| x86 | 39,070,813 | 39,246,252 | 39,076,929 | 39,252,364 |
+| x86_64 | 40,094,582 | 40,270,021 | 40,100,698 | 40,276,133 |
+| Universal | 77,582,778 | 109,101,612 | 77,588,894 | 109,107,724 |
+
+**Device review:** Check the licence sheet and, after A4.3a, play on ARM64 Preview to exercise
+the optimized JNI and extension API. Other ABIs were verified by unit tests and APK inspection.
 
 ### Wave Y (owner approved 2026-11-06; after the anime lane)
 
@@ -2783,6 +2813,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-10 A4.2 (Codex).** Release packaging (`70ddd61c4`) is in review. Debug, Release and Preview built, 1,040 tests passed, and all ten optimized APKs passed 16 KB ZIP alignment.
 
 - **2026-11-09 A4.1 (Codex).** Anime restyle parity implementation (`12ed776cd`) is in review. Debug assembly and 1,038 tests passed. Dot and Colour device checks are pending.
 
