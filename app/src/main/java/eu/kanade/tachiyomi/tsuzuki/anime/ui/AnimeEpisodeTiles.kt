@@ -9,10 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +25,6 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
@@ -58,6 +59,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
+import eu.kanade.tachiyomi.tsuzuki.anime.isExcludedAnimeGroup
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import java.text.DateFormat
@@ -255,56 +257,85 @@ internal fun AnimeEpisodeActions(
 }
 
 @Composable
-internal fun AnimeEpisodeFilterDialog(
+internal fun AnimeEpisodeFilterSheet(
     display: AnimeEpisodeDisplay,
+    groups: List<String>,
+    excludedGroups: Set<String>,
     onDismiss: () -> Unit,
-    onSave: (AnimeEpisodeDisplay) -> Unit,
+    onSave: (AnimeEpisodeDisplay, Set<String>) -> Unit,
 ) {
     var draft by remember(display) { mutableStateOf(display) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_filter))) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                TsuzukiPillRow(
-                    labels = listOf(
-                        stringResource(R.string.tsz_anime_episode_number),
-                        mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
-                    ),
-                    selected = if (draft.sortByDate) 1 else 0,
-                    onClick = { draft = draft.copy(sortByDate = it == 1) },
-                )
-                TsuzukiPillRow(
-                    labels = listOf(
-                        mokoStringResource(MR.strings.action_asc),
-                        mokoStringResource(MR.strings.action_desc),
-                    ),
-                    selected = if (draft.ascending) 0 else 1,
-                    onClick = { draft = draft.copy(ascending = it == 0) },
-                )
-                AnimeEpisodeFilterOption(
-                    stringResource(R.string.tsz_anime_unseen_only),
-                    draft.unseenOnly,
-                ) { draft = draft.copy(unseenOnly = !draft.unseenOnly) }
-                AnimeEpisodeFilterOption(
-                    stringResource(R.string.tsz_anime_bookmarked_only),
-                    draft.bookmarkedOnly,
-                ) { draft = draft.copy(bookmarkedOnly = !draft.bookmarkedOnly) }
+    var groupDraft by remember(excludedGroups) { mutableStateOf(excludedGroups) }
+    TsuzukiAdaptiveSheet(onDismissRequest = onDismiss) { close ->
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text(
+                tsuzukiMenuLabel(mokoStringResource(MR.strings.action_filter)),
+                style = MaterialTheme.typography.displaySmall,
+            )
+            LazyColumn(Modifier.weight(1f, fill = false)) {
+                item {
+                    TsuzukiPillRow(
+                        labels = listOf(
+                            stringResource(R.string.tsz_anime_episode_number),
+                            mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
+                        ),
+                        selected = if (draft.sortByDate) 1 else 0,
+                        onClick = { draft = draft.copy(sortByDate = it == 1) },
+                    )
+                    TsuzukiPillRow(
+                        labels = listOf(
+                            mokoStringResource(MR.strings.action_asc),
+                            mokoStringResource(MR.strings.action_desc),
+                        ),
+                        selected = if (draft.ascending) 0 else 1,
+                        onClick = { draft = draft.copy(ascending = it == 0) },
+                    )
+                    AnimeEpisodeFilterOption(
+                        stringResource(R.string.tsz_anime_unseen_only),
+                        draft.unseenOnly,
+                    ) { draft = draft.copy(unseenOnly = !draft.unseenOnly) }
+                    AnimeEpisodeFilterOption(
+                        stringResource(R.string.tsz_anime_bookmarked_only),
+                        draft.bookmarkedOnly,
+                    ) { draft = draft.copy(bookmarkedOnly = !draft.bookmarkedOnly) }
+                }
+                if (groups.isNotEmpty()) {
+                    item {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(R.string.tsz_anime_exclude_groups)),
+                            color = TsuzukiTheme.tokens.mutedText,
+                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                    items(groups, key = { it }) { group ->
+                        val excluded = group.isExcludedAnimeGroup(groupDraft)
+                        AnimeEpisodeFilterOption(group, excluded) {
+                            groupDraft = if (excluded) {
+                                groupDraft.filterNot { it.equals(group, ignoreCase = true) }.toSet()
+                            } else {
+                                groupDraft + group
+                            }
+                        }
+                    }
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(draft) }) { Text(mokoStringResource(MR.strings.action_apply)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(mokoStringResource(MR.strings.action_cancel)) }
-        },
-    )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = { close(onDismiss) }) {
+                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_cancel)))
+                }
+                TextButton(onClick = { close { onSave(draft, groupDraft) } }) {
+                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_apply)))
+                }
+            }
+        }
+    }
 }
 
 @Composable
 private fun AnimeEpisodeFilterOption(label: String, checked: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().height(48.dp).toggleable(checked, role = Role.Checkbox) { onClick() },
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(checked, role = Role.Checkbox) { onClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

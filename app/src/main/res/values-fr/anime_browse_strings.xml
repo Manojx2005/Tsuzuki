@@ -43,4 +43,5 @@
     <string name="tsz_anime_beta_summary">Afficher les étagères, les sources et le lecteur d’animes</string>
     <string name="tsz_anime_group_seasons">Regrouper les saisons</string>
     <string name="tsz_anime_season_short">S%1$s</string>
+    <string name="tsz_anime_exclude_groups">Masquer des groupes</string>
 </resources>

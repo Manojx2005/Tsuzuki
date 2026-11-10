@@ -42,4 +42,5 @@
     <string name="tsz_anime_beta_summary">アニメの本棚、配信元、プレーヤーを表示します</string>
     <string name="tsz_anime_group_seasons">シーズンをまとめる</string>
     <string name="tsz_anime_season_short">第%1$sシーズン</string>
+    <string name="tsz_anime_exclude_groups">字幕グループを除外</string>
 </resources>

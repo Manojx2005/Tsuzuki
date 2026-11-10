@@ -18,6 +18,8 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
+import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
@@ -31,6 +33,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -112,6 +115,7 @@ internal class AnimePlayerModel(
     private var waitingForFile = false
     private var tracker = AnimePlaybackProgress()
     private var loadingJob: Job? = null
+    private var episodeGroupsJob: Job? = null
     private var countdownJob: Job? = null
     private var cancelledCountdown = false
     private var pendingVideo: Video? = null
@@ -311,6 +315,7 @@ internal class AnimePlayerModel(
         cancelCountdown()
         cancelledCountdown = false
         loadingJob?.cancel()
+        episodeGroupsJob?.cancel()
         waitingForFile = false
         pendingVideo = null
         streams = null
@@ -331,7 +336,6 @@ internal class AnimePlayerModel(
                 val episode = checkNotNull(library.getEpisode(id))
                 val anime = checkNotNull(library.getAnime(episode.animeId))
                 val episodes = library.getEpisodes(anime.id)
-                val (previous, next) = adjacentAnimeEpisodes(episodes, episode.id)
                 val start = restoredPosition?.takeIf { it.isFinite() && it >= 0 }
                     ?: episode.lastSecondSeen.toDouble().takeUnless { episode.seen }
                     ?: 0.0
@@ -339,11 +343,14 @@ internal class AnimePlayerModel(
                     it.copy(
                         title = anime.title,
                         episode = episode,
-                        episodes = episodes,
-                        previous = previous,
-                        next = next,
                         position = start,
                     )
+                }
+                updateEpisodeQueue(episodes, id, anime.memo.excludedAnimeGroups())
+                episodeGroupsJob = viewModelScope.launch {
+                    library.observeExcludedGroups(anime.id)
+                        .catch { error -> logcat(LogPriority.WARN, error) { "Could not observe anime episode groups" } }
+                        .collect { groups -> updateEpisodeQueue(episodes, id, groups) }
                 }
                 val offline = downloads.offlineVideo(anime.source, anime.id, episode.id)
                 if (offline != null) {
@@ -370,6 +377,15 @@ internal class AnimePlayerModel(
                 fail()
             }
         }
+    }
+
+    private fun updateEpisodeQueue(episodes: List<Episode>, episodeId: Long, excludedGroups: Set<String>) {
+        if (targetEpisodeId != episodeId) return
+        val (previous, next) = adjacentAnimeEpisodes(episodes.filterAnimeGroups(excludedGroups, episodeId), episodeId)
+        mutableState.update {
+            it.copy(episodes = episodes.filterAnimeGroups(excludedGroups), previous = previous, next = next)
+        }
+        if (next == null) cancelCountdown()
     }
 
     private fun tryNextStream(fallback: Boolean = false) {

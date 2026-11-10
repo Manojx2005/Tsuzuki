@@ -43,4 +43,5 @@
     <string name="tsz_anime_beta_summary">Mostrar estantes e fontes de anime e o reprodutor</string>
     <string name="tsz_anime_group_seasons">Agrupar temporadas</string>
     <string name="tsz_anime_season_short">T%1$s</string>
+    <string name="tsz_anime_exclude_groups">Ocultar grupos</string>
 </resources>

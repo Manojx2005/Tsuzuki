@@ -42,4 +42,5 @@
     <string name="tsz_anime_beta_summary">애니메이션 서가, 소스 및 플레이어를 표시합니다</string>
     <string name="tsz_anime_group_seasons">시즌 묶기</string>
     <string name="tsz_anime_season_short">시즌 %1$s</string>
+    <string name="tsz_anime_exclude_groups">자막 그룹 숨기기</string>
 </resources>

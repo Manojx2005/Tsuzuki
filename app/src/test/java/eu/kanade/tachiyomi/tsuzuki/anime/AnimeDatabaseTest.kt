@@ -440,6 +440,58 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun excludedGroupsFilterDetailsAndBothUpdatesListsWithoutChangingStoredEpisodes() = runBlocking {
+        withDatabase { _, db ->
+            val repository = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                repository,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val show = SAnime.create().apply {
+                url = "/show"
+                title = "Fixture"
+            }
+            fun release(path: String, group: String?) = SEpisode.create().apply {
+                url = "/$path"
+                name = path
+                scanlator = group
+                date_upload = 100
+            }
+            val original = release("original", null)
+            val hidden = release("hidden", "Release Team")
+            val visible = release("visible", "Another Team")
+            val id = store.setFavorite(42, show, true, setOf(0L))
+            store.syncEpisodes(42, show, listOf(original))
+            store.syncEpisodes(42, show, listOf(original, hidden, visible))
+            assertEquals(setOf("hidden", "visible"), store.observeNewEpisodes(0).first().map { it.name }.toSet())
+
+            store.setEpisodeDisplay(id, AnimeEpisodeDisplay(), setOf("release team"))
+            val filtered = store.observeEpisodes(id).first()
+            assertEquals(setOf("original", "visible"), filtered.items.map(Episode::name).toSet())
+            assertEquals(listOf("Another Team", "release team"), filtered.groups)
+            assertEquals(listOf("visible"), store.observeNewEpisodes(0).first().map { it.name })
+            assertEquals(
+                setOf("original", "visible"),
+                store.observeAiringEpisodes(0, 200).first().map {
+                    it.name
+                }.toSet(),
+            )
+            assertEquals(3, store.getEpisodes(id).size)
+
+            val saved = checkNotNull(repository.awaitById(id))
+            assertFalse(ANIME_EXCLUDED_GROUPS in saved.toSourceAnime().memo)
+            show.memo = JsonObject(mapOf(ANIME_EXCLUDED_GROUPS to JsonPrimitive("extension data")))
+            store.syncEpisodes(42, show, listOf(original, hidden, visible))
+            assertEquals(setOf("release team"), store.observeExcludedGroups(id).first())
+            store.setEpisodeDisplay(id, AnimeEpisodeDisplay(), emptySet())
+            assertEquals(3, store.observeEpisodes(id).first().items.size)
+        }
+    }
+
+    @Test
     fun updatesExcludeInitialImportsAndRetainAnEpisodeAcrossRefreshes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

@@ -43,4 +43,5 @@
     <string name="tsz_anime_beta_summary">Anime-Regale, Quellen und Player anzeigen</string>
     <string name="tsz_anime_group_seasons">Staffeln gruppieren</string>
     <string name="tsz_anime_season_short">S%1$s</string>
+    <string name="tsz_anime_exclude_groups">Gruppen ausblenden</string>
 </resources>

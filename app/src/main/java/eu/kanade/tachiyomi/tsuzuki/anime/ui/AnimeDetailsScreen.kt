@@ -49,6 +49,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -67,6 +68,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
@@ -109,6 +111,7 @@ internal fun AnimeDetailsScreen(
         downloadQueue.entries.associate { it.episodeId to it.status }
     }
     val saved = details.saved
+    val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
     val seasons by remember(saved?.id) {
         saved?.let { library.observeSeasons(it.id) } ?: flowOf(emptyList<Anime>())
     }.collectAsState(emptyList())
@@ -383,15 +386,30 @@ internal fun AnimeDetailsScreen(
                 episodeState.resume?.let { next ->
                     item { AnimeResumeTile(next, selected.isEmpty()) { play(next) } }
                 }
-                if (episodeState.items.isNotEmpty()) {
+                if (episodeState.items.isNotEmpty() || episodeState.groups.isNotEmpty()) {
                     item {
-                        TsuzukiSectionLabel(
-                            text = stringResource(
-                                MR.strings.tsz_anime_episode_progress,
-                                episodeState.items.count(Episode::seen),
-                                episodeState.items.size,
-                            ),
-                        )
+                        Row(
+                            Modifier.fillMaxWidth().padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TsuzukiSectionLabel(
+                                text = stringResource(
+                                    MR.strings.tsz_anime_episode_progress,
+                                    episodeState.items.count(Episode::seen),
+                                    episodeState.items.size,
+                                ),
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (episodeState.groups.isNotEmpty()) {
+                                TsuzukiPill(
+                                    text = androidStringResource(R.string.tsz_anime_exclude_groups),
+                                    selected = excludedGroups.isNotEmpty(),
+                                    count = excludedGroups.size.takeIf { it > 0 },
+                                    role = Role.Button,
+                                    onClick = { if (!saving) showFilter = true },
+                                )
+                            }
+                        }
                     }
                 }
                 if (filtered.isEmpty() && seasons.isEmpty() && !details.refreshing && !details.refreshFailed) {
@@ -451,9 +469,14 @@ internal fun AnimeDetailsScreen(
         }
     }
     if (showFilter) {
-        AnimeEpisodeFilterDialog(details.episodeDisplay, onDismiss = { showFilter = false }) { displayOptions ->
+        AnimeEpisodeFilterSheet(
+            display = details.episodeDisplay,
+            groups = episodeState.groups,
+            excludedGroups = excludedGroups,
+            onDismiss = { showFilter = false },
+        ) { displayOptions, groups ->
             showFilter = false
-            mutate { model.setEpisodeDisplay(displayOptions) }
+            mutate { model.setEpisodeDisplay(displayOptions, groups) }
         }
     }
 }

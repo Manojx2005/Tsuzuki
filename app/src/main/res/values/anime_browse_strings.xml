@@ -43,4 +43,5 @@
     <string name="tsz_anime_beta_summary">Show anime shelves, sources and the player</string>
     <string name="tsz_anime_group_seasons">Group seasons</string>
     <string name="tsz_anime_season_short">S%1$s</string>
+    <string name="tsz_anime_exclude_groups">Exclude groups</string>
 </resources>

@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.animesource.model.SAnimeSeasonUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
+import tachiyomi.data.subscribeToOneOrNull
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.entries.anime.model.Anime
@@ -26,12 +28,17 @@ import tachiyomi.domain.items.episode.repository.EpisodeRepository
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Date
+import java.util.Locale
 
 internal data class AnimeLibraryEntry(val anime: Anime, val shelfIds: Set<Long>)
 
 internal data class ContinueAnime(val anime: Anime, val episode: Episode)
 
-internal data class AnimeEpisodes(val items: List<Episode>, val resume: Episode?)
+internal data class AnimeEpisodes(
+    val items: List<Episode>,
+    val resume: Episode?,
+    val groups: List<String> = emptyList(),
+)
 
 internal class AnimeLibraryStore(
     private val database: Database,
@@ -54,14 +61,32 @@ internal class AnimeLibraryStore(
             previewUrl,
             dateFetch,
             memo,
+            scanlator,
+            animeMemo,
         ->
-        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to memo
+        val visible = memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) &&
+            !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
+        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to visible
     }.subscribeToList().map { rows ->
-        rows.mapNotNull { (entry, memo) -> entry.takeIf { memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) } }
+        rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
     }
 
     fun observeAiringEpisodes(start: Long, end: Long) =
-        database.episodesQueries.getLibraryAiring(start, end, ::AnimeUpdateEpisode).subscribeToList()
+        database.episodesQueries.getLibraryAiring(start, end) {
+                animeId,
+                title,
+                episodeId,
+                name,
+                previewUrl,
+                dateUpload,
+                scanlator,
+                animeMemo,
+            ->
+            val visible = !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
+            AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateUpload) to visible
+        }.subscribeToList().map { rows ->
+            rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
+        }
 
     fun observeShelves() = shelves.subscribeAll()
 
@@ -75,9 +100,13 @@ internal class AnimeLibraryStore(
         entries.firstNotNullOfOrNull { entry ->
             val show = anime.awaitById(entry.animeId) ?: return@firstNotNullOfOrNull null
             val last = episodes.awaitById(entry.episodeId) ?: return@firstNotNullOfOrNull null
-            if (!last.seen) return@firstNotNullOfOrNull ContinueAnime(show, last)
+            val excluded = show.memo.excludedAnimeGroups()
+            if (!last.seen && !last.scanlator.isExcludedAnimeGroup(excluded)) {
+                return@firstNotNullOfOrNull ContinueAnime(show, last)
+            }
             val ordered = episodes.awaitByAnimeId(show.id).sortedWith(animeEpisodeNumberOrder)
-            val next = ordered.dropWhile { it.id != last.id }.drop(1).firstOrNull { !it.seen }
+            val next = ordered.dropWhile { it.id != last.id }.drop(1)
+                .firstOrNull { !it.seen && !it.scanlator.isExcludedAnimeGroup(excluded) }
             next?.let { ContinueAnime(show, it) }
         }
     }
@@ -91,9 +120,17 @@ internal class AnimeLibraryStore(
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
-    fun observeEpisodes(animeId: Long) = episodes.subscribeByAnimeId(animeId).map { items ->
-        AnimeEpisodes(items, chooseAnimeEpisode(items, history.latestInProgressEpisodeId(animeId)))
-    }
+    fun observeExcludedGroups(animeId: Long) = database.animesQueries.getById(animeId)
+        .subscribeToOneOrNull().map { it?.memo?.excludedAnimeGroups().orEmpty() }.distinctUntilChanged()
+
+    fun observeEpisodes(animeId: Long) =
+        combine(episodes.subscribeByAnimeId(animeId), observeExcludedGroups(animeId)) { items, excluded ->
+            val visible = items.filterAnimeGroups(excluded)
+            val groups = (excluded + items.mapNotNull { it.scanlator?.trim()?.takeIf(String::isNotEmpty) })
+                .distinctBy { it.lowercase(Locale.ROOT) }
+                .sortedWith(String.CASE_INSENSITIVE_ORDER)
+            AnimeEpisodes(visible, chooseAnimeEpisode(visible, history.latestInProgressEpisodeId(animeId)), groups)
+        }
 
     suspend fun getShelves() = shelves.awaitAll()
     suspend fun shelfIds(animeId: Long) = shelves.awaitByAnimeId(animeId).mapTo(mutableSetOf(), AnimeCategory::id)
@@ -215,10 +252,16 @@ internal class AnimeLibraryStore(
         entry.copy(lastUpdate = now)
     }
 
-    suspend fun setEpisodeDisplay(animeId: Long, display: AnimeEpisodeDisplay) = database.transaction {
-        val show = anime.awaitById(animeId) ?: return@transaction
-        anime.update(show.copy(episodeFlags = display.toFlags(show.episodeFlags)))
-    }
+    suspend fun setEpisodeDisplay(animeId: Long, display: AnimeEpisodeDisplay, excludedGroups: Set<String>? = null) =
+        database.transaction {
+            val show = anime.awaitById(animeId) ?: return@transaction
+            anime.update(
+                show.copy(
+                    episodeFlags = display.toFlags(show.episodeFlags),
+                    memo = excludedGroups?.let(show.memo::withExcludedAnimeGroups) ?: show.memo,
+                ),
+            )
+        }
 
     suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean): List<Episode> = database.transactionWithResult {
         val newlySeen = mutableListOf<Episode>()
@@ -271,7 +314,7 @@ internal class AnimeLibraryStore(
             seasonNumber = show.season_number.takeIf { it.isFinite() && it >= 0 } ?: stored.seasonNumber,
             favorite = favorite ?: stored.favorite,
             dateAdded = if (favorite == true && !stored.favorite) System.currentTimeMillis() else stored.dateAdded,
-            memo = JsonObject(stored.memo + show.memo),
+            memo = JsonObject(stored.memo + (show.memo - ANIME_EXCLUDED_GROUPS)),
         )
         val id = if (stored.id == -1L) anime.insert(updated) else stored.id
         val entry = updated.copy(id = id)
@@ -294,7 +337,7 @@ internal fun Anime.toSourceAnime(): SAnime = SAnime.create().also { source ->
     source.fetch_type = fetchType
     source.season_number = seasonNumber
     source.initialized = initialized
-    source.memo = memo
+    source.memo = JsonObject(memo - ANIME_EXCLUDED_GROUPS)
 }
 
 internal fun Episode.toSourceEpisode(): SEpisode = SEpisode.create().also { source ->

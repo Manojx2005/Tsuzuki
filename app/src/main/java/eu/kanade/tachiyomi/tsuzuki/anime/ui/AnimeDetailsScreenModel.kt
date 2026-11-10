@@ -62,9 +62,9 @@ internal class AnimeDetailsScreenModel(
         mutableState.update { it.copy(saved = saved) }
     }
 
-    suspend fun setEpisodeDisplay(display: AnimeEpisodeDisplay) {
+    suspend fun setEpisodeDisplay(display: AnimeEpisodeDisplay, excludedGroups: Set<String>) {
         val id = state.value.saved?.id ?: return
-        library.setEpisodeDisplay(id, display)
+        library.setEpisodeDisplay(id, display, excludedGroups)
         val saved = library.getAnime(id)
         mutableState.update { it.copy(saved = saved) }
     }
