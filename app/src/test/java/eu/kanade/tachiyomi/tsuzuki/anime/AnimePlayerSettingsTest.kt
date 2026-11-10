@@ -6,11 +6,22 @@ import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeTrackKind
 import eu.kanade.tachiyomi.tsuzuki.anime.player.preferredAnimeTrack
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class AnimePlayerSettingsTest {
+    @Test
+    fun pictureInPictureDefaultsOnAndPersistsAcrossPlayerSessions() {
+        val store = InMemoryPreferenceStore()
+        val preference = AnimePlayerPreferences(store).pictureInPicture
+        assertTrue(preference.get())
+        preference.set(false)
+        assertFalse(AnimePlayerPreferences(store).pictureInPicture.get())
+    }
+
     @Test
     fun settingsPersistAcrossSessionsAndClampInvalidValues() {
         val store = InMemoryPreferenceStore()

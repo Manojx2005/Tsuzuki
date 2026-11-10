@@ -42,6 +42,7 @@ internal data class AnimePlayerSettings(
 internal class AnimePlayerPreferences(store: PreferenceStore) {
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
+    val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)
     val preferredSubtitle = store.getString("tsuzuki_anime_player_subtitle", "")
     val preferredAudio = store.getString("tsuzuki_anime_player_audio", "")
     private val speed = store.getFloat("tsuzuki_anime_player_speed", 1f)

@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.supportsAnimePictureInPicture
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -64,6 +66,8 @@ internal object AnimePlayerSettingsScreen : Screen() {
         val preferences = remember { AnimePlayerPreferences(Injekt.get()) }
         var settings by remember { mutableStateOf(preferences.get()) }
         val autoplay by preferences.autoplay.collectAsState()
+        val pictureInPicture by preferences.pictureInPicture.collectAsState()
+        val supportsPip = LocalContext.current.supportsAnimePictureInPicture()
         var showSpeed by remember { mutableStateOf(false) }
         var showAniSkip by remember { mutableStateOf(false) }
         val tokens = TsuzukiTheme.tokens
@@ -153,6 +157,13 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 }
                 item {
                     PlayerSettingCard(stringResource(R.string.tsz_anime_player_video), Icons.Outlined.Videocam) {
+                        if (supportsPip) {
+                            PlayerSettingSwitch(
+                                label = stringResource(R.string.tsz_anime_player_picture_in_picture),
+                                checked = pictureInPicture,
+                                onChange = preferences.pictureInPicture::set,
+                            )
+                        }
                         PlayerSettingSwitch(
                             label = stringResource(R.string.tsz_anime_player_decoder_hardware),
                             checked = settings.hardwareDecoding,

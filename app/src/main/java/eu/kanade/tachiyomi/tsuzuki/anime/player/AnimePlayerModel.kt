@@ -193,15 +193,17 @@ internal class AnimePlayerModel(
         syncPause()
     }
 
-    fun togglePlayback() {
+    fun togglePlayback() = setPlaying(state.value.ended || !state.value.playing)
+
+    fun setPlaying(play: Boolean, retainAudioFocus: Boolean = false) {
         if (state.value.failed) return
-        if (state.value.ended) {
-            seekTo(0.0)
-            wantsPlayback = true
-        } else {
-            wantsPlayback = !state.value.playing
+        if (play && state.value.ended) seekTo(0.0)
+        wantsPlayback = play
+        if (play) {
+            requestFocus()
+        } else if (!retainAudioFocus) {
+            abandonFocus()
         }
-        if (wantsPlayback) requestFocus() else abandonFocus()
         syncPause()
     }
 

@@ -1,7 +1,11 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
+import android.app.PictureInPictureUiState
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.SurfaceHolder
@@ -9,6 +13,7 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,15 +32,21 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerContent
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerModel
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.math.roundToInt
 
 class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     private var model: AnimePlayerModel? = null
+    private var pip: AnimePictureInPicture? = null
+    private var inPip by mutableStateOf(false)
+    private var enteringPip by mutableStateOf(false)
+    private val pipPreference by lazy { AnimePlayerPreferences(Injekt.get()).pictureInPicture }
     private var orientationLocked by mutableStateOf(false)
     private var gestureStartLevel = 0f
     private val audio by lazy { getSystemService(AudioManager::class.java) }
@@ -80,6 +91,13 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
             return
         }
         model = player
+        inPip = isInPictureInPictureMode
+        if (supportsAnimePictureInPicture()) {
+            pip = AnimePictureInPicture(this, ::handlePipAction)
+            window.decorView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                currentPipControls()?.let { pip?.update(it) }
+            }
+        }
         orientationLocked = savedInstanceState?.getBoolean(ORIENTATION_LOCKED) == true
         applyOrientation()
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -89,8 +107,13 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         setContent {
             TachiyomiTheme {
                 val state by player.state.collectAsState()
-                LaunchedEffect(state.playing) {
-                    if (state.playing) {
+                val animeEnabled = TsuzukiAnime.enabled
+                val preferPip by pipPreference.collectAsState()
+                val pipControls = state.pipControls(animeEnabled && preferPip, animeEnabled && inPip)
+                LaunchedEffect(pipControls) { pip?.update(pipControls) }
+                LaunchedEffect(animeEnabled) { if (!animeEnabled) finish() }
+                LaunchedEffect(state.playing, inPip) {
+                    if (state.playing && !inPip) {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     } else {
                         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -105,6 +128,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                         applyOrientation()
                     },
                     orientationLocked = orientationLocked,
+                    pictureInPicture = inPip || enteringPip,
                     onLevelGesture = ::adjustLevel,
                     surface = { modifier ->
                         AndroidView(
@@ -116,6 +140,58 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                     },
                 )
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (!TsuzukiAnime.enabled) {
+            finish()
+            return
+        }
+        // Reuse the Android task, but release the previous video and its ViewModel
+        // before creating one for the new playback request.
+        model?.setForeground(false)
+        model?.detach()
+        model = null
+        viewModelStore.clear()
+        setIntent(intent)
+        recreate()
+    }
+
+    private fun currentPipControls(): AnimePipControls? = model?.state?.value?.pipControls(
+        enabled = TsuzukiAnime.enabled && pipPreference.get(),
+        inPip = TsuzukiAnime.enabled && inPip,
+    )
+
+    private fun handlePipAction(action: AnimePipAction) {
+        val player = model ?: return
+        if (action !in currentPipControls()?.actions.orEmpty()) return
+        when (action) {
+            AnimePipAction.REWIND -> player.seekBy(-10)
+            AnimePipAction.PLAY -> player.setPlaying(true)
+            // Keep the existing focus request while paused so PiP can resume from the background.
+            AnimePipAction.PAUSE -> player.setPlaying(false, retainAudioFocus = true)
+            AnimePipAction.FORWARD -> player.seekBy(10)
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        currentPipControls()?.let { pip?.enterOnUserLeave(it) }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        inPip = isInPictureInPictureMode
+        enteringPip = false
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onPictureInPictureUiStateChanged(pipState: PictureInPictureUiState) {
+        super.onPictureInPictureUiStateChanged(pipState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            enteringPip = pipState.isTransitioningToPip
         }
     }
 
@@ -170,15 +246,20 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         model?.detach()
     }
 
+    override fun onStart() {
+        super.onStart()
+        model?.setForeground(true)
+    }
+
     override fun onResume() {
         super.onResume()
         model?.setForeground(true)
     }
 
-    override fun onPause() {
+    override fun onStop() {
         model?.setForeground(false)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        super.onPause()
+        super.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -193,6 +274,8 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     }
 
     override fun onDestroy() {
+        pip?.close()
+        pip = null
         model?.detach()
         model = null
         super.onDestroy()

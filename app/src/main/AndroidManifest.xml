@@ -65,8 +65,10 @@
 
         <activity
             android:name=".tsuzuki.anime.ui.AnimePlayerActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:exported="false" />
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true" />
 
         <activity
             android:name=".ui.main.MainActivity"

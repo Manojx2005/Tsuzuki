@@ -88,6 +88,7 @@ internal fun AnimePlayerContent(
     onBack: () -> Unit,
     onOrientationLock: (Boolean) -> Unit,
     orientationLocked: Boolean,
+    pictureInPicture: Boolean,
     onLevelGesture: (volume: Boolean, delta: Float, start: Boolean) -> Float,
     surface: @Composable (Modifier) -> Unit,
 ) {
@@ -121,14 +122,15 @@ internal fun AnimePlayerContent(
             level = null
         }
     }
-    BackHandler(enabled = sheet != null) { sheet = null }
-    BackHandler(enabled = locked && sheet == null) {
+    BackHandler(enabled = !pictureInPicture && sheet != null) { sheet = null }
+    BackHandler(enabled = !pictureInPicture && locked && sheet == null) {
         locked = false
         visible = true
     }
 
     Box(Modifier.fillMaxSize().background(tokens.background)) {
         surface(Modifier.fillMaxSize())
+        if (pictureInPicture) return@Box
         Box(
             Modifier.fillMaxSize()
                 .pointerInput(locked, settings.seekGesture) {
