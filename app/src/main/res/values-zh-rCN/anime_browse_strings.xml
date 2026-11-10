@@ -43,4 +43,7 @@
     <string name="tsz_anime_group_seasons">合并显示各季</string>
     <string name="tsz_anime_season_short">第%1$s季</string>
     <string name="tsz_anime_exclude_groups">隐藏字幕组</string>
+    <string name="tsz_anime_migration_matches">匹配的剧集：%1$d</string>
+    <string name="tsz_anime_migration_carry">保留匹配剧集的进度、书架、追踪关联和隐藏字幕组。替换后会从资料库移除原条目。</string>
+    <string name="tsz_anime_migration_replace">替换</string>
 </resources>

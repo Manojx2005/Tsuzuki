@@ -49,4 +49,13 @@ class BrowseHeaderSectionsTest {
         val pages = browsePages(hideManga = true, animeEnabled = true)
         browsePagesFor(pages, BrowseMedia.ANIME) shouldBe listOf(BrowsePage.ANIME_SOURCES)
     }
+
+    @Test
+    fun `anime migration requires the beta gate and at least one library anime`() {
+        val pages = browsePages(hideManga = true, animeEnabled = true, hasAnimeLibrary = true)
+        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe
+            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_MIGRATION)
+        browsePages(hideManga = false, animeEnabled = false, hasAnimeLibrary = true)
+            .pageIndex(BrowseMedia.ANIME, BrowseSection.MIGRATION) shouldBe -1
+    }
 }

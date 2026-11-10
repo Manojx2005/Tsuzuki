@@ -198,7 +198,11 @@ internal fun AnimeSearchFilterPills(model: AnimeGlobalSearch) {
 }
 
 @Composable
-internal fun AnimeGlobalSearchResults(model: AnimeGlobalSearch, padding: PaddingValues) {
+internal fun AnimeGlobalSearchResults(
+    model: AnimeGlobalSearch,
+    padding: PaddingValues,
+    onSelect: ((RegisteredAnimeSource, SAnime) -> Unit)? = null,
+) {
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -249,7 +253,13 @@ internal fun AnimeGlobalSearchResults(model: AnimeGlobalSearch, padding: Padding
             TsuzukiGlobalSearchResultItem(
                 title = "${source.name} · ${stringResource(MR.strings.tsz_anime_media)}",
                 subtitle = subtitle,
-                onClick = { openAnimeCatalogue(context, source.id, query = model.query) },
+                onClick = if (onSelect ==
+                    null
+                ) {
+                    ({ openAnimeCatalogue(context, source.id, query = model.query) })
+                } else {
+                    null
+                },
             ) {
                 if (result.loading) GlobalSearchLoadingResultItem()
                 if (!result.titles.isNullOrEmpty()) {
@@ -261,6 +271,10 @@ internal fun AnimeGlobalSearchResults(model: AnimeGlobalSearch, padding: Padding
                             Column(
                                 Modifier.size(width = 96.dp, height = 156.dp)
                                     .tsuzukiClickable(role = Role.Button) {
+                                        if (onSelect != null) {
+                                            onSelect(result.entry, title)
+                                            return@tsuzukiClickable
+                                        }
                                         if (!opening) {
                                             opening = true
                                             scope.launch {

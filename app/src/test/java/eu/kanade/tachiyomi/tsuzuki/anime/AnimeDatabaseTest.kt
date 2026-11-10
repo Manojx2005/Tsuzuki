@@ -440,6 +440,63 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun animeMigrationCopiesDataAndReplaceOnlyRemovesTheOriginalFromTheLibrary() = runBlocking {
+        withDatabase { _, db ->
+            val repository = AnimeRepositoryImpl(db)
+            val shelves = AnimeCategoryRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val tracks = AnimeTrackRepositoryImpl(db)
+            val store = AnimeLibraryStore(db, repository, shelves, episodes, AnimeHistoryRepositoryImpl(db))
+            fun title(path: String) = SAnime.create().apply {
+                url = "/$path"
+                title = path
+            }
+            fun release(path: String) = SEpisode.create().apply {
+                url = "/$path"
+                name = path
+                episode_number = 1.5f
+            }
+            val original = title("original")
+            val copy = title("copy")
+            val replacement = title("replacement")
+            val originalShelf = shelves.insert("Watching")
+            val destinationShelf = shelves.insert("Other")
+            val originalId = store.setFavorite(10, original, true, setOf(originalShelf))
+            val copyId = store.syncEpisodes(11, copy, listOf(release("copy-episode"))).id
+            val replacementId = store.setFavorite(12, replacement, true, setOf(destinationShelf))
+            store.syncEpisodes(10, original, listOf(release("old-episode")))
+            store.syncEpisodes(12, replacement, listOf(release("new-episode")))
+            val originalEpisode = store.getEpisodes(originalId).single()
+            episodes.updateProgress(originalEpisode.id, true, 45, 120)
+            store.setEpisodeDisplay(originalId, AnimeEpisodeDisplay(), setOf("Old group"))
+            store.setEpisodeDisplay(replacementId, AnimeEpisodeDisplay(), setOf("New group"))
+            tracks.upsert(AnimeTrack(originalId, 2, 101, "Old binding", "https://example.com/101"))
+            tracks.upsert(AnimeTrack(replacementId, 2, 102, "Existing binding", "https://example.com/102"))
+
+            store.migrateFavorite(originalId, copyId, AnimeMigrationMode.COPY, tracks)
+            assertTrue(checkNotNull(repository.awaitById(originalId)).favorite)
+            assertTrue(checkNotNull(repository.awaitById(copyId)).favorite)
+            assertEquals(setOf(originalShelf), store.shelfIds(copyId))
+            assertEquals(setOf("Old group"), store.observeExcludedGroups(copyId).first())
+            assertEquals(101L, tracks.awaitByAnimeId(copyId).single().remoteId)
+            val copiedEpisode = store.getEpisodes(copyId).single()
+            assertTrue(copiedEpisode.seen)
+            assertEquals(45L, copiedEpisode.lastSecondSeen)
+            assertEquals(120L, copiedEpisode.totalSeconds)
+
+            store.migrateFavorite(originalId, replacementId, AnimeMigrationMode.REPLACE, tracks)
+            assertFalse(checkNotNull(repository.awaitById(originalId)).favorite)
+            assertTrue(checkNotNull(repository.awaitById(replacementId)).favorite)
+            assertEquals(setOf(originalShelf, destinationShelf), store.shelfIds(replacementId))
+            assertEquals(setOf("Old group", "New group"), store.observeExcludedGroups(replacementId).first())
+            assertEquals(102L, tracks.awaitByAnimeId(replacementId).single().remoteId)
+            assertTrue(store.getEpisodes(replacementId).single().seen)
+            assertEquals(45L, store.getEpisodes(originalId).single().lastSecondSeen)
+            assertEquals(101L, tracks.awaitByAnimeId(originalId).single().remoteId)
+        }
+    }
+
+    @Test
     fun excludedGroupsFilterDetailsAndBothUpdatesListsWithoutChangingStoredEpisodes() = runBlocking {
         withDatabase { _, db ->
             val repository = AnimeRepositoryImpl(db)

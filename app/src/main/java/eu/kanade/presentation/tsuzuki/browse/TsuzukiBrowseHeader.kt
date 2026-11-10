@@ -30,20 +30,32 @@ internal enum class BrowsePage(val media: BrowseMedia, val section: BrowseSectio
     MANGA_MIGRATION(BrowseMedia.MANGA, BrowseSection.MIGRATION),
     ANIME_SOURCES(BrowseMedia.ANIME, BrowseSection.SOURCES),
     ANIME_EXTENSIONS(BrowseMedia.ANIME, BrowseSection.EXTENSIONS),
+    ANIME_MIGRATION(BrowseMedia.ANIME, BrowseSection.MIGRATION),
 }
 
 internal fun browsePages(
     hideManga: Boolean,
     animeEnabled: Boolean = TsuzukiAnime.enabled,
     hasAnimeRepos: Boolean = false,
+    hasAnimeLibrary: Boolean = false,
 ): List<BrowsePage> =
     BrowsePage.entries.filter {
         when (it.media) {
             BrowseMedia.NOVELS -> true
             BrowseMedia.MANGA -> !hideManga
-            BrowseMedia.ANIME -> animeEnabled && (it.section != BrowseSection.EXTENSIONS || hasAnimeRepos)
+            BrowseMedia.ANIME -> animeEnabled && animeBrowseSectionAvailable(it.section, hasAnimeRepos, hasAnimeLibrary)
         }
     }
+
+private fun animeBrowseSectionAvailable(
+    section: BrowseSection,
+    hasRepos: Boolean,
+    hasLibrary: Boolean,
+) = when (section) {
+    BrowseSection.SOURCES -> true
+    BrowseSection.EXTENSIONS -> hasRepos
+    BrowseSection.MIGRATION -> hasLibrary
+}
 
 internal fun List<BrowsePage>.pageIndex(media: BrowseMedia, section: BrowseSection): Int =
     indexOfFirst { it.media == media && it.section == section }
@@ -68,14 +80,17 @@ internal fun TsuzukiBrowseHeader(
     onSelectSection: (BrowseSection) -> Unit,
     hasAnime: Boolean = false,
     hasAnimeRepos: Boolean = false,
+    hasAnimeLibrary: Boolean = false,
 ) {
     val mediaOptions = buildList {
         add(BrowseMedia.NOVELS to stringResource(MR.strings.tsz_storage_novels))
         if (hasManga) add(BrowseMedia.MANGA to stringResource(MR.strings.tsz_storage_manga))
-        if (hasAnime) add(BrowseMedia.ANIME to stringResource(MR.strings.tsz_anime_media))
+        if (hasAnime && (active.section != BrowseSection.MIGRATION || hasAnimeLibrary)) {
+            add(BrowseMedia.ANIME to stringResource(MR.strings.tsz_anime_media))
+        }
     }
     val sections = if (active.media == BrowseMedia.ANIME) {
-        browseHeaderSections.filter { it == BrowseSection.SOURCES || (it == BrowseSection.EXTENSIONS && hasAnimeRepos) }
+        browseHeaderSections.filter { animeBrowseSectionAvailable(it, hasAnimeRepos, hasAnimeLibrary) }
     } else {
         browseHeaderSections
     }

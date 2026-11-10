@@ -25,12 +25,14 @@ import eu.kanade.presentation.tsuzuki.browse.BrowsePage
 import eu.kanade.presentation.tsuzuki.browse.BrowseSection
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiBrowseHeader
 import eu.kanade.presentation.tsuzuki.browse.animeExtensionsTab
+import eu.kanade.presentation.tsuzuki.browse.animeMigrateSourceTab
 import eu.kanade.presentation.tsuzuki.browse.animeSourcesTab
 import eu.kanade.presentation.tsuzuki.browse.browsePages
 import eu.kanade.presentation.tsuzuki.browse.browsePagesFor
 import eu.kanade.presentation.tsuzuki.browse.pageIndex
 import eu.kanade.presentation.tsuzuki.browse.rememberAnimeBrowseRepos
 import eu.kanade.presentation.tsuzuki.browse.rememberAnimeBrowseSources
+import eu.kanade.presentation.tsuzuki.browse.rememberHasAnimeMigration
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -107,8 +109,9 @@ data object BrowseTab : Tab {
         val animeSources = if (animeEnabled) rememberAnimeBrowseSources().value else emptyList()
         val animeRepos = if (animeEnabled) rememberAnimeBrowseRepos().value else emptyList()
         val hasAnimeRepos = animeRepos.isNotEmpty()
-        val allPages = remember(hideMangaUi, animeEnabled, hasAnimeRepos) {
-            browsePages(hideMangaUi, animeEnabled = animeEnabled, hasAnimeRepos = hasAnimeRepos)
+        val hasAnimeLibrary = animeEnabled && rememberHasAnimeMigration()
+        val allPages = remember(hideMangaUi, animeEnabled, hasAnimeRepos, hasAnimeLibrary) {
+            browsePages(hideMangaUi, animeEnabled, hasAnimeRepos, hasAnimeLibrary)
         }
         // Tsuzuki: swipes stay inside the chosen media (Sources / Extensions / Migrate); the pills switch media.
         var media by rememberSaveable { mutableStateOf(BrowseMedia.NOVELS) }
@@ -130,6 +133,7 @@ data object BrowseTab : Tab {
                 BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
                 BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources)
                 BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeRepos)
+                BrowsePage.ANIME_MIGRATION -> animeMigrateSourceTab(animeSources)
             }
         }
         val novelExtensionsTabIndex = pages.indexOf(BrowsePage.NOVEL_EXTENSIONS)
@@ -147,15 +151,14 @@ data object BrowseTab : Tab {
                         extensionBadge = tabs.getOrNull(pages.pageIndex(activeMedia, BrowseSection.EXTENSIONS))
                             ?.badgeNumber,
                         onSelectMedia = {
-                            if (it == BrowseMedia.ANIME &&
-                                pages.getOrNull(state.currentPage)?.section == BrowseSection.MIGRATION
-                            ) {
-                                state.requestScrollToPage(0)
-                            }
+                            val section = pages.getOrNull(state.currentPage)?.section ?: BrowseSection.SOURCES
+                            val next = browsePagesFor(allPages, it).pageIndex(it, section).coerceAtLeast(0)
+                            state.requestScrollToPage(next)
                             media = it
                         },
                         onSelectSection = { onSelectPage(pages.pageIndex(activeMedia, it)) },
                         hasAnime = animeEnabled,
+                        hasAnimeLibrary = hasAnimeLibrary,
                         hasAnimeRepos = hasAnimeRepos,
                     )
                 }

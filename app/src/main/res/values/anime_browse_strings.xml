@@ -44,4 +44,7 @@
     <string name="tsz_anime_group_seasons">Group seasons</string>
     <string name="tsz_anime_season_short">S%1$s</string>
     <string name="tsz_anime_exclude_groups">Exclude groups</string>
+    <string name="tsz_anime_migration_matches">Matched episodes: %1$d</string>
+    <string name="tsz_anime_migration_carry">Matched progress, shelves, tracker links and excluded groups carry over. Replacing removes the original from the library.</string>
+    <string name="tsz_anime_migration_replace">Replace</string>
 </resources>

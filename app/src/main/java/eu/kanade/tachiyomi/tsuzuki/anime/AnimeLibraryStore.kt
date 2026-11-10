@@ -25,6 +25,7 @@ import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.repository.EpisodeRepository
+import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Date
@@ -151,6 +152,43 @@ internal class AnimeLibraryStore(
             if (favorite) shelves.setForAnime(entry.id, shelfIds)
             entry.id
         }
+
+    suspend fun migrateFavorite(
+        originalId: Long,
+        targetId: Long,
+        mode: AnimeMigrationMode,
+        tracks: AnimeTrackRepository,
+    ) = database.transaction {
+        val original = checkNotNull(anime.awaitById(originalId))
+        val target = checkNotNull(anime.awaitById(targetId))
+        require(original.favorite && original.source != target.source)
+        for ((old, new) in matchAnimeEpisodes(getEpisodes(originalId), getEpisodes(targetId))) {
+            val updated = new.withMigratedProgress(old)
+            if (updated != new) {
+                episodes.updateProgress(updated.id, updated.seen, updated.lastSecondSeen, updated.totalSeconds)
+            }
+        }
+        val existingTrackers = tracks.awaitByAnimeId(targetId).mapTo(mutableSetOf()) { it.syncId }
+        tracks.awaitByAnimeId(originalId).filterNot { it.syncId in existingTrackers }.forEach {
+            tracks.upsert(it.copy(id = -1, animeId = targetId))
+        }
+        shelves.setForAnime(targetId, shelfIds(targetId) + shelfIds(originalId))
+        val added = when {
+            target.favorite -> target.dateAdded
+            mode == AnimeMigrationMode.REPLACE -> original.dateAdded
+            else -> System.currentTimeMillis()
+        }
+        anime.update(
+            target.copy(
+                favorite = true,
+                dateAdded = added,
+                memo = target.memo.withExcludedAnimeGroups(
+                    target.memo.excludedAnimeGroups() + original.memo.excludedAnimeGroups(),
+                ),
+            ),
+        )
+        if (mode == AnimeMigrationMode.REPLACE) anime.setFavorite(originalId, false, original.dateAdded)
+    }
 
     suspend fun refresh(
         source: RegisteredAnimeSource,

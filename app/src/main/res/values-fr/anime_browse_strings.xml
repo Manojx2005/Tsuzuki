@@ -44,4 +44,7 @@
     <string name="tsz_anime_group_seasons">Regrouper les saisons</string>
     <string name="tsz_anime_season_short">S%1$s</string>
     <string name="tsz_anime_exclude_groups">Masquer des groupes</string>
+    <string name="tsz_anime_migration_matches">Épisodes correspondants : %1$d</string>
+    <string name="tsz_anime_migration_carry">La progression correspondante, les étagères, les liens de suivi et les groupes masqués sont conservés. Le remplacement retire l’entrée d’origine de la bibliothèque.</string>
+    <string name="tsz_anime_migration_replace">Remplacer</string>
 </resources>

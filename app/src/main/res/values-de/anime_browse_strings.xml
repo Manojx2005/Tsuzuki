@@ -44,4 +44,7 @@
     <string name="tsz_anime_group_seasons">Staffeln gruppieren</string>
     <string name="tsz_anime_season_short">S%1$s</string>
     <string name="tsz_anime_exclude_groups">Gruppen ausblenden</string>
+    <string name="tsz_anime_migration_matches">Passende Folgen: %1$d</string>
+    <string name="tsz_anime_migration_carry">Passender Fortschritt, Regale, Tracker-Verknüpfungen und ausgeblendete Gruppen werden übernommen. Ersetzen entfernt den ursprünglichen Eintrag aus der Bibliothek.</string>
+    <string name="tsz_anime_migration_replace">Ersetzen</string>
 </resources>

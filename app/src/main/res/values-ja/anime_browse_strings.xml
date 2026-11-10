@@ -43,4 +43,7 @@
     <string name="tsz_anime_group_seasons">シーズンをまとめる</string>
     <string name="tsz_anime_season_short">第%1$sシーズン</string>
     <string name="tsz_anime_exclude_groups">字幕グループを除外</string>
+    <string name="tsz_anime_migration_matches">一致したエピソード: %1$d</string>
+    <string name="tsz_anime_migration_carry">一致したエピソードの進捗、棚、トラッカーの連携、除外グループを引き継ぎます。置き換えると元の作品はライブラリから外れます。</string>
+    <string name="tsz_anime_migration_replace">置き換える</string>
 </resources>

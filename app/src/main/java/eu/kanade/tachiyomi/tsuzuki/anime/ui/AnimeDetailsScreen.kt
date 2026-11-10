@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -104,6 +107,9 @@ internal fun AnimeDetailsScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
+    val migrate = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == Activity.RESULT_OK) scope.launch { model.reloadSaved() }
+    }
     val details by model.state.collectAsState()
     val downloads = remember { Injekt.get<AnimeDownloads>() }
     val downloadQueue by downloads.state.collectAsState()
@@ -226,6 +232,13 @@ internal fun AnimeDetailsScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             if (saved?.favorite == true) {
+                                TsuzukiMenuItem(
+                                    text = stringResource(MR.strings.action_migrate),
+                                    onClick = {
+                                        showMenu = false
+                                        migrate.launch(AnimeMigrationActivity.fromAnime(context, saved.id))
+                                    },
+                                )
                                 TsuzukiMenuItem(
                                     text = stringResource(MR.strings.tsz_anime_shelves),
                                     onClick = {
