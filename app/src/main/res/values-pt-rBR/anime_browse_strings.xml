@@ -41,4 +41,6 @@
     <string name="tsz_anime_player_unsupported_device">Este dispositivo não oferece suporte à reprodução de anime</string>
     <string name="tsz_anime_beta">Anime (beta)</string>
     <string name="tsz_anime_beta_summary">Mostrar estantes e fontes de anime e o reprodutor</string>
+    <string name="tsz_anime_group_seasons">Agrupar temporadas</string>
+    <string name="tsz_anime_season_short">T%1$s</string>
 </resources>

@@ -3,9 +3,12 @@ package eu.kanade.tachiyomi.tsuzuki.anime
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
+import eu.kanade.tachiyomi.animesource.model.SAnimeSeasonUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.data.backup.BackupProtoReader
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
@@ -21,6 +24,10 @@ import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSource
 import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupStore
 import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSummary
 import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupTrack
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -384,6 +391,51 @@ class AnimeDatabaseTest {
             val saved = checkNotNull(anime.awaitById(id))
             assertTrue(saved.favorite)
             assertEquals(result.title, saved.title)
+        }
+    }
+
+    @Test
+    fun refreshDiscoversSeasonSourcesAndStoresOrderedChildrenWithoutFetchingEpisodes() = runBlocking {
+        withDatabase { _, db ->
+            val repository = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                repository,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            fun anime(url: String, number: Double = -1.0) = SAnime.create().apply {
+                this.url = url
+                title = url
+                season_number = number
+            }
+            val parent = anime("/series")
+            val details = parent.copy().apply { fetch_type = FetchType.Seasons }
+            val season1 = anime("/season-1", 1.0)
+            val season2 = anime("/season-2", 2.0)
+            val movie = anime("/movie")
+            val source = mockk<AnimeSource>()
+            every { source.id } returns 42
+            coEvery {
+                source.getAnimeEpisodeUpdate(any(), emptyList(), fetchDetails = true, fetchEpisodes = false)
+            } returns SAnimeEpisodeUpdate(details, emptyList())
+            coEvery {
+                source.getAnimeSeasonUpdate(any(), emptyList(), fetchDetails = false, fetchSeasons = true)
+            } returns SAnimeSeasonUpdate(details, listOf(season2, movie, season1, season2, parent))
+            val entry = RegisteredAnimeSource(source, "example.anime", "Fixture", 17.0)
+            val favoriteId = store.setFavorite(42, season2, true, setOf(0L))
+
+            val saved = checkNotNull(store.refresh(entry, parent, fetchDetails = true))
+            val seasons = store.observeSeasons(saved.id).first()
+
+            assertEquals(FetchType.Seasons, saved.fetchType)
+            assertEquals(listOf("/season-1", "/season-2", "/movie"), seasons.map(Anime::url))
+            assertEquals(listOf(2L, 0L, 1L), seasons.map(Anime::seasonSourceOrder))
+            assertEquals(favoriteId, seasons[1].id)
+            assertTrue(seasons[1].favorite)
+            assertTrue(seasons.all { it.parentId == saved.id })
+            coVerify(exactly = 0) { source.getAnimeEpisodeUpdate(any(), any(), any(), fetchEpisodes = true) }
         }
     }
 

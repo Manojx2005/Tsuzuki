@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
+import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
+import eu.kanade.tachiyomi.animesource.model.SAnimeSeasonUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -63,6 +65,8 @@ internal class AnimeLibraryStore(
 
     fun observeShelves() = shelves.subscribeAll()
 
+    fun observeSeasons(parentId: Long) = anime.subscribeSeasons(parentId)
+
     fun observeLibrary() = combine(anime.subscribeLibrary(), shelves.subscribeMemberships()) { items, memberships ->
         items.map { (entry) -> AnimeLibraryEntry(entry, memberships[entry.id].orEmpty().ifEmpty { setOf(0L) }) }
     }
@@ -120,12 +124,52 @@ internal class AnimeLibraryStore(
         val cached = getAnime(source.source.id, show.url)
         if (favoriteOnly && cached?.favorite != true) return@withLock null
         val current = cached?.toSourceAnime() ?: show
+        // A source can declare the fetch type in its first details response.
+        val discoverType = source.libVersion >= 16 && fetchDetails &&
+            !current.initialized && current.fetch_type == FetchType.Episodes
+        val detailed = if (discoverType) {
+            withContext(Dispatchers.IO) {
+                source.fetchEpisodeUpdate(current, emptyList(), fetchDetails = true, fetchEpisodes = false).anime
+            }
+        } else {
+            current
+        }
+        if (source.libVersion >= 16 && detailed.fetch_type == FetchType.Seasons) {
+            val existing = cached?.let { observeSeasons(it.id).first() }.orEmpty()
+            val update = withContext(Dispatchers.IO) {
+                source.fetchSeasonUpdate(detailed, existing.map(Anime::toSourceAnime), fetchDetails && !discoverType)
+            }
+            return@withLock syncSeasons(source.source.id, update.anime, update.seasons)
+        }
+
         val existing = cached?.let { getEpisodes(it.id) }.orEmpty()
         val update = withContext(Dispatchers.IO) {
-            source.fetchUpdate(current, existing.map(Episode::toSourceEpisode), fetchDetails)
+            source.fetchEpisodeUpdate(detailed, existing.map(Episode::toSourceEpisode), fetchDetails && !discoverType)
         }
         syncEpisodes(source.source.id, update.anime, update.episodes)
     }
+
+    private suspend fun syncSeasons(source: Long, show: SAnime, available: List<SAnime>): Anime =
+        database.transactionWithResult {
+            val parent = saveAnime(source, show)
+            val ancestors = mutableSetOf(parent.id)
+            var ancestor = parent.parentId
+            while (ancestor != null && ancestors.add(ancestor)) {
+                ancestor = anime.awaitById(ancestor)?.parentId
+            }
+            available.distinctBy(SAnime::url).forEachIndexed { index, season ->
+                if (season.url.isBlank() || season.url == parent.url) return@forEachIndexed
+                val entry = saveAnime(source, season)
+                if (entry.id in ancestors || (entry.parentId != null && entry.parentId != parent.id)) {
+                    return@forEachIndexed
+                }
+                val linked = entry.copy(parentId = parent.id, seasonSourceOrder = index.toLong())
+                if (linked != entry) anime.update(linked)
+            }
+            val now = System.currentTimeMillis()
+            database.animesQueries.recordLibraryRefresh(now, parent.id)
+            parent.copy(lastUpdate = now)
+        }
 
     suspend fun syncEpisodes(
         source: Long,
@@ -219,7 +263,12 @@ internal class AnimeLibraryStore(
             backgroundUrl = show.background_url ?: stored.backgroundUrl,
             initialized = show.initialized || stored.initialized,
             updateStrategy = if (show.initialized) show.update_strategy else stored.updateStrategy,
-            fetchType = if (show.initialized) show.fetch_type else stored.fetchType,
+            fetchType = if (show.initialized || (!stored.initialized && show.fetch_type == FetchType.Seasons)) {
+                show.fetch_type
+            } else {
+                stored.fetchType
+            },
+            seasonNumber = show.season_number.takeIf { it.isFinite() && it >= 0 } ?: stored.seasonNumber,
             favorite = favorite ?: stored.favorite,
             dateAdded = if (favorite == true && !stored.favorite) System.currentTimeMillis() else stored.dateAdded,
             memo = JsonObject(stored.memo + show.memo),
@@ -261,22 +310,39 @@ internal fun Episode.toSourceEpisode(): SEpisode = SEpisode.create().also { sour
 }
 
 @Suppress("DEPRECATION")
-private suspend fun RegisteredAnimeSource.fetchUpdate(
+private suspend fun RegisteredAnimeSource.fetchEpisodeUpdate(
     show: SAnime,
     episodes: List<SEpisode>,
     fetchDetails: Boolean,
+    fetchEpisodes: Boolean = true,
 ): SAnimeEpisodeUpdate = callAnimeSource {
     val update = if (libVersion >= 17) {
-        source.getAnimeEpisodeUpdate(show, episodes, fetchDetails = fetchDetails, fetchEpisodes = true)
+        source.getAnimeEpisodeUpdate(show, episodes, fetchDetails = fetchDetails, fetchEpisodes = fetchEpisodes)
     } else {
         SAnimeEpisodeUpdate(
             if (fetchDetails) source.getAnimeDetails(show) else show,
-            AnimeStreamResolver.episodes(source, libVersion, show),
+            if (fetchEpisodes) AnimeStreamResolver.episodes(source, libVersion, show) else episodes,
         )
     }
-    if (!fetchDetails) return@callAnimeSource SAnimeEpisodeUpdate(show, update.episodes)
-    val refreshed = show.copy().apply {
-        val remote = update.anime
+    SAnimeEpisodeUpdate(if (fetchDetails) show.withDetails(update.anime, libVersion >= 17) else show, update.episodes)
+}
+
+@Suppress("DEPRECATION")
+private suspend fun RegisteredAnimeSource.fetchSeasonUpdate(
+    show: SAnime,
+    seasons: List<SAnime>,
+    fetchDetails: Boolean,
+): SAnimeSeasonUpdate = callAnimeSource {
+    if (libVersion < 17) {
+        val detailed = if (fetchDetails) show.withDetails(source.getAnimeDetails(show), copyMemo = false) else show
+        return@callAnimeSource SAnimeSeasonUpdate(detailed, source.getSeasonList(detailed))
+    }
+    val update = source.getAnimeSeasonUpdate(show, seasons, fetchDetails = fetchDetails, fetchSeasons = true)
+    SAnimeSeasonUpdate(if (fetchDetails) show.withDetails(update.anime, copyMemo = true) else show, update.seasons)
+}
+
+private fun SAnime.withDetails(remote: SAnime, copyMemo: Boolean): SAnime =
+    copy().apply {
         title = runCatching { remote.title }.getOrNull()?.takeIf(String::isNotBlank) ?: title
         artist = remote.artist ?: artist
         author = remote.author ?: author
@@ -285,13 +351,12 @@ private suspend fun RegisteredAnimeSource.fetchUpdate(
         background_url = remote.background_url ?: background_url
         description = remote.description ?: description
         genre = remote.genre ?: genre
+        if (!initialized && fetch_type != FetchType.Seasons) fetch_type = remote.fetch_type
         initialized = true
         update_strategy = remote.update_strategy
-        if (!show.initialized) fetch_type = remote.fetch_type
-        if (libVersion >= 17) memo = remote.memo
+        if (remote.season_number.isFinite() && remote.season_number >= 0) season_number = remote.season_number
+        if (copyMemo) memo = remote.memo
     }
-    SAnimeEpisodeUpdate(refreshed, update.episodes)
-}
 
 internal data class AnimeUpdateEpisode(
     val animeId: Long,

@@ -49,12 +49,14 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
+import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -77,12 +79,14 @@ import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.model.AnimeCategory
+import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.text.NumberFormat
 import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
@@ -105,6 +109,13 @@ internal fun AnimeDetailsScreen(
         downloadQueue.entries.associate { it.episodeId to it.status }
     }
     val saved = details.saved
+    val seasons by remember(saved?.id) {
+        saved?.let { library.observeSeasons(it.id) } ?: flowOf(emptyList<Anime>())
+    }.collectAsState(emptyList())
+    val siblings by remember(saved?.parentId) {
+        saved?.parentId?.let(library::observeSeasons) ?: flowOf(emptyList<Anime>())
+    }.collectAsState(emptyList())
+    val seasonChoices = seasons.ifEmpty { siblings.takeIf { it.size > 1 }.orEmpty() }
     val emptyEpisodes = remember { AnimeEpisodes(emptyList(), null) }
     val episodeState by remember(saved?.id) {
         saved?.let { library.observeEpisodes(it.id) } ?: flowOf(emptyEpisodes)
@@ -313,6 +324,23 @@ internal fun AnimeDetailsScreen(
                 item(key = "anime-overview") {
                     AnimeDetailsHeader(entry.source, display, coverWidth = if (expanded) 156.dp else 104.dp)
                 }
+                if (seasonChoices.isNotEmpty()) {
+                    item(key = "anime-seasons") {
+                        val format = NumberFormat.getNumberInstance().apply { isGroupingUsed = false }
+                        TsuzukiPillRow(
+                            labels = seasonChoices.map { season ->
+                                season.seasonNumber.takeIf { it.isFinite() && it >= 0 }?.let {
+                                    androidStringResource(R.string.tsz_anime_season_short, format.format(it))
+                                } ?: season.title
+                            },
+                            selected = seasonChoices.indexOfFirst { it.id == saved?.id },
+                            onClick = { index ->
+                                val season = seasonChoices[index]
+                                if (season.id != saved?.id) openAnime(context, season.id)
+                            },
+                        )
+                    }
+                }
                 item(key = "anime-actions") {
                     val eligible = filtered.filter { episode ->
                         val status = downloadStatuses[episode.id]
@@ -366,7 +394,7 @@ internal fun AnimeDetailsScreen(
                         )
                     }
                 }
-                if (filtered.isEmpty() && !details.refreshing && !details.refreshFailed) {
+                if (filtered.isEmpty() && seasons.isEmpty() && !details.refreshing && !details.refreshFailed) {
                     item { AnimeCatalogueStatus(androidStringResource(R.string.tsz_anime_no_episodes)) }
                 }
                 items(filtered, key = Episode::id) { episode ->

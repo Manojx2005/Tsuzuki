@@ -8,6 +8,7 @@ interface AnimeRepository {
     suspend fun awaitById(id: Long): Anime?
     suspend fun awaitBySourceAndUrl(source: Long, url: String): Anime?
     fun subscribeLibrary(): Flow<List<LibraryAnime>>
+    fun subscribeSeasons(parentId: Long): Flow<List<Anime>>
     suspend fun insert(anime: Anime): Long
     suspend fun update(anime: Anime)
     suspend fun setFavorite(id: Long, favorite: Boolean, dateAdded: Long)

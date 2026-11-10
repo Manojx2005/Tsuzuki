@@ -40,4 +40,6 @@
     <string name="tsz_anime_player_unsupported_device">この端末ではアニメを再生できません</string>
     <string name="tsz_anime_beta">アニメ（ベータ版）</string>
     <string name="tsz_anime_beta_summary">アニメの本棚、配信元、プレーヤーを表示します</string>
+    <string name="tsz_anime_group_seasons">シーズンをまとめる</string>
+    <string name="tsz_anime_season_short">第%1$sシーズン</string>
 </resources>

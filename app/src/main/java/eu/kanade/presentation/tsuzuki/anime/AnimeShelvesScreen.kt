@@ -50,13 +50,17 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
@@ -64,8 +68,10 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 internal class AnimeShelvesScreen : Screen() {
     @Composable
@@ -75,6 +81,8 @@ internal class AnimeShelvesScreen : Screen() {
         val store = remember { Injekt.get<AnimeLibraryStore>() }
         val shelves by remember { store.observeShelves() }.collectAsState(emptyList())
         val library by remember { store.observeLibrary() }.collectAsState(emptyList())
+        val groupSeasonsPreference = remember { animeSeasonGrouping(Injekt.get()) }
+        val groupSeasons by groupSeasonsPreference.collectAsState()
         val scope = rememberCoroutineScope()
         val snackbars = remember { SnackbarHostState() }
         val error = stringResource(MR.strings.unknown_error)
@@ -121,6 +129,13 @@ internal class AnimeShelvesScreen : Screen() {
                     color = tokens.mutedText,
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                TsuzukiTile(Modifier.fillMaxWidth().padding(bottom = 12.dp), padding = 0.dp) {
+                    SwitchPreferenceWidget(
+                        title = tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_group_seasons)),
+                        checked = groupSeasons,
+                        onCheckedChanged = groupSeasonsPreference::set,
+                    )
+                }
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     state = listState,

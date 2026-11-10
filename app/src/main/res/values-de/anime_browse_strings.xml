@@ -41,4 +41,6 @@
     <string name="tsz_anime_player_unsupported_device">Anime-Wiedergabe wird auf diesem Gerät nicht unterstützt</string>
     <string name="tsz_anime_beta">Anime (Beta)</string>
     <string name="tsz_anime_beta_summary">Anime-Regale, Quellen und Player anzeigen</string>
+    <string name="tsz_anime_group_seasons">Staffeln gruppieren</string>
+    <string name="tsz_anime_season_short">S%1$s</string>
 </resources>

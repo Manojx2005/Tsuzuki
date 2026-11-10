@@ -41,4 +41,6 @@
     <string name="tsz_anime_player_unsupported_device">Anime playback isn’t supported on this device</string>
     <string name="tsz_anime_beta">Anime (beta)</string>
     <string name="tsz_anime_beta_summary">Show anime shelves, sources and the player</string>
+    <string name="tsz_anime_group_seasons">Group seasons</string>
+    <string name="tsz_anime_season_short">S%1$s</string>
 </resources>

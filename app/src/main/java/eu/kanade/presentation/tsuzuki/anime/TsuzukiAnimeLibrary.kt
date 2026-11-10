@@ -78,6 +78,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
+import eu.kanade.tachiyomi.tsuzuki.anime.groupAnimeSeasons
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
@@ -115,12 +117,18 @@ internal data object AnimeLibraryTab : Tab {
         val store = remember { Injekt.get<AnimeLibraryStore>() }
         val library by remember { store.observeLibrary() }.collectAsState(emptyList())
         val shelves by remember { store.observeShelves() }.collectAsState(emptyList())
+        val groupSeasons by remember { animeSeasonGrouping(Injekt.get()) }.collectAsState()
         var selectedShelf by rememberSaveable { mutableLongStateOf(0L) }
         var query by rememberSaveable { mutableStateOf<String?>(null) }
         val activeShelf = shelves.indexOfFirst { it.id == selectedShelf }.coerceAtLeast(0)
         val shelfId = shelves.getOrNull(activeShelf)?.id ?: 0L
         val search = query.orEmpty().trim()
-        val filtered = library.filter { shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) }
+        val filtered = remember(library, shelfId, search, groupSeasons) {
+            val matches = library.filter {
+                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true)
+            }
+            if (groupSeasons && search.isEmpty()) groupAnimeSeasons(matches) else matches
+        }
         val tokens = TsuzukiTheme.tokens
         val compact = LocalConfiguration.current.screenWidthDp < 600
         val bottomPad = if (compact) 108.dp else 24.dp

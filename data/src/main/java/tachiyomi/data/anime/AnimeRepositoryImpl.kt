@@ -22,6 +22,9 @@ class AnimeRepositoryImpl(private val database: Database) : AnimeRepository {
     override fun subscribeLibrary() =
         queries.getLibrary().subscribeToList().map { rows -> rows.map { LibraryAnime(it.toDomain()) } }
 
+    override fun subscribeSeasons(parentId: Long) =
+        queries.getSeasons(parentId).subscribeToList().map { rows -> rows.map(Animes::toDomain) }
+
     override suspend fun insert(anime: Anime): Long = database.transactionWithResult {
         val existing = queries.getBySourceAndUrl(anime.source, anime.url).awaitAsOneOrNull()
         if (existing != null) return@transactionWithResult existing._id

@@ -40,4 +40,6 @@
     <string name="tsz_anime_player_unsupported_device">此设备不支持播放动漫</string>
     <string name="tsz_anime_beta">动漫（测试版）</string>
     <string name="tsz_anime_beta_summary">显示动漫书架、来源和播放器</string>
+    <string name="tsz_anime_group_seasons">合并显示各季</string>
+    <string name="tsz_anime_season_short">第%1$s季</string>
 </resources>

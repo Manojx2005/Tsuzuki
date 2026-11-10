@@ -90,6 +90,11 @@ SELECT * FROM animes WHERE source = :source AND url = :url ORDER BY _id LIMIT 1;
 getLibrary:
 SELECT * FROM animes WHERE favorite = 1 ORDER BY title COLLATE NOCASE, _id;
 
+getSeasons:
+SELECT * FROM animes
+WHERE parent_id = :parentId AND _id != :parentId
+ORDER BY season_number < 0, CASE WHEN season_number >= 0 THEN season_number END, season_source_order, _id;
+
 getBackupIds:
 SELECT _id FROM animes
 WHERE _id > :afterId AND (
