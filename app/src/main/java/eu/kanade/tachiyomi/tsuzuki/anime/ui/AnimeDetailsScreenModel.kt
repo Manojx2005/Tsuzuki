@@ -69,8 +69,7 @@ internal class AnimeDetailsScreenModel(
     }
 
     suspend fun reloadSaved() {
-        val id = state.value.saved?.id ?: return
-        val saved = library.getAnime(id)
+        val saved = library.getAnime(entry.source.id, state.value.display.url)
         mutableState.update { it.copy(saved = saved) }
     }
 }

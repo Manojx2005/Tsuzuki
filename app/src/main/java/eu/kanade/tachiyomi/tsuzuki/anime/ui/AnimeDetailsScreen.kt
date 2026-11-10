@@ -136,6 +136,7 @@ internal fun AnimeDetailsScreen(
     val ordered = remember(episodeState.items) { episodeState.items.sortedWith(animeEpisodeNumberOrder) }
     val shelves by remember { library.observeShelves() }.collectAsState(emptyList())
     var shelfSelection by remember { mutableStateOf<Set<Long>?>(null) }
+    var duplicate by remember { mutableStateOf<AnimeDuplicateMatch?>(null) }
     var selection by rememberSaveable(anime.url) { mutableStateOf(longArrayOf()) }
     val selected = episodeState.items.filter { it.id in selection }
     var saving by remember { mutableStateOf(false) }
@@ -369,8 +370,15 @@ internal fun AnimeDetailsScreen(
                             if (saved?.favorite == true) {
                                 mutate { model.setFavorite(false, emptySet()) }
                             } else {
-                                scope.launch {
-                                    shelfSelection = saved?.let { library.shelfIds(it.id) } ?: setOf(0L)
+                                mutate {
+                                    val id = saved?.id ?: library.cacheSearchResult(entry.source.id, display)
+                                    val adding = checkNotNull(library.getAnime(id))
+                                    val existing = library.findDuplicate(adding)
+                                    if (existing == null) {
+                                        shelfSelection = library.shelfIds(id)
+                                    } else {
+                                        duplicate = AnimeDuplicateMatch(existing, adding)
+                                    }
                                 }
                             }
                         },
@@ -475,6 +483,22 @@ internal fun AnimeDetailsScreen(
             }
         }
     }
+    duplicate?.let { match ->
+        AnimeDuplicateDialog(
+            existing = match.existing,
+            adding = match.adding,
+            addingSource = entry.source,
+            onDismiss = { duplicate = null },
+            onAdd = { mutate { shelfSelection = library.shelfIds(match.adding.id) } },
+            onOpen = {
+                duplicate = null
+                openAnime(context, match.existing.id)
+            },
+            onMigrate = {
+                migrate.launch(AnimeMigrationActivity.fromAnime(context, match.existing.id, match.adding.id))
+            },
+        )
+    }
     shelfSelection?.let { initial ->
         AnimeShelfPicker(shelves, initial, onDismiss = { shelfSelection = null }) { selectedShelves ->
             shelfSelection = null
@@ -493,6 +517,8 @@ internal fun AnimeDetailsScreen(
         }
     }
 }
+
+private data class AnimeDuplicateMatch(val existing: Anime, val adding: Anime)
 
 @Composable
 private fun AnimeShelfPicker(

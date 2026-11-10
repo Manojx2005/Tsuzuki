@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
@@ -53,6 +54,12 @@ internal class AnimeLibraryStore(
     fun observeHasFavorites() = anime.subscribeLibrary().map { it.isNotEmpty() }
 
     suspend fun getLibrary() = anime.subscribeLibrary().first().map { it.anime }
+
+    suspend fun findDuplicate(candidate: Anime): Anime? = withContext(Dispatchers.IO) {
+        val tracked = database.anime_syncQueries.findFavoriteWithSameTracker(candidate.id, candidate.source)
+            .awaitAsOneOrNull()
+        findAnimeDuplicate(candidate, getLibrary(), tracked)
+    }
 
     fun observeNewEpisodes(since: Long) = database.episodesQueries.getLibraryUpdates(since) {
             animeId,

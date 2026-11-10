@@ -56,6 +56,7 @@ import eu.kanade.presentation.tsuzuki.browse.rememberAnimeSourceStubs
 import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationPreviewTile
 import eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrationPrimaryAction
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeMigrationMode
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
@@ -174,6 +175,39 @@ class AnimeMigrationActivity : BaseActivity() {
         val snackbars = remember { SnackbarHostState() }
         val error = stringResource(MR.strings.unknown_error)
         val tokens = TsuzukiTheme.tokens
+        val targetId = intent.getLongExtra(TARGET, -1)
+        var suggestedTargetOpened by remember { mutableStateOf(targetId == -1L) }
+
+        fun prepare(entry: RegisteredAnimeSource, result: SAnime) {
+            if (preparing) return
+            preparing = true
+            scope.launch {
+                try {
+                    candidate = withContext(Dispatchers.IO) {
+                        val target = checkNotNull(library.refresh(entry, result, fetchDetails = true))
+                        val oldEpisodes = library.getEpisodes(original.id)
+                        val newEpisodes = library.getEpisodes(target.id)
+                        MigrationCandidate(entry, target, oldEpisodes, newEpisodes)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logcat(LogPriority.WARN, e) { "Could not prepare anime migration" }
+                    snackbars.showSnackbar(error)
+                } finally {
+                    preparing = false
+                }
+            }
+        }
+
+        LaunchedEffect(targets) {
+            if (!suggestedTargetOpened && targets.isNotEmpty()) {
+                suggestedTargetOpened = true
+                val target = withContext(Dispatchers.IO) { library.getAnime(targetId) }
+                val entry = targets.firstOrNull { it.source.id == target?.source }
+                if (entry != null && target != null) prepare(entry, target.toSourceAnime())
+            }
+        }
         LaunchedEffect(model.revision, targets) { model.search(targets, model.query) }
         BackHandler(enabled = applying) {}
         Scaffold(
@@ -193,27 +227,7 @@ class AnimeMigrationActivity : BaseActivity() {
             if (preparing || applying) {
                 Column(Modifier.padding(padding)) { AnimeCatalogueStatus(null) }
             } else {
-                AnimeGlobalSearchResults(model, padding) { entry, result ->
-                    if (preparing) return@AnimeGlobalSearchResults
-                    preparing = true
-                    scope.launch {
-                        try {
-                            candidate = withContext(Dispatchers.IO) {
-                                val target = checkNotNull(library.refresh(entry, result, fetchDetails = true))
-                                val oldEpisodes = library.getEpisodes(original.id)
-                                val newEpisodes = library.getEpisodes(target.id)
-                                MigrationCandidate(entry, target, oldEpisodes, newEpisodes)
-                            }
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            logcat(LogPriority.WARN, e) { "Could not prepare anime migration" }
-                            snackbars.showSnackbar(error)
-                        } finally {
-                            preparing = false
-                        }
-                    }
-                }
+                AnimeGlobalSearchResults(model, padding, onSelect = ::prepare)
             }
         }
         candidate?.let { match ->
@@ -246,9 +260,12 @@ class AnimeMigrationActivity : BaseActivity() {
     companion object {
         private const val ANIME = "migration_anime_id"
         private const val SOURCE = "migration_source_id"
+        private const val TARGET = "migration_target_id"
 
-        internal fun fromAnime(context: Context, id: Long) =
-            Intent(context, AnimeMigrationActivity::class.java).putExtra(ANIME, id)
+        internal fun fromAnime(context: Context, id: Long, targetId: Long? = null) =
+            Intent(context, AnimeMigrationActivity::class.java).putExtra(ANIME, id).apply {
+                if (targetId != null) putExtra(TARGET, targetId)
+            }
 
         internal fun fromSource(context: Context, id: Long) =
             Intent(context, AnimeMigrationActivity::class.java).putExtra(SOURCE, id)

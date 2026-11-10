@@ -440,6 +440,37 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun duplicateLookupPrefersAStoredTrackerIdentityOnAnotherSource() = runBlocking {
+        withDatabase { _, db ->
+            val repository = AnimeRepositoryImpl(db)
+            val tracks = AnimeTrackRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                repository,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            fun title(path: String, name: String) = SAnime.create().apply {
+                url = "/$path"
+                title = name
+            }
+            val sameSourceId = store.setFavorite(10, title("same", "The Show"), true, emptySet())
+            val titleId = store.setFavorite(11, title("name", "THE SHOW!"), true, emptySet())
+            val trackerId = store.setFavorite(12, title("tracker", "Different title"), true, emptySet())
+            val candidateId = store.cacheSearchResult(10, title("new", "The Show"))
+            val candidate = checkNotNull(repository.awaitById(candidateId))
+            assertEquals(titleId, store.findDuplicate(candidate)?.id)
+
+            listOf(sameSourceId, trackerId, candidateId).forEach {
+                tracks.upsert(AnimeTrack(it, 3, 101, "Shared identity", "https://example.com/101"))
+            }
+            assertEquals(trackerId, store.findDuplicate(candidate)?.id)
+            assertFalse(checkNotNull(repository.awaitById(candidateId)).favorite)
+        }
+    }
+
+    @Test
     fun animeMigrationCopiesDataAndReplaceOnlyRemovesTheOriginalFromTheLibrary() = runBlocking {
         withDatabase { _, db ->
             val repository = AnimeRepositoryImpl(db)
