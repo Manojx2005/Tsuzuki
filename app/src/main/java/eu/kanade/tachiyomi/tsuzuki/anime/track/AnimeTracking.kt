@@ -20,7 +20,7 @@ internal class AnimeTracking(
     private val writes = Mutex()
 
     val services: List<Tracker>
-        get() = listOf(trackers.aniList, trackers.myAnimeList)
+        get() = listOf(trackers.aniList, trackers.myAnimeList, trackers.kitsu)
 
     fun observe(animeId: Long) = tracks.subscribeByAnimeId(animeId)
 
@@ -45,7 +45,8 @@ internal class AnimeTracking(
                 it.syncId == selected.syncId && it.remoteId == selected.remoteId
             },
         )
-        tracks.upsert(api.update(current, edit))
+        val latest = if (current.syncId == TrackerManager.KITSU) checkNotNull(api.entry(current)) else current
+        tracks.upsert(api.update(latest, edit))
     }
 
     suspend fun unlink(track: AnimeTrack) = writes.withLock {
@@ -85,6 +86,7 @@ internal class AnimeTracking(
     private fun provider(id: Long): AnimeTrackerApi? = when {
         id == trackers.aniList.id && trackers.aniList.isLoggedIn -> trackers.aniList.anime
         id == trackers.myAnimeList.id && trackers.myAnimeList.isLoggedIn -> trackers.myAnimeList.anime
+        id == trackers.kitsu.id && trackers.kitsu.isLoggedIn -> trackers.kitsu.anime
         else -> null
     }
 }

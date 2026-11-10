@@ -16,12 +16,14 @@ import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
+import eu.kanade.tachiyomi.tsuzuki.anime.track.KitsuAnimeApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import okhttp3.FormBody
 import okhttp3.Headers.Companion.headersOf
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -38,6 +40,8 @@ class KitsuApi(private val client: OkHttpClient, interceptor: KitsuInterceptor) 
     private val json: Json by injectLazy()
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
+
+    internal fun anime(userId: () -> String) = KitsuAnimeApi(authClient, json, BASE_URL.toHttpUrl(), userId)
 
     suspend fun addLibManga(track: Track, userId: String): Track {
         return withIOContext {

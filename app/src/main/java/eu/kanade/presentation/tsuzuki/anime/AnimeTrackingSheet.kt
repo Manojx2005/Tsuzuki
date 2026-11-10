@@ -227,6 +227,7 @@ private fun AnimeTrackerTile(
                 ) {
                     val initials = when {
                         service.id == TrackerManager.ANILIST -> "AL"
+                        service.id == TrackerManager.KITSU -> "K"
                         service is MyAnimeList -> "MAL"
                         else -> service.name.take(2)
                     }
@@ -365,10 +366,17 @@ private fun EditTrackDialog(
             confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(MR.strings.action_cancel)) } },
         )
         EditTrackField.SCORE -> Dialog(onDismissRequest = onDismiss) {
-            val steps = if (track.syncId == TrackerManager.ANILIST) 10 else 1
-            val scores = remember(steps) { (0..10 * steps).map { it.toDouble() / steps } }
+            val steps = when (track.syncId) {
+                TrackerManager.ANILIST -> 10
+                TrackerManager.KITSU -> 2
+                else -> 1
+            }
+            val minimum = if (track.syncId == TrackerManager.KITSU) 2 else 0
+            val scores = remember(steps, minimum) { (minimum..10 * steps).map { it.toDouble() / steps } }
             val labels = remember(scores) { listOf("—") + scores.map(::formatTrackNumber) }
-            var selection by remember { mutableStateOf(formatTrackNumber(track.score.coerceIn(0.0, 10.0))) }
+            var selection by remember {
+                mutableStateOf(track.score.coerceIn(0.0, 10.0).takeIf { it > 0.0 }?.let(::formatTrackNumber) ?: "—")
+            }
             TrackScoreSelector(
                 selection = selection,
                 onSelectionChange = { selection = it },

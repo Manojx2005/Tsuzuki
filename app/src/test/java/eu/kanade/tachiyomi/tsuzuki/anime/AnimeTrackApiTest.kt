@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AniListAnimeApi
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackEdit
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackStatus
+import eu.kanade.tachiyomi.tsuzuki.anime.track.KitsuAnimeApi
 import eu.kanade.tachiyomi.tsuzuki.anime.track.MyAnimeListAnimeApi
 import eu.kanade.tachiyomi.tsuzuki.anime.track.nextAnimeTrackProgress
 import eu.kanade.tachiyomi.tsuzuki.anime.track.toTrackDate
@@ -11,6 +12,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.FormBody
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -111,6 +113,110 @@ class AnimeTrackApiTest {
     }
 
     @Test
+    fun kitsuSearchUsesAnimeAndParsesJsonApiMedia() = runBlocking {
+        val client = respondingTo {
+            assertEquals("/api/edge/anime", it.url.encodedPath)
+            assertEquals("Title & subtitle", it.url.queryParameter("filter[text]"))
+            assertEquals("application/vnd.api+json", it.header("Accept"))
+            """
+                {"data":[{"id":"31","type":"anime","attributes":{
+                  "canonicalTitle":"Title","slug":"title","episodeCount":12,
+                  "posterImage":{"small":"https://example.com/small.png"}}},
+                  {"id":"32","type":"anime","attributes":{"titles":{"en":"Fallback"},"episodeCount":null}},
+                  {"id":"33","type":"anime","attributes":{}}]}
+            """.trimIndent()
+        }
+        val results = kitsu(client).search("Title & subtitle")
+        assertEquals(listOf("Title", "Fallback"), results.map { it.title })
+        assertEquals(31L, results[0].id)
+        assertEquals(12L, results[0].totalEpisodes)
+        assertEquals("https://kitsu.app/anime/title", results[0].url)
+        assertEquals("https://example.com/small.png", results[0].cover)
+    }
+
+    @Test
+    fun kitsuFindsAnimeEntryForTheLoggedInUser() = runBlocking {
+        val client = respondingTo {
+            assertEquals("/api/edge/library-entries", it.url.encodedPath)
+            assertEquals("31", it.url.queryParameter("filter[anime_id]"))
+            assertEquals("42", it.url.queryParameter("filter[user_id]"))
+            assertEquals("anime", it.url.queryParameter("include"))
+            assertTrue(it.cacheControl.noCache)
+            """
+                {"data":[{"id":"9","type":"libraryEntries","attributes":{"status":"on_hold","progress":7,
+                  "ratingTwenty":17,"private":true,"startedAt":"2026-01-03T00:00:00.000Z"}}],
+                  "included":[{"id":"31","type":"anime","attributes":{"canonicalTitle":"New title","episodeCount":12}}]}
+            """.trimIndent()
+        }
+        val result = checkNotNull(kitsu(client).entry(track(3L, 31)))
+        assertEquals(9L, result.libraryId)
+        assertEquals("New title", result.title)
+        assertEquals(12L, result.totalEpisodes)
+        assertEquals(7.0, result.lastEpisodeSeen)
+        assertEquals(8.5, result.score)
+        assertEquals(AnimeTrackStatus.ON_HOLD.idFor(3L), result.status)
+        assertEquals(LocalDate.of(2026, 1, 3).toTrackDate(), result.startDate)
+        assertTrue(result.isPrivate)
+    }
+
+    @Test
+    fun kitsuCreatesAnAnimeRelationshipForTheCurrentAccount() = runBlocking {
+        val client = respondingTo {
+            assertEquals("POST", it.method)
+            assertEquals("/api/edge/library-entries", it.url.encodedPath)
+            val data = it.jsonBody().getValue("data").jsonObject
+            assertEquals("libraryEntries", data.getValue("type").jsonPrimitive.content)
+            val relationships = data.getValue("relationships").jsonObject
+            val media = relationships.getValue("media").jsonObject.getValue("data").jsonObject
+            val user = relationships.getValue("user").jsonObject.getValue("data").jsonObject
+            assertEquals("anime", media.getValue("type").jsonPrimitive.content)
+            assertEquals("31", media.getValue("id").jsonPrimitive.content)
+            assertEquals("42", user.getValue("id").jsonPrimitive.content)
+            assertEquals("planned", data.getValue("attributes").jsonObject.getValue("status").jsonPrimitive.content)
+            """{"data":{"id":"9","attributes":{"status":"planned"}}}"""
+        }
+        val result = kitsu(client).update(track(3L, 31), AnimeTrackEdit(status = AnimeTrackStatus.PLANNING))
+        assertEquals(9L, result.libraryId)
+        assertEquals(AnimeTrackStatus.PLANNING.idFor(3L), result.status)
+    }
+
+    @Test
+    fun kitsuUpdatesOnlyExplicitFieldsAndNeverSendsLowerProgress() = runBlocking {
+        val client = respondingTo {
+            assertEquals("PATCH", it.method)
+            assertEquals("/api/edge/library-entries/9", it.url.encodedPath)
+            val attributes = it.jsonBody().getValue("data").jsonObject.getValue("attributes").jsonObject
+            assertEquals(setOf("status", "reconsuming", "ratingTwenty"), attributes.keys)
+            assertEquals("current", attributes.getValue("status").jsonPrimitive.content)
+            assertEquals("true", attributes.getValue("reconsuming").jsonPrimitive.content)
+            assertEquals("17", attributes.getValue("ratingTwenty").jsonPrimitive.content)
+            """{"data":{"id":"9","attributes":{"status":"current","reconsuming":true,"progress":7,"ratingTwenty":17}}}"""
+        }
+        val previous = track(3L, 31).copy(libraryId = 9, lastEpisodeSeen = 7.0, totalEpisodes = 12)
+        val api = kitsu(client)
+        assertEquals(previous, api.update(previous, AnimeTrackEdit(progress = 5)))
+        val result = api.update(
+            previous,
+            AnimeTrackEdit(progress = 5, status = AnimeTrackStatus.REWATCHING, score = 8.5),
+        )
+        assertEquals(7.0, result.lastEpisodeSeen)
+        assertEquals(8.5, result.score)
+        assertEquals(AnimeTrackStatus.REWATCHING.idFor(3L), result.status)
+    }
+
+    @Test
+    fun kitsuSendsOnlyBoundedEpisodeProgressDuringAutoSync() = runBlocking {
+        val client = respondingTo {
+            val attributes = it.jsonBody().getValue("data").jsonObject.getValue("attributes").jsonObject
+            assertEquals(setOf("progress"), attributes.keys)
+            assertEquals("12", attributes.getValue("progress").jsonPrimitive.content)
+            """{"data":{"id":"9","attributes":{"status":"current","progress":12}}}"""
+        }
+        val previous = track(3L, 31).copy(libraryId = 9, lastEpisodeSeen = 7.0, totalEpisodes = 12)
+        assertEquals(12.0, kitsu(client).update(previous, AnimeTrackEdit(progress = 13)).lastEpisodeSeen)
+    }
+
+    @Test
     fun progressOnlyIncreasesAndStaysWithinKnownEpisodeCount() {
         val existing = track(2L, 31).copy(lastEpisodeSeen = 8.0, totalEpisodes = 12)
         assertNull(nextAnimeTrackProgress(existing, 7.0))
@@ -124,6 +230,10 @@ class AnimeTrackApiTest {
     private fun Request.jsonBody() = json.parseToJsonElement(
         Buffer().also { checkNotNull(body).writeTo(it) }.readUtf8(),
     ).jsonObject
+
+    private fun kitsu(client: OkHttpClient) = KitsuAnimeApi(client, json, "https://kitsu.app/api/edge/".toHttpUrl()) {
+        "42"
+    }
 
     private fun track(service: Long, remoteId: Long) = AnimeTrack(
         animeId = 1,

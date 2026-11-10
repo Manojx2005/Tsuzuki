@@ -54,7 +54,10 @@ internal enum class AnimeTrackStatus(
     REWATCHING(6, 7, "REPEATING", "watching"),
     ;
 
-    fun idFor(trackerId: Long) = if (trackerId == TrackerManager.ANILIST) aniListId else myAnimeListId
+    fun idFor(trackerId: Long) = when (trackerId) {
+        TrackerManager.ANILIST, TrackerManager.KITSU -> aniListId
+        else -> myAnimeListId
+    }
 }
 
 internal fun nextAnimeTrackProgress(remote: AnimeTrack, seenNumber: Double): Int? {
