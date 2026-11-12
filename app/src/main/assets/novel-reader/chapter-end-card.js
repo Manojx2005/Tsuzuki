@@ -21,6 +21,7 @@
         'text-align:start;text-indent:0;line-height:1.35;letter-spacing:normal;' +
         'font:14px/1.35 ' + (dot ? 'monospace' : 'sans-serif') + ';color:' + ink);
     container.id = '__BTN_CONTAINER_ID__';
+    container.dataset.chapterEndCard = '';
     container.dataset.chapterId = data.chapterId;
 
     element(container, 'div', data.end, 'margin-bottom:20px;text-align:center;color:' + pageInk);
@@ -41,7 +42,13 @@
     var next = element(card, 'button', data.next + ' →',
         common + 'min-height:56px;margin:8px 0;border:0;background:' +
         (data.button || pageInk) + ';color:' + (data.buttonInk || page));
-    next.onclick = function () { Android.loadNextChapter(); };
+    next.dataset.chapterEndNext = '';
+    element(container, 'style', 'button[data-chapter-end-next]:disabled{opacity:.75;cursor:default;}', '');
+    next.onclick = function () {
+        if (next.disabled) return;
+        next.disabled = true;
+        Android.loadNextChapterFromEnd(data.chapterId);
+    };
 
     var actions = element(card, 'div', '', 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;');
     var secondary = common + 'min-height:48px;background:transparent;color:' + ink +

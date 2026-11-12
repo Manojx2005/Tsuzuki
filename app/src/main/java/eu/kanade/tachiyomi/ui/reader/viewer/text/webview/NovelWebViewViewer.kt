@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta
 import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewChapterMeta.unescapeJsResult
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -126,6 +127,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private val container = FrameLayout(activity)
+    private val chapterEndTransition = eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition(
+        activity,
+        container,
+    )
     private lateinit var webView: WebView
     private var loadingIndicator: ReaderProgressIndicator? = null
     private val preferences: ReaderPreferences by injectLazy()
@@ -274,7 +279,32 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         activity,
         object : GestureDetector.SimpleOnGestureListener() {
 
-            override fun onDown(e: MotionEvent): Boolean = false
+            private var chapterEndHit: CompletableDeferred<Boolean>? = null
+
+            override fun onDown(e: MotionEvent): Boolean {
+                chapterEndHit = null
+                return false
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (isEditingMode || docState != DocState.READY || isPagedModeActive() ||
+                    preferences.novelInfiniteScroll.get() || currentChapters?.nextChapter == null || webView.width == 0
+                ) {
+                    return false
+                }
+
+                // Ask before WebView processes the up event. Its click can replace the DOM
+                // before GestureDetector confirms the tap and runs the reader's tap zones.
+                val hit = CompletableDeferred<Boolean>()
+                chapterEndHit = hit
+                val x = e.x / webView.width
+                val y = e.y / webView.width
+                evaluateJavascriptSafe(
+                    """Boolean(document.elementFromPoint($x * innerWidth, $y * innerWidth)
+                        ?.closest('[data-chapter-end-card] button'))""",
+                ) { result -> hit.complete(result == "false") }
+                return false
+            }
 
             override fun onFling(
                 e1: MotionEvent?,
@@ -307,12 +337,30 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     e.y / container.height.toFloat(),
                 )
 
+                val hit = chapterEndHit
+                if (hit == null) {
+                    handleTapZone(pos)
+                } else {
+                    val chapter = currentChapters?.currChapter
+                    scope.launch {
+                        val outsideCard = withTimeoutOrNull(500L) { hit.await() } == true
+                        if (outsideCard && chapterEndHit === hit && currentChapters?.currChapter === chapter &&
+                            !isEditingMode
+                        ) {
+                            handleTapZone(pos)
+                        }
+                    }
+                }
+                return true
+            }
+
+            private fun handleTapZone(pos: android.graphics.PointF) {
                 if (preferences.navigationModeNovel.get() in ReaderPreferences.TAPZONE_ZONE_ONLY_MODES) {
                     val menuZone = navigator.getRegions().firstOrNull()?.rectF
                     if (menuZone != null && menuZone.contains(pos.x, pos.y)) {
                         activity.toggleMenu()
                     }
-                    return true
+                    return
                 }
 
                 when (navigator.getAction(pos)) {
@@ -330,8 +378,6 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                         pageScrollBy(-1)
                     }
                 }
-
-                return true
             }
         },
     ).apply {
@@ -726,6 +772,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     // Loading/error loads also fire onPageFinished(about:blank), and some WebView
                     // builds fire twice per navigation; gate the whole body so scripts/snippets
                     // inject only on the first genuine chapter load.
+                    if (docState == DocState.ERROR) chapterEndTransition.revealWhenReady(webView, animate = false)
                     if (docState != DocState.LOADING_REAL) return
                     docState = DocState.READY
                     pagedChapterSwitchPending = false
@@ -764,6 +811,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     // A full reload replaces window, dropping the autoscroll rAF loop; re-arm it
                     // on the new document so autoscroll survives a non-inf-scroll chapter change.
                     if (isAutoScrolling) startAutoScroll()
+                    chapterEndTransition.revealWhenReady(webView, currentChapters?.currChapter?.chapter?.id)
                 }
             }
 
@@ -1016,6 +1064,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         ThemeUtils.getThemeColors(activity, preferences, theme)
 
     override fun destroy() {
+        chapterEndTransition.clear()
         if (isDestroyed) return
         // Only persist if real progress exists. lastSavedProgress starts at 0 and stays 0
         // until onPageFinished restores or the user scrolls. Saving 0 here on an early
@@ -1223,6 +1272,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun setChapters(chapters: ViewerChapters) {
+        chapterEndTransition.onChapterChanging(chapters.currChapter.chapter.id)
         // A getPageList failure leaves the chapter in Error state with no pages - must be checked
         // before the null-pages early return below, which would otherwise swallow it silently.
         val chapterLoadError = (chapters.currChapter.state as? ReaderChapter.State.Error)?.error
@@ -1234,6 +1284,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         val page = chapters.currChapter.pages?.firstOrNull()
         val chapterId = chapters.currChapter.chapter.id
         if (page == null || chapterId == null) {
+            chapterEndTransition.clear()
             releasePagedChapterSwitchIfPending()
             return
         }
@@ -1253,6 +1304,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         isInfiniteScrollNavigation = false
 
         if (loadedChapterIds.contains(chapterId) && (!enteredViaPrevious || docState == DocState.READY)) {
+            chapterEndTransition.clear()
             logcat(LogPriority.DEBUG) { "NovelWebViewViewer: Chapter $chapterId already loaded, skipping" }
             val index = chapterQueue.indexOf(chapterId)
             if (index >= 0) {
@@ -1293,6 +1345,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             val loader = page.chapter.pageLoader
             if (loader == null) {
                 logcat(LogPriority.ERROR) { "NovelWebViewViewer: No page loader available" }
+                chapterEndTransition.clear()
                 if (!isPrepend) hideLoadingIndicator()
                 releasePagedChapterSwitchIfPending()
                 return@launch
@@ -1788,6 +1841,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun showLoadingIndicator(message: String = "Loading...") {
+        if (chapterEndTransition.isPending) {
+            docState = DocState.LOADING
+            return
+        }
         val theme = preferences.novelTheme.get()
         val (finalBgColor, finalTextColor) = getThemeColors(theme)
 
@@ -2131,6 +2188,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
 
     override fun handleGenericMotionEvent(event: MotionEvent): Boolean = false
 
+    private fun resetChapterEndButton() {
+        evaluateJavascriptSafe("document.querySelector('[data-chapter-end-next]')?.removeAttribute('disabled')", null)
+    }
+
     @Keep
     @Suppress("unused")
     inner class WebViewInterface {
@@ -2138,6 +2199,21 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         fun dismissNovelRecap(chapterId: String) {
             val id = chapterId.toLongOrNull() ?: return
             activity.runOnUiThread { activity.viewModel.dismissNovelRecap(id) }
+        }
+
+        @JavascriptInterface
+        fun loadNextChapterFromEnd(chapterId: String) {
+            activity.runOnUiThread {
+                val chapters = currentChapters ?: return@runOnUiThread
+                if (docState != DocState.READY || preferences.novelInfiniteScroll.get() || isPagedModeActive() ||
+                    chapters.currChapter.chapter.id.toString() != chapterId || chapterEndTransition.isPending
+                ) {
+                    return@runOnUiThread
+                }
+                if (!chapterEndTransition.start(scope, chapters, onRejected = ::resetChapterEndButton)) {
+                    resetChapterEndButton()
+                }
+            }
         }
 
         @JavascriptInterface

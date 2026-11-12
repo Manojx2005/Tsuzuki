@@ -26,6 +26,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
 import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
+import eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
 import eu.kanade.presentation.tsuzuki.reader.createNovelRecapView
 import eu.kanade.tachiyomi.source.model.Page
@@ -79,6 +80,7 @@ import kotlin.math.roundToInt
 class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     private val container = FrameLayout(activity)
+    private val chapterEndTransition = NovelChapterEndTransition(activity, container)
     private lateinit var scrollView: NestedScrollView
     private lateinit var contentContainer: NovelReadingColumn
     private val inlineFeedback by lazy {
@@ -1395,6 +1397,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun destroy() {
+        chapterEndTransition.clear()
         // Save the live per-chapter progress, not a recomputed whole-document ratio.
         // lastSavedProgress is 0 until restore/scroll, and a teardown before that (orientation
         // lock recreates the activity) must not persist 0 and wipe the saved progress.
@@ -1450,6 +1453,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun setChapters(chapters: ViewerChapters) {
+        chapterEndTransition.onChapterChanging(chapters.currChapter.chapter.id)
         renderGeneration++
         // A getPageList failure leaves the chapter in Error state with no pages - must be checked
         // before the null-pages early return below, which would otherwise swallow it silently.
@@ -1460,15 +1464,21 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             displayError(chapterLoadError)
             return
         }
-        val page = chapters.currChapter.pages?.firstOrNull() ?: return
+        val page = chapters.currChapter.pages?.firstOrNull()
+        if (page == null) {
+            chapterEndTransition.clear()
+            return
+        }
         val enteredViaPrevious = chapters.takePreviousEntry()
 
         loadJob?.cancel()
+        if (chapterEndTransition.isPending) flushProgress()
         currentPage = page
         currentChapters = chapters
 
         val loadedIndex = loadedChapters.indexOfFirst { it.chapter.chapter.id == chapters.currChapter.chapter.id }
         if (preferences.novelInfiniteScroll.get() && loadedIndex >= 0) {
+            chapterEndTransition.clear()
             if (enteredViaPrevious) {
                 pendingRestoreChapterId = null
                 progressSaveJob?.cancel()
@@ -1500,6 +1510,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             val loader = page.chapter.pageLoader
             if (loader == null) {
                 logcat(LogPriority.ERROR) { "NovelViewer: No page loader available" }
+                chapterEndTransition.clear()
                 hideLoadingIndicator()
                 return@launch
             }
@@ -1703,7 +1714,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val chapters = currentChapters ?: return
         if (chapters.nextChapter == null) return
 
-        activity.createChapterEndCard(chapters, preferences, NEXT_CHAPTER_BUTTON_TAG)?.let {
+        activity.createChapterEndCard(
+            chapters,
+            preferences,
+            NEXT_CHAPTER_BUTTON_TAG,
+            isLeaving = { chapterEndTransition.isLeaving(chapters.currChapter.chapter.id) },
+            onNext = { chapterEndTransition.start(scope, chapters) },
+        )?.let {
             contentContainer.addView(it)
             return
         }
@@ -1898,6 +1915,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     private fun applyBackgroundColor() {
         val theme = preferences.novelTheme.get()
         val (backgroundColor, _) = getThemeColors(theme)
+        container.setBackgroundColor(backgroundColor)
         scrollView.setBackgroundColor(backgroundColor)
     }
 
@@ -1947,6 +1965,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
             startTts()
         }
+        chapterEndTransition.revealWhenReady(scrollView, loaded.chapter.chapter.id)
     }
 
     private var initialLoadingView: TextView? = null
@@ -2052,6 +2071,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
         contentContainer.removeAllViews()
         contentContainer.addView(errorContainer)
+        chapterEndTransition.revealWhenReady(scrollView, animate = false)
     }
 
     fun startAutoScroll() {

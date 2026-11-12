@@ -1771,6 +1771,15 @@ class ReaderActivity : BaseActivity() {
         loadAdjacentChapter(forward = true)
     }
 
+    internal suspend fun loadNextChapterFromEnd(fromId: Long): Boolean {
+        val state = viewModel.state.value
+        if (state.viewerChapters?.currChapter?.chapter?.id != fromId || state.isLoadingAdjacentChapter) return false
+        stopNovelTtsForManualNav()
+        val loaded = viewModel.loadNextChapter()
+        if (loaded) (state.viewer as? NovelWebViewViewer)?.onChapterNavigate("next")
+        return loaded
+    }
+
     /**
      * Loads the next chapter for a TTS auto-advance without stopping TTS. The viewer
      * has set pendingTtsAutoStart and needs it to survive the chapter swap so playback
