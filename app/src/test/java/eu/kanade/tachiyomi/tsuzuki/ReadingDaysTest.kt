@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.tsuzuki
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import java.time.LocalDate
 
 class ReadingDaysTest {
@@ -34,16 +33,5 @@ class ReadingDaysTest {
         assertEquals(map, ReadingDays.decode(ReadingDays.encode(map)))
         assertEquals(mapOf(today to 5L), ReadingDays.decode("bad;2026-11-03=5;2026-13-40=1;x=y"))
         assertEquals(emptyMap<LocalDate, Long>(), ReadingDays.decode(""))
-    }
-
-    @Test
-    fun `listening preserves older records and counts with reading`() {
-        val preferences = InMemoryPreferenceStore()
-        preferences.getString("tsz_reading_days").set("$today=$min")
-        val store = ReadingDays(preferences)
-        store.addListening(mapOf(today to ReadingDays.ListeningDay(2 * min, 1)))
-        store.add(today, min)
-        assertEquals(mapOf(today to 4 * min), store.days())
-        assertEquals(ReadingDays.ListeningSummary(2 * min, 2 * min, 1), store.listeningSummary(today))
     }
 }

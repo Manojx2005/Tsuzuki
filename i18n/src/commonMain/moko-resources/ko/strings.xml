@@ -1374,11 +1374,6 @@
     <string name="tsz_manga_format">만화 형식</string>
     <string name="tsz_manga_format_auto">자동</string>
     <string name="tsz_manga_long_strip_detected">웹툰 모드 자동 선택 · 이 작품에 대해 변경</string>
-    <string name="tsz_stats_listening">듣기</string>
-    <string name="tsz_stats_listen_today">오늘</string>
-    <string name="tsz_stats_listen_week">이번 주</string>
-    <string name="tsz_stats_listened_chapters">이번 주에 들은 화</string>
-    <string name="tsz_stats_minutes_read_listened">읽거나 들은 시간(분)</string>
     <string name="tsz_reader_recap_setting">이전 화 돌아보기</string>
     <string name="tsz_reader_recap_setting_summary">24시간 이상 읽지 않았을 때 이전 화의 텍스트를 오프라인에서 이용할 수 있으면 발췌문을 표시합니다.</string>
     <string name="tsz_reader_recap_previously">지난 이야기</string>

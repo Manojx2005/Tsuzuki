@@ -1362,11 +1362,6 @@
     <string name="tsz_manga_format">Formato del cómic</string>
     <string name="tsz_manga_format_auto">Automático</string>
     <string name="tsz_manga_long_strip_detected">Modo webtoon automático · cambiar para esta serie</string>
-    <string name="tsz_stats_listening">Escucha</string>
-    <string name="tsz_stats_listen_today">Hoy</string>
-    <string name="tsz_stats_listen_week">Esta semana</string>
-    <string name="tsz_stats_listened_chapters">Capítulos esta semana</string>
-    <string name="tsz_stats_minutes_read_listened">Minutos de lectura o escucha</string>
     <string name="tsz_reader_recap_setting">Resumen del capítulo</string>
     <string name="tsz_reader_recap_setting_summary">Tras 24 horas de pausa, muestra fragmentos del capítulo anterior si el texto está disponible sin conexión.</string>
     <string name="tsz_reader_recap_previously">Anteriormente</string>

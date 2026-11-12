@@ -713,7 +713,6 @@ class ReaderActivity : BaseActivity() {
     }
 
     override fun onPause() {
-        viewModel.listeningSession.setReaderVisible(false)
         when (val viewer = viewModel.state.value.viewer) {
             is NovelViewer -> viewer.flushProgress()
             is NovelWebViewViewer -> viewer.flushProgress()
@@ -738,7 +737,6 @@ class ReaderActivity : BaseActivity() {
      */
     override fun onResume() {
         super.onResume()
-        viewModel.listeningSession.setReaderVisible(true)
         val listening = currentNovelTtsState()?.active == true
         lifecycleScope.launch {
             viewModel.restartReadTimerSynced()
