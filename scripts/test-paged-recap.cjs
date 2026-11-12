@@ -31,6 +31,9 @@ const recap = fs.readFileSync(`${assets}/chapter-recap-card.js`, 'utf8').replace
     chapterId: '42',
     title: 'Previously',
     dismiss: 'Dismiss',
+    ink: '#ffffff',
+    accent: '#ff2d2d',
+    tile: '#0d0d0d',
     paragraphs: [
         'The archivist waited for the second bell at the gate. '.repeat(9),
         'A lantern beside the door cast shadows across the floor. '.repeat(9),
@@ -47,7 +50,9 @@ const story = Array.from({ length: 40 }, (_, i) => (
 function fixture(withRecap, width, height) {
     const chapter = width === 390 ? `<main>${story}</main>` : `<tsundoku-chapter>${story}</tsundoku-chapter>`;
     return `<!doctype html><meta charset="utf-8">
-        <style>body {margin:16px;font:18px/1.55 Georgia,serif} p{margin:0 0 12px} ${css}</style>
+        <style>body {margin:16px;font:18px/1.55 Georgia,serif}
+        * {color:inherit !important;font-family:inherit !important;font-size:inherit !important}
+        p{margin:0 0 12px} ${css}</style>
         ${chapter}<script>
         const dismissCalls = [];
         let saved;
@@ -69,6 +74,11 @@ function fixture(withRecap, width, height) {
             };
             const p = window.__tdPaged;
             const card = document.getElementById('tsuzuki-novel-recap');
+            const cardStyle = card ? {
+                font: getComputedStyle(card).fontFamily,
+                ink: getComputedStyle(card).color,
+                action: getComputedStyle(card.querySelector('button')).color,
+            } : null;
             window.__tdPagedRestoreRatio(0, 1);
             const start = { page: p.pageIndex, progress: saved, lines: snapshot() };
             const totalPages = p.pageCount;
@@ -86,7 +96,7 @@ function fixture(withRecap, width, height) {
             const dismissed = { page: p.pageIndex, lines: snapshot(), progress: saved };
             parent.postMessage({
                 withRecap: ${withRecap}, width: ${width}, height: ${height}, start, totalPages, recapFragments,
-                resumed, turned, turnProgress, dismissed, dismissCalls, end,
+                resumed, turned, turnProgress, dismissed, dismissCalls, end, cardStyle,
             }, '*');
         });</script>`;
 }
@@ -127,6 +137,8 @@ try {
         const withCard = results.find(result => result.width === width && result.withRecap);
         assert.ok(plain.resumed.length, 'Story did not render');
         assert.ok(withCard.recapFragments > 0, 'Recap did not render');
+        assert.deepEqual(withCard.cardStyle, {font: 'monospace', ink: 'rgb(255, 255, 255)', action: 'rgb(255, 45, 45)'},
+            'Reader-wide overrides must preserve Dot recap typography and action colour');
         assert.deepEqual(withCard.resumed, plain.resumed, 'Recap moved the resumed story lines');
         assert.deepEqual(withCard.start, { page: 0, progress: 0, lines: [] });
         assert.equal(withCard.totalPages - plain.totalPages, withCard.recapFragments);

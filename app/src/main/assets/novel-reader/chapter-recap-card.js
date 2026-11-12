@@ -14,6 +14,10 @@
             'font:14px/1.5 ' + (data.ink ? 'monospace' : 'sans-serif') + ';background:' +
             (data.tile || 'color-mix(in srgb,' + page.color + ' 8%,' + page.backgroundColor + ')') + ';' +
             (data.border ? 'border:1px solid ' + data.border + ';' : '');
+        // Reader-wide * overrides must not replace this UI card's theme typography and ink.
+        card.style.setProperty('font-family', data.ink ? 'monospace' : 'sans-serif', 'important');
+        card.style.setProperty('font-size', '14px', 'important');
+        card.style.setProperty('color', ink, 'important');
 
         var header = document.createElement('div');
         header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;';
@@ -25,6 +29,7 @@
         dismiss.textContent = data.dismiss;
         dismiss.style.cssText = 'min-height:48px;background:transparent;border:0;' +
             'padding:0 8px;cursor:pointer;font:inherit;color:' + (data.accent || ink);
+        dismiss.style.setProperty('color', data.accent || ink, 'important');
         dismiss.onclick = function () {
             card.remove();
             Android.dismissNovelRecap(data.chapterId);
