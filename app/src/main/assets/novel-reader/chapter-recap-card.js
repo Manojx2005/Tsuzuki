@@ -28,7 +28,11 @@
         dismiss.onclick = function () {
             card.remove();
             Android.dismissNovelRecap(data.chapterId);
-            window.dispatchEvent(new Event('scroll'));
+            if (window.__tdPagedRepaginate) {
+                window.__tdPagedRepaginate();
+            } else {
+                window.dispatchEvent(new Event('scroll'));
+            }
         };
         header.appendChild(dismiss);
         card.appendChild(header);
