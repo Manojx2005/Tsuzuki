@@ -1383,4 +1383,22 @@
     <string name="tsz_dictionary_save">Adicionar ao caderno</string>
     <string name="tsz_dictionary_update">Atualizar</string>
     <string name="tsz_dictionary_web_search">Pesquisa na web</string>
+    <string name="tsz_lnr_choose">Selecionar backup do LNReader</string>
+    <string name="tsz_lnr_started">Importação iniciada (veja o progresso nas notificações)</string>
+    <string name="tsz_lnr_import">Importar backup do LNReader</string>
+    <string name="tsz_lnr_subtitle">Importar romances de um backup do LNReader (.zip)</string>
+    <string name="tsz_export_url">URL completo</string>
+    <string name="tsz_export_chapters">Número de capítulos</string>
+    <string name="tsz_export_novel">É um romance</string>
+    <string name="tsz_export_description">Descrição</string>
+    <string name="tsz_export_tags">Tags (separadas por vírgulas)</string>
+    <string name="tsz_lnr_options">Opções de importação do LNReader</string>
+    <string name="tsz_lnr_choose_items">Escolha o que restaurar do backup:</string>
+    <string name="tsz_lnr_novels">Romances</string>
+    <string name="tsz_lnr_chapters">Listas de capítulos</string>
+    <string name="tsz_lnr_history">Histórico de leitura</string>
+    <string name="tsz_lnr_covers">Capas em cache</string>
+    <string name="tsz_lnr_plugins">Plugins (extensões)</string>
+    <string name="tsz_lnr_missing">Restaurar plugins ausentes como marcadores</string>
+    <string name="tsz_lnr_confirm">Importar</string>
 </resources>

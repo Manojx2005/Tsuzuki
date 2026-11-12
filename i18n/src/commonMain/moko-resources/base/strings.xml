@@ -1765,4 +1765,22 @@
     <string name="tsz_dictionary_save">Add to notebook</string>
     <string name="tsz_dictionary_update">Update</string>
     <string name="tsz_dictionary_web_search">Web search</string>
+    <string name="tsz_lnr_choose">Select LNReader backup file</string>
+    <string name="tsz_lnr_started">Import started (check notifications for progress)</string>
+    <string name="tsz_lnr_import">Import LNReader backup</string>
+    <string name="tsz_lnr_subtitle">Import novels from an LNReader backup file (.zip)</string>
+    <string name="tsz_export_url">Full URL</string>
+    <string name="tsz_export_chapters">Chapter Count</string>
+    <string name="tsz_export_novel">Is Novel</string>
+    <string name="tsz_export_description">Description</string>
+    <string name="tsz_export_tags">Tags (comma-separated)</string>
+    <string name="tsz_lnr_options">LNReader Import Options</string>
+    <string name="tsz_lnr_choose_items">Choose what to restore from the backup:</string>
+    <string name="tsz_lnr_novels">Novels</string>
+    <string name="tsz_lnr_chapters">Chapters lists</string>
+    <string name="tsz_lnr_history">Reading history</string>
+    <string name="tsz_lnr_covers">Cached covers</string>
+    <string name="tsz_lnr_plugins">Plugins (extensions)</string>
+    <string name="tsz_lnr_missing">Restore with missing plugins (as stubs)</string>
+    <string name="tsz_lnr_confirm">Import</string>
 </resources>

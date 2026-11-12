@@ -1605,4 +1605,22 @@
     <string name="tsz_dictionary_save">ノートに追加</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">ウェブ検索</string>
+    <string name="tsz_lnr_choose">LNReaderのバックアップファイルを選択</string>
+    <string name="tsz_lnr_started">インポートを開始しました（進行状況は通知で確認できます）</string>
+    <string name="tsz_lnr_import">LNReaderバックアップをインポート</string>
+    <string name="tsz_lnr_subtitle">LNReaderのバックアップファイル（.zip）から小説をインポート</string>
+    <string name="tsz_export_url">完全なURL</string>
+    <string name="tsz_export_chapters">章数</string>
+    <string name="tsz_export_novel">小説かどうか</string>
+    <string name="tsz_export_description">あらすじ</string>
+    <string name="tsz_export_tags">タグ（カンマ区切り）</string>
+    <string name="tsz_lnr_options">LNReaderのインポート設定</string>
+    <string name="tsz_lnr_choose_items">バックアップから復元する項目を選択：</string>
+    <string name="tsz_lnr_novels">小説</string>
+    <string name="tsz_lnr_chapters">章一覧</string>
+    <string name="tsz_lnr_history">読書履歴</string>
+    <string name="tsz_lnr_covers">キャッシュ済みの表紙</string>
+    <string name="tsz_lnr_plugins">プラグイン（拡張機能）</string>
+    <string name="tsz_lnr_missing">不足しているプラグインを仮の項目として復元</string>
+    <string name="tsz_lnr_confirm">インポート</string>
 </resources>

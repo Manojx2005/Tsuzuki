@@ -1386,4 +1386,22 @@
     <string name="tsz_dictionary_save">Zum Notizbuch hinzufügen</string>
     <string name="tsz_dictionary_update">Aktualisieren</string>
     <string name="tsz_dictionary_web_search">Websuche</string>
+    <string name="tsz_lnr_choose">LNReader-Sicherungsdatei auswählen</string>
+    <string name="tsz_lnr_started">Import gestartet (Fortschritt in den Benachrichtigungen)</string>
+    <string name="tsz_lnr_import">LNReader-Sicherung importieren</string>
+    <string name="tsz_lnr_subtitle">Romane aus einer LNReader-Sicherungsdatei (.zip) importieren</string>
+    <string name="tsz_export_url">Vollständige URL</string>
+    <string name="tsz_export_chapters">Kapitelanzahl</string>
+    <string name="tsz_export_novel">Ist ein Roman</string>
+    <string name="tsz_export_description">Beschreibung</string>
+    <string name="tsz_export_tags">Tags (kommagetrennt)</string>
+    <string name="tsz_lnr_options">LNReader-Importoptionen</string>
+    <string name="tsz_lnr_choose_items">Aus der Sicherung wiederherzustellende Daten wählen:</string>
+    <string name="tsz_lnr_novels">Romane</string>
+    <string name="tsz_lnr_chapters">Kapitellisten</string>
+    <string name="tsz_lnr_history">Leseverlauf</string>
+    <string name="tsz_lnr_covers">Zwischengespeicherte Cover</string>
+    <string name="tsz_lnr_plugins">Plugins (Erweiterungen)</string>
+    <string name="tsz_lnr_missing">Mit fehlenden Plugins wiederherstellen (als Platzhalter)</string>
+    <string name="tsz_lnr_confirm">Importieren</string>
 </resources>

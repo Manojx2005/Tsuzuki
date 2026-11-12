@@ -1386,4 +1386,22 @@
     <string name="tsz_dictionary_save">添加到笔记本</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">网页搜索</string>
+    <string name="tsz_lnr_choose">选择 LNReader 备份文件</string>
+    <string name="tsz_lnr_started">已开始导入（请查看通知中的进度）</string>
+    <string name="tsz_lnr_import">导入 LNReader 备份</string>
+    <string name="tsz_lnr_subtitle">从 LNReader 备份文件（.zip）导入小说</string>
+    <string name="tsz_export_url">完整 URL</string>
+    <string name="tsz_export_chapters">章节数量</string>
+    <string name="tsz_export_novel">是否为小说</string>
+    <string name="tsz_export_description">简介</string>
+    <string name="tsz_export_tags">标签（以逗号分隔）</string>
+    <string name="tsz_lnr_options">LNReader 导入选项</string>
+    <string name="tsz_lnr_choose_items">选择要从备份中恢复的内容：</string>
+    <string name="tsz_lnr_novels">小说</string>
+    <string name="tsz_lnr_chapters">章节列表</string>
+    <string name="tsz_lnr_history">阅读历史</string>
+    <string name="tsz_lnr_covers">缓存的封面</string>
+    <string name="tsz_lnr_plugins">插件（扩展）</string>
+    <string name="tsz_lnr_missing">将缺失的插件恢复为占位项</string>
+    <string name="tsz_lnr_confirm">导入</string>
 </resources>
