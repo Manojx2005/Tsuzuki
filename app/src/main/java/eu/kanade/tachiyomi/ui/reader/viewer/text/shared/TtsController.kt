@@ -119,7 +119,7 @@ class TtsController internal constructor(
             override fun onDone(utteranceId: String?) {
                 val (queue, finishedIndex) = currentChunk(utteranceId) ?: return
                 val isLastChunk = finishedIndex == ttsChunks.lastIndex
-                listening.endChunk(queue, finishedIndex, completedChapter = isLastChunk && ttsPlaybackChapterId != null)
+                if (!listening.endChunk(queue, finishedIndex, completedChapter = isLastChunk)) return
                 if (isLastChunk && sleepTimer == TtsSleepTimer.ChapterEnd) {
                     val chapterId = ttsPlaybackChapterId
                     callbacks.runOnUiThread {
@@ -257,7 +257,7 @@ class TtsController internal constructor(
         val engine = tts ?: return
         closePlaybackQueue()
         val queue = nextQueue.incrementAndGet()
-        listening.beginQueue(queue)
+        listening.beginQueue(queue, ttsPlaybackChapterId)
         playbackQueue = queue
         callbacks.onPlaybackStarted()
         ttsChunks.drop(startIndex).forEachIndexed { i, chunk ->
@@ -296,8 +296,9 @@ class TtsController internal constructor(
         }
     }
 
-    fun stop() {
+    fun stop(preserveListeningRun: Boolean = false) {
         closePlaybackQueue()
+        if (!preserveListeningRun) listening.endRun()
         setSleepTimer(TtsSleepTimer.Off)
         isTtsAutoPlay = false
         ttsPaused = false
@@ -409,6 +410,7 @@ class TtsController internal constructor(
 
     fun destroy() {
         closePlaybackQueue()
+        listening.endRun()
         setSleepTimer(TtsSleepTimer.Off)
         tts?.stop()
         callbacks.runOnUiThread { callbacks.onClearHighlights() }

@@ -3,9 +3,12 @@ package eu.kanade.tachiyomi.tsuzuki.tts
 import android.os.SystemClock
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays.ListeningDay
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.util.concurrent.atomic.AtomicLong
 
 /** Accounts only for time between an actual TTS start and its matching end or interruption. */
 internal class ListeningSession(
@@ -15,6 +18,10 @@ internal class ListeningSession(
     private val localTime: () -> ZonedDateTime = ZonedDateTime::now,
 ) {
     private var queue: Long? = null
+    private var chapterId: Long? = null
+    private var playbackRun: Long? = null
+    private var recording = false
+    private val completedChapters = mutableSetOf<Long>()
     private var activeChunk: Int? = null
     private var lastCheckpoint: Long? = null
     private var readerVisible = false
@@ -23,10 +30,13 @@ internal class ListeningSession(
     private val pending = mutableMapOf<LocalDate, ListeningDay>()
 
     @Synchronized
-    fun beginQueue(id: Long) {
+    fun beginQueue(id: Long, chapterId: Long?) {
         finishSpeech()
         persist()
-        queue = id.takeIf { canRecord() }
+        if (playbackRun == null) playbackRun = nextRun.incrementAndGet()
+        queue = id
+        this.chapterId = chapterId
+        recording = canRecord()
     }
 
     @Synchronized
@@ -36,17 +46,28 @@ internal class ListeningSession(
         activeChunk = index
     }
 
+    /** Returns false for duplicate or interrupted callbacks, including while incognito. */
     @Synchronized
-    fun endChunk(id: Long, index: Int, completedChapter: Boolean) {
-        if (queue != id || activeChunk != index) return
+    fun endChunk(id: Long, index: Int, completedChapter: Boolean): Boolean {
+        if (queue != id || activeChunk != index) return false
         finishSpeech()
         if (completedChapter) {
-            val day = localTime().toLocalDate()
-            val previous = pending[day] ?: ListeningDay()
-            pending[day] = previous.copy(chapters = previous.chapters + 1)
+            val chapter = chapterId
+            val firstCompletion = chapter != null && completedChapters.add(chapter)
+            val counted = firstCompletion && recording && canRecord()
+            logcat(LogPriority.DEBUG) {
+                "TTS chapter finished chapter=$chapter run=$playbackRun queue=$id counted=$counted"
+            }
+            if (counted) {
+                val day = localTime().toLocalDate()
+                val previous = pending[day] ?: ListeningDay()
+                pending[day] = previous.copy(chapters = previous.chapters + 1)
+            }
             queue = null
+            chapterId = null
         }
         if (completedChapter || pending.values.sumOf { it.durationMs } >= 60_000L) persist()
+        return true
     }
 
     @Synchronized
@@ -55,6 +76,18 @@ internal class ListeningSession(
         finishSpeech()
         queue = null
         persist()
+    }
+
+    /** Queue changes and pauses preserve a run; Stop, manual navigation and viewer close end it. */
+    @Synchronized
+    fun endRun() {
+        finishSpeech()
+        queue = null
+        chapterId = null
+        persist()
+        playbackRun = null
+        completedChapters.clear()
+        recording = false
     }
 
     @Synchronized
@@ -100,6 +133,7 @@ internal class ListeningSession(
             return
         }
 
+        if (!recording || !canRecord()) return
         val end = localTime()
         var start = end.minus(Duration.ofMillis(duration))
         while (start.isBefore(end)) {
@@ -115,7 +149,11 @@ internal class ListeningSession(
 
     private fun persist() {
         if (pending.isEmpty()) return
-        readingDays().addListening(pending)
+        if (canRecord()) readingDays().addListening(pending)
         pending.clear()
+    }
+
+    private companion object {
+        val nextRun = AtomicLong()
     }
 }
