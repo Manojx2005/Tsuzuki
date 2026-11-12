@@ -7,8 +7,6 @@ import androidx.core.net.toUri
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.model.SManga
-import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -22,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 interface DeeplinkResolver {
     fun isDeeplinkUrl(source: CatalogueSource, url: String): Boolean
 }
+
 
 class PackageManagerDeeplinkResolver(
 
@@ -61,8 +60,6 @@ suspend fun resolveDeeplinkManga(
 ): SManga? {
     if (!deeplinkResolver.isDeeplinkUrl(source, url)) return null
     return withTimeoutOrNull(timeoutMs) {
-        runCatching {
-            source.withSourceHealth { source.getSearchManga(1, url, source.getFilterList()).mangas.firstOrNull() }
-        }.onFailure { if (it is CancellationException) throw it }.getOrNull()
+        runCatching { source.getSearchManga(1, url, source.getFilterList()).mangas.firstOrNull() }.getOrNull()
     }
 }

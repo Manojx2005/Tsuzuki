@@ -7,7 +7,6 @@ import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import mihon.domain.source.models.RemoteMangaUpdate
@@ -66,14 +65,12 @@ class UpdateMangaFromRemote(
                 chapterRepository.getChapterByMangaId(manga.id).sortedBy { it.sourceOrder }
             }
             val update = withIOContext {
-                source.withSourceHealth {
-                    source.getMangaUpdate(
-                        manga = manga.toSManga(),
-                        chapters = chapters.map(Chapter::toSChapter),
-                        fetchDetails = fetchDetails,
-                        fetchChapters = fetchChapters,
-                    )
-                }
+                source.getMangaUpdate(
+                    manga = manga.toSManga(),
+                    chapters = chapters.map(Chapter::toSChapter),
+                    fetchDetails = fetchDetails,
+                    fetchChapters = fetchChapters,
+                )
             }
             if (fetchDetails) {
                 updateManga.awaitUpdateFromSource(

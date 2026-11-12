@@ -46,10 +46,6 @@ data class TsuzukiTokens(
 ) {
     val isDot get() = style == TsuzukiStyle.DOT
 
-    val sourceWorking: Color get() = if (isDot) dotOn else Color(0xFF7DDFB4)
-    val sourceSlow: Color get() = if (isDot) mutedText else Color(0xFFE9B44C)
-    val sourceDown: Color get() = if (isDot) accent else Color(0xFFFF8D73)
-
     /** Read and secondary labels still need to be readable on both the base and the tile. */
     val mutedText: Color
         get() {

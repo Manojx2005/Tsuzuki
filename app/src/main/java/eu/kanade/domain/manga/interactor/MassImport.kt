@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
 import eu.kanade.tachiyomi.util.source.normalizeSourcePath
 import kotlinx.coroutines.Dispatchers
 import logcat.LogPriority
@@ -57,16 +56,14 @@ class MassImport(
         // and their failures (e.g. UnknownHostException from a slash-less baseUrl + url concat)
         // masked the real error from the direct details fetch. Deeplink-shaped URLs are already
         // resolved to their canonical path by the caller before path is passed in here.
-        val sManga = source.withSourceHealth {
-            source.getMangaUpdate(
-                eu.kanade.tachiyomi.source.model.SManga.create().apply {
-                    this.url = inputUrl
-                },
-                emptyList(),
-                fetchDetails = true,
-                fetchChapters = false,
-            ).manga
-        }
+        val sManga = source.getMangaUpdate(
+            eu.kanade.tachiyomi.source.model.SManga.create().apply {
+                this.url = inputUrl
+            },
+            emptyList(),
+            fetchDetails = true,
+            fetchChapters = false,
+        ).manga
 
         try {
             val resolvedUrl = runCatching { sManga.url }.getOrNull().orEmpty()

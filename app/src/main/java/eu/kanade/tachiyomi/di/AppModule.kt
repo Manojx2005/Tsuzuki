@@ -141,15 +141,7 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { CoverCache(app) }
         addSingletonFactory { LibrarySettingsCache(app) }
 
-        addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.sourcehealth.SourceHealthStore(get()) }
-        addSingletonFactory {
-            NetworkHelper(
-                app,
-                get(),
-                get(),
-                eu.kanade.tachiyomi.tsuzuki.sourcehealth.SourceHealthInterceptor(get(), get()),
-            )
-        }
+        addSingletonFactory { NetworkHelper(app, get(), get()) }
         addSingletonFactory { JavaScriptEngine(app) }
 
         addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }

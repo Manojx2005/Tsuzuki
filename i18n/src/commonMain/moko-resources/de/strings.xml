@@ -1386,20 +1386,4 @@
     <string name="tsz_dictionary_save">Zum Notizbuch hinzufügen</string>
     <string name="tsz_dictionary_update">Aktualisieren</string>
     <string name="tsz_dictionary_web_search">Websuche</string>
-    <string name="tsz_source_health">Quellenstatus</string>
-    <string name="tsz_source_health_working">Erreichbar</string>
-    <string name="tsz_source_health_slow">Langsam</string>
-    <string name="tsz_source_health_down">Ausgefallen</string>
-    <string name="tsz_source_health_unknown">Nicht gemessen</string>
-    <string name="tsz_source_health_history">Letzte 7 Tage</string>
-    <string name="tsz_source_health_average">Ø %1$d ms</string>
-    <string name="tsz_source_health_success">Zuletzt erfolgreich · %1$s</string>
-    <string name="tsz_source_health_failure">Letzter Fehler · %1$s · %2$s</string>
-    <string name="tsz_source_health_http">HTTP %1$d</string>
-    <string name="tsz_source_health_cloudflare">Cloudflare-Prüfung</string>
-    <string name="tsz_source_health_timeout">Zeitüberschreitung</string>
-    <string name="tsz_source_health_network">Netzwerkfehler</string>
-    <string name="tsz_source_health_outage">%1$s ist ausgefallen</string>
-    <string name="tsz_source_health_migrate">Migrieren (%1$d)</string>
-    <string name="tsz_source_health_passive">Basiert auf Anfragen, die dieses Gerät bereits gestellt hat.</string>
 </resources>

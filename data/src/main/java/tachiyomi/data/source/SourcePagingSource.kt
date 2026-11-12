@@ -5,8 +5,6 @@ import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
-import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,7 +73,7 @@ abstract class BaseSourcePagingSource(
 
             val startTime = System.currentTimeMillis()
             val mangasPage = withIOContext {
-                source.withSourceHealth { requestNextPage(page.toInt()) }
+                requestNextPage(page.toInt())
                     .takeIf { it.mangas.isNotEmpty() }
                     ?: throw NoResultsException()
             }
@@ -97,8 +95,6 @@ abstract class BaseSourcePagingSource(
                 prevKey = null,
                 nextKey = if (mangasPage.hasNextPage) page + 1 else null,
             )
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
             LoadResult.Error(e)
         }

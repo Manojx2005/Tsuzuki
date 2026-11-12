@@ -46,10 +46,6 @@ fun Screen.sourcesTab(extensionUpdates: Int, onOpenExtensions: () -> Unit): TabC
                 icon = Icons.Outlined.FilterList,
                 onClick = { navigator.push(SourcesFilterScreen(isNovel = false)) },
             ),
-        ) + listOfNotNull(
-            eu.kanade.presentation.tsuzuki.browse.sourceHealthAction {
-                navigator.push(eu.kanade.presentation.tsuzuki.browse.TsuzukiSourceHealthScreen())
-            },
         ),
         content = { contentPadding, snackbarHostState ->
             SourcesScreen(
