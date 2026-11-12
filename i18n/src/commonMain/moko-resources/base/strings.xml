@@ -1788,6 +1788,4 @@
     <string name="tsz_merge_add">Add another source</string>
     <string name="tsz_merge_library_required">Save another edition of this novel to your library first.</string>
     <string name="tsz_merge_save_error">Could not save linked sources.</string>
-    <string name="tsz_neural_tts_debug">Kokoro listening test</string>
-    <string name="tsz_neural_tts_debug_summary">Play novels with a local Kokoro voice pack.</string>
 </resources>

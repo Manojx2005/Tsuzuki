@@ -1396,6 +1396,4 @@
     <string name="tsz_merge_add">Añadir otra fuente</string>
     <string name="tsz_merge_library_required">Guarda primero otra edición de esta novela en tu biblioteca.</string>
     <string name="tsz_merge_save_error">No se pudieron guardar las fuentes vinculadas.</string>
-    <string name="tsz_neural_tts_debug">Prueba de escucha de Kokoro</string>
-    <string name="tsz_neural_tts_debug_summary">Lee novelas con un paquete de voz local de Kokoro.</string>
 </resources>

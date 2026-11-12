@@ -12,7 +12,7 @@ object TtsTextUtils {
         return bounds
     }
 
-    fun splitTextForTts(text: String, maxLength: Int, allowLongWords: Boolean = true): List<String> {
+    fun splitTextForTts(text: String, maxLength: Int): List<String> {
         val chunks = mutableListOf<String>()
         val hasSpaces = ' ' in text
         var remaining = text
@@ -33,7 +33,7 @@ object TtsTextUtils {
                 val lastSpace = slice.lastIndexOf(' ')
                 if (lastSpace > maxLength / 2) {
                     breakPoint = lastSpace + 1
-                } else if (hasSpaces && allowLongWords) {
+                } else if (hasSpaces) {
                     val nextSpace = remaining.indexOf(' ')
                     if (nextSpace > 0) {
                         breakPoint = nextSpace + 1
@@ -44,11 +44,6 @@ object TtsTextUtils {
                 }
             }
 
-            if (!allowLongWords && breakPoint > 1 &&
-                remaining[breakPoint - 1].isHighSurrogate() && remaining[breakPoint].isLowSurrogate()
-            ) {
-                breakPoint--
-            }
             chunks.add(remaining.substring(0, breakPoint).trim())
             remaining = remaining.substring(breakPoint).trim()
         }

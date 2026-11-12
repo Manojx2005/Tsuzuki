@@ -24,7 +24,6 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -67,15 +66,6 @@ class DebugInfoScreen : Screen() {
                                     ),
                                 )
                             },
-                        )
-                    } else {
-                        null
-                    },
-                    if (BuildConfig.BUILD_TYPE == "debug") {
-                        Preference.PreferenceItem.SwitchPreference(
-                            preference = remember { neuralTtsDebugPreference() },
-                            title = stringResource(MR.strings.tsz_neural_tts_debug),
-                            subtitle = stringResource(MR.strings.tsz_neural_tts_debug_summary),
                         )
                     } else {
                         null
