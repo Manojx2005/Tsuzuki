@@ -1386,4 +1386,7 @@
     <string name="tsz_dictionary_save">添加到笔记本</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">网页搜索</string>
+    <string name="tsz_reader_timer_short">定时</string>
+    <string name="tsz_reader_sleep_chapter_short">章末</string>
+    <string name="tsz_reader_listen_position">第 %1$d / %2$d 段</string>
 </resources>

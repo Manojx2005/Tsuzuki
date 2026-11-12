@@ -1385,4 +1385,7 @@
     <string name="tsz_dictionary_save">노트에 추가</string>
     <string name="tsz_dictionary_update">업데이트</string>
     <string name="tsz_dictionary_web_search">웹 검색</string>
+    <string name="tsz_reader_timer_short">타이머</string>
+    <string name="tsz_reader_sleep_chapter_short">장 끝</string>
+    <string name="tsz_reader_listen_position">문단 %1$d / %2$d</string>
 </resources>

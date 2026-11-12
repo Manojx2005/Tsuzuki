@@ -1605,4 +1605,7 @@
     <string name="tsz_dictionary_save">ノートに追加</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">ウェブ検索</string>
+    <string name="tsz_reader_timer_short">タイマー</string>
+    <string name="tsz_reader_sleep_chapter_short">章末</string>
+    <string name="tsz_reader_listen_position">段落 %1$d / %2$d</string>
 </resources>

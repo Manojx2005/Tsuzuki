@@ -1765,4 +1765,7 @@
     <string name="tsz_dictionary_save">Add to notebook</string>
     <string name="tsz_dictionary_update">Update</string>
     <string name="tsz_dictionary_web_search">Web search</string>
+    <string name="tsz_reader_timer_short">Timer</string>
+    <string name="tsz_reader_sleep_chapter_short">Ch.</string>
+    <string name="tsz_reader_listen_position">Paragraph %1$d of %2$d</string>
 </resources>

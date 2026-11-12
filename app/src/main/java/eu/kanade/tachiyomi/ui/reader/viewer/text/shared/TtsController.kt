@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.text.shared
 
 import android.content.Context
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
@@ -19,6 +20,7 @@ class TtsController(
     private val preferences: ReaderPreferences,
     private val scope: CoroutineScope,
     private val callbacks: Callbacks,
+    private val elapsedMs: () -> Long = SystemClock::elapsedRealtime,
 ) : TextToSpeech.OnInitListener {
 
     interface Callbacks {
@@ -53,6 +55,8 @@ class TtsController(
     internal var sleepTimer: TtsSleepTimer = TtsSleepTimer.Off
         private set
     private var sleepJob: Job? = null
+
+    @Volatile private var sleepDeadlineMs: Long? = null
 
     var ttsPlaybackChapterIndex: Int = 0
         private set
@@ -244,10 +248,14 @@ class TtsController(
         }
     }
 
+    internal fun remainingSleepSeconds(nowMs: Long = elapsedMs()): Long? =
+        sleepDeadlineMs?.let { ((it - nowMs).coerceAtLeast(0) + 999) / 1_000 }
+
     internal fun setSleepTimer(option: TtsSleepTimer) {
         sleepJob?.cancel()
         sleepJob = null
         sleepTimer = option
+        sleepDeadlineMs = option.minutes?.let { elapsedMs() + it * 60_000L }
         option.minutes?.let { minutes ->
             sleepJob = scope.launch {
                 delay(minutes * 60_000L)

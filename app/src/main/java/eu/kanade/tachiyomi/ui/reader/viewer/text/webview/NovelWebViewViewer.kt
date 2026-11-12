@@ -33,6 +33,7 @@ import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
 import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
 import eu.kanade.presentation.tsuzuki.reader.webNovelRecapScript
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.tsuzuki.reader.novelCssColor
 import eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
@@ -451,8 +452,14 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     private fun applyTtsHighlight(chunkIndex: Int, paragraphIndex: Int) {
         if (chunkIndex < 0 || chunkIndex >= ttsController.ttsChunks.size) return
 
-        val highlightColor = ThemeUtils.colorToHex(preferences.novelTtsHighlightColor.get())
-        val highlightTextColor = ThemeUtils.colorToHex(preferences.novelTtsHighlightTextColor.get())
+        val feedback = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(
+            getThemeColors(preferences.novelTheme.get()).second,
+        )
+        val highlightColor = feedback?.readAlongFill?.let(::novelCssColor)
+            ?: ThemeUtils.colorToHex(preferences.novelTtsHighlightColor.get())
+        val highlightTextColor = ThemeUtils.colorToHex(
+            feedback?.readAlongInk ?: preferences.novelTtsHighlightTextColor.get(),
+        )
         val highlightStyle = quoteForJson(preferences.novelTtsHighlightStyle.get())
         val keepInView = preferences.novelTtsKeepHighlightInView.get()
 

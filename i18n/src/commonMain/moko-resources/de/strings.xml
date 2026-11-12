@@ -1386,4 +1386,7 @@
     <string name="tsz_dictionary_save">Zum Notizbuch hinzufügen</string>
     <string name="tsz_dictionary_update">Aktualisieren</string>
     <string name="tsz_dictionary_web_search">Websuche</string>
+    <string name="tsz_reader_timer_short">Timer</string>
+    <string name="tsz_reader_sleep_chapter_short">Kap.</string>
+    <string name="tsz_reader_listen_position">Absatz %1$d von %2$d</string>
 </resources>

@@ -1373,4 +1373,7 @@
     <string name="tsz_dictionary_save">Añadir al cuaderno</string>
     <string name="tsz_dictionary_update">Actualizar</string>
     <string name="tsz_dictionary_web_search">Buscar en la web</string>
+    <string name="tsz_reader_timer_short">Tempor.</string>
+    <string name="tsz_reader_sleep_chapter_short">Cap.</string>
+    <string name="tsz_reader_listen_position">Párrafo %1$d de %2$d</string>
 </resources>
