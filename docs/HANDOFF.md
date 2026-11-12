@@ -64,6 +64,12 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 - App lane (one thread): `Read AGENTS.md and docs/HANDOFF.md. You are the app lane: follow "Plan 0.1.1", take S2-F, then RP1, then STR1, then ERR1, then NT2 and NT3 when they are ready.`
 - Don't start an anime thread.
 
+## Current state (2026-11-13, Codex)
+
+- `main` = `424618de6`: RV2 accepted R15, S3/S3-F and R13; 1,006 tests green. S1 deferred pending explicit extension-trust approval; S2 failed and S2-F remains ready. RV2 evidence archived in `app/build/review-evidence/rv2/`; disposable app removed and the daily tablet Preview restored.
+- This chat now reviews RV4, then implements the app queue for another reviewer. Tablet only for now (owner); S22 deferred. Hourly resume reminder `resume-tsuzuki-plan-0-1-1` is active.
+- TTS-LANGUAGE still has uncommitted implementer work and must be skipped in RV4 until that work is finished. MAIN-REPOS owner changes remain uncommitted on main for their RV4 review. Anime remains paused.
+
 ## Current state (2026-11-12, Claude)
 
 - **Owner bug 2026-11-12: extension videos don't play.** Reproduced by Claude on the tablet; card **AY-PLAY** (PARITY §7) is first in the anime lane, then **AY9** video previews (PARITY §8).
@@ -257,7 +263,7 @@ never compiled. Don't discard them.
 The S22 is on wireless adb: get the IP:port from the owner if `adb devices` doesn't show it, and confirm
 `getprop ro.serialno` = `RZCWA139X1X` before installing.
 
-#### RV4 Review: fix cards + owner reports (T3) — `ready` (after RV2; Plan 0.1.1 step 2)
+#### RV4 Review: fix cards + owner reports (T3) — `codex-working` (.worktrees/rv4, review/rv4, 2026-11-13; tablet only)
 Cards, in order: **V7.7-F, R12-F, R14, CHAPNUM, TTS-LANGUAGE, NT1 (= S4), MAIN-REPOS**. (S3-F is merged in RV2.)
 - V7.7-F and R12-F replace the cards RV1 reverted: merge `tsuzuki/v7.7` then `tsuzuki/v7.7-f`, `tsuzuki/r12` then
   `tsuzuki/r12-f`, and re-run the RV1 checks that failed (WebView chapter-end tap; source health with a native
@@ -452,7 +458,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV2 review, .worktrees/rv2-batch-t, tablet only, 2026-11-13; S22 disconnected`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV4 review, .worktrees/rv4, tablet only, 2026-11-13; S22 deferred by owner`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
