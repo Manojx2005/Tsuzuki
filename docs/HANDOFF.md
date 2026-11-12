@@ -383,10 +383,10 @@ Result (Codex app lane, 2026-11-13): **review**, code `54810e270` on `tsuzuki/rp
 
 Independent reviewer: check Dot/Colour Native highlighted line with bars opening during speech, selection fill/ink/handles in Native and WebView, final card Next/Mark read/Contents with bottom bars shown/hidden and unchanged story progress. Check timer Off/Chapter/15 minutes, actual decreasing countdown and pause/resume, phone dock fit and tablet controls. Read from here remains available in reader actions. S22 deferred by owner. On merge with S2-F, retain both ListeningSession and elapsed-clock constructor arguments and both timer-test additions; neither card subsumes the other.
 
-#### STR1 Translate the LNReader import strings (T1) — `codex-working` (.worktrees/str1, 2026-11-13; app lane)
+#### STR1 Translate the LNReader import strings (T1) — `review` (.worktrees/str1, 2026-11-13; code 77ede839d; independent review required)
 RV2-10: `SettingsDataScreen.kt` L269, L307, L385–387 hardcode English. New `tsz_` strings in all 8 locales;
 smallest possible edit to the upstream file. Check the same screen for any other literal.
-Result: _pending_
+Result (Codex app lane, 2026-11-13): `77ede839d` localizes the LNReader chooser, started status, import preference and entire options dialog. The same-screen audit also found CSV export labels; those now use resources too. 18 new `tsz_` keys in all 8 locales, existing Categories/Downloaded chapters reused. Upstream edit is 21 line replacements; no layout changes. `:app:compileDebugKotlin` and two scoped Spotless passes succeed. XML audit confirms 18 unique keys per locale and no remaining UI string literals in this screen. Evidence `.worktrees/str1/app/build/str1-evidence/`. No new tests for this copy-only change; no adb. Reviewer: Japanese Data screen chooser title, temporary import-started status, import-options dialog and CSV options, then another app language. No actual owner backup import required.
 
 #### ERR1 Errors and long waits say what happened (T3) — `ready` (boards 1 and 2 in `docs/design/boards/fixes-2026-11b/` approved 2026-11-12; app lane, after STR1)
 Boards 1 `ErrorState` and 2 `LoadingStages`. One composable pair in `presentation/tsuzuki/components/`
