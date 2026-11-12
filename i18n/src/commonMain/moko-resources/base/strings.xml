@@ -1781,4 +1781,11 @@
     <string name="tsz_source_health_outage">%1$s is down</string>
     <string name="tsz_source_health_migrate">Migrate (%1$d)</string>
     <string name="tsz_source_health_passive">Based on requests this device already made.</string>
+    <string name="tsz_merge_sources">Merge sources</string>
+    <string name="tsz_merge_combined">Combined chapters</string>
+    <string name="tsz_merge_other_count">%1$d chapters from other sources</string>
+    <string name="tsz_merge_priority">Priority · Drag to reorder</string>
+    <string name="tsz_merge_add">Add another source</string>
+    <string name="tsz_merge_library_required">Save another edition of this novel to your library first.</string>
+    <string name="tsz_merge_save_error">Could not save linked sources.</string>
 </resources>

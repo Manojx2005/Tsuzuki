@@ -1402,4 +1402,11 @@
     <string name="tsz_source_health_outage">%1$s 出现故障</string>
     <string name="tsz_source_health_migrate">迁移（%1$d）</string>
     <string name="tsz_source_health_passive">根据此设备已发出的请求统计。</string>
+    <string name="tsz_merge_sources">合并来源</string>
+    <string name="tsz_merge_combined">合并章节</string>
+    <string name="tsz_merge_other_count">来自其他来源的 %1$d 章</string>
+    <string name="tsz_merge_priority">优先级 · 拖动排序</string>
+    <string name="tsz_merge_add">添加其他来源</string>
+    <string name="tsz_merge_library_required">请先将此小说的另一个版本添加到书库。</string>
+    <string name="tsz_merge_save_error">无法保存关联的来源。</string>
 </resources>

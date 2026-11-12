@@ -1621,4 +1621,11 @@
     <string name="tsz_source_health_outage">%1$s で障害が発生しています</string>
     <string name="tsz_source_health_migrate">移行（%1$d）</string>
     <string name="tsz_source_health_passive">この端末が既に行った通信をもとに表示しています。</string>
+    <string name="tsz_merge_sources">ソースを統合</string>
+    <string name="tsz_merge_combined">統合した章</string>
+    <string name="tsz_merge_other_count">他のソースから %1$d 章</string>
+    <string name="tsz_merge_priority">優先順位 · ドラッグして並べ替え</string>
+    <string name="tsz_merge_add">別のソースを追加</string>
+    <string name="tsz_merge_library_required">先に、この小説の別の版をライブラリに追加してください。</string>
+    <string name="tsz_merge_save_error">リンクしたソースを保存できませんでした。</string>
 </resources>
