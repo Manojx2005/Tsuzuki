@@ -84,7 +84,9 @@ done
 - The devices are set to Japanese, so system strings and Tsundoku's own strings show in Japanese.
 - Native libraries are 16 KB-aligned since quickjs-kt 1.0.15; re-check after dependency bumps (see the 16 KB task in the queue).
 - Who may use adb: Claude, and the Codex review lane (HANDOFF "Batch T", owner 2026-11-08) on the tablet and S22
-  only. Implementer Codex threads never use adb. Nobody installs on `R5GL23ZYE1V` without asking.
+  only. Anime-lane implementer threads (Batch AY and the A6 cards) also test their own cards on those two devices
+  (owner 2026-11-12), one thread at a time: claim the "Device lock" line in HANDOFF "Batch AY" first. Other
+  implementer threads never use adb. Nobody installs on `R5GL23ZYE1V` without asking.
 - The owner may be using a device while you work. If the screen isn't what you expect, don't tap through system pickers or permission dialogs; ask instead.
 
 ## Rules
@@ -111,7 +113,8 @@ done
   `MangaViewModel.kt`, `LibraryContent.kt`, `LibraryPager.kt`, `LibraryViewModel.kt`, `NovelsTab.kt`,
   `presentation-core/.../theme/Color.kt` (`LocalActiveColor`), `NovelReaderAppBars.kt`, `ReaderActivity.kt`, `PreferenceScaffold.kt`, `BasePreferenceWidget.kt`, `TextPreferenceWidget.kt`, `AboutScreen.kt`, `CategoryListItem.kt`, `ExtensionsScreen.kt`, `ExtensionStoresContent.kt`, `ExtensionDetailsScreen.kt`, `GlobalSearchResultItems.kt`, `ui/.../BrowseSourceScreen.kt` (re-indented block, see order 14.9), `BrowseBadges.kt`, `Preference.kt`, `PreferenceItem.kt`, `SettingsLibraryScreen.kt`, `presentation/category/CategoryScreen.kt`, `CategoryFloatingActionButton.kt`, `SourcePriorityScreen.kt`, `ui/setting/SettingsScreen.kt`, `components/DropdownMenu.kt`, `LnrTypography.kt`, `AppLanguageScreen.kt`, `SettingsAdvancedScreen.kt`, `SettingsDataScreen.kt`, `res/xml/locales_config.xml`, `LibraryToolbar.kt`, `BrowseSourceToolbar.kt`, `WebViewScreenContent.kt`, `ReaderTopBar.kt`, `MassImportDialog.kt`, `DownloadHolder.kt`, `DownloadHeaderHolder.kt`, `MigrationConfigScreen.kt`, `JsPluginsTab.kt`, `NovelExtensionsTab.kt`, `ExtensionsTab.kt`, `ImportEpubScreen.kt`, `DownloadQueueScreen.kt`, `presentation/more/NewUpdateScreen.kt`, `presentation/manga/MangaNotesScreen.kt`, `presentation/more/onboarding/{OnboardingScreen,StorageStep,PermissionStep}.kt`, `ui/more/OnboardingScreen.kt`). Prefer a small dispatch at the top of an upstream composable that
   calls a `presentation/tsuzuki/...` version, as `HistoryItem` and `MoreScreen` do.
-- **Sources.** Default repos are seeded once on first launch by `eu/kanade/tachiyomi/tsuzuki/DefaultSourceRepos.kt`:
+- **Sources.** Shipped builds (release, preview, foss) come with **no** repositories (owner 2026-11-10). Only the
+  debug build seeds default repos, once on first launch, in `eu/kanade/tachiyomi/tsuzuki/DefaultSourceRepos.kt`:
   the LNReader plugin index (novels, via the QuickJS plugin host) and Keiyoushi (`repo.json`, which points at their
   v2 protobuf index; the legacy `index.min.json` only lists an "Outdated App" stub).
 - **Reuse the Tsuzuki building blocks** before writing new UI: `TsuzukiPill` / `TsuzukiPillRow`,
@@ -152,3 +155,5 @@ done
 - **Batch Q part 2 upstream touches (merged 2026-11-07):** Q9: `AppBar.kt`, `HistoryScreen.kt`, `HistoryItem.kt`, `HistoryTab.kt`, `CommonMangaItem.kt`, `LibraryToolbar.kt`, `MangaScreen.kt` (both), `MangaBottomActionMenu.kt`, `MangaChapterListItem.kt`, `MangaToolbar.kt`, `PreferenceScaffold.kt`, `PreferenceScreen.kt`, `UpdatesScreen.kt`, `UpdatesUiItem.kt`, `UpdatesTab.kt`, `UpdatesViewModel.kt`, `LibraryTab.kt`, `LibraryViewModel.kt`, `NovelsTab.kt`, `MangaViewModel.kt`; Q8: `ChapterHeader.kt`; Q11: `NovelPage.kt`, `ReaderSettingsDialog.kt`, presentation-core `SettingsItems.kt` (opt-in `LocalStackedSettingsLabel`); X1: `ReaderActivity.kt` / `ReaderViewModel.kt` (now one-line calls into `presentation/tsuzuki/reader/`); X3: `Preference.kt`, `PreferenceItem.kt`, `SettingsTranslationScreen.kt`, `EditTextPreferenceWidget.kt`; X4: `MigrationConfigScreen.kt`, `MigrationConfigScreenSheet.kt`; Claude fixes: `TabbedScreen.kt` (custom header → `TsuzukiPagerHeader`), `NovelTextRenderer.kt` (`removeBlankLines()`).
 
 - **Batch T RV1 upstream touches:** `TtsController.kt` (voice label adapter), `GetUpcomingManga.kt` (eligible-book lookup), `NovelImageGetter.kt` (illustration sizing), `NovelTextRenderer.kt` (illustration span reflow), `NovelWebViewStyler.kt` (reader column CSS).
+
+- **RV2 upstream touches (2026-11-13):** `data/backup/BackupFileValidator.kt`, `BackupProtoReader.kt`, `create/BackupCreateJob.kt`, `create/BackupCreator.kt`, `presentation/more/settings/screen/data/RestoreBackupScreen.kt`, and `ui/reader/viewer/text/webview/NovelWebViewDocumentBuilder.kt` (backup validation/counts and paged recap separation; other reader/settings hooks were already listed).
