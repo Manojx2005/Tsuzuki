@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tsuzuki boards 2026-11b</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@1&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --page:#f3f1ea; --ink:#1b1b1b; --note:#5c5a55; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page:#141414; --ink:#ececec; --note:#a3a09a; } }
+  :root[data-theme="dark"] { --page:#141414; --ink:#ececec; --note:#a3a09a; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--page); color:var(--ink); font:14px/1.5 Manrope, system-ui, sans-serif; padding:24px 16px 64px; }
+  h1 { font:800 22px Manrope, sans-serif; margin-bottom:4px; }
+  h2 { font:800 16px Manrope, sans-serif; margin:40px 0 4px; }
+  p.note { color:var(--note); max-width:70ch; margin-bottom:14px; }
+  .row { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  figure { margin:0; }
+  figcaption { font:700 11px 'Space Mono', monospace; letter-spacing:1px; color:var(--note); margin-top:8px; text-transform:uppercase; }
+
+  /* ---- theme tokens (docs/design/README.md) ---- */
+  .dot { --bg:#000; --tile:#0d0d0d; --line:#262626; --text:#fff; --muted:#8a8a8a; --accent:#ff2d2d; --on:#fff;
+         --display:'Doto', monospace; --body:'Space Mono', monospace; --case:uppercase; --ls:1px; --dw:900; --ds:normal;
+         background-image:radial-gradient(#1c1c1c 1px, transparent 1px); background-size:12px 12px; }
+  .col { --bg:#1c2b4a; --tile:rgba(255,255,255,.08); --line:transparent; --text:#fff; --muted:rgba(255,255,255,.72);
+         --accent:#e9b44c; --on:#1c2b4a; --display:'Instrument Serif', serif; --body:Manrope, sans-serif;
+         --case:none; --ls:0; --dw:400; --ds:italic; }
+  .phone { width:360px; height:740px; border-radius:36px; background-color:var(--bg); color:var(--text); position:relative;
+           overflow:hidden; font-family:var(--body); padding:18px 16px; display:flex; flex-direction:column; }
+  .tablet { width:753px; height:420px; border-radius:28px; background-color:var(--bg); color:var(--text); position:relative;
+            overflow:hidden; font-family:var(--body); padding:20px 24px; }
+  .top { display:flex; align-items:center; gap:12px; height:48px; }
+  .round { width:48px; height:48px; border-radius:24px; border:1px solid var(--line); background:var(--tile);
+           display:grid; place-items:center; font-size:18px; flex:none; }
+  .title { font-family:var(--display); font-weight:var(--dw); font-style:var(--ds); font-size:26px; text-transform:var(--case); letter-spacing:1px; }
+  .tile { background:var(--tile); border:1px solid var(--line); border-radius:24px; padding:20px; }
+  .label { font-size:11px; font-weight:700; letter-spacing:var(--ls); text-transform:var(--case); color:var(--muted); }
+  .big { font-family:var(--display); font-weight:var(--dw); font-style:var(--ds); font-size:30px; line-height:1.05; text-transform:var(--case); margin:10px 0 8px; }
+  .body { font-size:13px; line-height:1.5; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .code { font:400 11px 'Space Mono', monospace; color:var(--muted); border:1px dashed var(--line); border-radius:12px; padding:8px 10px; margin-top:12px;
+          text-transform:none; letter-spacing:0; word-break:break-word; }
+  .col .code { border-color:rgba(255,255,255,.25); }
+  .btns { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .pill { height:48px; padding:0 20px; border-radius:24px; display:inline-flex; align-items:center; font-size:12px; font-weight:700;
+          letter-spacing:var(--ls); text-transform:var(--case); border:1px solid var(--line); background:var(--tile); color:var(--text); white-space:nowrap; }
+  .pill.primary { background:var(--accent); color:var(--on); border-color:transparent; }
+  .col .pill { border-color:rgba(255,255,255,.18); }
+  .grow { flex:1; }
+  .center { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .dots { display:flex; gap:7px; margin-top:14px; }
+  .dots i { width:6px; height:6px; border-radius:3px; background:#2e2e2e; }
+  .dots i.on { background:#fff; } .dots i.cur { background:var(--accent); }
+  .bar { height:6px; border-radius:3px; background:rgba(255,255,255,.18); margin-top:14px; overflow:hidden; }
+  .bar b { display:block; height:100%; width:45%; background:var(--accent); }
+  .dot .bar, .col .dots { display:none; }
+  .steps { margin-top:14px; display:grid; gap:8px; }
+  .step { display:flex; gap:10px; align-items:center; font-size:12px; text-transform:var(--case); letter-spacing:var(--ls); color:var(--muted); }
+  .step b { width:8px; height:8px; border-radius:4px; background:#2e2e2e; flex:none; }
+  .col .step b { background:rgba(255,255,255,.25); }
+  .step.done { color:var(--text); } .step.done b { background:var(--text); }
+  .step.now { color:var(--text); } .step.now b { background:var(--accent); }
+  .reader { font:400 15px/1.75 Georgia, serif; color:#d8d8d8; text-transform:none; letter-spacing:0; }
+  .reader p { margin-bottom:12px; }
+  .recap { margin:6px 0 18px; }
+  .recap .body { color:var(--text); opacity:.86; font:400 13px/1.6 Georgia, serif; }
+  .sel { background:var(--accent); color:var(--on); border-radius:2px; padding:0 1px; }
+  .dock { position:absolute; left:24px; right:24px; bottom:20px; height:64px; border-radius:32px; background:var(--tile);
+          border:1px solid var(--line); display:flex; align-items:center; gap:8px; padding:0 8px; }
+  .dot .dock { background:#111; border-color:#2a2a2a; }
+  .col .dock { background:rgba(0,0,0,.32); }
+  .ic { width:48px; height:48px; border-radius:24px; display:grid; place-items:center; font-size:16px; flex:none; }
+  .ic.play { background:var(--accent); color:var(--on); }
+  .chip { height:32px; padding:0 12px; border-radius:16px; border:1px solid var(--line); display:inline-flex; align-items:center;
+          font-size:11px; font-weight:700; letter-spacing:var(--ls); text-transform:var(--case); }
+  .chip.on { border-color:var(--accent); color:var(--accent); }
+  .col .chip { border-color:rgba(255,255,255,.25); }
+  .now { min-width:0; flex:1; padding:0 8px; }
+  .now div { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  table.spec { border-collapse:collapse; margin-top:10px; font-size:13px; }
+  table.spec td, table.spec th { border:1px solid color-mix(in srgb, var(--ink) 20%, transparent); padding:6px 10px; text-align:left; vertical-align:top; }
+</style>
+</head>
+<body>
+<h1>Tsuzuki boards — batch 2026-11b</h1>
+<p class="note">Four states the app shows today without a design. Drawn by Claude on 2026-11-12 from the tokens in docs/design/README.md; Dot on the left, Colour on the right. Phone frames are 360 dp wide, the tablet frame is the Tab S11 in portrait (753 dp), cropped to its lower part. All text is example copy except where README.md in this folder says it comes from data.</p>
+
+<h2>1 · ErrorState — a source or page failed</h2>
+<p class="note">Replaces "Unknown error". Headline says what failed in plain words, one sentence says why, the dashed box shows the technical message for bug reports (tap copies it). At most two buttons: the most useful one is the accent pill.</p>
+<div class="row">
+  <figure><div class="phone dot">
+    <div class="top"><div class="round">←</div><div class="title">AnimePahe</div></div>
+    <div class="center"><div class="tile">
+      <div class="label">Couldn't load · Popular</div>
+      <div class="big">The site asked for a browser check</div>
+      <div class="body">Open it in WebView once, pass the check, then come back and retry.</div>
+      <div class="code">HTTP 403 · DDoS-Guard · animepahe.example</div>
+      <div class="btns"><span class="pill primary">Open in WebView</span><span class="pill">Retry</span></div>
+    </div></div>
+  </div><figcaption>ErrorState · Dot</figcaption></figure>
+  <figure><div class="phone col">
+    <div class="top"><div class="round">←</div><div class="title">AnimePahe</div></div>
+    <div class="center"><div class="tile">
+      <div class="label">Couldn't load · Popular</div>
+      <div class="big">The site asked for a browser check</div>
+      <div class="body">Open it in WebView once, pass the check, then come back and retry.</div>
+      <div class="code">HTTP 403 · DDoS-Guard · animepahe.example</div>
+      <div class="btns"><span class="pill primary">Open in WebView</span><span class="pill">Retry</span></div>
+    </div></div>
+  </div><figcaption>ErrorState · Colour</figcaption></figure>
+</div>
+
+<h2>2 · LoadingStages — a wait longer than two seconds</h2>
+<p class="note">A bare spinner becomes a tile that names the step in progress. Finished steps are white, the current one carries the accent dot, later ones are muted. After 30 s on one step the tile turns into ErrorState with "Took too long".</p>
+<div class="row">
+  <figure><div class="phone dot">
+    <div class="top"><div class="round">←</div><div class="title">Chapter 42</div></div>
+    <div class="center"><div class="tile">
+      <div class="label">Opening</div>
+      <div class="big">Loading the chapter</div>
+      <div class="steps">
+        <div class="step done"><b></b>Found the source</div>
+        <div class="step now"><b></b>Downloading text · 3 s</div>
+        <div class="step"><b></b>Laying out pages</div>
+      </div>
+      <div class="btns"><span class="pill">Cancel</span></div>
+    </div></div>
+  </div><figcaption>LoadingStages · Dot</figcaption></figure>
+  <figure><div class="phone col">
+    <div class="top"><div class="round">←</div><div class="title">Chapter 42</div></div>
+    <div class="center"><div class="tile">
+      <div class="label">Opening</div>
+      <div class="big">Loading the chapter</div>
+      <div class="steps">
+        <div class="step done"><b></b>Found the source</div>
+        <div class="step now"><b></b>Downloading text · 3 s</div>
+        <div class="step"><b></b>Laying out pages</div>
+      </div>
+      <div class="btns"><span class="pill">Cancel</span></div>
+    </div></div>
+  </div><figcaption>LoadingStages · Colour</figcaption></figure>
+</div>
+
+<h2>3 · Recap — "previously" at the start of a chapter</h2>
+<p class="note">Sits above the first paragraph and scrolls away with the text; it is never a page of its own, so it cannot move the resume position. Shows the last three paragraphs of the previous chapter, only after a gap of a day or more. The Dot selection colours for the reader are shown on the word "lantern".</p>
+<div class="row">
+  <figure><div class="phone dot">
+    <div class="top"><div class="round">←</div><div><div class="label" style="color:#fff">The Perfect Run</div><div class="label">Ch. 5 · Homecoming</div></div></div>
+    <div class="tile recap">
+      <div class="label">Previously · Ch. 4 · 2 days ago</div>
+      <div class="body" style="margin-top:10px">…Ryan closed the car door and looked back at the burning casino. "Well," he said, "that could have gone worse."</div>
+      <div class="btns"><span class="pill">Dismiss</span><span class="pill">Don't show again</span></div>
+    </div>
+    <div class="reader">
+      <p>The road out of New Rome was empty at this hour, lit only by a single <span class="sel">lantern</span> swinging from the toll gate.</p>
+      <p>He had driven it so many times that the potholes felt like old friends.</p>
+      <p>Somewhere behind him, a siren started and stopped.</p>
+    </div>
+  </div><figcaption>Recap + selection · Dot</figcaption></figure>
+  <figure><div class="phone col">
+    <div class="top"><div class="round">←</div><div><div class="label" style="color:#fff">The Perfect Run</div><div class="label">Ch. 5 · Homecoming</div></div></div>
+    <div class="tile recap">
+      <div class="label">Previously · Ch. 4 · 2 days ago</div>
+      <div class="body" style="margin-top:10px">…Ryan closed the car door and looked back at the burning casino. "Well," he said, "that could have gone worse."</div>
+      <div class="btns"><span class="pill">Dismiss</span><span class="pill">Don't show again</span></div>
+    </div>
+    <div class="reader">
+      <p>The road out of New Rome was empty at this hour, lit only by a single <span class="sel">lantern</span> swinging from the toll gate.</p>
+      <p>He had driven it so many times that the potholes felt like old friends.</p>
+      <p>Somewhere behind him, a siren started and stopped.</p>
+    </div>
+  </div><figcaption>Recap + selection · Colour</figcaption></figure>
+</div>
+
+<h2>4 · TabletListenDock — compact Listen controls with the sleep timer</h2>
+<p class="note">The tablet in portrait (under 900 dp wide) gets the same controls as the phone's ListenMini board, including the timer. One row, 64 dp tall, 24 dp from the edges. The timer chip is outlined when off and accent-outlined with the time left when running.</p>
+<div class="row">
+  <figure><div class="tablet dot">
+    <div class="reader" style="max-width:560px;margin:0 auto">
+      <p><span style="background:#2e2e2e;color:#fff;border-radius:3px">The road out of New Rome was empty at this hour, lit only by a single lantern swinging from the toll gate.</span></p>
+      <p>He had driven it so many times that the potholes felt like old friends.</p>
+      <p>Somewhere behind him, a siren started and stopped.</p>
+    </div>
+    <div class="dock">
+      <div class="ic">⌄</div>
+      <div class="now"><div class="label" style="color:#fff">Ch. 5 · Homecoming</div><div class="label">Paragraph 3 of 48 · 1.2×</div></div>
+      <span class="chip on">⏱ 14:32</span>
+      <div class="ic">⏮</div><div class="ic play">⏸</div><div class="ic">⏭</div>
+    </div>
+  </div><figcaption>TabletListenDock · Dot · timer running</figcaption></figure>
+  <figure><div class="tablet col">
+    <div class="reader" style="max-width:560px;margin:0 auto">
+      <p><span style="background:rgba(233,180,76,.28);border-radius:3px">The road out of New Rome was empty at this hour, lit only by a single lantern swinging from the toll gate.</span></p>
+      <p>He had driven it so many times that the potholes felt like old friends.</p>
+      <p>Somewhere behind him, a siren started and stopped.</p>
+    </div>
+    <div class="dock">
+      <div class="ic">⌄</div>
+      <div class="now"><div class="label" style="color:#fff">Ch. 5 · Homecoming</div><div class="label">Paragraph 3 of 48 · 1.2×</div></div>
+      <span class="chip">⏱ Timer</span>
+      <div class="ic">⏮</div><div class="ic play">⏸</div><div class="ic">⏭</div>
+    </div>
+  </div><figcaption>TabletListenDock · Colour · timer off</figcaption></figure>
+</div>
+
+<h2>5 · Voices — choose the reading voice and download the offline one</h2>
+<p class="note">More › Settings › Reader › Voices, and the same page from the Listen panel's voice row. Two engines as tiles; the offline voice is a download, never part of the app. Left: before the download. Right: downloaded, with the voice list. A voice row plays a one-sentence sample when tapped; the selected row carries the accent mark.</p>
+<div class="row">
+  <figure><div class="phone dot">
+    <div class="top"><div class="round">←</div><div class="title">Voices</div></div>
+    <div style="height:14px"></div>
+    <div class="tile" style="border-color:#fff">
+      <div class="label" style="color:#fff">● Phone voice · in use</div>
+      <div class="body" style="margin-top:8px">Uses the voices installed on this phone. Works for every language.</div>
+      <div class="btns"><span class="pill">Phone voice settings</span></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="tile">
+      <div class="label">○ Natural voice · offline</div>
+      <div class="big" style="font-size:24px">English · 147 MB</div>
+      <div class="body">Sounds closer to a narrator. Downloads once, then works without internet. Other languages keep using the phone voice.</div>
+      <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="label" style="margin-top:10px">58 of 147 MB · Wi-Fi</div>
+      <div class="btns"><span class="pill primary">Pause</span><span class="pill">Cancel</span></div>
+    </div>
+    <div class="grow"></div>
+    <div class="label">Free space 21.4 GB · needs 320 MB while installing</div>
+  </div><figcaption>Voices · Dot · downloading</figcaption></figure>
+  <figure><div class="phone col">
+    <div class="top"><div class="round">←</div><div class="title">Voices</div></div>
+    <div style="height:14px"></div>
+    <div class="tile">
+      <div class="label">○ Phone voice</div>
+      <div class="body" style="margin-top:8px">Used for languages the natural voice can't read.</div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="tile" style="outline:2px solid var(--accent)">
+      <div class="label" style="color:#fff">● Natural voice · in use · 147 MB</div>
+      <div style="display:grid;gap:8px;margin-top:14px">
+        <div class="pill" style="justify-content:space-between;width:100%"><span>▶ Narrator · Heart</span><span style="color:var(--accent)">✓</span></div>
+        <div class="pill" style="justify-content:space-between;width:100%"><span>▶ Narrator · Michael</span><span></span></div>
+        <div class="pill" style="justify-content:space-between;width:100%"><span>▶ British · Emma</span><span></span></div>
+      </div>
+      <div class="label" style="margin-top:14px">Dialogue in a second voice</div>
+      <div class="btns" style="margin-top:8px"><span class="pill">Off</span><span class="pill primary">Michael</span></div>
+      <div class="btns"><span class="pill">Delete download</span></div>
+    </div>
+  </div><figcaption>Voices · Colour · downloaded</figcaption></figure>
+</div>
+
+<h2>Measurements</h2>
+<table class="spec">
+  <tr><th>Part</th><th>Size</th><th>Dot</th><th>Colour</th></tr>
+  <tr><td>State tile (1, 2)</td><td>radius 24, padding 20, 16 from screen edges, vertically centred; max width 420 on tablets</td><td>#0D0D0D, 1 dp #262626</td><td>white 8 %, no border</td></tr>
+  <tr><td>Label</td><td>11 sp bold, spacing 1</td><td>Space Mono, uppercase, #8A8A8A</td><td>Manrope, white 72 %</td></tr>
+  <tr><td>Headline</td><td>30 sp, line height 1.05, max 3 lines</td><td>Doto 900 uppercase</td><td>Instrument Serif italic</td></tr>
+  <tr><td>Technical message</td><td>11 sp mono, dashed 1 dp box radius 12, max 2 lines, tap = copy</td><td colspan="2">muted text; never the only explanation</td></tr>
+  <tr><td>Buttons</td><td>48 tall pills, 10 gap, at most 2</td><td>primary #FF2D2D with white text</td><td>primary accent with background-colour text</td></tr>
+  <tr><td>Step row (2)</td><td>12 sp, 8 dp dot, 8 gap between rows</td><td>done white · current red · later #2E2E2E</td><td>done white · current accent · later white 25 %</td></tr>
+  <tr><td>Recap tile (3)</td><td>radius 24, padding 20, 18 below; body 13 sp in the reader's own font, max 6 lines</td><td colspan="2">same tile as above; inside the scrolling text, not pinned</td></tr>
+  <tr><td>Selection (3)</td><td>—</td><td>fill #FF2D2D, text #FFFFFF (4.0:1; bold body text passes large-text AA) — or fill #FFFFFF, text #000 if the owner prefers no red in text</td><td>fill accent, text background colour</td></tr>
+  <tr><td>Voices (5)</td><td>engine tiles radius 24, 12 gap; voice rows are 48 tall pills, full width, 8 gap; download progress = the theme progress component; free-space line pinned to the bottom</td><td>selected engine: 1 dp white border; selected voice: red tick</td><td>selected engine: 2 dp accent outline; selected voice: accent tick</td></tr>
+  <tr><td>Listen dock (4)</td><td>64 tall, radius 32, 24 from edges and bottom inset; buttons 48; timer chip 32 tall</td><td>#111, 1 dp #2A2A2A; play disc red</td><td>black 32 %; play disc accent</td></tr>
+  <tr><td>Read-along highlight (4)</td><td>scroll target = line top − (top bar height + 16) when the bar is visible</td><td>#2E2E2E fill, white text (replaces the yellow default)</td><td>accent 28 % fill</td></tr>
+</table>
+</body>
+</html>
