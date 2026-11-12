@@ -87,11 +87,13 @@ import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySelection
 import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySheet
+import eu.kanade.presentation.tsuzuki.novel.novelReaderChapterLabel
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
 import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -507,7 +509,17 @@ class ReaderActivity : BaseActivity() {
             if (isNovelMode && !state.menuVisible && novelStatusBarEnabled) {
                 val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
                 val showChapterSegment = novelStatusBarShowChapterNumber || novelStatusBarShowChapterTitle
+                val themedChapterLabels = isTsuzukiStyle()
                 val chapterText: String? = chapter?.takeIf { showChapterSegment }?.let { ch ->
+                    if (themedChapterLabels) {
+                        return@let novelReaderChapterLabel(
+                            title = ch.name,
+                            storedNumber = ch.chapter_number.toDouble(),
+                            showNumber = novelStatusBarShowChapterNumber,
+                            showTitle = novelStatusBarShowChapterTitle,
+                            numberPrefix = "Ch.",
+                        )
+                    }
                     val numStr = if (novelStatusBarShowChapterNumber && ch.chapter_number >= 0f) {
                         "Ch. ${formatChapterNumber(ch.chapter_number.toDouble())}"
                     } else {
@@ -933,10 +945,19 @@ class ReaderActivity : BaseActivity() {
 
             // Format chapter title based on preference
             val chapterTitleDisplay by readerPreferences.novelChapterTitleDisplay.collectAsState()
-            val formattedChapterTitle = remember(state.currentChapter, state.novelVisibleChapter, chapterTitleDisplay) {
-                val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
+            val themedChapterLabels = isTsuzukiStyle()
+            val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
+            val formattedChapterTitle = remember(chapter, chapterTitleDisplay, themedChapterLabels) {
                 if (chapter == null) {
                     null
+                } else if (themedChapterLabels) {
+                    novelReaderChapterLabel(
+                        title = chapter.name,
+                        storedNumber = chapter.chapter_number.toDouble(),
+                        showNumber = chapterTitleDisplay == 1 || chapterTitleDisplay == 2,
+                        showTitle = chapterTitleDisplay != 1,
+                        numberPrefix = if (chapterTitleDisplay == 1) "Chapter" else "Ch.",
+                    ) ?: chapter.name
                 } else {
                     when (chapterTitleDisplay) {
                         1 -> { // Number only

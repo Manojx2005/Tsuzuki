@@ -29,6 +29,7 @@ import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
+import eu.kanade.presentation.tsuzuki.novel.novelTitleChapterNumber
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -60,13 +61,17 @@ private data class ChapterEndLabels(
 
 private fun ReaderActivity.chapterEndLabels(chapter: ReaderChapter, dot: Boolean): ChapterEndLabels {
     fun String.cased() = if (dot) uppercase() else this
+    val sourceTitle = chapter.chapter.name
+    val separateNumber = chapter.chapter.chapter_number.takeIf {
+        it >= 0 && novelTitleChapterNumber(sourceTitle) == null
+    }
     return ChapterEndLabels(
         end = stringResource(MR.strings.tsz_reader_chapter_end).cased(),
         upNext = stringResource(MR.strings.tsz_reader_up_next).cased(),
-        number = chapter.chapter.chapter_number.takeIf { it >= 0 }?.let {
+        number = separateNumber?.let {
             stringResource(MR.strings.tsz_reader_chapter_position, formatChapterNumber(it.toDouble())).cased()
         },
-        title = chapter.chapter.name.cased(),
+        title = sourceTitle.cased(),
         downloaded = stringResource(MR.strings.label_downloaded).cased(),
         next = stringResource(MR.strings.action_next_chapter).cased(),
         markRead = stringResource(MR.strings.action_mark_as_read).cased(),
