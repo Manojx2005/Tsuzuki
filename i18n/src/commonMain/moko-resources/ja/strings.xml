@@ -1589,11 +1589,6 @@
     <string name="tsz_backup_history_entries">履歴項目</string>
     <string name="tsz_backup_checking">バックアップを確認中…</string>
     <string name="tsz_backup_unreadable">ファイルを開けませんでした。ファイルが利用できることを確認し、選び直してください。</string>
-    <string name="tsz_manhwa">マンファ</string>
-    <string name="tsz_library_manhwa_count">マンファ %1$d冊</string>
-    <string name="tsz_manga_format">コミック形式</string>
-    <string name="tsz_manga_format_auto">自動</string>
-    <string name="tsz_manga_long_strip_detected">縦読みを自動選択 · この作品の設定を変更</string>
     <string name="tsz_reader_recap_setting">前回までの振り返り</string>
     <string name="tsz_reader_recap_setting_summary">24時間以上空いたとき、前の章がオフラインで読める場合は、その一部を表示します。</string>
     <string name="tsz_reader_recap_previously">前回まで</string>

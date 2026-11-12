@@ -14,7 +14,6 @@ data class LibraryItem(
     val unreadCount: Long = -1,
     val isLocal: Boolean = false,
     val sourceLanguage: String = "",
-    val isManhwa: Boolean = false,
 ) {
     val id: Long = libraryManga.id
 

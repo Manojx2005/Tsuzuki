@@ -46,8 +46,6 @@ import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.source.getMangaUrlOrNull
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -132,9 +130,6 @@ class LibraryViewModel(
 ) : StateViewModel<LibraryViewModel.State>(State()) {
 
     private val restoredUi = savedState?.get<Bundle>("tsuzuki_library_ui")
-    private val manhwaStore by lazy { Injekt.get<eu.kanade.tachiyomi.tsuzuki.manhwa.ManhwaStore>() }
-    private val manhwaOnlyState = MutableStateFlow(restoredUi?.getBoolean("manhwa_only") ?: false)
-    val manhwaOnly = manhwaOnlyState.asStateFlow()
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
 
@@ -176,7 +171,6 @@ class LibraryViewModel(
                 "search_query" to current.searchQuery,
                 "selected" to current.selection.savedSelection(),
                 "filters_open" to (current.dialog == Dialog.SettingsSheet),
-                "manhwa_only" to manhwaOnly.value,
             )
         }
         // Experimental pagination: nothing is resident at startup, so the category pager (which
@@ -308,31 +302,15 @@ class LibraryViewModel(
                 categoriesFlow,
                 getFavoritesFlow(displayPreferencesFlow),
                 combine(getTracksPerManga.subscribe(), getTrackingFiltersFlow(), ::Pair),
-                combine(itemPreferencesFlow, manhwaStore.observe(), manhwaOnly, ::Triple),
+                itemPreferencesFlow,
                 getLibraryManga.isLoading(),
-            ) { categories, rawFavorites, tracksAndFilters, prefsAndManhwa, isLoading ->
+            ) { categories, favorites, tracksAndFilters, itemPreferences, isLoading ->
                 val (tracksMap, trackingFilters) = tracksAndFilters
-                val (itemPreferences, classification, manhwaOnly) = prefsAndManhwa
-                val favorites = rawFavorites.map { item ->
-                    val manga = item.libraryManga.manga
-                    if (!manga.isNovel && classification.isManhwa(manga, sourceManager.get(manga.source)?.lang)) {
-                        item.copy(isManhwa = true)
-                    } else {
-                        item
-                    }
-                }
 
                 val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0L) }
 
                 val filteredFavorites = favorites
                     .applyFilters(tracksMap, trackingFilters, itemPreferences)
-                    .let { items ->
-                        if (manhwaOnly && itemPreferences.filterNovel != TriState.ENABLED_IS) {
-                            items.fastFilter { it.isManhwa }
-                        } else {
-                            items
-                        }
-                    }
 
                 LibraryData(
                     isInitialized = !isLoading,
@@ -340,8 +318,7 @@ class LibraryViewModel(
                     categories = categories,
                     favorites = filteredFavorites,
                     novelCount = favorites.count { it.libraryManga.manga.isNovel },
-                    mangaCount = favorites.count { !it.libraryManga.manga.isNovel && !it.isManhwa },
-                    manhwaCount = favorites.count { it.isManhwa },
+                    mangaCount = favorites.count { !it.libraryManga.manga.isNovel },
                     tracksMap = tracksMap,
                     loggedInTrackerIds = trackingFilters.keys,
                 )
@@ -1398,12 +1375,6 @@ class LibraryViewModel(
         mutableState.update { it.copy(selection = setOf()) }
     }
 
-    fun setManhwaOnly(enabled: Boolean) {
-        if (manhwaOnlyState.value == enabled) return
-        clearSelection()
-        manhwaOnlyState.value = enabled
-    }
-
     fun toggleSelection(category: Category, manga: LibraryManga) {
         mutableState.update { state ->
             val newSelection = state.selection.mutate { set ->
@@ -2129,7 +2100,6 @@ class LibraryViewModel(
         val favorites: List<LibraryItem> = emptyList(),
         val novelCount: Int = 0,
         val mangaCount: Int = 0,
-        val manhwaCount: Int = 0,
         val tracksMap: Map</* Manga */ Long, List<Track>> = emptyMap(),
         val loggedInTrackerIds: Set<Long> = emptySet(),
     ) {

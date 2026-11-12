@@ -288,7 +288,7 @@ Tests: existing anime update + Updates tests still pass; add one test that the h
 `TsuzukiAnime.enabled` is false. Result must list the final `git diff --stat main` for those upstream files.
 Result: _pending_
 
-#### S1 Manhwa: classify long-strip comics (T3) — `review` (2026-11-08, `.worktrees/s1`; lane 2)
+#### S1 Manhwa: classify long-strip comics (T3) — `ready` (lane 2)
 Boards `09-manga/LibraryMixed` (novels · manga · manhwa) and `09-manga/MangaDetails` ("auto webtoon"). Mark a
 manga as manhwa/long-strip from real data only: source genre/tags (manhwa, manhua, webtoon, long strip), the
 source's language hint, and, once chapters are read, the measured page aspect ratio (height ≥ 2.5 × width on most
@@ -296,27 +296,7 @@ pages). Store the result in a Tsuzuki preference-backed store keyed by manga id 
 override on the details screen wins. Use it for: a Manhwa pill on the Library Manga tab, the details "auto webtoon"
 line, and the default reading mode (webtoon) for manhwa when the user hasn't set one. Pure classifier + tests (tags,
 aspect ratios, override precedence). Claude device-checks with a known manhwa from Keiyoushi on the S22.
-Result: `fc654bd76`. Two per-file Spotless passes (app and core/common) and offline JDK 21
-`:app:assembleDebug :app:testDebugUnitTest` passed (974 tests, including 6 new).
-
-- `ManhwaClassifier.kt` uses exact format tags, reader measurements and a weak Korean/Chinese source-language
-  hint, in that order. A manual classification wins. A measurement verdict requires a majority of distinct
-  chapter pages, at an inclusive 2.5:1 height-to-width threshold.
-- `ManhwaStore.kt` persists verdicts and overrides keyed by local manga ID. The preferences stay local because
-  backup restores can assign different IDs. `AppModule.kt` registers the shared store.
-- `ManhwaReader.kt`, `ImageUtil.kt`, `ReaderChapter.kt` and both page holders measure bounds off the UI thread
-  from bytes already loaded for the reader. `ReaderViewModel.kt` defaults classified comics to Webtoon when
-  the title has no explicit reader mode.
-- `LibraryViewModel.kt` and `LibraryItem.kt` apply classification before grouping and selection. `LibraryTab.kt`,
-  `NovelsTab.kt`, `TsuzukiLibraryMediaSwitch.kt` and `TsuzukiMixedLibraryHeader.kt` expose a Manhwa-only subset.
-  The existing Manga filter includes all comics. `TsuzukiMixedLibraryGrid.kt` adds badges.
-- `TsuzukiMangaDetails.kt` shows auto Webtoon and offers format overrides alongside the reader-mode picker.
-  Eight locale files provide labels. `ManhwaClassifierTest.kt` covers tags, language, page ratios, duplicate
-  pages, and override precedence. `docs/design/README.md` records the board implementation.
-
-Claude device review: on S22, favorite a known Keiyoushi manhwa and a paged manga, check the Manhwa filter,
-badge, and reader default in Dot and Colour, then force Manga and return to Automatic. Verify an explicit
-per-series reader mode still wins, and check the mixed-grid badge on the tablet.
+Result: _pending_
 
 #### S2 Listening stats (T2) — `ready` (lane 2)
 Board `07-system/Stats` (Dot: `07-system/dot/Stats`). Owner Q4 keeps reading and watch time apart; listening counts

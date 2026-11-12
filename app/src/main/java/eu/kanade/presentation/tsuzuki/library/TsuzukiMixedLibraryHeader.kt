@@ -27,10 +27,7 @@ import uy.kohesive.injekt.api.get
 fun TsuzukiMixedLibraryHeader(
     novelCount: Int,
     mangaCount: Int,
-    manhwaCount: Int,
     showCounts: Boolean,
-    manhwaOnly: Boolean,
-    onManhwaOnlyChanged: (Boolean) -> Unit,
     onFilterChanged: () -> Unit,
 ) {
     val preferences = remember { Injekt.get<LibraryPreferences>() }
@@ -39,11 +36,10 @@ fun TsuzukiMixedLibraryHeader(
     val hideMangaUi by remember { Injekt.get<BasePreferences>().hideMangaUi }.collectAsState()
     val tokens = TsuzukiTheme.tokens
     Column {
-        if (showCounts && novelCount + mangaCount + manhwaCount > 0) {
+        if (showCounts && novelCount + mangaCount > 0) {
             val counts = listOfNotNull(
                 stringResource(MR.strings.tsz_library_novel_count, novelCount).takeIf { novelCount > 0 },
                 stringResource(MR.strings.tsz_library_manga_count, mangaCount).takeIf { mangaCount > 0 },
-                stringResource(MR.strings.tsz_library_manhwa_count, manhwaCount).takeIf { manhwaCount > 0 },
             ).joinToString(" · ")
             Text(
                 text = if (tokens.isDot) counts.uppercase() else counts,
@@ -59,13 +55,11 @@ fun TsuzukiMixedLibraryHeader(
                     stringResource(MR.strings.tsz_library_all),
                     stringResource(TDMR.strings.label_novels),
                     stringResource(TDMR.strings.label_manga),
-                    stringResource(MR.strings.tsz_manhwa),
                 ),
-                selected = if (manhwaOnly && filter == TriState.ENABLED_NOT) filters.size else filters.indexOf(filter),
+                selected = filters.indexOf(filter),
                 onClick = {
                     onFilterChanged()
-                    onManhwaOnlyChanged(it == filters.size)
-                    preferences.filterNovel().set(filters.getOrElse(it) { TriState.ENABLED_NOT })
+                    preferences.filterNovel().set(filters[it])
                 },
             )
         }

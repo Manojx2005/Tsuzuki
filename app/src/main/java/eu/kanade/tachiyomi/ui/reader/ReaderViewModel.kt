@@ -1392,8 +1392,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val default = readerPreferences.defaultReadingMode.get()
         val readingMode = ReadingMode.fromPreference(manga?.readingMode?.toInt())
         return when {
-            resolveDefault && readingMode == ReadingMode.DEFAULT ->
-                eu.kanade.tachiyomi.tsuzuki.manhwa.manhwaDefaultReadingMode(manga, source?.lang, default)
+            resolveDefault && readingMode == ReadingMode.DEFAULT -> default
             else -> manga?.readingMode?.toInt() ?: default
         }
     }

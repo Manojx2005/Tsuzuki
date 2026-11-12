@@ -185,14 +185,11 @@ class WebtoonPageHolder(
     private suspend fun setImage() {
         progressIndicator.setProgress(0)
 
-        val currentPage = page ?: return
-        val streamFn = currentPage.stream ?: return
+        val streamFn = page?.stream ?: return
 
         try {
             val (source, isAnimated) = withIOContext {
-                val rawSource = streamFn().use { Buffer().readFrom(it) }
-                eu.kanade.tachiyomi.tsuzuki.manhwa.recordManhwaPage(currentPage, rawSource)
-                val source = process(rawSource)
+                val source = streamFn().use { process(Buffer().readFrom(it)) }
                 val isAnimated = ImageUtil.isAnimatedAndSupported(source)
                 Pair(source, isAnimated)
             }

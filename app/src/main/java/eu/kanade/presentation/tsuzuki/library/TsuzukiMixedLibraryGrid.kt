@@ -108,25 +108,15 @@ fun TsuzukiMixedLibraryGrid(
                         shape = shape,
                     )
                     Text(
-                        text = when {
-                            manga.isNovel -> "LN"
-                            item.isManhwa -> stringResource(MR.strings.tsz_manhwa).uppercase()
-                            else -> stringResource(TDMR.strings.label_manga).uppercase()
-                        },
+                        text = if (manga.isNovel) "LN" else stringResource(TDMR.strings.label_manga).uppercase(),
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(4.dp)
                             .height(20.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(
-                                when {
-                                    manga.isNovel -> tokens.accent
-                                    item.isManhwa -> tokens.dotOn
-                                    else -> tokens.background.copy(alpha = 0.9f)
-                                },
-                            )
+                            .background(if (manga.isNovel) tokens.accent else tokens.background.copy(alpha = 0.9f))
                             .then(
-                                if (manga.isNovel || item.isManhwa) {
+                                if (manga.isNovel) {
                                     Modifier
                                 } else {
                                     Modifier.border(
@@ -137,11 +127,7 @@ fun TsuzukiMixedLibraryGrid(
                                 },
                             )
                             .padding(horizontal = 5.dp, vertical = 2.dp),
-                        color = when {
-                            manga.isNovel -> tokens.onAccent
-                            item.isManhwa -> tokens.background
-                            else -> tokens.dotOn
-                        },
+                        color = if (manga.isNovel) tokens.onAccent else tokens.dotOn,
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.ExtraBold,

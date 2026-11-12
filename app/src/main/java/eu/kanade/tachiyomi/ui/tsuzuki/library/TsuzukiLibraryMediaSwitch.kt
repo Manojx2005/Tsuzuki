@@ -11,7 +11,6 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -25,11 +24,7 @@ import uy.kohesive.injekt.api.get
  * legacy themes. Anime joins once it lands.
  */
 @Composable
-fun TsuzukiLibraryMediaSwitch(
-    isManga: Boolean,
-    manhwaOnly: Boolean = false,
-    onManhwaOnlyChanged: ((Boolean) -> Unit)? = null,
-) {
+fun TsuzukiLibraryMediaSwitch(isManga: Boolean) {
     if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) return
     val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
     val basePreferences = remember { Injekt.get<BasePreferences>() }
@@ -38,19 +33,10 @@ fun TsuzukiLibraryMediaSwitch(
     val tabNavigator = LocalTabNavigator.current
     androidx.compose.foundation.layout.Column {
         if (!joined && !hideMangaUi) {
-            val labels = listOf(stringResource(TDMR.strings.label_novels), stringResource(TDMR.strings.label_manga))
-            val manhwa = stringResource(MR.strings.tsz_manhwa)
             TsuzukiPillRow(
-                labels = if (onManhwaOnlyChanged == null) labels else labels + manhwa,
-                selected = when {
-                    !isManga -> 0
-                    manhwaOnly -> 2
-                    else -> 1
-                },
-                onClick = { index ->
-                    onManhwaOnlyChanged?.invoke(index == 2)
-                    tabNavigator.current = if (index == 0) NovelsTab else LibraryTab
-                },
+                labels = listOf(stringResource(TDMR.strings.label_novels), stringResource(TDMR.strings.label_manga)),
+                selected = if (isManga) 1 else 0,
+                onClick = { tabNavigator.current = if (it == 1) LibraryTab else NovelsTab },
             )
         }
         if (!isManga) eu.kanade.presentation.tsuzuki.library.TsuzukiLibraryQueryPills()

@@ -1370,11 +1370,6 @@
     <string name="tsz_backup_history_entries">历史记录条目</string>
     <string name="tsz_backup_checking">正在检查备份…</string>
     <string name="tsz_backup_unreadable">无法打开此文件。请确认文件可用，然后重新选择。</string>
-    <string name="tsz_manhwa">条漫</string>
-    <string name="tsz_library_manhwa_count">%1$d 部条漫</string>
-    <string name="tsz_manga_format">漫画格式</string>
-    <string name="tsz_manga_format_auto">自动</string>
-    <string name="tsz_manga_long_strip_detected">自动选择条漫模式 · 为本作修改</string>
     <string name="tsz_reader_recap_setting">章节回顾</string>
     <string name="tsz_reader_recap_setting_summary">离开本书满 24 小时后，如果上一章的文本可离线读取，则显示片段。</string>
     <string name="tsz_reader_recap_previously">前情回顾</string>

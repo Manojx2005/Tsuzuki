@@ -1367,11 +1367,6 @@
     <string name="tsz_backup_history_entries">Entradas do histórico</string>
     <string name="tsz_backup_checking">Verificando backup…</string>
     <string name="tsz_backup_unreadable">Não foi possível abrir o arquivo. Confira se ele está disponível e selecione-o novamente.</string>
-    <string name="tsz_manhwa">Manhwa</string>
-    <string name="tsz_library_manhwa_count">%1$d manhwas</string>
-    <string name="tsz_manga_format">Formato do quadrinho</string>
-    <string name="tsz_manga_format_auto">Automático</string>
-    <string name="tsz_manga_long_strip_detected">Modo webtoon automático · alterar para esta série</string>
     <string name="tsz_reader_recap_setting">Recapitulação do capítulo</string>
     <string name="tsz_reader_recap_setting_summary">Após 24 horas de pausa, mostra trechos do capítulo anterior se o texto estiver disponível offline.</string>
     <string name="tsz_reader_recap_previously">Anteriormente</string>
