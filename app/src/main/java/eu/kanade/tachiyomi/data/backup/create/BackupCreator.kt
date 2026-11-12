@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.tsuzuki.backup.AutomaticBackupFiles
 import eu.kanade.tachiyomi.tsuzuki.backup.BackupSizeSink
 import eu.kanade.tachiyomi.tsuzuki.backup.TsuzukiBackupPreferences
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
@@ -195,7 +196,7 @@ class BackupCreator(
             BackupFileValidator(context).validate(file.uri)
 
             val published = automaticFiles?.publish(file) ?: file
-            file = published
+            file = null // The published backup must survive failures or cancellation in status/rotation.
             // Export succeeded. A status or rotation failure must never remove the valid copy.
             runCatching {
                 val prefs = TsuzukiBackupPreferences(Injekt.get<PreferenceStore>())
@@ -204,7 +205,10 @@ class BackupCreator(
                 }
                 prefs.recordExport(sizeSink.bytesWritten)
                 automaticFiles?.prune(prefs.retentionCount(), published)
-            }.onFailure { logcat(LogPriority.WARN, it) { "Could not update backup status or rotation" } }
+            }.onFailure {
+                if (it is CancellationException) throw it
+                logcat(LogPriority.WARN, it) { "Could not update backup status or rotation" }
+            }
             return published.uri.toString()
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)

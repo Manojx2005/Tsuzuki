@@ -19,9 +19,12 @@ class BackupRotationTest {
     fun keepsNewestAcrossNamingSchemesAndIgnoresUnfinishedOrManualFiles() {
         val appId = "io.github.manojx2005.tsuzuki"
         val newest = "Tsuzuki_2026-11-08_12-00-00-123.tachibk"
-        val old = "Tsuzuki_2026-11-06_12-00.tachibk"
+        val old = "Tsuzuki_2026-11-06_12-00-00-123.tachibk"
         val files = listOf(
-            "${appId}_2026-11-07_12-00.tachibk",
+            "${appId}_2026-11-07_12-00-00-123.tachibk",
+            // Short names are manual exports (or indistinguishable from them): never rotated.
+            "Tsuzuki_2026-11-05_12-00.tachibk",
+            "${appId}_2026-11-04_12-00.tachibk",
             newest,
             old,
             "Tsuzuki_2026-11-09_12-00-00-123.tachibk.part",

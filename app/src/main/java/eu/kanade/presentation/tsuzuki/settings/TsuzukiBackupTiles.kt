@@ -8,10 +8,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -29,12 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -57,24 +58,27 @@ import java.util.Date
 fun TsuzukiBackupTiles(lastAutoBackup: Long, onCreate: () -> Unit, onRestore: () -> Unit) {
     val preferences = remember { TsuzukiBackupPreferences(Injekt.get()) }
     val lastExport by preferences.lastExport.collectAsState()
-    BackupStatusTile(BackupExport.fromPreference(lastExport, lastAutoBackup))
+    // One root: the preference slot stacks sibling roots on top of each other.
+    Column(Modifier.fillMaxWidth()) {
+        BackupStatusTile(BackupExport.fromPreference(lastExport, lastAutoBackup))
 
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        BackupTile(
-            Icons.Outlined.FileDownload,
-            stringResource(MR.strings.pref_create_backup),
-            Modifier.weight(1f),
-            onCreate,
-        )
-        BackupTile(
-            Icons.Outlined.FileUpload,
-            stringResource(MR.strings.pref_restore_backup),
-            Modifier.weight(1f),
-            onRestore,
-        )
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp).height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            BackupTile(
+                Icons.Outlined.FileDownload,
+                stringResource(MR.strings.pref_create_backup),
+                Modifier.weight(1f).fillMaxHeight(),
+                onCreate,
+            )
+            BackupTile(
+                Icons.Outlined.FileUpload,
+                stringResource(MR.strings.pref_restore_backup),
+                Modifier.weight(1f).fillMaxHeight(),
+                onRestore,
+            )
+        }
     }
 }
 
@@ -126,22 +130,20 @@ private fun BackupTile(icon: ImageVector, label: String, modifier: Modifier, onC
     Column(
         modifier
             .tsuzukiPress(press)
-            .height(112.dp)
+            .heightIn(min = 112.dp)
             .clip(shape)
             .background(t.tile)
             .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
             .clickable(interactionSource = press, indication = ripple(), role = Role.Button, onClick = onClick)
             .padding(16.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+        Icon(icon, contentDescription = null, tint = t.dotOn, modifier = Modifier.size(24.dp))
         Spacer(Modifier.weight(1f))
         Text(
             if (t.isDot) label.uppercase() else label,
+            modifier = Modifier.padding(top = 8.dp),
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold),
-            color = Color.White,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis,
+            color = t.dotOn,
         )
     }
 }

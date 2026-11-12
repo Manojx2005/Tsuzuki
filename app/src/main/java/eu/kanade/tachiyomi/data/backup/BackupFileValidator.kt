@@ -10,10 +10,14 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.isBackupSourceName
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.tsuzuki.backup.isBackupField
 import kotlinx.serialization.protobuf.ProtoBuf
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.IOException
 
 class BackupFileValidator(
     private val context: Context,
@@ -35,7 +39,9 @@ class BackupFileValidator(
         var shelves = 0
         var historyEntries = 0L
         val reader = BackupProtoReader(context)
+        var recognised = false
         reader.read(uri) { fieldNumber, data ->
+            if (isBackupField(fieldNumber)) recognised = true
             when (fieldNumber) {
                 1 -> {
                     val migrated = BackupProtoMigration.migrateManga(data)
@@ -57,6 +63,7 @@ class BackupFileValidator(
                 106 -> parser.decodeFromByteArray(BackupExtensionStore.serializer(), data)
             }
         }
+        if (!recognised) throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
 
         val sources = backupSources.associate { it.sourceId to it.name }
         val missingSources = sources
