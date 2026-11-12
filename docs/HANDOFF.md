@@ -350,7 +350,7 @@ and the manifest as assets. **Only the owner creates the release.** After the up
 hash from a device and put the URL in NT3's manifest constant.
 Result: _pending_
 
-#### S2-F Count a listened chapter once (T3) — `ready` (needs `tsuzuki/s2`; app lane)
+#### S2-F Count a listened chapter once (T3) — `codex-working` (.worktrees/s2-f, 2026-11-13; this chat app lane, independent review required)
 RV2-14: one autoplay run counted 5 chapters for a 2-chapter book. Trace `TtsController`'s chapter hand-off with
 infinite scroll + auto-next on (log each "chapter finished" with chapter id and a playback-run id). Count a
 chapter at most once per (chapter id, playback run); a run ends on stop, on a manual chapter change, or when the
