@@ -10,12 +10,14 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Buffer
 import okio.HashingSink
 import okio.sink
 import org.json.JSONObject
+import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException
 
@@ -156,7 +158,10 @@ internal class DictionaryPacks(context: Context, private val client: OkHttpClien
         if (db.version != SCHEMA || meta["language"] != language.code) return@readPack null
         val version = meta["version"]?.takeIf { it.isNotBlank() } ?: return@readPack null
         val license = meta["license"]?.takeIf { it.isNotBlank() } ?: return@readPack null
-        db.rawQuery("SELECT form FROM term LIMIT 1", null).use { if (!it.moveToFirst()) return@readPack null }
+        // Every table and column lookup() reads must exist, and one term must resolve to an entry with a sense.
+        // A missing table or column throws SQLiteException, which readPack reports as an invalid pack.
+        db.rawQuery(PACK_LOOKUP_CHECK, null).use { if (!it.moveToFirst()) return@readPack null }
+        if (language == DictionaryLanguage.English) db.rawQuery(PACK_EXCEPTION_CHECK, null).use { it.count }
         InstalledDictionary(version, file.length(), license)
     }
 
@@ -168,7 +173,8 @@ internal class DictionaryPacks(context: Context, private val client: OkHttpClien
                 null,
                 SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS,
             ).use(read)
-        } catch (_: android.database.sqlite.SQLiteException) {
+        } catch (error: android.database.sqlite.SQLiteException) {
+            logcat(LogPriority.WARN, error) { "Could not read dictionary pack" }
             null
         }
     }
@@ -181,6 +187,10 @@ internal class DictionaryPacks(context: Context, private val client: OkHttpClien
 
     private companion object {
         const val SCHEMA = 1
+        const val PACK_LOOKUP_CHECK =
+            "SELECT t.form, e.id, e.headword, e.reading, s.part, s.gloss, s.ordinal " +
+                "FROM term t JOIN entry e ON e.id = t.entry JOIN sense s ON s.entry = e.id LIMIT 1"
+        const val PACK_EXCEPTION_CHECK = "SELECT form, lemma FROM exception LIMIT 0"
         const val MAX_MANIFEST_BYTES = 16_384L
         const val MAX_PACK_BYTES = 256 * 1024 * 1024L
         const val RELEASE = "https://github.com/Manojx2005/Tsuzuki/releases/download/dictionaries-v1"

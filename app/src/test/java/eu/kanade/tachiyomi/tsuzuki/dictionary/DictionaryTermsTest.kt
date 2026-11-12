@@ -37,6 +37,7 @@ class DictionaryTermsTest {
             "話さなかった" to "話す",
             "勉強しました" to "勉強する",
             "高くなかった" to "高い",
+            "高くて" to "高い",
         ).forEach { (word, lemma) ->
             assertEquals(word, japaneseDictionaryForms(word).first())
             assertTrue(lemma in japaneseDictionaryForms(word), word)

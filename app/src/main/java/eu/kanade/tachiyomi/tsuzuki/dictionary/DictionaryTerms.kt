@@ -62,7 +62,7 @@ private val godanA = mapOf(
     'な' to 'ぬ', 'ば' to 'ぶ', 'ま' to 'む', 'ら' to 'る',
 )
 private val japaneseEndings = listOf(
-    "くなかった" to listOf("い"), "くない" to listOf("い"), "かった" to listOf("い"),
+    "くなかった" to listOf("い"), "くない" to listOf("い"), "かった" to listOf("い"), "くて" to listOf("い"),
     "して" to listOf("する", "す"), "した" to listOf("する", "す"),
     "って" to listOf("う", "つ", "る"), "った" to listOf("う", "つ", "る"),
     "んで" to listOf("ぬ", "ぶ", "む"), "んだ" to listOf("ぬ", "ぶ", "む"),
