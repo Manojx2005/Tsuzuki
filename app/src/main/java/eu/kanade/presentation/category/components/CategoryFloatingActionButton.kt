@@ -19,8 +19,9 @@ fun CategoryFloatingActionButton(
     lazyListState: LazyListState,
     onCreate: () -> Unit,
     modifier: Modifier = Modifier,
+    showInTsuzuki: Boolean = false,
 ) {
-    if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) return
+    if (!showInTsuzuki && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) return
     SmallExtendedFloatingActionButton(
         text = { Text(text = stringResource(MR.strings.action_add)) },
         icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
