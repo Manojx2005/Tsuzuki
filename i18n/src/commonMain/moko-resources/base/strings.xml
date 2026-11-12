@@ -1765,4 +1765,9 @@
     <string name="tsz_dictionary_save">Add to notebook</string>
     <string name="tsz_dictionary_update">Update</string>
     <string name="tsz_dictionary_web_search">Web search</string>
+    <string name="tsz_stats_listening">Listening</string>
+    <string name="tsz_stats_listen_today">Today</string>
+    <string name="tsz_stats_listen_week">This week</string>
+    <string name="tsz_stats_listened_chapters">Chapters this week</string>
+    <string name="tsz_stats_minutes_read_listened">Minutes read or listened</string>
 </resources>

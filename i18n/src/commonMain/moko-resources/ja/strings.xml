@@ -1605,4 +1605,9 @@
     <string name="tsz_dictionary_save">ノートに追加</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">ウェブ検索</string>
+    <string name="tsz_stats_listening">読み上げ</string>
+    <string name="tsz_stats_listen_today">今日</string>
+    <string name="tsz_stats_listen_week">今週</string>
+    <string name="tsz_stats_listened_chapters">今週聴いた話数</string>
+    <string name="tsz_stats_minutes_read_listened">読書・読み上げ時間</string>
 </resources>

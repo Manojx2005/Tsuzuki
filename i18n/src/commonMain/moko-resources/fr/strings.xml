@@ -1379,4 +1379,9 @@
     <string name="tsz_dictionary_save">Ajouter au carnet</string>
     <string name="tsz_dictionary_update">Mettre à jour</string>
     <string name="tsz_dictionary_web_search">Recherche Web</string>
+    <string name="tsz_stats_listening">Écoute</string>
+    <string name="tsz_stats_listen_today">Aujourd’hui</string>
+    <string name="tsz_stats_listen_week">Cette semaine</string>
+    <string name="tsz_stats_listened_chapters">Chapitres cette semaine</string>
+    <string name="tsz_stats_minutes_read_listened">Minutes de lecture ou d’écoute</string>
 </resources>

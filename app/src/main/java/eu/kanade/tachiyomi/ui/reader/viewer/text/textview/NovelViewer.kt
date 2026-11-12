@@ -836,6 +836,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         context = activity,
         preferences = preferences,
         scope = scope,
+        listening = activity.viewModel.listeningSession,
         callbacks = object : TtsController.Callbacks {
             override fun onInitialized(pendingRequest: TtsController.StartRequest?) {
                 when (pendingRequest) {
