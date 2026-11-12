@@ -66,9 +66,9 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 ## Current state (2026-11-13, Codex)
 
-- `main` = `424618de6`: RV2 accepted R15, S3/S3-F and R13; 1,006 tests green. S1 deferred pending explicit extension-trust approval; S2 failed and S2-F remains ready. RV2 evidence archived in `app/build/review-evidence/rv2/`; disposable app removed and the daily tablet Preview restored.
-- This chat now reviews RV4, then implements the app queue for another reviewer. Tablet only for now (owner); S22 deferred. Hourly resume reminder `resume-tsuzuki-plan-0-1-1` is active.
-- TTS-LANGUAGE still has uncommitted implementer work and must be skipped in RV4 until that work is finished. MAIN-REPOS owner changes remain uncommitted on main for their RV4 review. Anime remains paused.
+- RV2 base `424618de6`: RV2 accepted R15, S3/S3-F and R13; 1,006 tests green. S1 deferred pending explicit extension-trust approval; S2 failed and S2-F remains ready. RV2 evidence archived in `app/build/review-evidence/rv2/`; disposable app removed and the daily tablet Preview restored.
+- RV4 accepted V7.7-F, CHAPNUM and MAIN-REPOS after the repository Add fix. Accepted suite: 1,011 tests green, Debug/Preview built, tablet scratch QA complete. This chat now switches to app work S2-F → RP1 → STR1 → ERR1; another chat reviews those cards. S22 deferred by owner; hourly resume reminder stays active.
+- TTS-LANGUAGE still has uncommitted implementer work and was skipped. R12-F/R14/NT1 are deferred with explicit evidence/gates below. NT2 requires NT1 merged and NT3 requires the owner listening go; neither gate is waived. Anime remains paused.
 
 ## Current state (2026-11-12, Claude)
 
@@ -177,7 +177,7 @@ tablet-only: check line length on the tablet in portrait and landscape and that 
 Review: V7.6, R16 and R17 passed. V7.7 and R12 were reverted, with fix cards below. The full candidate built Debug and Preview and passed 981 tests. After the reverts, Preview built and 977 tests passed with no failures or skips. Both devices launched the accepted Preview. The tablet stayed on Dot Home. The S22 crash buffer contained a UI automation process failure during a dump, with no Tsuzuki crash. Evidence is in `app/build/review-evidence/rv1/`.
 
 #### RV2 Review: app lane batch 2 (T3) — `done` (2026-11-13; R15, S3/S3-F, R13 accepted; S1 deferred, S2 failed)
-**Resume progress (Codex RV2, 2026-11-13):** S3-F merged as `cdaca0445`. Review fixes committed separately: R15 `005713576`, S3 `ea748689e`, R13 `bb82bd9f1`. Added unknown-gzip/settings-only validator tests, cold-local recap/cancellation tests, and real SQLite schema tests. Removing the three fixes causes six expected regression failures; restored fixes pass all 1,018 Debug tests. Per-file Spotless twice and Debug + isolated Preview build pass (`scratch-build-20261113.log`; first unrestricted build daemon died during R8, constrained retry succeeded). Browser paged-recap fixture passes all three sizes; converter 2/2; 34 new strings match across all eight locales. Tablet scratch QA ongoing in `.worktrees/rv2-batch-t/app/build/review-evidence/rv2/` (new evidence ends `20261113`): corrupt gzip rejected, valid fixture restored with counts, cold local TextView recap appears, manual export shows time/size with status above fully wrapped action labels in Dot and Colour. Owner allows tablet only for now; S22 deferred. No RV2 merge verdict yet.
+**Final RV2 evidence:** accepted 1,006 tests and tablet results are recorded in the RV2 log and archived at `app/build/review-evidence/rv2/`. S2-F must revert exclusion `591429e49` to restore S2 before fixing it; merging its already-merged ancestor branch alone will not restore the excluded code. S1 remains deferred pending explicit extension-trust approval.
 
 Cards, in order: **R15, S1, S2, S3, R13**. R15 changes backups and S1 classifies the library: back up first. R13
 is T4 (offline dictionary packs): read every storage and download path line by line; the pack itself is not in the
@@ -263,8 +263,8 @@ never compiled. Don't discard them.
 The S22 is on wireless adb: get the IP:port from the owner if `adb devices` doesn't show it, and confirm
 `getprop ro.serialno` = `RZCWA139X1X` before installing.
 
-#### RV4 Review: fix cards + owner reports (T3) — `codex-working` (.worktrees/rv4, review/rv4, 2026-11-13; tablet only)
-**Progress 2026-11-13:** Candidate merges V7.7-F (`cf557a464`), R12-F (`d70015232`), R14 (`0e4a5e704`), CHAPNUM (`c4f1697bd`), S4 (`940fe8545`). MAIN-REPOS four-file owner patch copied into candidate without committing it yet. Debug + isolated Preview built and **1,026 tests passed**, no failures/errors/skips. Tablet scratch IDs `.rv4debugscratch` / `.rv4scratch`; daily app untouched. V7.7: Native and WebView Next checked in Dot/Colour, hidden chrome stays hidden, WebView recording has no menu flash; Native missing-chapter Retry recovers. CHAPNUM mismatch 129 vs stored 1 verified in details/reader, Home 131 vs stored 3. Debug seeds LNReader/Keiyoushi; fresh Preview has no repositories. Found manga repository Add action hidden by shared category FAB; scoped opt-in fix `7f51d31da`, rebuild running. R14 single-edition/empty picker checked; real two-source fallback still unverified. TTS-LANGUAGE skipped (dirty implementer worktree). NT1 AAR hash matches; all 16 ELF libraries aligned 16 KB; both APK zipalign checks pass; Preview has no neural libraries/service; Debug licences present and missing-model fallback reaches Android TTS (highlight/Pause). **NT1 literal espeak/piper grep fails on legacy names/warnings in the pinned AAR. Owner clarification requested; do not waive the literal gate.** No model download. R12-F live native check still needs explicit trust approval; prior automatic approval rejection must not be bypassed. Evidence `.worktrees/rv4/app/build/review-evidence/rv4/`; RV4 verdicts/merge still pending.
+#### RV4 Review: fix cards + owner reports (T3) — `done` (2026-11-13; V7.7-F, CHAPNUM, MAIN-REPOS accepted; other gates deferred)
+**Final validation 2026-11-13:** Candidate 1,026 tests; accepted Debug + optimized scratch Preview built, **1,011 tests, 0 failures/errors/skips**, scoped Spotless twice. Tablet-only checks per owner; crash buffer empty; both scratch apps removed and daily Preview returned to Dot Home. Evidence archived and size-verified (225 files) in `app/build/review-evidence/rv4/`.
 
 Cards, in order: **V7.7-F, R12-F, R14, CHAPNUM, TTS-LANGUAGE, NT1 (= S4), MAIN-REPOS**. (S3-F is merged in RV2.)
 - V7.7-F and R12-F replace the cards RV1 reverted: merge `tsuzuki/v7.7` then `tsuzuki/v7.7-f`, `tsuzuki/r12` then
@@ -281,7 +281,7 @@ Cards, in order: **V7.7-F, R12-F, R14, CHAPNUM, TTS-LANGUAGE, NT1 (= S4), MAIN-R
   repository" on the novel and manga tabs, debug still seeds. Then commit it on `main` as
   `Ship no default repositories outside debug builds`. `docs/HANDOFF.md`, `docs/ANIME_ANIYOMI_PARITY.md` and
   `docs/design/boards/fixes-2026-11b/` are also uncommitted on `main`: commit them as `docs: plan 0.1.1, boards 2026-11b`.
-Review: _pending_
+Review (Codex RV4, 2026-11-13): Accepted V7.7-F and CHAPNUM. MAIN-REPOS committed on main as `7f697fef9`; owner plan/boards as `3e610bd08`. Review fix `7f51d31da` restores the manga Add Repository action in Tsuzuki themes: fresh Preview has no repositories on either tab, both add flows open; Debug still seeds LNReader/Keiyoushi; 7 seed tests pass. R12-F deferred for native live-source trust approval (and missing decode warning), R14 deferred for two-source runtime checks, S4/NT1 deferred for literal native-string gate clarification; exclusions `89e1ac9ac`, `451168815`, `911a2222f`. TTS-LANGUAGE skipped because its worktree remains dirty. S3-F already passed RV2. Native bottom-card overlap is pre-existing and added to RP1. No push.
 
 #### Neural TTS in 0.1.1 (owner 2026-11-12) — read before NT1–NT4
 The owner wants the offline natural voice (Kokoro through sherpa-onnx, S4) **shipped in 0.1.1**. It is optional:
@@ -294,12 +294,12 @@ voices only, licences in About). **Three things can stop it, and each has a rule
 - Speed has never been measured on a phone. NT2 measures it. Slower than real time at 1.5× on the S22 → same rule.
 - Nobody has heard it. The owner's listening test (NT2 step 4) is the go / no-go.
 
-#### NT1 Review S4 (review lane) — `ready` (in RV4, after TTS-LANGUAGE)
+#### NT1 Review S4 (review lane) — `blocked` (literal native string gate needs owner clarification, 2026-11-13)
 Review `tsuzuki/s4` as a T4 card: the private process, the AAR's SHA-256 against the research doc, no
 `espeak`/`piper` string in any packaged `.so` (`strings | grep -i -E 'espeak|piper'`), 16 KB alignment, licence
 files present, system TTS untouched when the opt-in is off. Device: opt-in with no pack → system fallback.
 Don't download a model. Pass → merge (still debug-only).
-Review: _pending_
+Review (Codex RV4, 2026-11-13): See S4 review below. Pinned AAR contains literal espeak/piper matches; owner clarification pending. This gate is not waived.
 
 #### NT2 Neural TTS: licence, speed and the listening test (T3) — `ready` (needs NT1 merged; app lane; **gate for NT3/NT4**)
 1. Lexicon licence: find the origin and licence of the two English lexicon files in
@@ -365,6 +365,7 @@ Result: _pending_
    colour from tokens (board 3, "Selection" row). The yellow TTS highlight becomes the token colours in board 4.
 3. RV2-13: the compact Listen dock has no sleep timer. Add the timer chip per board 4 (`TabletListenDock`) and
    the phone board `06-reader/ListenMini`; it calls the same `setSleepTimer()` as `TsuzukiReaderListenPanel`.
+4. RV4-01: the Native chapter-end card can remain under visible bottom reader bars at maximum scroll. Reserve the measured visible bottom chrome height plus 16 dp in scroll content so Next, Mark read and Contents stay tappable; remove the extra space when chrome hides. Keep story progress independent of the card. Existing Q2 ChapterEnd / TabletReader boards apply. Evidence `app/build/review-evidence/rv4/tablet-rv4-preview-native-secondary-actual-bounds-20261113.png`; hiding chrome exposes the card and Contents opens correctly. Card vertical layout is unchanged by V7.7-F, so this is a pre-existing polish issue.
 Tests: scroll-offset maths; timer chip label formatting; selection CSS contains the token colours.
 Result: _pending_
 
@@ -425,7 +426,7 @@ Review: _pending_
 After RV3, each time 4–5 cards reach `review`, write the next RV card here (same format, same order the lanes
 finished them) and run it. The anime chain stays one review per 3–4 cards.
 
-#### CHAPNUM Novel chapter labels (owner 2026-11-08) — `review` (.worktrees/chapter-numbers)
+#### CHAPNUM Novel chapter labels (owner 2026-11-08) — `done` (RV4, 2026-11-13)
 
 Use a clearly stated chapter number in the source title when showing a novel chapter number. The Perfect Run
 lists “2: Story Branching” while the stored number is 1. Apply the correction to the tablet details chapter
@@ -452,6 +453,8 @@ Independent device review: open The Perfect Run on the tablet in Dot and Colour.
 Home list, details list, reader toolbar and chapter-end card, then check number-only mode.
 Verify that a manga and a novel whose source title has no number keep their previous labels.
 
+Review (Codex RV4, 2026-11-13): Pass for the requested details/Home/reader label surfaces. Synthetic source headings 129–131 with stored indexes 1–3 display once in details and reader in Dot/Colour; Home uses source Chapter 131. Pure tests cover explicit decimal, volume, Japanese headings, incidental-number fallback and duplicate suppression. Stored numbers/order are unchanged; manga remains on the existing guarded path. Four card tests and all 1,011 accepted tests pass. S22 deferred by owner. Evidence `app/build/review-evidence/rv4/tablet-rv4-chapter-numbers-*.png` and accepted-reader screenshot.
+
 ### Batch AY — Aniyomi parity (Claude, 2026-11-12) — lane 1 — **PAUSED until 0.1.1 is tagged (owner 2026-11-12); take no AY or A6 card**
 
 Detail for every card, the Aniyomi files to read, the code rules and the device-test procedure are in
@@ -462,7 +465,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV4 review, .worktrees/rv4, tablet only, 2026-11-13; S22 deferred by owner`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (RV4 tablet QA complete 2026-11-13; daily Preview on Dot Home; S22 deferred by owner)`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -856,7 +859,7 @@ local-chapter and hard-wrap edits (RV2-07 and RV2-03).
   visible story lines. Also open at 0%, turn through the recap and dismiss it at the start.
   Check Dot and Colour on the S22 and tablet. The local-source path still needs the Android retest.
 
-#### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `review` (.worktrees/s4, 2026-11-09)
+#### S4 Neural TTS — step 1: engine + listening test, debug only (T4) — `blocked` (RV4 deferred, 2026-11-13)
 Research is done: `docs/research/neural-tts.md` (GO-WITH-CONDITIONS). The conditions are hard rules: sherpa-onnx
 ≥ v2.0.1 **without espeak-ng** (GPL); **lexicon voices only** (Kokoro int8 multi-lang v1.1), the pack re-zipped
 **without `espeak-ng-data/`**; system TTS stays the default engine; 16 KB alignment check on the new `.so` files;
@@ -875,6 +878,8 @@ Claude side-loads it for the test. Tests: chunk queueing, stop/pause/seek, fallb
 Verification: JDK 21, two scoped Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (981 tests, 0 failures, errors or skips). Queue tests cover one-ahead synthesis, stop/restart/seek, initial and prefetch failures and surrogate-safe chunking. The pack fixture excludes eSpeak data. All five Debug APKs pass `zipalign -c -P 16 -v 4`, and the packaged Sherpa/ONNX ELF load segments pass 16 KB alignment. The AAR scan found no checked eSpeak API or phontab markers. The Gradle audit confirms the AAR and service are absent from Preview and Release runtime dependencies and merged manifests.
 
 Device review: with a backed-up S22 Debug install, first try the opt-in with no pack and confirm system fallback. Side-load the owner-supplied pack, reopen the reader, and try Listen in both renderers. Check pause/resume, paragraph seek, chapter advance, sleep timer and proper names. The prototype uses US English speaker 0 and the existing speech-rate preference. Real synthesis, sound quality and device timing await the listening test.
+
+Review (Codex RV4, 2026-11-13): Deferred by NT1 gate. Exact pinned AAR SHA-256 matches research; all 16 native libraries have 0x4000 PT_LOAD alignment, Debug/Preview zipalign passes, Debug notices present and Preview has neither neural libraries nor service. Tablet opt-in default-off verified; opt-in with no pack logs missing model in private worker and falls back to Android TTS (highlight/Pause). No model downloaded. Literal espeak/piper grep has legacy token-conversion names, warning text/config names, and Speaker false matches; requested clarification rather than waiving the explicit rule. Excluded by `911a2222f`; revert exclusion to resume. Evidence `app/build/review-evidence/rv4/s4-native-audit-20261113.json` and TTS logs/screenshots after archive.
 
 #### A5.1 Anime: picture-in-picture (T3) — `review` (.worktrees/a5.1, 2026-11-10; lane 1; v0.3)
 No board needed (system PiP window). The player enters PiP on Home/recents while playing (setting, default on),
@@ -1435,7 +1440,7 @@ load and retry, and paged and infinite-scroll navigation.
 
 **Review (Codex RV1, 2026-11-08):** Fail. Native Dot advances on the first tap and holds the outgoing frame. In scrolling WebView Colour, one Next chapter tap loads the right chapter but reveals the hidden reader chrome. The frame sheet shows the controls entering during the handoff. `NovelWebViewViewer.kt:302` handles the same tap as a native navigation gesture while the JS button handles it. Evidence: `v77-native-dot-frames.png` and `v77-web-colour-frames.png`. Reverted in `dc4b7d563`.
 
-#### V7.7-F Keep the WebView chapter-end tap in the card (T3) — `review` (.worktrees/v7.7-f, 2026-11-09)
+#### V7.7-F Keep the WebView chapter-end tap in the card (T3) — `done` (RV4, 2026-11-13)
 
 Reapply V7.7 by reverting `dc4b7d563` on a fix branch from the reviewed main. A tap on an interactive
 chapter-end control should reach the DOM action once and should preserve reader chrome visibility and scroll
@@ -1451,6 +1456,8 @@ including a fling to the card and a slow or failed chapter load.
 Verification: JDK 21, two per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (977 tests, 0 failures, errors or skips), and a Node DOM smoke check covering the three buttons, pending Next, nested targets, ordinary content and card reinjection.
 
 Device review: on Tab S11 and S22, Dot then Colour, fling to the card and tap Next with chrome hidden and shown in TextView and scrolling WebView. Check one action, stable chrome and outgoing scroll position, plus slow/failed loads and retry. Check Mark read, Contents, ordinary text taps and paged swipes.
+
+Review (Codex RV4, 2026-11-13): Pass for the chapter-end tap/transition change. Tablet Dot/Colour Native and scrolling WebView Next navigate once; the recorded hidden-chrome WebView tap keeps chrome hidden, and a normal text tap still shows it. Native missing local chapter displays Retry and recovers after the fixture is restored. Final accepted Preview smoke opens Chapter 131 at 0%. Native Contents works with chrome hidden; visible bottom bars overlap the card (pre-existing unchanged layout), tracked as RV4-01 in RP1, so no claim that covered-button taps passed. Candidate 1,026 tests; accepted 1,011 tests, both Debug/Preview builds and scoped Spotless twice pass. S22 deferred by owner. Evidence `app/build/review-evidence/rv4/`, including transition MP4s/contact sheets and accepted APKs.
 
 #### V7.6 v0.1 polish from the V1 notes (T2) — `done` (2026-11-08, `.worktrees/v7.6`) (Claude 2026-11-08; v0.1 fix, allowed into main during the freeze)
 Small, visible polish Claude found in V1 that is still open. Worktree from `main` (`tsuzuki/v7.6`), no Needs.
@@ -1764,7 +1771,7 @@ updating its status. Check outage actions only when a real failure is present.
 
 **Review (Codex RV1, 2026-11-08):** Fail. Real Royal Road requests set a healthy dot, last success and latency. An Archive of Our Own request recorded HTTP 418 and showed the WebView outage action. On the S22, Asura Scans loaded both Popular and Latest but remained unmeasured. `HttpSource.kt:127` tags the legacy request builders. Modern Keiyoushi suspend methods can issue OkHttp requests directly, outside those builders. Evidence: `r12-health-observed-dot-tablet.png`, `r12-health-colour-tablet.png`, `r12-manga-latest-dot-s22.png` and `r12-health-manga-dot-s22.png`. Reverted in `1d6554c94`.
 
-#### R12-F Measure current Keiyoushi sources (T3) — `review` (.worktrees/r12-f, 2026-11-09)
+#### R12-F Measure current Keiyoushi sources (T3) — `blocked` (RV4 deferred, 2026-11-13)
 
 Reapply R12 by reverting `1d6554c94` on a fix branch from the reviewed main. Pass source identity through
 native suspend catalogue and update paths that bypass HttpSource request builders. Keep cache-only requests,
@@ -1781,6 +1788,8 @@ real Keiyoushi source and one LNReader plugin on device, including unmeasured an
 Verification: JDK 21, two scoped Spotless passes per fix file and `:app:assembleDebug :app:testDebugUnitTest` passed (984 tests, 0 failures, errors or skips).
 
 Device review: on Tab S11 and S22, open Popular, Latest and Search for a live modern Keiyoushi source such as Asura Scans, then refresh one of its library entries. Check its observed status, latency and last success. Repeat with a live LNReader plugin in Dot and Colour, and verify an unused source remains unmeasured.
+
+Review (Codex RV4, 2026-11-13): Deferred: the required live native Keiyoushi check cannot run until the owner explicitly approves trusting the untrusted extension. Automatic approval review rejected that trust action for arbitrary extension code/credential risk; it was not bypassed. Candidate unit tests passed, but this does not prove the live native path. Also fix `SourceHealthStore.kt` decode fallback before acceptance: malformed saved JSON is swallowed without the warning log required by the checklist. Excluded by `89e1ac9ac`; later review must revert that exclusion before testing. No code-fix card added for an authorization gate.
 
 #### R13 Dictionary lookup — offline packs (T4) — `done` (2026-11-08, `.worktrees/r13`)
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
@@ -1829,7 +1838,7 @@ Hold for RV2-04 and RV2-05. The no-pack sheet passed in both tablet renderers. A
 
 Validate the lookup tables and required columns for each language before replacing an installed pack. Keep a working pack after a rejected update. Cover the malformed schema with a local fixture and add the missing Japanese adjective connective form. Verify the no-pack fallback in both renderers and fixture-backed lookup. Keep real packs unpublished during this check.
 
-#### R14 Merge sources for one book (T4) — `review` (.worktrees/r14, 2026-11-09)
+#### R14 Merge sources for one book (T4) — `blocked` (RV4 deferred, 2026-11-13)
 Board `MergeSources`. Start the Result with a short design note, then build it: link 2+ library entries of the same book from different sources into one "merged" view (chapter
 list unified by chapter number, preferred source per chapter, read state synced across). Must not change the DB
 schema in this card: store links in a Tsuzuki store; reading progress sync via existing interactors. Mihon has no
@@ -1847,6 +1856,8 @@ Links are local app state. The combined list routes to the preferred edition per
 Verification: JDK 21, two clean per-file Spotless passes, `:app:assembleDebug :app:testDebugUnitTest` (981 tests, 0 failures, errors or skips), eight-locale placeholder check.
 
 Device review: back up first. On Tab S11 and S22 in Dot and Colour, link two disposable saved editions with overlapping, missing and unnumbered chapters. Reorder and remove an edition, reopen the screen and check persistence, open a fallback row in the reader, mark a matching chapter read/unread in details, finish one in the reader and refresh for a late-arriving copy. Compare the read flags in both editions.
+
+Review (Codex RV4, 2026-11-13): Deferred: line-by-line storage/read-flag review and four pure tests passed; tablet single-edition and empty picker states checked. A real second novel edition from a distinct trusted source was unavailable, so fallback reader opening, linked read/unread, reorder/removal and persistence are not device-proven. Excluded by `451168815`; revert that exclusion in the later review. No claim of a full data-safety pass.
 
 #### R15 Backup: scheduled export + restore polish (T3) — `done` (2026-11-08, `.worktrees/r15`)
 Board `Backup`. Data and storage › Backup: last backup time + size, scheduled frequency (existing pref), keep-N
@@ -3478,6 +3489,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-13 RV4 (Codex review lane).** Accepted V7.7-F and CHAPNUM; MAIN-REPOS owner policy committed `7f697fef9`, plan/boards `3e610bd08`; Add Repository review fix `7f51d31da`. Accepted Debug/Preview builds and **1,011 tests** pass; tablet Dot/Colour reader, mismatch-label and fresh-repository checks; crash buffer empty. R12-F/R14/S4 deferred and excluded (`89e1ac9ac`/`451168815`/`911a2222f`), TTS-LANGUAGE skipped dirty. No model downloaded or extension trusted. Evidence 225 files archived `app/build/review-evidence/rv4/`; scratch apps removed, daily tablet on Dot Home; S22 deferred. RV4-01 Native bottom-card overlap added to RP1. No push.
 
 - **2026-11-13 RV2 (Codex review lane).** Accepted R15, S3/S3-F and R13 after fixes `005713576`, `ea748689e`, `bb82bd9f1`, `286d18b7b` plus the dictionary update regression. Candidate Debug and scratch Preview built; final suite **1,006 tests, 0 failures/errors/skips**, per-file Spotless twice; browser recap 3/3 sizes; converter 2/2. Tablet scratch QA passed backup export/restore and invalid/settings-only inputs, cold recap in all three reader modes, paged resume, and no-pack management; crash buffer empty. S2 excluded (`591429e49`) for the documented over-count; S1 excluded (`dab21422c`) pending explicit trust approval for a live source. S22 deferred by owner. Evidence archived at `app/build/review-evidence/rv2/`; daily Preview data untouched. No push. Next RV4, then this chat implements app cards for a different reviewer.
 
