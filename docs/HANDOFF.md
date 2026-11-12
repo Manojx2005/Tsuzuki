@@ -350,15 +350,27 @@ and the manifest as assets. **Only the owner creates the release.** After the up
 hash from a device and put the URL in NT3's manifest constant.
 Result: _pending_
 
-#### S2-F Count a listened chapter once (T3) — `ready` (needs `tsuzuki/s2`; app lane)
+#### S2-F Count a listened chapter once (T3) — `review` (.worktrees/s2-f, 2026-11-13; independent reviewer required)
 RV2-14: one autoplay run counted 5 chapters for a 2-chapter book. Trace `TtsController`'s chapter hand-off with
 infinite scroll + auto-next on (log each "chapter finished" with chapter id and a playback-run id). Count a
 chapter at most once per (chapter id, playback run); a run ends on stop, on a manual chapter change, or when the
 reader closes. Tests: hand-off fired twice → one count; replay after stop → second count; incognito → none.
 Device script in Result (review lane runs it): the RV2 fixture `Tsuzuki-RV2-listening.tachibk`, expected Stats = 2.
-Result: _pending_
+Result (Codex app lane, 2026-11-13): `2f7b56a4c`; S2 restored on this branch by `252ff29b8` (do not separately revert its main exclusion when merging S2-F).
 
-#### RP1 Reader polish from RV2 (T3) — `ready` (needs `main` after RV2; app lane; boards 3 and 4 approved 2026-11-12)
+- `ListeningSession.kt` associates queues with chapter IDs and a playback-run ID. Repeated queues for a completed chapter count once until the run ends; real speaking duration still accumulates. Debug completion logs include chapter, run, queue and whether the completion was counted.
+- `TtsController.kt` ignores duplicate/interrupted completion callbacks before scheduling auto-next. Pause/resume and seek preserve the run; Stop/manual navigation and viewer destruction end it. Incognito callbacks still hand off but do not write listening data. Unknown chapter IDs retain playback/time behavior without inventing a chapter count.
+- `NovelWebViewViewer.kt` preserves the run for its explicit autoplay full-document handoff; user-driven navigation retains the normal Stop path.
+- Tests cover repeated same-chapter queues, duplicate callback acknowledgement, two distinct chapters, pause/seek, replay after Stop, stale callbacks, incognito, mid-queue privacy changes, unknown chapter IDs, and the controller's stop/close/sleep-timer paths. Debug build + **1,024 unit tests, 0 failures/errors/skips**, two scoped Spotless passes; five restored labels present once in all eight locales. Evidence `.worktrees/s2-f/app/build/s2-f-evidence/`.
+- No adb used in this app card. The exact device event sequence behind RV2-14 remains for independent review; the code fix and deterministic regression do not claim a runtime pass.
+
+Independent reviewer device script (tablet for now; S22 deferred by owner):
+1. Use a disposable install, restore `app/build/review-evidence/rv2/Tsuzuki-RV2-listening.tachibk`, and copy its `listen-1.txt` / `listen-2.txt` into the dedicated SAF folder's `localnovels/RV2 Listening Test/`. Enable infinite scroll and auto-next; choose an installed English system voice explicitly while TTS-LANGUAGE is pending.
+2. Start chapter 1, pause/resume once, let both chapters finish. Capture `TTS chapter finished` logs: the run ID must stay the same across queue and chapter handoffs; only two distinct chapter IDs may have `counted=true`. Stats listened chapters must be **2**, in both renderers. Any automatic stop/restart that changes the run unexpectedly needs a follow-up trace.
+3. Stop and explicitly replay one chapter: it starts a new run and adds one completion. Repeat in incognito: totals stay unchanged. Check timer stop and manual chapter navigation end the previous run. Restore/remove only the disposable app and leave daily data alone.
+
+
+#### RP1 Reader polish from RV2 (T3) — `review` (.worktrees/rp1, 2026-11-13; code 54810e270; independent review required)
 1. RV2-08: during TextView read-along the top bar covers the highlighted line. Scroll target = line top −
    (visible top bar height + 16 dp). No board needed.
 2. RV2-11: Dot WebView selection is black on dark blue (2.1:1). Set `::selection` and the TextView highlight
@@ -367,9 +379,11 @@ Result: _pending_
    the phone board `06-reader/ListenMini`; it calls the same `setSleepTimer()` as `TsuzukiReaderListenPanel`.
 4. RV4-01: the Native chapter-end card can remain under visible bottom reader bars at maximum scroll. Reserve the measured visible bottom chrome height plus 16 dp in scroll content so Next, Mark read and Contents stay tappable; remove the extra space when chrome hides. Keep story progress independent of the card. Existing Q2 ChapterEnd / TabletReader boards apply. Evidence `app/build/review-evidence/rv4/tablet-rv4-preview-native-secondary-actual-bounds-20261113.png`; hiding chrome exposes the card and Contents opens correctly. Card vertical layout is unchanged by V7.7-F, so this is a pre-existing polish issue.
 Tests: scroll-offset maths; timer chip label formatting; selection CSS contains the token colours.
-Result: _pending_
+Result (Codex app lane, 2026-11-13): **review**, code `54810e270` on `tsuzuki/rp1`. Native read-along uses measured top chrome plus 16 dp; chapter-end scroll content reserves measured visible bottom chrome plus 16 dp and releases it when hidden. Shared token feedback drives Native selection/ink and both renderers' read-along; WebView selection CSS overrides source CSS. New board-based phone/tablet Listen dock shows the existing sleep choices and a live countdown from the controller deadline; actual chapter/paragraph/speed only. Thin AppBars slot preserves legacy UI. Three strings translated in all 8 locales. Debug APK and **1,017 tests** pass (zero failures/errors/skips), scoped Spotless twice; evidence `.worktrees/rp1/app/build/rp1-evidence/`. No adb or self-review.
 
-#### STR1 Translate the LNReader import strings (T1) — `ready` (app lane)
+Independent reviewer: check Dot/Colour Native highlighted line with bars opening during speech, selection fill/ink/handles in Native and WebView, final card Next/Mark read/Contents with bottom bars shown/hidden and unchanged story progress. Check timer Off/Chapter/15 minutes, actual decreasing countdown and pause/resume, phone dock fit and tablet controls. Read from here remains available in reader actions. S22 deferred by owner. On merge with S2-F, retain both ListeningSession and elapsed-clock constructor arguments and both timer-test additions; neither card subsumes the other.
+
+#### STR1 Translate the LNReader import strings (T1) — `codex-working` (.worktrees/str1, 2026-11-13; app lane)
 RV2-10: `SettingsDataScreen.kt` L269, L307, L385–387 hardcode English. New `tsz_` strings in all 8 locales;
 smallest possible edit to the upstream file. Check the same screen for any other literal.
 Result: _pending_
