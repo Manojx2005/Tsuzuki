@@ -7,8 +7,10 @@ import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.Cache
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import tachiyomi.core.common.tsuzuki.sourceHealthCallTags
 import java.io.File
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -17,7 +19,10 @@ class NetworkHelper(
     private val context: Context,
     private val preferences: NetworkPreferences,
     private val scope: CoroutineScope,
+    sourceHealthInterceptor: Interceptor?,
 ) {
+    constructor(context: Context, preferences: NetworkPreferences, scope: CoroutineScope) :
+        this(context, preferences, scope, null)
 
     val cookieJar = AndroidCookieJar()
 
@@ -68,6 +73,12 @@ class NetworkHelper(
     }
 
     val client = clientBuilder
+        .apply {
+            if (sourceHealthInterceptor != null) {
+                eventListenerFactory(sourceHealthCallTags)
+                addInterceptor(sourceHealthInterceptor)
+            }
+        }
         .addInterceptor(
             CloudflareInterceptor(context, cookieJar, scope, ::defaultUserAgentProvider),
         )

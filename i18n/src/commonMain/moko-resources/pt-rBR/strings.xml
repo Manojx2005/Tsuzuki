@@ -1383,4 +1383,20 @@
     <string name="tsz_dictionary_save">Adicionar ao caderno</string>
     <string name="tsz_dictionary_update">Atualizar</string>
     <string name="tsz_dictionary_web_search">Pesquisa na web</string>
+    <string name="tsz_source_health">Estado das fontes</string>
+    <string name="tsz_source_health_working">Ativa</string>
+    <string name="tsz_source_health_slow">Lenta</string>
+    <string name="tsz_source_health_down">Fora do ar</string>
+    <string name="tsz_source_health_unknown">Sem medição</string>
+    <string name="tsz_source_health_history">Últimos 7 dias</string>
+    <string name="tsz_source_health_average">Média de %1$d ms</string>
+    <string name="tsz_source_health_success">Último sucesso · %1$s</string>
+    <string name="tsz_source_health_failure">Último erro · %1$s · %2$s</string>
+    <string name="tsz_source_health_http">HTTP %1$d</string>
+    <string name="tsz_source_health_cloudflare">Verificação do Cloudflare</string>
+    <string name="tsz_source_health_timeout">Tempo limite excedido</string>
+    <string name="tsz_source_health_network">Erro de rede</string>
+    <string name="tsz_source_health_outage">%1$s está fora do ar</string>
+    <string name="tsz_source_health_migrate">Migrar (%1$d)</string>
+    <string name="tsz_source_health_passive">Com base nas solicitações já feitas por este dispositivo.</string>
 </resources>

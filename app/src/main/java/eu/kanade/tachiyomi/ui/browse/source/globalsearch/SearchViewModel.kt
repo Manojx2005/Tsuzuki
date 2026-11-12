@@ -9,6 +9,8 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.isNovelSource
+import eu.kanade.tachiyomi.source.tsuzuki.withSourceHealth
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
@@ -201,7 +203,7 @@ abstract class SearchViewModel(
 
                     try {
                         val page = withContext(coroutineDispatcher) {
-                            source.getSearchManga(1, query, source.getFilterList())
+                            source.withSourceHealth { source.getSearchManga(1, query, source.getFilterList()) }
                         }
 
                         val titles = page.mangas
@@ -212,6 +214,8 @@ abstract class SearchViewModel(
                         if (isActive) {
                             updateItem(source, SearchItemResult.Success(titles))
                         }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         if (isActive) {
                             updateItem(source, SearchItemResult.Error(e))

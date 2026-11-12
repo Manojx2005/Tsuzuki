@@ -1605,4 +1605,20 @@
     <string name="tsz_dictionary_save">ノートに追加</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">ウェブ検索</string>
+    <string name="tsz_source_health">ソースの稼働状況</string>
+    <string name="tsz_source_health_working">正常</string>
+    <string name="tsz_source_health_slow">低速</string>
+    <string name="tsz_source_health_down">障害</string>
+    <string name="tsz_source_health_unknown">未計測</string>
+    <string name="tsz_source_health_history">過去7日間</string>
+    <string name="tsz_source_health_average">平均 %1$d ms</string>
+    <string name="tsz_source_health_success">最終成功 · %1$s</string>
+    <string name="tsz_source_health_failure">最終エラー · %1$s · %2$s</string>
+    <string name="tsz_source_health_http">HTTP %1$d</string>
+    <string name="tsz_source_health_cloudflare">Cloudflare の認証</string>
+    <string name="tsz_source_health_timeout">タイムアウト</string>
+    <string name="tsz_source_health_network">ネットワークエラー</string>
+    <string name="tsz_source_health_outage">%1$s で障害が発生しています</string>
+    <string name="tsz_source_health_migrate">移行（%1$d）</string>
+    <string name="tsz_source_health_passive">この端末が既に行った通信をもとに表示しています。</string>
 </resources>
