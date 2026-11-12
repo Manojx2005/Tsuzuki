@@ -1395,11 +1395,4 @@
     <string name="tsz_source_health_outage">%1$s est en panne</string>
     <string name="tsz_source_health_migrate">Migrer (%1$d)</string>
     <string name="tsz_source_health_passive">D’après les requêtes déjà effectuées par cet appareil.</string>
-    <string name="tsz_merge_sources">Fusionner les sources</string>
-    <string name="tsz_merge_combined">Chapitres combinés</string>
-    <string name="tsz_merge_other_count">%1$d chapitres d’autres sources</string>
-    <string name="tsz_merge_priority">Priorité · Faire glisser pour réorganiser</string>
-    <string name="tsz_merge_add">Ajouter une autre source</string>
-    <string name="tsz_merge_library_required">Enregistrez d’abord une autre édition de ce roman dans votre bibliothèque.</string>
-    <string name="tsz_merge_save_error">Impossible d’enregistrer les sources liées.</string>
 </resources>

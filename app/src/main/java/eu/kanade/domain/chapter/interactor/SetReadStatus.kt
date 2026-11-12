@@ -2,7 +2,6 @@ package eu.kanade.domain.chapter.interactor
 
 import eu.kanade.domain.download.interactor.DeleteDownload
 import eu.kanade.tachiyomi.data.track.source.SourceTrackerDispatcher
-import eu.kanade.tachiyomi.tsuzuki.novel.MergedNovelSources
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
@@ -28,7 +27,6 @@ class SetReadStatus(
 ) {
 
     private val sourceTrackerDispatcher: SourceTrackerDispatcher by lazy { Injekt.get() }
-    private val mergedNovelSources: MergedNovelSources by lazy { Injekt.get() }
 
     private val mapper = { chapter: Chapter, read: Boolean ->
         ChapterUpdate(
@@ -50,7 +48,9 @@ class SetReadStatus(
         }
 
         try {
-            mergedNovelSources.writeReadStatus(chaptersToUpdate, read, chaptersToUpdate.map { mapper(it, read) })
+            chapterRepository.updateAll(
+                chaptersToUpdate.map { mapper(it, read) },
+            )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             return@withNonCancellableContext Result.InternalError(e)

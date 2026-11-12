@@ -1401,11 +1401,4 @@
     <string name="tsz_source_health_outage">%1$s에 장애가 발생했습니다</string>
     <string name="tsz_source_health_migrate">이전 (%1$d)</string>
     <string name="tsz_source_health_passive">이 기기에서 이미 보낸 요청을 기준으로 표시합니다.</string>
-    <string name="tsz_merge_sources">소스 병합</string>
-    <string name="tsz_merge_combined">통합된 챕터</string>
-    <string name="tsz_merge_other_count">다른 소스의 챕터 %1$d개</string>
-    <string name="tsz_merge_priority">우선순위 · 끌어서 순서 변경</string>
-    <string name="tsz_merge_add">다른 소스 추가</string>
-    <string name="tsz_merge_library_required">먼저 이 소설의 다른 판본을 라이브러리에 추가하세요.</string>
-    <string name="tsz_merge_save_error">연결된 소스를 저장하지 못했습니다.</string>
 </resources>
