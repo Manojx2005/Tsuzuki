@@ -42,8 +42,8 @@
 
 3. Open the downloaded file. If Android asks, allow your browser or Files app to **install unknown apps**, then tap
    **Install**.
-4. Open Tsuzuki and add sources from **Browse**: the LNReader novel index and Keiyoushi manga repository are already
-   added for you.
+4. Open Tsuzuki and add a source repository in **Browse**. Tsuzuki comes with no repositories; you choose which ones
+   to add.
 
 **Updates:** Tsuzuki checks GitHub for new releases by itself. You can also check any time in
 **Settings › About › Check for updates**, or track this repo with [Obtainium](https://github.com/ImranR98/Obtainium)

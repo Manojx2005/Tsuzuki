@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- New installs come with no source repositories. Add the ones you want in Browse. Repositories that 0.1.0 already
+  added stay until you remove them.
+
 ## [0.1.0]
 
 The first Tsuzuki release: a reader for light novels, web novels, manga and manhwa in one library.
