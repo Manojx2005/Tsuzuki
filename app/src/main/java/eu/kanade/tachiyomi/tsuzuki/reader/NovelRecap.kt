@@ -24,7 +24,15 @@ internal fun novelRecapParagraphs(content: String): List<String> {
         block.after(TextNode("\n\n"))
     }
     val text = body.wholeText()
-    val paragraphs = if (html) text.split(paragraphBreak) else text.lines()
+    // Plain text with blank lines is hard-wrapped prose: the blank lines are the paragraph breaks.
+    // Separator lines ("—", "***") inside such a block are not part of the sentence around them.
+    val paragraphs = when {
+        html -> text.split(paragraphBreak)
+        paragraphBreak.containsMatchIn(text.trim()) -> text.split(paragraphBreak).map { block ->
+            block.lines().filter { line -> line.any(Char::isLetterOrDigit) }.joinToString(" ")
+        }
+        else -> text.lines()
+    }
     val normalized = paragraphs.map { it.replace(whitespace, " ").trim() }
     val lastNote = normalized.indexOfLast { noteStart.containsMatchIn(it) }
     val beforeNote = if (lastNote > 0 && normalized.take(lastNote).count { it.length >= 24 } >= 2) {

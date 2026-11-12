@@ -50,6 +50,13 @@ class NovelRecapTest {
     }
 
     @Test
+    fun keepsHardWrappedPlainTextLinesInTheirParagraphs() {
+        val wrapped = "The archivist lowered the ledger\nonto the table.\n\n" +
+            "She heard the bells ring\nfrom the locked tower."
+        assertEquals(listOf(first, second), novelRecapParagraphs(wrapped))
+    }
+
+    @Test
     fun showsOnlyAfterAnInclusiveTwentyFourHourGap() {
         val lastRead = 1_700_000_000_000L
         val day = TimeUnit.HOURS.toMillis(24)
