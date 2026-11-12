@@ -88,6 +88,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     @SuppressLint("LaunchActivityFromNotification")
     override fun onCreate() {
         super<Application>.onCreate()
+        if (eu.kanade.tachiyomi.tsuzuki.tts.isNeuralTtsWorker(this)) {
+            AndroidLogcatLogger.installOnDebuggableApp(this)
+            return
+        }
         patchInjekt()
         TelemetryConfig.init(applicationContext)
 

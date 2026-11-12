@@ -1406,4 +1406,6 @@
     <string name="tsz_merge_add">Adicionar outra fonte</string>
     <string name="tsz_merge_library_required">Salve primeiro outra edição deste romance na biblioteca.</string>
     <string name="tsz_merge_save_error">Não foi possível salvar as fontes vinculadas.</string>
+    <string name="tsz_neural_tts_debug">Teste de escuta do Kokoro</string>
+    <string name="tsz_neural_tts_debug_summary">Ouça romances com um pacote de voz local do Kokoro.</string>
 </resources>

@@ -1628,4 +1628,6 @@
     <string name="tsz_merge_add">別のソースを追加</string>
     <string name="tsz_merge_library_required">先に、この小説の別の版をライブラリに追加してください。</string>
     <string name="tsz_merge_save_error">リンクしたソースを保存できませんでした。</string>
+    <string name="tsz_neural_tts_debug">Kokoro 試聴テスト</string>
+    <string name="tsz_neural_tts_debug_summary">端末内の Kokoro 音声パックで小説を読み上げます。</string>
 </resources>

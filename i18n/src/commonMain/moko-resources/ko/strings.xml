@@ -1408,4 +1408,6 @@
     <string name="tsz_merge_add">다른 소스 추가</string>
     <string name="tsz_merge_library_required">먼저 이 소설의 다른 판본을 라이브러리에 추가하세요.</string>
     <string name="tsz_merge_save_error">연결된 소스를 저장하지 못했습니다.</string>
+    <string name="tsz_neural_tts_debug">Kokoro 청취 테스트</string>
+    <string name="tsz_neural_tts_debug_summary">기기에 저장한 Kokoro 음성 팩으로 소설을 읽어 줍니다.</string>
 </resources>

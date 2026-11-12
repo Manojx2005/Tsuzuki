@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <service
+            android:name="eu.kanade.tachiyomi.tsuzuki.tts.debug.KokoroTtsService"
+            android:exported="false"
+            android:process=":neural_tts" />
         <activity
             android:name="eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"

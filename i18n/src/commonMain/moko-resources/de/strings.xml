@@ -1409,4 +1409,6 @@
     <string name="tsz_merge_add">Weitere Quelle hinzufügen</string>
     <string name="tsz_merge_library_required">Speichere zuerst eine weitere Ausgabe dieses Romans in deiner Bibliothek.</string>
     <string name="tsz_merge_save_error">Die verknüpften Quellen konnten nicht gespeichert werden.</string>
+    <string name="tsz_neural_tts_debug">Kokoro-Hörtest</string>
+    <string name="tsz_neural_tts_debug_summary">Lies Romane mit einem lokalen Kokoro-Stimmpaket vor.</string>
 </resources>
