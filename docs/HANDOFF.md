@@ -66,17 +66,22 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
-## Current state (2026-11-14, Codex review lane — Case B)
+## Current state (2026-11-14, Codex review lane — Case B completed)
 
-RV5 review is complete: **S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE pass** with separate review fixes
-`0a96ace3d`, `bf5055dcd`, `8570ff5d7` on `review/rv5-err1`. Debug + optimized Preview + **1,085 tests** pass;
-final crash buffers empty on tablet and S22. Evidence archived in `app/build/review-evidence/rv5/`.
-Batch T fast-forward completed: `main` and `review/rv5` are `88bcf6e4e`. **PERF1** is now claimed on
-`review/perf1` (`.worktrees/perf1`), then finish **REL-0.1.1** from the
-existing `tsuzuki/rel-0.1.1` prep branch, merging the reviewed fixes into it before builds. No tags or pushes.
-Neural voice and anime gates remain in force. The localhost fixture server has been stopped; tablet Wi-Fi and
-the renamed synthetic S22 chapter were restored. Daily apps were not opened or changed: automatic approval
-review rejected their relaunch, so the disposable tablet app is returned to Dot Home instead.
+RV5, PERF1 and REL-0.1.1 candidate preparation are complete. Accepted review fixes:
+`0a96ace3d`, `bf5055dcd`, `8570ff5d7`; RV5 close `88bcf6e4e`, PERF1 `5bd037c50`.
+Release branch includes those fixes, versionCode 25 / versionName 0.1.1. Preview + Release
+builds and 1,085 tests pass; 16 KB checks pass. Exact Y4 upgrade comparison retained
+500 books, 50,000 chapters, 995 history entries, 30 shelves and exported settings.
+Both test devices are on optimized candidate scratch Dot Home with 500 synthetic books;
+final crash buffers empty, devices remain awake. Evidence: `app/build/review-evidence/rel-011/`.
+PERF-START and PERF-DETAILS are ready follow-ups for measured budget misses; no tuning done.
+
+**Stop at the owner publishing handoff.** Local artifacts use the Android Debug signing
+certificate; official CI signing and publishing remain with the owner, along with the owner-phone
+install and stale `v0.1.1` tag decision. No tag or push. Neural voice/anime remain blocked.
+Daily apps were untouched: auto review rejected relaunching them, so scratch candidates
+were used for the final handback. Local fixture server/reverse stopped and test Wi-Fi/files restored.
 
 ## Current state (2026-11-14 evening, Claude — took over from Codex, which is out of usage)
 
@@ -589,7 +594,7 @@ motion and record an explicit readiness definition before changing timing. Prese
 Dot/Colour behavior and compare optimized Preview on the same Y4 fixture. Evidence:
 app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not dispatch traces.
 
-#### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `ready` (after PERF1; Plan 0.1.1 step 8)
+#### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `done` (candidate preparation only; Codex review lane, 2026-11-14)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
 2. Version bump as V6 did for 0.1.0 (see V6's Result for the files).
 3. `:app:assemblePreview :app:assembleRelease :app:testDebugUnitTest`; 16 KB check on the APKs.
@@ -597,7 +602,13 @@ app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not 
    backup restored, install the candidate over it, library/history/settings intact, no migration error.
 5. Preview candidate on the tablet and S22, Dot Home. **Stop there.** The owner installs it on their phone, tags
    and publishes; nobody else tags, pushes or touches `R5GL23ZYE1V`.
-Result: _pending_
+Result: Candidate prepared from release branch merge `fa9523f04` (accepted RV5 + PERF1), versionCode 25 / versionName 0.1.1. Changelog covers all accepted cards; automatic voice wording preserves explicit choices. `assemblePreview`, `assembleRelease`, `testDebugUnitTest` passed (7m43s; 1,085 tests, 0 failures/errors/skips). ARM64 Preview/Release and the optimized scratch candidate each contain seven aligned native libraries and baseline.prof/profm; 16 KB ELF and zipalign pass. All five Release APKs, five scratch Preview APKs and archived normal ARM64 Preview pass zipalign.
+
+Upgrade: built exact tag `v0.1.0` (`5a65307c9`) as Debug in isolated package `io.github.manojx2005.tsuzuki.rel011upgradescratch`, restored Y4, chose Colour, then installed optimized non-debuggable 0.1.1 Preview over it on S22. Before database snapshot: 500 books / 50,000 chapters / 995 history rows / 30 synthetic shelves (+ system shelf). Candidate backup compared exactly against fixture: titles/types, all chapter read/bookmark/progress/timestamps/order, all history dates/durations and category mappings preserved. Seven exported existing settings matched with no changes, including Colour; internal app-state keys are excluded from exports, but storage and onboarding remained intact in the UI. No migration error. S22 switched back to Dot afterward. Tablet fresh scratch candidate restored the same Y4 data. Both final Dot Home screenshots inspected, 500 books, correct phone pill/tablet rail; both final crash logs 0 bytes. Owner phone and daily apps untouched. Existing Watch teaser from v0.1.0 remains; the blocked anime chain was not merged.
+
+Artifacts and evidence: `app/build/review-evidence/rel-011/`. Normal ARM64 Preview `tsuzuki-0.1.1-arm64-preview.apk` SHA-256 `0a00fe4b7b824632694c0f6a9cbdef237c7bead01335c965110ad51ff7661738`; normal ARM64 Release `tsuzuki-0.1.1-arm64-release.apk` SHA-256 `e600b27a97853546ae894bde3b322e86faaca3c959f66f89b29c061477a83838`; tested optimized scratch SHA-256 `1473cc9606d691fc1645ea19c0c781d3a91e4d5cdbae35c34352dee6ce1a63ea`. Logs retain non-fatal Compose mapping, XML service and optional AndroidX window-extension warnings. These local APKs use the Android Debug certificate (SHA-256 `6c1e396d8d094a0b9bd98354cbd8997637acb2549d8ba79e84cc0212be5ae17a`); the owner's official CI signing/publish flow is still required for the distributed release. Do not uninstall an official app to install these local artifacts.
+
+Stop point reached: owner handles official signing, owner-phone install, stale local tag resolution, tag and publish. No tag, push or official release was performed.
 
 #### RV3 Review: anime chain A2.3 → R-A5 (T4) — `blocked` (owner 2026-11-12: anime waits until 0.1.1 is tagged; Plan 0.1.1 step 10)
 Merge **one** branch: `tsuzuki/r-a5` (it contains A2.3, A2.4, A3.0–A3.5, R-A2, R-A3, R-A5; 14 commits). Review it
@@ -659,7 +670,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane PERF1, .worktrees/perf1, 2026-11-14; verified S22 wireless + tablet USB; scratch apps only, daily-app relaunch rejected by auto review; keep both awake per owner`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane Case B completed 2026-11-14; tablet + S22 optimized candidate scratch Dot Home, both awake; owner phone/daily apps untouched`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3983,3 +3994,5 @@ Result: _pending_
   `AGENTS.md` (see top of this file) and `docs/design/README.md` status table.
 
 - **2026-11-14 Codex review lane — PERF1 completed.** All four speed budgets measured on optimized RV5 Preview/S22 with Y4 synthetic data. Cold startup and settled details missed; PERF-START/PERF-DETAILS created without tuning. Library passed; local Native chapter-first-text limited pass near measurement uncertainty. See PERFORMANCE.md and local perf1 evidence. REL preparation next.
+
+- **2026-11-14 Codex review lane — REL-0.1.1 preparation completed.** Merged accepted main into existing release prep; Preview/Release + 1,085 tests passed, 16 KB APK/ELF/profile audits passed. Exact tagged-v0.1.0 Debug → optimized 0.1.1 scratch upgrade retained all Y4 book/chapter/history/shelf state and exported settings. Both candidate Dot Homes inspected, empty crash buffers. Local artifacts use Android Debug signing; official signing/tag/publish and owner-phone install remain owner-only. Device lock released, both kept awake. No push/tag.

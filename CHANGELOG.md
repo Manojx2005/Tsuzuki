@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Download queue: pause and resume a manga source's downloads, and retry a failed download.
 - Stats count listening: each chapter you listen to is counted once, and Stats show listening time and chapters.
 - Errors say what failed and offer Retry or Open in WebView, and long waits show the current step.
+- Manga page loading keeps its download percentage visible.
 
 ### Changed
 - New installs come with no source repositories. Add the ones you want in Browse. Repositories that 0.1.0 already
@@ -35,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tracking: novel accounts are listed first. The update schedule offers all four smart-update restrictions.
 - In Dot and Colour settings, long labels keep their full text and the value shortens instead.
 - The Listen panel shows the voice's name, marked online or offline, instead of a raw language code.
-- The Listen voice follows the chapter's language.
+- Automatic Listen voices follow English or Japanese chapter text; an explicitly chosen voice stays selected.
 - English settings use "Greyscale" and "Colour".
 
 ### Improved
@@ -53,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Restore rejects files that are not Tsuzuki backups. Settings-only backups still restore.
 - In paged reading, your place in a chapter stays the same when the recap card appears or is dismissed.
 - The highlighted line while listening is no longer hidden under the top bar, and the chapter-end buttons are no
-  longer hidden under the bottom bar.
+  longer hidden under the bottom bar or the floating Listen controls.
 - Text selection is readable in the Dot theme.
 - The Listen controls show the chapter that is actually being read aloud.
 - Listening no longer repeats the last chapter when a book ends.
