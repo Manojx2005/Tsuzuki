@@ -175,7 +175,7 @@ Use the curves and durations above. The intent of each:
 
 | Board | What moves |
 |---|---|
-| MotionOpen | The cover in a list flies to its place on book details. Owner 2026-11-14 overrides the archived board's 450 ms opening: fully settle within 300 ms total, with 180 ms synchronized cover/fade and 120 ms preparation allowance. Colour/Dot keep their existing appearance and smooth easing. The original 200 ms version passed at 235–292 ms (PERF-DETAILS), but the refreshed candidate reached the 300 ms boundary on the first Colour open; the 180 ms refinement requires final candidate verification; BACK1 then passed early/settled Back and process-restoration checks on both devices/themes. |
+| MotionOpen | The cover in a list flies to its place on book details. Owner 2026-11-14 overrides the archived board's 450 ms opening: fully settle within 300 ms total, with 180 ms synchronized cover/fade and 120 ms preparation allowance. Colour/Dot keep their existing appearance and smooth easing. The original 200 ms version passed at 235–292 ms (PERF-DETAILS), but the refreshed candidate reached the 300 ms boundary on the first Colour open; the final 180 ms candidate passed six cached S22 openings with conservative upper bounds of 226–260 ms; BACK1 then passed early/settled Back and process-restoration checks on both devices/themes. |
 | MotionReader | Resume: the cover scales into the reader page (450 ms). The reader bars slide in after. |
 | MotionStack | Home's shelf stack: tap shuffles the top book to the back (400 ms). |
 | MotionTheme | Switching Colour ↔ Dot: a circular reveal from the tapped card (600 ms). |

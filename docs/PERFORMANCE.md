@@ -209,7 +209,7 @@ WebView warm-up before any source graph construction. Any safe reduction of the
 remaining cost needs instrumented attribution and like-for-like before/after
 measurements; **the 500 ms miss is unresolved and no speed-up is claimed**.
 
-## PERF-DETAILS timing change (2026-11-14, pending independent review)
+## PERF-DETAILS timing change (2026-11-14, reviewed; final candidate refinement below)
 
 The archived MotionOpen HTML explicitly uses 450 ms for the cover and Colour
 background. `TsuzukiSharedCover.kt` used 450 ms for both the shared cover and
@@ -259,6 +259,25 @@ on the first open after launch: 292 ms with one 25 ms frame gap, which is inside
 budget line. Return navigation measured about 440 ms and looked smooth. Not measured: a real (non-placeholder)
 cover, reduced motion, the tablet (layout looked normal there; no timing). Evidence (ignored local):
 `app/build/review-evidence/perf-details/`.
+
+### Final 0.1.1 candidate refinement (2026-11-15)
+
+Initial refreshed source 7e49de3a7 retained the 200 ms animation. Its first Colour opening had a final-cover completion bracket of approximately 286–302 ms, touching the 300 ms boundary. Candidate review fix **6119f2613** uses **180 ms** for the synchronized cover/fade, reserving 120 ms for preparation; return 450 ms, reduced motion 150 ms, easing, layout, data and dynamic composition local are unchanged. This supersedes the 200 ms opening setting above.
+
+Final optimized candidate scratch SHA-256 `965e15c459bcde317b77320b061cde1d854c4c0c923b32737145229c6458d2f9`, S22 RZCWA139X1X, 500-book Y4 fixture, cached Novel 481. First visible input feedback to an inspected fully settled cover/screen, original variable-rate PTS; conservative upper bounds rounded up, approximately 8–17 ms frame uncertainty. First run in each theme is the first details open after relaunch.
+
+| Theme | Run | Settled by |
+|---|---|---:|
+| Dot | 1 | 260 ms |
+| Dot | 2 | 227 ms |
+| Dot | 3 | 252 ms |
+| Colour | 1 | 226 ms |
+| Colour | 2 | 253 ms |
+| Colour | 3 | 243 ms |
+
+All six frame sheets were inspected. In Colour run 2 the app cover/screen is already settled by frame 29 (PTS 1.415856 s; input PTS 1.163167 s), before an 882 ms idle gap. Subsequent compressed frames differ slightly without further visible app movement; the raw automated diff endpoint of 1147.444 ms is preserved, but is not used as opening time. The conservative visual bound is 252.689 ms. `details-timing.json` records both the method and exception; frame comparison is an aid, not the visual readiness definition.
+
+**Cached-placeholder budget passes**, with useful margin. Real-cover and reduced-motion timing remain unmeasured; no remote-source speed claim. BACK1's full 48-case / 16-gesture matrix passed before this duration refinement. The final 180 ms APK additionally passes 12 timed Library Back cases, four edge gestures and ordinary/dead-process-restored Library-to-Home Back in all four device/theme combinations. Final Dot phone/tablet screenshots inspected, crash buffers empty. Preview/Release + 1,091 tests and 15 normal/scratch APK alignment/profile audits pass; Release R8 required a single-worker retry after a two-worker heap failure. Evidence: `app/build/review-evidence/rel-011-refresh-final/`; prior boundary run retained separately in `rel-011-refresh/`.
 
 ## PERF-START-V: S22 Home-observed baseline (2026-11-14)
 
