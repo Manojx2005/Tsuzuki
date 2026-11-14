@@ -40,7 +40,8 @@ class RateLimitResolverTest {
             ),
         )
 
-        resolver.resolve(sourceId = 1L) shouldBe RateLimitSpec(delayMillis = 2000L, jitterMillis = 0L, permits = 1)
+        // Global default permits is 2 since the faster pacing defaults (owner 2026-11-07, 4841b899d).
+        resolver.resolve(sourceId = 1L) shouldBe RateLimitSpec(delayMillis = 2000L, jitterMillis = 0L, permits = 2)
     }
 
     @Test
