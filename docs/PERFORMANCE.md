@@ -208,3 +208,54 @@ profiles based on these inclusive intervals alone. Keep the documented main-thre
 WebView warm-up before any source graph construction. Any safe reduction of the
 remaining cost needs instrumented attribution and like-for-like before/after
 measurements; **the 500 ms miss is unresolved and no speed-up is claimed**.
+
+## PERF-DETAILS timing change (2026-11-14, pending independent review)
+
+The archived MotionOpen HTML explicitly uses 450 ms for the cover and Colour
+background. `TsuzukiSharedCover.kt` used 450 ms for both the shared cover and
+the full-screen crossfade, with smooth motion in both themes (the owner's
+2026-11-06 override of stepped Dot movement). This explains why the approximately
+510 ms PERF1 settling estimate cannot meet a 300 ms total-open budget.
+
+**Owner decision, 2026-11-14:** change the design to finish the entire opening
+within 300 ms. The original budget is retained; first readable text alone is not
+a pass. The opening animation now uses 200 ms for both the shared cover and
+crossfade, reserving 100 ms for navigation/composition. This allowance is a design
+choice, not a measured guarantee. Return navigation and other screens retain
+their existing 450 ms motion; reduced motion remains a 150 ms fade, without a
+shared cover. The screen's data and layout are unchanged.
+
+Readiness definition for review: from the first visible input/pressed feedback
+frame until both the incoming cached details cover and screen have reached their
+final position/opacity and the outgoing Library is absent. Verify against the
+final settled frame, allowing for the recorder's 8–16 ms frame intervals; report
+first readable title separately. Metadata/source requests that continue after
+the cached screen is displayed are outside this fixture's timing and must not
+be silently included as a cached-data speed pass.
+
+Use the same optimized Preview package and S22 Y4 500-book fixture as PERF1,
+opening cached `[SYNTHETIC] NOVEL 481` from shelf 01. Retain at least three
+before/after videos per theme, original variable-rate PTS and the exact APK hash.
+Dot first, then Colour; include a real-cover shared transition in addition to
+the synthetic placeholder fixture. Check interrupted opening/Back and reduced
+motion, and inspect the tablet rail layout as a visual regression check. Restore
+test settings and hand back Dot Home using the normal device lock protocol.
+
+**Measured 2026-11-14 (independent review, S22, optimized scratch Preview of `260691fba`, APK SHA-256
+`5321203d47a4d0ef772d135d17aba719cd91e090f50fca542bad762b3418abd4`, Y4 fixture, same `record-tap.py` as PERF1).**
+Times are from the first frame that differs from the pre-tap frame; each endpoint is ±8 ms (frame interval).
+
+| Theme | Run | First title | Settled | Last differing frame |
+|---|---|---:|---:|---:|
+| Dot | 1 (first open after launch) | 108 ms | 284 ms | 292 ms |
+| Dot | 2 | 44 ms | 235 ms | 249 ms |
+| Dot | 3 | 46 ms | 235 ms | 244 ms |
+| Colour | 1 | 59 ms | 251 ms | 263 ms |
+| Colour | 2 | 50 ms | 243 ms | 252 ms |
+| Colour | 3 | 58 ms | 251 ms | 260 ms |
+
+**Verdict: the 300 ms total-open budget is met in both themes** (PERF1 baseline 502–511 ms). The margin is thin
+on the first open after launch: 292 ms with one 25 ms frame gap, which is inside the measurement error of the
+budget line. Return navigation measured about 440 ms and looked smooth. Not measured: a real (non-placeholder)
+cover, reduced motion, the tablet (layout looked normal there; no timing). Evidence (ignored local):
+`app/build/review-evidence/perf-details/`.

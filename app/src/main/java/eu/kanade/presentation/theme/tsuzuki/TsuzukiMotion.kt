@@ -46,6 +46,10 @@ object TsuzukiMotion {
     const val SHEET_MS = 300
     const val STACK_MS = 400
     const val SHARED_MS = 450
+
+    // Owner 2026-11-14: details must fully open within 300 ms, including preparation.
+    // Reserve 100 ms for navigation/composition; the device budget still needs verification.
+    const val DETAILS_OPEN_MS = 200
     const val THEME_MS = 600
     const val REDUCED_MS = 150
 
