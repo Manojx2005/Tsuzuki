@@ -636,7 +636,7 @@ optimized scratch Preview built from the same `main` commit, with the Y4 500-boo
 `docs/PERFORMANCE.md` as the baseline for PERF-START-2. If the section metric comes back empty, set `blocked`
 with the benchmark output; don't patch the helper in this card.
 
-#### PERF-START-2 Cold start: three measured changes (app lane, T4) — `ready` (for 0.1.2, not 0.1.1; branch `tsuzuki/perf-start-2` from `main`)
+#### PERF-START-2 Cold start: three measured changes (T4) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`; for 0.1.2, not 0.1.1; Codex: don't take)
 PERF-START found 391 ms in application binding (140 ms of it the WebView user-agent warm-up), 166 ms in the
 first traversal, 32 ms in Activity create; the budget is 500 ms and the benchmark says 741 ms. Make **each change
 its own commit that builds alone**, so the review lane can measure them one at a time. No adb in this card.
@@ -660,7 +660,7 @@ Review lane after it: measure baseline, then each commit; a change that doesn't 
 the run-to-run range is dropped. If all three still miss 500 ms, record the numbers and ask the owner whether
 the S22 budget moves.
 
-#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (app lane, T3) — `ready` (for 0.1.2; no app or runtime change)
+#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`; for 0.1.2; Codex: don't take)
 Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
 so the neural voice is out of 0.1.1. This card builds the replacement data, nothing else.
 - `scripts/neural-tts/build-lexicon-cmudict.py`: read CMUdict from a pinned commit of `cmusphinx/cmudict` (hash
