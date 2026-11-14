@@ -145,3 +145,39 @@ all ten Perfetto traces in `benchmark-output/`, `s22-cold-baseline.log`, the gen
 `measure-scroll.py`, raw gfxinfo, `record-tap.py`, six videos, before/after screenshots,
 frame timestamp lists and contact sheets. `show_touches` was restored to its original 0.
 No production tuning was performed; budget misses are separate cards.
+
+## PERF-DETAILS timing change (2026-11-14, pending independent review)
+
+The archived MotionOpen HTML explicitly uses 450 ms for the cover and Colour
+background. `TsuzukiSharedCover.kt` used 450 ms for both the shared cover and
+the full-screen crossfade, with smooth motion in both themes (the owner's
+2026-11-06 override of stepped Dot movement). This explains why the approximately
+510 ms PERF1 settling estimate cannot meet a 300 ms total-open budget.
+
+**Owner decision, 2026-11-14:** change the design to finish the entire opening
+within 300 ms. The original budget is retained; first readable text alone is not
+a pass. The opening animation now uses 200 ms for both the shared cover and
+crossfade, reserving 100 ms for navigation/composition. This allowance is a design
+choice, not a measured guarantee. Return navigation and other screens retain
+their existing 450 ms motion; reduced motion remains a 150 ms fade, without a
+shared cover. The screen's data and layout are unchanged.
+
+Readiness definition for review: from the first visible input/pressed feedback
+frame until both the incoming cached details cover and screen have reached their
+final position/opacity and the outgoing Library is absent. Verify against the
+final settled frame, allowing for the recorder's 8–16 ms frame intervals; report
+first readable title separately. Metadata/source requests that continue after
+the cached screen is displayed are outside this fixture's timing and must not
+be silently included as a cached-data speed pass.
+
+Use the same optimized Preview package and S22 Y4 500-book fixture as PERF1,
+opening cached `[SYNTHETIC] NOVEL 481` from shelf 01. Retain at least three
+before/after videos per theme, original variable-rate PTS and the exact APK hash.
+Dot first, then Colour; include a real-cover shared transition in addition to
+the synthetic placeholder fixture. Check interrupted opening/Back and reduced
+motion, and inspect the tablet rail layout as a visual regression check. Restore
+test settings and hand back Dot Home using the normal device lock protocol.
+
+No runtime sample for this change has been collected by its implementer. The
+original 502–511 ms settling miss remains the only measured verdict until the
+independent review records an optimized before/after comparison.

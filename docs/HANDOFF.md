@@ -587,12 +587,22 @@ WebView warm-up ordering documented in PERFORMANCE.md, and measure Home readines
 separately. Evidence: app/build/review-evidence/perf1/benchmark-output/. Do not infer
 regression size from older four-book am-start measurements.
 
-#### PERF-DETAILS Details transition exceeds S22 budget — `ready`
+#### PERF-DETAILS Details transition exceeds S22 budget — `review` (200 ms motion; 300 ms total budget pending device review)
 PERF1 cached details become readable in 49–115 ms, but the visual transition settles
 in approximately 502–511 ms versus the 300 ms opening budget. Review the intended board
 motion and record an explicit readiness definition before changing timing. Preserve
 Dot/Colour behavior and compare optimized Preview on the same Y4 fixture. Evidence:
 app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not dispatch traces.
+
+Owner decision (2026-11-14, this chat): change the design so the **entire opening finishes within 300 ms**. Preserve the total-open target; first readable content is not a substitute. Implementation uses a 200 ms synchronized cover/fade, reserving 100 ms for preparation; independent device measurement is still required.
+
+
+Result (Codex, 2026-11-14; `tsuzuki/perf-details`, `.worktrees/perf-details`): **review**, implementation complete; 300 ms total-open budget requires independent device proof.
+- Opened MotionOpen/MotionSpec PNGs and decoded their offline HTML timing: shared cover/background 450 ms. Owner explicitly chose a new **300 ms complete-opening budget**, superseding the archived opening timing; `docs/design/specs.md` records that decision.
+- `TsuzukiMotion.kt` and `TsuzukiSharedCover.kt`: details opening uses a 200 ms synchronized screen fade and shared-cover bounds animation, reserving 100 ms for preparation. One composition-local duration supplies both covers and the screen fade; back navigation/other screens retain 450 ms, reduced motion 150 ms. No upstream hooks, layout, colours, fonts, strings or data changed.
+- `TsuzukiMotionTest.kt`: route/direction and reduced-motion regressions; **1,087 app tests, zero failures/errors/skips**, Debug assembly, optimized Preview assembly and two scoped Spotless passes pass. All Kotlin LF. Exact final test source precedes the result XML timestamp.
+- Optimized ARM64 Preview package is `io.github.manojx2005.tsuzuki.rv5debugscratch`, versionCode 25; SHA-256 `a6fa1660d5385d9d4c70783a547a73067166df4e3cbe550f88fe01ab0d1c9b1a`. ZIP 16 KB alignment passes; baseline.prof/profm packaged. Artifact `.worktrees/perf-details/app/build/outputs/apk/preview/app-arm64-v8a-preview.apk`; logs/excerpts/test summary `app/build/perf-details/` in that worktree. Known non-fatal Compose mapping/XML service/optional window-extension warnings retained.
+- **Independent device review:** S22, optimized baseline archive `app/build/review-evidence/rv5/rv5-arm64-preview.apk` SHA-256 `6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`, then this candidate on the same scratch Y4 fixture. Dot then Colour, three original-PTS recordings each, `[SYNTHETIC] NOVEL 481` from shelf 01; first input feedback to final cover/screen position and opacity/outgoing Library absent is the total-open measurement. Report readable-title time separately. Also check real-cover sharing, interrupted opening/Back, reduced motion and tablet rail. Full protocol/uncertainty in PERFORMANCE.md. No adb/install/screenshot done by this implementer; no measured pass claimed, no main merge/push or release-candidate replacement.
 
 #### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `done` (candidate preparation only; Codex review lane, 2026-11-14)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
