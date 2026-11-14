@@ -390,6 +390,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
             context = activity,
             preferences = preferences,
             scope = scope,
+            listening = activity.viewModel.listeningSession,
             callbacks = object : TtsController.Callbacks {
                 override fun onInitialized(pendingRequest: TtsController.StartRequest?) {
                     when (pendingRequest) {
@@ -1323,7 +1324,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         }
 
         restoreFromPreviousEntry = enteredViaPrevious
-        ttsController.stop()
+        ttsController.stop(preserveListeningRun = pendingTtsAutoStartOnLoad)
 
         // Paged mode always does a full chapter switch (never an append), same as infinite
         // scroll being off, so the queue resets here too regardless of the underlying pref.

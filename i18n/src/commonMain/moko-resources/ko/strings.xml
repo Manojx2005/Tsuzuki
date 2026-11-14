@@ -1385,4 +1385,9 @@
     <string name="tsz_dictionary_save">노트에 추가</string>
     <string name="tsz_dictionary_update">업데이트</string>
     <string name="tsz_dictionary_web_search">웹 검색</string>
+    <string name="tsz_stats_listening">듣기</string>
+    <string name="tsz_stats_listen_today">오늘</string>
+    <string name="tsz_stats_listen_week">이번 주</string>
+    <string name="tsz_stats_listened_chapters">이번 주에 들은 화</string>
+    <string name="tsz_stats_minutes_read_listened">읽거나 들은 시간(분)</string>
 </resources>

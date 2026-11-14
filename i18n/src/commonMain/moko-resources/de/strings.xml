@@ -1386,4 +1386,9 @@
     <string name="tsz_dictionary_save">Zum Notizbuch hinzufügen</string>
     <string name="tsz_dictionary_update">Aktualisieren</string>
     <string name="tsz_dictionary_web_search">Websuche</string>
+    <string name="tsz_stats_listening">Hören</string>
+    <string name="tsz_stats_listen_today">Heute</string>
+    <string name="tsz_stats_listen_week">Diese Woche</string>
+    <string name="tsz_stats_listened_chapters">Kapitel diese Woche</string>
+    <string name="tsz_stats_minutes_read_listened">Gelesene oder gehörte Minuten</string>
 </resources>

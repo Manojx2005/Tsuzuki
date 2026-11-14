@@ -15,7 +15,8 @@ class TtsSleepTimerTest {
     fun replacementCancelsTheOldTimerAndTheNewTimerStopsPlayback() = runTest {
         val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
         every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
-        val controller = TtsController(mockk(), mockk(), this, callbacks)
+        val listening = mockk<ListeningSession>(relaxed = true)
+        val controller = TtsController(mockk(), mockk(), this, listening, callbacks)
 
         controller.setSleepTimer(TtsSleepTimer.Fifteen)
         advanceTimeBy(10 * 60_000L)
@@ -27,5 +28,21 @@ class TtsSleepTimerTest {
         runCurrent()
         assertEquals(TtsSleepTimer.Off, controller.sleepTimer)
         verify(exactly = 1) { callbacks.onClearHighlights() }
+        verify(exactly = 1) { listening.endRun() }
+    }
+
+    @Test
+    fun automaticDocumentHandoffPreservesTheRunButStopAndCloseEndIt() = runTest {
+        val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
+        every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
+        val listening = mockk<ListeningSession>(relaxed = true)
+        val controller = TtsController(mockk(), mockk(), this, listening, callbacks)
+
+        controller.stop(preserveListeningRun = true)
+        verify(exactly = 0) { listening.endRun() }
+        controller.stop()
+        verify(exactly = 1) { listening.endRun() }
+        controller.destroy()
+        verify(exactly = 2) { listening.endRun() }
     }
 }
