@@ -17,7 +17,8 @@ class TtsSleepTimerTest {
         val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
         every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
         val listening = mockk<ListeningSession>(relaxed = true)
-        val controller = TtsController(mockk(), mockk(), this, listening, callbacks, elapsedMs = { testScheduler.currentTime })
+        val controller =
+            TtsController(mockk(), mockk(), this, listening, callbacks, elapsedMs = { testScheduler.currentTime })
 
         controller.setSleepTimer(TtsSleepTimer.Fifteen)
         advanceTimeBy(10 * 60_000L)
@@ -37,7 +38,8 @@ class TtsSleepTimerTest {
         val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
         every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
         val listening = mockk<ListeningSession>(relaxed = true)
-        val controller = TtsController(mockk(), mockk(), this, listening, callbacks, elapsedMs = { testScheduler.currentTime })
+        val controller =
+            TtsController(mockk(), mockk(), this, listening, callbacks, elapsedMs = { testScheduler.currentTime })
 
         controller.stop(preserveListeningRun = true)
         verify(exactly = 0) { listening.endRun() }
@@ -51,7 +53,10 @@ class TtsSleepTimerTest {
     fun countdownFollowsTheMonotonicClockAndClearsForNonTimedChoices() = runTest {
         val callbacks = mockk<TtsController.Callbacks>(relaxed = true)
         every { callbacks.runOnUiThread(any()) } answers { firstArg<() -> Unit>()() }
-        val controller = TtsController(mockk(), mockk(), this, mockk(relaxed = true), callbacks, elapsedMs = { testScheduler.currentTime })
+        val controller =
+            TtsController(mockk(), mockk(), this, mockk(relaxed = true), callbacks, elapsedMs = {
+                testScheduler.currentTime
+            })
         assertNull(controller.remainingSleepSeconds())
         controller.setSleepTimer(TtsSleepTimer.Fifteen)
         assertEquals(900L, controller.remainingSleepSeconds())

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.tsuzuki.error
 
 import eu.kanade.tachiyomi.network.HttpException
-import tachiyomi.domain.chapter.model.NoChaptersException
 import kotlinx.coroutines.CancellationException
+import tachiyomi.domain.chapter.model.NoChaptersException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.URI
@@ -81,7 +81,7 @@ fun errorCopy(error: Throwable, whatFailed: String = "", sourceUrl: String? = nu
                 "stubsource",
             ).any(text::contains) -> ErrorReason.EXTENSION
         chain.any { it is NoChaptersException } -> ErrorReason.NO_CHAPTERS
-        status == 403 || challenge && (status == null || status == 503) -> ErrorReason.CHALLENGE
+        status == 403 || (challenge && (status == null || status == 503)) -> ErrorReason.CHALLENGE
         chain.any { it is UnknownHostException || it is ConnectException } -> ErrorReason.NETWORK
         chain.any {
             it is SocketTimeoutException || it is TimeoutException ||
