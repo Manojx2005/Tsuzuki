@@ -85,6 +85,8 @@ implementation, until Claude's usage runs out. Nothing is pushed or tagged.
 tag point. `main` has moved past it with PERF-START and the neural build scripts (no app code changed by
 either). Anything else merged into `main` from now on is for 0.1.2 unless the owner says to refresh the candidate.
 
+Owner update (2026-11-14, review-lane chat): review NT-LEX1 first, then PERF-START-V when the Device lock is free, then PERF-START-2 (`d1950daa5` alone first; `eb5e21fa7` diagnostic only, never merged). **Refreshing the 0.1.1 candidate with BACK1 and the faster PERF-DETAILS opening is now authorized**; BACK1 must first leave `claude-working` and pass review. No tag/push; do not touch other `claude-working` cards.
+
 **What Codex does next.**
 *Review lane (a chat that did not write the card; Device lock first):*
 1. **PERF-START-V** (ready): run the Home-observed helper on the S22, record the baseline.
@@ -678,6 +680,8 @@ optimized scratch Preview built from the same `main` commit, with the Y4 500-boo
 `TsuzukiHomeObserved` sample next to the initial-display value. Write all twenty numbers and the APK hash into
 `docs/PERFORMANCE.md` as the baseline for PERF-START-2. If the section metric comes back empty, set `blocked`
 with the benchmark output; don't patch the helper in this card.
+
+Preparation (Codex review lane, 2026-11-14): main `9f1b87ced` built in `.worktrees/review-perf-start-v` (`review/perf-start-v`). Optimized scratch Preview and `:baseline-profile:assembleNonMinifiedRelease` both pass (3m43s). ARM64 Preview SHA-256 `db7f5496f7225dd582bef404a86f68f8c5f7cbd31c2e99ef393fc8b548eb0566`, target `io.github.manojx2005.tsuzuki.rv5debugscratch`; benchmark helper SHA-256 `178bd7b251753c849f1e0e83651a637a65562845498c7cea6065ec541e42c96e`. Paths in that worktree: `app/build/outputs/apk/preview/app-arm64-v8a-preview.apk`, `baseline-profile/build/outputs/apk/nonMinifiedRelease/baseline-profile-nonMinifiedRelease.apk`; build log and artifact manifest `app/build/review-evidence/perf-start-v/`. No adb run: Device lock still names Claude for BACK1. Once it says free, claim it, confirm S22 hardware serial and Y4 500 books, then install scratch/helper and run ten cold baseline-profile-required iterations. No measurements yet, no helper patch. PERF-START-2 measurements and candidate refresh remain pending behind this gate.
 
 #### PERF-START-2 Cold start: three measured changes (T4) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`, `tsuzuki/perf-start-2`; for 0.1.2; review lane: read, then measure on the S22; **not measured, no speed-up claimed**)
 PERF-START found 391 ms in application binding (140 ms of it the WebView user-agent warm-up), 166 ms in the
