@@ -9,10 +9,12 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.isNovelSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
@@ -46,6 +48,7 @@ abstract class SearchViewModel(
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
+    private val retryJobs = mutableMapOf<Source, Job>()
 
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
     private val disabledSources = sourcePreferences.disabledSources.get()
@@ -171,6 +174,8 @@ abstract class SearchViewModel(
         this.lastSourceFilter = sourceFilter
 
         searchJob?.cancel()
+        retryJobs.values.forEach(Job::cancel)
+        retryJobs.clear()
 
         val sources = getSelectedSources()
 
@@ -199,38 +204,53 @@ abstract class SearchViewModel(
                         return@async
                     }
 
-                    try {
-                        val page = withContext(coroutineDispatcher) {
-                            source.getSearchManga(1, query, source.getFilterList())
-                        }
-
-                        val titles = page.mangas
-                            .map { it.toDomainManga(source.id, source.isNovelSource()) }
-                            .distinctBy { it.url }
-                            .let { networkToLocalManga(it) }
-
-                        if (isActive) {
-                            updateItem(source, SearchItemResult.Success(titles))
-                        }
-                    } catch (e: Exception) {
-                        if (isActive) {
-                            updateItem(source, SearchItemResult.Error(e))
-                        }
-                    } catch (e: LinkageError) {
-                        // Outdated/incompatible extensions throw LinkageError subtypes
-                        // (NoClassDefFoundError, NoSuchMethodError, etc.) rather than Exception.
-                        // Catching only Exception let one broken source crash the whole global
-                        // search instead of failing just that source.
-                        if (isActive) {
-                            updateItem(source, SearchItemResult.Error(e))
-                        }
-                    }
+                    searchSource(source, query)
                 }
             }
                 .awaitAll()
             if (anyLoading) {
                 val elapsed = GlobalSearchStats.elapsedMillis(startNanos, System.nanoTime())
                 mutableState.update { it.copy(elapsedMillis = elapsed) }
+            }
+        }
+    }
+
+    /** Re-runs the current query for one source only (the per-source Retry on an error or slow row). */
+    fun retrySource(source: Source) {
+        val query = lastQuery ?: return
+        if (source !in state.value.items) return
+        retryJobs.remove(source)?.cancel()
+        updateItem(source, SearchItemResult.Loading)
+        retryJobs[source] = viewModelScope.launchIO { searchSource(source, query) }
+    }
+
+    private suspend fun searchSource(source: Source, query: String) {
+        try {
+            val page = withContext(coroutineDispatcher) {
+                source.getSearchManga(1, query, source.getFilterList())
+            }
+
+            val titles = page.mangas
+                .map { it.toDomainManga(source.id, source.isNovelSource()) }
+                .distinctBy { it.url }
+                .let { networkToLocalManga(it) }
+
+            if (currentCoroutineContext().isActive) {
+                updateItem(source, SearchItemResult.Success(titles))
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (currentCoroutineContext().isActive) {
+                updateItem(source, SearchItemResult.Error(e))
+            }
+        } catch (e: LinkageError) {
+            // Outdated/incompatible extensions throw LinkageError subtypes
+            // (NoClassDefFoundError, NoSuchMethodError, etc.) rather than Exception.
+            // Catching only Exception let one broken source crash the whole global
+            // search instead of failing just that source.
+            if (currentCoroutineContext().isActive) {
+                updateItem(source, SearchItemResult.Error(e))
             }
         }
     }

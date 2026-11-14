@@ -1405,4 +1405,27 @@
     <string name="tsz_lnr_plugins">Plugins (extensions)</string>
     <string name="tsz_lnr_missing">Restaurer les plugins manquants comme substituts</string>
     <string name="tsz_lnr_confirm">Importer</string>
+    <string name="tsz_error_failed">Chargement impossible · %1$s</string>
+    <string name="tsz_error_network">La source est inaccessible</string>
+    <string name="tsz_error_timeout">Le délai est dépassé</string>
+    <string name="tsz_error_challenge">Le site demande une vérification du navigateur</string>
+    <string name="tsz_error_not_found">La page est introuvable</string>
+    <string name="tsz_error_server">Le serveur de la source rencontre un problème</string>
+    <string name="tsz_error_parse">Le site a peut-être changé</string>
+    <string name="tsz_error_extension">L’extension de la source est indisponible</string>
+    <string name="tsz_error_storage_full">Le stockage est plein</string>
+    <string name="tsz_error_permission">L’accès au stockage a été refusé</string>
+    <string name="tsz_error_network_help">Vérifiez la connexion, puis réessayez.</string>
+    <string name="tsz_error_retry_help">Patientez un instant, puis réessayez.</string>
+    <string name="tsz_error_challenge_help">Ouvrez WebView, terminez la vérification, puis réessayez.</string>
+    <string name="tsz_error_not_found_help">La source a peut-être déplacé ou supprimé cette page.</string>
+    <string name="tsz_error_extension_help">Vérifiez que l’extension est installée, approuvée et à jour.</string>
+    <string name="tsz_error_parse_help">Mettez l’extension de la source à jour, puis réessayez.</string>
+    <string name="tsz_error_storage_help">Libérez de l’espace ou choisissez un dossier accessible.</string>
+    <string name="tsz_error_opening">Ouverture · %1$s</string>
+    <string name="tsz_error_loading">En attente de l’étape en cours</string>
+    <string name="tsz_error_seconds">%1$s · %2$d s</string>
+    <string name="tsz_error_fetch">Chargement depuis la source</string>
+    <string name="tsz_error_layout">Préparation de la page</string>
+    <string name="tsz_error_other">La requête n’a pas pu aboutir</string>
 </resources>

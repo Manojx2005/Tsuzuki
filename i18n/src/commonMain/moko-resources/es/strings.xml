@@ -1399,4 +1399,27 @@
     <string name="tsz_lnr_plugins">Complementos (extensiones)</string>
     <string name="tsz_lnr_missing">Restaurar con complementos ausentes (como marcadores)</string>
     <string name="tsz_lnr_confirm">Importar</string>
+    <string name="tsz_error_failed">No se pudo cargar · %1$s</string>
+    <string name="tsz_error_network">No se pudo conectar con la fuente</string>
+    <string name="tsz_error_timeout">La espera fue demasiado larga</string>
+    <string name="tsz_error_challenge">El sitio pide una comprobación del navegador</string>
+    <string name="tsz_error_not_found">No se encontró la página</string>
+    <string name="tsz_error_server">El servidor de la fuente tiene un problema</string>
+    <string name="tsz_error_parse">El sitio puede haber cambiado</string>
+    <string name="tsz_error_extension">La extensión de la fuente no está disponible</string>
+    <string name="tsz_error_storage_full">El almacenamiento está lleno</string>
+    <string name="tsz_error_permission">Se denegó el acceso al almacenamiento</string>
+    <string name="tsz_error_network_help">Comprueba la conexión y vuelve a intentarlo.</string>
+    <string name="tsz_error_retry_help">Espera un momento y vuelve a intentarlo.</string>
+    <string name="tsz_error_challenge_help">Abre WebView, completa la comprobación y vuelve a intentarlo.</string>
+    <string name="tsz_error_not_found_help">La fuente puede haber movido o eliminado la página.</string>
+    <string name="tsz_error_extension_help">Comprueba que la extensión esté instalada, sea de confianza y esté actualizada.</string>
+    <string name="tsz_error_parse_help">Actualiza la extensión de la fuente y vuelve a intentarlo.</string>
+    <string name="tsz_error_storage_help">Libera espacio o elige una carpeta accesible.</string>
+    <string name="tsz_error_opening">Abriendo · %1$s</string>
+    <string name="tsz_error_loading">Esperando el paso actual</string>
+    <string name="tsz_error_seconds">%1$s · %2$d s</string>
+    <string name="tsz_error_fetch">Cargando desde la fuente</string>
+    <string name="tsz_error_layout">Preparando la página</string>
+    <string name="tsz_error_other">No se pudo completar la solicitud</string>
 </resources>

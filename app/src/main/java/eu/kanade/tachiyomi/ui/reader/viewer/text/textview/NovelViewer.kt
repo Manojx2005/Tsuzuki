@@ -24,6 +24,8 @@ import androidx.core.net.toUri
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import eu.kanade.presentation.tsuzuki.components.createReaderErrorView
+import eu.kanade.presentation.tsuzuki.components.createReaderLoadingView
 import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
 import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
 import eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition
@@ -2045,10 +2047,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         chapterEndTransition.revealWhenReady(scrollView, loaded.chapter.chapter.id)
     }
 
-    private var initialLoadingView: TextView? = null
+    private var initialLoadingView: View? = null
 
     private fun showLoadingIndicator() {
         contentContainer.removeAllViews()
+
+        activity.createReaderLoadingView(currentChapters?.currChapter?.chapter?.id ?: Unit)?.let {
+            initialLoadingView = it
+            contentContainer.addView(it)
+            applyBackgroundColor()
+            return
+        }
 
         initialLoadingView = TextView(activity).apply {
             text = activity.stringResource(TDMR.strings.novel_chapter_loading)
@@ -2070,6 +2079,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun displayError(error: Throwable) {
+        activity.createReaderErrorView(error) { activity.viewModel.reloadChapter(fromSource = false) }?.let {
+            logcat(LogPriority.ERROR) { "NovelViewer: Chapter load failed (${error.javaClass.simpleName})" }
+            contentContainer.removeAllViews()
+            contentContainer.addView(it)
+            chapterEndTransition.revealWhenReady(scrollView, animate = false)
+            return
+        }
         val fmt = ErrorFormatter.format(error)
         logcat(LogPriority.ERROR) { "NovelViewer: Chapter load failed\n${fmt.stackTrace}" }
 

@@ -128,6 +128,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private val container = FrameLayout(activity)
+    private val operationState by lazy {
+        eu.kanade.presentation.tsuzuki.components.TsuzukiReaderOperation(activity, container)
+    }
     private val chapterEndTransition = eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition(
         activity,
         container,
@@ -785,6 +788,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                     if (docState == DocState.ERROR) chapterEndTransition.revealWhenReady(webView, animate = false)
                     if (docState != DocState.LOADING_REAL) return
                     docState = DocState.READY
+                    operationState.clear()
                     pagedChapterSwitchPending = false
 
                     styler.injectScript { buildTsundokuScript() }
@@ -1074,6 +1078,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         ThemeUtils.getThemeColors(activity, preferences, theme)
 
     override fun destroy() {
+        operationState.clear()
         chapterEndTransition.clear()
         if (isDestroyed) return
         // Only persist if real progress exists. lastSavedProgress starts at 0 and stays 0
@@ -1382,7 +1387,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
                             // leave the document (and docState) intact.
                             inlineFeedback.hideInlineLoading(isPrepend = true)
                             inlineFeedback.showInlineError(
-                                ErrorFormatter.format(state.error).summary,
+                                state.error,
                                 isPrepend = true,
                             )
                         } else {
@@ -1697,6 +1702,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         // Signal to onPageFinished that the next callback is for real chapter content, not
         // the loading-indicator page (which also fires onPageFinished with url="about:blank").
         docState = DocState.LOADING_REAL
+        operationState.loading(currentChapters?.currChapter?.chapter?.id ?: chapterPath, step = 1)
         dispatchLoadingChapter(true)
         // New document: hold scroll callbacks and clear the baseline so a stale flush can't write
         // the previous chapter's percent here, restoreScrollPosition seeds the real value.
@@ -1851,6 +1857,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun showLoadingIndicator(message: String = "Loading...") {
+        if (operationState.loading(currentChapters?.currChapter?.chapter?.id ?: message)) {
+            docState = DocState.LOADING
+            return
+        }
         if (chapterEndTransition.isPending) {
             docState = DocState.LOADING
             return
@@ -1903,6 +1913,12 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         // infinite-scroll appends forever) while marking the body un-appendable.
         docState = DocState.ERROR
         releasePagedChapterSwitchIfPending()
+        if (operationState.error(error)) {
+            stopTts()
+            stopAutoScroll()
+            chapterEndTransition.revealWhenReady(webView, animate = false)
+            return
+        }
 
         val theme = preferences.novelTheme.get()
         val (finalBgColor, finalTextColor) = getThemeColors(theme)

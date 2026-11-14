@@ -384,6 +384,7 @@ class MangaViewModel(
         forceRefresh: Boolean = false,
     ) {
         val state = successState ?: return
+        updateSuccessState { it.copy(sourceError = null) }
         try {
             withIOContext {
                 val host = state.source.rateLimitHost()
@@ -409,8 +410,8 @@ class MangaViewModel(
                     updateLibraryChapterCounts()
                 }
             }
-        } catch (_: CancellationException) {
-            // ignore
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             val message = if (e is NoChaptersException) {
                 context.stringResource(MR.strings.no_chapters_error)
@@ -420,7 +421,14 @@ class MangaViewModel(
             }
 
             viewModelScope.launch {
-                snackbarHostState.showSnackbar(message = message)
+                updateSuccessState { it.copy(sourceError = e) }
+                if (eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor(
+                        Injekt.get<eu.kanade.domain.ui.UiPreferences>().appTheme.get(),
+                    ).style ==
+                    eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
+                ) {
+                    snackbarHostState.showSnackbar(message = message)
+                }
             }
         }
     }
@@ -1883,6 +1891,7 @@ class MangaViewModel(
             val trackingCount: Int = 0,
             val hasLoggedInTrackers: Boolean = false,
             val isRefreshingData: Boolean = false,
+            val sourceError: Throwable? = null,
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,

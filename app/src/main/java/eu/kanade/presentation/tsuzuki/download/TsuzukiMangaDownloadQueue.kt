@@ -48,6 +48,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.browse.tsuzukiGroupedTile
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.download.DownloadHeaderItem
@@ -220,9 +221,12 @@ private fun MangaQueueRow(
     val status by download.statusFlow.collectAsState()
     val error = download.error.takeIf { status == Download.State.ERROR && !it.isNullOrBlank() }
     val errorLabel = stringResource(MR.strings.download_notifier_title_error)
+    val errorCopy = remember(error) {
+        error?.let { eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi(IllegalStateException(it)) }
+    }
     val statusLabel = when (status) {
         Download.State.DOWNLOADING -> stringResource(MR.strings.downloading_with_progress, progress)
-        Download.State.ERROR -> error?.lineSequence()?.firstOrNull() ?: errorLabel
+        Download.State.ERROR -> errorCopy?.let(context::errorHeading) ?: errorLabel
         Download.State.DOWNLOADED -> stringResource(MR.strings.completed)
         else -> stringResource(if (paused) MR.strings.paused else MR.strings.tsz_downloads_queued)
     }
@@ -270,7 +274,9 @@ private fun MangaQueueRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = if (error != null) {
-                    Modifier.clickable { context.copyToClipboard(errorLabel, error) }
+                    Modifier.clickable {
+                        context.copyToClipboard(errorLabel, eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(error))
+                    }
                 } else {
                     Modifier
                 },

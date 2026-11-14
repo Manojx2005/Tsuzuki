@@ -1409,4 +1409,27 @@
     <string name="tsz_lnr_plugins">Plugins (extensões)</string>
     <string name="tsz_lnr_missing">Restaurar plugins ausentes como marcadores</string>
     <string name="tsz_lnr_confirm">Importar</string>
+    <string name="tsz_error_failed">Não foi possível carregar · %1$s</string>
+    <string name="tsz_error_network">Não foi possível acessar a fonte</string>
+    <string name="tsz_error_timeout">A espera demorou demais</string>
+    <string name="tsz_error_challenge">O site pediu uma verificação no navegador</string>
+    <string name="tsz_error_not_found">A página não foi encontrada</string>
+    <string name="tsz_error_server">O servidor da fonte está com um problema</string>
+    <string name="tsz_error_parse">O site pode ter mudado</string>
+    <string name="tsz_error_extension">A extensão da fonte está indisponível</string>
+    <string name="tsz_error_storage_full">O armazenamento está cheio</string>
+    <string name="tsz_error_permission">O acesso ao armazenamento foi negado</string>
+    <string name="tsz_error_network_help">Confira a conexão e tente novamente.</string>
+    <string name="tsz_error_retry_help">Aguarde um pouco e tente novamente.</string>
+    <string name="tsz_error_challenge_help">Abra no WebView, conclua a verificação e tente novamente.</string>
+    <string name="tsz_error_not_found_help">A fonte pode ter movido ou removido esta página.</string>
+    <string name="tsz_error_extension_help">Confira se a extensão está instalada, é confiável e está atualizada.</string>
+    <string name="tsz_error_parse_help">Atualize a extensão da fonte e tente novamente.</string>
+    <string name="tsz_error_storage_help">Libere espaço ou escolha uma pasta acessível.</string>
+    <string name="tsz_error_opening">Abrindo · %1$s</string>
+    <string name="tsz_error_loading">Aguardando a etapa atual</string>
+    <string name="tsz_error_seconds">%1$s · %2$d s</string>
+    <string name="tsz_error_fetch">Carregando da fonte</string>
+    <string name="tsz_error_layout">Preparando a página</string>
+    <string name="tsz_error_other">Não foi possível concluir a solicitação</string>
 </resources>

@@ -1412,4 +1412,27 @@
     <string name="tsz_lnr_plugins">Plugins (Erweiterungen)</string>
     <string name="tsz_lnr_missing">Mit fehlenden Plugins wiederherstellen (als Platzhalter)</string>
     <string name="tsz_lnr_confirm">Importieren</string>
+    <string name="tsz_error_failed">Laden fehlgeschlagen · %1$s</string>
+    <string name="tsz_error_network">Die Quelle ist nicht erreichbar</string>
+    <string name="tsz_error_timeout">Es dauert zu lange</string>
+    <string name="tsz_error_challenge">Die Website verlangt eine Browserprüfung</string>
+    <string name="tsz_error_not_found">Die Seite wurde nicht gefunden</string>
+    <string name="tsz_error_server">Der Server der Quelle hat ein Problem</string>
+    <string name="tsz_error_parse">Die Website hat sich möglicherweise geändert</string>
+    <string name="tsz_error_extension">Die Quellenerweiterung ist nicht verfügbar</string>
+    <string name="tsz_error_storage_full">Der Speicher ist voll</string>
+    <string name="tsz_error_permission">Der Speicherzugriff wurde verweigert</string>
+    <string name="tsz_error_network_help">Verbindung prüfen und erneut versuchen.</string>
+    <string name="tsz_error_retry_help">Kurz warten und erneut versuchen.</string>
+    <string name="tsz_error_challenge_help">In WebView öffnen, Prüfung abschließen und erneut versuchen.</string>
+    <string name="tsz_error_not_found_help">Die Quelle hat die Seite möglicherweise verschoben oder entfernt.</string>
+    <string name="tsz_error_extension_help">Installation, Vertrauensstatus und Updates der Erweiterung prüfen.</string>
+    <string name="tsz_error_parse_help">Quellenerweiterung aktualisieren und erneut versuchen.</string>
+    <string name="tsz_error_storage_help">Speicher freigeben oder einen zugänglichen Ordner wählen.</string>
+    <string name="tsz_error_opening">Wird geöffnet · %1$s</string>
+    <string name="tsz_error_loading">Warten auf den aktuellen Schritt</string>
+    <string name="tsz_error_seconds">%1$s · %2$d s</string>
+    <string name="tsz_error_fetch">Daten von der Quelle laden</string>
+    <string name="tsz_error_layout">Seite vorbereiten</string>
+    <string name="tsz_error_other">Die Anfrage konnte nicht abgeschlossen werden</string>
 </resources>
