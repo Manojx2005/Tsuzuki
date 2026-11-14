@@ -1381,4 +1381,22 @@
     <string name="tsz_reader_timer_short">Tempor.</string>
     <string name="tsz_reader_sleep_chapter_short">Cap.</string>
     <string name="tsz_reader_listen_position">Párrafo %1$d de %2$d</string>
+    <string name="tsz_lnr_choose">Seleccionar copia de LNReader</string>
+    <string name="tsz_lnr_started">Importación iniciada (consulta las notificaciones)</string>
+    <string name="tsz_lnr_import">Importar copia de LNReader</string>
+    <string name="tsz_lnr_subtitle">Importar novelas desde una copia de LNReader (.zip)</string>
+    <string name="tsz_export_url">URL completa</string>
+    <string name="tsz_export_chapters">Número de capítulos</string>
+    <string name="tsz_export_novel">Es una novela</string>
+    <string name="tsz_export_description">Descripción</string>
+    <string name="tsz_export_tags">Etiquetas (separadas por comas)</string>
+    <string name="tsz_lnr_options">Opciones de importación de LNReader</string>
+    <string name="tsz_lnr_choose_items">Elige qué restaurar de la copia:</string>
+    <string name="tsz_lnr_novels">Novelas</string>
+    <string name="tsz_lnr_chapters">Listas de capítulos</string>
+    <string name="tsz_lnr_history">Historial de lectura</string>
+    <string name="tsz_lnr_covers">Portadas en caché</string>
+    <string name="tsz_lnr_plugins">Complementos (extensiones)</string>
+    <string name="tsz_lnr_missing">Restaurar con complementos ausentes (como marcadores)</string>
+    <string name="tsz_lnr_confirm">Importar</string>
 </resources>

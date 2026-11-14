@@ -1393,4 +1393,22 @@
     <string name="tsz_reader_timer_short">타이머</string>
     <string name="tsz_reader_sleep_chapter_short">장 끝</string>
     <string name="tsz_reader_listen_position">문단 %1$d / %2$d</string>
+    <string name="tsz_lnr_choose">LNReader 백업 파일 선택</string>
+    <string name="tsz_lnr_started">가져오기를 시작했습니다 (알림에서 진행 상황 확인)</string>
+    <string name="tsz_lnr_import">LNReader 백업 가져오기</string>
+    <string name="tsz_lnr_subtitle">LNReader 백업 파일(.zip)에서 소설 가져오기</string>
+    <string name="tsz_export_url">전체 URL</string>
+    <string name="tsz_export_chapters">장 수</string>
+    <string name="tsz_export_novel">소설 여부</string>
+    <string name="tsz_export_description">설명</string>
+    <string name="tsz_export_tags">태그 (쉼표로 구분)</string>
+    <string name="tsz_lnr_options">LNReader 가져오기 옵션</string>
+    <string name="tsz_lnr_choose_items">백업에서 복원할 항목을 선택하세요:</string>
+    <string name="tsz_lnr_novels">소설</string>
+    <string name="tsz_lnr_chapters">장 목록</string>
+    <string name="tsz_lnr_history">독서 기록</string>
+    <string name="tsz_lnr_covers">캐시된 표지</string>
+    <string name="tsz_lnr_plugins">플러그인 (확장 기능)</string>
+    <string name="tsz_lnr_missing">누락된 플러그인을 임시 항목으로 복원</string>
+    <string name="tsz_lnr_confirm">가져오기</string>
 </resources>
