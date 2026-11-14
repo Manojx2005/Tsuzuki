@@ -260,6 +260,7 @@ object HomeScreen : Screen() {
                     enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(
                         tabNavigator.current != homeTab,
                         HomeScreen,
+                        navigator = navigator,
                     ),
                     onBack = { tabNavigator.current = homeTab },
                 )

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 
 /**
@@ -20,8 +21,11 @@ internal fun backHandlerActive(
 
 /** `enabled` value for a `BackHandler` that belongs to [owner] (a tab host counts as its screen). */
 @Composable
-fun tsuzukiBackEnabled(ownEnabled: Boolean, owner: Screen): Boolean {
-    val navigator = LocalNavigator.current
+fun tsuzukiBackEnabled(
+    ownEnabled: Boolean,
+    owner: Screen,
+    navigator: Navigator? = LocalNavigator.current,
+): Boolean {
     // A restored HomeScreen can keep its saved key while the process singleton has a new one.
     // Resolve only this singleton host; distinct BrowseSourceScreen instances keep their own keys.
     val restoredOwnerKey = if (owner is HomeScreen) {
