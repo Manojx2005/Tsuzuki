@@ -1337,6 +1337,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     /** (paragraphIndex, paragraphCount) for the media notification's "paragraph N of M". */
     internal val listeningController get() = ttsController
 
+    /** Name of the chapter being read aloud (not the viewport's), or null when it isn't loaded. */
+    internal val playbackChapterName: String?
+        get() = ttsController.ttsPlaybackChapterId?.let { id ->
+            loadedChapters.firstOrNull { it.chapter.chapter.id == id }?.chapter?.chapter?.name
+        }
+
     fun getTtsParagraphProgress(): Pair<Int, Int> = ttsController.getParagraphProgress()
 
     /** Media-notification seek-bar drag: jump straight to [paragraphIndex]. */
