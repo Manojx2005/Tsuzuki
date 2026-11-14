@@ -685,7 +685,7 @@ Preparation (Codex review lane, 2026-11-14): main `9f1b87ced` built in `.worktre
 
 Review (Codex, 2026-11-14): **pass.** S22 confirmed RZCWA139X1X, optimized main `9f1b87ced` scratch Preview, Dot Home with 500 books inspected. All ten cold Partial/Require iterations have exactly one nonzero Home-observed section plus initial display. Initial display median 698.614 ms (647.388–772.369), Home-observed median 3282.650 ms (3161.579–3333.075); observer overhead is included, not app fully-drawn. All twenty values and APK hash recorded in PERFORMANCE.md. No thermal-throttle sleep, no helper patch, no crash observed. Evidence `app/build/review-evidence/perf-start-v/` (archived in root). Device lock retained for PERF-START-2.
 
-#### PERF-START-2 Cold start: three measured changes (T4) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`, `tsuzuki/perf-start-2`; for 0.1.2; review lane: read, then measure on the S22; **not measured, no speed-up claimed**)
+#### PERF-START-2 Cold start: three measured changes (T4) — `codex-working` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`, `tsuzuki/perf-start-2`; Codex independent review .worktrees/review-perf-start-2, 2026-11-14; for 0.1.2; review lane: read, then measure on the S22; **not measured, no speed-up claimed**)
 PERF-START found 391 ms in application binding (140 ms of it the WebView user-agent warm-up), 166 ms in the
 first traversal, 32 ms in Activity create; the budget is 500 ms and the benchmark says 741 ms. Make **each change
 its own commit that builds alone**, so the review lane can measure them one at a time. No adb in this card.
