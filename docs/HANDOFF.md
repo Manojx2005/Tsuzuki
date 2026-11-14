@@ -567,12 +567,27 @@ RV5 progress (2026-11-14, this independent reviewer): review branch merges S2-F 
 - Findings to disposition before verdicts: tablet native autoplay repeats chapter 2 after the last chapter. Trace `tablet-native-full-tts-trace.txt`: at 13:28:15 controller playback index=1/id=2, but `moveToLoadedNextChapterForTts anchor=0` selects loaded nextIndex=1 again. This is upstream native handoff behavior, beyond count deduplication, and needs a follow-up card. RP1 compact dock shows CHAPTER 1 while Chapter 2 paragraph 3 is highlighted/speaking (`tablet-rv5-native-after-handoff.png`); `ReaderListenLayout.kt:165` chooses viewport title instead of controller playback chapter. Do not claim either behavior passed.
 - Owner explicitly said keep both devices awake: stayon true and screen_off_timeout=2147483647 on both. Tablet rotation was free, temporarily locked portrait with `wm user-rotation lock 0`; restore free when appropriate. Devices remain claimed for ongoing RV5 review.
 
-#### PERF1 Speed budgets on `main` (review lane; needs devices) — `codex-working` (.worktrees/perf1, review/perf1, 2026-11-14; base main 88bcf6e4e)
+#### PERF1 Speed budgets on `main` (review lane; needs devices) — `done` (2026-11-14; review/perf1, base main 88bcf6e4e)
 Measure on the S22 with the preview APK and write the numbers, method and date into `docs/PERFORMANCE.md`:
 cold start (10 runs, median; budget 500 ms), next novel chapter from the chapter-end card (budget 200 ms to
 first text), Library scroll with the 500-book synthetic backup (Y4) — janky frames from `dumpsys gfxinfo`
 (budget under 5 %), opening book details (budget 300 ms). A missed budget becomes a card; don't tune here.
-Result: _pending_
+Result: Optimized Preview, S22, Y4 500-book database. Cold Macrobenchmark 10-run median 741.2 ms (miss); local Native Next first readable text approximately 180–190 ms in 3 video samples (limited pass, close to timing uncertainty); Library 25/1,397 janky frames = 1.79% (pass; selected shelf 17 books); cached details first title median 58 ms but full transition about 510 ms (miss). Methods, scope and evidence in docs/PERFORMANCE.md. No tuning; follow-up cards below.
+
+#### PERF-START Cold startup exceeds S22 budget — `ready`
+Trace-led investigation of PERF1: optimized Preview on accepted RV5 main, Y4 500-book
+scratch database, baseline-profile-required Macrobenchmark 10 cold launches, median
+initial display 741.2 ms versus 500 ms. Compare like-for-like before/after, retain the
+WebView warm-up ordering documented in PERFORMANCE.md, and measure Home readiness
+separately. Evidence: app/build/review-evidence/perf1/benchmark-output/. Do not infer
+regression size from older four-book am-start measurements.
+
+#### PERF-DETAILS Details transition exceeds S22 budget — `ready`
+PERF1 cached details become readable in 49–115 ms, but the visual transition settles
+in approximately 502–511 ms versus the 300 ms opening budget. Review the intended board
+motion and record an explicit readiness definition before changing timing. Preserve
+Dot/Colour behavior and compare optimized Preview on the same Y4 fixture. Evidence:
+app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not dispatch traces.
 
 #### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `ready` (after PERF1; Plan 0.1.1 step 8)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
@@ -3966,3 +3981,5 @@ Result: _pending_
 - **2026-11-03/04 Claude + Codex:** orders 1–10, 12–14 of the old queue (Tsuzuki UI across Home, Library,
   details, reader chrome, settings, browse, motion, translations, widget, menus). Details in git history of
   `AGENTS.md` (see top of this file) and `docs/design/README.md` status table.
+
+- **2026-11-14 Codex review lane — PERF1 completed.** All four speed budgets measured on optimized RV5 Preview/S22 with Y4 synthetic data. Cold startup and settled details missed; PERF-START/PERF-DETAILS created without tuning. Library passed; local Native chapter-first-text limited pass near measurement uncertainty. See PERFORMANCE.md and local perf1 evidence. REL preparation next.

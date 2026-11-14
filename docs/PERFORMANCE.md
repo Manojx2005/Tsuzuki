@@ -95,3 +95,53 @@ Optimized preview from main `17ac99c42`, Galaxy S22, Colour theme, Japanese UI, 
 **median 352.5 ms**, min 334, max 456. The earlier single phone launch was 594 ms (2026-11-04); no regression after the
 Batch R / v0.1 merges. Baseline profile re-collect (P2.4) still to do before the release tag.
 
+
+## PERF1 S22 speed budgets (2026-11-14)
+
+Accepted RV5 main `88bcf6e4e`, optimized non-debuggable Preview, scratch package
+`io.github.manojx2005.tsuzuki.rv5debugscratch`, versionCode 24. APK SHA-256
+`6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`.
+Galaxy S22 SM-S901E (`RZCWA139X1X`), Android 16/API 36, Japanese UI, Dot, portrait,
+120 Hz, connected over adb wireless. Restored Y4: 500 books (250 novels, 250 manga),
+30 shelves, 50,000 chapters and 995 history entries. Only synthetic scratch data was changed.
+
+| Measurement | Result | Budget / verdict |
+|---|---:|---|
+| Cold initial display, 10 runs | median 741.2 ms; 701.2–885.1 ms | 500 ms: missed, PERF-START |
+| Local Native next chapter, 3 video samples | approximately 180–190 ms to first readable incoming text | 200 ms: met in this limited fixture; close to measurement uncertainty |
+| Library scrolling | 25 / 1,397 janky frames, 1.79% | under 5%: met |
+| Cached details, 3 video samples | first readable title 49–115 ms (median 58); transition settles about 502–511 ms (median 510) | 300 ms: full transition missed, PERF-DETAILS |
+
+Cold method: existing `ColdStartupBenchmark#startupCompilationBaselineProfiles`,
+`CompilationMode.Partial(BaselineProfileMode.Require)`, `StartupMode.COLD`, 10 iterations;
+standalone helper targets the explicit scratch `targetAppId`. Run passed, no thermal-throttle
+sleep. Initial display samples (ms): 723.0, 766.8, 722.9, 760.6, 735.2, 701.2, 774.2,
+746.1, 736.2, 885.1. The test also waits for populated Home, but the reported timing is
+`timeToInitialDisplayMs`, not a Home-ready metric. This is a different method and dataset
+from the older four-book `am start -W` results; it does not establish their regression size.
+
+Scroll method: reset `dumpsys gfxinfo`, then 24 automated 400 ms swipes, six down/six up
+repeated twice, one-second final idle; 13.34 seconds total. Default shelf 01 contains 17
+books while all 500 are in the database. Three-column grid, generated placeholder covers.
+Legacy jank counter was 34/1,397 (2.43%), CPU frame P95 8 ms. This measures the stated
+500-book database with the normal selected shelf, not 500 simultaneously visible covers
+or real-cover decoding.
+
+Video method: six-second 1080x2340 screen recordings, first pressed/input-feedback frame
+as time zero, inspect original variable-rate presentation timestamps. Frame spacing around
+the transition was 8–16 ms. These are visual estimates, not instrumented touch-dispatch
+latencies; recorder overhead and the reference frame add uncertainty. Chapter samples use
+the cached two-chapter RV2 local fixture, Native renderer, infinite scrolling disabled,
+menus and Listen dock closed. First readable chapter-2 text is about 180–190 ms after
+feedback while the outgoing frame is still cross-fading. Full settling takes about 0.5 s;
+the third recording also includes a later non-transition frame, so its final frame is not
+the settling timestamp. Network/source fetches, WebView and larger chapters are unmeasured.
+Details samples open cached `[SYNTHETIC] NOVEL 481` from shelf 01: metadata plus the
+missing-source message, with no network wait. First title is early, but the approximately
+0.5 s visual transition exceeds 300 ms; do not count first content as a full-open pass.
+
+Evidence (ignored local): `app/build/review-evidence/perf1/`, including benchmark JSON and
+all ten Perfetto traces in `benchmark-output/`, `s22-cold-baseline.log`, the generated backup,
+`measure-scroll.py`, raw gfxinfo, `record-tap.py`, six videos, before/after screenshots,
+frame timestamp lists and contact sheets. `show_touches` was restored to its original 0.
+No production tuning was performed; budget misses are separate cards.
