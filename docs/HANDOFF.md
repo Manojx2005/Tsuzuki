@@ -434,6 +434,18 @@ Result (Codex app lane, 2026-11-14): **review**, implementation `d1e360ff4` plus
 - Independent reviewer: inspect patch/dependencies/notices; rebuild and compare the TTS API, raw string scan, ELF dependencies/alignment. Integrate only on a disposable review branch with S4 (excluded by `911a2222f`); this AAR is **arm64-only**, so unsupported ABIs must keep Android TTS. Verify worker/no-pack fallback and APK zipalign separately. Successful artifact checks do not settle the lexicon licence, performance, quality or owner listening decision. NT1/NT2/NT3/NT4 gates remain.
 
 
+#### NT1-BINARY-F Native build hygiene follow-up — `review` (2026-11-14; `.worktrees/nt1-binary`, `tsuzuki/nt1-binary` per queued instruction)
+
+Result (Codex, code `d904693d2`): completed the queued source/artifact follow-up, ready for independent review. This is not an NT1 acceptance verdict, inference result, lexicon licence waiver or S4 merge.
+- `build-kokoro-runtime.ps1` maps source/SDK paths, defaults to two native jobs and uses source-built ONNX exclusively. `build-onnx-runtime.ps1` pins ONNX 1.28.2 source, portable CMake 3.31.6 and host protoc 21.12; verifies extracted files; builds default targets plus RE2; combines 81 Android archives and emits component hashes. Environment overrides for Sherpa's static ONNX input are restored after configure/build. No linked-library string editing or forbidden-symbol renaming.
+- `prepare-source.py` rejects unknown edits/extra files before extraction; pinned legacy cache archives are hash-checked if present. Pristine mode validates ONNX/tool ZIP contents and rootless ZIPs. An old unlisted Eigen 3.4 archive was rejected and preserved at `.native/archives/unused-eigen-3.4.0.tar.gz`, not silently permitted.
+- `audit-neural-runtime.py` checks ASCII plus UTF-16 LE/BE at both byte alignments. NT1's literal/alignment verdict is preserved; a separate build-hygiene result and `--require-build-hygiene` enforce no build paths. URL/runtime-path and random four-byte code fragments are regression cases. The intermediate candidate with 548 inherited ONNX CI paths is rejected by the strict mode.
+- `package-runtime.py` requires the complete kissfft copyright/BSD-3 text, validates the pinned ONNX source/static hash manifest, includes that manifest in the AAR, and refuses retained build paths. Official `classes.jar` is byte-identical. Licences and ONNX third-party notices match the pinned upstream sources. Research summary and design status updated.
+- **Final AAR:** `.native/output/sherpa-onnx-2.0.1-tsuzuki-kokoro-arm64.aar`, **7,853,259 bytes**, SHA-256 `1f70ec2b28f40dfe760a5fe1283e623a1163155c5c530b5a70ae06df1eae4ec1`. **JNI:** 20,887,080 bytes, `ef5ccbfc500fefb8a75100fd0f4fe0528d14669c0dad096781f7b7d13df71b24`. Combined ONNX archive SHA-256 `da1db20d213c68641a48e79b8a99e1c6557859b85186e87f5bf140848b463e50`.
+- **Verification:** full ONNX source compilation and complete offline recipe passed; **21 Python tests, zero failures**. All 1,009 ONNX compiler commands and selected Sherpa commands carry prefix mapping. Strict audit has zero ASCII/UTF-16 literal or build-path hits. Independent NDK strings plus a broader source-file-path scan find none; username occurrences are zero in ASCII/UTF-16. NDK readelf: three PT_LOAD at 0x4000, DT_NEEDED only libandroid/liblog/libm/libdl/libc. 18 Java exports, ten TTS/GeneratedAudio JNI methods match official. Two packaging writes are byte-identical; no model entries in AAR.
+- Evidence `app/build/nt1-binary-evidence/f-*` and `ort-*`: final independent JSON, readelf/exports/strings, repeat packaging, tests, full build/configure logs; intermediate prebuilt-ORT candidate and linker failures retained. Host protoc works outside the sandbox (the sandbox produced a DLL-relocation failure). Initial JNI link caught omitted RE2; recipe corrected and full retry passed. No stale failed log is treated as success.
+- **Reviewer:** inspect changed scripts/notices and the source summary, independently rebuild with the pinned SDK/NDK and `-Offline` only after its caches exist; rerun strict artifact audit and compare API/classes/licences. Recheck tool/dependency provenance and path scans. Full native-byte reproducibility across machines/toolchains was not established; repeated packaging with identical inputs was. No adb, app dependency, voice pack, lexicon, Gradle edit or app integration; synthesis, non-arm64 fallback, APK packaging, performance and owner listening gates stay with NT1/NT2/NT3.
+
 #### NT2 Neural TTS: licence, speed and the listening test (T3) — `ready` (needs NT1 merged; app lane; **gate for NT3/NT4**)
 1. Lexicon licence: find the origin and licence of the two English lexicon files in
    `kokoro-int8-multi-lang-v1_1` (sherpa-onnx `tts-models` release notes, the k2-fsa scripts that generate
@@ -579,7 +591,7 @@ first text), Library scroll with the 500-book synthetic backup (Y4) — janky fr
 (budget under 5 %), opening book details (budget 300 ms). A missed budget becomes a card; don't tune here.
 Result: Optimized Preview, S22, Y4 500-book database. Cold Macrobenchmark 10-run median 741.2 ms (miss); local Native Next first readable text approximately 180–190 ms in 3 video samples (limited pass, close to timing uncertainty); Library 25/1,397 janky frames = 1.79% (pass; selected shelf 17 books); cached details first title median 58 ms but full transition about 510 ms (miss). Methods, scope and evidence in docs/PERFORMANCE.md. No tuning; follow-up cards below.
 
-#### PERF-START Cold startup exceeds S22 budget — `ready`
+#### PERF-START Cold startup exceeds S22 budget — `done` as an investigation (Claude review 2026-11-14: pass, merged; the 500 ms miss is still open → **PERF-START-2**)
 Trace-led investigation of PERF1: optimized Preview on accepted RV5 main, Y4 500-book
 scratch database, baseline-profile-required Macrobenchmark 10 cold launches, median
 initial display 741.2 ms versus 500 ms. Compare like-for-like before/after, retain the
@@ -587,12 +599,32 @@ WebView warm-up ordering documented in PERFORMANCE.md, and measure Home readines
 separately. Evidence: app/build/review-evidence/perf1/benchmark-output/. Do not infer
 regression size from older four-book am-start measurements.
 
-#### PERF-DETAILS Details transition exceeds S22 budget — `ready`
+
+Result (Codex, 2026-11-14; `tsuzuki/perf-start` commit `b98a5e706`, `.worktrees/perf-start`): investigated all ten original PERF1 traces locally, no adb or production tuning. Main-thread medians: application bind 391.2 ms (includes dex open 104.3 ms and Chromium sync 140.5 ms), first traversal 166.4 ms, Activity create 32.4 ms. Inclusive wall intervals cannot be added across nesting. The benchmark's original 741.2 ms remains the budget verdict; Perfetto system interval boundaries differ.
+- `scripts/analyze_startup_traces.py`: reproducible per-trace SQL, retained raw slices/health, missing-package rejection, summary ranges and sample counts. Ten-trace analysis + Python compilation + negative package check pass.
+- `StartupBenchmarks.kt`: separate benchmark-process `TsuzukiHomeObserved` section, waits for seeded English/Japanese Home and startup overlay absence. Includes shell/accessibility overhead; not an app-internal fully-drawn time. Initial-display and frame metrics retained.
+- `docs/PERFORMANCE.md`: attribution, reproduction, limitations and next measurement. `docs/design/README.md`: investigation status only. Main-thread WebView warm-up retained before source graph construction. No release artifact/profile/screen changed.
+- JDK 21 helper compile and `:baseline-profile:assembleNonMinifiedRelease` pass; two scoped Spotless passes clean. Whole-module formatting encounters pre-existing `constants.kt` filename lint, so used absolute-path `spotlessIdeHook`. Helper APK SHA-256 `178bd7b251753c849f1e0e83651a637a65562845498c7cea6065ec541e42c96e`. Logs/JSON `.worktrees/perf-start/app/build/perf-start/`.
+- **Independent review still required:** run helper on S22 same optimized PERF1 scratch APK/Y4 fixture, ensure ten nonzero Home-observed samples and compare initial display; if experimenting with compilation modes, use identical APK/data and retain all outputs. No new runtime measurement, before/after improvement or budget pass claimed. This card's speed target stays open; this review is for the investigation/helper, not a completed optimization.
+
+Review (Claude, 2026-11-14): **pass, merged into `main`.** Read `StartupBenchmarks.kt` and `analyze_startup_traces.py`: the old metrics are kept, the new section only wraps the existing wait plus the overlay-gone wait, the script only reads traces (package name is SQL-escaped, arguments go through an argv list). Nothing in the app changed. Not run on a device by this review: the helper's ten non-zero `TsuzukiHomeObserved` samples are **PERF-START-V** for the review lane. What the numbers say: about 390 ms of the 741 ms is spent before the Activity exists (140 ms of it the WebView user-agent warm-up in `App.kt`), so the budget cannot be met by trimming Home alone.
+
+#### PERF-DETAILS Details transition exceeds S22 budget — `review` (200 ms motion; 300 ms total budget pending device review)
 PERF1 cached details become readable in 49–115 ms, but the visual transition settles
 in approximately 502–511 ms versus the 300 ms opening budget. Review the intended board
 motion and record an explicit readiness definition before changing timing. Preserve
 Dot/Colour behavior and compare optimized Preview on the same Y4 fixture. Evidence:
 app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not dispatch traces.
+
+Owner decision (2026-11-14, this chat): change the design so the **entire opening finishes within 300 ms**. Preserve the total-open target; first readable content is not a substitute. Implementation in `.worktrees/perf-details` uses a 200 ms synchronized cover/fade, pending independent device measurement.
+
+
+Result (Codex, 2026-11-14; `tsuzuki/perf-details` commit `3f15ad172`, `.worktrees/perf-details`): **review**, implementation complete; 300 ms total-open budget requires independent device proof.
+- Opened MotionOpen/MotionSpec PNGs and decoded their offline HTML timing: shared cover/background 450 ms. Owner explicitly chose a new **300 ms complete-opening budget**, superseding the archived opening timing; `docs/design/specs.md` records that decision.
+- `TsuzukiMotion.kt` and `TsuzukiSharedCover.kt`: details opening uses a 200 ms synchronized screen fade and shared-cover bounds animation, reserving 100 ms for preparation. One composition-local duration supplies both covers and the screen fade; back navigation/other screens retain 450 ms, reduced motion 150 ms. No upstream hooks, layout, colours, fonts, strings or data changed.
+- `TsuzukiMotionTest.kt`: route/direction and reduced-motion regressions; **1,087 app tests, zero failures/errors/skips**, Debug assembly, optimized Preview assembly and two scoped Spotless passes pass. All Kotlin LF. Exact final test source precedes the result XML timestamp.
+- Optimized ARM64 Preview package is `io.github.manojx2005.tsuzuki.rv5debugscratch`, versionCode 25; SHA-256 `a6fa1660d5385d9d4c70783a547a73067166df4e3cbe550f88fe01ab0d1c9b1a`. ZIP 16 KB alignment passes; baseline.prof/profm packaged. Artifact `.worktrees/perf-details/app/build/outputs/apk/preview/app-arm64-v8a-preview.apk`; logs/excerpts/test summary `app/build/perf-details/` in that worktree. Known non-fatal Compose mapping/XML service/optional window-extension warnings retained.
+- **Independent device review:** S22, optimized baseline archive `app/build/review-evidence/rv5/rv5-arm64-preview.apk` SHA-256 `6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`, then this candidate on the same scratch Y4 fixture. Dot then Colour, three original-PTS recordings each, `[SYNTHETIC] NOVEL 481` from shelf 01; first input feedback to final cover/screen position and opacity/outgoing Library absent is the total-open measurement. Report readable-title time separately. Also check real-cover sharing, interrupted opening/Back, reduced motion and tablet rail. Full protocol/uncertainty in PERFORMANCE.md. No adb/install/screenshot done by this implementer; no measured pass claimed, no main merge/push or release-candidate replacement.
 
 #### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `done` (candidate preparation only; Codex review lane, 2026-11-14)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
@@ -670,7 +702,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane Case B completed 2026-11-14; tablet + S22 optimized candidate scratch Dot Home, both awake; owner phone/daily apps untouched`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Claude (review of PERF-DETAILS / PERF-START, 2026-11-14 night; a Claude subagent uses the S22 and tablet scratch apps only)`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -1995,6 +2027,15 @@ Verification: JDK 21, two scoped Spotless passes per fix file and `:app:assemble
 Device review: on Tab S11 and S22, open Popular, Latest and Search for a live modern Keiyoushi source such as Asura Scans, then refresh one of its library entries. Check its observed status, latency and last success. Repeat with a live LNReader plugin in Dot and Colour, and verify an unused source remains unmeasured.
 
 Review (Codex RV4, 2026-11-13): Deferred: the required live native Keiyoushi check cannot run until the owner explicitly approves trusting the untrusted extension. Automatic approval review rejected that trust action for arbitrary extension code/credential risk; it was not bypassed. Candidate unit tests passed, but this does not prove the live native path. Also fix `SourceHealthStore.kt` decode fallback before acceptance: malformed saved JSON is swallowed without the warning log required by the checklist. Excluded by `89e1ac9ac`; later review must revert that exclusion before testing. No code-fix card added for an authorization gate.
+
+#### R12-WARN Saved source-health decode warning — `done` (Claude review 2026-11-14: pass; stays on `tsuzuki/r12-warn`, which is now the branch to review R12-F from)
+
+Implements only the queued R12-F decode-warning leftover. Add a warning when saved source-health JSON cannot decode, retain the empty-record fallback and avoid putting preference contents in logs. No UI, source trust, live requests, main restoration or R12-F acceptance. Allowed code: `SourceHealthStore.kt`; run scoped formatting, Debug build and existing unit tests. Parent R12-F remains deferred for the owner-controlled live-source trust check. Review can cherry-pick this small fix onto that card before resuming its separate review.
+
+
+Result (Codex, 2026-11-14; code `9cfc67ed7`): `SourceHealthStore.kt` adds a WARN diagnostic for malformed saved JSON while retaining the empty-record fallback. The parser exception/raw preference is deliberately omitted because its message can include JSON contents. Four added Kotlin lines (two imports, comment, warning), no other behavior, UI, strings or data changes. JDK 21 `:app:assembleDebug :app:testDebugUnitTest` passes: **984 tests, 0 failures/errors/skips** on the deferred feature branch; two scoped formatter passes clean, Kotlin LF and diff check pass. Logs `app/build/r12-warn/` in this worktree. No new tests for this logging-only change; existing behavior tests retained. No adb, trust action, main restoration, merge or push. Reviewer should apply this fix to R12-F's restored review branch; the parent feature's separate live-source trust/runtime gate remains deferred. This result does not accept R12-F.
+
+Review (Claude, 2026-11-14): **pass.** `9cfc67ed7` is four lines in `SourceHealthStore.kt`: a WARN line on a decode failure, no exception text and no stored JSON in the log, fallback unchanged. Not merged into `main` because R12-F itself is still excluded there (`89e1ac9ac`); `tsuzuki/r12-warn` = R12-F + this fix, so a later R12-F review starts from this branch. R12-F still waits for the owner to approve trusting a live Keiyoushi extension on a test device.
 
 #### R13 Dictionary lookup — offline packs (T4) — `done` (2026-11-08, `.worktrees/r13`)
 Owner 2026-11-07: **offline dictionary**. Board `Dictionary`. Long-press a word in the novel reader (TextView +
@@ -3695,6 +3736,18 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-14 R12-WARN app lane:** `9cfc67ed7` adds the missing malformed-source-health decode warning without logging JSON/exception contents; fallback unchanged. Debug assembly and 984 existing tests pass on R12-F base, scoped formatter twice clean. Independent review pending; R12-F trust/runtime check remains deferred and no feature was restored on main. Evidence `.worktrees/r12-warn/app/build/r12-warn/`.
+
+
+
+- **2026-11-14 NT1-BINARY-F app lane:** `d904693d2` removes local and inherited ONNX CI paths through source compilation, bundles full kissfft BSD-3 text and strengthens source/UTF-16 audits. Complete offline recipe, 21 tests, independent NDK checks and identical-input packaging pass. Final AAR SHA-256 `1f70ec2b28f40dfe760a5fe1283e623a1163155c5c530b5a70ae06df1eae4ec1`; independent review still required, no voice pack/app integration/S4 merge. Evidence `.worktrees/nt1-binary/app/build/nt1-binary-evidence/f-*`.
+
+
+
+- **2026-11-14 PERF-DETAILS app lane:** `3f15ad172` synchronizes details cover and fade at 200 ms under the owner's new 300 ms total-opening budget. Debug, optimized scratch Preview, 1,087 tests, scoped formatting and APK 16 KB alignment pass. Independent S22/tablet runtime review pending; no measured budget pass or main merge. Evidence `.worktrees/perf-details/app/build/perf-details/`.
+
+
+
 - **2026-11-14 Codex independent review lane — RV5 Case B completed.** Accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; review fixes `0a96ace3d` (first-line/dock clearance), `bf5055dcd` (CSV title), `8570ff5d7` (reader loading/progress/held chapter-end state). Debug + optimized Preview + 1,085 tests pass; 16 KB APK alignment pass, both crash buffers empty. Tablet/S22 scratch-only Dot/Colour QA; archive `app/build/review-evidence/rv5/`. External/CDN and unforced matrix limits are explicit in ERR1 verdict. Main fast-forward next; no push.
 
 - **2026-11-14 — NT1-BINARY candidate ready for independent review:** `d1e360ff4` + `d580d500e`; all official Android variants fail the unchanged literal gate, while an isolated arm64 Kokoro-only source profile passes raw strings, 16 KB ELF alignment and TTS JNI API checks. Candidate 7,857,879 B, `b2cee72b9131cf5190753c966e23e0c0e65ef7a0e9313e434d074d4aa3b5fa47`; 13 Python tests and offline recipe pass. Evidence `.worktrees/nt1-binary/app/build/nt1-binary-evidence/`. No model, app integration, install, merge or push. RV5 is now ready for an independent chat.
@@ -3996,3 +4049,5 @@ Result: _pending_
 - **2026-11-14 Codex review lane — PERF1 completed.** All four speed budgets measured on optimized RV5 Preview/S22 with Y4 synthetic data. Cold startup and settled details missed; PERF-START/PERF-DETAILS created without tuning. Library passed; local Native chapter-first-text limited pass near measurement uncertainty. See PERFORMANCE.md and local perf1 evidence. REL preparation next.
 
 - **2026-11-14 Codex review lane — REL-0.1.1 preparation completed.** Merged accepted main into existing release prep; Preview/Release + 1,085 tests passed, 16 KB APK/ELF/profile audits passed. Exact tagged-v0.1.0 Debug → optimized 0.1.1 scratch upgrade retained all Y4 book/chapter/history/shelf state and exported settings. Both candidate Dot Homes inspected, empty crash buffers. Local artifacts use Android Debug signing; official signing/tag/publish and owner-phone install remain owner-only. Device lock released, both kept awake. No push/tag.
+
+- **2026-11-14 final Case B audit:** archived Preview/Release/scratch SHA-256 hashes rechecked, successful build log and empty final crash logs verified. Tablet still on scratch candidate; `wm user-rotation` already reports `free`, so no device setting changed. Required owner-publish stop point remains. Evidence `app/build/review-evidence/rel-011/final-audit.json`.
