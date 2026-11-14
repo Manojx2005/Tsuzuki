@@ -93,7 +93,7 @@ either). Anything else merged into `main` from now on is for 0.1.2 unless the ow
    also needs the per-commit S22 measurements described in its card.
 3. If the owner asks for PERF-DETAILS in 0.1.1: merge `main` into `tsuzuki/rel-0.1.1`, re-run REL-0.1.1 steps
    3–5 (build Preview + Release, tests, 16 KB check, upgrade check), and record new hashes. Not before the owner asks.
-*App lane (one thread, no adb, own branch from `main`):* **BACK1**, then **STR2**, then **A11Y1** (cards below, after NT-LEX1).
+*App lane (one thread, no adb, own branch from `main`):* **STR2**, then **A11Y1** (BACK1 is with a Claude subagent) (cards below, after NT-LEX1).
 Don't take PERF-START-2 or NT-LEX1 while they say `claude-working`. If a `claude-working` card has no Result and
 no log entry for a day, Claude has stopped: take it over from its worktree and say so in the card.
 *Do not start:* NT2 steps 2–4, NT3, NT4, any anime card (paused until the 0.1.1 tag), tagging, pushing.
@@ -719,7 +719,7 @@ so the neural voice is out of 0.1.1. This card builds the replacement data, noth
 - Left for later cards (say so in Result, don't start): function-word reduction, suffix rules, names and
   out-of-vocabulary words, numbers and dates, any British lexicon, the owner listening test.
 
-#### BACK1 Back pressed while details is opening is swallowed (app lane, T3) — `ready` (before STR2)
+#### BACK1 Back pressed while details is opening is swallowed (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/back1`; Codex: don't take)
 Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
 Details stays open; the next Back shows **Home**, not the Library. Expected: the first Back returns to the
 Library (or cancels the opening), and the Library tab is still selected. Guess, not confirmed: while the
