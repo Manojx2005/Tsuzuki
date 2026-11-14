@@ -18,3 +18,7 @@ local.properties
 # Tsuzuki release signing key (never commit)
 *.jks
 *.keystore
+
+# Reproducible neural runtime investigation/build outputs
+/.native/
+scripts/**/__pycache__/
