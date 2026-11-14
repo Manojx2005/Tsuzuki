@@ -23,4 +23,12 @@ class TsuzukiBackGateTest {
         backHandlerActive(true, null, "home") shouldBe true
         backHandlerActive(false, null, "home") shouldBe false
     }
+
+    @Test
+    fun `a restored singleton uses the key of its navigator instance`() {
+        // The saved root and the newly constructed process singleton have different unique keys.
+        backHandlerActive(true, "saved-home", "process-home", "saved-home") shouldBe true
+        backHandlerActive(true, "details", "process-home", "saved-home") shouldBe false
+        backHandlerActive(false, "saved-home", "process-home", "saved-home") shouldBe false
+    }
 }
