@@ -291,3 +291,67 @@ Initial display median **698.614 ms**, range 647.388–772.369 ms
 (span 124.981 ms). Home observed median **3282.650 ms**,
 range 3161.579–3333.075 ms (span 171.495 ms). Initial display still misses 500 ms.
 Evidence: `app/build/review-evidence/perf-start-v/` (benchmark JSON/log, hashes and Dot Home screenshot).
+
+## PERF-START-2 independent review (2026-11-15)
+
+Production candidate `d1950daa5` was applied alone to current main as `879959859`,
+optimized scratch APK SHA-256 `07117c8830328b4ae6cc092ff9111460b1fb8320a78c8549c6d1b0c07c09f917`.
+Preview build and 1,095 unit tests pass. Same S22, scratch package, Dot, Japanese UI and
+500-book library as PERF-START-V (the full backup also includes the extra reading fixture).
+Ten COLD Partial/Require runs per build; every observer count is one, no thermal-throttle sleep.
+An immediate baseline repeat controls for the elapsed time and midnight rollover since PERF-START-V.
+Home observed includes benchmark/shell/accessibility overhead; it is not app fully-drawn.
+
+| Run | Main initial (ms) | Warm-up initial (ms) | Main Home observed (ms) | Warm-up Home observed (ms) |
+|---|---:|---:|---:|---:|
+| 1 | 734.443 | 639.841 | 3303.008 | 3316.883 |
+| 2 | 658.891 | 425.215 | 3206.650 | 3019.051 |
+| 3 | 741.446 | 674.533 | 3207.302 | 3167.251 |
+| 4 | 741.797 | 419.357 | 3347.755 | 3151.274 |
+| 5 | 760.206 | 538.276 | 3421.948 | 3215.467 |
+| 6 | 731.435 | 576.151 | 3432.810 | 3185.550 |
+| 7 | 740.356 | 630.928 | 3375.024 | 3296.350 |
+| 8 | 815.010 | 418.006 | 3402.793 | 3133.899 |
+| 9 | 649.267 | 532.129 | 3268.953 | 3130.323 |
+| 10 | 741.426 | 573.951 | 3327.231 | 3657.318 |
+
+| Metric | Main median / range (ms) | Warm-up median / range (ms) | Median improvement (ms) |
+|---|---:|---:|---:|
+| Initial display | 740.891 / 649.267–815.010 | 556.113 / 418.006–674.533 | 184.778 |
+| Home observed | 3337.493 / 3206.650–3432.810 | 3176.401 / 3019.051–3657.318 | 161.092 |
+
+**Not accepted for merge.** The initial-display gain (184.778 ms) is smaller than the candidate's
+256.527 ms run range. Home-observed gain (161.092 ms) is smaller than both its 638.266 ms candidate
+range and the 226.160 ms baseline range. Initial display still misses 500 ms. The apparent gain is
+worth further investigation, but does not satisfy this card's strict variability criterion.
+
+Twenty additional cold launches reached populated Home; XML/screenshots and sampled recording frames
+were inspected, with no sustained splash freeze in this fixture and an empty crash buffer. Cold first
+Browse search found the existing local Listening fixture. No usable remote extension is configured,
+so remote search/constructor ordering was not verified and no extension was trusted.
+
+The library-update job started a new scratch process after `am kill` and a verified absent PID;
+WebView warmed without an observed freeze. WorkManager deferred the periodic worker body until its
+scheduled time, so this is not proof that cold background source fetching is correct. The temporary
+12-hour update setting was returned to Off, its job canceled, and the pre-job backup restored (worker
+SUCCESS). The code still reads `SourceManager.get/getOrStub` in LibraryUpdateJob without awaiting
+initialization. Custom/JS source construction can initialize NetworkHelper/CookieManager before the
+new APK-only gate. Posting after pre-draw also does not guarantee that a frame has been presented.
+These remain unresolved ordering/coverage risks, not verified regressions on every device.
+
+Diagnostic `eb5e21fa7` was built separately as `52d0aa909` on `diagnostic/perf-start-2-trace`.
+It is never merged. Its composition sections exclude later measure/layout/draw and nested sections
+must not be added together. No third tuning change was invented. Evidence, exact samples, traces,
+source audit, backup and smoke recordings: `app/build/review-evidence/perf-start-2/`.
+
+Diagnostic first-composition medians across all ten traces: Dot font-family construction **37.546 ms**
+(34.227-46.525), encompassing typography **37.924 ms**; Home phone **9.850 ms** (6.185-20.997),
+shelf **1.105 ms**, startup-overlay composition **0.362 ms**, nav-bar composition **0.352 ms**.
+The small parent HomeScreen section excludes deferred BoxWithConstraints/lazy subcomposition; it is
+not a measurement of the complete Home. These named sections do not account for the full traversal.
+The diagnostic benchmark passed with zero thermal-throttle sleep, but its timings are not used to
+accept the production candidate. Parser warnings (power-rail empty packet and, in some traces,
+out-of-order events) are retained with the raw traces. No third optimization selected from this data.
+
+Owner delegated the budget decision to the reviewer: retain the **500 ms** engineering target and
+record a follow-up; do not relax the budget to make this candidate pass.
