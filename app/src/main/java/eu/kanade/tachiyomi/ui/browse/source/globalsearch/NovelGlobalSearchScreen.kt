@@ -76,6 +76,7 @@ class NovelGlobalSearchScreen(
                 },
                 onClickItem = { navigator.push(MangaScreen(it.id, true)) },
                 onLongClickItem = { navigator.push(MangaScreen(it.id, true)) },
+                onRetrySource = viewModel::retrySource,
             )
         }
     }

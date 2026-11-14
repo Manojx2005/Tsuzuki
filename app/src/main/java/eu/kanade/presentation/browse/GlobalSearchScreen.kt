@@ -34,6 +34,7 @@ fun GlobalSearchScreen(
     onClickSource: (Source) -> Unit,
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
+    onRetrySource: ((Source) -> Unit)? = null,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -62,6 +63,7 @@ fun GlobalSearchScreen(
             onClickSource = onClickSource,
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
+            onRetrySource = onRetrySource,
             header = if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
                 { TsuzukiGlobalSearchSummary(state.resultCount, state.elapsedMillis) }
             } else {
@@ -82,6 +84,7 @@ internal fun GlobalSearchContent(
     fromSourceId: Long? = null,
     header: (@Composable () -> Unit)? = null,
     operationKey: Any? = null,
+    onRetrySource: ((Source) -> Unit)? = null,
 ) {
     LazyColumn(
         contentPadding = contentPadding,
@@ -108,9 +111,7 @@ internal fun GlobalSearchContent(
                                     ),
                                     currentStep = 0,
                                     operationKey = operationKey to source.id,
-                                    onRetry = {
-                                        onClickSource(source)
-                                    },
+                                    onRetry = onRetrySource?.let { retry -> { retry(source) } },
                                 )
                             } else {
                                 GlobalSearchLoadingResultItem()
@@ -129,9 +130,7 @@ internal fun GlobalSearchContent(
                                 eu.kanade.presentation.tsuzuki.components.TsuzukiErrorState(
                                     error = result.throwable,
                                     whatFailed = source.name,
-                                    onRetry = {
-                                        onClickSource(source)
-                                    },
+                                    onRetry = onRetrySource?.let { retry -> { retry(source) } },
                                     onExtensions = eu.kanade.presentation.tsuzuki.components.extensionsAction(),
                                 )
                             } else {

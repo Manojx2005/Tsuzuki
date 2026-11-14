@@ -44,7 +44,7 @@ import eu.kanade.tachiyomi.tsuzuki.error.ErrorAction
 import eu.kanade.tachiyomi.tsuzuki.error.ErrorCopy
 import eu.kanade.tachiyomi.tsuzuki.error.ErrorReason
 import eu.kanade.tachiyomi.tsuzuki.error.LoadingPhase
-import eu.kanade.tachiyomi.tsuzuki.error.errorCopy
+import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import eu.kanade.tachiyomi.tsuzuki.error.loadingPhase
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
@@ -62,6 +62,7 @@ internal fun Context.errorHeading(copy: ErrorCopy): String = when (copy.reason) 
     ErrorReason.EXTENSION -> stringResource(MR.strings.tsz_error_extension)
     ErrorReason.STORAGE_FULL -> stringResource(MR.strings.tsz_error_storage_full)
     ErrorReason.PERMISSION -> stringResource(MR.strings.tsz_error_permission)
+    ErrorReason.NO_CHAPTERS -> stringResource(MR.strings.no_chapters_error)
     ErrorReason.OTHER -> stringResource(MR.strings.tsz_error_other)
 }
 
@@ -73,7 +74,7 @@ internal fun Context.errorAdvice(copy: ErrorCopy): String? = when (copy.reason) 
     ErrorReason.PARSE -> stringResource(MR.strings.tsz_error_parse_help)
     ErrorReason.EXTENSION -> stringResource(MR.strings.tsz_error_extension_help)
     ErrorReason.STORAGE_FULL, ErrorReason.PERMISSION -> stringResource(MR.strings.tsz_error_storage_help)
-    ErrorReason.OTHER -> null
+    ErrorReason.NO_CHAPTERS, ErrorReason.OTHER -> null
 }
 
 /** Board 1. Callbacks are offered only when the host can perform the action. */
@@ -92,7 +93,7 @@ fun TsuzukiErrorState(
 ) {
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
-    val copy = remember(error, whatFailed, sourceUrl) { errorCopy(error, whatFailed, sourceUrl) }
+    val copy = remember(error, whatFailed, sourceUrl) { errorCopyForUi(error, whatFailed, sourceUrl) }
     val preferred = when (copy.primaryAction) {
         ErrorAction.WEBVIEW -> onWebView?.let { context.stringResource(MR.strings.action_open_in_web_view) to it }
         ErrorAction.EXTENSIONS -> onExtensions?.let { context.stringResource(MR.strings.label_extensions) to it }

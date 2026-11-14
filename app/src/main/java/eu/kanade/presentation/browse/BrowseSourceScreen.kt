@@ -68,7 +68,7 @@ fun BrowseSourceContent(
 
     val getErrorMessage: (LoadState.Error) -> String = { state ->
         if (themedErrors) {
-            context.errorHeading(eu.kanade.tachiyomi.tsuzuki.error.errorCopy(state.error))
+            context.errorHeading(eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi(state.error))
         } else {
             with(context) { state.error.formattedMessage }
         }

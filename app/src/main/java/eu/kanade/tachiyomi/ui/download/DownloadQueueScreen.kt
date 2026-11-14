@@ -949,12 +949,16 @@ private fun NovelDownloadCard(
                     item.errorDetails.take(collapsedLimit)
                 }
                 visibleErrors.forEach { (chapter, reason) ->
+                    val themedCopy = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                        remember(chapter, reason) {
+                            eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi(IllegalStateException(reason), chapter)
+                        }
+                    } else {
+                        null
+                    }
                     Text(
-                        text = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
-                            eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(chapter) + ": " +
-                                context.errorHeading(
-                                    eu.kanade.tachiyomi.tsuzuki.error.errorCopy(IllegalStateException(reason)),
-                                )
+                        text = if (themedCopy != null) {
+                            themedCopy.whatFailed + ": " + context.errorHeading(themedCopy)
                         } else {
                             "$chapter: $reason"
                         },

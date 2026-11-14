@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.error
 
 import eu.kanade.tachiyomi.network.HttpException
+import tachiyomi.domain.chapter.model.NoChaptersException
 import kotlinx.coroutines.CancellationException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -20,6 +21,7 @@ enum class ErrorReason {
     EXTENSION,
     STORAGE_FULL,
     PERMISSION,
+    NO_CHAPTERS,
     OTHER,
 }
 enum class ErrorAction { RETRY, WEBVIEW, EXTENSIONS, STORAGE }
@@ -33,6 +35,22 @@ data class ErrorCopy(
     val technical: String,
     val primaryAction: ErrorAction,
 )
+
+/**
+ * Non-throwing variant for UI and composition call sites: a cancellation that was stored as an error state becomes
+ * the generic copy instead of crashing the caller. Suspend callers use [errorCopy], which rethrows cancellation.
+ */
+fun errorCopyForUi(error: Throwable, whatFailed: String = "", sourceUrl: String? = null): ErrorCopy = try {
+    errorCopy(error, whatFailed, sourceUrl)
+} catch (_: CancellationException) {
+    ErrorCopy(
+        whatFailed = redactErrorTitle(whatFailed),
+        reason = ErrorReason.OTHER,
+        message = "Cancelled",
+        technical = "Cancelled",
+        primaryAction = ErrorAction.RETRY,
+    )
+}
 
 /** Pure classification; nothing from an exception reaches display or clipboard before redaction. */
 fun errorCopy(error: Throwable, whatFailed: String = "", sourceUrl: String? = null): ErrorCopy {
@@ -62,7 +80,8 @@ fun errorCopy(error: Throwable, whatFailed: String = "", sourceUrl: String? = nu
                 "missing plugin",
                 "stubsource",
             ).any(text::contains) -> ErrorReason.EXTENSION
-        challenge && (status == null || status == 403 || status == 503) -> ErrorReason.CHALLENGE
+        chain.any { it is NoChaptersException } -> ErrorReason.NO_CHAPTERS
+        status == 403 || challenge && (status == null || status == 503) -> ErrorReason.CHALLENGE
         chain.any { it is UnknownHostException || it is ConnectException } -> ErrorReason.NETWORK
         chain.any {
             it is SocketTimeoutException || it is TimeoutException ||
@@ -84,7 +103,7 @@ fun errorCopy(error: Throwable, whatFailed: String = "", sourceUrl: String? = nu
     val message = redactErrorText(raw.ifBlank { error.javaClass.simpleName })
     val host = sourceUrl?.let(::safeErrorHost)
     return ErrorCopy(
-        whatFailed = redactErrorText(whatFailed),
+        whatFailed = redactErrorTitle(whatFailed),
         reason = reason,
         message = message,
         technical = listOfNotNull(
@@ -109,17 +128,36 @@ fun safeErrorHost(url: String): String? = try {
     null
 }
 
+private val URL_RE = Regex("""(?i)(?:https?://|content://|file://)[^\s<>\"']+""")
+
+/** Titles keep `?`, `&` and `#`; only URLs are reduced to their host. */
+fun redactErrorTitle(text: String): String = text
+    .replace(URL_RE) { safeErrorHost(it.value) ?: "[URL]" }
+    .replace(Regex("""[\r\n\t ]+"""), " ")
+    .trim()
+    .take(600)
+
 /** Keep a short diagnostic, never URL paths, queries, credentials, headers or stack traces. */
 fun redactErrorText(text: String): String = text
     .replace(Regex("""(?im)^\s*(?:at\s+|caused by:).*$(?:\r?\n)?"""), " ")
-    .replace(Regex("""(?i)(?:authorization|proxy-authorization|cookie|set-cookie)\s*[:=][^\r\n]*"""), "[redacted]")
-    .replace(Regex("""(?i)\b(?:bearer|basic)\s+[A-Za-z0-9+/=._~-]+"""), "[redacted]")
-    .replace(Regex("""(?i)(?:https?://|content://|file://)[^\s<>\"']+""")) { safeErrorHost(it.value) ?: "[URL]" }
     .replace(
-        Regex("""(?i)\b(?:token|api[_-]?key|password|secret|session|signature|access_token)\s*[:=]\s*[^\s,;]+"""),
+        Regex("""(?i)(?:authorization|proxy-authorization|cookie|set-cookie)["']?\s*[:=][^\r\n]*"""),
         "[redacted]",
     )
+    .replace(Regex("""(?i)\b(?:bearer|basic)\s+[A-Za-z0-9+/=._~-]+"""), "[redacted]")
+    .replace(URL_RE) { safeErrorHost(it.value) ?: "[URL]" }
+    .replace(
+        Regex(
+            """(?i)\b(?:token|api[_-]?key|password|secret|session|signature|access_token)["']?\s*[:=]\s*""" +
+                """(?:"[^"]*"|'[^']*'|[^\s,;]+)""",
+        ),
+        "[redacted]",
+    )
+    .replace(Regex("""(?<![\w@])[\w.%+-]+:[^\s@/:]+@(?=[\w.-])"""), "")
     .replace(Regex("""[?&#][^\s]+"""), "[redacted]")
+    // File-system paths: keep the file name, drop the directories (they can contain book titles and user names).
+    .replace(Regex("""(?<![\w.:/~-])/(?:[^\s/<>\"'|?*:][^/\r\n<>\"'|?*:]*/)+"""), "[path]/")
+    .replace(Regex("""(?i)(?<!\w)[A-Z]:\\(?:[^\s\\<>\"'|?*:][^\\\r\n<>\"'|?*:]*\\)*"""), "[path]/")
     .replace(Regex("""[\r\n\t ]+"""), " ")
     .trim()
     .take(600)

@@ -114,7 +114,7 @@ internal class NovelWebViewInlineFeedback(
         pendingRetry = onRetry
         val fmt = ErrorFormatter.format(error)
         val themed = eu.kanade.presentation.tsuzuki.components.usesTsuzukiErrors()
-        val copy = if (themed) eu.kanade.tachiyomi.tsuzuki.error.errorCopy(error) else null
+        val copy = if (themed) eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi(error) else null
         val tokens = eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor(
             uy.kohesive.injekt.Injekt.get<eu.kanade.domain.ui.UiPreferences>().appTheme.get(),
         )

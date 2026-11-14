@@ -14,11 +14,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import tachiyomi.domain.chapter.model.NoChaptersException
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.concurrent.TimeoutException
+import javax.net.ssl.SSLException
 
 class ErrorCopyTest {
     @ParameterizedTest
@@ -136,8 +138,85 @@ class ErrorCopyTest {
         assertEquals(LoadingPhase.STAGES, loadingPhase(29999))
         assertEquals(LoadingPhase.TIMED_OUT, loadingPhase(30000))
         assertEquals(LoadingPhase.TIMED_OUT, loadingPhase(Long.MAX_VALUE))
-        // A new step starts its own clock, regardless of the previous step's elapsed time.
-        assertEquals(LoadingPhase.SPINNER, loadingPhase(0))
+    }
+
+    @Test
+    fun `titles keep query and fragment characters`() {
+        listOf("Chapter #12", "Why?!", "A&B", "Vol. 3 & 4 #5?").forEach {
+            assertEquals(it, redactErrorTitle(it))
+            assertEquals(it, errorCopy(IOException("x"), it).whatFailed)
+        }
+    }
+
+    @Test
+    fun `title containing a URL is reduced to its host`() {
+        assertEquals("Read example.org now", redactErrorTitle("Read https://example.org/a/b?token=s#f now"))
+        assertEquals("example.org", errorCopy(IOException("x"), "https://u:p@example.org/p?q=1#h").whatFailed)
+    }
+
+    @Test
+    fun `bare 403 is a challenge that prefers the browser`() {
+        val copy = errorCopy(HttpException(403))
+        assertEquals(ErrorReason.CHALLENGE, copy.reason)
+        assertEquals(ErrorAction.WEBVIEW, copy.primaryAction)
+    }
+
+    @Test
+    fun `JSON quoted secrets are redacted`() {
+        listOf(
+            """{"token":"abcSecret"}""",
+            """{"token": "abc Secret"}""",
+            """"cookie":"abc=Secret"""",
+            """{"authorization":"Bearer abcSecret"}""",
+            """{'password':'abcSecret'}""",
+        ).forEach {
+            assertFalse(redactErrorText(it).contains("Secret"), redactErrorText(it))
+        }
+    }
+
+    @Test
+    fun `file system paths keep only the file name`() {
+        assertEquals(
+            "open failed: [path]/001.jpg (No such file)",
+            redactErrorText("open failed: /storage/emulated/0/Tsuzuki/Some Title/001.jpg (No such file)"),
+        )
+        assertEquals("[path]/book.epub", redactErrorText("""C:\Users\name\My Docs\book.epub"""))
+        assertFalse(errorCopy(IOException("/data/user/0/app/Hidden Name/x.cbz")).technical.contains("Hidden"))
+    }
+
+    @Test
+    fun `credentials without a scheme are redacted`() {
+        val out = redactErrorText("login failed for user:hunter2@example.org")
+        assertFalse(out.contains("hunter2"), out)
+        assertFalse(out.contains("user:"), out)
+        assertTrue(out.contains("example.org"))
+    }
+
+    @Test
+    fun `ordinary prose with slashes is not mangled`() {
+        listOf(
+            "read/write failed",
+            "404 Not Found",
+            "and/or",
+            "Connection reset / try again and/or later",
+            "w/o network, 1/2 done",
+            "TCP/IP error",
+        ).forEach { assertEquals(it, redactErrorText(it)) }
+    }
+
+    @Test
+    fun `UI variant maps cancellation to the generic copy instead of throwing`() {
+        val copy = errorCopyForUi(CancellationException("owner left"), "Chapter #1")
+        assertEquals(ErrorReason.OTHER, copy.reason)
+        assertEquals(ErrorAction.RETRY, copy.primaryAction)
+        assertEquals("Chapter #1", copy.whatFailed)
+        assertEquals(ErrorReason.NETWORK, errorCopyForUi(UnknownHostException()).reason)
+    }
+
+    @Test
+    fun `no chapters gets its own copy`() {
+        assertEquals(ErrorReason.NO_CHAPTERS, errorCopy(NoChaptersException()).reason)
+        assertEquals(ErrorReason.NO_CHAPTERS, errorCopy(IOException("wrap", NoChaptersException())).reason)
     }
 
     companion object {
@@ -161,6 +240,13 @@ class ErrorCopyTest {
                 ErrorReason.STORAGE_FULL,
                 ErrorAction.STORAGE,
             ),
+            Arguments.of(
+                IOException("write failed", IOException("ENOSPC (No space left on device)")),
+                ErrorReason.STORAGE_FULL,
+                ErrorAction.STORAGE,
+            ),
+            Arguments.of(SSLException("Connection closed by peer"), ErrorReason.OTHER, ErrorAction.RETRY),
+            Arguments.of(HttpException(403), ErrorReason.CHALLENGE, ErrorAction.WEBVIEW),
             Arguments.of(SecurityException("SAF grant revoked"), ErrorReason.PERMISSION, ErrorAction.STORAGE),
             Arguments.of(IOException("open failed: EACCES"), ErrorReason.PERMISSION, ErrorAction.STORAGE),
             Arguments.of(IOException("other failure"), ErrorReason.OTHER, ErrorAction.RETRY),

@@ -1975,15 +1975,20 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     private fun showLoadingIndicator() {
         contentContainer.removeAllViews()
 
-        initialLoadingView =
-            activity.createReaderLoadingView(currentChapters?.currChapter?.chapter?.id ?: Unit)
-                ?: TextView(activity).apply {
-                    text = activity.stringResource(TDMR.strings.novel_chapter_loading)
-                    textSize = 16f
-                    gravity = Gravity.CENTER
-                    setPadding(32, 64, 32, 64)
-                    setTextColor(0xFF888888.toInt())
-                }
+        activity.createReaderLoadingView(currentChapters?.currChapter?.chapter?.id ?: Unit)?.let {
+            initialLoadingView = it
+            contentContainer.addView(it)
+            applyBackgroundColor()
+            return
+        }
+
+        initialLoadingView = TextView(activity).apply {
+            text = activity.stringResource(TDMR.strings.novel_chapter_loading)
+            textSize = 16f
+            gravity = Gravity.CENTER
+            setPadding(32, 64, 32, 64)
+            setTextColor(0xFF888888.toInt())
+        }
 
         contentContainer.addView(initialLoadingView)
         applyBackgroundColor()
