@@ -132,3 +132,26 @@ including `f-final-independent-audit.json`, `f-source-rebuild.log`, `f-final-rea
 
 This is ready for independent artifact review, not a synthesis or licence verdict. No app dependency,
 voice pack, lexicon, Gradle configuration or S4 integration was added. The owner listening gate remains.
+
+## US-English lexicon from CMUdict (NT-LEX1)
+
+The upstream Kokoro lexicon's licence is unsettled (`docs/research/neural-tts-clean-lexicon.md`), so
+`build-lexicon-cmudict.py` converts CMUdict (BSD-2-style licence) instead. Conversion only: no function-word
+reduction, suffix rules, names, numbers or British English yet, and nothing from misaki's data is used.
+
+```sh
+python scripts/neural-tts/build-lexicon-cmudict.py            # pinned download, then convert
+python scripts/neural-tts/build-lexicon-cmudict.py --input path/to/cmudict.dict --output out.txt
+python -m unittest discover -s scripts/tests
+```
+
+- Source: `cmudict.dict` at `cmusphinx/cmudict` commit `74790861f652b15e4ac49015a90074ad62a27690`, SHA-256
+  `81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22`. It is cached as
+  `.native/archives/74790861f652-cmudict.dict` (ignored by git); a wrong hash is refused. If Python has no CA
+  certificates (MSYS Python), download the file another way into that path and rerun. `--input` skips the check.
+- Output (default `.native/lexicon/lexicon-us-en-cmudict.txt`, ignored by git): `word p h o n e s`, one symbol per
+  space-separated field, sorted, LF, UTF-8, one pronunciation per word (the lowest `WORD(n)` variant, because the
+  runtime keeps one per key). It prints the entry count and SHA-256 (126,052 entries, hash in the card Result).
+- The flapped t is written `T`, as misaki feeds Kokoro-82M v1.0; `--flap ipa` writes U+027E instead. Which one
+  sounds right is for the owner listening test. Licence texts to ship next to the lexicon:
+  `licenses/cmudict-LICENSE.txt` and `licenses/cmudict-NOTICE.txt`.
