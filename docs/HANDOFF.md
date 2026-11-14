@@ -79,6 +79,26 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 
 **Stop at the publishing handoff.** Local APKs use Android Debug signing. Owner handles official CI signing, owner-phone install, stale local v0.1.1 tag resolution, tagging and publishing. No tag/push performed. Neural runtime/voice and the anime chain remain outside this candidate. Earlier current-state blocks are historical; this block supersedes their next-action/candidate statements.
 
+## Current state (2026-11-15 early morning, Claude — 0.1.1 tagged; anime is next)
+
+Owner 2026-11-15 (before sleeping): (1) if everything is done with 0.1.1, Claude may push the build; (2) **anime
+is the priority after 0.1.1**; (3) **STR2 is parked** to save usage (partial, uncommitted work in
+`.worktrees/str2`: strings moved in 15 files plus a locale-coverage test, tests never run); A11Y1 waits with it.
+
+- Claude's check of Codex's refreshed candidate before tagging: `main` and `tsuzuki/rel-0.1.1` differ only in
+  docs; versionCode 25 / versionName 0.1.1; `:app:testDebugUnitTest` re-run on the release branch = **1,091
+  tests, 0 failures**; Codex's review fixes read (`3305865d0`, `7e3a3d635`, `5c4b89421`); the 153 unpushed commits
+  scanned for secrets, keystores and binaries (none); both test devices on the candidate, Dot Home, crash buffers
+  empty. Not re-done by Claude: the Release build, 16 KB audit and the 0.1.0 → 0.1.1 upgrade comparison (Codex's
+  `app/build/review-evidence/rel-011-refresh-final/final-audit.json`).
+- The stale local tag `v0.1.1` (2016 upstream commit `0210fd882`) was deleted and `v0.1.1` now points at `main`.
+  `main` and the tag were pushed to `origin`; the Release workflow signs and publishes. Result: see the log.
+- **The anime pause is over** (Plan 0.1.1 step 10). Order: **RV3** (review of the anime chain A2.3 → R-A5), then
+  **AY-PLAY** (owner bug: extension videos don't play), **AY9**, **AY0** … as in "Batch AY".
+- Still open and not anime: cold start 741 ms vs 500 ms (PERF-START-2-F); neural voice (lexicon decision, owner
+  listening test); R12-F / R14 / S1 reviews (owner must approve trusting one live extension); R13 dictionary
+  packs not published; owner-phone install of 0.1.1.
+
 ## Current state (2026-11-14 night, Claude — reviewing the app lane; budget subagents implement)
 
 Owner 2026-11-14 night: Claude checks Codex's work, says what Codex does next, and uses cheaper subagents for
