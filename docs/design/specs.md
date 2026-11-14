@@ -175,7 +175,7 @@ Use the curves and durations above. The intent of each:
 
 | Board | What moves |
 |---|---|
-| MotionOpen | The cover in a list flies to its place on book details. Owner 2026-11-14 overrides the archived board's 450 ms opening: fully settle within 300 ms total, with 200 ms synchronized cover/fade and 100 ms preparation allowance. Colour/Dot keep their existing appearance and smooth easing. This total budget is pending device verification. |
+| MotionOpen | The cover in a list flies to its place on book details. Owner 2026-11-14 overrides the archived board's 450 ms opening: fully settle within 300 ms total, with 200 ms synchronized cover/fade and 100 ms preparation allowance. Colour/Dot keep their existing appearance and smooth easing. S22 Dot/Colour verification passed at 235–292 ms (PERF-DETAILS); BACK1 then passed early/settled Back and process-restoration checks on both devices/themes. |
 | MotionReader | Resume: the cover scales into the reader page (450 ms). The reader bars slide in after. |
 | MotionStack | Home's shelf stack: tap shuffles the top book to the back (400 ms). |
 | MotionTheme | Switching Colour ↔ Dot: a circular reveal from the tapped card (600 ms). |

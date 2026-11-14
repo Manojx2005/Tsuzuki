@@ -756,7 +756,7 @@ Result (Claude subagent, 2026-11-14; `243121aea`): **review.** Scripts only; not
 
 Review (Codex independent review, 2026-11-14): **pass.** Full six-file diff reviewed, no copied gold/silver or upstream lexicon data. Pinned CMU input independently downloaded and hash-verified; two default builds give 126,052 entries and SHA-256 `3f9d023400a8b0c4730c095729363c9374c8e8efbf65ad62e2df67f0d18efb50`. All 50 Python tests pass (0 skips), full output vocabulary exactly matches the 114-symbol pinned config fixture, CMU licence byte-identical to pinned source, 30 common words checked against ARPAbet input. The default `T` flap is supported by pinned model normalization code; IPA option retained, listening still required. Explicit local `--input` bypass is documented and warns; production data must use default hash-enforced path. Python HTTPS CA limitation remains; curl verified TLS for independent downloads. JDK21 Debug + Preview builds and 1,087 Android unit tests pass (0 failures/errors/skips), diff check clean. No devices needed or used. Evidence `app/build/review-evidence/nt-lex1/` (archived in root); source checks and scope in research section 4. No app runtime integration or voice release approval.
 
-#### BACK1 Back pressed while details is opening is swallowed (T3) — `codex-working` (Codex independent review 2026-11-15, .worktrees/review-back1; owner explicitly authorizes takeover from stopped Claude; implementation tsuzuki/back1 f9d047d95)
+#### BACK1 Back pressed while details is opening is swallowed (T3) — `done` (Codex independent review 2026-11-15; original f9d047d95 plus review fixes 3305865d0 and 7e3a3d635)
 Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
 Details stays open; the next Back shows **Home**, not the Library. Expected: the first Back returns to the
 Library (or cancels the opening), and the Library tab is still selected. Guess, not confirmed: while the
@@ -768,6 +768,11 @@ back handlers (`HomeScreen.kt`, the tab back handling, Voyager's `Navigator` bac
 pops the details screen and leaves the tab alone; add a unit test for whatever decision function you extract.
 Keep the upstream edit to a small dispatch. No adb. Reviewer script: S22 and tablet, Dot and Colour, Back at
 about 50, 150 and 400 ms after the tap, from Library, Home shelf, Updates and History; then predictive-back swipe.
+
+
+Review Result (Codex, owner-authorized takeover 2026-11-15): **pass with two review fixes**, not f9d047d95 alone. Seven-file diff reviewed. Covered tab Back callbacks could win while both routes stayed composed; the identical unconditional Home callback existed before c0a12f2c4 (450 ms), established by source reasoning, not an old-APK measurement. Original fix introduced a regression: ordinary Library Back exited the app because Home's handler sits outside its root-navigator provider and saw the nested tab navigator. Reproduced fresh and after process death. 7e3a3d635 passes the captured root navigator explicitly; 3305865d0 resolves the restored Home host key rather than the new process singleton key. Other screen instances retain their own keys. Small upstream hooks; no layout/data/motion changes.
+
+Final JDK21 Debug + optimized Preview and 1,091 unit tests pass; four Back policy tests, scoped formatter/diff checks clean. On S22 and tablet, Dot and Colour, Library/Updates/History/Home shelf each pass Back at requested 50/150/400 ms (actual 51–56/151–153/401–406 ms), plus one edge Back swipe per origin: **48 timed cases + 16 gestures**. Each combination also passes ordinary Library-to-Home Back and verified-dead-process restoration followed by Library-to-Home Back. Warm open/pop precedes each timed series to exercise callback recreation. XML/text comparisons, recordings and all four final screenshot montages inspected; origins and selected phone pill/tablet rail preserved, crash buffers empty. S22 rv5debugscratch and tablet rel011upgradescratch both use 500-book synthetic fixtures; daily apps untouched. APK SHA-256: S22 `7ac99e682436d440bc29074f1d12cfd4341afafa8b393143c45a0a07379b8466`; tablet candidate-id `e97f80765c61800568b0b368b76e5d354a59059db8a7539cc40f09fc0510fa4b`. Evidence `app/build/review-evidence/back1-review/`, final-audit.json and source-audit.md. Timestamped input helper is evidence only and was removed from module sources. No TalkBack/reduced-motion/real-cover claim. Device lock retained for candidate refresh.
 
 #### STR2 Hardcoded and untranslated strings sweep (T2) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/str2`; Codex: don't take)
 The test devices run in Japanese and RV5 still found English or reused strings (STR1, the CSV dialog title).
@@ -868,7 +873,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (BACK1 then release-candidate refresh, 2026-11-15). S22 currently diagnostic PERF-START-2 scratch; replace before BACK1 checks. Tablet available. Scratch apps only; daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (BACK1 then release-candidate refresh, 2026-11-15). BACK1 passed on corrected scratch builds; candidate upgrade/build checks in progress. Scratch apps only; daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3901,6 +3906,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-15 Codex review lane — BACK1 passes with review fixes.** Original f9d047d95 merged only with 3305865d0 (saved Home key) and 7e3a3d635 (explicit root navigator). Original normal Back regression reproduced and corrected. 1,091 tests, 48 timed Back cases, 16 edge gestures and all four ordinary/process-restoration checks pass; Dot/Colour phone/tablet screenshots inspected, crashes empty. Candidate refresh follows; no tag/push. Evidence back1-review/.
 
 - **2026-11-15 Codex review lane — PERF-START-V passed; PERF-START-2 not merged.** Baseline helper validated (ten counts exactly one), full samples in PERFORMANCE.md. d1950daa5-only candidate built and 1,095 tests passed, but initial/Home median gains did not exceed observed variability; 500 ms target retained by delegated owner judgment. Twenty-launch/local search smoke passed with stated scope; periodic job starts a dead process but actual cold source fetching remains unverified. Diagnostic eb5e21fa7 measured on isolated branch only, never merged. PERF-START-2-F created. Owner authorizes taking over BACK1 independent review and refreshing 0.1.1 with BACK1 + faster details; STR2 remains untouched. Evidence perf-start-v/ and perf-start-2/.
 
