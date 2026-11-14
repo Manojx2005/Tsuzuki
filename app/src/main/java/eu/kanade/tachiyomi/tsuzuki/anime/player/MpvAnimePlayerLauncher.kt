@@ -211,6 +211,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 title = MPVLib.getPropertyString("$path/title"),
                 codec = MPVLib.getPropertyString("$path/codec"),
                 selected = MPVLib.getPropertyBoolean("$path/selected") == true,
+                forced = MPVLib.getPropertyBoolean("$path/forced") == true,
             )
         }
     }

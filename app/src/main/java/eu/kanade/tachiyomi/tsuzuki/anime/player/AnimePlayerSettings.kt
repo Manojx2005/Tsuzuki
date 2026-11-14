@@ -15,16 +15,14 @@ internal data class AnimePlayerTrack(
     val title: String?,
     val codec: String?,
     val selected: Boolean,
+    val forced: Boolean = false,
 ) {
     val preferenceKey: String
-        get() = listOf(language.orEmpty().lowercase(Locale.ROOT), title.orEmpty(), codec.orEmpty()).joinToString("|")
-}
-
-internal fun preferredAnimeTrack(tracks: List<AnimePlayerTrack>, key: String): AnimePlayerTrack? {
-    if (key.isBlank()) return null
-    val language = key.substringBefore('|').takeIf(String::isNotBlank)
-    return tracks.firstOrNull { it.preferenceKey == key }
-        ?: language?.let { preferred -> tracks.firstOrNull { it.language.equals(preferred, ignoreCase = true) } }
+        get() = listOf(
+            normalizeAnimeLanguage(language) ?: language.orEmpty().lowercase(Locale.ROOT),
+            title.orEmpty(),
+            codec.orEmpty(),
+        ).joinToString("|")
 }
 
 internal data class AnimePlayerSettings(
@@ -39,12 +37,23 @@ internal data class AnimePlayerSettings(
     val aniSkipIntroDelay: Int = 3,
 )
 
-internal class AnimePlayerPreferences(store: PreferenceStore) {
+internal class AnimePlayerPreferences(private val store: PreferenceStore) {
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
     val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)
     val preferredSubtitle = store.getString("tsuzuki_anime_player_subtitle", "")
     val preferredAudio = store.getString("tsuzuki_anime_player_audio", "")
+    val audioLanguages = store.getString("tsuzuki_anime_player_audio_languages", "")
+    val subtitleLanguages = store.getString("tsuzuki_anime_player_subtitle_languages", "")
+
+    fun languages(kind: AnimeTrackKind) = when (kind) {
+        AnimeTrackKind.AUDIO -> audioLanguages
+        AnimeTrackKind.SUBTITLE -> subtitleLanguages
+    }
+
+    fun trackOverride(animeId: Long, kind: AnimeTrackKind) =
+        store.getString("tsuzuki_anime_player_track_${animeId}_${kind.mpvType}", "")
+
     private val speed = store.getFloat("tsuzuki_anime_player_speed", 1f)
     private val subtitleScale = store.getFloat("tsuzuki_anime_player_subtitle_scale", 1f)
     private val subtitleDelay = store.getFloat("tsuzuki_anime_player_subtitle_delay", 0f)

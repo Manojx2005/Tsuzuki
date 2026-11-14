@@ -122,6 +122,7 @@ internal class AnimePlayerModel(
     private var streams: AnimeStreamQueue? = null
     private var source: RegisteredAnimeSource? = null
     private var candidates = emptyList<Video>()
+    private val directTrackOverrides = mutableMapOf<AnimeTrackKind, String>()
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
     private val skippedSegments = mutableSetOf<AniSkipSegment>()
@@ -260,10 +261,16 @@ internal class AnimePlayerModel(
 
     fun setTrack(kind: AnimeTrackKind, track: AnimePlayerTrack?) {
         if (!initialized || state.value.loading || state.value.failed) return
-        when (kind) {
-            AnimeTrackKind.SUBTITLE ->
-                playerPreferences.preferredSubtitle.set(track?.preferenceKey ?: AnimePlayerPreferences.SUBTITLES_OFF)
-            AnimeTrackKind.AUDIO -> playerPreferences.preferredAudio.set(track?.preferenceKey.orEmpty())
+        val value = track?.preferenceKey ?: if (kind == AnimeTrackKind.SUBTITLE) {
+            AnimePlayerPreferences.SUBTITLES_OFF
+        } else {
+            ""
+        }
+        val animeId = state.value.episode?.animeId
+        if (animeId == null) {
+            directTrackOverrides[kind] = value
+        } else {
+            playerPreferences.trackOverride(animeId, kind).set(value)
         }
         backend.selectTrack(kind, track?.id)
         refreshTracks()
@@ -536,18 +543,18 @@ internal class AnimePlayerModel(
 
     private fun refreshTracks() {
         val tracks = backend.tracks()
-        val subtitles = tracks.filter { it.kind == AnimeTrackKind.SUBTITLE }
-        val audio = tracks.filter { it.kind == AnimeTrackKind.AUDIO }
-        val subtitlePreference = playerPreferences.preferredSubtitle.get()
-        val subtitle = preferredAnimeTrack(subtitles, subtitlePreference)
-        val preferredAudio = preferredAnimeTrack(audio, playerPreferences.preferredAudio.get())
-        if (subtitlePreference == AnimePlayerPreferences.SUBTITLES_OFF && subtitles.any(AnimePlayerTrack::selected)) {
-            backend.selectTrack(AnimeTrackKind.SUBTITLE, null)
-        } else if (subtitle != null && !subtitle.selected) {
-            backend.selectTrack(AnimeTrackKind.SUBTITLE, subtitle.id)
-        }
-        if (preferredAudio != null && !preferredAudio.selected) {
-            backend.selectTrack(AnimeTrackKind.AUDIO, preferredAudio.id)
+        val animeId = state.value.episode?.animeId
+        for (kind in AnimeTrackKind.entries) {
+            val override = animeId?.let { playerPreferences.trackOverride(it, kind).get() }
+                ?: directTrackOverrides[kind]
+            val legacy = when (kind) {
+                AnimeTrackKind.AUDIO -> playerPreferences.preferredAudio.get()
+                AnimeTrackKind.SUBTITLE -> playerPreferences.preferredSubtitle.get()
+            }
+            val languages = animeLanguageOrder(playerPreferences.languages(kind).get(), kind)
+            val choice = chooseAnimeTrack(kind, tracks, override, languages, legacy) ?: continue
+            val selected = tracks.firstOrNull { it.kind == kind && it.selected }
+            if (choice.track?.id != selected?.id) backend.selectTrack(kind, choice.track?.id)
         }
         mutableState.update { it.copy(tracks = tracks) }
     }

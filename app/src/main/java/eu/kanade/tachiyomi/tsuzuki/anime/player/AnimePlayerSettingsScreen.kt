@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.Speed
@@ -70,6 +71,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
         val supportsPip = LocalContext.current.supportsAnimePictureInPicture()
         var showSpeed by remember { mutableStateOf(false) }
         var showAniSkip by remember { mutableStateOf(false) }
+        var languageKind by remember { mutableStateOf<AnimeTrackKind?>(null) }
         val tokens = TsuzukiTheme.tokens
 
         fun update(settingsUpdate: AnimePlayerSettings) {
@@ -144,15 +146,25 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 }
                 item {
                     PlayerSettingCard(
-                        stringResource(R.string.tsz_anime_player_subtitle_size),
+                        stringResource(R.string.tsz_anime_player_subtitles),
                         Icons.Outlined.TextFields,
                     ) {
                         AnimePlayerStepper(
-                            label = null,
+                            label = stringResource(R.string.tsz_anime_player_subtitle_size),
                             value = formatAnimePercent(settings.subtitleScale),
                             decrease = { update(settings.copy(subtitleScale = settings.subtitleScale - 0.1f)) },
                             increase = { update(settings.copy(subtitleScale = settings.subtitleScale + 0.1f)) },
                         )
+                        TextButton(onClick = { languageKind = AnimeTrackKind.SUBTITLE }) {
+                            Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_preferred_languages)))
+                        }
+                    }
+                }
+                item {
+                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_audio), Icons.Outlined.Headphones) {
+                        TextButton(onClick = { languageKind = AnimeTrackKind.AUDIO }) {
+                            Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_preferred_languages)))
+                        }
                     }
                 }
                 item {
@@ -188,6 +200,18 @@ internal object AnimePlayerSettingsScreen : Screen() {
                     }
                 }
             }
+        }
+        languageKind?.let { kind ->
+            val preference = preferences.languages(kind)
+            AnimeLanguageOrderDialog(
+                kind = kind,
+                initial = animeLanguageOrder(preference.get(), kind),
+                onDismiss = { languageKind = null },
+                onSave = {
+                    preference.set(it.joinToString(","))
+                    languageKind = null
+                },
+            )
         }
         if (showSpeed) {
             AlertDialog(
