@@ -256,7 +256,13 @@ object HomeScreen : Screen() {
 
                 val goToNovelsTab = { tabNavigator.current = NovelsTab }
 
-                BackHandler(enabled = tabNavigator.current != homeTab, onBack = { tabNavigator.current = homeTab })
+                BackHandler(
+                    enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(
+                        tabNavigator.current != homeTab,
+                        HomeScreen,
+                    ),
+                    onBack = { tabNavigator.current = homeTab },
+                )
 
                 LaunchedEffect(Unit) {
                     launch {
