@@ -579,13 +579,21 @@ first text), Library scroll with the 500-book synthetic backup (Y4) — janky fr
 (budget under 5 %), opening book details (budget 300 ms). A missed budget becomes a card; don't tune here.
 Result: Optimized Preview, S22, Y4 500-book database. Cold Macrobenchmark 10-run median 741.2 ms (miss); local Native Next first readable text approximately 180–190 ms in 3 video samples (limited pass, close to timing uncertainty); Library 25/1,397 janky frames = 1.79% (pass; selected shelf 17 books); cached details first title median 58 ms but full transition about 510 ms (miss). Methods, scope and evidence in docs/PERFORMANCE.md. No tuning; follow-up cards below.
 
-#### PERF-START Cold startup exceeds S22 budget — `ready`
+#### PERF-START Cold startup exceeds S22 budget — `review` (investigation/helper only; 500 ms miss unresolved)
 Trace-led investigation of PERF1: optimized Preview on accepted RV5 main, Y4 500-book
 scratch database, baseline-profile-required Macrobenchmark 10 cold launches, median
 initial display 741.2 ms versus 500 ms. Compare like-for-like before/after, retain the
 WebView warm-up ordering documented in PERFORMANCE.md, and measure Home readiness
 separately. Evidence: app/build/review-evidence/perf1/benchmark-output/. Do not infer
 regression size from older four-book am-start measurements.
+
+
+Result (Codex, 2026-11-14; `tsuzuki/perf-start`, `.worktrees/perf-start`): investigated all ten original PERF1 traces locally, no adb or production tuning. Main-thread medians: application bind 391.2 ms (includes dex open 104.3 ms and Chromium sync 140.5 ms), first traversal 166.4 ms, Activity create 32.4 ms. Inclusive wall intervals cannot be added across nesting. The benchmark's original 741.2 ms remains the budget verdict; Perfetto system interval boundaries differ.
+- `scripts/analyze_startup_traces.py`: reproducible per-trace SQL, retained raw slices/health, missing-package rejection, summary ranges and sample counts. Ten-trace analysis + Python compilation + negative package check pass.
+- `StartupBenchmarks.kt`: separate benchmark-process `TsuzukiHomeObserved` section, waits for seeded English/Japanese Home and startup overlay absence. Includes shell/accessibility overhead; not an app-internal fully-drawn time. Initial-display and frame metrics retained.
+- `docs/PERFORMANCE.md`: attribution, reproduction, limitations and next measurement. `docs/design/README.md`: investigation status only. Main-thread WebView warm-up retained before source graph construction. No release artifact/profile/screen changed.
+- JDK 21 helper compile and `:baseline-profile:assembleNonMinifiedRelease` pass; two scoped Spotless passes clean. Whole-module formatting encounters pre-existing `constants.kt` filename lint, so used absolute-path `spotlessIdeHook`. Helper APK SHA-256 `178bd7b251753c849f1e0e83651a637a65562845498c7cea6065ec541e42c96e`. Logs/JSON `.worktrees/perf-start/app/build/perf-start/`.
+- **Independent review still required:** run helper on S22 same optimized PERF1 scratch APK/Y4 fixture, ensure ten nonzero Home-observed samples and compare initial display; if experimenting with compilation modes, use identical APK/data and retain all outputs. No new runtime measurement, before/after improvement or budget pass claimed. This card's speed target stays open; this review is for the investigation/helper, not a completed optimization.
 
 #### PERF-DETAILS Details transition exceeds S22 budget — `ready`
 PERF1 cached details become readable in 49–115 ms, but the visual transition settles

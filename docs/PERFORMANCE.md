@@ -145,3 +145,66 @@ all ten Perfetto traces in `benchmark-output/`, `s22-cold-baseline.log`, the gen
 `measure-scroll.py`, raw gfxinfo, `record-tap.py`, six videos, before/after screenshots,
 frame timestamp lists and contact sheets. `show_touches` was restored to its original 0.
 No production tuning was performed; budget misses are separate cards.
+
+## PERF-START trace investigation (2026-11-14, pending device review)
+
+All ten archived PERF1 cold traces were queried locally with the official Perfetto
+v59.1 Windows trace processor (SHA-256
+`3acc5aca1c764541033a82ba3bb0a47524b5c3c0aa194eea8d9a7b0cdb346bdc`).
+No app, device setting or release artifact was changed for this analysis.
+
+| Main-thread interval | Median | Min–max |
+|---|---:|---:|
+| Application binding | 391.2 ms | 366.4–448.3 ms |
+| Opening app dex files, within application binding | 104.3 ms | 99.5–114.6 ms |
+| Synchronous Chromium startup, within application binding | 140.5 ms | 128.9–150.2 ms |
+| MainActivity performCreate | 32.4 ms | 24.7–64.3 ms |
+| First UI traversal | 166.4 ms | 112.8–206.4 ms |
+
+These are inclusive wall intervals, including scheduling and waits. Nested rows
+must not be added. The first traversal contains direct-child Compose recomposition
+(median 46.1 ms), measure (9.0 ms) and layout (25.2 ms); those are also inclusive.
+The traces do not identify individual application composables, so attributing the
+whole traversal to Home queries, fonts or a specific tile would be speculative.
+Every trace reports one `power_rail_empty_packet` import error; power is not used
+by this analysis.
+
+Perfetto's `android_startups` system interval has median 747.0 ms (705.0–887.9),
+which has different boundaries from Macrobenchmark's initial-display metric.
+The benchmark's 741.2 ms remains the budget result. Neither number establishes
+a regression from the older four-book `am start -W` dataset.
+
+Reproduce the analysis from the repository root (paths below assume the local
+PERF1 archive and the verified processor binary):
+
+```powershell
+python scripts/analyze_startup_traces.py `
+  --processor app/build/review-evidence/perf-start/trace_processor_shell.exe `
+  --traces app/build/review-evidence/perf1/benchmark-output `
+  --package io.github.manojx2005.tsuzuki.rv5debugscratch `
+  --output app/build/perf-start/trace-analysis.json
+```
+
+The script requires exactly one cold startup for the requested package per trace,
+retains the raw main-thread slices and trace health diagnostics, and reports missing
+intervals with a zero sample count rather than treating them as zero cost.
+
+`StartupBenchmarks.kt` now requests a separate `TsuzukiHomeObserved` section metric:
+from immediately before `startActivityAndWait()` until automation finds the seeded
+English/Japanese All books action and the localized startup overlay is absent.
+The section is in the benchmark process, so `targetPackageOnly = false` is required
+([AndroidX API](https://developer.android.com/reference/kotlin/androidx/benchmark/macro/TraceSectionMetric)).
+It includes shell/accessibility observation overhead and is **not** an app-internal
+fully-drawn timestamp. Existing initial-display and frame metrics remain separate.
+The old wait could find Home behind the startup overlay; its frame sample ended
+after an idle wait, with no numeric Home-readiness metric.
+
+Independent review must run the helper on the same S22 synthetic fixture and
+optimized APK, verify one nonzero Home-observed section per iteration, and retain
+the ten raw initial-display and Home-observed samples. First recapture the baseline
+with this helper before comparing a production change. Compare compilation modes
+on the identical APK if investigating the dex/app-image cost; do not trim shipped
+profiles based on these inclusive intervals alone. Keep the documented main-thread
+WebView warm-up before any source graph construction. Any safe reduction of the
+remaining cost needs instrumented attribution and like-for-like before/after
+measurements; **the 500 ms miss is unresolved and no speed-up is claimed**.
