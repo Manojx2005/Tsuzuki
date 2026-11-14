@@ -66,6 +66,46 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Current state (2026-11-14 night, Claude — reviewing the app lane; budget subagents implement)
+
+Owner 2026-11-14 night: Claude checks Codex's work, says what Codex does next, and uses cheaper subagents for
+implementation, until Claude's usage runs out. Nothing is pushed or tagged.
+
+**Verdicts on the four cards Codex left in `review`:**
+- **PERF-START**: pass as an investigation, merged (`7defdb569`). The 500 ms miss is open.
+- **R12-WARN**: pass; stays on `tsuzuki/r12-warn` (R12-F is still excluded from `main`).
+- **NT1-BINARY + NT1-BINARY-F**: pass; scripts merged (`343a17309`). The runtime is not in the app. The neural
+  voice is still blocked by the lexicon licence and the owner listening test.
+- **PERF-DETAILS**: review fix `260691fba` on `tsuzuki/perf-details` (the duration local is now a dynamic
+  `compositionLocalOf`; a static one recomposes both screens unskipped whenever the duration changes). Device
+  timing on the S22 and tablet: _see the card; verdict pending when this block was written_.
+
+**The release candidate is unchanged.** `tsuzuki/rel-0.1.1` (`987051988`) is the reviewed 0.1.1 candidate and the
+tag point. `main` has moved past it with PERF-START and the neural build scripts (no app code changed by
+either). Anything else merged into `main` from now on is for 0.1.2 unless the owner says to refresh the candidate.
+
+**What Codex does next.**
+*Review lane (a chat that did not write the card; Device lock first):*
+1. **PERF-START-V** (ready): run the Home-observed helper on the S22, record the baseline.
+2. Review **NT-LEX1** and **PERF-START-2** when Claude's subagents set them to `review` (Codex reviews Claude's
+   subagents the same way it reviews Codex: read the diff, re-run the tests, don't trust the Result). PERF-START-2
+   also needs the per-commit S22 measurements described in its card.
+3. If the owner asks for PERF-DETAILS in 0.1.1: merge `main` into `tsuzuki/rel-0.1.1`, re-run REL-0.1.1 steps
+   3–5 (build Preview + Release, tests, 16 KB check, upgrade check), and record new hashes. Not before the owner asks.
+*App lane (one thread, no adb, own branch from `main`):* **STR2**, then **A11Y1** (cards below, after NT-LEX1).
+Don't take PERF-START-2 or NT-LEX1 while they say `claude-working`. If a `claude-working` card has no Result and
+no log entry for a day, Claude has stopped: take it over from its worktree and say so in the card.
+*Do not start:* NT2 steps 2–4, NT3, NT4, any anime card (paused until the 0.1.1 tag), tagging, pushing.
+
+**Waiting for the owner:**
+1. Publish 0.1.1: delete the stale local tag first (`git tag -d v0.1.1`, it points at a 2016 upstream commit),
+   then tag `tsuzuki/rel-0.1.1` and let CI sign and publish. Local APKs are debug-signed.
+2. PERF-DETAILS in 0.1.1 or 0.1.2?
+3. Approve trusting one live Keiyoushi extension on a test device (unblocks the R12-F, R14 and S1 reviews).
+4. Neural voice: wait for the misaki maintainer, or go with our own CMUdict lexicon (NT-LEX1 is the first step;
+   the research estimates 3–4 weeks to a respectable US-only voice).
+5. R13 dictionary packs are not published; the 0.1.1 changelog must not promise them until they are.
+
 ## Current state (2026-11-14, Codex review lane — Case B completed)
 
 RV5, PERF1 and REL-0.1.1 candidate preparation are complete. Accepted review fixes:
@@ -421,7 +461,7 @@ files present, system TTS untouched when the opt-in is off. Device: opt-in with 
 Don't download a model. Pass → merge (still debug-only).
 Review (Codex RV4, 2026-11-13): See S4 review below. Pinned AAR contains literal espeak/piper matches; owner clarification pending. This gate is not waived.
 
-#### NT1-BINARY Investigate a runtime satisfying the literal native-string gate (T3) — `review` (.worktrees/nt1-binary, 2026-11-14; d1e360ff4 + d580d500e; independent review required)
+#### NT1-BINARY Investigate a runtime satisfying the literal native-string gate (T3) — `done` (independent review passed 2026-11-14, see NT1-BINARY-F; scripts in `main`; was: .worktrees/nt1-binary, 2026-11-14; d1e360ff4 + d580d500e; independent review required)
 
 Inspect current official sherpa-onnx Android artifacts and source build options for a lexicon-only binary with no literal `espeak`/`piper` substring in packaged native libraries. Keep the raw gate unchanged, distinguish deprecated references/Speaker false matches from actual linked GPL code, and document reproducible source/dependency/string/16 KB checks for any candidate. Do not merge S4, publish a pack, download a model or waive NT2/owner listening gates. Another chat reviews any implementation produced here.
 Result (Codex app lane, 2026-11-14): **review**, implementation `d1e360ff4` plus patch-whitespace rule `d580d500e` on `tsuzuki/nt1-binary`. Investigation produced a source-built candidate; **not an NT1 approval or app dependency change**.
@@ -675,6 +715,29 @@ so the neural voice is out of 0.1.1. This card builds the replacement data, noth
   report an agreement percentage as a diagnostic, as the research did.
 - Left for later cards (say so in Result, don't start): function-word reduction, suffix rules, names and
   out-of-vocabulary words, numbers and dates, any British lexicon, the owner listening test.
+
+#### STR2 Hardcoded and untranslated strings sweep (app lane, T2) — `ready`
+The test devices run in Japanese and RV5 still found English or reused strings (STR1, the CSV dialog title).
+Sweep `app/src/main/java/eu/kanade/presentation/tsuzuki/` and `eu/kanade/tachiyomi/tsuzuki/` for user-visible
+text that is a Kotlin string literal (including `contentDescription`, toasts, notification text, error copy) or
+a `tsz_` key missing from any of the 8 locales Tsuzuki ships. Move literals to `tsz_` strings with all 8
+locales; reuse an existing key only when the meaning is the same sentence, not just similar words. Add a unit
+test that fails when a `tsz_` key is missing from a shipped locale (if one exists already, extend it). Don't
+touch upstream strings or upstream screens. Result: a table of every string moved (file, old text, key), and a
+list of anything left on purpose (debug-only text, log messages, format-only strings) with the reason.
+Reviewer: Japanese device pass over the screens in the table.
+
+#### A11Y1 Screen-reader and touch-target pass on Tsuzuki screens (app lane, T3) — `ready` (after STR2; same files)
+Code-reading card, no adb. For every composable under `presentation/tsuzuki/` and `presentation/theme/tsuzuki/`:
+(1) clickable things have a role and a spoken label (icon-only buttons need a `contentDescription` from a
+`tsz_` string; decorative images use `null`); (2) touch targets are at least 48 dp (use
+`minimumInteractiveComponentSize` or padding; don't change the drawn size on the boards); (3) rows that are one
+action are merged (`semantics(mergeDescendants = true)`) so TalkBack reads them once; (4) state is spoken
+(selected pill, toggles, progress bars with a value); (5) headings are marked on section labels;
+(6) nothing conveys state by Dot's red alone. Fix what is a plain omission. For anything that would change a
+board's look, don't change it: list it for the owner. Add Compose semantics unit tests only where a test rule
+already exists in the module; otherwise list what a reviewer must check with TalkBack on the S22.
+Result: a table per screen (what was missing, what was done), and the TalkBack script for the reviewer.
 
 #### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `done` (candidate preparation only; Codex review lane, 2026-11-14)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
