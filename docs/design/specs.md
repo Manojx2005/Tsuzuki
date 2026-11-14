@@ -52,7 +52,9 @@ Motion everywhere, from board `MotionSpec`:
   - 200 ms: toggles, chips and tab pills.
   - 300 ms: sheets, nav and tile expand.
   - 400 ms: stack shuffle and page turn.
-  - 450 ms: shared cover into the novel or the reader.
+  - 450 ms: shared cover into the reader and return navigation. Owner 2026-11-14:
+    opening book details has a 300 ms total budget; its synchronized cover/fade uses
+    200 ms, reserving 100 ms for navigation and composition. Device verification pending.
   - 600 ms: the theme switch reveal.
 - **Colour vs Dot:**
   - Colour is smooth: backgrounds morph between books, covers fly as shared elements, and sheets use springs.
@@ -173,7 +175,7 @@ Use the curves and durations above. The intent of each:
 
 | Board | What moves |
 |---|---|
-| MotionOpen | The cover in a list flies to its place on book details (shared element, 450 ms). In Colour, the background morphs to the book's palette. |
+| MotionOpen | The cover in a list flies to its place on book details. Owner 2026-11-14 overrides the archived board's 450 ms opening: fully settle within 300 ms total, with 200 ms synchronized cover/fade and 100 ms preparation allowance. Colour/Dot keep their existing appearance and smooth easing. S22 Dot/Colour verification passed at 235–292 ms (PERF-DETAILS); BACK1 then passed early/settled Back and process-restoration checks on both devices/themes. |
 | MotionReader | Resume: the cover scales into the reader page (450 ms). The reader bars slide in after. |
 | MotionStack | Home's shelf stack: tap shuffles the top book to the back (400 ms). |
 | MotionTheme | Switching Colour ↔ Dot: a circular reveal from the tapped card (600 ms). |

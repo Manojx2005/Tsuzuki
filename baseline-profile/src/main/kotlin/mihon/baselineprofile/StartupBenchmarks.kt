@@ -1,10 +1,13 @@
 package mihon.baselineprofile
 
+import android.os.Trace
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
+import androidx.benchmark.macro.TraceSectionMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.uiautomator.By
@@ -74,11 +77,16 @@ abstract class AbstractStartupBenchmark(private val startupMode: StartupMode) {
     @Test
     fun startupCompilationFull() = benchmark(CompilationMode.Full())
 
+    @OptIn(ExperimentalMetricApi::class)
     private fun benchmark(compilationMode: CompilationMode) {
         // The application id for the running build variant is read from the instrumentation arguments.
         rule.measureRepeated(
             packageName = TARGET_PACKAGE_NAME,
-            metrics = listOf(StartupTimingMetric(), FrameTimingMetric()),
+            metrics = listOf(
+                StartupTimingMetric(),
+                FrameTimingMetric(),
+                TraceSectionMetric("TsuzukiHomeObserved", targetPackageOnly = false),
+            ),
             compilationMode = compilationMode,
             startupMode = startupMode,
             iterations = 10,
@@ -86,17 +94,34 @@ abstract class AbstractStartupBenchmark(private val startupMode: StartupMode) {
                 pressHome()
             },
             measureBlock = {
-                startActivityAndWait()
-
-                // Use the same seeded English/Japanese Home condition as profile collection.
-                // StartupTimingMetric still reports the initial window separately; this wait also
-                // captures startup frames through populated Home instead of ending at the splash.
-                check(
-                    device.wait(
-                        Until.hasObject(By.text(Pattern.compile("(?iu)(all books|すべての本)\\s*→?"))),
-                        10_000,
-                    ),
-                ) { "Restore a test library before benchmarking Home startup" }
+                // This observer metric includes instrumentation/shell/accessibility overhead.
+                // Keep it separate from StartupTimingMetric's app initial-display measurement.
+                Trace.beginSection("TsuzukiHomeObserved")
+                try {
+                    startActivityAndWait()
+                    check(
+                        device.wait(
+                            Until.hasObject(By.text(Pattern.compile("(?iu)(all books|すべての本)\\s*→?"))),
+                            10_000,
+                        ),
+                    ) { "Restore a test library before benchmarking Home startup" }
+                    // Home may already be composed underneath the startup overlay. It is usable
+                    // only once the overlay is gone. Fixtures use English or Japanese UI.
+                    check(
+                        device.wait(
+                            Until.gone(
+                                By.desc(
+                                    Pattern.compile(
+                                        "(?iu)(Tsuzuki is starting\\. Tap to skip\\.|Tsuzukiを起動しています。タップでスキップ)",
+                                    ),
+                                ),
+                            ),
+                            10_000,
+                        ),
+                    ) { "Startup overlay did not leave populated Home" }
+                } finally {
+                    Trace.endSection()
+                }
                 device.waitForIdle()
             },
         )

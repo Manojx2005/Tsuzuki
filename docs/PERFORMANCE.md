@@ -145,3 +145,213 @@ all ten Perfetto traces in `benchmark-output/`, `s22-cold-baseline.log`, the gen
 `measure-scroll.py`, raw gfxinfo, `record-tap.py`, six videos, before/after screenshots,
 frame timestamp lists and contact sheets. `show_touches` was restored to its original 0.
 No production tuning was performed; budget misses are separate cards.
+
+## PERF-START trace investigation (2026-11-14, pending device review)
+
+All ten archived PERF1 cold traces were queried locally with the official Perfetto
+v59.1 Windows trace processor (SHA-256
+`3acc5aca1c764541033a82ba3bb0a47524b5c3c0aa194eea8d9a7b0cdb346bdc`).
+No app, device setting or release artifact was changed for this analysis.
+
+| Main-thread interval | Median | Min–max |
+|---|---:|---:|
+| Application binding | 391.2 ms | 366.4–448.3 ms |
+| Opening app dex files, within application binding | 104.3 ms | 99.5–114.6 ms |
+| Synchronous Chromium startup, within application binding | 140.5 ms | 128.9–150.2 ms |
+| MainActivity performCreate | 32.4 ms | 24.7–64.3 ms |
+| First UI traversal | 166.4 ms | 112.8–206.4 ms |
+
+These are inclusive wall intervals, including scheduling and waits. Nested rows
+must not be added. The first traversal contains direct-child Compose recomposition
+(median 46.1 ms), measure (9.0 ms) and layout (25.2 ms); those are also inclusive.
+The traces do not identify individual application composables, so attributing the
+whole traversal to Home queries, fonts or a specific tile would be speculative.
+Every trace reports one `power_rail_empty_packet` import error; power is not used
+by this analysis.
+
+Perfetto's `android_startups` system interval has median 747.0 ms (705.0–887.9),
+which has different boundaries from Macrobenchmark's initial-display metric.
+The benchmark's 741.2 ms remains the budget result. Neither number establishes
+a regression from the older four-book `am start -W` dataset.
+
+Reproduce the analysis from the repository root (paths below assume the local
+PERF1 archive and the verified processor binary):
+
+```powershell
+python scripts/analyze_startup_traces.py `
+  --processor app/build/review-evidence/perf-start/trace_processor_shell.exe `
+  --traces app/build/review-evidence/perf1/benchmark-output `
+  --package io.github.manojx2005.tsuzuki.rv5debugscratch `
+  --output app/build/perf-start/trace-analysis.json
+```
+
+The script requires exactly one cold startup for the requested package per trace,
+retains the raw main-thread slices and trace health diagnostics, and reports missing
+intervals with a zero sample count rather than treating them as zero cost.
+
+`StartupBenchmarks.kt` now requests a separate `TsuzukiHomeObserved` section metric:
+from immediately before `startActivityAndWait()` until automation finds the seeded
+English/Japanese All books action and the localized startup overlay is absent.
+The section is in the benchmark process, so `targetPackageOnly = false` is required
+([AndroidX API](https://developer.android.com/reference/kotlin/androidx/benchmark/macro/TraceSectionMetric)).
+It includes shell/accessibility observation overhead and is **not** an app-internal
+fully-drawn timestamp. Existing initial-display and frame metrics remain separate.
+The old wait could find Home behind the startup overlay; its frame sample ended
+after an idle wait, with no numeric Home-readiness metric.
+
+Independent review must run the helper on the same S22 synthetic fixture and
+optimized APK, verify one nonzero Home-observed section per iteration, and retain
+the ten raw initial-display and Home-observed samples. First recapture the baseline
+with this helper before comparing a production change. Compare compilation modes
+on the identical APK if investigating the dex/app-image cost; do not trim shipped
+profiles based on these inclusive intervals alone. Keep the documented main-thread
+WebView warm-up before any source graph construction. Any safe reduction of the
+remaining cost needs instrumented attribution and like-for-like before/after
+measurements; **the 500 ms miss is unresolved and no speed-up is claimed**.
+
+## PERF-DETAILS timing change (2026-11-14, pending independent review)
+
+The archived MotionOpen HTML explicitly uses 450 ms for the cover and Colour
+background. `TsuzukiSharedCover.kt` used 450 ms for both the shared cover and
+the full-screen crossfade, with smooth motion in both themes (the owner's
+2026-11-06 override of stepped Dot movement). This explains why the approximately
+510 ms PERF1 settling estimate cannot meet a 300 ms total-open budget.
+
+**Owner decision, 2026-11-14:** change the design to finish the entire opening
+within 300 ms. The original budget is retained; first readable text alone is not
+a pass. The opening animation now uses 200 ms for both the shared cover and
+crossfade, reserving 100 ms for navigation/composition. This allowance is a design
+choice, not a measured guarantee. Return navigation and other screens retain
+their existing 450 ms motion; reduced motion remains a 150 ms fade, without a
+shared cover. The screen's data and layout are unchanged.
+
+Readiness definition for review: from the first visible input/pressed feedback
+frame until both the incoming cached details cover and screen have reached their
+final position/opacity and the outgoing Library is absent. Verify against the
+final settled frame, allowing for the recorder's 8–16 ms frame intervals; report
+first readable title separately. Metadata/source requests that continue after
+the cached screen is displayed are outside this fixture's timing and must not
+be silently included as a cached-data speed pass.
+
+Use the same optimized Preview package and S22 Y4 500-book fixture as PERF1,
+opening cached `[SYNTHETIC] NOVEL 481` from shelf 01. Retain at least three
+before/after videos per theme, original variable-rate PTS and the exact APK hash.
+Dot first, then Colour; include a real-cover shared transition in addition to
+the synthetic placeholder fixture. Check interrupted opening/Back and reduced
+motion, and inspect the tablet rail layout as a visual regression check. Restore
+test settings and hand back Dot Home using the normal device lock protocol.
+
+**Measured 2026-11-14 (independent review, S22, optimized scratch Preview of `260691fba`, APK SHA-256
+`5321203d47a4d0ef772d135d17aba719cd91e090f50fca542bad762b3418abd4`, Y4 fixture, same `record-tap.py` as PERF1).**
+Times are from the first frame that differs from the pre-tap frame; each endpoint is ±8 ms (frame interval).
+
+| Theme | Run | First title | Settled | Last differing frame |
+|---|---|---:|---:|---:|
+| Dot | 1 (first open after launch) | 108 ms | 284 ms | 292 ms |
+| Dot | 2 | 44 ms | 235 ms | 249 ms |
+| Dot | 3 | 46 ms | 235 ms | 244 ms |
+| Colour | 1 | 59 ms | 251 ms | 263 ms |
+| Colour | 2 | 50 ms | 243 ms | 252 ms |
+| Colour | 3 | 58 ms | 251 ms | 260 ms |
+
+**Verdict: the 300 ms total-open budget is met in both themes** (PERF1 baseline 502–511 ms). The margin is thin
+on the first open after launch: 292 ms with one 25 ms frame gap, which is inside the measurement error of the
+budget line. Return navigation measured about 440 ms and looked smooth. Not measured: a real (non-placeholder)
+cover, reduced motion, the tablet (layout looked normal there; no timing). Evidence (ignored local):
+`app/build/review-evidence/perf-details/`.
+
+## PERF-START-V: S22 Home-observed baseline (2026-11-14)
+
+Optimized scratch Preview from main `9f1b87ced`, APK SHA-256
+`db7f5496f7225dd582bef404a86f68f8c5f7cbd31c2e99ef393fc8b548eb0566`;
+package `io.github.manojx2005.tsuzuki.rv5debugscratch`. S22 hardware serial RZCWA139X1X,
+Dot, Japanese UI, 500-book Y4-derived scratch database retained from the prior reviews
+(current Home resume card is RV2 listening fixture). Both comparison builds must retain this state.
+`ColdStartupBenchmark#startupCompilationBaselineProfiles`, COLD, Partial/Require, ten runs,
+no thermal-throttle sleep. The updated helper is from the same commit.
+
+**Helper pass:** each run contains exactly one nonzero `TsuzukiHomeObserved` section. This
+includes shell/accessibility/startActivityAndWait observer overhead; it is not app fully-drawn
+or a direct measure of how long a reader sees the splash. No helper changes made.
+
+| Run | Initial display (ms) | Home observed (ms) | Section count |
+|---|---:|---:|---:|
+| 1 | 686.407 | 3238.022 | 1 |
+| 2 | 772.369 | 3161.579 | 1 |
+| 3 | 697.819 | 3280.642 | 1 |
+| 4 | 647.388 | 3187.202 | 1 |
+| 5 | 732.731 | 3284.658 | 1 |
+| 6 | 699.409 | 3302.669 | 1 |
+| 7 | 745.431 | 3325.115 | 1 |
+| 8 | 685.652 | 3254.836 | 1 |
+| 9 | 703.812 | 3327.479 | 1 |
+| 10 | 673.366 | 3333.075 | 1 |
+
+Initial display median **698.614 ms**, range 647.388–772.369 ms
+(span 124.981 ms). Home observed median **3282.650 ms**,
+range 3161.579–3333.075 ms (span 171.495 ms). Initial display still misses 500 ms.
+Evidence: `app/build/review-evidence/perf-start-v/` (benchmark JSON/log, hashes and Dot Home screenshot).
+
+## PERF-START-2 independent review (2026-11-15)
+
+Production candidate `d1950daa5` was applied alone to current main as `879959859`,
+optimized scratch APK SHA-256 `07117c8830328b4ae6cc092ff9111460b1fb8320a78c8549c6d1b0c07c09f917`.
+Preview build and 1,095 unit tests pass. Same S22, scratch package, Dot, Japanese UI and
+500-book library as PERF-START-V (the full backup also includes the extra reading fixture).
+Ten COLD Partial/Require runs per build; every observer count is one, no thermal-throttle sleep.
+An immediate baseline repeat controls for the elapsed time and midnight rollover since PERF-START-V.
+Home observed includes benchmark/shell/accessibility overhead; it is not app fully-drawn.
+
+| Run | Main initial (ms) | Warm-up initial (ms) | Main Home observed (ms) | Warm-up Home observed (ms) |
+|---|---:|---:|---:|---:|
+| 1 | 734.443 | 639.841 | 3303.008 | 3316.883 |
+| 2 | 658.891 | 425.215 | 3206.650 | 3019.051 |
+| 3 | 741.446 | 674.533 | 3207.302 | 3167.251 |
+| 4 | 741.797 | 419.357 | 3347.755 | 3151.274 |
+| 5 | 760.206 | 538.276 | 3421.948 | 3215.467 |
+| 6 | 731.435 | 576.151 | 3432.810 | 3185.550 |
+| 7 | 740.356 | 630.928 | 3375.024 | 3296.350 |
+| 8 | 815.010 | 418.006 | 3402.793 | 3133.899 |
+| 9 | 649.267 | 532.129 | 3268.953 | 3130.323 |
+| 10 | 741.426 | 573.951 | 3327.231 | 3657.318 |
+
+| Metric | Main median / range (ms) | Warm-up median / range (ms) | Median improvement (ms) |
+|---|---:|---:|---:|
+| Initial display | 740.891 / 649.267–815.010 | 556.113 / 418.006–674.533 | 184.778 |
+| Home observed | 3337.493 / 3206.650–3432.810 | 3176.401 / 3019.051–3657.318 | 161.092 |
+
+**Not accepted for merge.** The initial-display gain (184.778 ms) is smaller than the candidate's
+256.527 ms run range. Home-observed gain (161.092 ms) is smaller than both its 638.266 ms candidate
+range and the 226.160 ms baseline range. Initial display still misses 500 ms. The apparent gain is
+worth further investigation, but does not satisfy this card's strict variability criterion.
+
+Twenty additional cold launches reached populated Home; XML/screenshots and sampled recording frames
+were inspected, with no sustained splash freeze in this fixture and an empty crash buffer. Cold first
+Browse search found the existing local Listening fixture. No usable remote extension is configured,
+so remote search/constructor ordering was not verified and no extension was trusted.
+
+The library-update job started a new scratch process after `am kill` and a verified absent PID;
+WebView warmed without an observed freeze. WorkManager deferred the periodic worker body until its
+scheduled time, so this is not proof that cold background source fetching is correct. The temporary
+12-hour update setting was returned to Off, its job canceled, and the pre-job backup restored (worker
+SUCCESS). The code still reads `SourceManager.get/getOrStub` in LibraryUpdateJob without awaiting
+initialization. Custom/JS source construction can initialize NetworkHelper/CookieManager before the
+new APK-only gate. Posting after pre-draw also does not guarantee that a frame has been presented.
+These remain unresolved ordering/coverage risks, not verified regressions on every device.
+
+Diagnostic `eb5e21fa7` was built separately as `52d0aa909` on `diagnostic/perf-start-2-trace`.
+It is never merged. Its composition sections exclude later measure/layout/draw and nested sections
+must not be added together. No third tuning change was invented. Evidence, exact samples, traces,
+source audit, backup and smoke recordings: `app/build/review-evidence/perf-start-2/`.
+
+Diagnostic first-composition medians across all ten traces: Dot font-family construction **37.546 ms**
+(34.227-46.525), encompassing typography **37.924 ms**; Home phone **9.850 ms** (6.185-20.997),
+shelf **1.105 ms**, startup-overlay composition **0.362 ms**, nav-bar composition **0.352 ms**.
+The small parent HomeScreen section excludes deferred BoxWithConstraints/lazy subcomposition; it is
+not a measurement of the complete Home. These named sections do not account for the full traversal.
+The diagnostic benchmark passed with zero thermal-throttle sleep, but its timings are not used to
+accept the production candidate. Parser warnings (power-rail empty packet and, in some traces,
+out-of-order events) are retained with the raw traces. No third optimization selected from this data.
+
+Owner delegated the budget decision to the reviewer: retain the **500 ms** engineering target and
+record a follow-up; do not relax the budget to make this candidate pass.

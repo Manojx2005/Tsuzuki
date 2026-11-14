@@ -1,0 +1,9 @@
+{
+  "sherpa-onnx/jni/CMakeLists.txt": "b2e58e66b73fbf621240a675188a33cc188e73541611bd9736830eb5e20a8b01",
+  "sherpa-onnx/csrc/offline-tts-impl.cc": "676a50c04a13a8b88a84dab387ad45a39883569939dde294a7944face6c265e0",
+  "sherpa-onnx/csrc/offline-tts-model-config.cc": "43e092912ab455f6e467bfc587a2352a494932573e8afb65bba9b629cd9ef0cd",
+  "sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc": "70212133a88eda2ae8d3072b0b4f82f96d75fee26065c6cdc7e9eefb71094c0e",
+  "sherpa-onnx/csrc/offline-tts-kokoro-model.cc": "3a3a4386d02d98962a8eeeb957993bb80966b8ed6f9f181323952ac5b11a723a",
+  "sherpa-onnx/csrc/version.cc": "9ad44f5f664ca1ea93a5d107085d93baf085cd78672f54dd5293575a9743a8f4",
+  "sherpa-onnx/csrc/offline-tts-kokoro-impl.h": "5c873bed67eb9b25784fe5f533956fe9bb93ececa3d6e31c1e92ac2b9e4b5667"
+}
