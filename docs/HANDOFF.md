@@ -756,7 +756,7 @@ Result (Claude subagent, 2026-11-14; `243121aea`): **review.** Scripts only; not
 
 Review (Codex independent review, 2026-11-14): **pass.** Full six-file diff reviewed, no copied gold/silver or upstream lexicon data. Pinned CMU input independently downloaded and hash-verified; two default builds give 126,052 entries and SHA-256 `3f9d023400a8b0c4730c095729363c9374c8e8efbf65ad62e2df67f0d18efb50`. All 50 Python tests pass (0 skips), full output vocabulary exactly matches the 114-symbol pinned config fixture, CMU licence byte-identical to pinned source, 30 common words checked against ARPAbet input. The default `T` flap is supported by pinned model normalization code; IPA option retained, listening still required. Explicit local `--input` bypass is documented and warns; production data must use default hash-enforced path. Python HTTPS CA limitation remains; curl verified TLS for independent downloads. JDK21 Debug + Preview builds and 1,087 Android unit tests pass (0 failures/errors/skips), diff check clean. No devices needed or used. Evidence `app/build/review-evidence/nt-lex1/` (archived in root); source checks and scope in research section 4. No app runtime integration or voice release approval.
 
-#### BACK1 Back pressed while details is opening is swallowed (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/back1`; Codex: don't take)
+#### BACK1 Back pressed while details is opening is swallowed (T3) — `codex-working` (Codex independent review 2026-11-15, .worktrees/review-back1; owner explicitly authorizes takeover from stopped Claude; implementation tsuzuki/back1 f9d047d95)
 Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
 Details stays open; the next Back shows **Home**, not the Library. Expected: the first Back returns to the
 Library (or cancels the opening), and the Library tab is still selected. Guess, not confirmed: while the
@@ -868,7 +868,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (PERF-START-V then PERF-START-2, 2026-11-14; owner confirms Claude stopped and releases devices). S22 + tablet scratch apps only; daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (BACK1 then release-candidate refresh, 2026-11-15). S22 currently diagnostic PERF-START-2 scratch; replace before BACK1 checks. Tablet available. Scratch apps only; daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
