@@ -434,7 +434,7 @@ Result (Codex app lane, 2026-11-14): **review**, implementation `d1e360ff4` plus
 - Independent reviewer: inspect patch/dependencies/notices; rebuild and compare the TTS API, raw string scan, ELF dependencies/alignment. Integrate only on a disposable review branch with S4 (excluded by `911a2222f`); this AAR is **arm64-only**, so unsupported ABIs must keep Android TTS. Verify worker/no-pack fallback and APK zipalign separately. Successful artifact checks do not settle the lexicon licence, performance, quality or owner listening decision. NT1/NT2/NT3/NT4 gates remain.
 
 
-#### NT1-BINARY-F Native build hygiene follow-up — `review` (2026-11-14; `.worktrees/nt1-binary`, `tsuzuki/nt1-binary` per queued instruction)
+#### NT1-BINARY-F Native build hygiene follow-up — `done` (Claude review 2026-11-14: pass; build scripts merged into `main`, runtime not integrated)
 
 Result (Codex, code `d904693d2`): completed the queued source/artifact follow-up, ready for independent review. This is not an NT1 acceptance verdict, inference result, lexicon licence waiver or S4 merge.
 - `build-kokoro-runtime.ps1` maps source/SDK paths, defaults to two native jobs and uses source-built ONNX exclusively. `build-onnx-runtime.ps1` pins ONNX 1.28.2 source, portable CMake 3.31.6 and host protoc 21.12; verifies extracted files; builds default targets plus RE2; combines 81 Android archives and emits component hashes. Environment overrides for Sherpa's static ONNX input are restored after configure/build. No linked-library string editing or forbidden-symbol renaming.
@@ -445,6 +445,8 @@ Result (Codex, code `d904693d2`): completed the queued source/artifact follow-up
 - **Verification:** full ONNX source compilation and complete offline recipe passed; **21 Python tests, zero failures**. All 1,009 ONNX compiler commands and selected Sherpa commands carry prefix mapping. Strict audit has zero ASCII/UTF-16 literal or build-path hits. Independent NDK strings plus a broader source-file-path scan find none; username occurrences are zero in ASCII/UTF-16. NDK readelf: three PT_LOAD at 0x4000, DT_NEEDED only libandroid/liblog/libm/libdl/libc. 18 Java exports, ten TTS/GeneratedAudio JNI methods match official. Two packaging writes are byte-identical; no model entries in AAR.
 - Evidence `app/build/nt1-binary-evidence/f-*` and `ort-*`: final independent JSON, readelf/exports/strings, repeat packaging, tests, full build/configure logs; intermediate prebuilt-ORT candidate and linker failures retained. Host protoc works outside the sandbox (the sandbox produced a DLL-relocation failure). Initial JNI link caught omitted RE2; recipe corrected and full retry passed. No stale failed log is treated as success.
 - **Reviewer:** inspect changed scripts/notices and the source summary, independently rebuild with the pinned SDK/NDK and `-Offline` only after its caches exist; rerun strict artifact audit and compare API/classes/licences. Recheck tool/dependency provenance and path scans. Full native-byte reproducibility across machines/toolchains was not established; repeated packaging with identical inputs was. No adb, app dependency, voice pack, lexicon, Gradle edit or app integration; synthesis, non-arm64 fallback, APK packaging, performance and owner listening gates stay with NT1/NT2/NT3.
+
+Review (Claude with an independent subagent, 2026-11-14): **pass.** Re-measured, not taken from the Result: AAR and `.so` sizes and SHA-256 match; 21 Python tests pass; strict audit exit 0; an independent scan of the `.so` finds 0 hits for `espeak`, `piper`, the Windows user name, `C:\`, `/Users/`, `/home/`, `.worktrees`, `Desktop` in ASCII and UTF-16 LE/BE; three PT_LOAD at 0x4000; DT_NEEDED = libandroid, liblog, libm, libdl, libc; 18 `Java_` exports; all 1,009 ONNX compile commands carry the prefix map; the three downloads are hash-pinned with no skip path; no built binary is edited. Notes, none blocking: (1) no single log shows one clean from-scratch build (full ONNX build log + RE2 link fix + final incremental link); (2) the audit's exit code covers build paths only with `--require-build-hygiene` (the recipe and the packager both enforce it); (3) `classes.jar` equality with the official AAR was confirmed indirectly (the pinned official AAR is not on disk; sibling official 2.0.1 AARs have the same hash). Not checked by anyone: inference, cross-machine reproducibility, app integration. `tsuzuki/nt1-binary` (scripts and docs only, no app or Gradle file) is merged into `main` so NT-LEX1 can build on it. **This does not unblock the neural voice**: the lexicon licence (NT2 step 1) and the owner listening test still gate it; S4 stays excluded.
 
 #### NT2 Neural TTS: licence, speed and the listening test (T3) — `ready` (needs NT1 merged; app lane; **gate for NT3/NT4**)
 1. Lexicon licence: find the origin and licence of the two English lexicon files in
@@ -625,6 +627,54 @@ Result (Codex, 2026-11-14; `tsuzuki/perf-details` commit `3f15ad172`, `.worktree
 - `TsuzukiMotionTest.kt`: route/direction and reduced-motion regressions; **1,087 app tests, zero failures/errors/skips**, Debug assembly, optimized Preview assembly and two scoped Spotless passes pass. All Kotlin LF. Exact final test source precedes the result XML timestamp.
 - Optimized ARM64 Preview package is `io.github.manojx2005.tsuzuki.rv5debugscratch`, versionCode 25; SHA-256 `a6fa1660d5385d9d4c70783a547a73067166df4e3cbe550f88fe01ab0d1c9b1a`. ZIP 16 KB alignment passes; baseline.prof/profm packaged. Artifact `.worktrees/perf-details/app/build/outputs/apk/preview/app-arm64-v8a-preview.apk`; logs/excerpts/test summary `app/build/perf-details/` in that worktree. Known non-fatal Compose mapping/XML service/optional window-extension warnings retained.
 - **Independent device review:** S22, optimized baseline archive `app/build/review-evidence/rv5/rv5-arm64-preview.apk` SHA-256 `6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`, then this candidate on the same scratch Y4 fixture. Dot then Colour, three original-PTS recordings each, `[SYNTHETIC] NOVEL 481` from shelf 01; first input feedback to final cover/screen position and opacity/outgoing Library absent is the total-open measurement. Report readable-title time separately. Also check real-cover sharing, interrupted opening/Back, reduced motion and tablet rail. Full protocol/uncertainty in PERFORMANCE.md. No adb/install/screenshot done by this implementer; no measured pass claimed, no main merge/push or release-candidate replacement.
+
+#### PERF-START-V Run the Home-observed startup helper on the S22 (review lane, T2) — `ready` (needs the Device lock)
+On `main` at or after `7defdb569`. Run the cold startup benchmark in `StartupBenchmarks.kt` on the S22 against an
+optimized scratch Preview built from the same `main` commit, with the Y4 500-book fixture (PERF1's command is in
+`app/build/review-evidence/perf1/s22-cold-baseline.log`). Pass = ten iterations, each with one non-zero
+`TsuzukiHomeObserved` sample next to the initial-display value. Write all twenty numbers and the APK hash into
+`docs/PERFORMANCE.md` as the baseline for PERF-START-2. If the section metric comes back empty, set `blocked`
+with the benchmark output; don't patch the helper in this card.
+
+#### PERF-START-2 Cold start: three measured changes (app lane, T4) — `ready` (for 0.1.2, not 0.1.1; branch `tsuzuki/perf-start-2` from `main`)
+PERF-START found 391 ms in application binding (140 ms of it the WebView user-agent warm-up), 166 ms in the
+first traversal, 32 ms in Activity create; the budget is 500 ms and the benchmark says 741 ms. Make **each change
+its own commit that builds alone**, so the review lane can measure them one at a time. No adb in this card.
+1. **Warm-up after the first frame.** Today `App.onCreate` calls `WebSettings.getDefaultUserAgent` on the main
+   thread before the modules load, because an extension calling it on a background thread while the main thread
+   waits on the Injekt source graph deadlocks (comment in `App.kt`). Keep that guarantee a different way: post
+   the warm-up to the main thread after the first frame (with a time limit so it always runs), and make the
+   background block that first touches `SourceManager` / extension loading wait for it. Write down every place
+   the main thread can build the source graph before the warm-up and why each is safe (on the main thread the
+   call cannot deadlock, it is only slow). Add a unit test for the ordering gate. If any path can still build
+   sources on a background thread before the warm-up, don't ship the change; say so in Result.
+2. **Name the first traversal.** Add `androidx.tracing` sections (no behaviour change) around the startup
+   overlay, the Home screen and its tiles, the nav bar/rail, and font loading, so the next trace says where the
+   166 ms goes. No tuning in this commit.
+3. **One change the new sections justify**, only if the existing ten traces already point at it; otherwise
+   leave it out and say so.
+Don't edit the baseline profile, the dex layout or the splash design. Result must list, per commit, what the
+review lane should measure (PERF-START-V's method, same APK settings, same fixture) and what would count as a
+regression (splash freeze, missing sources on Home, first search failing).
+Review lane after it: measure baseline, then each commit; a change that doesn't move the median by more than
+the run-to-run range is dropped. If all three still miss 500 ms, record the numbers and ask the owner whether
+the S22 budget moves.
+
+#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (app lane, T3) — `ready` (for 0.1.2; no app or runtime change)
+Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
+so the neural voice is out of 0.1.1. This card builds the replacement data, nothing else.
+- `scripts/neural-tts/build-lexicon-cmudict.py`: read CMUdict from a pinned commit of `cmusphinx/cmudict` (hash
+  checked, like `prepare-source.py`), convert ARPAbet to the Kokoro symbols with the mapping in the research
+  note, write a file in the format of `lexicon-us-en.txt` that the NT1-BINARY runtime reads. Deterministic
+  output; print its SHA-256.
+- Bundle CMU's full licence text and a line saying the data was converted (`scripts/neural-tts/licenses/`).
+- Tests: every output symbol is in the model's `tokens.txt`; the mapping cases named in the research note
+  (G → U+0261, the five diphthongs, ER0/ER1, AH0/AH1, flap T, stress mark position); alternate pronunciations
+  `WORD(2)` handled; same input → same bytes.
+- **Do not** copy from, or tune against, misaki's `gold`/`silver` data or the upstream lexicon files. You may
+  report an agreement percentage as a diagnostic, as the research did.
+- Left for later cards (say so in Result, don't start): function-word reduction, suffix rules, names and
+  out-of-vocabulary words, numbers and dates, any British lexicon, the owner listening test.
 
 #### REL-0.1.1 Release candidate (review lane prepares; owner publishes) — `done` (candidate preparation only; Codex review lane, 2026-11-14)
 1. `CHANGELOG.md`: move Unreleased to 0.1.1 with every merged card in plain words (what the reader notices).
