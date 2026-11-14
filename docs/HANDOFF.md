@@ -36,7 +36,7 @@ Old handoffs (`docs/CODEX_PROMPT.md`, `docs/CLAUDE_HANDOFF.md`, the AGENTS.md ta
 
 ## Plan 0.1.1 — reading first, anime later (owner 2026-11-12)
 
-Owner 2026-11-13 (this chat): review RV2 then RV4, then implement the app queue; another chat reviews cards implemented here. Use the tablet only for now; S22 device checks are deferred. Hourly resume reminder active for this chat.
+Owner 2026-11-13 (this chat): review RV2 then RV4, then implement the app queue; another chat reviews cards implemented here. Use the tablet only for now; S22 device checks are deferred. Hourly resume reminder disabled after owner stop on 2026-11-13.
 
 Owner decisions 2026-11-12: (1) the next release is **0.1.1 with no anime**; (2) **the anime lane is paused**
 (A6.4 may be committed as it is; no AY card starts until 0.1.1 is tagged); (3) **Codex does the reviews**
@@ -63,6 +63,8 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 - Review lane: `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: follow "Plan 0.1.1", start with RV2, then RV4.`
 - App lane (one thread): `Read AGENTS.md and docs/HANDOFF.md. You are the app lane: follow "Plan 0.1.1", take S2-F, then RP1, then STR1, then ERR1, then NT2 and NT3 when they are ready.`
 - Don't start an anime thread.
+
+Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
 ## Current state (2026-11-13, Codex)
 
@@ -388,7 +390,7 @@ RV2-10: `SettingsDataScreen.kt` L269, L307, L385–387 hardcode English. New `ts
 smallest possible edit to the upstream file. Check the same screen for any other literal.
 Result (Codex app lane, 2026-11-13): `77ede839d` localizes the LNReader chooser, started status, import preference and entire options dialog. The same-screen audit also found CSV export labels; those now use resources too. 18 new `tsz_` keys in all 8 locales, existing Categories/Downloaded chapters reused. Upstream edit is 21 line replacements; no layout changes. `:app:compileDebugKotlin` and two scoped Spotless passes succeed. XML audit confirms 18 unique keys per locale and no remaining UI string literals in this screen. Evidence `.worktrees/str1/app/build/str1-evidence/`. No new tests for this copy-only change; no adb. Reviewer: Japanese Data screen chooser title, temporary import-started status, import-options dialog and CSV options, then another app language. No actual owner backup import required.
 
-#### ERR1 Errors and long waits say what happened (T3) — `codex-working` (.worktrees/err1, 2026-11-13; boards 1 and 2 approved; app lane)
+#### ERR1 Errors and long waits say what happened (T3) — `review` (.worktrees/err1, 2026-11-14; code ad3e6a871; independent review required)
 Boards 1 `ErrorState` and 2 `LoadingStages`. One composable pair in `presentation/tsuzuki/components/`
 (`TsuzukiErrorState`, `TsuzukiLoadingStages`) and one pure mapper `tsuzuki/error/ErrorCopy.kt`: Throwable →
 (what failed, why in one sentence, technical line, primary action). Cases: no network, timeout, HTTP 403/503 with
@@ -400,7 +402,15 @@ downloads list rows. Dispatch from the existing upstream empty/error composables
 (`presentation/components/EmptyScreen` pattern), no re-indent. LoadingStages appears only after 2 s, and turns
 into ErrorState after 30 s on one step. 8 locales. Tests: the mapper table; redaction; 2 s / 30 s thresholds.
 Device script: airplane mode on a catalogue; a Cloudflare-protected source; a removed extension's book.
-Result: _pending_
+Result (Codex app lane, 2026-11-14): **review**, code `ad3e6a871` on `tsuzuki/err1`. Independent review required; no merge or push.
+
+- `tsuzuki/error/ErrorCopy.kt` classifies wrapped network/timeouts, 403/503 browser challenges, 404/server/parse failures, unavailable or untrusted extensions, full storage and denied access. Display and clipboard diagnostics remove URL paths/queries, credentials, auth/cookie headers and stack frames; cause chains and message lengths are bounded. Normal cancellation propagates; the reader's timeout is classified as a timeout.
+- `presentation/tsuzuki/components/TsuzukiErrorState.kt` implements approved boards 1/2 using shared tiles and pills, typography and tokens. Two-second delayed stages, per-step seconds and 30-second timeout; retry/new-operation/new-step resets the clock. The shared tile keeps its original positional API, with an additional overload for these boards' 24 dp corners.
+- `TsuzukiOperationState.kt` adapts catalogue/global-search/details, with working extension/storage routes where hosted navigation is available. Details keeps cached data and shows the real refresh failure. Global-search Retry opens the same source with the current search query. Only observable steps appear; the adapters do not invent source/parse/layout completions.
+- `TsuzukiReaderOperation.kt` adapts Native, WebView and manga holders. WebView loading/error UI sits outside the document so it cannot be spoken or counted as story progress. A full WebView failure stops speech/autoscroll; real document readiness removes the overlay. Native actual inline load failures reuse the card; WebView inline diagnostics reuse the mapper and token colours. Existing retry/WebView handlers remain wired. Search clocks reset on query change; manga clocks reset on reuse/hide.
+- Novel/manga download rows show concise mapped causes and copy redacted diagnostics. **23 new keys in all 8 locales**, with identical placeholders. Debug APK and **1,039 tests, 0 failures/errors/skips**, including **28 mapper/redaction/threshold tests**, pass. Two scoped Spotless passes succeeded; unrelated upstream formatter edits restored, then final APK/tests rerun. Evidence `.worktrees/err1/app/build/err1-evidence/` (`build-tests-final.log`, `tests-final.txt`, `locale-audit.json`, formatter logs). All edited Kotlin uses UTF-8/LF.
+- Independent device review: tablet + S22, Dot then Colour. Offline catalogue: cause and Retry; browser-challenge source: WebView then Retry; removed extension's cached book: Extensions route. Slow request: spinner before 2 s, real stage/seconds after, timeout at 30 s, retry/leave/reopen and new search reset it. Check Native/WebView chapter failure/retry and inline next-chapter failures; ensure error text is never spoken and story position is retained. Manga paged/strip: failed page retry, WebView, recycling/scroll back. Download rows: localized cause and copied diagnostic has no query/token. Check portrait/landscape and larger font sizing. No app-lane runtime verdict is claimed.
+- Reviewer: add newly touched upstream adapters to AGENTS' touch list when merging: `presentation/browse/MigrateSearchScreen.kt`, `ui/reader/viewer/ReaderProgressIndicator.kt`, `viewer/pager/PagerPageHolder.kt`, `viewer/webtoon/WebtoonPageHolder.kt`, `viewer/text/textview/NovelTextViewInlineFeedback.kt`, `viewer/text/webview/NovelWebViewInlineFeedback.kt`. Other hooks are in already-listed files. Watch the Native loading-view expression formatting; no upstream body was wrapped/reindented as a new dispatch.
 
 #### PERF1 Speed budgets on `main` (review lane; needs devices) — `ready` (after RV5; Plan 0.1.1 step 7)
 Measure on the S22 with the preview APK and write the numbers, method and date into `docs/PERFORMANCE.md`:
@@ -3503,6 +3513,9 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 — ERR1 implementation ready for independent review:** `ad3e6a871` adds actionable mapped errors, redacted diagnostics and delayed loading stages in catalogue/search/details/readers/download rows. Debug APK and 1,039 tests pass, 23 keys verified in eight locales; evidence `.worktrees/err1/app/build/err1-evidence/`. No device verdict or merge. Owner reports USB tablet + wireless S22 available and asks to investigate a binary satisfying NT1; gates remain in force.
+
 
 - **2026-11-13 RV4 (Codex review lane).** Accepted V7.7-F and CHAPNUM; MAIN-REPOS owner policy committed `7f697fef9`, plan/boards `3e610bd08`; Add Repository review fix `7f51d31da`. Accepted Debug/Preview builds and **1,011 tests** pass; tablet Dot/Colour reader, mismatch-label and fresh-repository checks; crash buffer empty. R12-F/R14/S4 deferred and excluded (`89e1ac9ac`/`451168815`/`911a2222f`), TTS-LANGUAGE skipped dirty. No model downloaded or extension trusted. Evidence 225 files archived `app/build/review-evidence/rv4/`; scratch apps removed, daily tablet on Dot Home; S22 deferred. RV4-01 Native bottom-card overlap added to RP1. No push.
 
