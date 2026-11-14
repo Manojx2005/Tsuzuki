@@ -1435,4 +1435,5 @@
     <string name="tsz_error_fetch">Daten von der Quelle laden</string>
     <string name="tsz_error_layout">Seite vorbereiten</string>
     <string name="tsz_error_other">Die Anfrage konnte nicht abgeschlossen werden</string>
+    <string name="tsz_export_choose_columns">Spalten zum Exportieren auswählen</string>
 </resources>

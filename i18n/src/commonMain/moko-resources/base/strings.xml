@@ -1814,4 +1814,5 @@
     <string name="tsz_error_fetch">Loading from the source</string>
     <string name="tsz_error_layout">Preparing the page</string>
     <string name="tsz_error_other">The request could not be completed</string>
+    <string name="tsz_export_choose_columns">Select columns to export</string>
 </resources>

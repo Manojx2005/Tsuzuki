@@ -1435,4 +1435,5 @@
     <string name="tsz_error_fetch">正在从来源加载</string>
     <string name="tsz_error_layout">正在准备页面</string>
     <string name="tsz_error_other">无法完成请求</string>
+    <string name="tsz_export_choose_columns">选择要导出的列</string>
 </resources>
