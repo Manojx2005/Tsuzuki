@@ -13,20 +13,23 @@ import eu.kanade.tachiyomi.tsuzuki.error.safeErrorHost
 internal object AnimeLog {
     const val TAG = "TsuzukiAnime"
 
-    fun d(message: String) {
-        Log.d(TAG, message)
-    }
+    fun d(message: String) = emit(Log.DEBUG, message)
 
-    fun i(message: String) {
-        Log.i(TAG, message)
-    }
+    fun i(message: String) = emit(Log.INFO, message)
 
-    fun w(message: String, error: Throwable? = null) {
-        Log.w(TAG, if (error == null) message else "$message\n${describeAnimeError(error)}")
-    }
+    fun w(message: String, error: Throwable? = null) =
+        emit(Log.WARN, if (error == null) message else "$message\n${describeAnimeError(error)}")
 
-    fun e(message: String, error: Throwable? = null) {
-        Log.e(TAG, if (error == null) message else "$message\n${describeAnimeError(error)}")
+    fun e(message: String, error: Throwable? = null) =
+        emit(Log.ERROR, if (error == null) message else "$message\n${describeAnimeError(error)}")
+
+    /** Logging must never break playback or a plain JVM unit test, where [Log] is not available. */
+    private fun emit(priority: Int, message: String) {
+        try {
+            Log.println(priority, TAG, message)
+        } catch (_: RuntimeException) {
+            // Not running on Android.
+        }
     }
 }
 
