@@ -456,9 +456,10 @@ internal class AnimePlayerModel(
             val video = withContext(Dispatchers.IO) {
                 queue.next { candidate ->
                     try {
-                        AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate).also {
-                            AnimeLog.i("resolved video ${describeAnimeVideo(it)}")
-                        }
+                        AnimeStreamResolver.withSourceHeaders(
+                            entry.source,
+                            AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate),
+                        ).also { AnimeLog.i("resolved video ${describeAnimeVideo(it)}") }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {

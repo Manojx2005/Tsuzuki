@@ -22,7 +22,7 @@ internal fun rankAnimeVideos(videos: List<Video>, preferred: Int): List<Video> =
     }.thenBy { video ->
         val quality = video.animeResolution ?: 0
         if (preferred > 0 && quality > preferred) quality else -quality
-    }.thenByDescending { it.bitrate ?: 0 },
+    }.thenByDescending { it.preferred }.thenByDescending { it.bitrate ?: 0 },
 )
 
 internal class AnimeStreamQueue(videos: List<Video>, preferred: Int) {
