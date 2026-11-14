@@ -712,7 +712,7 @@ Result (Claude subagent, 2026-11-14): **review.** No adb; nothing measured. 1,09
 
 Claude's review notes (2026-11-14, before the review lane): **commit 2 is a diagnostic build only: measure with it, never merge it** (the re-indent would conflict with STR2 and A11Y1 on the same files; if the sections are wanted long-term, redo them without re-indenting). Review-lane order: PERF-START-V baseline on `main` → `d1950daa5` alone (initial display, Home-observed, and 20 cold starts watching for a splash freeze; also start the app from a library-update notification/job with the process dead, and run a first Browse search) → `eb5e21fa7` for the trace only. Merge `d1950daa5` only if the median moves by more than the run-to-run range and none of the four risks shows; otherwise leave the branch and record the numbers.
 
-#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; for 0.1.2; review lane: independent review)
+#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `codex-working` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; Codex independent review 2026-11-14 in .worktrees/review-nt-lex1; for 0.1.2; review lane: independent review)
 Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
 so the neural voice is out of 0.1.1. This card builds the replacement data, nothing else.
 - `scripts/neural-tts/build-lexicon-cmudict.py`: read CMUdict from a pinned commit of `cmusphinx/cmudict` (hash
