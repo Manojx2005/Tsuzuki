@@ -712,7 +712,7 @@ Result (Claude subagent, 2026-11-14): **review.** No adb; nothing measured. 1,09
 
 Claude's review notes (2026-11-14, before the review lane): **commit 2 is a diagnostic build only: measure with it, never merge it** (the re-indent would conflict with STR2 and A11Y1 on the same files; if the sections are wanted long-term, redo them without re-indenting). Review-lane order: PERF-START-V baseline on `main` → `d1950daa5` alone (initial display, Home-observed, and 20 cold starts watching for a splash freeze; also start the app from a library-update notification/job with the process dead, and run a first Browse search) → `eb5e21fa7` for the trace only. Merge `d1950daa5` only if the median moves by more than the run-to-run range and none of the four risks shows; otherwise leave the branch and record the numbers.
 
-#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `codex-working` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; Codex independent review 2026-11-14 in .worktrees/review-nt-lex1; for 0.1.2; review lane: independent review)
+#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `done` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; Codex independent review 2026-11-14 in .worktrees/review-nt-lex1; for 0.1.2; review lane: independent review)
 Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
 so the neural voice is out of 0.1.1. This card builds the replacement data, nothing else.
 - `scripts/neural-tts/build-lexicon-cmudict.py`: read CMUdict from a pinned commit of `cmusphinx/cmudict` (hash
@@ -738,6 +738,8 @@ Result (Claude subagent, 2026-11-14; `243121aea`): **review.** Scripts only; not
 - Diagnostic only, nothing copied: 58.6 % exact agreement with misaki gold on 36,973 shared words (66.0 % ignoring stress). The subagent read `us_gold.json` in a scratch directory outside the repo for this number and to count which flap symbol it uses.
 - Not verified: the script's own HTTPS download (this machine's MSYS Python has no CA bundle; the pinned file was fetched with `curl` and passed the hash check); loading the file in the runtime; how it sounds.
 - Reviewer: read the mapping table against the research note and a primary ARPAbet reference, re-run the tests, rebuild and compare the output hash, spot-check 30 common words, and confirm no misaki data or upstream lexicon text is in the commit.
+
+Review (Codex independent review, 2026-11-14): **pass.** Full six-file diff reviewed, no copied gold/silver or upstream lexicon data. Pinned CMU input independently downloaded and hash-verified; two default builds give 126,052 entries and SHA-256 `3f9d023400a8b0c4730c095729363c9374c8e8efbf65ad62e2df67f0d18efb50`. All 50 Python tests pass (0 skips), full output vocabulary exactly matches the 114-symbol pinned config fixture, CMU licence byte-identical to pinned source, 30 common words checked against ARPAbet input. The default `T` flap is supported by pinned model normalization code; IPA option retained, listening still required. Explicit local `--input` bypass is documented and warns; production data must use default hash-enforced path. Python HTTPS CA limitation remains; curl verified TLS for independent downloads. JDK21 Debug + Preview builds and 1,087 Android unit tests pass (0 failures/errors/skips), diff check clean. No devices needed or used. Evidence `app/build/review-evidence/nt-lex1/` (archived in root); source checks and scope in research section 4. No app runtime integration or voice release approval.
 
 #### BACK1 Back pressed while details is opening is swallowed (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/back1`; Codex: don't take)
 Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
@@ -3884,6 +3886,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 Codex review lane — NT-LEX1 pass.** Independently reviewed `243121aea` via `review/nt-lex1`: deterministic full-data hash, licence/vocabulary/source mapping and 30-word checks pass; 50 Python tests, Debug/Preview and 1,087 Android tests pass. Scripts only; voice/listening gates remain. No devices. Evidence `app/build/review-evidence/nt-lex1/`. Owner also authorized refreshing 0.1.1 with BACK1 and PERF-DETAILS; wait for BACK1 to leave claude-working and the Device lock to be free. No tag/push.
 
 - **2026-11-14 night, Claude review of the app lane.** PERF-START pass, merged `7defdb569` (investigation + Home-observed helper; miss still open). R12-WARN pass, stays on `tsuzuki/r12-warn`. NT1-BINARY + NT1-BINARY-F pass after an independent artifact re-measure, scripts merged `343a17309` (runtime not integrated, voice still blocked). PERF-DETAILS pass after review fix `260691fba`: S22 235–292 ms vs 300 ms in Dot and Colour, merged `c0a12f2c4`. `tsuzuki/rel-0.1.1` untouched and still the 0.1.1 tag point. New cards: PERF-START-V, PERF-START-2 and NT-LEX1 (Claude subagents working), BACK1, STR2, A11Y1. Evidence `app/build/review-evidence/perf-details/`. No push, no tag.
 

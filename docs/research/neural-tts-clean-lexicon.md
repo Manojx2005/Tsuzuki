@@ -60,3 +60,27 @@ code: official 2.0.1 contains no espeak-ng or piper-phonemize source. Open befor
 third-party prebuilt pinned by hash only; the `.so` embeds 25 absolute build paths including the Windows user
 name (add `-ffile-prefix-map`); kissfft's full BSD-3 text is missing; `classes.jar` (unmodified official) has
 "eSpeak" inside `OfflineSpeaker*` class names and is not scanned; arm64 only; never loaded a model.
+
+## 4. NT-LEX1 independent conversion review (Codex, 2026-11-14)
+
+Reviewed the full six-file diff in `243121aea`. The default pinned CMUdict input rebuilds to
+126,052 entries, SHA-256 `3f9d023400a8b0c4730c095729363c9374c8e8efbf65ad62e2df67f0d18efb50`,
+identically on two runs. All 50 Python tests pass, including the full-dictionary check (no skips).
+The bundled licence is byte-identical to the pinned upstream licence; the 114-symbol fixture exactly
+matches the pinned Kokoro config vocabulary. Thirty common words were checked against their CMU input.
+No misaki gold/silver data or upstream lexicon text is in the commit. No app integration or synthesis tested.
+
+Primary checks: [CMU phone inventory](https://github.com/cmusphinx/cmudict/blob/74790861f652b15e4ac49015a90074ad62a27690/cmudict.phones),
+[stress symbols](https://github.com/cmusphinx/cmudict/blob/74790861f652b15e4ac49015a90074ad62a27690/cmudict.symbols),
+[licence](https://github.com/cmusphinx/cmudict/blob/74790861f652b15e4ac49015a90074ad62a27690/LICENSE),
+and sherpa-onnx v2.0.1 `generate_lexicon_en.py` / `ParseLexiconFile` for the per-symbol format.
+The default flap differs from section 2: the pinned
+[model normalization code](https://github.com/hexgrad/misaki/blob/fba1236595f2d2bf21d414ba6e57d25256afada3/misaki/en.py#L733)
+rewrites IPA U+027E to `T` before Kokoro v1.0 input. Accept `T` for this conversion, retaining `--flap ipa`
+for the later listening comparison. Neither spelling has been listened to here.
+
+`--input` is an explicit unverified local/test input mode with a warning; release data must use the default
+hash-enforced path. Python HTTPS remains unverified on this machine because its CA bundle is missing;
+independent downloads used curl with normal TLS verification, then the converter verified the pin.
+Function-word reduction, suffixes, OOV/names, numbers/dates, British English and owner listening remain out of
+scope. Evidence: `.worktrees/review-nt-lex1/app/build/review-evidence/nt-lex1/`.
