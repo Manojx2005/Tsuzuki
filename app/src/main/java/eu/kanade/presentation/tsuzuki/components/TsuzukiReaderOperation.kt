@@ -70,7 +70,7 @@ internal fun ReaderActivity.createReaderLoadingView(key: Any): View? {
             TachiyomiTheme {
                 TsuzukiLoadingStages(
                     viewModel.state.value.viewerChapters?.currChapter?.chapter?.name.orEmpty(),
-                    listOf(stringResource(MR.strings.tsz_error_fetch)),
+                    listOf(stringResource(MR.strings.tsz_error_open)),
                     0,
                     operationKey = key,
                     onRetry = { viewModel.reloadChapter(fromSource = false) },
@@ -130,7 +130,7 @@ internal class TsuzukiReaderOperation(private val activity: ReaderActivity, priv
                                     TsuzukiLoadingStages(
                                         title,
                                         listOf(
-                                            stringResource(MR.strings.tsz_error_fetch),
+                                            stringResource(MR.strings.tsz_error_open),
                                             stringResource(MR.strings.tsz_error_layout),
                                         ),
                                         current.step,

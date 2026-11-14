@@ -1299,7 +1299,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         val page = chapters.currChapter.pages?.firstOrNull()
         val chapterId = chapters.currChapter.chapter.id
         if (page == null || chapterId == null) {
-            chapterEndTransition.clear()
+            // Keep the outgoing frame while the target chapter's pages are being prepared.
+            // onChapterChanging already cancels a transition to a different chapter.
             releasePagedChapterSwitchIfPending()
             return
         }
@@ -1319,7 +1320,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         isInfiniteScrollNavigation = false
 
         if (loadedChapterIds.contains(chapterId) && (!enteredViaPrevious || docState == DocState.READY)) {
-            chapterEndTransition.clear()
+            if (docState == DocState.READY) chapterEndTransition.clear()
             logcat(LogPriority.DEBUG) { "NovelWebViewViewer: Chapter $chapterId already loaded, skipping" }
             val index = chapterQueue.indexOf(chapterId)
             if (index >= 0) {
@@ -1702,7 +1703,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         // Signal to onPageFinished that the next callback is for real chapter content, not
         // the loading-indicator page (which also fires onPageFinished with url="about:blank").
         docState = DocState.LOADING_REAL
-        operationState.loading(currentChapters?.currChapter?.chapter?.id ?: chapterPath, step = 1)
+        if (!chapterEndTransition.isPending) {
+            operationState.loading(currentChapters?.currChapter?.chapter?.id ?: chapterPath, step = 1)
+        }
         dispatchLoadingChapter(true)
         // New document: hold scroll callbacks and clear the baseline so a stale flush can't write
         // the previous chapter's percent here, restoreScrollPosition seeds the real value.
@@ -1857,11 +1860,12 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun showLoadingIndicator(message: String = "Loading...") {
-        if (operationState.loading(currentChapters?.currChapter?.chapter?.id ?: message)) {
+        // The chapter-end transition owns the visible card until the next document is ready.
+        if (chapterEndTransition.isPending) {
             docState = DocState.LOADING
             return
         }
-        if (chapterEndTransition.isPending) {
+        if (operationState.loading(currentChapters?.currChapter?.chapter?.id ?: message)) {
             docState = DocState.LOADING
             return
         }

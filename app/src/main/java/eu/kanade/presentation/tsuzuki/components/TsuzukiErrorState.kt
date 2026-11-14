@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
@@ -50,6 +51,7 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import java.text.NumberFormat
 import java.util.concurrent.TimeoutException
 
 internal fun Context.errorHeading(copy: ErrorCopy): String = when (copy.reason) {
@@ -172,6 +174,7 @@ fun TsuzukiLoadingStages(
     operationKey: Any = Unit,
     onRetry: (() -> Unit)? = null,
     onCancel: (() -> Unit)? = null,
+    progress: Float? = null,
 ) {
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
@@ -187,7 +190,11 @@ fun TsuzukiLoadingStages(
     }
     when (loadingPhase(elapsedMs)) {
         LoadingPhase.SPINNER -> Box(modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = tokens.accent)
+            if (progress == null) {
+                CircularProgressIndicator(color = tokens.accent)
+            } else {
+                CircularProgressIndicator(progress = { progress.coerceIn(0f, 1f) }, color = tokens.accent)
+            }
         }
         LoadingPhase.TIMED_OUT -> TsuzukiErrorState(
             remember(operationKey, currentStep, retryGeneration) { TimeoutException() },
@@ -213,6 +220,16 @@ fun TsuzukiLoadingStages(
                 color = tokens.dotOn,
                 style = MaterialTheme.typography.headlineMedium,
             )
+            progress?.let {
+                Spacer(Modifier.height(12.dp))
+                TsuzukiProgressBar(it)
+                Text(
+                    NumberFormat.getPercentInstance(context.resources.configuration.locales[0])
+                        .format(it.coerceIn(0f, 1f).toDouble()),
+                    color = tokens.mutedText,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             Spacer(Modifier.height(14.dp))
             steps.forEachIndexed { index, step ->
                 Row(
