@@ -324,7 +324,7 @@ Result (Codex app lane, 2026-11-14): **review**, implementation `d1e360ff4` plus
 
 #### NT1-BINARY-F Native build hygiene follow-up — `review` (2026-11-14; `.worktrees/nt1-binary`, `tsuzuki/nt1-binary` per queued instruction)
 
-Result (Codex): completed the queued source/artifact follow-up, ready for independent review. This is not an NT1 acceptance verdict, inference result, lexicon licence waiver or S4 merge.
+Result (Codex, code `d904693d2`): completed the queued source/artifact follow-up, ready for independent review. This is not an NT1 acceptance verdict, inference result, lexicon licence waiver or S4 merge.
 - `build-kokoro-runtime.ps1` maps source/SDK paths, defaults to two native jobs and uses source-built ONNX exclusively. `build-onnx-runtime.ps1` pins ONNX 1.28.2 source, portable CMake 3.31.6 and host protoc 21.12; verifies extracted files; builds default targets plus RE2; combines 81 Android archives and emits component hashes. Environment overrides for Sherpa's static ONNX input are restored after configure/build. No linked-library string editing or forbidden-symbol renaming.
 - `prepare-source.py` rejects unknown edits/extra files before extraction; pinned legacy cache archives are hash-checked if present. Pristine mode validates ONNX/tool ZIP contents and rootless ZIPs. An old unlisted Eigen 3.4 archive was rejected and preserved at `.native/archives/unused-eigen-3.4.0.tar.gz`, not silently permitted.
 - `audit-neural-runtime.py` checks ASCII plus UTF-16 LE/BE at both byte alignments. NT1's literal/alignment verdict is preserved; a separate build-hygiene result and `--require-build-hygiene` enforce no build paths. URL/runtime-path and random four-byte code fragments are regression cases. The intermediate candidate with 548 inherited ONNX CI paths is rejected by the strict mode.
@@ -3556,6 +3556,10 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 NT1-BINARY-F app lane:** `d904693d2` removes local and inherited ONNX CI paths through source compilation, bundles full kissfft BSD-3 text and strengthens source/UTF-16 audits. Complete offline recipe, 21 tests, independent NDK checks and identical-input packaging pass. Final AAR SHA-256 `1f70ec2b28f40dfe760a5fe1283e623a1163155c5c530b5a70ae06df1eae4ec1`; independent review still required, no voice pack/app integration/S4 merge. Evidence `.worktrees/nt1-binary/app/build/nt1-binary-evidence/f-*`.
+
+
 
 - **2026-11-14 — NT1-BINARY candidate ready for independent review:** `d1e360ff4` + `d580d500e`; all official Android variants fail the unchanged literal gate, while an isolated arm64 Kokoro-only source profile passes raw strings, 16 KB ELF alignment and TTS JNI API checks. Candidate 7,857,879 B, `b2cee72b9131cf5190753c966e23e0c0e65ef7a0e9313e434d074d4aa3b5fa47`; 13 Python tests and offline recipe pass. Evidence `.worktrees/nt1-binary/app/build/nt1-binary-evidence/`. No model, app integration, install, merge or push. RV5 is now ready for an independent chat.
 
