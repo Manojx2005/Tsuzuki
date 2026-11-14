@@ -78,7 +78,8 @@ implementation, until Claude's usage runs out. Nothing is pushed or tagged.
   voice is still blocked by the lexicon licence and the owner listening test.
 - **PERF-DETAILS**: review fix `260691fba` on `tsuzuki/perf-details` (the duration local is now a dynamic
   `compositionLocalOf`; a static one recomposes both screens unskipped whenever the duration changes). Device
-  timing on the S22 and tablet: _see the card; verdict pending when this block was written_.
+  timing on the S22: **pass**, 235–292 ms against 300 ms in Dot and Colour; merged (`c0a12f2c4`). New card BACK1
+  from a Back-during-opening oddity seen in the test.
 
 **The release candidate is unchanged.** `tsuzuki/rel-0.1.1` (`987051988`) is the reviewed 0.1.1 candidate and the
 tag point. `main` has moved past it with PERF-START and the neural build scripts (no app code changed by
@@ -92,7 +93,7 @@ either). Anything else merged into `main` from now on is for 0.1.2 unless the ow
    also needs the per-commit S22 measurements described in its card.
 3. If the owner asks for PERF-DETAILS in 0.1.1: merge `main` into `tsuzuki/rel-0.1.1`, re-run REL-0.1.1 steps
    3–5 (build Preview + Release, tests, 16 KB check, upgrade check), and record new hashes. Not before the owner asks.
-*App lane (one thread, no adb, own branch from `main`):* **STR2**, then **A11Y1** (cards below, after NT-LEX1).
+*App lane (one thread, no adb, own branch from `main`):* **BACK1**, then **STR2**, then **A11Y1** (cards below, after NT-LEX1).
 Don't take PERF-START-2 or NT-LEX1 while they say `claude-working`. If a `claude-working` card has no Result and
 no log entry for a day, Claude has stopped: take it over from its worktree and say so in the card.
 *Do not start:* NT2 steps 2–4, NT3, NT4, any anime card (paused until the 0.1.1 tag), tagging, pushing.
@@ -651,7 +652,7 @@ Result (Codex, 2026-11-14; `tsuzuki/perf-start` commit `b98a5e706`, `.worktrees/
 
 Review (Claude, 2026-11-14): **pass, merged into `main`.** Read `StartupBenchmarks.kt` and `analyze_startup_traces.py`: the old metrics are kept, the new section only wraps the existing wait plus the overlay-gone wait, the script only reads traces (package name is SQL-escaped, arguments go through an argv list). Nothing in the app changed. Not run on a device by this review: the helper's ten non-zero `TsuzukiHomeObserved` samples are **PERF-START-V** for the review lane. What the numbers say: about 390 ms of the 741 ms is spent before the Activity exists (140 ms of it the WebView user-agent warm-up in `App.kt`), so the budget cannot be met by trimming Home alone.
 
-#### PERF-DETAILS Details transition exceeds S22 budget — `review` (200 ms motion; 300 ms total budget pending device review)
+#### PERF-DETAILS Details transition exceeds S22 budget — `done` (Claude review 2026-11-14: pass, 235–292 ms on the S22; merged `c0a12f2c4`; in 0.1.2 unless the owner asks for 0.1.1)
 PERF1 cached details become readable in 49–115 ms, but the visual transition settles
 in approximately 502–511 ms versus the 300 ms opening budget. Review the intended board
 motion and record an explicit readiness definition before changing timing. Preserve
@@ -667,6 +668,8 @@ Result (Codex, 2026-11-14; `tsuzuki/perf-details` commit `3f15ad172`, `.worktree
 - `TsuzukiMotionTest.kt`: route/direction and reduced-motion regressions; **1,087 app tests, zero failures/errors/skips**, Debug assembly, optimized Preview assembly and two scoped Spotless passes pass. All Kotlin LF. Exact final test source precedes the result XML timestamp.
 - Optimized ARM64 Preview package is `io.github.manojx2005.tsuzuki.rv5debugscratch`, versionCode 25; SHA-256 `a6fa1660d5385d9d4c70783a547a73067166df4e3cbe550f88fe01ab0d1c9b1a`. ZIP 16 KB alignment passes; baseline.prof/profm packaged. Artifact `.worktrees/perf-details/app/build/outputs/apk/preview/app-arm64-v8a-preview.apk`; logs/excerpts/test summary `app/build/perf-details/` in that worktree. Known non-fatal Compose mapping/XML service/optional window-extension warnings retained.
 - **Independent device review:** S22, optimized baseline archive `app/build/review-evidence/rv5/rv5-arm64-preview.apk` SHA-256 `6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`, then this candidate on the same scratch Y4 fixture. Dot then Colour, three original-PTS recordings each, `[SYNTHETIC] NOVEL 481` from shelf 01; first input feedback to final cover/screen position and opacity/outgoing Library absent is the total-open measurement. Report readable-title time separately. Also check real-cover sharing, interrupted opening/Back, reduced motion and tablet rail. Full protocol/uncertainty in PERFORMANCE.md. No adb/install/screenshot done by this implementer; no measured pass claimed, no main merge/push or release-candidate replacement.
+
+Review (Claude with a device subagent, 2026-11-14): **pass, merged.** Review fix `260691fba`: `LocalCoverDuration` is a dynamic `compositionLocalOf` (a static local turns off skipping for both screens each time the value changes, at the start of the animation being measured). Rebuilt optimized scratch Preview (SHA-256 `5321203d…abd4`), 14 `TsuzukiMotionTest` tests pass. S22, three recordings per theme, first changed frame → settled: Dot 284 / 235 / 235 ms (last differing frame 292 / 249 / 244), Colour 251 / 243 / 251 ms (263 / 252 / 260); ±8 ms. Budget met; the first open after launch is within one frame of the line. Return about 440 ms, smooth. Tablet: two-pane details looked normal (2-book library, no timing). Crash buffers empty. Not tested: a real cover image, reduced motion. Table in `docs/PERFORMANCE.md`; evidence `app/build/review-evidence/perf-details/`. **Found while testing → BACK1:** Back pressed right after the tap does not close details, and the next Back shows Home instead of the Library (3 of 3). Not known whether this is older than the card.
 
 #### PERF-START-V Run the Home-observed startup helper on the S22 (review lane, T2) — `ready` (needs the Device lock)
 On `main` at or after `7defdb569`. Run the cold startup benchmark in `StartupBenchmarks.kt` on the S22 against an
@@ -715,6 +718,19 @@ so the neural voice is out of 0.1.1. This card builds the replacement data, noth
   report an agreement percentage as a diagnostic, as the research did.
 - Left for later cards (say so in Result, don't start): function-word reduction, suffix rules, names and
   out-of-vocabulary words, numbers and dates, any British lexicon, the owner listening test.
+
+#### BACK1 Back pressed while details is opening is swallowed (app lane, T3) — `ready` (before STR2)
+Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
+Details stays open; the next Back shows **Home**, not the Library. Expected: the first Back returns to the
+Library (or cancels the opening), and the Library tab is still selected. Guess, not confirmed: while the
+transition runs, the Library tab's own back handler ("back goes to Home") is still the top handler, so the
+early Back changes the selected tab underneath instead of popping `MangaScreen`. Find the cause by reading the
+back handlers (`HomeScreen.kt`, the tab back handling, Voyager's `Navigator` back handling,
+`TsuzukiNavigatorTransition`, predictive back if enabled). First check whether `main` before `c0a12f2c4`
+(450 ms opening) has the same behaviour by reasoning from the code; say which. Fix so a Back during the opening
+pops the details screen and leaves the tab alone; add a unit test for whatever decision function you extract.
+Keep the upstream edit to a small dispatch. No adb. Reviewer script: S22 and tablet, Dot and Colour, Back at
+about 50, 150 and 400 ms after the tap, from Library, Home shelf, Updates and History; then predictive-back swipe.
 
 #### STR2 Hardcoded and untranslated strings sweep (app lane, T2) — `ready`
 The test devices run in Japanese and RV5 still found English or reused strings (STR1, the CSV dialog title).
@@ -815,7 +831,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Claude (review of PERF-DETAILS / PERF-START, 2026-11-14 night; a Claude subagent uses the S22 and tablet scratch apps only)`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Claude PERF-DETAILS review done 2026-11-14 night; S22 + tablet on the `…rv5debugscratch` app (now the PERF-DETAILS build, versionCode 25), Dot Home, awake; the `…rel011upgradescratch` candidate app is still installed and in recents on both; show_touches 0; owner phone/daily apps untouched`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3848,6 +3864,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 night, Claude review of the app lane.** PERF-START pass, merged `7defdb569` (investigation + Home-observed helper; miss still open). R12-WARN pass, stays on `tsuzuki/r12-warn`. NT1-BINARY + NT1-BINARY-F pass after an independent artifact re-measure, scripts merged `343a17309` (runtime not integrated, voice still blocked). PERF-DETAILS pass after review fix `260691fba`: S22 235–292 ms vs 300 ms in Dot and Colour, merged `c0a12f2c4`. `tsuzuki/rel-0.1.1` untouched and still the 0.1.1 tag point. New cards: PERF-START-V, PERF-START-2 and NT-LEX1 (Claude subagents working), BACK1, STR2, A11Y1. Evidence `app/build/review-evidence/perf-details/`. No push, no tag.
 
 - **2026-11-14 R12-WARN app lane:** `9cfc67ed7` adds the missing malformed-source-health decode warning without logging JSON/exception contents; fallback unchanged. Debug assembly and 984 existing tests pass on R12-F base, scoped formatter twice clean. Independent review pending; R12-F trust/runtime check remains deferred and no feature was restored on main. Evidence `.worktrees/r12-warn/app/build/r12-warn/`.
 
