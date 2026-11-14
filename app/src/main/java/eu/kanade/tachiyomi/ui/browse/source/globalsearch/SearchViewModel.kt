@@ -50,6 +50,10 @@ abstract class SearchViewModel(
     private var searchJob: Job? = null
     private val retryJobs = mutableMapOf<Source, Job>()
 
+    /** Latest request number per source; a result is applied only if it carries the current number. */
+    private val latestRequest = java.util.concurrent.ConcurrentHashMap<Source, Long>()
+    private val requestCounter = java.util.concurrent.atomic.AtomicLong()
+
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
     private val disabledSources = sourcePreferences.disabledSources.get()
     protected val pinnedSources = sourcePreferences.pinnedSources.get()
@@ -197,14 +201,16 @@ abstract class SearchViewModel(
         val anyLoading = state.value.items.values.any { it is SearchItemResult.Loading }
         mutableState.update { it.copy(elapsedMillis = null) }
 
+        val requests = sources.associateWith { newRequest(it) }
         searchJob = viewModelScope.launchIO {
             sources.map { source ->
+                val request = requests.getValue(source)
                 async {
                     if (state.value.items[source] !is SearchItemResult.Loading) {
                         return@async
                     }
 
-                    searchSource(source, query)
+                    searchSource(source, query, request)
                 }
             }
                 .awaitAll()
@@ -220,11 +226,16 @@ abstract class SearchViewModel(
         val query = lastQuery ?: return
         if (source !in state.value.items) return
         retryJobs.remove(source)?.cancel()
+        // A newer request number makes any late result from the original search for this source a no-op.
+        val request = newRequest(source)
         updateItem(source, SearchItemResult.Loading)
-        retryJobs[source] = viewModelScope.launchIO { searchSource(source, query) }
+        retryJobs[source] = viewModelScope.launchIO { searchSource(source, query, request) }
     }
 
-    private suspend fun searchSource(source: Source, query: String) {
+    private fun newRequest(source: Source): Long =
+        requestCounter.incrementAndGet().also { latestRequest[source] = it }
+
+    private suspend fun searchSource(source: Source, query: String, request: Long) {
         try {
             val page = withContext(coroutineDispatcher) {
                 source.getSearchManga(1, query, source.getFilterList())
@@ -236,13 +247,13 @@ abstract class SearchViewModel(
                 .let { networkToLocalManga(it) }
 
             if (currentCoroutineContext().isActive) {
-                updateItem(source, SearchItemResult.Success(titles))
+                updateItem(source, SearchItemResult.Success(titles), request)
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             if (currentCoroutineContext().isActive) {
-                updateItem(source, SearchItemResult.Error(e))
+                updateItem(source, SearchItemResult.Error(e), request)
             }
         } catch (e: LinkageError) {
             // Outdated/incompatible extensions throw LinkageError subtypes
@@ -250,7 +261,7 @@ abstract class SearchViewModel(
             // Catching only Exception let one broken source crash the whole global
             // search instead of failing just that source.
             if (currentCoroutineContext().isActive) {
-                updateItem(source, SearchItemResult.Error(e))
+                updateItem(source, SearchItemResult.Error(e), request)
             }
         }
     }
@@ -264,11 +275,14 @@ abstract class SearchViewModel(
         }
     }
 
-    private fun updateItem(source: Source, result: SearchItemResult) {
+    private fun updateItem(source: Source, result: SearchItemResult, request: Long? = null) {
         if (source !in getSelectedSources()) return
-        mutableState.update { current ->
-            val items = current.items + (source to result)
-            current.copy(items = items.toSortedMap(sortComparator(items)))
+        synchronized(latestRequest) {
+            if (request != null && latestRequest[source] != request) return
+            mutableState.update { current ->
+                val items = current.items + (source to result)
+                current.copy(items = items.toSortedMap(sortComparator(items)))
+            }
         }
     }
 
