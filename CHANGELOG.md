@@ -9,10 +9,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-### Changed
+## [0.1.1]
 
+### Added
+- When you return to a novel after 24 hours or more, the chapter opens with a "Previously" card showing the last few
+  paragraphs of your previous chapter. It works offline and can be turned off in reader settings.
+- Long-press a word in a novel to look it up with your phone's lookup or a web search. The app can also read optional
+  offline English and Japanese dictionary packs (Settings > Reader > Dictionaries), but none are available to
+  download yet.
+- Upcoming: an optional bell on each book reminds you on its expected release date. Off by default.
+- Backups can keep 2, 4, 8 or 12 copies, show when the last backup ran and how big it was, and preview what a backup
+  file holds (books, shelves, history) before you restore it.
+- Novel reading shows time left in the chapter and in the book, once there is enough reading history to estimate it.
+- Home: swipe left or right on the cover stack to move between books.
+- Download queue: pause and resume a manga source's downloads, and retry a failed download.
+- Stats count listening: each chapter you listen to is counted once, and Stats show listening time and chapters.
+- Errors say what failed and offer Retry or Open in WebView, and long waits show the current step.
+
+### Changed
 - New installs come with no source repositories. Add the ones you want in Browse. Repositories that 0.1.0 already
   added stay until you remove them.
+- On wide tablet screens, novel text sits in a centred column about 600 dp wide.
+- When a source's title states a chapter number, that number is shown in chapter lists and the reader. Your chapter
+  order and stored numbers stay the same.
+- Tracking: novel accounts are listed first. The update schedule offers all four smart-update restrictions.
+- In Dot and Colour settings, long labels keep their full text and the value shortens instead.
+- The Listen panel shows the voice's name, marked online or offline, instead of a raw language code.
+- The Listen voice follows the chapter's language.
+- English settings use "Greyscale" and "Colour".
+
+### Improved
+- The "Library last updated" line on Updates is a quiet caption in Dot and Colour.
+- Moving from the end of one chapter to the next uses a smooth transition.
+- The sleep timer is in the compact Listen controls.
+- LNReader import and CSV export texts are translated.
+
+### Fixed
+- On the end-of-chapter card in the web reader, Next, Mark read and Contents each act once, and the reader bars stay
+  hidden.
+- The Add repository button is reachable in Dot and Colour.
+- A failed or corrupt dictionary update keeps the working pack.
+- A scheduled backup that fails no longer removes older backups.
+- Restore rejects files that are not Tsuzuki backups. Settings-only backups still restore.
+- In paged reading, your place in a chapter stays the same when the recap card appears or is dismissed.
+- The highlighted line while listening is no longer hidden under the top bar, and the chapter-end buttons are no
+  longer hidden under the bottom bar.
+- Text selection is readable in the Dot theme.
+- The Listen controls show the chapter that is actually being read aloud.
+- Listening no longer repeats the last chapter when a book ends.
 
 ## [0.1.0]
 
