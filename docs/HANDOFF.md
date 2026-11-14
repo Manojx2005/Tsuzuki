@@ -443,6 +443,11 @@ Back up/use disposable data as Batch T requires; unrelated extension trust gates
 NT1-BINARY's candidate is a separate independent review; it does not silently enable S4 or waive NT2.
 Result: _pending_
 
+RV5 progress (2026-11-14, this independent reviewer): review branch merges S2-F `0bf63eaec`, RP1 `85a7b5782`, STR1 `17ce3afaf` on claim `ff55d86d8`. Both timer constructor arguments and tests retained; locale conflicts unioned. Debug + optimized Preview + **1,030 tests, zero failures/errors/skips** pass. First parallel compiler run exhausted memory; retry with `--no-parallel --max-workers=2 -Pkotlin.daemon.jvmargs=-Xmx6g` passed. All 26 added keys match placeholders across eight locales; no new duplicate keys. Evidence `.worktrees/rv5/app/build/review-evidence/rv5/`. Daily Preview/Debug untouched: both devices use separate `io.github.manojx2005.tsuzuki.rv5debugscratch` installs with synthetic RV2 listening backup in `Documents/Tsuzuki-RV5-Scratch`. S22 endpoint `192.168.40.243:44823`, verified hardware serial `RZCWA139X1X`.
+- Tablet native pause/resume, 15-minute countdown, two-chapter handoff: chapter 1/run 1/queue 2 and chapter 2/run 1/queue 3 counted=true; repeated chapter 2/queue 4 counted=false. Stats screenshot shows **2 listened chapters**. Baseline crash buffers empty. S22 native run also started, paused/resumed, English `en-us-x-iom-local` explicitly chosen on both. Remaining: capture S22 final Stats, WebView, replay/Stop and incognito, optimized Preview and STR1 flows. No final verdicts yet.
+- Findings to disposition before verdicts: tablet native autoplay repeats chapter 2 after the last chapter. Trace `tablet-native-full-tts-trace.txt`: at 13:28:15 controller playback index=1/id=2, but `moveToLoadedNextChapterForTts anchor=0` selects loaded nextIndex=1 again. This is upstream native handoff behavior, beyond count deduplication, and needs a follow-up card. RP1 compact dock shows CHAPTER 1 while Chapter 2 paragraph 3 is highlighted/speaking (`tablet-rv5-native-after-handoff.png`); `ReaderListenLayout.kt:165` chooses viewport title instead of controller playback chapter. Do not claim either behavior passed.
+- Owner explicitly said keep both devices awake: stayon true and screen_off_timeout=2147483647 on both. Tablet rotation was free, temporarily locked portrait with `wm user-rotation lock 0`; restore free when appropriate. Devices remain claimed for ongoing RV5 review.
+
 #### PERF1 Speed budgets on `main` (review lane; needs devices) — `ready` (after RV5; Plan 0.1.1 step 7)
 Measure on the S22 with the preview APK and write the numbers, method and date into `docs/PERFORMANCE.md`:
 cold start (10 runs, median; budget 500 ms), next novel chapter from the chapter-end card (budget 200 ms to
@@ -520,7 +525,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV5 independent review of S2-F/RP1/STR1, .worktrees/rv5, 2026-11-14; tablet USB + verified S22 wireless only`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV5 independent review of S2-F/RP1/STR1, .worktrees/rv5, 2026-11-14; tablet USB + verified S22 wireless only; owner 2026-11-14: keep both awake (stayon true, screen_off_timeout 2147483647)`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
