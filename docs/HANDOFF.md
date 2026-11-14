@@ -66,6 +66,108 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Current state (2026-11-14, Codex review lane — Case B)
+
+RV5 review is complete: **S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE pass** with separate review fixes
+`0a96ace3d`, `bf5055dcd`, `8570ff5d7` on `review/rv5-err1`. Debug + optimized Preview + **1,085 tests** pass;
+final crash buffers empty on tablet and S22. Evidence archived in `app/build/review-evidence/rv5/`.
+Batch T fast-forward of `review/rv5` and `main` is next, then **PERF1**, then finish **REL-0.1.1** from the
+existing `tsuzuki/rel-0.1.1` prep branch, merging the reviewed fixes into it before builds. No tags or pushes.
+Neural voice and anime gates remain in force. The localhost fixture server has been stopped; tablet Wi-Fi and
+the renamed synthetic S22 chapter were restored. Daily apps were not opened or changed: automatic approval
+review rejected their relaunch, so the disposable tablet app is returned to Dot Home instead.
+
+## Current state (2026-11-14 evening, Claude — took over from Codex, which is out of usage)
+
+Owner 2026-11-14: Claude orchestrates and cheaper agents (Sonnet/Haiku subagents) do the work, until Claude's usage runs out. Nothing is pushed; `main` is still `0b1c8c889` until RV5 closes.
+
+**For Codex, if it resumes before Claude finishes — read this block first.**
+- Branch map (all local, nothing pushed, `main` untouched at `0b1c8c889`):
+  `review/rv5` (`.worktrees/rv5`, tip `86e640358`) = S2-F + RP1 + STR1 + two review fixes + TTS-LANGUAGE →
+  `review/rv5-err1` (`.worktrees/rv5e`, tip `28bd88a33`) = that + ERR1 with its review fixes; **1,084 tests, 0 failures** →
+  `tsuzuki/rel-0.1.1` (`.worktrees/rel-011`, tip `6c0dea4a7`) = that + 0.1.1 changelog + versionCode 25 / versionName 0.1.1 (not built).
+  When the device passes are clean: fast-forward `review/rv5` to `review/rv5-err1`, then `main` to it (Batch T step 7), then REL.
+- **Do not take:** RV5, ERR1, TTS-LANGUAGE, NT1-BINARY review, REL-0.1.1 steps 1–2 (all done or in Claude's hands).
+- **Still open, in order:** (1) device pass A–H on `review/rv5` (running; verdicts for S2-F, RP1, TTS-LANGUAGE come from
+  it); (2) ERR1 device script with the APK already built at
+  `.worktrees/rv5e/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk` (package `…tsuzuki.rv5debugscratch`);
+  (3) close RV5: verdicts in each card, log entry, status table in `docs/design/README.md`; (4) PERF1; (5) REL-0.1.1
+  steps 3–5 on `tsuzuki/rel-0.1.1`.
+- Scratch builds: `./gradlew -I app/build/review-evidence/rv5/scratch.init.gradle :app:assembleDebug` (init script
+  sets the application id; no `build.gradle.kts` edit). Use `--no-parallel --max-workers=2 -Pkotlin.daemon.jvmargs=-Xmx6g`.
+- **Owner must decide:** neural voice is out of 0.1.1 unless the lexicon licence is cleared (below and
+  `docs/research/neural-tts-clean-lexicon.md`); a stale upstream **local tag `v0.1.1`** (2016 commit `0210fd882`)
+  exists — `git tag -d v0.1.1` before tagging the release (the remote only has `v0.1.0`).
+
+**What Codex does next (Claude, 2026-11-14 evening).**
+*Case A — Claude is still working (the Device lock line in "Batch AY" names Claude):* app lane only, no adb, no
+`main`, don't touch `.worktrees/rv5`, `rv5e` or `rel-011`. Take these in order, each on its own branch from
+`review/rv5-err1` unless it says otherwise:
+1. **NT1-BINARY-F** (branch `tsuzuki/nt1-binary`, same worktree; T2): add `-ffile-prefix-map` so the `.so` has no
+   absolute build paths or user name; bundle the full BSD-3 text for kissfft; make `prepare-source.py` fail on
+   extra files in `.native/src`; add a UTF-16 pass to `scripts/audit-neural-runtime.py`. Rebuild, re-run the 13
+   tests, record the new hashes. Still no model, no app integration, no S4 merge.
+2. **STR1-F** (T1): the CSV export dialog title shows 移行するデータを選択 ("select data to migrate"); give it
+   its own `tsz_` string ("select columns to export") in 8 locales. One-line upstream edit.
+3. **ERR1-F2** (T2), only what can be settled by reading code and unit tests: "Loading from the source" must not
+   be the label for a downloaded chapter/page or for the WebView translation wait (use a neutral "Opening" label
+   there; 8 locales); in themed mode the pager/webtoon loading tile should keep showing the real page progress
+   percentage that `ReaderProgressIndicator` already receives. Leave the overlay-vs-chapter-end-card question to
+   the device pass.
+4. **R12-F** leftover (T2): add the missing decode warning RV4 noted; the live-source trust check stays deferred.
+Set each to `review` with a Result as usual; Claude (or a different Codex chat) reviews them.
+*Case B — Claude has stopped (owner says so, or the Device lock still names Claude with no log entry for a
+day):* a **review-lane chat that did not implement S2-F, RP1, STR1, ERR1 or NT1-BINARY** takes over the "Still
+open, in order" list below from item 1, following Batch T. Take the Device lock first. The app-lane chat that
+wrote those cards must not give their verdicts.
+*Either case, do not start:* NT2 steps 2–4, NT3, NT4 (blocked on the lexicon licence and the owner), any anime
+card, tagging or pushing.
+
+- **RV5 (`review/rv5`, `.worktrees/rv5`) is Claude's now.** On top of Codex's S2-F + RP1 + STR1 merges:
+  `03cd237dd` review: RP1 Listen dock shows the *playing* chapter (was the viewport chapter; `ReaderListenLayout.kt`,
+  new pure helpers in `NovelTtsPlayback.kt`); `498430910` review: native autoplay no longer replays the last
+  chapter (hand-off anchored on the playing chapter id, not the viewport index; WebView never had the bug);
+  `86e640358` merge **TTS-LANGUAGE** (`9fb91e4e3`, finished from the dirty worktree: script check first, classifier
+  only for Latin/Han text of 24+ chars, engine without the detected language resets to the device locale).
+  `TtsController.kt` conflict resolved keeping both the listening-run tracking and the language job.
+  **1,044 tests, 0 failures.** Not yet device-verified: a device pass (checks A–H, evidence files `c-*` in
+  `.worktrees/rv5/app/build/review-evidence/rv5/`) was started on the tablet, then the S22.
+- **STR1 device check: pass** on tablet and S22 (Dot, Japanese): every Data and storage row and the CSV export
+  dialog are Japanese, nothing clipped, no crash (`str1-*.png`). Not seen on a device: the LNReader options dialog
+  (it opens only after a file is picked; no file was picked). Nit: the CSV export dialog title is
+  移行するデータを選択 ("select data to migrate"), a reused migration string.
+- **ERR1: independent review = pass with small fixes** (no blocker). Fixes applied on `tsuzuki/err1` as
+  `5f5f49781` (1,051 tests), merged on `review/rv5-err1` as `5a7f1816a`, plus `1ac0b4524` (a late result after a
+  per-source retry is ignored), `47e8438d0` (AGENTS touch list), `28bd88a33` (ktlint: parentheses in
+  `ErrorCopy.kt`). What the fixes were: titles over-redacted ("Chapter #12" → "Chapter [redacted]");
+  global-search Retry navigated instead of retrying (new per-source retry in `SearchViewModel`); `errorCopy`
+  could throw `CancellationException` inside composition (non-throwing UI variant); bare HTTP 403 → challenge copy;
+  redaction gaps (JSON-quoted secrets, file paths, `user:pass@host`); `NoChaptersException` lost its specific
+  message; uncached `errorCopy` in download rows; hidden ComposeView left per pager retry; one vacuous test;
+  `NovelViewer.showLoadingIndicator` re-indent. Still to check on a device: whether the opaque WebView overlay
+  covers the chapter-end card during a chapter switch; "Loading from the source" shown for downloaded chapters;
+  page-progress percentage dropped in themed mode. New upstream file for the AGENTS list besides the six in
+  ERR1's Result: `presentation/browse/BrowseSourceScreen.kt`. Then: merge into `review/rv5`, build, device script.
+- **NT1-BINARY: independent artifact review = pass.** AAR and .so hashes/sizes match; 0 `espeak`/`piper` bytes
+  (ASCII and UTF-16) in the .so; 3 PT_LOAD at 0x4000; DT_NEEDED system libs only; 18 `Java_*` exports (10 TTS,
+  8 VersionInfo); 13 Python tests pass. Notes: the patch removes code paths, not GPL code — official 2.0.1 has no
+  espeak-ng/piper source, the gate's hits were deprecation text and identifiers; clean strings depend on
+  `--gc-sections` (the audit script must stay in release checks); `classes.jar` is the unmodified official one and
+  contains "eSpeak" inside `OfflineSpeaker*` class names (jar is not scanned by the gate); ONNX Runtime is a
+  third-party prebuilt pinned by hash only; the .so embeds 25 absolute build paths with the Windows user name
+  (add `-ffile-prefix-map` before shipping); kissfft's full BSD-3 text is missing; arm64 only (other ABIs must
+  fall back to the phone voice; not implemented); never loaded a model. Not merged; S4 stays excluded.
+- **NT2 step 1 (lexicon licence): NOT SETTLED → by the Plan 0.1.1 rule, 0.1.1 ships without the neural voice
+  unless the owner clears it.** `lexicon-us-en.txt` / `lexicon-gb-en.txt` are a mechanical re-encoding of misaki's
+  `{us,gb}_{gold,silver}.json` (sherpa-onnx `scripts/kokoro/v1.0/generate_lexicon_en.py`, `run.sh`). The misaki
+  maintainer says (hexgrad/misaki#51) silver = output of espeak-ng 1.52 (GPL-3.0) over dwyl/english-words, gold =
+  unnamed "local datasets". No data-specific licence exists; only the repo-level Apache-2.0. Issues
+  hexgrad/misaki#107 and #113 ask exactly this and have no maintainer answer. Options: wait for / ask the
+  maintainer; legal advice on espeak output; or build our own lexicon from a source with an explicit licence
+  (e.g. CMUdict, licence not yet checked). `lexicon-zh.txt` (pypinyin + misaki zh) is unverified too.
+- **REL-0.1.1 prep:** changelog draft (22 items for `main` + 5 pending lines) is in `docs/CHANGELOG-0.1.1-draft.md` (uncommitted),
+  not yet moved into `CHANGELOG.md`. Its dictionary line promises packs that are not published (R13): reword or publish first.
+
 ## Current state (2026-11-14, Codex app lane)
 
 - ERR1 code `ad3e6a871` / handoff `dd945ec72` is ready for independent review: Debug APK + 1,039 tests pass. S2-F, RP1 and STR1 are also review; RV5 is ready for another chat.
@@ -131,9 +233,11 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 
 ## Codex queue
 
-#### TTS-LANGUAGE Select the automatic voice from chapter text (T3) — `codex-working` (.worktrees/tts-language, 2026-11-10)
+#### TTS-LANGUAGE Select the automatic voice from chapter text (T3) — `done` (Codex RV5, 2026-11-14)
 
 Owner report from RV2. English text spoken on a Japanese device used the Japanese voice. Detect the language of the text sent to speech in both novel renderers and ask the engine for that language. Keep an explicitly selected voice or legacy voice locale. Check a Japanese device with English and Japanese text and confirm the choice follows the chapter on handoff.
+
+Review (Codex RV5, 2026-11-14): Pass. Retained explicit voice/legacy locale behavior and cancellation across handoff. In Japanese-system scratch apps, Native English selected `en-US` (S22 process trace 14:57:27), WebView Japanese selected `ja-JP` (tablet trace 14:59:22). Earlier explicit English playback and automatic/restore menu evidence inspected. Script/classifier/fallback tests included in the 1,085 passing combined tests. No neural runtime or model integrated.
 
 ### Batch T — Codex reviews Codex (owner 2026-11-08; Claude is out of usage) — read this first
 
@@ -178,6 +282,8 @@ ready, then the next.` A reviewer never reviews a card it implemented in the sam
    moved, merge `main` into the review branch, rebuild, then fast-forward). Add one log entry (newest first:
    cards merged, cards failed, test counts, evidence folder), set the RV card `done`, update the status table in
    `docs/design/README.md`. No push. Delete the review worktree, keep the branches.
+
+
 
 #### RV1 Review: app lane batch 1 (T3) — `done` (2026-11-08)
 Cards, in order: **V7.6, V7.7, R12, R16, R17** (all `review`; each branch is 2 commits off `main`). R17 is
@@ -371,7 +477,7 @@ and the manifest as assets. **Only the owner creates the release.** After the up
 hash from a device and put the URL in NT3's manifest constant.
 Result: _pending_
 
-#### S2-F Count a listened chapter once (T3) — `review` (.worktrees/s2-f, 2026-11-13; independent reviewer required)
+#### S2-F Count a listened chapter once (T3) — `done` (Codex RV5, 2026-11-14)
 RV2-14: one autoplay run counted 5 chapters for a 2-chapter book. Trace `TtsController`'s chapter hand-off with
 infinite scroll + auto-next on (log each "chapter finished" with chapter id and a playback-run id). Count a
 chapter at most once per (chapter id, playback run); a run ends on stop, on a manual chapter change, or when the
@@ -391,7 +497,9 @@ Independent reviewer device script (tablet for now; S22 deferred by owner):
 3. Stop and explicitly replay one chapter: it starts a new run and adds one completion. Repeat in incognito: totals stay unchanged. Check timer stop and manual chapter navigation end the previous run. Restore/remove only the disposable app and leave daily data alone.
 
 
-#### RP1 Reader polish from RV2 (T3) — `review` (.worktrees/rp1, 2026-11-13; code 54810e270; independent review required)
+Review (Codex RV5, 2026-11-14): Pass. Reviewed restoration and queue/run accounting, retaining both timer constructor parameters and test sets. Prior tablet Native/WebView and S22 replay/incognito evidence plus this takeover’s S22 Native pause/resume trace show two distinct completions in one run, followed by Stop after the final chapter; no last-chapter replay. Combined suite: 1,085 tests, zero failures/errors/skips. Evidence: `app/build/review-evidence/rv5/` (`c-tablet-A-native-trace.txt`, `c-tablet-E-webview-trace.txt`, S22 Stats/replay/incognito captures and `s22-rv5-caseb-*`).
+
+#### RP1 Reader polish from RV2 (T3) — `done` (Codex RV5, 2026-11-14)
 1. RV2-08: during TextView read-along the top bar covers the highlighted line. Scroll target = line top −
    (visible top bar height + 16 dp). No board needed.
 2. RV2-11: Dot WebView selection is black on dark blue (2.1:1). Set `::selection` and the TextView highlight
@@ -404,12 +512,16 @@ Result (Codex app lane, 2026-11-13): **review**, code `54810e270` on `tsuzuki/rp
 
 Independent reviewer: check Dot/Colour Native highlighted line with bars opening during speech, selection fill/ink/handles in Native and WebView, final card Next/Mark read/Contents with bottom bars shown/hidden and unchanged story progress. Check timer Off/Chapter/15 minutes, actual decreasing countdown and pause/resume, phone dock fit and tablet controls. Read from here remains available in reader actions. S22 deferred by owner. On merge with S2-F, retain both ListeningSession and elapsed-clock constructor arguments and both timer-test additions; neither card subsumes the other.
 
-#### STR1 Translate the LNReader import strings (T1) — `review` (.worktrees/str1, 2026-11-13; code 77ede839d; independent review required)
+Review (Codex RV5, 2026-11-14): Pass with review fixes `03cd237dd`, `498430910` and `0a96ace3d`. The dock follows the playing chapter; Native autoplay stops at the final chapter. The first line now has actual top clearance (the previous clamped scroll target still clipped it at chapter start), and measured floating Listen height is included in bottom clearance. Dot/Colour, tablet/S22, Native/WebView selection/read-along and timer evidence inspected. S22 Native card Next/Mark read/Contents exercised above both dock and bars; story progress remains 100%. Countdown visibly decreases (15:00 → 14:57; Colour 14:55). 1,085 tests pass. Evidence `app/build/review-evidence/rv5/`, notably `s22-rv5-caseb-first-line-fixed.png`, `s22-rv5-caseb-card-clears-dock.png`, `s22-rv5-caseb-preview-colour-readalong.png` and prior `c-tablet-F-*`.
+
+#### STR1 Translate the LNReader import strings (T1) — `done` (Codex RV5, 2026-11-14)
 RV2-10: `SettingsDataScreen.kt` L269, L307, L385–387 hardcode English. New `tsz_` strings in all 8 locales;
 smallest possible edit to the upstream file. Check the same screen for any other literal.
 Result (Codex app lane, 2026-11-13): `77ede839d` localizes the LNReader chooser, started status, import preference and entire options dialog. The same-screen audit also found CSV export labels; those now use resources too. 18 new `tsz_` keys in all 8 locales, existing Categories/Downloaded chapters reused. Upstream edit is 21 line replacements; no layout changes. `:app:compileDebugKotlin` and two scoped Spotless passes succeed. XML audit confirms 18 unique keys per locale and no remaining UI string literals in this screen. Evidence `.worktrees/str1/app/build/str1-evidence/`. No new tests for this copy-only change; no adb. Reviewer: Japanese Data screen chooser title, temporary import-started status, import-options dialog and CSV options, then another app language. No actual owner backup import required.
 
-#### ERR1 Errors and long waits say what happened (T3) — `review` (.worktrees/err1, 2026-11-14; code ad3e6a871; independent review required)
+Review (Codex RV5, 2026-11-14): Pass with `bf5055dcd`: CSV now has its own “Select columns to export” title in all 8 locales. Japanese LNReader options/chooser/data evidence inspected; Japanese and English CSV dialog labels verified on S22. Eight-locale key uniqueness and XML audit pass; 1,085 combined tests pass. Evidence `app/build/review-evidence/rv5/` (`tablet-rv5-str1-japanese-options.png`, `s22-rv5-caseb-str1-ja-csv.png`, `s22-rv5-caseb-str1-en-csv.png`). No owner backup imported.
+
+#### ERR1 Errors and long waits say what happened (T3) — `done` (Codex RV5, 2026-11-14)
 Boards 1 `ErrorState` and 2 `LoadingStages`. One composable pair in `presentation/tsuzuki/components/`
 (`TsuzukiErrorState`, `TsuzukiLoadingStages`) and one pure mapper `tsuzuki/error/ErrorCopy.kt`: Throwable →
 (what failed, why in one sentence, technical line, primary action). Cases: no network, timeout, HTTP 403/503 with
@@ -431,7 +543,9 @@ Result (Codex app lane, 2026-11-14): **review**, code `ad3e6a871` on `tsuzuki/er
 - Independent device review: tablet + S22, Dot then Colour. Offline catalogue: cause and Retry; browser-challenge source: WebView then Retry; removed extension's cached book: Extensions route. Slow request: spinner before 2 s, real stage/seconds after, timeout at 30 s, retry/leave/reopen and new search reset it. Check Native/WebView chapter failure/retry and inline next-chapter failures; ensure error text is never spoken and story position is retained. Manga paged/strip: failed page retry, WebView, recycling/scroll back. Download rows: localized cause and copied diagnostic has no query/token. Check portrait/landscape and larger font sizing. No app-lane runtime verdict is claimed.
 - Reviewer: add newly touched upstream adapters to AGENTS' touch list when merging: `presentation/browse/MigrateSearchScreen.kt`, `ui/reader/viewer/ReaderProgressIndicator.kt`, `viewer/pager/PagerPageHolder.kt`, `viewer/webtoon/WebtoonPageHolder.kt`, `viewer/text/textview/NovelTextViewInlineFeedback.kt`, `viewer/text/webview/NovelWebViewInlineFeedback.kt`. Other hooks are in already-listed files. Watch the Native loading-view expression formatting; no upstream body was wrapped/reindented as a new dispatch.
 
-#### RV5 Review app fixes for 0.1.1 (review lane) — `codex-working` (.worktrees/rv5, review/rv5, 2026-11-14; S2-F/RP1/STR1 only in this chat)
+Review (Codex RV5, 2026-11-14): Pass with the prior independent review fixes and `8570ff5d7`. Reader waits now use neutral Opening copy, manga progress reaches the themed loading tile, and WebView keeps its chapter-end snapshot while target pages are being prepared (including repeated loaded-state callbacks). Controlled localhost fixture verified stages at 4s, timeout, HTTP 403 → WebView, HTTP 500 → reader error → Retry recovery. Tablet missing-source cached details → Extensions; S22 Native missing local chapter → Retry recovery after restoring the synthetic file. A synthetic failed download showed its Japanese cause, Copy action and successful Retry. Manga paged offline error and Retry exercised; DNS failure persisted briefly online, then images rendered in webtoon mode. Webtoon render/recycling smoke checked; a separate forced webtoon error, live external browser challenge, inline-append failure and full large-font/landscape matrix were not established by this sample. These remain broader runtime QA coverage, not claims of this verdict. Debug, optimized Preview and 1,085 tests pass; Preview 16 KB APK alignment passes, SHA-256 `6f519bc92772f28e31f7ca5db8796dac2be497feaf48d6b85554c61a34dcea96`. Evidence `app/build/review-evidence/rv5/`. Both final crash buffers empty; daily Preview/Debug and owner phone untouched.
+
+#### RV5 Review app fixes for 0.1.1 (review lane) — `done` (Codex independent Case B takeover, 2026-11-14)
 
 Plan 0.1.1 step 6: review **S2-F → RP1 → STR1 → ERR1** using Batch T. All four are now `review`.
 Per-card independence: saved chat `01a1d049-7422-7173-a22c-a8a917b0b110` ("Follow Plan 0.1.1 review and app lanes") implemented S2-F/RP1/STR1. This distinct chat `01a1d800-cbe7-7272-91e5-d9c406331a99` may review those three. ERR1 and NT1-BINARY were implemented here and must be reviewed by a different chat. Do not merge either here. Use current `main` as base; no push. Tablet USB and S22 wireless
@@ -441,7 +555,11 @@ When combining S2-F and RP1, retain both ListeningSession and elapsed-clock cons
 timer-test additions. Merge eight-locale resources by key. Each card's Result has its exact runtime script.
 Back up/use disposable data as Batch T requires; unrelated extension trust gates remain in force.
 NT1-BINARY's candidate is a separate independent review; it does not silently enable S4 or waive NT2.
-Result: _pending_
+Result: accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; final review fixes `0a96ace3d`, `bf5055dcd`, `8570ff5d7`. Debug + optimized Preview + 1,085 tests pass. Per-card verdicts below/above; evidence archived to `app/build/review-evidence/rv5/`. Candidate ready for Batch T fast-forward; no push. Daily-app relaunch was rejected by automatic approval review, so daily apps remain untouched; disposable Dot Home is used for handback.
+
+Case B takeover (Codex independent review lane, 2026-11-14): owner explicitly assigned Case B; this chat implemented none of the review cards. Device lock claimed; resume A–H, ERR1 runtime checks, verdicts, then PERF1 and REL preparation. Main remains unchanged pending verdicts.
+- Case B progress: baseline `review/rv5-err1` Debug + optimized Preview + 1,084 tests passed. S22 verified `RZCWA139X1X`; both scratch installs upgraded only. S22 Native pause/resume trace counted chapter 1 and 2 once in run 1 and stopped after chapter 2. Remaining first-line/bar clipping reproduced on S22 (default reader size 16px, system font scale 1.0); small review fix on rv5e reserves top scroll inset outside story coordinates, device capture now clears the bar. Review fixes also restore manga page percentage, use neutral reader loading copy, preserve WebView chapter-end transition ownership and give CSV columns their own title in 8 locales. Fix Debug + 1,085 tests pass; accepted in `0a96ace3d`, `bf5055dcd`, `8570ff5d7`. Scoped formatter twice, clean diff check.
+- ERR1 runtime: tablet offline MangaFire shows Japanese connection copy; Wi-Fi restored and Retry loads catalogue. Synthetic localhost custom source exists only in scratch app (`files/custom_sources/rv5-caseb.json`, adb reverse 18765); controlled 40s request shows stages at 4s and timeout; HTTP 403 offers WebView and opens localhost correctly. Evidence `caseb-*` / `*-rv5-caseb-*` under `.worktrees/rv5/app/build/review-evidence/rv5/`; new build/formatter logs under rv5e equivalent. Main unchanged; no push. Synthetic fixture server must be stopped and reverse removed after QA.
 
 RV5 progress (2026-11-14, this independent reviewer): review branch merges S2-F `0bf63eaec`, RP1 `85a7b5782`, STR1 `17ce3afaf` on claim `ff55d86d8`. Both timer constructor arguments and tests retained; locale conflicts unioned. Debug + optimized Preview + **1,030 tests, zero failures/errors/skips** pass. First parallel compiler run exhausted memory; retry with `--no-parallel --max-workers=2 -Pkotlin.daemon.jvmargs=-Xmx6g` passed. All 26 added keys match placeholders across eight locales; no new duplicate keys. Evidence `.worktrees/rv5/app/build/review-evidence/rv5/`. Daily Preview/Debug untouched: both devices use separate `io.github.manojx2005.tsuzuki.rv5debugscratch` installs with synthetic RV2 listening backup in `Documents/Tsuzuki-RV5-Scratch`. S22 endpoint `192.168.40.243:44823`, verified hardware serial `RZCWA139X1X`.
 - Tablet native pause/resume, 15-minute countdown, two-chapter handoff: chapter 1/run 1/queue 2 and chapter 2/run 1/queue 3 counted=true; repeated chapter 2/queue 4 counted=false. Stats screenshot shows **2 listened chapters**. Baseline crash buffers empty. S22 native run also started, paused/resumed, English `en-us-x-iom-local` explicitly chosen on both. Remaining: capture S22 final Stats, WebView, replay/Stop and incognito, optimized Preview and STR1 flows. No final verdicts yet.
@@ -525,7 +643,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: RV5 independent review of S2-F/RP1/STR1, .worktrees/rv5, 2026-11-14; tablet USB + verified S22 wireless only; owner 2026-11-14: keep both awake (stayon true, screen_off_timeout 2147483647)`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex independent review lane, Case B takeover, .worktrees/rv5 and rv5e, 2026-11-14; tablet USB + verified S22 wireless only; keep both awake per owner`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3549,6 +3667,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 Codex independent review lane — RV5 Case B completed.** Accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; review fixes `0a96ace3d` (first-line/dock clearance), `bf5055dcd` (CSV title), `8570ff5d7` (reader loading/progress/held chapter-end state). Debug + optimized Preview + 1,085 tests pass; 16 KB APK alignment pass, both crash buffers empty. Tablet/S22 scratch-only Dot/Colour QA; archive `app/build/review-evidence/rv5/`. External/CDN and unforced matrix limits are explicit in ERR1 verdict. Main fast-forward next; no push.
 
 - **2026-11-14 — NT1-BINARY candidate ready for independent review:** `d1e360ff4` + `d580d500e`; all official Android variants fail the unchanged literal gate, while an isolated arm64 Kokoro-only source profile passes raw strings, 16 KB ELF alignment and TTS JNI API checks. Candidate 7,857,879 B, `b2cee72b9131cf5190753c966e23e0c0e65ef7a0e9313e434d074d4aa3b5fa47`; 13 Python tests and offline recipe pass. Evidence `.worktrees/nt1-binary/app/build/nt1-binary-evidence/`. No model, app integration, install, merge or push. RV5 is now ready for an independent chat.
 
