@@ -34,6 +34,33 @@ class AnimeSourceManagerTest {
         manager.stub(42L) shouldBe metadata
     }
 
+    @Test
+    fun `ensureLoaded loads extensions once across episode opens and again only after a change`() = runTest {
+        val source = mockk<AnimeSource> {
+            every { id } returns 7L
+            every { name } returns "Counting source"
+            every { lang } returns "ja"
+        }
+        var loads = 0
+        val manager = AnimeSourceManager(MemoryAnimeSources()) {
+            loads++
+            listOf(extension(source))
+        }
+
+        manager.ensureLoaded()
+        manager.ensureLoaded()
+        manager.get(7L)?.source shouldBe source
+        loads shouldBe 1
+
+        AnimeSourceManager.extensionsChanged()
+        manager.ensureLoaded()
+        manager.ensureLoaded()
+        loads shouldBe 2
+
+        manager.refresh()
+        loads shouldBe 3
+    }
+
     private fun extension(source: AnimeSource): AnimeLoadResult = AnimeLoadResult.Success(
         AnimeExtension.Installed(
             name = "Fixture extension",

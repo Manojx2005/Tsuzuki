@@ -97,13 +97,13 @@ class AnimeCatalogueActivity : BaseActivity() {
         val resumeId = intent.getLongExtra(RESUME_ANIME_EPISODE_ID, -1L)
         val openLatest = intent.getBooleanExtra(ANIME_OPEN_LATEST, false)
         val initialQuery = intent.getStringExtra(ANIME_SEARCH_QUERY).orEmpty()
-        val sources = AnimeSourceManager.create(applicationContext)
+        val sources = Injekt.get<AnimeSourceManager>()
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
                 val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading) {
                     value = try {
-                        sources.refresh()
+                        sources.ensureLoaded()
                         val saved = if (savedId >= 0) library.getAnime(savedId) else null
                         val actualSource = saved?.source ?: sourceId
                         val entry = sources.get(actualSource)

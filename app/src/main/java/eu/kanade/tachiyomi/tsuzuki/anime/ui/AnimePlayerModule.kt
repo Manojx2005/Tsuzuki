@@ -1,16 +1,21 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.Process
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.player.MpvAnimePlayerLauncher
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
+import uy.kohesive.injekt.api.get
 
 internal class AnimePlayerModule : InjektModule {
     override fun InjektRegistrar.registerInjectables() {
+        // One process-wide instance: extensions are loaded once and shared by the player, catalogue and downloads.
+        addSingletonFactory { AnimeSourceManager.create(get<Application>()) }
         addSingletonFactory<AnimePlayerLauncher> {
             selectAnimePlayerLauncher(Build.SUPPORTED_ABIS.firstOrNull(), Process.is64Bit())
         }

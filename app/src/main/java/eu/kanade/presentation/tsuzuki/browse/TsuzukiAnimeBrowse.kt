@@ -67,7 +67,7 @@ import androidx.compose.ui.res.stringResource as androidStringResource
 internal fun rememberAnimeBrowseSources(): State<List<RegisteredAnimeSource>> {
     val appContext = LocalContext.current.applicationContext
     val owner = LocalLifecycleOwner.current
-    val manager = remember(appContext) { AnimeSourceManager.create(appContext) }
+    val manager = remember { Injekt.get<AnimeSourceManager>() }
     return produceState(emptyList(), manager, owner) {
         owner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             AnimeSourceManager.extensionChanges.collect {

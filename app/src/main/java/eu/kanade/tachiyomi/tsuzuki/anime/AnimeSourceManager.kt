@@ -32,7 +32,23 @@ internal class AnimeSourceManager(
     @Volatile
     private var installed = emptyMap<Long, RegisteredAnimeSource>()
 
-    suspend fun refresh(): List<RegisteredAnimeSource> = refreshLock.withLock {
+    /** The [extensionChanges] value the current [installed] map was loaded at; null before the first load. */
+    private var loadedAt: Long? = null
+
+    /** Loads every installed extension again. Use when something outside the app may have changed them. */
+    suspend fun refresh(): List<RegisteredAnimeSource> = refreshLock.withLock { load() }
+
+    /**
+     * Loads the extensions once and reuses the result until [extensionsChanged] is called. The player, catalogue and
+     * downloads share one instance, so opening an episode no longer reloads every extension (and recreates every
+     * source, losing whatever state the extension keeps in memory).
+     */
+    suspend fun ensureLoaded(): List<RegisteredAnimeSource> = refreshLock.withLock {
+        if (loadedAt == extensionChanges.value) installed.values.toList() else load()
+    }
+
+    private suspend fun load(): List<RegisteredAnimeSource> {
+        val version = extensionChanges.value
         val registered = loadExtensions()
             .filterIsInstance<AnimeLoadResult.Success>()
             .sortedBy { it.extension.pkgName }
@@ -54,7 +70,8 @@ internal class AnimeSourceManager(
             if (saved[source.id] != metadata) repository.upsert(metadata)
         }
         installed = registered.associateBy { it.source.id }
-        registered
+        loadedAt = version
+        return registered
     }
 
     fun get(id: Long): RegisteredAnimeSource? = installed[id]

@@ -46,6 +46,8 @@ import logcat.LogPriority
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.items.episode.model.Episode
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -399,8 +401,8 @@ internal class AnimePlayerModel(
                 }
                 AnimeLog.i("open episode ${episode.id}: source=${anime.source} start=${"%.1f".format(start)}s")
                 val (entry, videos) = withContext(Dispatchers.IO) {
-                    val sources = AnimeSourceManager.create(context)
-                    sources.refresh()
+                    val sources = Injekt.get<AnimeSourceManager>()
+                    sources.ensureLoaded()
                     AnimeLog.i("extensions loaded (+${SystemClock.elapsedRealtime() - openedAt} ms)")
                     val entry = checkNotNull(sources.get(anime.source)) { "Source not installed: ${anime.source}" }
                     AnimeLog.i("requesting videos from ${entry.extensionName} (lib ${entry.libVersion})")

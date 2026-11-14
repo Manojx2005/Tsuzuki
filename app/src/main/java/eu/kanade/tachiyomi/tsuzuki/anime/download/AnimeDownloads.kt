@@ -35,6 +35,8 @@ import logcat.LogPriority
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.items.episode.model.Episode
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -243,8 +245,8 @@ internal class AnimeDownloads(
             val episode = checkNotNull(library.getEpisode(entry.episodeId))
             val anime = checkNotNull(library.getAnime(entry.animeId))
             check(episode.animeId == anime.id && anime.source == entry.sourceId)
-            val sources = AnimeSourceManager.create(context)
-            sources.refresh()
+            val sources = Injekt.get<AnimeSourceManager>()
+            sources.ensureLoaded()
             val source = checkNotNull(sources.get(entry.sourceId))
             val client = (source.source as? AnimeHttpSource)?.client ?: network.client
             val preferred = prefs.quality.get()
