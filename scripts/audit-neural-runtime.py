@@ -17,6 +17,15 @@ from pathlib import Path
 
 FORBIDDEN = re.compile(rb"espeak|piper", re.IGNORECASE)
 PRINTABLE = re.compile(rb"[ -~]{4,}")
+UTF16_PRINTABLE = (
+    ("utf-16-le", re.compile(rb"(?:[ -~]\x00){4,}")),
+    ("utf-16-be", re.compile(rb"(?:\x00[ -~]){4,}")),
+)
+BUILD_PATH = re.compile(
+    r"(?:^|[\s(\"'=])(?:"
+    r"[A-Za-z]:[\\/](?:[A-Za-z_][A-Za-z0-9_. -]*[\\/]|[A-Za-z0-9_-]+\.(?:c|cc|cpp|cxx|h|hpp|cmake)(?:$|[\s:]))"
+    r"|/(?:home|Users|workspace|builds?|src|private/tmp|mnt)/)"
+)
 RUNTIME_MARKERS = (
     b"espeak_Initialize", b"espeak_Synth", b"espeak_TextToPhonemes",
     b"espeak_SetVoiceByName", b"espeak_ng_Initialize", b"phontab",
@@ -92,11 +101,23 @@ def inspect_elf(data):
 def inspect_library(name, data):
     result = {"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
     result.update(inspect_elf(data))
+    ascii_strings = [match.decode("ascii") for match in PRINTABLE.findall(data)]
+    wide_strings = [match.decode(encoding) for encoding, pattern in UTF16_PRINTABLE
+                    for match in pattern.findall(data)]
     result["literal_grep_matches"] = list(dict.fromkeys(
-        match.decode("ascii") for match in PRINTABLE.findall(data) if FORBIDDEN.search(match)
+        text for text in ascii_strings if FORBIDDEN.search(text.encode("ascii"))
     ))
+    result["utf16_literal_matches"] = list(dict.fromkeys(
+        text for text in wide_strings if FORBIDDEN.search(text.encode("ascii"))
+    ))
+    result["absolute_build_path_matches"] = list(dict.fromkeys(
+        text for text in ascii_strings + wide_strings if BUILD_PATH.search(text)
+    ))
+    result["passes_build_hygiene"] = not result["absolute_build_path_matches"]
     result["runtime_markers"] = [marker.decode("ascii") for marker in RUNTIME_MARKERS if marker in data]
-    result["passes_nt1_artifact_gates"] = not result["literal_grep_matches"] and result["aligned_16kb"]
+    result["passes_nt1_artifact_gates"] = (
+        not result["literal_grep_matches"] and not result["utf16_literal_matches"] and result["aligned_16kb"]
+    )
     return result
 
 
@@ -113,21 +134,26 @@ def inspect_artifact(path):
         raise ValueError(f"{path.name}: no native libraries; an empty archive cannot pass")
     return {"artifact": path.name, "bytes": path.stat().st_size,
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "libraries": libraries,
-            "passes_nt1_artifact_gates": all(lib["passes_nt1_artifact_gates"] for lib in libraries)}
+            "passes_nt1_artifact_gates": all(lib["passes_nt1_artifact_gates"] for lib in libraries),
+            "passes_build_hygiene": all(lib["passes_build_hygiene"] for lib in libraries)}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifacts", nargs="+", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--require-build-hygiene", action="store_true")
     args = parser.parse_args()
     reports = [inspect_artifact(path) for path in args.artifacts]
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(reports, indent=2) + "\n", encoding="utf-8", newline="")
     for report in reports:
         failed = sum(not lib["passes_nt1_artifact_gates"] for lib in report["libraries"])
-        print(f"{report['artifact']}: {len(report['libraries'])} libraries, {failed} fail")
-    return 0 if all(report["passes_nt1_artifact_gates"] for report in reports) else 1
+        paths = sum(not lib["passes_build_hygiene"] for lib in report["libraries"])
+        print(f"{report['artifact']}: {len(report['libraries'])} libraries, {failed} fail NT1, {paths} have build paths")
+    return 0 if all(report["passes_nt1_artifact_gates"] and
+                    (not args.require_build_hygiene or report["passes_build_hygiene"])
+                    for report in reports) else 1
 
 
 if __name__ == "__main__":

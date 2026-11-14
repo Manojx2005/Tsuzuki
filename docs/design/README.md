@@ -61,6 +61,7 @@ pill with black text. Updates with unread shows `NEW 14` in red.
 
 | Board | Status | Code |
 |---|---|---|
+| Neural runtime research (NT1-BINARY-F; no UI) | Isolated arm64 source-built Sherpa/ONNX candidate passes native literal, path, alignment and JNI API checks plus 21 regression tests. Independent review pending; no voice pack, app integration or Voices UI. | `scripts/neural-tts/`, `scripts/build-onnx-runtime.ps1`, [audit summary](../research/neural-tts-native-audit-20261114.json) |
 | Tablet novel chapter labels (CHAPNUM) | Home splits explicit source headings into their number and title columns. Elsewhere, number-only mode uses the source number and number-and-title mode shows it once. Tablet Dot/Colour mismatch labels passed RV4 2026-11-13; S22 deferred by owner. | `presentation/tsuzuki/novel/NovelChapterNumber.kt` |
 | Onboarding | ready for review in the onboarding worktree. Dot and Colour share six steps, including storage and permissions. Debug build and 660 unit tests pass. Device checks pending | `presentation/tsuzuki/onboarding/` |
 | Upstream integration checkpoint (2026-11-04) | main UI work committed and all 28 Mihon picks merged; debug build + 630 app tests pass; tablet Dot/Colour novel and manga reader checks, novel pause/resume and queue restart checks pass. Interrupted tall-image split recovery fixed and verified on the same failed chapter; owner data restored and hash-verified. Optimized preview/device bug sweep remains | merge `c54b2f809`, recovery `de061e0ef`; evidence `app/build/codex-merge-20261104/` |

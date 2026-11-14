@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$SdkRoot,
     [string]$UpstreamAar,
-    [ValidateRange(1, 8)][int]$Jobs = 4,
+    [ValidateRange(1, 8)][int]$Jobs = 2,
     [switch]$Offline
 )
 
@@ -61,9 +61,23 @@ foreach ($entry in $profileHashes.PSObject.Properties) {
 }
 $dependencies = Get-Content -LiteralPath (Join-Path $profileRoot 'dependencies-v2.0.1.json') -Raw | ConvertFrom-Json
 foreach ($dependency in $dependencies) {
+    # Retain the legacy hash in the source-cache allowlist, but never fetch/link its prebuilt runtime.
+    if ($dependency.filename.StartsWith('onnxruntime-')) { continue }
     Get-VerifiedFile $dependency.url (Join-Path $sourceRoot $dependency.filename) $dependency.sha256
 }
+& (Join-Path $PSScriptRoot 'build-onnx-runtime.ps1') -SdkRoot $SdkRoot -Jobs $Jobs -Offline:$Offline
+if ($LASTEXITCODE -ne 0) { throw 'ONNX source build failed' }
+$onnxRoot = Join-Path $nativeRoot 'ort-install'
+foreach ($required in @('include/onnxruntime_cxx_api.h', 'lib/libonnxruntime.a')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $onnxRoot $required))) {
+        throw "Missing source-built ONNX input: $required"
+    }
+}
 
+# Map paths in __FILE__/diagnostics before compilation, never edit a linked library.
+$mappedRepo = $repoRoot.Replace('\', '/')
+$mappedSdk = ([IO.Path]::GetFullPath($SdkRoot)).Replace('\', '/')
+$pathFlags = '-ffile-prefix-map="{0}=tsuzuki" -ffile-prefix-map="{1}=android-sdk"' -f $mappedRepo, $mappedSdk
 $configArgs = @(
     '-S', $sourceRoot, '-B', $buildRoot, '-G', 'Ninja',
     "-DCMAKE_MAKE_PROGRAM=$cmakeRoot/ninja.exe",
@@ -71,16 +85,26 @@ $configArgs = @(
     "-DCMAKE_INSTALL_PREFIX=$nativeRoot/install-arm64",
     '-DANDROID_ABI=arm64-v8a', '-DANDROID_PLATFORM=android-26', '-DANDROID_STL=c++_static',
     '-DCMAKE_BUILD_TYPE=Release', '-DBUILD_SHARED_LIBS=OFF', '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
+    "-DCMAKE_C_FLAGS=$pathFlags", "-DCMAKE_CXX_FLAGS=$pathFlags", "-DCMAKE_ASM_FLAGS=$pathFlags",
     '-DSHERPA_ONNX_ENABLE_JNI=ON', '-DSHERPA_ONNX_ENABLE_C_API=OFF',
     '-DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=OFF', '-DSHERPA_ONNX_ENABLE_BINARY=OFF',
     '-DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF', '-DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF',
-    '-DSHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE=OFF',
+    '-DSHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE=ON',
     '-DCMAKE_DISABLE_FIND_PACKAGE_Git=ON', '-DCMAKE_TLS_VERIFY=ON'
 )
-& $cmake @configArgs *> (Join-Path $evidenceRoot 'configure-arm64.log')
-if ($LASTEXITCODE -ne 0) { throw 'Native configure failed; see configure-arm64.log' }
-& $cmake --build $buildRoot --target sherpa-onnx-jni --parallel $Jobs *> (Join-Path $evidenceRoot 'build-arm64-final.log')
-if ($LASTEXITCODE -ne 0) { throw 'Native build failed; see build-arm64-final.log' }
+$priorOnnxInclude = $env:SHERPA_ONNXRUNTIME_INCLUDE_DIR
+$priorOnnxLibrary = $env:SHERPA_ONNXRUNTIME_LIB_DIR
+try {
+    $env:SHERPA_ONNXRUNTIME_INCLUDE_DIR = Join-Path $onnxRoot 'include'
+    $env:SHERPA_ONNXRUNTIME_LIB_DIR = Join-Path $onnxRoot 'lib'
+    & $cmake @configArgs *> (Join-Path $evidenceRoot 'configure-arm64.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Native configure failed; see configure-arm64.log' }
+    & $cmake --build $buildRoot --target sherpa-onnx-jni --parallel $Jobs *> (Join-Path $evidenceRoot 'build-arm64-final.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Native build failed; see build-arm64-final.log' }
+} finally {
+    $env:SHERPA_ONNXRUNTIME_INCLUDE_DIR = $priorOnnxInclude
+    $env:SHERPA_ONNXRUNTIME_LIB_DIR = $priorOnnxLibrary
+}
 $libraryDirectory = Join-Path $outputRoot 'arm64-v8a'
 New-Item -ItemType Directory -Path $libraryDirectory -Force | Out-Null
 $library = Join-Path $libraryDirectory 'libsherpa-onnx-jni.so'
@@ -95,9 +119,10 @@ Get-VerifiedFile 'https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1
 $candidate = Join-Path $outputRoot 'sherpa-onnx-2.0.1-tsuzuki-kokoro-arm64.aar'
 & python (Join-Path $profileRoot 'package-runtime.py') --upstream-aar $UpstreamAar --library $library `
     --build $buildRoot --llvm-nm (Join-Path $llvmRoot 'llvm-nm.exe') `
+    --onnx-build-manifest (Join-Path $onnxRoot 'build.json') `
     --ndk-notice (Join-Path $ndkRoot 'NOTICE') --output $candidate
 if ($LASTEXITCODE -ne 0) { throw 'Candidate API/packaging check failed' }
-& python (Join-Path $PSScriptRoot 'audit-neural-runtime.py') $candidate `
+& python (Join-Path $PSScriptRoot 'audit-neural-runtime.py') $candidate --require-build-hygiene `
     --output (Join-Path $evidenceRoot 'candidate-aar-audit.json')
 if ($LASTEXITCODE -ne 0) { throw 'Candidate fails NT1 artifact gates' }
 Write-Output "Candidate ready for independent review: $candidate"

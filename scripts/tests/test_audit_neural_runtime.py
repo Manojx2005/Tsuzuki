@@ -51,6 +51,36 @@ class RuntimeAuditTest(unittest.TestCase):
         self.assertFalse(report["passes_nt1_artifact_gates"])
         self.assertEqual(["espeak_Initialize"], report["runtime_markers"])
 
+    def test_utf16_literals_fail_in_both_byte_orders_and_alignments(self):
+        for encoding in ("utf-16-le", "utf-16-be"):
+            for offset in (b"", b"\xff"):
+                for text in ("CreateSpeakerEmbeddingExtractor", "PiPeR"):
+                    with self.subTest(encoding=encoding, offset=offset, text=text):
+                        report = audit.inspect_library("jni.so", elf(payload=offset + text.encode(encoding)))
+                        self.assertFalse(report["passes_nt1_artifact_gates"])
+                        self.assertEqual([], report["literal_grep_matches"])
+                        self.assertTrue(any(text in match for match in report["utf16_literal_matches"]))
+
+    def test_unrelated_utf16_text_does_not_fail(self):
+        for encoding in ("utf-16-le", "utf-16-be"):
+            report = audit.inspect_library("jni.so", elf(payload="Kokoro text runtime".encode(encoding)))
+            self.assertTrue(report["passes_nt1_artifact_gates"])
+
+    def test_build_paths_fail_hygiene_in_ascii_and_utf16(self):
+        for encoding in ("ascii", "utf-16-le", "utf-16-be"):
+            for text in ("C:/Users/test/build/runtime.cc", r"C:\Users\test\build\runtime.cc",
+                         "C:/runtime.cc", "/home/runner/work/runtime/core.h"):
+                with self.subTest(encoding=encoding, path=text):
+                    report = audit.inspect_library("jni.so", elf(payload=text.encode(encoding)))
+                    self.assertFalse(report["passes_build_hygiene"])
+                    self.assertTrue(report["passes_nt1_artifact_gates"])
+
+    def test_urls_relative_diagnostics_and_android_paths_are_not_build_paths(self):
+        for text in ("https://github.com/project/src/core.cc", "tsuzuki/.native/src/core.cc",
+                     "/data/user/0/app/files/models", "/proc/self/maps", "R:/6"):
+            with self.subTest(text=text):
+                self.assertTrue(audit.inspect_library("jni.so", elf(payload=text.encode()))["passes_build_hygiene"])
+
     def test_bad_or_truncated_native_files_fail_closed(self):
         for data in (b"", b"not ELF", elf()[:80], elf()[:52]):
             with self.subTest(size=len(data)):

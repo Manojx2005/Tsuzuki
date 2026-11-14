@@ -29,9 +29,18 @@ def main():
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--llvm-nm", type=Path, required=True)
     parser.add_argument("--ndk-notice", type=Path, required=True)
+    parser.add_argument("--onnx-build-manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     profile = Path(__file__).parent
+    onnx_record = json.loads(args.onnx_build_manifest.read_text(encoding="utf-8-sig"))
+    onnx_library = args.onnx_build_manifest.parent / "lib/libonnxruntime.a"
+    if onnx_record["source_archive_sha256"] != "0a71177b993c8406e0ae50574e2319bd0f53d3e89857cd9acdde0aea22ba27f1":
+        raise ValueError("ONNX source manifest is not the pinned v1.28.2 source")
+    with onnx_library.open("rb") as stream:
+        onnx_hash = hashlib.file_digest(stream, "sha256").hexdigest()
+    if onnx_hash != onnx_record["library_sha256"]:
+        raise ValueError("ONNX static archive differs from its source build manifest")
     upstream = args.upstream_aar.read_bytes()
     if hashlib.sha256(upstream).hexdigest() != UPSTREAM_SHA256:
         raise ValueError("The Java/API baseline is not the pinned official AAR")
@@ -41,6 +50,8 @@ def main():
     inspection = audit.inspect_library("jni/arm64-v8a/libsherpa-onnx-jni.so", library)
     if not inspection["passes_nt1_artifact_gates"]:
         raise ValueError("Candidate fails the unchanged literal/16 KB artifact gates")
+    if not inspection["passes_build_hygiene"]:
+        raise ValueError("Candidate still contains absolute build paths")
     system = {"libandroid.so", "liblog.so", "libm.so", "libdl.so", "libc.so"}
     if not set(inspection["needed"]).issubset(system):
         raise ValueError(f"Unexpected runtime dependency: {inspection['needed']}")
@@ -58,6 +69,12 @@ def main():
         raise ValueError(f"TTS JNI API differs: expected {expected}, actual {actual}")
     entries["jni/arm64-v8a/libsherpa-onnx-jni.so"] = library
     entries["assets/tsuzuki-runtime/LICENSE.sherpa-onnx"] = (profile / "LICENSE.sherpa-onnx").read_bytes()
+    entries["assets/tsuzuki-runtime/onnx-build.json"] = (json.dumps(onnx_record, indent=2) + "\n").encode()
+    # kissfft's root COPYING only points to LICENSES/BSD-3-Clause, which the
+    # dependency-root loop below does not descend into. Require its full text.
+    entries["assets/tsuzuki-runtime/kissfft-BSD-3-Clause.txt"] = (
+        profile / "licenses/kissfft-BSD-3-Clause.txt"
+    ).read_bytes()
     entries["assets/tsuzuki-runtime/NOTICE.txt"] = (
         "Tsuzuki Kokoro-only research profile, based on sherpa-onnx v2.0.1.\n"
         "Modified source and reproducible build: scripts/neural-tts/ in Tsuzuki.\n"
@@ -82,7 +99,7 @@ def main():
     report = {"tts_jni_exports": actual, "classes_sha256": hashlib.sha256(entries["classes.jar"]).hexdigest(),
               "upstream_aar_sha256": UPSTREAM_SHA256, "candidate_library": inspection,
               "candidate_aar_sha256": hashlib.sha256(args.output.read_bytes()).hexdigest(),
-              "candidate_aar_bytes": args.output.stat().st_size}
+              "candidate_aar_bytes": args.output.stat().st_size, "onnx_source_build": onnx_record}
     args.output.with_suffix(".api.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8", newline="")
     print(f"Packaged {args.output.name}: {report['candidate_aar_bytes']} bytes; {len(actual)} TTS JNI exports match")
 
