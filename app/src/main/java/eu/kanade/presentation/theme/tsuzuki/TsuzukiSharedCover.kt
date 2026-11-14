@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -21,7 +22,8 @@ import eu.kanade.tachiyomi.ui.manga.MangaScreen
 @OptIn(ExperimentalSharedTransitionApi::class)
 private val LocalSharedCoverScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 private val LocalCoverVisibilityScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
-private val LocalCoverDuration = staticCompositionLocalOf { TsuzukiMotion.SHARED_MS }
+// Dynamic on purpose: a static local would recompose both screens unskipped when the duration changes.
+private val LocalCoverDuration = compositionLocalOf { TsuzukiMotion.SHARED_MS }
 
 internal fun navigatorCoverDuration(isDetails: Boolean, event: StackEvent, reduced: Boolean): Int = when {
     reduced -> TsuzukiMotion.REDUCED_MS
