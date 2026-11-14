@@ -597,7 +597,7 @@ app/build/review-evidence/perf1/details-*.mp4. Video timings are estimates, not 
 Owner decision (2026-11-14, this chat): change the design so the **entire opening finishes within 300 ms**. Preserve the total-open target; first readable content is not a substitute. Implementation uses a 200 ms synchronized cover/fade, reserving 100 ms for preparation; independent device measurement is still required.
 
 
-Result (Codex, 2026-11-14; `tsuzuki/perf-details`, `.worktrees/perf-details`): **review**, implementation complete; 300 ms total-open budget requires independent device proof.
+Result (Codex, 2026-11-14; `tsuzuki/perf-details` commit `3f15ad172`, `.worktrees/perf-details`): **review**, implementation complete; 300 ms total-open budget requires independent device proof.
 - Opened MotionOpen/MotionSpec PNGs and decoded their offline HTML timing: shared cover/background 450 ms. Owner explicitly chose a new **300 ms complete-opening budget**, superseding the archived opening timing; `docs/design/specs.md` records that decision.
 - `TsuzukiMotion.kt` and `TsuzukiSharedCover.kt`: details opening uses a 200 ms synchronized screen fade and shared-cover bounds animation, reserving 100 ms for preparation. One composition-local duration supplies both covers and the screen fade; back navigation/other screens retain 450 ms, reduced motion 150 ms. No upstream hooks, layout, colours, fonts, strings or data changed.
 - `TsuzukiMotionTest.kt`: route/direction and reduced-motion regressions; **1,087 app tests, zero failures/errors/skips**, Debug assembly, optimized Preview assembly and two scoped Spotless passes pass. All Kotlin LF. Exact final test source precedes the result XML timestamp.
@@ -3704,6 +3704,10 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-14 PERF-DETAILS app lane:** `3f15ad172` synchronizes details cover and fade at 200 ms under the owner's new 300 ms total-opening budget. Debug, optimized scratch Preview, 1,087 tests, scoped formatting and APK 16 KB alignment pass. Independent S22/tablet runtime review pending; no measured budget pass or main merge. Evidence `.worktrees/perf-details/app/build/perf-details/`.
+
+
 
 - **2026-11-14 Codex independent review lane — RV5 Case B completed.** Accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; review fixes `0a96ace3d` (first-line/dock clearance), `bf5055dcd` (CSV title), `8570ff5d7` (reader loading/progress/held chapter-end state). Debug + optimized Preview + 1,085 tests pass; 16 KB APK alignment pass, both crash buffers empty. Tablet/S22 scratch-only Dot/Colour QA; archive `app/build/review-evidence/rv5/`. External/CDN and unforced matrix limits are explicit in ERR1 verdict. Main fast-forward next; no push.
 
