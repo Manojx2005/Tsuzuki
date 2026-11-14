@@ -93,7 +93,7 @@ either). Anything else merged into `main` from now on is for 0.1.2 unless the ow
    also needs the per-commit S22 measurements described in its card.
 3. If the owner asks for PERF-DETAILS in 0.1.1: merge `main` into `tsuzuki/rel-0.1.1`, re-run REL-0.1.1 steps
    3–5 (build Preview + Release, tests, 16 KB check, upgrade check), and record new hashes. Not before the owner asks.
-*App lane (one thread, no adb, own branch from `main`):* **STR2**, then **A11Y1** (BACK1 is with a Claude subagent) (cards below, after NT-LEX1).
+*App lane (one thread, no adb, own branch from `main`):* **A11Y1**, branched from `tsuzuki/str2` once STR2 is `review` (same files); BACK1 and STR2 are with Claude subagents (cards below, after NT-LEX1).
 Don't take PERF-START-2 or NT-LEX1 while they say `claude-working`. If a `claude-working` card has no Result and
 no log entry for a day, Claude has stopped: take it over from its worktree and say so in the card.
 *Do not start:* NT2 steps 2–4, NT3, NT4, any anime card (paused until the 0.1.1 tag), tagging, pushing.
@@ -752,7 +752,7 @@ pops the details screen and leaves the tab alone; add a unit test for whatever d
 Keep the upstream edit to a small dispatch. No adb. Reviewer script: S22 and tablet, Dot and Colour, Back at
 about 50, 150 and 400 ms after the tap, from Library, Home shelf, Updates and History; then predictive-back swipe.
 
-#### STR2 Hardcoded and untranslated strings sweep (app lane, T2) — `ready`
+#### STR2 Hardcoded and untranslated strings sweep (T2) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/str2`; Codex: don't take)
 The test devices run in Japanese and RV5 still found English or reused strings (STR1, the CSV dialog title).
 Sweep `app/src/main/java/eu/kanade/presentation/tsuzuki/` and `eu/kanade/tachiyomi/tsuzuki/` for user-visible
 text that is a Kotlin string literal (including `contentDescription`, toasts, notification text, error copy) or
@@ -763,7 +763,7 @@ touch upstream strings or upstream screens. Result: a table of every string move
 list of anything left on purpose (debug-only text, log messages, format-only strings) with the reason.
 Reviewer: Japanese device pass over the screens in the table.
 
-#### A11Y1 Screen-reader and touch-target pass on Tsuzuki screens (app lane, T3) — `ready` (after STR2; same files)
+#### A11Y1 Screen-reader and touch-target pass on Tsuzuki screens (app lane, T3) — `ready` (needs `tsuzuki/str2` at `review`; branch from it; same files)
 Code-reading card, no adb. For every composable under `presentation/tsuzuki/` and `presentation/theme/tsuzuki/`:
 (1) clickable things have a role and a spoken label (icon-only buttons need a `contentDescription` from a
 `tsz_` string; decorative images use `null`); (2) touch targets are at least 48 dp (use
