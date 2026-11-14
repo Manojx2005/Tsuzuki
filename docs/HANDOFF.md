@@ -923,14 +923,14 @@ Review (Codex RV4, 2026-11-13): Pass for the requested details/Home/reader label
   notification channels and the anime paths in `UpdatesViewModel`/`HistoryViewModel` were not checked for the gate.
 - **New rule: every anime card branches from `tsuzuki/anime-sync` (or from the card before it in the order), never
   from `tsuzuki/a6.4` or older.** Where a card says "needs `tsuzuki/a6.4`", read `tsuzuki/anime-sync`.
-- **Order now:** **AY-PLAY** (owner bug, Claude subagent working, branch `tsuzuki/ay-play`) → **RV3-S** (review
+- **Order now:** **AY-PLAY device half** (anime lane, with adb; the code half is on `tsuzuki/ay-play`, `review`) → **RV3-S** (review
   lane: review the chain as it stands on `tsuzuki/anime-sync` instead of `tsuzuki/r-a5` alone; same five checks as
   RV3 plus the merge resolutions above; on a pass the chain goes into `main` behind the setting, default off) →
   AY9 → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8.
 - Anime implementers test their own cards with adb on the tablet and S22 (owner 2026-11-12), **scratch package
   only** (`…tsuzuki.animescratch` via an init script like `app/build/perf-details/scratch.init.gradle`; never the
   `.dev`, daily or `rv5debugscratch` apps), Device lock first.
-- Prompts for the owner: review lane `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: do RV3-S as "Anime restart" in Batch AY describes.` Anime lane (after AY-PLAY is `review`): `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: take AY9, branching from tsuzuki/ay-play.`
+- Prompts for the owner: review lane `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: do RV3-S as "Anime restart" in Batch AY describes.` Anime lane: `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: do the device half of AY-PLAY on tsuzuki/ay-play (run its device script with three real sources, fix what the TsuzukiAnime log shows), then AY9.`
 
 Detail for every card, the Aniyomi files to read, the code rules and the device-test procedure are in
 **`docs/ANIME_ANIYOMI_PARITY.md`** (§1 reference checkout, §3 rules, §5 cards). Read §1–§3 once, then your card's
@@ -947,14 +947,21 @@ Apache-2.0: adapting its code is allowed with the header line from §1.
 **Order:** A6.4 → **AY-PLAY** → **AY9** → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8. Each card's Needs is the
 card before it in this order (`tsuzuki/ay0` needs `tsuzuki/a6.4`, `tsuzuki/a6.5` now needs `tsuzuki/ay6`, and so on).
 
-#### AY-PLAY Anime: videos from extensions don't play (T4) — `claude-working` (Claude subagent, 2026-11-15, `.worktrees/ay-play`, from `tsuzuki/anime-sync`; **owner bug 2026-11-12**; **code-only part**: errors made visible, position clamp, headers, shared source manager. Claude's session was not permitted to install and run third-party anime extensions on the devices, so **the device half (reproduce with real sources, confirm each fix) is for the anime lane or the owner** once this is `review`; Codex: don't take the code part)
+#### AY-PLAY Anime: videos from extensions don't play (T4) — `review` for the code half (Claude subagent, 2026-11-15, `tsuzuki/ay-play` `73a61f538`, `.worktrees/ay-play`); **device half `ready` for the anime lane: run the device script below with real sources, then fix what the log shows** (owner bug 2026-11-12)
 PARITY §7. Claude reproduced it on the tablet preview build: AnimeKai resolves after 25+ s, then sits at
 23:35 / −00:00 with a black picture and a dead Play button; AnimePahe shows "unknown error"; the app logs nothing
 from mpv. Evidence in `app/build/review-evidence/ay-play/` (main checkout). First make mpv and source errors
 visible, reproduce and write down the real error, then fix: start-position clamp, Play after end, source header
 fallback, one shared `AnimeSourceManager` (extensions are reloaded three times per episode open), readable
 source errors. Implementer tests on the tablet and S22 with three real sources.
-Result: _pending_
+Result, code half (Claude subagent, 2026-11-15; **no device, nothing here is shown to fix playback**): five commits on `tsuzuki/anime-sync`; 1,206 unit tests, 0 failures (19 new); Debug builds; no upstream file touched.
+- `e0f3eb669` + `73a61f538` **failures visible.** Before: mpv ran with verbose logging but no log observer was attached, resolve exceptions were swallowed, the UI said "Playback failed" / `unknown_error`. Now everything logs under tag **`TsuzukiAnime`** (`tsuzuki/anime/AnimeLog.kt`): open episode, extensions loaded (+ms), source returned N videos (+ms), resolved/failed video, `mpv loadfile`, `mpv FILE_LOADED` / `mpv end-file error: <reason>`, and mpv's own warn/error lines as `mpv/<prefix>:`. URLs are cut to the host; no tokens, cookies or paths. The player and catalogue error tiles show the ERR1 heading plus a redacted technical line.
+- `5bd9798c2` **start and end.** Confirmed by reading: the saved position was passed to mpv with no check against the duration, Retry reused the current position, and Play after the end called a seek that returns early when the duration is unknown. Now a position within 10 s of the end (or ≥ 90 %) starts at 0, re-checked when mpv reports the duration; Play after the end seeks to 0 or reloads. `AnimePlayerPolicy.kt`, 7 tests. Whether this was the 23:35 black screen is not known.
+- `f746985a0` **headers and order.** Confirmed against Aniyomi: a video without its own headers now gets the source's headers (before, mpv's default User-Agent); the source's `sortHosters()` / `sortVideos()` are applied. Left for AY1: `preferred` winning over resolution, parallel/lazy hosters, `mpvArgs`, per-hoster error isolation.
+- `c7c241670` **one source manager.** Confirmed: a new manager loading every extension was built in the player, catalogue, downloads and browse; `AnimeLibraryUpdateJob` asked Injekt for one that nothing registered. Now one singleton with `ensureLoaded()`; reloads when the app's installer reports a change. Caveat: a system-level install/uninstall is only noticed when Browse resumes or the update job runs.
+- **Device script for the anime lane** (debug build as `…tsuzuki.animescratch`, anime on, `adb logcat -s TsuzukiAnime:V`): (1) Browse → an anime source → Popular: a failing row shows heading + technical line; the `catalogue … failed` log line gives the cause (HTTP 403/Cloudflare, parse, or `Incompatible anime source` = AY6). (2) Open an unwatched episode: `extensions loaded` once, not per episode; `source returned … (+ms)` says whether a long wait is the source; `resolved video … headers=[…]`; then `mpv FILE_LOADED` or `mpv end-file error` with the `mpv/…` lines before it: **those lines are the real cause if it still doesn't play; fix from them.** (3) Resume mid-episode resumes; resume in the last 5 s starts at 0. (4) Play after the end restarts. (5) Retry on a failed episode does not reopen at the end. Crash buffer empty. Three real sources, tablet and S22.
+- Not done: the 30 s "no FILE_LOADED" watchdog and per-hoster timeout (AY1); PARITY §7 items 3 and 4 (episode label, portrait).
+Result, device half: _pending_
 
 #### AY9 Anime: video previews on Watch home and episode rows (T3) — `ready` (needs `tsuzuki/ay-play`; lane 1; owner 2026-11-12)
 PARITY §8. Boards `10-anime/AnimeHome` (continue-watching card = 16:9 frame of where you stopped, "EP n · mm:ss
