@@ -464,15 +464,20 @@ class ReaderActivity : BaseActivity() {
         val menuBottomBarPx = remember { mutableIntStateOf(0) }
         val onTopBarHeight = remember { { px: Int -> menuTopBarPx.intValue = px } }
         val onBottomBarHeight = remember { { px: Int -> menuBottomBarPx.intValue = px } }
-        val webViewer = state.viewer as? NovelWebViewViewer
+        val novelViewer = state.viewer
         val menuVisible = state.menuVisible
-        LaunchedEffect(webViewer, menuVisible, density) {
-            val viewer = webViewer ?: return@LaunchedEffect
-            snapshotFlow {
-                with(density) { menuTopBarPx.intValue.toDp().value to menuBottomBarPx.intValue.toDp().value }
-            }
+        LaunchedEffect(novelViewer, menuVisible, density) {
+            snapshotFlow { menuTopBarPx.intValue to menuBottomBarPx.intValue }
                 .distinctUntilChanged()
-                .collect { (top, bottom) -> viewer.onReaderChromeChanged(menuVisible, top, bottom) }
+                .collect { (top, bottom) ->
+                    when (novelViewer) {
+                        is NovelWebViewViewer -> with(density) {
+                            novelViewer.onReaderChromeChanged(menuVisible, top.toDp().value, bottom.toDp().value)
+                        }
+                        is NovelViewer -> novelViewer.onReaderChromeChanged(menuVisible, top, bottom)
+                        else -> Unit
+                    }
+                }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -997,7 +1002,7 @@ class ReaderActivity : BaseActivity() {
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
             val listenPanel = rememberTsuzukiListenPanel(
-                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused,
+                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused, ttsControlsVisible,
                 ::pauseTtsFromNotification, ::resumeTtsFromNotification, ::stepTtsParagraph, ::seekTtsToParagraph,
                 onPausedChanged = { isTtsPaused = it },
             )
@@ -1303,6 +1308,7 @@ class ReaderActivity : BaseActivity() {
                 onQuotes = ::onQuotesClicked,
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
                 showTtsMiniOverlay = !chrome.listeningVisible,
+                ttsMiniContent = listenPanel.miniContent,
                 panelEndInset = tsuzukiChromeRequests.panelEndInset,
                 panelBottomInset = tsuzukiChromeRequests.panelBottomInset,
                 onTopBarHeight = onTopBarHeight,

@@ -891,8 +891,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     private fun applyTtsHighlight(chunk: String, startOffset: Int, paragraphIndex: Int) {
         activity.runOnUiThread {
-            val highlightColor = preferences.novelTtsHighlightColor.get()
-            val highlightTextColor = preferences.novelTtsHighlightTextColor.get()
+            val feedback = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(
+                getThemeColors(preferences.novelTheme.get()).second,
+            )
+            val highlightColor = feedback?.readAlongFill ?: preferences.novelTtsHighlightColor.get()
+            val highlightTextColor = feedback?.readAlongInk ?: preferences.novelTtsHighlightTextColor.get()
             val highlightStyle = preferences.novelTtsHighlightStyle.get()
             val keepInView = preferences.novelTtsKeepHighlightInView.get()
 
@@ -978,9 +981,16 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     val layout = scrollTarget.layout ?: return
                     val line = layout.getLineForOffset(localStart.coerceAtMost(layout.text.length - 1).coerceAtLeast(0))
                     val targetInChunk = layout.getLineTop(line)
-                    val targetInScroll =
+                    val targetInScroll = if (feedback != null) {
+                        eu.kanade.tachiyomi.tsuzuki.reader.novelHighlightScrollTarget(
+                            block.container.top + scrollTarget.top + scrollTarget.totalPaddingTop + targetInChunk,
+                            readerChromeTopPx,
+                            (16 * activity.resources.displayMetrics.density).toInt(),
+                        )
+                    } else {
                         block.container.top + scrollTarget.top + targetInChunk - (scrollView.height / 3)
-                    scrollView.smoothScrollTo(0, targetInScroll.coerceAtLeast(0))
+                    }
+                    scrollView.smoothScrollTo(0, targetInScroll)
                 }
                 if (scrollTarget.layout != null) doScroll() else scrollTarget.post { doScroll() }
             }
@@ -1723,6 +1733,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             onNext = { chapterEndTransition.start(scope, chapters) },
         )?.let {
             contentContainer.addView(it)
+            updateChapterEndClearance()
             return
         }
 
@@ -1826,6 +1837,51 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
     }
 
+    private var readerChromeTopPx = 0
+    private var readerChromeBottomPx = 0
+
+    fun onReaderChromeChanged(visible: Boolean, topPx: Int, bottomPx: Int) {
+        val themed = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(0) != null
+        val previousTop = readerChromeTopPx
+        readerChromeTopPx = if (visible && themed) topPx.coerceAtLeast(0) else 0
+        readerChromeBottomPx = if (visible && themed) bottomPx.coerceAtLeast(0) else 0
+        updateChapterEndClearance()
+        if (readerChromeTopPx > 0 && previousTop != readerChromeTopPx && ttsController.isSpeaking() &&
+            preferences.novelTtsEnableHighlight.get()
+        ) {
+            val index = ttsController.ttsCurrentChunkIndex
+            ttsController.ttsChunks.getOrNull(index)?.let { chunk ->
+                applyTtsHighlight(
+                    chunk,
+                    ttsController.ttsChunkStartOffsets.getOrElse(index) { 0 },
+                    ttsController.ttsChunkParagraphIndexes.getOrElse(index) { index },
+                )
+            }
+        }
+    }
+
+    private fun updateChapterEndClearance() {
+        val hasCard = !preferences.novelInfiniteScroll.get() &&
+            contentContainer.findViewWithTag<View>(NEXT_CHAPTER_BUTTON_TAG) != null
+        val extra = eu.kanade.tachiyomi.tsuzuki.reader.novelEndCardClearance(
+            hasCard,
+            readerChromeBottomPx,
+            (16 * activity.resources.displayMetrics.density).toInt(),
+        )
+        if (scrollView.paddingBottom == extra) return
+        val oldMax = (contentContainer.height + scrollView.paddingBottom - scrollView.height).coerceAtLeast(0)
+        val atEnd = !isRestoringScroll && oldMax > 0 && scrollView.scrollY >= oldMax - 2
+        scrollView.setPadding(scrollView.paddingLeft, scrollView.paddingTop, scrollView.paddingRight, extra)
+        if (atEnd) {
+            val generation = renderGeneration
+            scrollView.post {
+                if (generation == renderGeneration) {
+                    scrollView.scrollTo(0, (contentContainer.height + extra - scrollView.height).coerceAtLeast(0))
+                }
+            }
+        }
+    }
+
     private fun applyTextViewStyles(textView: TextView) {
         val fontSize = preferences.novelFontSize.get()
         val lineHeight = preferences.novelLineHeight.get()
@@ -1911,9 +1967,14 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         // IllegalArgumentException. Strip it back to a plain Spannable so TextView measures
         // against the live paint instead.
         PlatformPrecomputedText.toPlainSpannable(textView.text)?.let { textView.text = it }
+        eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(textColor)?.let { feedback ->
+            textView.highlightColor = feedback.selectionFill
+            (textView as? NovelIllustrationTextView)?.selectionForegroundColor = feedback.selectionInk
+        }
     }
 
     private fun applyBackgroundColor() {
+        updateChapterEndClearance()
         val theme = preferences.novelTheme.get()
         val (backgroundColor, _) = getThemeColors(theme)
         container.setBackgroundColor(backgroundColor)

@@ -1388,4 +1388,7 @@
     <string name="tsz_stats_listen_week">Esta semana</string>
     <string name="tsz_stats_listened_chapters">Capítulos nesta semana</string>
     <string name="tsz_stats_minutes_read_listened">Minutos de leitura ou escuta</string>
+    <string name="tsz_reader_timer_short">Tempor.</string>
+    <string name="tsz_reader_sleep_chapter_short">Cap.</string>
+    <string name="tsz_reader_listen_position">Parágrafo %1$d de %2$d</string>
 </resources>

@@ -1391,4 +1391,7 @@
     <string name="tsz_stats_listen_week">本周</string>
     <string name="tsz_stats_listened_chapters">本周听完的章节</string>
     <string name="tsz_stats_minutes_read_listened">阅读或听书分钟数</string>
+    <string name="tsz_reader_timer_short">定时</string>
+    <string name="tsz_reader_sleep_chapter_short">章末</string>
+    <string name="tsz_reader_listen_position">第 %1$d / %2$d 段</string>
 </resources>

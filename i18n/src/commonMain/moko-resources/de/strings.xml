@@ -1391,4 +1391,7 @@
     <string name="tsz_stats_listen_week">Diese Woche</string>
     <string name="tsz_stats_listened_chapters">Kapitel diese Woche</string>
     <string name="tsz_stats_minutes_read_listened">Gelesene oder gehörte Minuten</string>
+    <string name="tsz_reader_timer_short">Timer</string>
+    <string name="tsz_reader_sleep_chapter_short">Kap.</string>
+    <string name="tsz_reader_listen_position">Absatz %1$d von %2$d</string>
 </resources>

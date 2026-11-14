@@ -1770,4 +1770,7 @@
     <string name="tsz_stats_listen_week">This week</string>
     <string name="tsz_stats_listened_chapters">Chapters this week</string>
     <string name="tsz_stats_minutes_read_listened">Minutes read or listened</string>
+    <string name="tsz_reader_timer_short">Timer</string>
+    <string name="tsz_reader_sleep_chapter_short">Ch.</string>
+    <string name="tsz_reader_listen_position">Paragraph %1$d of %2$d</string>
 </resources>

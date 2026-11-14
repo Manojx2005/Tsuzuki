@@ -176,6 +176,7 @@ fun NovelReaderAppBars(
     // Extra bottom offset for the floating TTS overlay so it clears the status bar
     ttsOverlayBottomPadding: Dp = 0.dp,
     showTtsMiniOverlay: Boolean = true,
+    ttsMiniContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
     panelEndInset: Dp = 0.dp,
     panelBottomInset: Dp = 0.dp,
 
@@ -280,6 +281,8 @@ fun NovelReaderAppBars(
                         onPrevParagraph = onTtsPreviousParagraph,
                         onNextParagraph = onTtsNextParagraph,
                         onStartFromViewport = onTtsStartFromViewport,
+                        themedContent = ttsMiniContent,
+                        onClose = onToggleTtsControls,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = MaterialTheme.padding.small + ttsOverlayBottomPadding),
@@ -818,7 +821,13 @@ private fun NovelTtsControlsOverlay(
     onNextParagraph: () -> Unit,
     onStartFromViewport: () -> Unit,
     modifier: Modifier = Modifier,
+    themedContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
+    onClose: () -> Unit = {},
 ) {
+    if (themedContent != null && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        themedContent(modifier, onClose, onPauseResume)
+        return
+    }
     if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
         TsuzukiTtsMiniPlayer(
             isTtsActive = isTtsActive,
