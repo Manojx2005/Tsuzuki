@@ -670,7 +670,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane Case B completed 2026-11-14; tablet + S22 optimized candidate scratch Dot Home, both awake; owner phone/daily apps untouched`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane Case B completed 2026-11-14; tablet + S22 optimized candidate scratch Dot Home, both awake; tablet rotation verified free; owner phone/daily apps untouched`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3996,3 +3996,5 @@ Result: _pending_
 - **2026-11-14 Codex review lane — PERF1 completed.** All four speed budgets measured on optimized RV5 Preview/S22 with Y4 synthetic data. Cold startup and settled details missed; PERF-START/PERF-DETAILS created without tuning. Library passed; local Native chapter-first-text limited pass near measurement uncertainty. See PERFORMANCE.md and local perf1 evidence. REL preparation next.
 
 - **2026-11-14 Codex review lane — REL-0.1.1 preparation completed.** Merged accepted main into existing release prep; Preview/Release + 1,085 tests passed, 16 KB APK/ELF/profile audits passed. Exact tagged-v0.1.0 Debug → optimized 0.1.1 scratch upgrade retained all Y4 book/chapter/history/shelf state and exported settings. Both candidate Dot Homes inspected, empty crash buffers. Local artifacts use Android Debug signing; official signing/tag/publish and owner-phone install remain owner-only. Device lock released, both kept awake. No push/tag.
+
+- **2026-11-14 final Case B audit:** archived Preview/Release/scratch SHA-256 hashes rechecked, successful build log and empty final crash logs verified. Tablet still on scratch candidate; `wm user-rotation` already reports `free`, so no device setting changed. Required owner-publish stop point remains. Evidence `app/build/review-evidence/rel-011/final-audit.json`.
