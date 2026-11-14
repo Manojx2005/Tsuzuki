@@ -44,8 +44,8 @@ internal fun novelCssColor(argb: Int) = String.format(
     argb ushr 24 and 255,
 )
 
-internal fun novelHighlightScrollTarget(lineTopPx: Int, topBarPx: Int, gapPx: Int): Int =
-    (lineTopPx - topBarPx.coerceAtLeast(0) - gapPx.coerceAtLeast(0)).coerceAtLeast(0)
+internal fun novelHighlightScrollTarget(lineTopPx: Int, topBarPx: Int, gapPx: Int, topInsetPx: Int = 0): Int =
+    (lineTopPx + topInsetPx.coerceAtLeast(0) - topBarPx.coerceAtLeast(0) - gapPx.coerceAtLeast(0)).coerceAtLeast(0)
 
 internal fun novelEndCardClearance(hasCard: Boolean, bottomBarPx: Int, gapPx: Int): Int =
     if (hasCard && bottomBarPx > 0) bottomBarPx + gapPx.coerceAtLeast(0) else 0
