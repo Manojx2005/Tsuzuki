@@ -857,7 +857,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Claude (BACK1 device check by a subagent, 2026-11-14 night) — before that: PERF-DETAILS review done; S22 + tablet on the `…rv5debugscratch` app (now the PERF-DETAILS build, versionCode 25), Dot Home, awake; the `…rel011upgradescratch` candidate app is still installed and in recents on both; show_touches 0; owner phone/daily apps untouched`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (PERF-START-V then PERF-START-2, 2026-11-14; owner confirms Claude stopped and releases devices). S22 + tablet scratch apps only; daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
