@@ -940,14 +940,14 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Claude (AY-PLAY subagent, 2026-11-15, package …tsuzuki.animescratch only) — before that: free — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — (Claude did not use them for AY-PLAY, see the card) — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
 **Order:** A6.4 → **AY-PLAY** → **AY9** → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8. Each card's Needs is the
 card before it in this order (`tsuzuki/ay0` needs `tsuzuki/a6.4`, `tsuzuki/a6.5` now needs `tsuzuki/ay6`, and so on).
 
-#### AY-PLAY Anime: videos from extensions don't play (T4) — `claude-working` (Claude subagent, 2026-11-15, `.worktrees/ay-play`, from `tsuzuki/anime-sync`; **owner bug 2026-11-12**; Codex: don't take)
+#### AY-PLAY Anime: videos from extensions don't play (T4) — `claude-working` (Claude subagent, 2026-11-15, `.worktrees/ay-play`, from `tsuzuki/anime-sync`; **owner bug 2026-11-12**; **code-only part**: errors made visible, position clamp, headers, shared source manager. Claude's session was not permitted to install and run third-party anime extensions on the devices, so **the device half (reproduce with real sources, confirm each fix) is for the anime lane or the owner** once this is `review`; Codex: don't take the code part)
 PARITY §7. Claude reproduced it on the tablet preview build: AnimeKai resolves after 25+ s, then sits at
 23:35 / −00:00 with a black picture and a dead Play button; AnimePahe shows "unknown error"; the app logs nothing
 from mpv. Evidence in `app/build/review-evidence/ay-play/` (main checkout). First make mpv and source errors
