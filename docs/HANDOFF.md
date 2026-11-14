@@ -66,6 +66,19 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Current state (2026-11-15, Codex review lane — requested reviews and candidate refresh complete)
+
+- **NT-LEX1 passed and merged**; **PERF-START-V passed** with the full S22 baseline in PERFORMANCE.md.
+- **PERF-START-2 was measured d1950daa5 alone and rejected**: its gain did not exceed variability. The 500 ms engineering target remains (owner delegated judgment); PERF-START-2-F is ready for the app lane. Neither d1950daa5 nor diagnostic eb5e21fa7 is merged. Diagnostic code remains isolated.
+- **BACK1 passed with review fixes** 3305865d0 (saved Home key) and 7e3a3d635 (explicit root navigator). Accepted main review 3606521fb; original f9d047d95 alone regressed normal Back. Full device/theme matrix: 48 timed cases + 16 edge gestures, plus normal and dead-process restoration checks.
+- **0.1.1 candidate refreshed**, on `tsuzuki/rel-0.1.1`; final APK source **6119f2613**, versionCode 25 / Release 0.1.1 / Preview 0.1.1-8848. Includes BACK1 and faster PERF-DETAILS. A first Colour opening with the 200 ms animation landed on the 300 ms boundary, so the candidate review refinement uses **180 ms synchronized cover/fade**, reserving 120 ms for preparation. Main has the same refinement via 5c4b89421.
+- Final S22 cached-opening upper bounds: **Dot 260 / 227 / 252 ms; Colour 226 / 253 / 243 ms**, original variable-rate video PTS, approximately 8–17 ms frame uncertainty. Synthetic placeholders only; real-cover and reduced-motion timing remain unmeasured. Final APK additionally passes 12 timed Library Back cases, four edge gestures and all four normal/restored Back combinations.
+- Preview + Release + **1,091 tests pass**; all 15 normal/scratch APKs pass 16 KB ZIP alignment, included 64-bit ELF alignment and baseline profile checks. Release R8 initially ran out of heap with two workers; the single-worker retry passed. Exact tagged-v0.1.0 snapshot → final candidate direct upgrade preserves 500 books, 50,000 chapters, 995 history entries, 30 user shelves and all eight exported existing preferences, including Colour. No migration exception found.
+- Both test devices are on the final optimized candidate scratch **Dot Home**, 500 books, awake; screenshots inspected and crash buffers empty. **Device lock free**. Daily apps and owner phone untouched; STR2 still claude-working and untouched.
+- Evidence and local ARM64 APKs: `app/build/review-evidence/rel-011-refresh-final/` (final-audit.json). Preview SHA-256 `51262ee4f416d69b2e7d2461baa9826417c0545458ca9ef729760a8fc17e0482`; Release `2f45a74d32b899be8f52cc7dd42b260361777eeddf088ca29f72e7212c27fc5f`; tested scratch `965e15c459bcde317b77320b061cde1d854c4c0c923b32737145229c6458d2f9`.
+
+**Stop at the publishing handoff.** Local APKs use Android Debug signing. Owner handles official CI signing, owner-phone install, stale local v0.1.1 tag resolution, tagging and publishing. No tag/push performed. Neural runtime/voice and the anime chain remain outside this candidate. Earlier current-state blocks are historical; this block supersedes their next-action/candidate statements.
+
 ## Current state (2026-11-14 night, Claude — reviewing the app lane; budget subagents implement)
 
 Owner 2026-11-14 night: Claude checks Codex's work, says what Codex does next, and uses cheaper subagents for
@@ -81,7 +94,7 @@ implementation, until Claude's usage runs out. Nothing is pushed or tagged.
   timing on the S22: **pass**, 235–292 ms against 300 ms in Dot and Colour; merged (`c0a12f2c4`). New card BACK1
   from a Back-during-opening oddity seen in the test.
 
-**The release candidate is unchanged.** `tsuzuki/rel-0.1.1` (`987051988`) is the reviewed 0.1.1 candidate and the
+**Historical candidate state (superseded by the 2026-11-15 refresh above).** `tsuzuki/rel-0.1.1` (`987051988`) is the reviewed 0.1.1 candidate and the
 tag point. `main` has moved past it with PERF-START and the neural build scripts (no app code changed by
 either). Anything else merged into `main` from now on is for 0.1.2 unless the owner says to refresh the candidate.
 
@@ -103,11 +116,10 @@ no log entry for a day, Claude has stopped: take it over from its worktree and s
 **Waiting for the owner:**
 1. Publish 0.1.1: delete the stale local tag first (`git tag -d v0.1.1`, it points at a 2016 upstream commit),
    then tag `tsuzuki/rel-0.1.1` and let CI sign and publish. Local APKs are debug-signed.
-2. PERF-DETAILS in 0.1.1 or 0.1.2?
-3. Approve trusting one live Keiyoushi extension on a test device (unblocks the R12-F, R14 and S1 reviews).
-4. Neural voice: wait for the misaki maintainer, or go with our own CMUdict lexicon (NT-LEX1 is the first step;
+2. Approve trusting one live Keiyoushi extension on a test device (unblocks the R12-F, R14 and S1 reviews).
+3. Neural voice: wait for the misaki maintainer, or go with our own CMUdict lexicon (NT-LEX1 is the first step;
    the research estimates 3–4 weeks to a respectable US-only voice).
-5. R13 dictionary packs are not published; the 0.1.1 changelog must not promise them until they are.
+4. R13 dictionary packs are not published; the 0.1.1 changelog must not promise them until they are.
 
 ## Current state (2026-11-14, Codex review lane — Case B completed)
 
@@ -772,7 +784,7 @@ about 50, 150 and 400 ms after the tap, from Library, Home shelf, Updates and Hi
 
 Review Result (Codex, owner-authorized takeover 2026-11-15): **pass with two review fixes**, not f9d047d95 alone. Seven-file diff reviewed. Covered tab Back callbacks could win while both routes stayed composed; the identical unconditional Home callback existed before c0a12f2c4 (450 ms), established by source reasoning, not an old-APK measurement. Original fix introduced a regression: ordinary Library Back exited the app because Home's handler sits outside its root-navigator provider and saw the nested tab navigator. Reproduced fresh and after process death. 7e3a3d635 passes the captured root navigator explicitly; 3305865d0 resolves the restored Home host key rather than the new process singleton key. Other screen instances retain their own keys. Small upstream hooks; no layout/data/motion changes.
 
-Final JDK21 Debug + optimized Preview and 1,091 unit tests pass; four Back policy tests, scoped formatter/diff checks clean. On S22 and tablet, Dot and Colour, Library/Updates/History/Home shelf each pass Back at requested 50/150/400 ms (actual 51–56/151–153/401–406 ms), plus one edge Back swipe per origin: **48 timed cases + 16 gestures**. Each combination also passes ordinary Library-to-Home Back and verified-dead-process restoration followed by Library-to-Home Back. Warm open/pop precedes each timed series to exercise callback recreation. XML/text comparisons, recordings and all four final screenshot montages inspected; origins and selected phone pill/tablet rail preserved, crash buffers empty. S22 rv5debugscratch and tablet rel011upgradescratch both use 500-book synthetic fixtures; daily apps untouched. APK SHA-256: S22 `7ac99e682436d440bc29074f1d12cfd4341afafa8b393143c45a0a07379b8466`; tablet candidate-id `e97f80765c61800568b0b368b76e5d354a59059db8a7539cc40f09fc0510fa4b`. Evidence `app/build/review-evidence/back1-review/`, final-audit.json and source-audit.md. Timestamped input helper is evidence only and was removed from module sources. No TalkBack/reduced-motion/real-cover claim. Device lock retained for candidate refresh.
+Final JDK21 Debug + optimized Preview and 1,091 unit tests pass; four Back policy tests, scoped formatter/diff checks clean. On S22 and tablet, Dot and Colour, Library/Updates/History/Home shelf each pass Back at requested 50/150/400 ms (actual 51–56/151–153/401–406 ms), plus one edge Back swipe per origin: **48 timed cases + 16 gestures**. Each combination also passes ordinary Library-to-Home Back and verified-dead-process restoration followed by Library-to-Home Back. Warm open/pop precedes each timed series to exercise callback recreation. XML/text comparisons, recordings and all four final screenshot montages inspected; origins and selected phone pill/tablet rail preserved, crash buffers empty. S22 rv5debugscratch and tablet rel011upgradescratch both use 500-book synthetic fixtures; daily apps untouched. APK SHA-256: S22 `7ac99e682436d440bc29074f1d12cfd4341afafa8b393143c45a0a07379b8466`; tablet candidate-id `e97f80765c61800568b0b368b76e5d354a59059db8a7539cc40f09fc0510fa4b`. Evidence `app/build/review-evidence/back1-review/`, final-audit.json and source-audit.md. Timestamped input helper is evidence only and was removed from module sources. Final candidate refinement 6119f2613 (180 ms opening) also passes all four normal/restored Library Back combinations, 12 additional timed Library cases and four edge gestures; see rel-011-refresh-final/. No TalkBack/reduced-motion/real-cover claim. Device lock retained for candidate refresh.
 
 #### STR2 Hardcoded and untranslated strings sweep (T2) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/str2`; Codex: don't take)
 The test devices run in Japanese and RV5 still found English or reused strings (STR1, the CSV dialog title).
@@ -805,7 +817,13 @@ Result: a table per screen (what was missing, what was done), and the TalkBack s
    backup restored, install the candidate over it, library/history/settings intact, no migration error.
 5. Preview candidate on the tablet and S22, Dot Home. **Stop there.** The owner installs it on their phone, tags
    and publishes; nobody else tags, pushes or touches `R5GL23ZYE1V`.
-Refresh review in progress (2026-11-15): BACK1 with review fixes and faster details are in candidate source 7e49de3a7. Preview/Release, 1,091 tests, all APK/64-bit ELF 16 KB checks and exact v0.1.0 Y4 state/preferences comparison pass. Final-candidate timing found the first Colour opening at the 300 ms boundary (last moving frame ~286 ms, next frame ~302 ms); the other samples met the budget. Review refinement reduces the shared opening/fade together from 200 to 180 ms, reserving 120 ms for preparation. No Back policy, easing, return/reduced-motion duration, layout or data changes. Rebuild and final verification pending; pre-refinement evidence retained in rel-011-refresh/.
+Refresh Result (Codex, 2026-11-15): **complete, owner publishing handoff**. Final app source 6119f2613 includes BACK1 review fixes and a synchronized 180 ms opening/fade. The first Colour opening on the initial refreshed 200 ms candidate reached the 300 ms boundary (286–302 ms frame bracket); evidence retained in rel-011-refresh/. Final cached-opening conservative upper bounds are Dot 260/227/252 ms and Colour 226/253/243 ms (8–17 ms frame uncertainty), all below 300 ms. Six frame sheets inspected; Colour run 2 has late idle compressed-frame differences without further visible movement, so its conservative visual endpoint is recorded explicitly in details-timing.json rather than using the raw diff endpoint. No claim for remote fetch, real-cover images or reduced-motion timing.
+
+Final Preview + Release and 1,091 tests pass (zero failures/errors/skips). Release R8 initially exhausted the 4 GB heap with two workers; retrying with --max-workers=1 passes. All ten normal Preview/Release APKs and five scratch Preview APKs pass 16 KB ZIP/64-bit ELF alignment and baseline.prof/profm checks. Final ARM64 Preview SHA-256 51262ee4f416d69b2e7d2461baa9826417c0545458ca9ef729760a8fc17e0482; Release 2f45a74d32b899be8f52cc7dd42b260361777eeddf088ca29f72e7212c27fc5f; optimized tested scratch 965e15c459bcde317b77320b061cde1d854c4c0c923b32737145229c6458d2f9. VersionCode 25, Release 0.1.1, Preview 0.1.1-8848; local Android Debug certificate remains 6c1e396d8d094a0b9bd98354cbd8997637acb2549d8ba79e84cc0212be5ae17a.
+
+Direct upgrade repeated for the final APK: fresh exact v0.1.0 tag APK (5a65307c9), restored the archived v0.1.0 Y4 database/preferences snapshot via run-as (database byte equality verified before launch; this snapshot came from the original UI backup restore), re-granted only its dedicated fixture directory, then installed the final optimized candidate directly over it. Final backup exactly matches all titles/types, chapter read/bookmark/progress/timestamps/order, history dates/durations and category mappings: 500 books / 50,000 chapters / 995 history / 30 user shelves. Eight exported existing preferences match, including Colour; storage/onboarding retained in UI. Both devices additionally pass final-APK normal/dead-process-restored Library Back, 50/150/400 ms Back and edge swipe (12 timed cases + four gestures). Both final Dot Homes inspected, 500 books, correct phone pill/tablet rail, awake, empty crash buffers, no migration exception in candidate UID logs. Device lock released. Daily apps/owner phone/STR2 untouched. Evidence and final artifacts: app/build/review-evidence/rel-011-refresh-final/. No tag, push, official signing or owner-phone install.
+
+Original preparation below (2026-11-14; hashes superseded by this refresh):
 
 Result: Candidate prepared from release branch merge `fa9523f04` (accepted RV5 + PERF1), versionCode 25 / versionName 0.1.1. Changelog covers all accepted cards; automatic voice wording preserves explicit choices. `assemblePreview`, `assembleRelease`, `testDebugUnitTest` passed (7m43s; 1,085 tests, 0 failures/errors/skips). ARM64 Preview/Release and the optimized scratch candidate each contain seven aligned native libraries and baseline.prof/profm; 16 KB ELF and zipalign pass. All five Release APKs, five scratch Preview APKs and archived normal ARM64 Preview pass zipalign.
 
@@ -875,7 +893,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane (BACK1 then release-candidate refresh, 2026-11-15). BACK1 passed on corrected scratch builds; candidate upgrade/build checks in progress. Scratch apps only; daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -3908,6 +3926,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-15 Codex review lane — 0.1.1 refresh complete.** Final source 6119f2613, BACK1 + 180 ms opening refinement (main cherry-pick 5c4b89421). Cached openings settle by 226–260 ms; final Back regression passes. Preview/Release + 1,091 tests, 15 APK alignment/profile audits and exact direct tagged-v0.1.0 Y4 upgrade comparison pass. Both final Dot Homes inspected, awake, crashes empty; lock free. Source-only startup warm-up and diagnostic commits remain unmerged; 500 ms startup target/follow-up stays open. Final hashes/artifacts in rel-011-refresh-final/final-audit.json. No tag/push; owner publishes.
 
 - **2026-11-15 Codex review lane — BACK1 passes with review fixes.** Original f9d047d95 merged only with 3305865d0 (saved Home key) and 7e3a3d635 (explicit root navigator). Original normal Back regression reproduced and corrected. 1,091 tests, 48 timed Back cases, 16 edge gestures and all four ordinary/process-restoration checks pass; Dot/Colour phone/tablet screenshots inspected, crashes empty. Candidate refresh follows; no tag/push. Evidence back1-review/.
 
