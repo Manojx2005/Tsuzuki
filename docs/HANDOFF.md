@@ -71,7 +71,8 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 RV5 review is complete: **S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE pass** with separate review fixes
 `0a96ace3d`, `bf5055dcd`, `8570ff5d7` on `review/rv5-err1`. Debug + optimized Preview + **1,085 tests** pass;
 final crash buffers empty on tablet and S22. Evidence archived in `app/build/review-evidence/rv5/`.
-Batch T fast-forward of `review/rv5` and `main` is next, then **PERF1**, then finish **REL-0.1.1** from the
+Batch T fast-forward completed: `main` and `review/rv5` are `88bcf6e4e`. **PERF1** is now claimed on
+`review/perf1` (`.worktrees/perf1`), then finish **REL-0.1.1** from the
 existing `tsuzuki/rel-0.1.1` prep branch, merging the reviewed fixes into it before builds. No tags or pushes.
 Neural voice and anime gates remain in force. The localhost fixture server has been stopped; tablet Wi-Fi and
 the renamed synthetic S22 chapter were restored. Daily apps were not opened or changed: automatic approval
@@ -555,7 +556,7 @@ When combining S2-F and RP1, retain both ListeningSession and elapsed-clock cons
 timer-test additions. Merge eight-locale resources by key. Each card's Result has its exact runtime script.
 Back up/use disposable data as Batch T requires; unrelated extension trust gates remain in force.
 NT1-BINARY's candidate is a separate independent review; it does not silently enable S4 or waive NT2.
-Result: accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; final review fixes `0a96ace3d`, `bf5055dcd`, `8570ff5d7`. Debug + optimized Preview + 1,085 tests pass. Per-card verdicts below/above; evidence archived to `app/build/review-evidence/rv5/`. Candidate ready for Batch T fast-forward; no push. Daily-app relaunch was rejected by automatic approval review, so daily apps remain untouched; disposable Dot Home is used for handback.
+Result: accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE; final review fixes `0a96ace3d`, `bf5055dcd`, `8570ff5d7`. Debug + optimized Preview + 1,085 tests pass. Per-card verdicts below/above; evidence archived to `app/build/review-evidence/rv5/`. Batch T fast-forward complete at `88bcf6e4e`; no push. Daily-app relaunch was rejected by automatic approval review, so daily apps remain untouched; disposable Dot Home is used for handback.
 
 Case B takeover (Codex independent review lane, 2026-11-14): owner explicitly assigned Case B; this chat implemented none of the review cards. Device lock claimed; resume A–H, ERR1 runtime checks, verdicts, then PERF1 and REL preparation. Main remains unchanged pending verdicts.
 - Case B progress: baseline `review/rv5-err1` Debug + optimized Preview + 1,084 tests passed. S22 verified `RZCWA139X1X`; both scratch installs upgraded only. S22 Native pause/resume trace counted chapter 1 and 2 once in run 1 and stopped after chapter 2. Remaining first-line/bar clipping reproduced on S22 (default reader size 16px, system font scale 1.0); small review fix on rv5e reserves top scroll inset outside story coordinates, device capture now clears the bar. Review fixes also restore manga page percentage, use neutral reader loading copy, preserve WebView chapter-end transition ownership and give CSV columns their own title in 8 locales. Fix Debug + 1,085 tests pass; accepted in `0a96ace3d`, `bf5055dcd`, `8570ff5d7`. Scoped formatter twice, clean diff check.
@@ -566,7 +567,7 @@ RV5 progress (2026-11-14, this independent reviewer): review branch merges S2-F 
 - Findings to disposition before verdicts: tablet native autoplay repeats chapter 2 after the last chapter. Trace `tablet-native-full-tts-trace.txt`: at 13:28:15 controller playback index=1/id=2, but `moveToLoadedNextChapterForTts anchor=0` selects loaded nextIndex=1 again. This is upstream native handoff behavior, beyond count deduplication, and needs a follow-up card. RP1 compact dock shows CHAPTER 1 while Chapter 2 paragraph 3 is highlighted/speaking (`tablet-rv5-native-after-handoff.png`); `ReaderListenLayout.kt:165` chooses viewport title instead of controller playback chapter. Do not claim either behavior passed.
 - Owner explicitly said keep both devices awake: stayon true and screen_off_timeout=2147483647 on both. Tablet rotation was free, temporarily locked portrait with `wm user-rotation lock 0`; restore free when appropriate. Devices remain claimed for ongoing RV5 review.
 
-#### PERF1 Speed budgets on `main` (review lane; needs devices) — `ready` (after RV5; Plan 0.1.1 step 7)
+#### PERF1 Speed budgets on `main` (review lane; needs devices) — `codex-working` (.worktrees/perf1, review/perf1, 2026-11-14; base main 88bcf6e4e)
 Measure on the S22 with the preview APK and write the numbers, method and date into `docs/PERFORMANCE.md`:
 cold start (10 runs, median; budget 500 ms), next novel chapter from the chapter-end card (budget 200 ms to
 first text), Library scroll with the 500-book synthetic backup (Y4) — janky frames from `dumpsys gfxinfo`
@@ -643,7 +644,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex independent review lane, Case B takeover, .worktrees/rv5 and rv5e, 2026-11-14; tablet USB + verified S22 wireless only; keep both awake per owner`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex review lane PERF1, .worktrees/perf1, 2026-11-14; verified S22 wireless + tablet USB; scratch apps only, daily-app relaunch rejected by auto review; keep both awake per owner`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
