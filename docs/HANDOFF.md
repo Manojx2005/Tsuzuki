@@ -62,7 +62,7 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 **Prompts for the owner to paste:**
 - Review lane: `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: follow "Plan 0.1.1", start with RV2, then RV4.`
 - App lane (one thread): `Read AGENTS.md and docs/HANDOFF.md. You are the app lane: follow "Plan 0.1.1", take S2-F, then RP1, then STR1, then ERR1, then NT2 and NT3 when they are ready.`
-- Don't start an anime thread.
+- Anime threads are allowed again since the 0.1.1 tag (2026-11-15); see "Anime restart" in Batch AY.
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
@@ -92,9 +92,14 @@ is the priority after 0.1.1**; (3) **STR2 is parked** to save usage (partial, un
   empty. Not re-done by Claude: the Release build, 16 KB audit and the 0.1.0 → 0.1.1 upgrade comparison (Codex's
   `app/build/review-evidence/rel-011-refresh-final/final-audit.json`).
 - The stale local tag `v0.1.1` (2016 upstream commit `0210fd882`) was deleted and `v0.1.1` now points at `main`.
-  `main` and the tag were pushed to `origin`; the Release workflow signs and publishes. Result: see the log.
-- **The anime pause is over** (Plan 0.1.1 step 10). Order: **RV3** (review of the anime chain A2.3 → R-A5), then
-  **AY-PLAY** (owner bug: extension videos don't play), **AY9**, **AY0** … as in "Batch AY".
+  `main` and the tag were pushed to `origin`. **0.1.1 is published**: the Release workflow succeeded and
+  https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.1.1 has five signed APKs (arm64-v8a, armeabi-v7a, x86,
+  x86_64, universal). The separate "Build & Test App" workflow failed on one stale `:domain` test
+  (`RateLimitResolverTest` still expected 1 permit; the default became 2 on 2026-11-07); fixed on `main` after
+  the tag. Local reviews only ever ran `:app` tests: **run `./gradlew testDebugUnitTest` (all modules) before a release.**
+- **The anime pause is over** (Plan 0.1.1 step 10). **Read "Anime restart" at the top of Batch AY before any
+  anime card**: the chain was merged with v0.1.1 on `tsuzuki/anime-sync`, and every anime card now branches from
+  there, not from `tsuzuki/a6.4`.
 - Still open and not anime: cold start 741 ms vs 500 ms (PERF-START-2-F); neural voice (lexicon decision, owner
   listening test); R12-F / R14 / S1 reviews (owner must approve trusting one live extension); R13 dictionary
   packs not published; owner-phone install of 0.1.1.
@@ -853,7 +858,7 @@ Artifacts and evidence: `app/build/review-evidence/rel-011/`. Normal ARM64 Previ
 
 Stop point reached: owner handles official signing, owner-phone install, stale local tag resolution, tag and publish. No tag, push or official release was performed.
 
-#### RV3 Review: anime chain A2.3 → R-A5 (T4) — `blocked` (owner 2026-11-12: anime waits until 0.1.1 is tagged; Plan 0.1.1 step 10)
+#### RV3 Review: anime chain A2.3 → R-A5 (T4) — `ready` as **RV3-S** (2026-11-15: review `tsuzuki/anime-sync`, the whole chain merged with v0.1.1, instead of `tsuzuki/r-a5`; see "Anime restart" in Batch AY)
 Merge **one** branch: `tsuzuki/r-a5` (it contains A2.3, A2.4, A3.0–A3.5, R-A2, R-A3, R-A5; 14 commits). Review it
 per card using each card's commits (`git log main..tsuzuki/r-a5`). Extra checks:
 1. Release gate: in the preview APK there is no Watch pill, no anime shelf, no anime settings, no anime in
@@ -903,7 +908,29 @@ Verify that a manga and a novel whose source title has no number keep their prev
 
 Review (Codex RV4, 2026-11-13): Pass for the requested details/Home/reader label surfaces. Synthetic source headings 129–131 with stored indexes 1–3 display once in details and reader in Dot/Colour; Home uses source Chapter 131. Pure tests cover explicit decimal, volume, Japanese headings, incidental-number fallback and duplicate suppression. Stored numbers/order are unchanged; manga remains on the existing guarded path. Four card tests and all 1,011 accepted tests pass. S22 deferred by owner. Evidence `app/build/review-evidence/rv4/tablet-rv4-chapter-numbers-*.png` and accepted-reader screenshot.
 
-### Batch AY — Aniyomi parity (Claude, 2026-11-12) — lane 1 — **PAUSED until 0.1.1 is tagged (owner 2026-11-12); take no AY or A6 card**
+### Batch AY — Aniyomi parity (Claude, 2026-11-12) — lane 1 — **open again since the 0.1.1 tag (2026-11-15); owner: anime is the priority**
+
+**Anime restart (Claude, 2026-11-15).**
+- `tsuzuki/a6.4` got its unfinished work committed as it was (`028a0c06d`, owner allowed this on 2026-11-12):
+  ordered preferred audio/subtitle languages, per-anime manual override, two new unit tests. Never seen on a device.
+- **`tsuzuki/anime-sync` (`a7a6b3f9f`, `.worktrees/anime-sync`) = the whole anime chain (A2.3 … A6.4, 40 commits)
+  merged with `main` at v0.1.1.** Debug builds; **1,187 unit tests, 0 failures**. Eight code conflicts resolved
+  keeping both sides (global search retry + anime search; backup validation/counts + anime backup; download queue;
+  stats). Migrations: `main` stops at 36, anime adds 37–39, `36.sqm` unchanged since v0.1.0. Done by a Claude
+  subagent, read by nobody else yet.
+- Known gaps from the merge: anime global-search results have no per-source Retry; the restore preview does not
+  count anime; three anime activities are not gated by the setting (they are `exported="false"`); anime
+  notification channels and the anime paths in `UpdatesViewModel`/`HistoryViewModel` were not checked for the gate.
+- **New rule: every anime card branches from `tsuzuki/anime-sync` (or from the card before it in the order), never
+  from `tsuzuki/a6.4` or older.** Where a card says "needs `tsuzuki/a6.4`", read `tsuzuki/anime-sync`.
+- **Order now:** **AY-PLAY** (owner bug, Claude subagent working, branch `tsuzuki/ay-play`) → **RV3-S** (review
+  lane: review the chain as it stands on `tsuzuki/anime-sync` instead of `tsuzuki/r-a5` alone; same five checks as
+  RV3 plus the merge resolutions above; on a pass the chain goes into `main` behind the setting, default off) →
+  AY9 → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8.
+- Anime implementers test their own cards with adb on the tablet and S22 (owner 2026-11-12), **scratch package
+  only** (`…tsuzuki.animescratch` via an init script like `app/build/perf-details/scratch.init.gradle`; never the
+  `.dev`, daily or `rv5debugscratch` apps), Device lock first.
+- Prompts for the owner: review lane `Read AGENTS.md and docs/HANDOFF.md. You are the review lane: do RV3-S as "Anime restart" in Batch AY describes.` Anime lane (after AY-PLAY is `review`): `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: take AY9, branching from tsuzuki/ay-play.`
 
 Detail for every card, the Aniyomi files to read, the code rules and the device-test procedure are in
 **`docs/ANIME_ANIYOMI_PARITY.md`** (§1 reference checkout, §3 rules, §5 cards). Read §1–§3 once, then your card's
@@ -913,14 +940,14 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Claude (AY-PLAY subagent, 2026-11-15, package …tsuzuki.animescratch only) — before that: free — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
 **Order:** A6.4 → **AY-PLAY** → **AY9** → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8. Each card's Needs is the
 card before it in this order (`tsuzuki/ay0` needs `tsuzuki/a6.4`, `tsuzuki/a6.5` now needs `tsuzuki/ay6`, and so on).
 
-#### AY-PLAY Anime: videos from extensions don't play (T4) — `ready` (needs `tsuzuki/a6.4`; lane 1; **owner bug 2026-11-12, do this first**)
+#### AY-PLAY Anime: videos from extensions don't play (T4) — `claude-working` (Claude subagent, 2026-11-15, `.worktrees/ay-play`, from `tsuzuki/anime-sync`; **owner bug 2026-11-12**; Codex: don't take)
 PARITY §7. Claude reproduced it on the tablet preview build: AnimeKai resolves after 25+ s, then sits at
 23:35 / −00:00 with a black picture and a dead Play button; AnimePahe shows "unknown error"; the app logs nothing
 from mpv. Evidence in `app/build/review-evidence/ay-play/` (main checkout). First make mpv and source errors
@@ -3946,6 +3973,8 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-15 Claude — 0.1.1 published; anime reopened.** Checked Codex's refreshed candidate (1,091 `:app` tests re-run, review fixes read, unpushed history scanned), replaced the stale local `v0.1.1` tag, pushed `main` and `v0.1.1` with the owner's permission. Release workflow passed: five signed APKs at the v0.1.1 release page. CI's Build & Test failed on one stale `:domain` test, fixed after the tag. Owner: anime first, STR2/A11Y1 parked. A6.4 committed as left (`028a0c06d`); anime chain merged with v0.1.1 on `tsuzuki/anime-sync` (`a7a6b3f9f`, 1,187 tests). AY-PLAY started.
 
 - **2026-11-15 Codex review lane — 0.1.1 refresh complete.** Final source 6119f2613, BACK1 + 180 ms opening refinement (main cherry-pick 5c4b89421). Cached openings settle by 226–260 ms; final Back regression passes. Preview/Release + 1,091 tests, 15 APK alignment/profile audits and exact direct tagged-v0.1.0 Y4 upgrade comparison pass. Both final Dot Homes inspected, awake, crashes empty; lock free. Source-only startup warm-up and diagnostic commits remain unmerged; 500 ms startup target/follow-up stays open. Final hashes/artifacts in rel-011-refresh-final/final-audit.json. No tag/push; owner publishes.
 
