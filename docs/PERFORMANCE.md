@@ -259,3 +259,35 @@ on the first open after launch: 292 ms with one 25 ms frame gap, which is inside
 budget line. Return navigation measured about 440 ms and looked smooth. Not measured: a real (non-placeholder)
 cover, reduced motion, the tablet (layout looked normal there; no timing). Evidence (ignored local):
 `app/build/review-evidence/perf-details/`.
+
+## PERF-START-V: S22 Home-observed baseline (2026-11-14)
+
+Optimized scratch Preview from main `9f1b87ced`, APK SHA-256
+`db7f5496f7225dd582bef404a86f68f8c5f7cbd31c2e99ef393fc8b548eb0566`;
+package `io.github.manojx2005.tsuzuki.rv5debugscratch`. S22 hardware serial RZCWA139X1X,
+Dot, Japanese UI, 500-book Y4-derived scratch database retained from the prior reviews
+(current Home resume card is RV2 listening fixture). Both comparison builds must retain this state.
+`ColdStartupBenchmark#startupCompilationBaselineProfiles`, COLD, Partial/Require, ten runs,
+no thermal-throttle sleep. The updated helper is from the same commit.
+
+**Helper pass:** each run contains exactly one nonzero `TsuzukiHomeObserved` section. This
+includes shell/accessibility/startActivityAndWait observer overhead; it is not app fully-drawn
+or a direct measure of how long a reader sees the splash. No helper changes made.
+
+| Run | Initial display (ms) | Home observed (ms) | Section count |
+|---|---:|---:|---:|
+| 1 | 686.407 | 3238.022 | 1 |
+| 2 | 772.369 | 3161.579 | 1 |
+| 3 | 697.819 | 3280.642 | 1 |
+| 4 | 647.388 | 3187.202 | 1 |
+| 5 | 732.731 | 3284.658 | 1 |
+| 6 | 699.409 | 3302.669 | 1 |
+| 7 | 745.431 | 3325.115 | 1 |
+| 8 | 685.652 | 3254.836 | 1 |
+| 9 | 703.812 | 3327.479 | 1 |
+| 10 | 673.366 | 3333.075 | 1 |
+
+Initial display median **698.614 ms**, range 647.388–772.369 ms
+(span 124.981 ms). Home observed median **3282.650 ms**,
+range 3161.579–3333.075 ms (span 171.495 ms). Initial display still misses 500 ms.
+Evidence: `app/build/review-evidence/perf-start-v/` (benchmark JSON/log, hashes and Dot Home screenshot).
