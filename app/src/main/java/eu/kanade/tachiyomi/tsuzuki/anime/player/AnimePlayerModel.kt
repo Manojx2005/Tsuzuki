@@ -131,6 +131,10 @@ internal class AnimePlayerModel(
     private var candidates = emptyList<Video>()
     private val directTrackOverrides = mutableMapOf<AnimeTrackKind, String>()
     private var lastFailure: Throwable? = null
+    private var currentVideo: Video? = null
+    private var loadedStart = 0.0
+    private var resumeChecked = true
+    private var restartPending = false
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
     private val skippedSegments = mutableSetOf<AniSkipSegment>()
@@ -210,7 +214,7 @@ internal class AnimePlayerModel(
 
     fun setPlaying(play: Boolean, retainAudioFocus: Boolean = false) {
         if (state.value.failed) return
-        if (play && state.value.ended) seekTo(0.0)
+        if (play && state.value.ended) restartAfterEnd()
         wantsPlayback = play
         if (play) {
             requestFocus()
@@ -218,6 +222,21 @@ internal class AnimePlayerModel(
             abandonFocus()
         }
         syncPause()
+    }
+
+    private fun restartAfterEnd() {
+        when (animePlayAfterEnd(state.value.duration)) {
+            AnimePlayAfterEnd.SEEK_TO_START -> seekTo(0.0)
+            AnimePlayAfterEnd.RELOAD -> {
+                val video = currentVideo ?: return
+                AnimeLog.i("play after end with unknown duration: loading the stream again from 0")
+                cancelCountdown()
+                tracker.skipNextIncrement()
+                mutableState.update { it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true) }
+                pendingVideo = video
+                loadPending()
+            }
+        }
     }
 
     fun seekBy(seconds: Int) = seekTo(state.value.position + seconds)
@@ -308,7 +327,8 @@ internal class AnimePlayerModel(
         if (!initialized) return
         val episode = state.value.episode?.id ?: (request as? AnimePlayback.Request.Episode)?.id
         if (episode != null) {
-            openEpisode(episode, state.value.position)
+            val current = state.value
+            openEpisode(episode, current.position.takeUnless { animeStartIsAtEnd(it, current.duration) } ?: 0.0)
         } else if (request is AnimePlayback.Request.Direct) {
             mutableState.update { it.copy(loading = true, failed = false) }
             pendingVideo = request.video
@@ -353,9 +373,11 @@ internal class AnimePlayerModel(
                 val episode = checkNotNull(library.getEpisode(id))
                 val anime = checkNotNull(library.getAnime(episode.animeId))
                 val episodes = library.getEpisodes(anime.id)
-                val start = restoredPosition?.takeIf { it.isFinite() && it >= 0 }
-                    ?: episode.lastSecondSeen.toDouble().takeUnless { episode.seen }
-                    ?: 0.0
+                val start = animeResumeStart(
+                    saved = restoredPosition?.takeIf { it.isFinite() && it >= 0 } ?: episode.lastSecondSeen.toDouble(),
+                    seen = restoredPosition == null && episode.seen,
+                    knownDuration = episode.totalSeconds.toDouble(),
+                )
                 mutableState.update {
                     it.copy(
                         title = anime.title,
@@ -462,6 +484,10 @@ internal class AnimePlayerModel(
         val video = pendingVideo ?: return
         pendingVideo = null
         waitingForFile = true
+        currentVideo = video
+        loadedStart = state.value.position
+        resumeChecked = loadedStart <= 0
+        restartPending = false
         mutableState.update { it.copy(resolution = video.animeResolution) }
         backend.load(video, state.value.position)
     }
@@ -469,6 +495,9 @@ internal class AnimePlayerModel(
     private fun playerEvents() = object : AnimePlayerBackend.Listener {
         override fun onPosition(seconds: Double) = onMain {
             if (state.value.loading || state.value.ended || !seconds.isFinite() || seconds < 0) return@onMain
+            if (restartPending && seconds < state.value.duration - ANIME_RESUME_END_MARGIN_SECONDS) {
+                restartPending = false
+            }
             if (foreground) tracker.onPosition(seconds, state.value.settings.speed)
             if (abs(state.value.position - seconds) >= 0.1) {
                 mutableState.update { it.copy(position = seconds) }
@@ -480,6 +509,7 @@ internal class AnimePlayerModel(
             if (!seconds.isFinite() || seconds <= 0 || (!waitingForFile && state.value.loading)) return@onMain
             tracker.onDuration(seconds)
             mutableState.update { it.copy(duration = seconds) }
+            restartIfStartedAtEnd()
             loadAniSkip()
         }
 
@@ -495,6 +525,7 @@ internal class AnimePlayerModel(
             if (!waitingForFile) return@onMain
             waitingForFile = false
             mutableState.update { it.copy(loading = false) }
+            restartIfStartedAtEnd()
             refreshTracks()
             syncPause()
             loadAniSkip()
@@ -506,7 +537,7 @@ internal class AnimePlayerModel(
 
         override fun onEnded() = onMain {
             val current = state.value
-            if (current.loading || current.ended || current.failed) return@onMain
+            if (current.loading || current.ended || current.failed || restartPending) return@onMain
             if (current.duration > 0) tracker.onPosition(current.duration, current.settings.speed)
             saveProgress()
             mutableState.update { it.copy(ended = true) }
@@ -519,6 +550,20 @@ internal class AnimePlayerModel(
             val failure = AnimeStreamException(detail)
             lastFailure = failure
             if (streams == null) fail(failure) else tryNextStream(fallback = true)
+        }
+    }
+
+    /** The duration was unknown when the file was opened: if the start we passed is at its end, start over. */
+    private fun restartIfStartedAtEnd() {
+        val current = state.value
+        if (resumeChecked || current.loading || current.duration <= 0) return
+        resumeChecked = true
+        if (animeStartIsAtEnd(loadedStart, current.duration)) {
+            AnimeLog.w(
+                "resume ${loadedStart.toInt()}s is at the end of a ${current.duration.toInt()}s file: restarting",
+            )
+            restartPending = true
+            seekTo(0.0)
         }
     }
 

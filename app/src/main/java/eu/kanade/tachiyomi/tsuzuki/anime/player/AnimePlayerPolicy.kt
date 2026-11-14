@@ -55,3 +55,28 @@ internal suspend fun repeatAnimeCheckpoints(save: () -> Unit): Nothing {
         save()
     }
 }
+
+/** A saved position this close to the end (seconds) is treated as "finished", not "resume here". */
+internal const val ANIME_RESUME_END_MARGIN_SECONDS = 10.0
+internal const val ANIME_RESUME_END_FRACTION = 0.9
+
+/** True when starting playback at [start] would begin at (or within the closing seconds of) a file of [duration]. */
+internal fun animeStartIsAtEnd(start: Double, duration: Double): Boolean =
+    start.isFinite() && duration.isFinite() && start > 0 && duration > 0 &&
+        (start >= duration - ANIME_RESUME_END_MARGIN_SECONDS || start >= duration * ANIME_RESUME_END_FRACTION)
+
+/**
+ * Where to start an episode. A seen episode starts over; a saved position at the end of the known duration
+ * ([knownDuration] is 0 when it was never stored) starts over too instead of opening on the last frame.
+ */
+internal fun animeResumeStart(saved: Double, seen: Boolean, knownDuration: Double): Double = when {
+    !saved.isFinite() || saved <= 0 || seen -> 0.0
+    animeStartIsAtEnd(saved, knownDuration) -> 0.0
+    else -> saved
+}
+
+internal enum class AnimePlayAfterEnd { SEEK_TO_START, RELOAD }
+
+/** Play on a finished file: seek back when the duration is known, otherwise load the stream again from 0. */
+internal fun animePlayAfterEnd(duration: Double): AnimePlayAfterEnd =
+    if (duration.isFinite() && duration > 0) AnimePlayAfterEnd.SEEK_TO_START else AnimePlayAfterEnd.RELOAD

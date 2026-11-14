@@ -157,7 +157,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 MpvPlayer.command("change-list", "http-header-fields", "append", "$name: $value")
             }
         }
-        setOpt("start", resumePosition.toString())
+        // mpv's `start` is a global option: always set it, and never to a negative or non-finite value.
+        setOpt("start", (resumePosition.takeIf { it.isFinite() && it > 0 } ?: 0.0).toString())
         MpvPlayer.command("loadfile", video.videoUrl, "replace")
     }
 
