@@ -6,17 +6,22 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeNoPlayableVideoException
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimePlaybackCheckpoint
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimePlaybackProgress
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamException
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.describeAnimeVideo
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
@@ -62,6 +67,8 @@ internal data class AnimePlayerState(
     val playing: Boolean = false,
     val ended: Boolean = false,
     val failed: Boolean = false,
+    /** Why [failed] is set, for the error tile. */
+    val error: Throwable? = null,
     val nextIn: Int? = null,
     val fallbackNotice: Int = 0,
     val aniSkipSegments: List<AniSkipSegment> = emptyList(),
@@ -123,6 +130,7 @@ internal class AnimePlayerModel(
     private var source: RegisteredAnimeSource? = null
     private var candidates = emptyList<Video>()
     private val directTrackOverrides = mutableMapOf<AnimeTrackKind, String>()
+    private var lastFailure: Throwable? = null
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
     private val skippedSegments = mutableSetOf<AniSkipSegment>()
@@ -160,8 +168,8 @@ internal class AnimePlayerModel(
                 is AnimePlayback.Request.Episode -> openEpisode(request.id, restoredPosition)
             }
         } catch (e: Exception) {
-            logcat(LogPriority.WARN, e) { "Could not initialize anime playback" }
-            fail()
+            AnimeLog.e("Could not initialize anime playback", e)
+            fail(e)
         }
     }
 
@@ -328,6 +336,7 @@ internal class AnimePlayerModel(
         streams = null
         candidates = emptyList()
         source = null
+        lastFailure = null
         tracker = AnimePlaybackProgress()
         mutableState.update { current ->
             AnimePlayerState(
@@ -338,6 +347,7 @@ internal class AnimePlayerModel(
             )
         }
         syncPause()
+        val openedAt = SystemClock.elapsedRealtime()
         loadingJob = viewModelScope.launch {
             try {
                 val episode = checkNotNull(library.getEpisode(id))
@@ -365,12 +375,17 @@ internal class AnimePlayerModel(
                     loadPending()
                     return@launch
                 }
+                AnimeLog.i("open episode ${episode.id}: source=${anime.source} start=${"%.1f".format(start)}s")
                 val (entry, videos) = withContext(Dispatchers.IO) {
                     val sources = AnimeSourceManager.create(context)
                     sources.refresh()
-                    val entry = checkNotNull(sources.get(anime.source))
+                    AnimeLog.i("extensions loaded (+${SystemClock.elapsedRealtime() - openedAt} ms)")
+                    val entry = checkNotNull(sources.get(anime.source)) { "Source not installed: ${anime.source}" }
+                    AnimeLog.i("requesting videos from ${entry.extensionName} (lib ${entry.libVersion})")
                     entry to AnimeStreamResolver.videos(entry.source, entry.libVersion, episode.toSourceEpisode())
                 }
+                AnimeLog.i("source returned ${videos.size} video(s) (+${SystemClock.elapsedRealtime() - openedAt} ms)")
+                videos.forEach { AnimeLog.d("candidate ${describeAnimeVideo(it)}") }
                 source = entry
                 candidates = videos
                 val qualities = candidates.mapNotNull(Video::animeResolution).distinct().sortedDescending()
@@ -380,8 +395,8 @@ internal class AnimePlayerModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logcat(LogPriority.WARN, e) { "Could not open anime episode" }
-                fail()
+                AnimeLog.e("Could not open anime episode", e)
+                fail(e)
             }
         }
     }
@@ -396,8 +411,8 @@ internal class AnimePlayerModel(
     }
 
     private fun tryNextStream(fallback: Boolean = false) {
-        val entry = source ?: return fail()
-        val queue = streams ?: return fail()
+        val entry = source ?: return fail(lastFailure)
+        val queue = streams ?: return fail(lastFailure)
         waitingForFile = false
         pendingVideo = null
         tracker.skipNextIncrement()
@@ -417,10 +432,23 @@ internal class AnimePlayerModel(
         val oldJob = loadingJob
         loadingJob = viewModelScope.launch {
             val video = withContext(Dispatchers.IO) {
-                queue.next { AnimeStreamResolver.resolve(entry.source, entry.libVersion, it) }
+                queue.next { candidate ->
+                    try {
+                        AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate).also {
+                            AnimeLog.i("resolved video ${describeAnimeVideo(it)}")
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        AnimeLog.w("could not resolve video ${describeAnimeVideo(candidate)}", e)
+                        lastFailure = e
+                        throw e
+                    }
+                }
             }
             if (video == null) {
-                fail()
+                AnimeLog.e("no playable video left (fallback=$fallback)")
+                fail(lastFailure ?: AnimeNoPlayableVideoException())
             } else {
                 pendingVideo = video
                 loadPending()
@@ -486,9 +514,11 @@ internal class AnimePlayerModel(
             startCountdown()
         }
 
-        override fun onError() = onMain {
+        override fun onError(detail: String?) = onMain {
             if (state.value.failed || (!waitingForFile && state.value.loading)) return@onMain
-            if (streams == null) fail() else tryNextStream(fallback = true)
+            val failure = AnimeStreamException(detail)
+            lastFailure = failure
+            if (streams == null) fail(failure) else tryNextStream(fallback = true)
         }
     }
 
@@ -559,9 +589,9 @@ internal class AnimePlayerModel(
         mutableState.update { it.copy(tracks = tracks) }
     }
 
-    private fun fail() {
+    private fun fail(error: Throwable? = null) {
         waitingForFile = false
-        mutableState.update { it.copy(loading = false, failed = true) }
+        mutableState.update { it.copy(loading = false, failed = true, error = error) }
         syncPause()
     }
 

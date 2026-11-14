@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
 import kotlinx.coroutines.CancellationException
@@ -12,8 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 
 internal data class AnimeDetailsState(
@@ -48,7 +47,7 @@ internal class AnimeDetailsScreenModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logcat(LogPriority.WARN, e) { "Could not refresh anime details" }
+                AnimeLog.w("Could not refresh anime details", e)
                 mutableState.update { it.copy(refreshFailed = true) }
             } finally {
                 mutableState.update { it.copy(refreshing = false) }

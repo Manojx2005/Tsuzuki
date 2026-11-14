@@ -1,9 +1,15 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
+import eu.kanade.tachiyomi.tsuzuki.anime.describeAnimeVideo
+import eu.kanade.tachiyomi.tsuzuki.anime.formatMpvLog
+import eu.kanade.tachiyomi.tsuzuki.anime.mpvLogPriority
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerBackend
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerLauncher
@@ -29,6 +35,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var appliedSettings: AnimePlayerSettings? = null
     private var externalTracks: Video? = null
     private var eventObserver: MPVLib.EventObserver? = null
+    private var logObserver: MPVLib.LogObserver? = null
+    private var loadStartedAt = 0L
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
@@ -45,6 +53,14 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         val events = newEventObserver(listener)
         eventObserver = events
         MpvPlayer.addObserver(events)
+        // mpv's own diagnostics (failed opens, TLS and HTTP errors) were invisible before: route them to logcat.
+        val logs = MPVLib.LogObserver { prefix, level, text ->
+            mpvLogPriority(level, BuildConfig.DEBUG)?.let { priority ->
+                Log.println(priority, AnimeLog.TAG, formatMpvLog(prefix, text))
+            }
+        }
+        logObserver = logs
+        MpvPlayer.addLogObserver(logs)
 
         MpvPlayer.create(context, "v")
         created = true
@@ -79,7 +95,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     private fun setOpt(name: String, value: String) {
-        if (!MpvPlayer.optionOrFalse(name, value)) Log.w(TAG, "mpv rejected option $name=$value")
+        if (!MpvPlayer.optionOrFalse(name, value)) AnimeLog.w("mpv rejected option $name=$value")
     }
 
     private fun newEventObserver(listener: AnimePlayerBackend.Listener) = object : MPVLib.EventObserver {
@@ -110,17 +126,28 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         override fun event(eventId: Int) {
             when (eventId) {
                 MPVLib.mpvEventId.MPV_EVENT_SEEK -> listener.onSeek()
-                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> listener.onLoaded()
+                MPVLib.mpvEventId.MPV_EVENT_START_FILE -> AnimeLog.i("mpv START_FILE (${sinceLoad()})")
+                MPVLib.mpvEventId.MPV_EVENT_END_FILE -> AnimeLog.i("mpv END_FILE (${sinceLoad()})")
+                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
+                    AnimeLog.i("mpv FILE_LOADED (${sinceLoad()})")
+                    listener.onLoaded()
+                }
             }
         }
 
         override fun efEvent(err: String?) {
-            if (!err.isNullOrBlank()) listener.onError()
+            if (err.isNullOrBlank()) return
+            AnimeLog.e("mpv end-file error: $err (${sinceLoad()})")
+            listener.onError(err)
         }
     }
 
+    private fun sinceLoad() = "+${SystemClock.elapsedRealtime() - loadStartedAt} ms since loadfile"
+
     override fun load(video: Video, resumePosition: Double) {
         externalTracks = video
+        loadStartedAt = SystemClock.elapsedRealtime()
+        AnimeLog.i("mpv loadfile start=${"%.1f".format(resumePosition)}s ${describeAnimeVideo(video)}")
         val headers = video.headers
         MpvPlayer.property("referrer", headers?.get("Referer").orEmpty())
         MpvPlayer.property("user-agent", headers?.get("User-Agent") ?: defaultUserAgent.orEmpty())
@@ -141,12 +168,12 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     override fun resize(width: Int, height: Int) {
-        Log.i(TAG, "surfaceChanged ${width}x$height")
+        AnimeLog.i("surfaceChanged ${width}x$height")
         MpvPlayer.property("android-surface-size", "${width}x$height")
     }
 
     override fun detach() {
-        Log.i(TAG, "surfaceDestroyed: detaching surface")
+        AnimeLog.i("surfaceDestroyed: detaching surface")
         MpvPlayer.property("vo", "null")
         setOpt("force-window", "no")
         MpvPlayer.detachSurface()
@@ -224,13 +251,11 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     override fun close() {
         eventObserver?.let(MpvPlayer::removeObserver)
         eventObserver = null
+        logObserver?.let(MpvPlayer::removeLogObserver)
+        logObserver = null
         if (created) {
             created = false
             MpvPlayer.destroy()
         }
-    }
-
-    private companion object {
-        const val TAG = "TsuzukiMpv"
     }
 }

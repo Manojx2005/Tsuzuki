@@ -10,6 +10,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 internal inline fun <T> callAnimeSource(block: () -> T): T = try {
     block()
 } catch (e: LinkageError) {
+    AnimeLog.e("Incompatible anime source (extension linked against a class this app does not provide)", e)
     throw IllegalStateException("Incompatible anime source", e)
 }
 

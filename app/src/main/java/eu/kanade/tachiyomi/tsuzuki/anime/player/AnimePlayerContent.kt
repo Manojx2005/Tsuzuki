@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -76,7 +77,9 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import kotlinx.coroutines.delay
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
@@ -246,12 +249,28 @@ internal fun AnimePlayerContent(
             CircularProgressIndicator(Modifier.align(Alignment.Center), color = tokens.accent)
         }
         if (state.failed) {
+            val context = LocalContext.current
+            val copy = remember(state.error) { state.error?.let { errorCopyForUi(it) } }
             TsuzukiTile(Modifier.align(Alignment.Center), padding = 16.dp) {
                 Text(
                     tsuzukiMenuLabel(mokoStringResource(MR.strings.tsz_anime_debug_playback_error)),
                     color = tokens.dotOn,
                     style = MaterialTheme.typography.titleSmall,
                 )
+                if (copy != null) {
+                    Text(
+                        tsuzukiMenuLabel(context.errorHeading(copy)),
+                        color = tokens.dotOn,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    if (copy.technical.isNotBlank()) {
+                        Text(
+                            copy.technical,
+                            color = tokens.mutedText,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                }
                 Row {
                     TextButton(onClick = model::retry) { Text(mokoStringResource(MR.strings.action_retry)) }
                     TextButton(onClick = onBack) { Text(mokoStringResource(MR.strings.action_webview_back)) }

@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
@@ -62,21 +63,22 @@ import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SEARCH_QUERY
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.callAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
+import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -118,7 +120,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        logcat(LogPriority.WARN, e) { "Could not open anime catalogue" }
+                        AnimeLog.w("Could not open anime catalogue", e)
                         AnimeCatalogueLocation.Missing(null)
                     }
                 }
@@ -300,7 +302,16 @@ private fun AnimeCatalogueScreen(
                     item(span = { GridItemSpan(maxLineSpan) }) { AnimeCatalogueStatus(null) }
                 } else if (refresh is LoadState.Error || append is LoadState.Error) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        AnimeCatalogueStatus(stringResource(MR.strings.unknown_error), shows::retry)
+                        val context = LocalContext.current
+                        val error = ((refresh as? LoadState.Error) ?: (append as? LoadState.Error))?.error
+                        val message = remember(error) {
+                            error?.let {
+                                val copy = errorCopyForUi(it)
+                                listOf(context.errorHeading(copy), copy.technical).filter(String::isNotBlank)
+                                    .joinToString("\n")
+                            }
+                        }
+                        AnimeCatalogueStatus(message ?: stringResource(MR.strings.unknown_error), shows::retry)
                     }
                 } else if (shows.itemCount == 0) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
@@ -350,6 +361,7 @@ private class AnimeCataloguePagingSource(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            AnimeLog.w("catalogue ${source.name} $mode page=$page failed", e)
             LoadResult.Error(e)
         }
     }

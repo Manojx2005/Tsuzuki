@@ -36,6 +36,6 @@ internal interface AnimePlayerBackend : AutoCloseable {
         fun onLoaded()
         fun onTracksChanged()
         fun onEnded()
-        fun onError()
+        fun onError(detail: String?)
     }
 }
