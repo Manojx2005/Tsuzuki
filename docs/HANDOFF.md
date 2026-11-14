@@ -679,7 +679,7 @@ optimized scratch Preview built from the same `main` commit, with the Y4 500-boo
 `docs/PERFORMANCE.md` as the baseline for PERF-START-2. If the section metric comes back empty, set `blocked`
 with the benchmark output; don't patch the helper in this card.
 
-#### PERF-START-2 Cold start: three measured changes (T4) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`; for 0.1.2, not 0.1.1; Codex: don't take)
+#### PERF-START-2 Cold start: three measured changes (T4) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/perf-start-2`, `tsuzuki/perf-start-2`; for 0.1.2; review lane: read, then measure on the S22; **not measured, no speed-up claimed**)
 PERF-START found 391 ms in application binding (140 ms of it the WebView user-agent warm-up), 166 ms in the
 first traversal, 32 ms in Activity create; the budget is 500 ms and the benchmark says 741 ms. Make **each change
 its own commit that builds alone**, so the review lane can measure them one at a time. No adb in this card.
@@ -702,6 +702,15 @@ regression (splash freeze, missing sources on Home, first search failing).
 Review lane after it: measure baseline, then each commit; a change that doesn't move the median by more than
 the run-to-run range is dropped. If all three still miss 500 ms, record the numbers and ask the owner whether
 the S22 budget moves.
+
+Result (Claude subagent, 2026-11-14): **review.** No adb; nothing measured. 1,093 tests, 0 failures; Debug builds.
+- `d1950daa5` **warm-up after the first frame.** New `tsuzuki/startup/StartupWarmUp.kt` (pure gate: run once, main thread only, opens even if the warm-up throws) and `WebViewWarmUp.kt` (first resumed activity → one-shot pre-draw listener → post to the main handler; time limit 1,000 ms from `Application.onCreate`). `App.kt`: the inline call is replaced by `WebViewWarmUp.install(this)` (main process only). `ExtensionLoader.kt`: `runNowIfMainThread()` at the top of `loadExtensions`, `awaitBeforeSources()` at the top of the suspend `loadExtension`. 8 unit tests.
+- `eb5e21fa7` **trace sections** (`presentation/tsuzuki/startup/TsuzukiTrace.kt`, `android.os.Trace`): startup overlay, Home and each tile, nav bar and rail, theme colours/typography/tokens, the two font family builders. Composition only. **It re-indents about 1,000 lines in `TsuzukiHomeScreen.kt`, `TsuzukiNav.kt`, `TsuzukiStartup.kt`** (`git diff -w` is small).
+- `43cd71ad1` docs. Commit 3 skipped: the ten traces don't point at one composable.
+- Why the subagent says the gate is enough: extension sources are constructed only in `ExtensionLoader.loadExtension`, whatever thread builds `SourceManager`/`ExtensionManager`; all four callers are gated; nothing on the main thread blocks on source initialisation; local, custom and JS-plugin sources never call `getDefaultUserAgent`.
+- **Risks to check before any merge:** (1) `NetworkHelper` → `AndroidCookieJar` → `CookieManager.getInstance()` can now run on a background thread before the warm-up; whether that needs the UI thread was not verified. A splash freeze would point here first. (2) `LibraryUpdateJob` calls `sourceManager.get()` without waiting for initialisation; a job-started process now gets its sources up to 1 s later. (3) The 140 ms moves to just after the first frame; it may show as a hitch or make Home-observed worse. (4) Whether the pre-draw listener fires on the real first Compose frame with the Android 12 splash.
+
+Claude's review notes (2026-11-14, before the review lane): **commit 2 is a diagnostic build only: measure with it, never merge it** (the re-indent would conflict with STR2 and A11Y1 on the same files; if the sections are wanted long-term, redo them without re-indenting). Review-lane order: PERF-START-V baseline on `main` → `d1950daa5` alone (initial display, Home-observed, and 20 cold starts watching for a splash freeze; also start the app from a library-update notification/job with the process dead, and run a first Browse search) → `eb5e21fa7` for the trace only. Merge `d1950daa5` only if the median moves by more than the run-to-run range and none of the four risks shows; otherwise leave the branch and record the numbers.
 
 #### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; for 0.1.2; review lane: independent review)
 Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
