@@ -703,7 +703,7 @@ Review lane after it: measure baseline, then each commit; a change that doesn't 
 the run-to-run range is dropped. If all three still miss 500 ms, record the numbers and ask the owner whether
 the S22 budget moves.
 
-#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`; for 0.1.2; Codex: don't take)
+#### NT-LEX1 Our own US-English lexicon from CMUdict, conversion only (T3) — `review` (Claude subagent, 2026-11-14 night, `.worktrees/nt-lex1`, `tsuzuki/nt-lex1` `243121aea`; for 0.1.2; review lane: independent review)
 Read `docs/research/neural-tts-clean-lexicon.md` §2 first. The upstream Kokoro lexicon's licence is not settled,
 so the neural voice is out of 0.1.1. This card builds the replacement data, nothing else.
 - `scripts/neural-tts/build-lexicon-cmudict.py`: read CMUdict from a pinned commit of `cmusphinx/cmudict` (hash
@@ -718,6 +718,17 @@ so the neural voice is out of 0.1.1. This card builds the replacement data, noth
   report an agreement percentage as a diagnostic, as the research did.
 - Left for later cards (say so in Result, don't start): function-word reduction, suffix rules, names and
   out-of-vocabulary words, numbers and dates, any British lexicon, the owner listening test.
+
+Result (Claude subagent, 2026-11-14; `243121aea`): **review.** Scripts only; nothing in the app.
+- `scripts/neural-tts/build-lexicon-cmudict.py`: CMUdict pinned at `cmusphinx/cmudict` commit `74790861f652`, `cmudict.dict` SHA-256 `81917843…3d22` (refused on mismatch; `--input` skips the check with a warning). Output `.native/lexicon/lexicon-us-en-cmudict.txt` (ignored, not committed): **126,052 entries**, SHA-256 `3f9d0234…fb50`, identical on two runs.
+- Format confirmed in sherpa-onnx v2.0.1 source: `word p h o n e s`, word lowercased, one symbol per field (`scripts/kokoro/v1.0/generate_lexicon_en.py` lines 33, 49–53; reader `csrc/text-utils.cc` `ParseLexiconFile` 1778–1855). A repeated word overwrites the earlier one, so only the first CMUdict variant of each word is written.
+- `licenses/cmudict-LICENSE.txt` (byte-identical to the pinned repo's) and `cmudict-NOTICE.txt`. Vocabulary fixture: the 114 symbols from `hexgrad/Kokoro-82M` `config.json` at `f3ff3571`.
+- Tests: 26 new, 50 in `scripts/tests` in total, 0 failures (Claude re-ran them). Every one of the 126,052 entries uses only vocabulary symbols.
+- **Decision to review: the flap symbol.** The research note said U+027E. misaki's own pipeline for Kokoro v1.0 rewrites U+027E to `T` before the model (`misaki/en.py` line 733 at `fba1236`), so the default output writes `T` ("water" → `w ˈ ɔ T ə ɹ`); `--flap ipa` writes U+027E, which is what the upstream sherpa lexicon feeds the model. Both are in the vocabulary. Nobody has listened to either; the owner listening test decides.
+- Other choices: flap only for T after a vowel and before an unstressed vowel, inside a word; stress mark directly before the vowel; AH0 `ə`, AH1/2 `ʌ`, ER0 `əɹ`, ER1/2 `ɜɹ`; unknown phone or missing stress digit is an error.
+- Diagnostic only, nothing copied: 58.6 % exact agreement with misaki gold on 36,973 shared words (66.0 % ignoring stress). The subagent read `us_gold.json` in a scratch directory outside the repo for this number and to count which flap symbol it uses.
+- Not verified: the script's own HTTPS download (this machine's MSYS Python has no CA bundle; the pinned file was fetched with `curl` and passed the hash check); loading the file in the runtime; how it sounds.
+- Reviewer: read the mapping table against the research note and a primary ARPAbet reference, re-run the tests, rebuild and compare the output hash, spot-check 30 common words, and confirm no misaki data or upstream lexicon text is in the commit.
 
 #### BACK1 Back pressed while details is opening is swallowed (T3) — `claude-working` (Claude subagent, 2026-11-14 night, `.worktrees/back1`; Codex: don't take)
 Seen on the S22 in the PERF-DETAILS review (3 of 3): Library → tap a book → system Back about 100–200 ms later.
