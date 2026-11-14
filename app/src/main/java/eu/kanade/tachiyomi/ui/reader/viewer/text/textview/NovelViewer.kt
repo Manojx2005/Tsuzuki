@@ -848,6 +848,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
             override fun getCurrentPage(): ReaderPage? = currentPage
 
+            override fun sourceLanguage(): String? = activity.viewModel.getSource()?.lang
+
             override fun onPlaybackStarted() = activity.discardNovelReadingSample()
 
             override fun onHighlightChunk(chunkIndex: Int, chunk: String, startOffset: Int, paragraphIndex: Int) {

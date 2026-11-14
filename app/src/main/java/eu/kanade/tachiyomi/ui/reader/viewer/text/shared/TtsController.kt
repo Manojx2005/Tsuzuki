@@ -5,12 +5,15 @@ import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession
+import eu.kanade.tachiyomi.tsuzuki.tts.TTS_LANGUAGE_SAMPLE_LENGTH
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
+import eu.kanade.tachiyomi.tsuzuki.tts.detectTtsLanguage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import logcat.logcat
@@ -34,6 +37,7 @@ class TtsController internal constructor(
         fun onClearHighlights()
         fun onLastChunkDone()
         fun runOnUiThread(action: () -> Unit)
+        fun sourceLanguage(): String? = null
     }
 
     enum class StartRequest { NORMAL, VIEWPORT }
@@ -60,6 +64,9 @@ class TtsController internal constructor(
     internal var sleepTimer: TtsSleepTimer = TtsSleepTimer.Off
         private set
     private var sleepJob: Job? = null
+    private var languageJob: Job? = null
+    private var languageSample = ""
+    private var automaticLanguage: Locale? = null
 
     @Volatile private var sleepDeadlineMs: Long? = null
 
@@ -140,7 +147,7 @@ class TtsController internal constructor(
                     callbacks.runOnUiThread {
                         scope.launch {
                             delay(LAST_CHUNK_DONE_DELAY_MS)
-                            if (playbackQueue == queue && !isSpeaking()) {
+                            if (playbackQueue == queue && !isSpeaking() && languageJob?.isActive != true) {
                                 if (sleepTimer == TtsSleepTimer.ChapterEnd) stop() else callbacks.onLastChunkDone()
                             }
                         }
@@ -198,10 +205,12 @@ class TtsController internal constructor(
             logcat(LogPriority.WARN) { "TTS not initialized, cannot speak" }
             return
         }
+        val sample = text.take(TTS_LANGUAGE_SAMPLE_LENGTH)
+        if (chapterId != ttsPlaybackChapterId || sample != languageSample) automaticLanguage = null
+        languageSample = sample
         closePlaybackQueue()
         ttsPlaybackChapterIndex = chapterIndex
         ttsPlaybackChapterId = chapterId
-        applySettings()
         ttsPaused = false
 
         val maxLength = TextToSpeech.getMaxSpeechInputLength().takeIf { it > 0 } ?: 4000
@@ -259,6 +268,30 @@ class TtsController internal constructor(
     fun speakChunksFrom(startIndex: Int) {
         if (ttsChunks.isEmpty() || startIndex >= ttsChunks.size) return
         val engine = tts ?: return
+        languageJob?.cancel()
+        closePlaybackQueue()
+        if (applySettings(engine)) {
+            enqueueChunks(engine, startIndex)
+            return
+        }
+
+        engine.stop()
+        ttsResumeChunkIndex = startIndex
+        val sourceLanguage = callbacks.sourceLanguage()
+        languageJob = scope.launch {
+            val language = detectTtsLanguage(context, languageSample, sourceLanguage)
+            // Detection suspends; a stop/pause/new speak() cancels this job, so never enqueue stale chunks.
+            ensureActive()
+            automaticLanguage = language
+            applySettings(engine)
+            logcat(LogPriority.INFO) {
+                "TTS: Chapter language ${language.toLanguageTag()}, voice ${engine.voice?.locale?.toLanguageTag()}"
+            }
+            enqueueChunks(engine, startIndex)
+        }
+    }
+
+    private fun enqueueChunks(engine: TextToSpeech, startIndex: Int) {
         closePlaybackQueue()
         val queue = nextQueue.incrementAndGet()
         listening.beginQueue(queue, ttsPlaybackChapterId)
@@ -272,6 +305,11 @@ class TtsController internal constructor(
     }
 
     fun pause() {
+        if (languageJob?.isActive == true) {
+            languageJob?.cancel()
+            ttsPaused = true
+            return
+        }
         if (ttsInitialized && tts?.isSpeaking == true) {
             ttsPaused = true
             ttsResumeChunkIndex = ttsCurrentChunkIndex
@@ -305,6 +343,7 @@ class TtsController internal constructor(
     }
 
     fun stop(preserveListeningRun: Boolean = false) {
+        languageJob?.cancel()
         closePlaybackQueue()
         if (!preserveListeningRun) listening.endRun()
         setSleepTimer(TtsSleepTimer.Off)
@@ -366,7 +405,8 @@ class TtsController internal constructor(
     fun isSpeaking(): Boolean = ttsInitialized && tts?.isSpeaking == true
     fun isPaused(): Boolean = ttsPaused
     fun isStarting(): Boolean =
-        pendingStartRequest != null || (!ttsInitialized && tts != null) || (ttsChunks.isEmpty() && isTtsAutoPlay)
+        languageJob?.isActive == true || pendingStartRequest != null || (!ttsInitialized && tts != null) ||
+            (ttsChunks.isEmpty() && isTtsAutoPlay)
 
     /**
      * Current (paragraphIndex, paragraphCount) - distinct from chunk index/count: a paragraph too
@@ -384,25 +424,35 @@ class TtsController internal constructor(
     }
 
     fun applySettings() {
-        tts?.let { engine ->
-            val voicePref = preferences.novelTtsVoice.get()
-            if (voicePref.isNotEmpty()) {
-                val selected = engine.voices?.find { it.name == voicePref }
-                if (selected != null) {
-                    engine.voice = selected
-                } else {
-                    try {
-                        engine.language = Locale.forLanguageTag(voicePref)
-                    } catch (e: Exception) {
-                        engine.language = Locale.getDefault()
-                    }
-                }
+        tts?.let(::applySettings)
+    }
+
+    private fun applySettings(engine: TextToSpeech): Boolean {
+        val voicePref = preferences.novelTtsVoice.get()
+        val explicitVoice = if (voicePref.isBlank()) {
+            false
+        } else {
+            val selected = engine.voices?.find { it.name == voicePref }
+            if (selected != null) {
+                engine.setVoice(selected) == TextToSpeech.SUCCESS
             } else {
-                engine.language = Locale.getDefault()
+                val legacyLocale = Locale.forLanguageTag(voicePref)
+                legacyLocale.language.isNotEmpty() && engine.setLanguage(legacyLocale) >= TextToSpeech.LANG_AVAILABLE
             }
-            engine.setSpeechRate(preferences.novelTtsSpeed.get())
-            engine.setPitch(preferences.novelTtsPitch.get())
         }
+        if (!explicitVoice) {
+            automaticLanguage?.let { locale ->
+                val result = engine.setLanguage(locale)
+                if (result < TextToSpeech.LANG_AVAILABLE) {
+                    // The engine lacks this language: use the device language, as before this detection existed.
+                    logcat(LogPriority.WARN) { "TTS: Language ${locale.toLanguageTag()} is unavailable ($result)" }
+                    engine.setLanguage(Locale.getDefault())
+                }
+            }
+        }
+        engine.setSpeechRate(preferences.novelTtsSpeed.get())
+        engine.setPitch(preferences.novelTtsPitch.get())
+        return explicitVoice || automaticLanguage != null
     }
 
     fun getAvailableVoices(): List<Pair<String, String>> =
@@ -417,6 +467,7 @@ class TtsController internal constructor(
     }
 
     fun destroy() {
+        languageJob?.cancel()
         closePlaybackQueue()
         listening.endRun()
         setSleepTimer(TtsSleepTimer.Off)
