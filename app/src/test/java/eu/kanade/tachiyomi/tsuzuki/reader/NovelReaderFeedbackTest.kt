@@ -16,6 +16,17 @@ class NovelReaderFeedbackTest {
     }
 
     @Test
+    fun firstHighlightedLineCanClearTheBarEvenWhenScrollCannotGoNegative() {
+        val bar = 200
+        val gap = 16
+        val inset = bar + gap
+        for (line in listOf(0, 50, 500)) {
+            val scroll = novelHighlightScrollTarget(line, bar, gap, inset)
+            assertEquals(bar + gap, line + inset - scroll)
+        }
+    }
+
+    @Test
     fun endCardSpaceExistsOnlyWhileTheVisibleBarsWouldCoverACard() {
         assertEquals(176, novelEndCardClearance(true, 160, 16))
         assertEquals(0, novelEndCardClearance(true, 0, 16))

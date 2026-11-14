@@ -539,7 +539,7 @@ object SettingsDataScreen : SearchableSettings {
         AlertDialog(
             onDismissRequest = onDismissRequest,
             title = {
-                Text(text = stringResource(MR.strings.migration_dialog_what_to_include))
+                Text(text = stringResource(MR.strings.tsz_export_choose_columns))
             },
             text = {
                 Column {

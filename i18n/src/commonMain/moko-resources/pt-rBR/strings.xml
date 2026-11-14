@@ -1432,4 +1432,6 @@
     <string name="tsz_error_fetch">Carregando da fonte</string>
     <string name="tsz_error_layout">Preparando a página</string>
     <string name="tsz_error_other">Não foi possível concluir a solicitação</string>
+    <string name="tsz_error_open">Abrindo</string>
+    <string name="tsz_export_choose_columns">Selecionar colunas para exportar</string>
 </resources>

@@ -990,6 +990,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                             block.container.top + scrollTarget.top + scrollTarget.totalPaddingTop + targetInChunk,
                             readerChromeTopPx,
                             (16 * activity.resources.displayMetrics.density).toInt(),
+                            scrollView.paddingTop,
                         )
                     } else {
                         block.container.top + scrollTarget.top + targetInChunk - (scrollView.height / 3)
@@ -1861,7 +1862,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val themed = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(0) != null
         val previousTop = readerChromeTopPx
         readerChromeTopPx = if (visible && themed) topPx.coerceAtLeast(0) else 0
-        readerChromeBottomPx = if (visible && themed) bottomPx.coerceAtLeast(0) else 0
+        readerChromeBottomPx = if (themed) bottomPx.coerceAtLeast(0) else 0
         updateChapterEndClearance()
         if (readerChromeTopPx > 0 && previousTop != readerChromeTopPx && ttsController.isSpeaking() &&
             preferences.novelTtsEnableHighlight.get()
@@ -1885,15 +1886,24 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             readerChromeBottomPx,
             (16 * activity.resources.displayMetrics.density).toInt(),
         )
-        if (scrollView.paddingBottom == extra) return
-        val oldMax = (contentContainer.height + scrollView.paddingBottom - scrollView.height).coerceAtLeast(0)
+        // A scroll target cannot be negative: the first line needs real space below visible chrome.
+        // Keep this outside the story blocks so their saved progress coordinates do not change.
+        val top = if (readerChromeTopPx > 0) {
+            readerChromeTopPx + (16 * activity.resources.displayMetrics.density).toInt()
+        } else {
+            0
+        }
+        if (scrollView.paddingBottom == extra && scrollView.paddingTop == top) return
+        val oldMax =
+            (contentContainer.height + scrollView.paddingTop + scrollView.paddingBottom - scrollView.height)
+                .coerceAtLeast(0)
         val atEnd = !isRestoringScroll && oldMax > 0 && scrollView.scrollY >= oldMax - 2
-        scrollView.setPadding(scrollView.paddingLeft, scrollView.paddingTop, scrollView.paddingRight, extra)
+        scrollView.setPadding(scrollView.paddingLeft, top, scrollView.paddingRight, extra)
         if (atEnd) {
             val generation = renderGeneration
             scrollView.post {
                 if (generation == renderGeneration) {
-                    scrollView.scrollTo(0, (contentContainer.height + extra - scrollView.height).coerceAtLeast(0))
+                    scrollView.scrollTo(0, (contentContainer.height + top + extra - scrollView.height).coerceAtLeast(0))
                 }
             }
         }

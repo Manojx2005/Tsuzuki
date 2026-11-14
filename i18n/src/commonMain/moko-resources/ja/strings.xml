@@ -1654,4 +1654,6 @@
     <string name="tsz_error_fetch">配信元から読み込み中</string>
     <string name="tsz_error_layout">ページを準備中</string>
     <string name="tsz_error_other">リクエストを完了できませんでした</string>
+    <string name="tsz_error_open">開いています</string>
+    <string name="tsz_export_choose_columns">エクスポートする項目を選択</string>
 </resources>

@@ -53,9 +53,10 @@ class ReaderProgressIndicator @JvmOverloads constructor(
             if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle() && showing) {
                 eu.kanade.presentation.tsuzuki.components.TsuzukiLoadingStages(
                     chapterName,
-                    listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.tsz_error_fetch)),
+                    listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.tsz_error_open)),
                     0,
                     onRetry = onRetry,
+                    progress = progress.takeIf { it > 0f },
                 )
             } else {
                 CombinedCircularProgressIndicator(progress = { progress })

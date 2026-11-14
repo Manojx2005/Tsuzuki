@@ -1428,4 +1428,6 @@
     <string name="tsz_error_fetch">Chargement depuis la source</string>
     <string name="tsz_error_layout">Préparation de la page</string>
     <string name="tsz_error_other">La requête n’a pas pu aboutir</string>
+    <string name="tsz_error_open">Ouverture en cours</string>
+    <string name="tsz_export_choose_columns">Choisir les colonnes à exporter</string>
 </resources>
