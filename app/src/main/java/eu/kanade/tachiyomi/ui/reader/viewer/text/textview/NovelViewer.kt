@@ -997,7 +997,14 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
     }
 
-    private fun loadNextChapterForTts(anchorChapterIndex: Int = currentChapterIndex) {
+    private fun loadNextChapterForTts(viewportChapterIndex: Int = currentChapterIndex) {
+        // Anchor on the chapter that just finished speaking, not the viewport: the viewport can
+        // still sit on an earlier chapter, which would re-select the finished one and replay it.
+        val anchorChapterIndex = eu.kanade.tachiyomi.tsuzuki.reader.ttsHandoffAnchorIndex(
+            loadedChapters.map { it.chapter.chapter.id },
+            ttsController.ttsPlaybackChapterId,
+            viewportChapterIndex,
+        )
         logcat(LogPriority.DEBUG) {
             "TTS: Auto-loading next chapter ts=${System.currentTimeMillis()} ttsPlaybackChapterIndex=${ttsController.ttsPlaybackChapterIndex} ttsPlaybackChapterId=${ttsController.ttsPlaybackChapterId}"
         }
