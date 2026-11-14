@@ -40,12 +40,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - English settings use "Greyscale" and "Colour".
 
 ### Improved
+- Book details open with a shorter cover transition in Dot and Colour.
 - The "Library last updated" line on Updates is a quiet caption in Dot and Colour.
 - Moving from the end of one chapter to the next uses a smooth transition.
 - The sleep timer is in the compact Listen controls.
 - LNReader import and CSV export texts are translated.
 
 ### Fixed
+- Back pressed while book details are opening returns to the screen you opened them from, keeping the selected tab.
 - On the end-of-chapter card in the web reader, Next, Mark read and Contents each act once, and the reader bars stay
   hidden.
 - The Add repository button is reachable in Dot and Colour.
