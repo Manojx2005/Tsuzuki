@@ -58,6 +58,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -176,6 +177,7 @@ fun NovelReaderAppBars(
     // Extra bottom offset for the floating TTS overlay so it clears the status bar
     ttsOverlayBottomPadding: Dp = 0.dp,
     showTtsMiniOverlay: Boolean = true,
+    ttsMiniContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
     panelEndInset: Dp = 0.dp,
     panelBottomInset: Dp = 0.dp,
 
@@ -199,12 +201,18 @@ fun NovelReaderAppBars(
             .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
     }
 
+    var bottomBarPx by remember { mutableIntStateOf(0) }
+    var listenOverlayPx by remember { mutableIntStateOf(0) }
+    LaunchedEffect(visible, ttsControlsVisible, showTtsMiniOverlay, bottomBarPx, listenOverlayPx, tsuzukiBars) {
+        val overlay = if (tsuzukiBars && ttsControlsVisible && showTtsMiniOverlay) listenOverlayPx else 0
+        onBottomBarHeight((if (visible) bottomBarPx else 0) + overlay)
+    }
+
     // onSizeChanged doesn't fire a final 0 when AnimatedVisibility removes the bars, so clear the
-    // reported heights here when the menu hides.
+    // reported top height here when the menu hides. The floating Listen dock is measured separately.
     LaunchedEffect(visible) {
         if (!visible) {
             onTopBarHeight(0)
-            onBottomBarHeight(0)
         }
     }
 
@@ -280,8 +288,11 @@ fun NovelReaderAppBars(
                         onPrevParagraph = onTtsPreviousParagraph,
                         onNextParagraph = onTtsNextParagraph,
                         onStartFromViewport = onTtsStartFromViewport,
+                        themedContent = ttsMiniContent,
+                        onClose = onToggleTtsControls,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .onSizeChanged { listenOverlayPx = it.height }
                             .padding(bottom = MaterialTheme.padding.small + ttsOverlayBottomPadding),
                     )
                 }
@@ -297,7 +308,7 @@ fun NovelReaderAppBars(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .onSizeChanged { onBottomBarHeight(it.height) }
+                        .onSizeChanged { bottomBarPx = it.height }
                         .background(backgroundColor)
                         .windowInsetsPadding(WindowInsets.navigationBars),
                 ) {
@@ -818,7 +829,13 @@ private fun NovelTtsControlsOverlay(
     onNextParagraph: () -> Unit,
     onStartFromViewport: () -> Unit,
     modifier: Modifier = Modifier,
+    themedContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
+    onClose: () -> Unit = {},
 ) {
+    if (themedContent != null && TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
+        themedContent(modifier, onClose, onPauseResume)
+        return
+    }
     if (TsuzukiTheme.tokens.style != TsuzukiStyle.NONE) {
         TsuzukiTtsMiniPlayer(
             isTtsActive = isTtsActive,

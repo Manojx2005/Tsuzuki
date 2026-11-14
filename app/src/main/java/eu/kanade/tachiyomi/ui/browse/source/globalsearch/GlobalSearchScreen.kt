@@ -77,6 +77,7 @@ class GlobalSearchScreen(
                 onClickItem = { navigator.push(MangaScreen(it.id, true)) },
                 onLongClickItem = { navigator.push(MangaScreen(it.id, true)) },
                 allowAnimeSearch = extensionFilter.isNullOrEmpty(),
+                onRetrySource = viewModel::retrySource,
             )
         }
     }

@@ -158,6 +158,10 @@ internal object NovelWebViewDocumentBuilder {
                     html.tsundoku-paged figure {
                         break-inside: avoid;
                     }
+                    /* Keep the story's page breaks independent of the optional recap. */
+                    html.tsundoku-paged #tsuzuki-novel-recap {
+                        break-after: column;
+                    }
                     /* The infinite-scroll chapter-boundary marker (chapterDividerCss above) renders
                        as a visible hr-like line in continuous mode; in paged mode it would show up
                        as a stray horizontal line mid-page instead of a clean boundary, so keep it

@@ -190,9 +190,18 @@ fun TsuzukiTile(
     modifier: Modifier = Modifier,
     padding: Dp = 20.dp,
     content: @Composable () -> Unit,
+) = TsuzukiTile(modifier, padding, TsuzukiTheme.tokens.tileRadius, content)
+
+/** Board-specific corners without changing positional callers of the shared tile. */
+@Composable
+fun TsuzukiTile(
+    modifier: Modifier = Modifier,
+    padding: Dp = 20.dp,
+    cornerRadius: Dp,
+    content: @Composable () -> Unit,
 ) {
     val t = TsuzukiTheme.tokens
-    val shape = RoundedCornerShape(t.tileRadius)
+    val shape = RoundedCornerShape(cornerRadius)
     Column(
         modifier
             .clip(shape)

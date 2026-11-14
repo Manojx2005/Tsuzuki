@@ -34,7 +34,17 @@ class DefaultSourceReposTest {
             coEvery { stores.insert(any(), any()) } returns insertResult
         }
 
-        fun run() = runBlocking { DefaultSourceRepos.seed(store, plugins, stores) }
+        fun run(enabled: Boolean = true) = runBlocking { DefaultSourceRepos.seed(store, plugins, stores, enabled) }
+    }
+
+    @Test
+    fun `shipped builds add no repos and leave the seeded flags alone`() {
+        val f = Fixture(lnreaderSeeded = false, keiyoushiSeeded = false, insertResult = Result.success(Unit))
+        f.run(enabled = false)
+        verify(exactly = 0) { f.plugins.addRepository(any(), any()) }
+        coVerify(exactly = 0) { f.stores.insert(any(), any()) }
+        verify(exactly = 0) { f.lnreader.set(any()) }
+        verify(exactly = 0) { f.keiyoushi.set(any()) }
     }
 
     @Test

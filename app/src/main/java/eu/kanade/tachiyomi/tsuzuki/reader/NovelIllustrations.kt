@@ -5,7 +5,10 @@ import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
+import android.text.Spannable
 import android.text.Spanned
+import android.text.TextPaint
+import android.text.style.CharacterStyle
 import android.text.style.ImageSpan
 import android.view.View.MeasureSpec
 import android.widget.TextView
@@ -48,6 +51,41 @@ internal class NovelIllustration : Drawable() {
 /** Refit already loaded spans before TextView lays them out after a dock or window resize. */
 internal class NovelIllustrationTextView(context: Context) : TextView(context) {
     private var fittedIllustrations = false
+
+    var selectionForegroundColor: Int? = null
+        set(value) {
+            field = value
+            updateSelectionInk(selectionStart, selectionEnd)
+        }
+    private var selectionInk: CharacterStyle? = null
+    private var changingSelectionInk = false
+
+    override fun onSelectionChanged(selStart: Int, selEnd: Int) {
+        super.onSelectionChanged(selStart, selEnd)
+        updateSelectionInk(selStart, selEnd)
+    }
+
+    private fun updateSelectionInk(start: Int, end: Int) {
+        if (changingSelectionInk) return
+        val spans = text as? Spannable ?: return
+        changingSelectionInk = true
+        try {
+            selectionInk?.let(spans::removeSpan)
+            selectionInk = null
+            val ink = selectionForegroundColor ?: return
+            if (start < 0 || end < 0 || start == end) return
+            // A separate CharacterStyle leaves the reader's TTS ForegroundColorSpans untouched.
+            val span = object : CharacterStyle() {
+                override fun updateDrawState(paint: TextPaint) {
+                    paint.color = ink
+                }
+            }
+            selectionInk = span
+            spans.setSpan(span, minOf(start, end), maxOf(start, end), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        } finally {
+            changingSelectionInk = false
+        }
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val availableWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight

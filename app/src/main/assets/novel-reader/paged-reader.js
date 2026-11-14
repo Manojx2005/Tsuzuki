@@ -7,7 +7,7 @@
 // (onScrollUpdate/onScrollProgress).
 //
 // p.lastRatio is the authoritative reading position; pageIndex is always re-derived
-// from it against the current pageCount, never the reverse - an early pageCount
+// from it against the current story page count, never the reverse - an early pageCount
 // measurement (fonts still loading) can be wrong, and deriving from a stale pageIndex
 // would compound that error.
 //
@@ -75,6 +75,7 @@
     var p = window.__tdPaged || (window.__tdPaged = {});
     p.pageIndex = p.pageIndex || 0;
     p.pageCount = p.pageCount || 1;
+    p.recapPages = 0;
     p.lastRatio = (typeof p.lastRatio === 'number') ? p.lastRatio : 0;
     // Guards the ResizeObserver/window-resize auto-repaginate below from firing before
     // restoreScrollPosition's first __tdPagedRestoreRatio call has set the real lastRatio.
@@ -125,6 +126,21 @@
         // text, never narrower), so rounding down on a sub-pixel-under measurement would strand
         // the last page's tail content past the end of the computed count.
         return Math.max(1, Math.ceil(el.scrollWidth / w));
+    }
+
+    function computeRecapPages(pc) {
+        var recap = document.getElementById('tsuzuki-novel-recap');
+        if (!recap) return 0;
+        var fragments = recap.getClientRects();
+        if (!fragments.length) return 0;
+        // The last fragment is on the last recap page. Subtract the container's
+        // painted left edge so its current translateX does not affect the offset.
+        var left = fragments[fragments.length - 1].left - container().getBoundingClientRect().left;
+        return Math.min(pc - 1, Math.floor(left / pageWidth()) + 1);
+    }
+
+    function ratioForPage(index, pc) {
+        return Math.max(0, index - p.recapPages + 1) / (pc - p.recapPages);
     }
 
     // Layout-based (offsetLeft/offsetParent chain), not paint-based (getBoundingClientRect):
@@ -244,7 +260,15 @@
         if (typeof ratio === 'number') p.lastRatio = ratio;
         applyColumnLayout();
         var pc = computePageCount();
-        var idx = pc > 1 ? Math.round(p.lastRatio * pc) - 1 : 0;
+        var previousRecapPages = p.recapPages;
+        p.recapPages = computeRecapPages(pc);
+        var storyPages = pc - p.recapPages;
+        var idx = p.recapPages + Math.max(0, Math.round(p.lastRatio * storyPages) - 1);
+        if (p.lastRatio === 0 && p.recapPages > 0) {
+            idx = typeof ratio === 'number' || p.pageIndex >= previousRecapPages
+                ? 0
+                : Math.min(p.pageIndex, p.recapPages - 1);
+        }
         landOnPage(idx, pc, false);
         drag = null;
     }
@@ -391,7 +415,7 @@
             });
             return;
         }
-        p.lastRatio = (target + 1) / pc;
+        p.lastRatio = ratioForPage(target, pc);
         landOnPage(target, pc, true);
     }
 
@@ -453,7 +477,7 @@
         var pc = p.pageCount || computePageCount();
         idx = Math.max(0, Math.min(idx, pc - 1));
         if (idx === p.pageIndex) return;
-        p.lastRatio = pc > 0 ? (idx + 1) / pc : 0;
+        p.lastRatio = ratioForPage(idx, pc);
         landOnPage(idx, pc, true);
     };
     // Called from Kotlin's restoreScrollPosition when paged mode is active, with the saved

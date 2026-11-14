@@ -253,7 +253,7 @@ private enum class ListenChooser { Speed, Voice, Sleep }
 private data class ListenChoice(val label: String, val selected: Boolean, val apply: () -> Unit)
 
 @Composable
-private fun sleepTimerLabel(timer: TtsSleepTimer): String = when (timer) {
+internal fun sleepTimerLabel(timer: TtsSleepTimer): String = when (timer) {
     TtsSleepTimer.Off -> stringResource(MR.strings.tsz_reader_sleep_off)
     TtsSleepTimer.ChapterEnd -> stringResource(MR.strings.tsz_reader_sleep_chapter)
     else -> stringResource(MR.strings.minute_short, checkNotNull(timer.minutes))

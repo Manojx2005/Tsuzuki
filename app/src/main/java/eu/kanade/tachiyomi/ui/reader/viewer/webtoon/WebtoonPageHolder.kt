@@ -92,6 +92,8 @@ class WebtoonPageHolder(
      */
     fun bind(page: ReaderPage) {
         this.page = page
+        progressIndicator.hide()
+        progressIndicator.chapterName = page.chapter.chapter.name
         loadJob?.cancel()
         loadJob = scope.launch { loadPageAndProcessStatus() }
         refreshLayoutParams()
@@ -244,6 +246,7 @@ class WebtoonPageHolder(
      */
     private fun setError(error: Throwable?) {
         progressContainer.isVisible = false
+        progressIndicator.hide()
         initErrorLayout(error)
     }
 
@@ -252,6 +255,7 @@ class WebtoonPageHolder(
      */
     private fun onImageDecoded() {
         progressContainer.isVisible = false
+        progressIndicator.hide()
         removeErrorLayout()
     }
 
@@ -263,6 +267,8 @@ class WebtoonPageHolder(
         frame.addView(progressContainer, MATCH_PARENT, parentHeight)
 
         val progress = ReaderProgressIndicator(context).apply {
+            chapterName = page?.chapter?.chapter?.name.orEmpty()
+            onRetry = { page?.let { it.chapter.pageLoader?.retryPage(it) } }
             updateLayoutParams<FrameLayout.LayoutParams> {
                 updateMargins(top = parentHeight / 4)
             }
@@ -299,6 +305,11 @@ class WebtoonPageHolder(
         errorLayout?.errorMessage?.text = with(context) { error?.formattedMessage }
             ?: context.stringResource(MR.strings.decode_image_error)
 
+        eu.kanade.presentation.tsuzuki.components.bindTsuzukiPageError(
+            errorLayout!!,
+            error,
+            page?.chapter?.chapter?.name.orEmpty(),
+        )
         return errorLayout!!
     }
 

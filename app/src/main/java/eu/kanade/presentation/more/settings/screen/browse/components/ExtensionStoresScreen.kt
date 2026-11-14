@@ -55,6 +55,7 @@ fun ExtensionStoresScreen(
             CategoryFloatingActionButton(
                 lazyListState = lazyListState,
                 onCreate = onClickCreate,
+                showInTsuzuki = true,
             )
         },
     ) { paddingValues ->

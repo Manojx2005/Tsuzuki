@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki
 
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.jsplugin.JsPluginManager
 import logcat.LogPriority
@@ -10,10 +11,12 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * Source repositories Tsuzuki ships with, added once on first launch.
+ * Source repositories added once on first launch of the **debug** build only (owner 2026-11-10: shipped builds
+ * come with no repositories; the user adds their own in Browse).
  *
  * Each repo is seeded only once: if the user later removes it, it stays removed.
  * A failed seed (e.g. offline on first launch) is retried on the next launch.
+ * Repositories an earlier shipped build already added are the user's data and are left alone.
  */
 object DefaultSourceRepos {
 
@@ -32,7 +35,10 @@ object DefaultSourceRepos {
         preferenceStore: PreferenceStore = Injekt.get(),
         jsPluginManager: JsPluginManager = Injekt.get(),
         extensionStores: ExtensionStoreRepository = Injekt.get(),
+        enabled: Boolean = BuildConfig.DEBUG,
     ) {
+        if (!enabled) return
+
         val lnreaderSeeded = preferenceStore.getBoolean(KEY_LNREADER, false)
         if (!lnreaderSeeded.get()) {
             // addRepository de-duplicates by URL and refreshes the plugin list itself.

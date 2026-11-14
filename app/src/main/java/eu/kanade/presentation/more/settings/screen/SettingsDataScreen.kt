@@ -57,6 +57,8 @@ import eu.kanade.tachiyomi.data.backup.restore.LNReaderImportJob
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.export.LibraryExportJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
+import eu.kanade.tachiyomi.tsuzuki.backup.TsuzukiBackupPreferences
+import eu.kanade.tachiyomi.tsuzuki.backup.backupRetentionChoices
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
@@ -241,6 +243,8 @@ object SettingsDataScreen : SearchableSettings {
         var pendingLNReaderUri by remember { mutableStateOf<Uri?>(null) }
 
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
+        val tsuzukiBackupPreferences = remember { TsuzukiBackupPreferences(Injekt.get()) }
+        val isTsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
 
         val chooseBackup = rememberLauncherForActivityResult(
             object : ActivityResultContracts.GetContent() {
@@ -262,7 +266,7 @@ object SettingsDataScreen : SearchableSettings {
             object : ActivityResultContracts.GetContent() {
                 override fun createIntent(context: Context, input: String): Intent {
                     val intent = super.createIntent(context, input)
-                    return Intent.createChooser(intent, "Select LNReader backup file")
+                    return Intent.createChooser(intent, context.stringResource(MR.strings.tsz_lnr_choose))
                 }
             },
         ) { uri ->
@@ -300,7 +304,7 @@ object SettingsDataScreen : SearchableSettings {
                         restoreDownloadedChapters = downloadedChapters,
                         restoreCovers = covers,
                     )
-                    lnReaderImportStatus = "Import started (check notifications for progress)"
+                    lnReaderImportStatus = context.stringResource(MR.strings.tsz_lnr_started)
                     scope.launch {
                         kotlinx.coroutines.delay(3000)
                         lnReaderImportStatus = null
@@ -319,6 +323,7 @@ object SettingsDataScreen : SearchableSettings {
                     // Tsuzuki themes: two action tiles (board 07-system "Backup")
                     if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
                         eu.kanade.presentation.tsuzuki.settings.TsuzukiBackupTiles(
+                            lastAutoBackup = lastAutoBackup,
                             onCreate = { navigator.push(CreateBackupScreen()) },
                             onRestore = {
                                 if (!BackupRestoreJob.isRunning(context)) {
@@ -377,9 +382,9 @@ object SettingsDataScreen : SearchableSettings {
                     title = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
                         stringResource(lnReaderImportPreferenceKeyString)
                     } else {
-                        "Import LNReader backup"
+                        stringResource(MR.strings.tsz_lnr_import)
                     },
-                    subtitle = lnReaderImportStatus ?: "Import novels from an LNReader backup file (.zip)",
+                    subtitle = lnReaderImportStatus ?: stringResource(MR.strings.tsz_lnr_subtitle),
                     onClick = {
                         chooseLNReaderBackup.launch("application/zip")
                     },
@@ -402,9 +407,18 @@ object SettingsDataScreen : SearchableSettings {
                         true
                     },
                 ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = tsuzukiBackupPreferences.retention,
+                    entries = backupRetentionChoices.associateWith { it.toString() },
+                    title = stringResource(MR.strings.tsz_backup_retention),
+                ),
                 Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.backup_info) + "\n\n" +
-                        stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup)),
+                    if (isTsuzuki) {
+                        stringResource(MR.strings.backup_info)
+                    } else {
+                        stringResource(MR.strings.backup_info) + "\n\n" +
+                            stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup))
+                    },
                 ),
             ),
         )
@@ -525,7 +539,7 @@ object SettingsDataScreen : SearchableSettings {
         AlertDialog(
             onDismissRequest = onDismissRequest,
             title = {
-                Text(text = stringResource(MR.strings.migration_dialog_what_to_include))
+                Text(text = stringResource(MR.strings.tsz_export_choose_columns))
             },
             text = {
                 Column {
@@ -566,7 +580,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = urlSelected,
                             onCheckedChange = { urlSelected = it },
                         )
-                        Text(text = "Full URL")
+                        Text(text = stringResource(MR.strings.tsz_export_url))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -574,7 +588,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = chapterCountSelected,
                             onCheckedChange = { chapterCountSelected = it },
                         )
-                        Text(text = "Chapter Count")
+                        Text(text = stringResource(MR.strings.tsz_export_chapters))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -582,7 +596,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = categorySelected,
                             onCheckedChange = { categorySelected = it },
                         )
-                        Text(text = "Categories")
+                        Text(text = stringResource(MR.strings.categories))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -590,7 +604,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = isNovelSelected,
                             onCheckedChange = { isNovelSelected = it },
                         )
-                        Text(text = "Is Novel")
+                        Text(text = stringResource(MR.strings.tsz_export_novel))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -598,7 +612,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = descriptionSelected,
                             onCheckedChange = { descriptionSelected = it },
                         )
-                        Text(text = "Description")
+                        Text(text = stringResource(MR.strings.tsz_export_description))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -606,7 +620,7 @@ object SettingsDataScreen : SearchableSettings {
                             checked = tagsSelected,
                             onCheckedChange = { tagsSelected = it },
                         )
-                        Text(text = "Tags (comma-separated)")
+                        Text(text = stringResource(MR.strings.tsz_export_tags))
                     }
                 }
             },
@@ -666,17 +680,17 @@ private fun LNReaderImportOptionsDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("LNReader Import Options") },
+        title = { Text(stringResource(MR.strings.tsz_lnr_options)) },
         text = {
             Column {
                 Text(
-                    "Choose what to restore from the backup:",
+                    stringResource(MR.strings.tsz_lnr_choose_items),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = restoreNovels, onCheckedChange = { restoreNovels = it })
-                    Text("Novels", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_novels), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -684,11 +698,11 @@ private fun LNReaderImportOptionsDialog(
                         onCheckedChange = { restoreChapters = it },
                         enabled = restoreNovels,
                     )
-                    Text("Chapters lists", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_chapters), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = restoreCategories, onCheckedChange = { restoreCategories = it })
-                    Text("Categories", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.categories), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -696,19 +710,19 @@ private fun LNReaderImportOptionsDialog(
                         onCheckedChange = { restoreHistory = it },
                         enabled = restoreNovels,
                     )
-                    Text("Reading history", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_history), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = restoreDownloadedChapters, onCheckedChange = { restoreDownloadedChapters = it })
-                    Text("Downloaded chapters", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.downloaded_chapters), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = restoreCovers, onCheckedChange = { restoreCovers = it })
-                    Text("Cached covers", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_covers), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = restorePlugins, onCheckedChange = { restorePlugins = it })
-                    Text("Plugins (extensions)", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_plugins), modifier = Modifier.padding(start = 4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -716,7 +730,7 @@ private fun LNReaderImportOptionsDialog(
                         onCheckedChange = { restoreMissingPlugins = it },
                         enabled = restoreNovels,
                     )
-                    Text("Restore with missing plugins (as stubs)", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(MR.strings.tsz_lnr_missing), modifier = Modifier.padding(start = 4.dp))
                 }
             }
         },
@@ -736,7 +750,7 @@ private fun LNReaderImportOptionsDialog(
                 },
                 enabled = restoreNovels || restoreCategories || restorePlugins,
             ) {
-                Text("Import")
+                Text(stringResource(MR.strings.tsz_lnr_confirm))
             }
         },
         dismissButton = {

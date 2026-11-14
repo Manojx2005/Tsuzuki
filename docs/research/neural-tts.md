@@ -14,6 +14,50 @@ Conditions:
 5. Keep Android system TTS as default; neural voices are optional. Fall back to it (or accept dropped words) when text has many out-of-lexicon words.
 6. Listen to real novel text before committing to UI work (OOV drop rate, see section 5).
 
+## 2026-11-14: a candidate for the literal NT1 string gate
+
+**NT1 remains pending independent review.** The owner requested an investigation of a binary satisfying the
+literal native-string rule; this did not waive that rule, NT2 licensing, or the owner listening go/no-go.
+
+The official release API still lists **v2.0.1 as the newest versioned runtime release** on this date (the
+`releases/latest` URL points at a model release, so it is not a runtime version check). Downloaded alternatives
+were SHA-256-verified against the [v2.0.1 release assets](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1).
+
+| Official Android AAR | Native libraries | Libraries with literal matches | Libraries failing 16 KB alignment |
+|---|---:|---:|---:|
+| Normal `sherpa-onnx-2.0.1.aar` | 16 | 12 | 0 |
+| `sherpa-onnx-static-link-onnxruntime-2.0.1.aar` | 5 | 4 | 0 |
+| `sherpa-onnx-2.0.1-rknn.aar` | 10 | 6 | 2 |
+
+The maintainer's [removal PR](https://github.com/k2-fsa/sherpa-onnx/pull/4055) separates the old phonemizer
+library from the runtime. That statement does not satisfy this project's stricter literal-string rule.
+Even `CreateSpeaker` contains the forbidden substring; this investigation keeps those as failures.
+
+A source-built **arm64 Kokoro-only candidate** now passes the unchanged artifact checks. Its seven-file patch
+omits unrelated JNI APIs and model factories, requires a lexicon, rejects external phoneme/token input,
+omits unused legacy metadata/warnings, and identifies the modified build. It does not rename banned symbols
+or patch linked binary bytes. The upstream [Kokoro implementation](https://github.com/k2-fsa/sherpa-onnx/blob/af2d8d81dbfa61c4cea4c568da78f3982edca005/sherpa-onnx/csrc/offline-tts-kokoro-model.cc)
+already documents the removed metadata as unused. Normal stripping removes build/debug information.
+
+- AAR: **7,857,879 bytes**, SHA-256 `b2cee72b9131cf5190753c966e23e0c0e65ef7a0e9313e434d074d4aa3b5fa47`.
+- JNI library: **20,903,096 bytes**, SHA-256 `9aa11f94d53ad3bac95ae84e6349e3ff0486f63bba39154e10dbde5e6532ff6f`.
+- Zero literal matches and checked runtime markers, three 0x4000-aligned load segments, only Android system
+  DT_NEEDED libraries. Independent LLVM strings/readelf agree with the Python auditor.
+- Official `classes.jar` retained byte-for-byte; all **10 TTS/GeneratedAudio JNI exports match**. Packaging is
+  deterministic for the same inputs; native byte identity across other build paths is not established.
+- Source/build dependency hashes, modification/runtime/dependency notices, ten passing auditor tests, three source-integrity tests and an
+  offline-verified build recipe are in [scripts/neural-tts](../../scripts/neural-tts/README.md).
+  ONNX Runtime's [pinned MIT licence](https://github.com/microsoft/onnxruntime/blob/v1.28.2/LICENSE) and third-party
+  notices are included. These do not settle the separate lexicon data licence.
+
+The candidate stays under `.worktrees/nt1-binary/.native/output/`. App dependencies, release/preview packaging
+and S4's exclusion are unchanged. No model was downloaded, no inference ran, and no device/runtime pass is
+claimed. Independent review must handle integration, unsupported-ABI fallback and APK alignment before NT1
+can pass; NT2 speed, memory, battery, lexicon licensing and the owner's listening test still follow.
+
+Evidence: `.worktrees/nt1-binary/app/build/nt1-binary-evidence/`; committed machine-readable summary:
+[neural-tts-native-audit-20261114.json](neural-tts-native-audit-20261114.json).
+
 ## 1. Is espeak-ng linked into the Android JNI library?
 
 **Before v2.0.0: yes, statically.**

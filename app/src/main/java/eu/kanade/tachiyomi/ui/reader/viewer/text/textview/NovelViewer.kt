@@ -24,7 +24,13 @@ import androidx.core.net.toUri
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import eu.kanade.presentation.tsuzuki.components.createReaderErrorView
+import eu.kanade.presentation.tsuzuki.components.createReaderLoadingView
+import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
+import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
+import eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition
 import eu.kanade.presentation.tsuzuki.reader.createChapterEndCard
+import eu.kanade.presentation.tsuzuki.reader.createNovelRecapView
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.tsuzuki.reader.NovelIllustrationTextView
 import eu.kanade.tachiyomi.tsuzuki.reader.NovelReadingColumn
@@ -76,6 +82,7 @@ import kotlin.math.roundToInt
 class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     private val container = FrameLayout(activity)
+    private val chapterEndTransition = NovelChapterEndTransition(activity, container)
     private lateinit var scrollView: NestedScrollView
     private lateinit var contentContainer: NovelReadingColumn
     private val inlineFeedback by lazy {
@@ -104,6 +111,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val chapter: ReaderChapter,
         val block: ChapterTextBlock,
         val headerView: TextView,
+        val recapView: View? = null,
         var separatorView: View? = null,
         var isLoaded: Boolean = false,
         // True once the chunk views received text - guards against false short-chapter
@@ -496,7 +504,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         // Don't mark while the block still shows empty layout (text set hasn't completed yet).
         if (!loaded.isTextSet) return
         val textHeight = loaded.block.container.height
-        if (textHeight <= 0 || textHeight > scrollView.height) return
+        val recapHeight = loaded.recapView?.takeIf { it.isVisible }?.height ?: 0
+        if (textHeight <= 0 || textHeight + recapHeight > scrollView.height) return
 
         lastSavedProgress = 1f
         saveProgress(1f)
@@ -756,6 +765,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                         )
                         rememberItem.setIcon(android.R.drawable.ic_menu_save)
                         rememberItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                        menu.addDictionaryAction(activity)
                         return true
                     }
 
@@ -767,6 +777,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                         return when (item.itemId) {
                             1 -> {
                                 onRememberSelectedText()
+                                mode.finish()
+                                true
+                            }
+                            DICTIONARY_SELECTION_MENU_ID -> {
+                                getSelectedText()?.let {
+                                    activity.openReaderDictionary(
+                                        it,
+                                        getCurrentChapterName(),
+                                        getSelectedParagraphIndex(),
+                                    )
+                                }
                                 mode.finish()
                                 true
                             }
@@ -817,6 +838,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         context = activity,
         preferences = preferences,
         scope = scope,
+        listening = activity.viewModel.listeningSession,
         callbacks = object : TtsController.Callbacks {
             override fun onInitialized(pendingRequest: TtsController.StartRequest?) {
                 when (pendingRequest) {
@@ -827,6 +849,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
 
             override fun getCurrentPage(): ReaderPage? = currentPage
+
+            override fun sourceLanguage(): String? = activity.viewModel.getSource()?.lang
 
             override fun onPlaybackStarted() = activity.discardNovelReadingSample()
 
@@ -871,8 +895,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     private fun applyTtsHighlight(chunk: String, startOffset: Int, paragraphIndex: Int) {
         activity.runOnUiThread {
-            val highlightColor = preferences.novelTtsHighlightColor.get()
-            val highlightTextColor = preferences.novelTtsHighlightTextColor.get()
+            val feedback = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(
+                getThemeColors(preferences.novelTheme.get()).second,
+            )
+            val highlightColor = feedback?.readAlongFill ?: preferences.novelTtsHighlightColor.get()
+            val highlightTextColor = feedback?.readAlongInk ?: preferences.novelTtsHighlightTextColor.get()
             val highlightStyle = preferences.novelTtsHighlightStyle.get()
             val keepInView = preferences.novelTtsKeepHighlightInView.get()
 
@@ -958,16 +985,31 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     val layout = scrollTarget.layout ?: return
                     val line = layout.getLineForOffset(localStart.coerceAtMost(layout.text.length - 1).coerceAtLeast(0))
                     val targetInChunk = layout.getLineTop(line)
-                    val targetInScroll =
+                    val targetInScroll = if (feedback != null) {
+                        eu.kanade.tachiyomi.tsuzuki.reader.novelHighlightScrollTarget(
+                            block.container.top + scrollTarget.top + scrollTarget.totalPaddingTop + targetInChunk,
+                            readerChromeTopPx,
+                            (16 * activity.resources.displayMetrics.density).toInt(),
+                            scrollView.paddingTop,
+                        )
+                    } else {
                         block.container.top + scrollTarget.top + targetInChunk - (scrollView.height / 3)
-                    scrollView.smoothScrollTo(0, targetInScroll.coerceAtLeast(0))
+                    }
+                    scrollView.smoothScrollTo(0, targetInScroll)
                 }
                 if (scrollTarget.layout != null) doScroll() else scrollTarget.post { doScroll() }
             }
         }
     }
 
-    private fun loadNextChapterForTts(anchorChapterIndex: Int = currentChapterIndex) {
+    private fun loadNextChapterForTts(viewportChapterIndex: Int = currentChapterIndex) {
+        // Anchor on the chapter that just finished speaking, not the viewport: the viewport can
+        // still sit on an earlier chapter, which would re-select the finished one and replay it.
+        val anchorChapterIndex = eu.kanade.tachiyomi.tsuzuki.reader.ttsHandoffAnchorIndex(
+            loadedChapters.map { it.chapter.chapter.id },
+            ttsController.ttsPlaybackChapterId,
+            viewportChapterIndex,
+        )
         logcat(LogPriority.DEBUG) {
             "TTS: Auto-loading next chapter ts=${System.currentTimeMillis()} ttsPlaybackChapterIndex=${ttsController.ttsPlaybackChapterIndex} ttsPlaybackChapterId=${ttsController.ttsPlaybackChapterId}"
         }
@@ -1189,6 +1231,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
             removedHeight += lc.headerView.height
             contentContainer.removeView(lc.headerView)
+            removedHeight += removeRecapView(lc)
             removedHeight += lc.block.container.height
             contentContainer.removeView(lc.block.container)
         }
@@ -1306,6 +1349,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     /** (paragraphIndex, paragraphCount) for the media notification's "paragraph N of M". */
     internal val listeningController get() = ttsController
 
+    /** Name of the chapter being read aloud (not the viewport's), or null when it isn't loaded. */
+    internal val playbackChapterName: String?
+        get() = ttsController.ttsPlaybackChapterId?.let { id ->
+            loadedChapters.firstOrNull { it.chapter.chapter.id == id }?.chapter?.chapter?.name
+        }
+
     fun getTtsParagraphProgress(): Pair<Int, Int> = ttsController.getParagraphProgress()
 
     /** Media-notification seek-bar drag: jump straight to [paragraphIndex]. */
@@ -1377,6 +1426,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun destroy() {
+        chapterEndTransition.clear()
         // Save the live per-chapter progress, not a recomputed whole-document ratio.
         // lastSavedProgress is 0 until restore/scroll, and a teardown before that (orientation
         // lock recreates the activity) must not persist 0 and wipe the saved progress.
@@ -1432,6 +1482,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     override fun setChapters(chapters: ViewerChapters) {
+        chapterEndTransition.onChapterChanging(chapters.currChapter.chapter.id)
         renderGeneration++
         // A getPageList failure leaves the chapter in Error state with no pages - must be checked
         // before the null-pages early return below, which would otherwise swallow it silently.
@@ -1442,15 +1493,21 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             displayError(chapterLoadError)
             return
         }
-        val page = chapters.currChapter.pages?.firstOrNull() ?: return
+        val page = chapters.currChapter.pages?.firstOrNull()
+        if (page == null) {
+            chapterEndTransition.clear()
+            return
+        }
         val enteredViaPrevious = chapters.takePreviousEntry()
 
         loadJob?.cancel()
+        if (chapterEndTransition.isPending) flushProgress()
         currentPage = page
         currentChapters = chapters
 
         val loadedIndex = loadedChapters.indexOfFirst { it.chapter.chapter.id == chapters.currChapter.chapter.id }
         if (preferences.novelInfiniteScroll.get() && loadedIndex >= 0) {
+            chapterEndTransition.clear()
             if (enteredViaPrevious) {
                 pendingRestoreChapterId = null
                 progressSaveJob?.cancel()
@@ -1482,6 +1539,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             val loader = page.chapter.pageLoader
             if (loader == null) {
                 logcat(LogPriority.ERROR) { "NovelViewer: No page loader available" }
+                chapterEndTransition.clear()
                 hideLoadingIndicator()
                 return@launch
             }
@@ -1554,6 +1612,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             chapter = chapter,
             block = block,
             headerView = headerView,
+            recapView = activity.createNovelRecapView(chapter.chapter.id, preferences),
             isLoaded = true,
         )
 
@@ -1594,6 +1653,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
 
         contentContainer.addView(headerView)
+        loadedChapter.recapView?.let { contentContainer.addView(it) }
         contentContainer.addView(block.container)
 
         val cfg = ContentConfig.from(
@@ -1626,6 +1686,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     "NovelViewer: Chapter ${chapter.chapter.name} extracted to unusable content"
                 }
                 contentContainer.removeView(headerView)
+                removeRecapView(loadedChapter)
                 contentContainer.removeView(block.container)
                 loadedChapter.separatorView?.let { contentContainer.removeView(it) }
                 chapterQueue.removeById(chapter.chapter.id)
@@ -1682,8 +1743,15 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val chapters = currentChapters ?: return
         if (chapters.nextChapter == null) return
 
-        activity.createChapterEndCard(chapters, preferences, NEXT_CHAPTER_BUTTON_TAG)?.let {
+        activity.createChapterEndCard(
+            chapters,
+            preferences,
+            NEXT_CHAPTER_BUTTON_TAG,
+            isLeaving = { chapterEndTransition.isLeaving(chapters.currChapter.chapter.id) },
+            onNext = { chapterEndTransition.start(scope, chapters) },
+        )?.let {
             contentContainer.addView(it)
+            updateChapterEndClearance()
             return
         }
 
@@ -1724,7 +1792,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val maxChapters = 3
         while (loadedChapters.size > maxChapters && currentChapterIndex > 0) {
             val toRemove = loadedChapters.first()
-            var removedHeight = toRemove.headerView.height + toRemove.block.container.height
+            var removedHeight = toRemove.headerView.height + toRemove.block.container.height + removeRecapView(toRemove)
 
             toRemove.separatorView?.let { sep ->
                 removedHeight += sep.height
@@ -1747,6 +1815,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
             logcat(LogPriority.DEBUG) { "NovelViewer: Removed distant chapter, adjusted scroll by -$removedHeight" }
         }
+    }
+
+    private fun removeRecapView(chapter: LoadedChapter): Int {
+        val recap = chapter.recapView ?: return 0
+        val height = if (recap.isVisible) recap.height else 0
+        contentContainer.removeView(recap)
+        return height
     }
 
     private fun restoreProgress(page: ReaderPage, enteredViaPrevious: Boolean) {
@@ -1776,6 +1851,60 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 isRestoringScroll = true
                 scrollView.scrollTo(0, 0)
                 isRestoringScroll = false
+            }
+        }
+    }
+
+    private var readerChromeTopPx = 0
+    private var readerChromeBottomPx = 0
+
+    fun onReaderChromeChanged(visible: Boolean, topPx: Int, bottomPx: Int) {
+        val themed = eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(0) != null
+        val previousTop = readerChromeTopPx
+        readerChromeTopPx = if (visible && themed) topPx.coerceAtLeast(0) else 0
+        readerChromeBottomPx = if (themed) bottomPx.coerceAtLeast(0) else 0
+        updateChapterEndClearance()
+        if (readerChromeTopPx > 0 && previousTop != readerChromeTopPx && ttsController.isSpeaking() &&
+            preferences.novelTtsEnableHighlight.get()
+        ) {
+            val index = ttsController.ttsCurrentChunkIndex
+            ttsController.ttsChunks.getOrNull(index)?.let { chunk ->
+                applyTtsHighlight(
+                    chunk,
+                    ttsController.ttsChunkStartOffsets.getOrElse(index) { 0 },
+                    ttsController.ttsChunkParagraphIndexes.getOrElse(index) { index },
+                )
+            }
+        }
+    }
+
+    private fun updateChapterEndClearance() {
+        val hasCard = !preferences.novelInfiniteScroll.get() &&
+            contentContainer.findViewWithTag<View>(NEXT_CHAPTER_BUTTON_TAG) != null
+        val extra = eu.kanade.tachiyomi.tsuzuki.reader.novelEndCardClearance(
+            hasCard,
+            readerChromeBottomPx,
+            (16 * activity.resources.displayMetrics.density).toInt(),
+        )
+        // A scroll target cannot be negative: the first line needs real space below visible chrome.
+        // Keep this outside the story blocks so their saved progress coordinates do not change.
+        val top = if (readerChromeTopPx > 0) {
+            readerChromeTopPx + (16 * activity.resources.displayMetrics.density).toInt()
+        } else {
+            0
+        }
+        if (scrollView.paddingBottom == extra && scrollView.paddingTop == top) return
+        val oldMax =
+            (contentContainer.height + scrollView.paddingTop + scrollView.paddingBottom - scrollView.height)
+                .coerceAtLeast(0)
+        val atEnd = !isRestoringScroll && oldMax > 0 && scrollView.scrollY >= oldMax - 2
+        scrollView.setPadding(scrollView.paddingLeft, top, scrollView.paddingRight, extra)
+        if (atEnd) {
+            val generation = renderGeneration
+            scrollView.post {
+                if (generation == renderGeneration) {
+                    scrollView.scrollTo(0, (contentContainer.height + top + extra - scrollView.height).coerceAtLeast(0))
+                }
             }
         }
     }
@@ -1865,11 +1994,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         // IllegalArgumentException. Strip it back to a plain Spannable so TextView measures
         // against the live paint instead.
         PlatformPrecomputedText.toPlainSpannable(textView.text)?.let { textView.text = it }
+        eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors(textColor)?.let { feedback ->
+            textView.highlightColor = feedback.selectionFill
+            (textView as? NovelIllustrationTextView)?.selectionForegroundColor = feedback.selectionInk
+        }
     }
 
     private fun applyBackgroundColor() {
+        updateChapterEndClearance()
         val theme = preferences.novelTheme.get()
         val (backgroundColor, _) = getThemeColors(theme)
+        container.setBackgroundColor(backgroundColor)
         scrollView.setBackgroundColor(backgroundColor)
     }
 
@@ -1919,12 +2054,20 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
             startTts()
         }
+        chapterEndTransition.revealWhenReady(scrollView, loaded.chapter.chapter.id)
     }
 
-    private var initialLoadingView: TextView? = null
+    private var initialLoadingView: View? = null
 
     private fun showLoadingIndicator() {
         contentContainer.removeAllViews()
+
+        activity.createReaderLoadingView(currentChapters?.currChapter?.chapter?.id ?: Unit)?.let {
+            initialLoadingView = it
+            contentContainer.addView(it)
+            applyBackgroundColor()
+            return
+        }
 
         initialLoadingView = TextView(activity).apply {
             text = activity.stringResource(TDMR.strings.novel_chapter_loading)
@@ -1946,6 +2089,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     }
 
     private fun displayError(error: Throwable) {
+        activity.createReaderErrorView(error) { activity.viewModel.reloadChapter(fromSource = false) }?.let {
+            logcat(LogPriority.ERROR) { "NovelViewer: Chapter load failed (${error.javaClass.simpleName})" }
+            contentContainer.removeAllViews()
+            contentContainer.addView(it)
+            chapterEndTransition.revealWhenReady(scrollView, animate = false)
+            return
+        }
         val fmt = ErrorFormatter.format(error)
         logcat(LogPriority.ERROR) { "NovelViewer: Chapter load failed\n${fmt.stackTrace}" }
 
@@ -2024,6 +2174,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
         contentContainer.removeAllViews()
         contentContainer.addView(errorContainer)
+        chapterEndTransition.revealWhenReady(scrollView, animate = false)
     }
 
     fun startAutoScroll() {

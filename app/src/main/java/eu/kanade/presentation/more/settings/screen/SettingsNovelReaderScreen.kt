@@ -58,6 +58,10 @@ object SettingsNovelReaderScreen : SearchableSettings {
             getContentGroup(readerPref),
             getStatusBarGroup(readerPref, navigator),
             getTtsGroup(readerPref),
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(MR.strings.tsz_dictionary_packs),
+                onClick = { navigator.push(eu.kanade.presentation.tsuzuki.dictionary.DictionaryPacksScreen()) },
+            ),
         )
     }
 
@@ -359,6 +363,13 @@ object SettingsNovelReaderScreen : SearchableSettings {
             // Auto-load next chapter stay visible here regardless of the paged-mode toggle, since
             // they remain fully functional for TextView-rendered novels either way.
             preferenceItems = buildList {
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = readerPreferences.novelChapterRecap,
+                        title = stringResource(MR.strings.tsz_reader_recap_setting),
+                        subtitle = stringResource(MR.strings.tsz_reader_recap_setting_summary),
+                    ),
+                )
                 add(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = readerPreferences.novelInfiniteScroll,

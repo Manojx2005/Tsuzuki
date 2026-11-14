@@ -229,6 +229,13 @@ class ReaderViewModel @JvmOverloads constructor(
      */
     private var chapterReadStartTime: Long? = null
     private val novelReadingSession = NovelReadingSession()
+    internal val listeningSession = eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession(
+        readingDays = { Injekt.get() },
+        canRecord = { !incognitoMode },
+    )
+    private val novelRecap by lazy {
+        eu.kanade.tachiyomi.tsuzuki.reader.NovelRecapSession(Injekt.get<Application>(), downloadProvider)
+    }
     private val novelEstimates by lazy { Injekt.get<NovelReadingEstimates>() }
 
     private var chapterToDownload: Download? = null
@@ -413,7 +420,13 @@ class ReaderViewModel @JvmOverloads constructor(
                 val source = sourceManager.getOrStub(manga.source)
                 loader = ChapterLoader(context, downloadManager, downloadProvider, manga, source)
 
-                loadChapter(loader!!, chapterList.first { chapterId == it.chapter.id })
+                val chapter = chapterList.first { chapterId == it.chapter.id }
+                if (manga.isNovel && readerPreferences.novelChapterRecap.get() && !incognitoMode) {
+                    chapterList.getOrNull(chapterList.indexOf(chapter) - 1)?.let { previous ->
+                        novelRecap.prepare(manga, chapterId, previous, source)
+                    }
+                }
+                loadChapter(loader!!, chapter)
             } catch (e: Throwable) {
                 if (e is CancellationException) {
                     throw e
@@ -1069,7 +1082,15 @@ class ReaderViewModel @JvmOverloads constructor(
     internal fun cacheNovelEstimateWords(chapterId: Long?, content: String) {
         if (chapterId == null || incognitoMode) return
         viewModelScope.launch(Dispatchers.Default) { novelEstimates.cacheWords(chapterId, content) }
+        if (readerPreferences.novelChapterRecap.get()) {
+            viewModelScope.launch(Dispatchers.IO) { novelRecap.cacheExcerpt(mangaId, chapterId, content) }
+        }
     }
+
+    internal fun novelRecapFor(chapterId: Long?) =
+        if (readerPreferences.novelChapterRecap.get()) novelRecap.forChapter(chapterId) else null
+
+    internal fun dismissNovelRecap(chapterId: Long) = novelRecap.dismiss(chapterId)
 
     internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) {
         if (incognitoMode) return
@@ -1089,6 +1110,7 @@ class ReaderViewModel @JvmOverloads constructor(
         // contribute progress, so the timer can start before the book is known.
         novelReadingSession.start()
         chapterReadStartTime = Clock.System.now().toEpochMilliseconds()
+        listeningSession.beginReadingWindow()
     }
 
     /**
@@ -1125,7 +1147,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val chapterId = readerChapter.chapter.id!!
         val endTime = Date()
         val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
-        recordTsuzukiReadingTime(sessionReadDuration)
+        recordTsuzukiReadingTime(listeningSession.endReadingWindow())
         if (manga?.isNovel == true) {
             novelEstimates.recordSession(sessionReadDuration, novelReadingSession.finish())
         }

@@ -1,0 +1,128 @@
+{
+  "date": "2026-11-14",
+  "source_tag_commit": "af2d8d81dbfa61c4cea4c568da78f3982edca005",
+  "source_archive_sha256": "71397fbf7c30cf81a56247e4c45bd3748abb590e761fbcfa2989a33ca7644282",
+  "official_artifacts": [
+    {
+      "artifact": "sherpa-onnx-2.0.1.aar",
+      "sha256": "a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7",
+      "bytes": 49441341,
+      "native_libraries": 16,
+      "literal_failures": 12,
+      "alignment_failures": 0
+    },
+    {
+      "artifact": "sherpa-onnx-static-link-onnxruntime-2.0.1.aar",
+      "sha256": "07e042d97f3a6bd5b7fe74d4eef0513dc01a714b16c15a903250095aba43a575",
+      "bytes": 38577050,
+      "native_libraries": 5,
+      "literal_failures": 4,
+      "alignment_failures": 0
+    },
+    {
+      "artifact": "sherpa-onnx-2.0.1-rknn.aar",
+      "sha256": "9725a94b6d605dc072d20462ef0b7dc8ae743e4d16dedffe625eaf5cbc722019",
+      "bytes": 26519741,
+      "native_libraries": 10,
+      "literal_failures": 6,
+      "alignment_failures": 2
+    }
+  ],
+  "candidate": {
+    "tts_jni_exports": [
+      "Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_delete",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getLang",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getSampleRate",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile"
+    ],
+    "classes_sha256": "0ee4991c56c19ef5a8a573b01891193d7298ffe7ebcc68f42b944361d8869d93",
+    "upstream_aar_sha256": "a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7",
+    "candidate_library": {
+      "name": "jni/arm64-v8a/libsherpa-onnx-jni.so",
+      "bytes": 20887080,
+      "sha256": "ef5ccbfc500fefb8a75100fd0f4fe0528d14669c0dad096781f7b7d13df71b24",
+      "elf_class": 64,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "aligned_16kb": true,
+      "needed": [
+        "libandroid.so",
+        "liblog.so",
+        "libm.so",
+        "libdl.so",
+        "libc.so"
+      ],
+      "literal_grep_matches": [],
+      "utf16_literal_matches": [],
+      "absolute_build_path_matches": [],
+      "passes_build_hygiene": true,
+      "runtime_markers": [],
+      "passes_nt1_artifact_gates": true
+    },
+    "candidate_aar_sha256": "1f70ec2b28f40dfe760a5fe1283e623a1163155c5c530b5a70ae06df1eae4ec1",
+    "candidate_aar_bytes": 7853259,
+    "onnx_source_build": {
+      "source_archive_sha256": "0a71177b993c8406e0ae50574e2319bd0f53d3e89857cd9acdde0aea22ba27f1",
+      "library_sha256": "da1db20d213c68641a48e79b8a99e1c6557859b85186e87f5bf140848b463e50",
+      "component_count": 81
+    }
+  },
+  "candidate_before_hygiene": {
+    "tts_jni_exports": [
+      "Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_delete",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getLang",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_getSampleRate",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset",
+      "Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile"
+    ],
+    "classes_sha256": "0ee4991c56c19ef5a8a573b01891193d7298ffe7ebcc68f42b944361d8869d93",
+    "upstream_aar_sha256": "a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7",
+    "candidate_library": {
+      "name": "jni/arm64-v8a/libsherpa-onnx-jni.so",
+      "bytes": 20903096,
+      "sha256": "9aa11f94d53ad3bac95ae84e6349e3ff0486f63bba39154e10dbde5e6532ff6f",
+      "elf_class": 64,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "aligned_16kb": true,
+      "needed": [
+        "libandroid.so",
+        "liblog.so",
+        "libm.so",
+        "libdl.so",
+        "libc.so"
+      ],
+      "literal_grep_matches": [],
+      "runtime_markers": [],
+      "passes_nt1_artifact_gates": true
+    },
+    "candidate_aar_sha256": "b2cee72b9131cf5190753c966e23e0c0e65ef7a0e9313e434d074d4aa3b5fa47",
+    "candidate_aar_bytes": 7857879
+  },
+  "hygiene_followup": {
+    "python_tests": 21,
+    "absolute_source_paths": 0,
+    "username_ascii_utf16_occurrences": 0,
+    "identical_input_packaging_repeatable": true,
+    "source_build_verified": true,
+    "inference_verified": false,
+    "app_integrated": false
+  }
+}

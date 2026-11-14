@@ -8,7 +8,9 @@ import eu.kanade.presentation.reader.settings.CodeSnippet
 import eu.kanade.presentation.reader.settings.safeTitle
 import eu.kanade.presentation.tsuzuki.reader.chapterEndDownloaded
 import eu.kanade.presentation.tsuzuki.reader.webChapterEndPayload
+import eu.kanade.tachiyomi.tsuzuki.reader.novelFeedbackColors
 import eu.kanade.tachiyomi.tsuzuki.reader.novelReadingColumnCss
+import eu.kanade.tachiyomi.tsuzuki.reader.novelSelectionCss
 import eu.kanade.tachiyomi.tsuzuki.reader.usesNovelReadingColumn
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
@@ -95,6 +97,7 @@ internal class NovelWebViewStyler(
             ""
         }
 
+        val selectionCss = novelFeedbackColors(finalTextColor)?.let(::novelSelectionCss).orEmpty()
         val textSelect = if (preferences.novelTextSelectable.get()) "text" else "none"
 
         val (fontInheritOverride, headingSizeRules) = fontOverrideCss(sourceCssPriority, useOriginalFonts)
@@ -135,6 +138,7 @@ internal class NovelWebViewStyler(
             $readingColumnCss
             $customCss
             $enabledSnippetsCss
+            $selectionCss
         """.trimIndent().replace("\n", " ")
 
         return CustomStylePayload(

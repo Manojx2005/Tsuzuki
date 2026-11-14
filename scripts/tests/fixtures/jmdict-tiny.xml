@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE JMdict [<!ENTITY v1 "Ichidan verb">]>
+<JMdict>
+  <entry>
+    <ent_seq>1</ent_seq>
+    <k_ele><keb>試せる</keb></k_ele>
+    <k_ele><keb>ためせる</keb></k_ele>
+    <r_ele><reb>ためせる</reb></r_ele>
+    <sense>
+      <pos>&v1;</pos>
+      <gloss>fixture meaning</gloss>
+      <gloss xml:lang="fre">fixture excluded</gloss>
+    </sense>
+    <sense><stagk>試せる</stagk><gloss>restricted fixture meaning</gloss></sense>
+  </entry>
+</JMdict>

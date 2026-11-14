@@ -2,6 +2,7 @@ package eu.kanade.presentation.theme.tsuzuki
 
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.LinearEasing
+import cafe.adriel.voyager.core.stack.StackEvent
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.floats.shouldBeLessThanOrEqual
@@ -12,6 +13,21 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 class TsuzukiMotionTest {
+
+    @Test
+    fun `only opening details uses the shorter synchronized cover duration`() {
+        navigatorCoverDuration(true, StackEvent.Push, false) shouldBe TsuzukiMotion.DETAILS_OPEN_MS
+        navigatorCoverDuration(false, StackEvent.Push, false) shouldBe TsuzukiMotion.SHARED_MS
+        navigatorCoverDuration(true, StackEvent.Pop, false) shouldBe TsuzukiMotion.SHARED_MS
+        navigatorCoverDuration(false, StackEvent.Pop, false) shouldBe TsuzukiMotion.SHARED_MS
+    }
+
+    @Test
+    fun `reduced motion overrides either navigation duration`() {
+        navigatorCoverDuration(true, StackEvent.Push, true) shouldBe TsuzukiMotion.REDUCED_MS
+        navigatorCoverDuration(false, StackEvent.Push, true) shouldBe TsuzukiMotion.REDUCED_MS
+        navigatorCoverDuration(true, StackEvent.Pop, true) shouldBe TsuzukiMotion.REDUCED_MS
+    }
 
     private val linear = Easing { it }
 
@@ -103,6 +119,7 @@ class TsuzukiMotionTest {
             TsuzukiMotion.SHEET_MS,
             TsuzukiMotion.STACK_MS,
             TsuzukiMotion.SHARED_MS,
+            TsuzukiMotion.DETAILS_OPEN_MS,
             TsuzukiMotion.REDUCED_MS,
         ).forEach { (it <= TsuzukiMotion.THEME_MS) shouldBe true }
     }

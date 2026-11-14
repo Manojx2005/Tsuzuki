@@ -74,6 +74,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.presentation.tsuzuki.download.TsuzukiAnimeDownloadQueue
 import eu.kanade.presentation.tsuzuki.download.TsuzukiMangaDownloadQueue
 import eu.kanade.presentation.tsuzuki.download.rememberMangaQueueStatuses
@@ -941,7 +942,12 @@ private fun NovelDownloadCard(
                         }
                     }
                     IconButton(
-                        onClick = { context.copyToClipboard(errorLabel, item.fullErrorReport) },
+                        onClick = {
+                            context.copyToClipboard(
+                                errorLabel,
+                                eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(item.fullErrorReport),
+                            )
+                        },
                         modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
@@ -959,8 +965,19 @@ private fun NovelDownloadCard(
                     item.errorDetails.take(collapsedLimit)
                 }
                 visibleErrors.forEach { (chapter, reason) ->
+                    val themedCopy = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                        remember(chapter, reason) {
+                            eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi(IllegalStateException(reason), chapter)
+                        }
+                    } else {
+                        null
+                    }
                     Text(
-                        text = "$chapter: $reason",
+                        text = if (themedCopy != null) {
+                            themedCopy.whatFailed + ": " + context.errorHeading(themedCopy)
+                        } else {
+                            "$chapter: $reason"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 2,

@@ -174,3 +174,7 @@ fun ProvideBookPalette(palette: BookPalette?, content: @Composable () -> Unit) {
 /** Upstream's "active" tint (filter icons and the like): the accent in the Tsuzuki themes. */
 val TsuzukiTokens.activeColor: Color
     get() = if (style == TsuzukiStyle.NONE) Color.Unspecified else accent
+
+/** Listen dock (board 4): a dark translucent surface over the Colour page. */
+val TsuzukiTokens.readerDockFill: Color
+    get() = if (isDot) tile else Color.Black.copy(alpha = .32f)

@@ -29,6 +29,7 @@ import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
+import eu.kanade.presentation.tsuzuki.novel.novelTitleChapterNumber
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -60,13 +61,17 @@ private data class ChapterEndLabels(
 
 private fun ReaderActivity.chapterEndLabels(chapter: ReaderChapter, dot: Boolean): ChapterEndLabels {
     fun String.cased() = if (dot) uppercase() else this
+    val sourceTitle = chapter.chapter.name
+    val separateNumber = chapter.chapter.chapter_number.takeIf {
+        it >= 0 && novelTitleChapterNumber(sourceTitle) == null
+    }
     return ChapterEndLabels(
         end = stringResource(MR.strings.tsz_reader_chapter_end).cased(),
         upNext = stringResource(MR.strings.tsz_reader_up_next).cased(),
-        number = chapter.chapter.chapter_number.takeIf { it >= 0 }?.let {
+        number = separateNumber?.let {
             stringResource(MR.strings.tsz_reader_chapter_position, formatChapterNumber(it.toDouble())).cased()
         },
-        title = chapter.chapter.name.cased(),
+        title = sourceTitle.cased(),
         downloaded = stringResource(MR.strings.label_downloaded).cased(),
         next = stringResource(MR.strings.action_next_chapter).cased(),
         markRead = stringResource(MR.strings.action_mark_as_read).cased(),
@@ -78,6 +83,8 @@ internal fun ReaderActivity.createChapterEndCard(
     chapters: ViewerChapters,
     preferences: ReaderPreferences,
     tag: String,
+    isLeaving: () -> Boolean,
+    onNext: () -> Unit,
 ): ComposeView? {
     val next = chapters.nextChapter ?: return null
     if (chapterEndTokens().style == TsuzukiStyle.NONE) return null
@@ -127,10 +134,16 @@ internal fun ReaderActivity.createChapterEndCard(
                             Text(labels.downloaded, color = foreground, style = MaterialTheme.typography.labelMedium)
                         }
                         Button(
-                            onClick = ::loadNextChapter,
+                            onClick = onNext,
+                            enabled = !isLeaving(),
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = onPrimary),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = primary,
+                                contentColor = onPrimary,
+                                disabledContainerColor = lerp(primary, fill, 0.25f),
+                                disabledContentColor = onPrimary,
+                            ),
                         ) {
                             Text(labels.next, style = MaterialTheme.typography.labelLarge)
                         }

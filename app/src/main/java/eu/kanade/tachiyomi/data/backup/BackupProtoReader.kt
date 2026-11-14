@@ -9,6 +9,7 @@ import okio.gzip
 import okio.source
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 
@@ -17,7 +18,7 @@ class BackupProtoReader(
 ) {
     suspend fun read(uri: Uri, onField: suspend (fieldNumber: Int, data: ByteArray) -> Unit) {
         withContext(Dispatchers.IO) {
-            context.contentResolver.openInputStream(uri)!!.use { inputStream ->
+            (context.contentResolver.openInputStream(uri) ?: throw FileNotFoundException()).use { inputStream ->
                 readFields(
                     inputStream,
                     invalidFormat = { isJson ->
@@ -62,6 +63,7 @@ class BackupProtoReader(
                     val tag = readVarint(payloadSource, invalidProto) ?: break
                     val wireType = (tag and 0x07).toInt()
                     val fieldNumber = (tag ushr 3).toInt()
+                    if (fieldNumber <= 0 || tag ushr 32 != 0L) throw invalidProto()
                     when (wireType) {
                         WIRE_TYPE_LENGTH_DELIMITED -> {
                             val length = readVarint(payloadSource, invalidProto) ?: throw invalidProto()

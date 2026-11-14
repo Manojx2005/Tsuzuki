@@ -393,7 +393,12 @@ data object LibraryTab : Tab {
             null -> {}
         }
 
-        BackHandler(enabled = state.selectionMode || state.toolbarQuery != null) {
+        BackHandler(
+            enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(
+                state.selectionMode || state.toolbarQuery != null,
+                eu.kanade.tachiyomi.ui.home.HomeScreen,
+            ),
+        ) {
             when {
                 state.selectionMode -> viewModel.clearSelection()
                 state.toolbarQuery != null -> viewModel.clearSearch()

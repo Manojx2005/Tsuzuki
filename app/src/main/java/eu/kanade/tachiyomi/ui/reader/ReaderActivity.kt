@@ -85,11 +85,15 @@ import eu.kanade.presentation.reader.appbars.bottomBarItemInfo
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.deserializeStatusBarOrder
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
+import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySelection
+import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySheet
+import eu.kanade.presentation.tsuzuki.novel.novelReaderChapterLabel
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
 import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
 import eu.kanade.presentation.tsuzuki.reader.rememberTsuzukiListenPanel
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -252,6 +256,7 @@ class ReaderActivity : BaseActivity() {
 
     // Quotes functionality
     private var showQuotesSheet by mutableStateOf(false)
+    private var dictionarySelection by mutableStateOf<ReaderDictionarySelection?>(null)
 
     /**
      * Called when the activity is created. Initializes the presenter and configuration.
@@ -459,15 +464,20 @@ class ReaderActivity : BaseActivity() {
         val menuBottomBarPx = remember { mutableIntStateOf(0) }
         val onTopBarHeight = remember { { px: Int -> menuTopBarPx.intValue = px } }
         val onBottomBarHeight = remember { { px: Int -> menuBottomBarPx.intValue = px } }
-        val webViewer = state.viewer as? NovelWebViewViewer
+        val novelViewer = state.viewer
         val menuVisible = state.menuVisible
-        LaunchedEffect(webViewer, menuVisible, density) {
-            val viewer = webViewer ?: return@LaunchedEffect
-            snapshotFlow {
-                with(density) { menuTopBarPx.intValue.toDp().value to menuBottomBarPx.intValue.toDp().value }
-            }
+        LaunchedEffect(novelViewer, menuVisible, density) {
+            snapshotFlow { menuTopBarPx.intValue to menuBottomBarPx.intValue }
                 .distinctUntilChanged()
-                .collect { (top, bottom) -> viewer.onReaderChromeChanged(menuVisible, top, bottom) }
+                .collect { (top, bottom) ->
+                    when (novelViewer) {
+                        is NovelWebViewViewer -> with(density) {
+                            novelViewer.onReaderChromeChanged(menuVisible, top.toDp().value, bottom.toDp().value)
+                        }
+                        is NovelViewer -> novelViewer.onReaderChromeChanged(menuVisible, top, bottom)
+                        else -> Unit
+                    }
+                }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -504,7 +514,17 @@ class ReaderActivity : BaseActivity() {
             if (isNovelMode && !state.menuVisible && novelStatusBarEnabled) {
                 val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
                 val showChapterSegment = novelStatusBarShowChapterNumber || novelStatusBarShowChapterTitle
+                val themedChapterLabels = isTsuzukiStyle()
                 val chapterText: String? = chapter?.takeIf { showChapterSegment }?.let { ch ->
+                    if (themedChapterLabels) {
+                        return@let novelReaderChapterLabel(
+                            title = ch.name,
+                            storedNumber = ch.chapter_number.toDouble(),
+                            showNumber = novelStatusBarShowChapterNumber,
+                            showTitle = novelStatusBarShowChapterTitle,
+                            numberPrefix = "Ch.",
+                        )
+                    }
                     val numStr = if (novelStatusBarShowChapterNumber && ch.chapter_number >= 0f) {
                         "Ch. ${formatChapterNumber(ch.chapter_number.toDouble())}"
                     } else {
@@ -686,6 +706,13 @@ class ReaderActivity : BaseActivity() {
                 },
             )
         }
+        dictionarySelection?.let { selection ->
+            ReaderDictionarySheet(
+                selection = selection,
+                onDismiss = { dictionarySelection = null },
+                onSave = { viewModel.saveQuote(selection.term.value, selection.chapterName, selection.paragraphIndex) },
+            )
+        }
     }
 
     /**
@@ -703,6 +730,7 @@ class ReaderActivity : BaseActivity() {
     }
 
     override fun onPause() {
+        viewModel.listeningSession.setReaderVisible(false)
         when (val viewer = viewModel.state.value.viewer) {
             is NovelViewer -> viewer.flushProgress()
             is NovelWebViewViewer -> viewer.flushProgress()
@@ -727,6 +755,7 @@ class ReaderActivity : BaseActivity() {
      */
     override fun onResume() {
         super.onResume()
+        viewModel.listeningSession.setReaderVisible(true)
         val listening = currentNovelTtsState()?.active == true
         lifecycleScope.launch {
             viewModel.restartReadTimerSynced()
@@ -923,10 +952,19 @@ class ReaderActivity : BaseActivity() {
 
             // Format chapter title based on preference
             val chapterTitleDisplay by readerPreferences.novelChapterTitleDisplay.collectAsState()
-            val formattedChapterTitle = remember(state.currentChapter, state.novelVisibleChapter, chapterTitleDisplay) {
-                val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
+            val themedChapterLabels = isTsuzukiStyle()
+            val chapter = state.novelVisibleChapter ?: state.currentChapter?.chapter
+            val formattedChapterTitle = remember(chapter, chapterTitleDisplay, themedChapterLabels) {
                 if (chapter == null) {
                     null
+                } else if (themedChapterLabels) {
+                    novelReaderChapterLabel(
+                        title = chapter.name,
+                        storedNumber = chapter.chapter_number.toDouble(),
+                        showNumber = chapterTitleDisplay == 1 || chapterTitleDisplay == 2,
+                        showTitle = chapterTitleDisplay != 1,
+                        numberPrefix = if (chapterTitleDisplay == 1) "Chapter" else "Ch.",
+                    ) ?: chapter.name
                 } else {
                     when (chapterTitleDisplay) {
                         1 -> { // Number only
@@ -964,7 +1002,7 @@ class ReaderActivity : BaseActivity() {
             var showEditSaveDialog by remember { mutableStateOf(false) }
             var isEditing by remember { mutableStateOf(false) }
             val listenPanel = rememberTsuzukiListenPanel(
-                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused,
+                this@ReaderActivity, state, readerPreferences, isTtsActive, isTtsPaused, ttsControlsVisible,
                 ::pauseTtsFromNotification, ::resumeTtsFromNotification, ::stepTtsParagraph, ::seekTtsToParagraph,
                 onPausedChanged = { isTtsPaused = it },
             )
@@ -1270,6 +1308,7 @@ class ReaderActivity : BaseActivity() {
                 onQuotes = ::onQuotesClicked,
                 ttsOverlayBottomPadding = ttsOverlayBottomPadding,
                 showTtsMiniOverlay = !chrome.listeningVisible,
+                ttsMiniContent = listenPanel.miniContent,
                 panelEndInset = tsuzukiChromeRequests.panelEndInset,
                 panelBottomInset = tsuzukiChromeRequests.panelBottomInset,
                 onTopBarHeight = onTopBarHeight,
@@ -1761,6 +1800,15 @@ class ReaderActivity : BaseActivity() {
         loadAdjacentChapter(forward = true)
     }
 
+    internal suspend fun loadNextChapterFromEnd(fromId: Long): Boolean {
+        val state = viewModel.state.value
+        if (state.viewerChapters?.currChapter?.chapter?.id != fromId || state.isLoadingAdjacentChapter) return false
+        stopNovelTtsForManualNav()
+        val loaded = viewModel.loadNextChapter()
+        if (loaded) (state.viewer as? NovelWebViewViewer)?.onChapterNavigate("next")
+        return loaded
+    }
+
     /**
      * Loads the next chapter for a TTS auto-advance without stopping TTS. The viewer
      * has set pendingTtsAutoStart and needs it to survive the chapter swap so playback
@@ -2010,6 +2058,15 @@ class ReaderActivity : BaseActivity() {
      */
     fun onQuotesClicked() {
         showQuotesSheet = true
+    }
+
+    internal fun openReaderDictionary(text: String, chapterName: String?, paragraphIndex: Int?) {
+        val term = eu.kanade.tachiyomi.tsuzuki.dictionary.dictionaryTerm(text) ?: return
+        dictionarySelection = ReaderDictionarySelection(
+            term,
+            chapterName.orEmpty(),
+            paragraphIndex,
+        )
     }
 
     /**

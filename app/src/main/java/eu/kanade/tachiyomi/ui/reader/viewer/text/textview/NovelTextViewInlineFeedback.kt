@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import eu.kanade.presentation.tsuzuki.components.createReaderErrorView
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ErrorFormatter
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.localized
 import eu.kanade.tachiyomi.util.system.toast
@@ -99,6 +100,20 @@ internal class NovelTextViewInlineFeedback(
     /** Rich variant for an actual load failure: real category/summary + Retry + Copy, not a generic string. */
     fun showInlineError(error: Throwable, isPrepend: Boolean, onRetry: (() -> Unit)? = null) {
         inlineErrorView?.let { contentContainer.removeView(it) }
+        (context as? eu.kanade.tachiyomi.ui.reader.ReaderActivity)?.createReaderErrorView(
+            error,
+            onRetry?.let { retry ->
+                {
+                    inlineErrorView?.let(contentContainer::removeView)
+                    inlineErrorView = null
+                    retry()
+                }
+            },
+        )?.let { view ->
+            inlineErrorView = view
+            if (isPrepend) contentContainer.addView(view, 0) else contentContainer.addView(view)
+            return
+        }
         val fmt = ErrorFormatter.format(error)
 
         val container = LinearLayout(context).apply {

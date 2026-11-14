@@ -41,3 +41,19 @@ verified backups before switching. Evidence has `webview-novel-semantics` in its
 native renderers and saved chapter positions (88% tablet / 75% phone) were restored; both left Dot Home with
 TTS hidden/stopped and current main-process crash logs empty. The preview native-default preference is now
 explicitly stored rather than absent; no primary debug changes. Preview history/minutes include tests.
+
+
+## RV5 independent Case B review — 2026-11-14
+
+Accepted S2-F, RP1, STR1, ERR1 and TTS-LANGUAGE with review fixes `0a96ace3d`, `bf5055dcd`, `8570ff5d7`.
+Debug/optimized Preview and 1,085 tests pass; both final crash buffers empty. All operations were in disposable
+`io.github.manojx2005.tsuzuki.rv5debugscratch` apps. Daily Preview/Debug and owner phone untouched.
+Evidence: `app/build/review-evidence/rv5/` (including the inherited c-* and STR1 runtime captures).
+
+- Native pause/resume counts two chapter completions once per run, stops after the last chapter; prior replay/incognito and WebView traces inspected.
+- Automatic voice: English Native → en-US on Japanese S22; Japanese WebView → ja-JP on Japanese tablet. Explicit English voice remains honored.
+- Dot/Colour first-line clearance, token selection/read-along, timer/countdown and chapter-end controls. Native end card clears both bars and the open Listen dock. Delayed WebView keeps the old card until the target chapter is ready.
+- Japanese LNReader options/chooser/data and Japanese/English CSV dialogs; eight-locale XML/key checks.
+- ERR1 controlled offline catalogue, delayed stages, timeout, synthetic 403 → WebView, missing source → Extensions, WebView HTTP 500 and Native missing local chapter → Retry recovery. Failed download cause/Copy/Retry checked. Manga paged offline error/Retry and webtoon render/recycling smoke checked; initial CDN DNS failures later recovered.
+- Coverage limits: separate forced webtoon error, live external browser challenge, inline-append error and full landscape/large-font matrix not established by this sample. Page-progress restoration is code-reviewed and built; no slow percentage capture was obtained. These do not mark the entire runtime sweep complete.
+- Synthetic S22 file and tablet Wi-Fi restored; localhost server stopped. Automatic approval review rejected opening daily apps, so handback uses disposable Dot Home.

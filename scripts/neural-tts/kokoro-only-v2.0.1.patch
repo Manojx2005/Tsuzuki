@@ -1,0 +1,448 @@
+--- a/sherpa-onnx/jni/CMakeLists.txt
++++ b/sherpa-onnx/jni/CMakeLists.txt
+@@ -1,3 +1,4 @@
++# Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ include_directories(${PROJECT_SOURCE_DIR})
+ 
+ if(NOT DEFINED ANDROID_ABI)
+@@ -11,27 +12,9 @@
+ endif()
+ 
+ set(sources
+-  audio-tagging.cc
+   common.cc
+   jni.cc
+-  keyword-spotter.cc
+-  offline-diacritization.cc
+-  offline-punctuation.cc
+-  offline-recognizer.cc
+-  offline-speech-denoiser.cc
+-  offline-stream.cc
+-  online-speech-denoiser.cc
+-  online-punctuation.cc
+-  online-recognizer.cc
+-  online-stream.cc
+-  speaker-embedding-extractor.cc
+-  speaker-embedding-manager.cc
+-  speech-denoiser.cc
+-  spoken-language-identification.cc
+   version.cc
+-  voice-activity-detector.cc
+-  wave-reader.cc
+-  wave-writer.cc
+ )
+ 
+ if(SHERPA_ONNX_ENABLE_TTS)
+--- a/sherpa-onnx/csrc/offline-tts-impl.cc
++++ b/sherpa-onnx/csrc/offline-tts-impl.cc
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/offline-tts-impl.cc
+ //
+ // Copyright (c)  2023  Xiaomi Corporation
+@@ -16,13 +17,7 @@
+ #include "rawfile/raw_file_manager.h"
+ #endif
+ 
+-#include "sherpa-onnx/csrc/offline-tts-kitten-impl.h"
+ #include "sherpa-onnx/csrc/offline-tts-kokoro-impl.h"
+-#include "sherpa-onnx/csrc/offline-tts-matcha-impl.h"
+-#include "sherpa-onnx/csrc/offline-tts-pocket-impl.h"
+-#include "sherpa-onnx/csrc/offline-tts-supertonic-impl.h"
+-#include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
+-#include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
+ 
+ namespace sherpa_onnx {
+ 
+@@ -40,21 +35,8 @@
+ 
+ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
+     const OfflineTtsConfig &config) {
+-  if (!config.model.vits.model.empty()) {
+-    return std::make_unique<OfflineTtsVitsImpl>(config);
+-  } else if (!config.model.matcha.acoustic_model.empty()) {
+-    return std::make_unique<OfflineTtsMatchaImpl>(config);
+-  } else if (!config.model.zipvoice.encoder.empty() &&
+-             !config.model.zipvoice.decoder.empty()) {
+-    return std::make_unique<OfflineTtsZipvoiceImpl>(config);
+-  } else if (!config.model.kokoro.model.empty()) {
++  if (!config.model.kokoro.model.empty() && !config.model.kokoro.lexicon.empty()) {
+     return std::make_unique<OfflineTtsKokoroImpl>(config);
+-  } else if (!config.model.kitten.model.empty()) {
+-    return std::make_unique<OfflineTtsKittenImpl>(config);
+-  } else if (!config.model.pocket.lm_flow.empty()) {
+-    return std::make_unique<OfflineTtsPocketImpl>(config);
+-  } else if (!config.model.supertonic.tts_json.empty()) {
+-    return std::make_unique<OfflineTtsSupertonicImpl>(config);
+   }
+ 
+   SHERPA_ONNX_LOGE("Please provide a tts model.");
+@@ -65,21 +47,8 @@
+ template <typename Manager>
+ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
+     Manager *mgr, const OfflineTtsConfig &config) {
+-  if (!config.model.vits.model.empty()) {
+-    return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
+-  } else if (!config.model.matcha.acoustic_model.empty()) {
+-    return std::make_unique<OfflineTtsMatchaImpl>(mgr, config);
+-  } else if (!config.model.zipvoice.encoder.empty() &&
+-             !config.model.zipvoice.decoder.empty()) {
+-    return std::make_unique<OfflineTtsZipvoiceImpl>(mgr, config);
+-  } else if (!config.model.kokoro.model.empty()) {
++  if (!config.model.kokoro.model.empty() && !config.model.kokoro.lexicon.empty()) {
+     return std::make_unique<OfflineTtsKokoroImpl>(mgr, config);
+-  } else if (!config.model.kitten.model.empty()) {
+-    return std::make_unique<OfflineTtsKittenImpl>(mgr, config);
+-  } else if (!config.model.pocket.lm_flow.empty()) {
+-    return std::make_unique<OfflineTtsPocketImpl>(mgr, config);
+-  } else if (!config.model.supertonic.tts_json.empty()) {
+-    return std::make_unique<OfflineTtsSupertonicImpl>(mgr, config);
+   }
+ 
+   SHERPA_ONNX_LOGE("Please provide a tts model.");
+--- a/sherpa-onnx/csrc/offline-tts-model-config.cc
++++ b/sherpa-onnx/csrc/offline-tts-model-config.cc
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/offline-tts-model-config.cc
+ //
+ // Copyright (c)  2023  Xiaomi Corporation
+@@ -11,13 +12,7 @@
+ namespace sherpa_onnx {
+ 
+ void OfflineTtsModelConfig::Register(ParseOptions *po) {
+-  vits.Register(po);
+-  matcha.Register(po);
+   kokoro.Register(po);
+-  zipvoice.Register(po);
+-  kitten.Register(po);
+-  pocket.Register(po);
+-  supertonic.Register(po);
+ 
+   po->Register("num-threads", &num_threads,
+                "Number of threads to run the neural network");
+@@ -35,50 +30,20 @@
+     return false;
+   }
+ 
+-  if (!vits.model.empty()) {
+-    return vits.Validate();
++  if (!vits.model.empty() || !matcha.acoustic_model.empty() ||
++      !zipvoice.encoder.empty() || !zipvoice.decoder.empty() || !kitten.model.empty() ||
++      !pocket.lm_flow.empty() || !supertonic.tts_json.empty()) {
++    SHERPA_ONNX_LOGE("This build accepts only a lexicon-based Kokoro model.");
++    return false;
+   }
+-
+-  if (!matcha.acoustic_model.empty()) {
+-    return matcha.Validate();
+-  }
+-
+-  if (!zipvoice.decoder.empty()) {
+-    return zipvoice.Validate();
+-  }
+-
+-  if (!kokoro.model.empty()) {
+-    return kokoro.Validate();
+-  }
+-
+-  if (!kitten.model.empty()) {
+-    return kitten.Validate();
+-  }
+-
+-  if (!pocket.lm_flow.empty()) {
+-    return pocket.Validate();
+-  }
+-
+-  if (!supertonic.tts_json.empty()) {
+-    return supertonic.Validate();
+-  }
+-
+-  SHERPA_ONNX_LOGE("Please provide exactly one tts model.");
+-
+-  return false;
++  return kokoro.Validate();
+ }
+ 
+ std::string OfflineTtsModelConfig::ToString() const {
+   std::ostringstream os;
+ 
+   os << "OfflineTtsModelConfig(";
+-  os << "vits=" << vits.ToString() << ", ";
+-  os << "matcha=" << matcha.ToString() << ", ";
+   os << "kokoro=" << kokoro.ToString() << ", ";
+-  os << "zipvoice=" << zipvoice.ToString() << ", ";
+-  os << "kitten=" << kitten.ToString() << ", ";
+-  os << "pocket=" << pocket.ToString() << ", ";
+-  os << "supertonic=" << supertonic.ToString() << ", ";
+   os << "num_threads=" << num_threads << ", ";
+   os << "debug=" << (debug ? "True" : "False") << ", ";
+   os << "provider=\"" << provider << "\")";
+--- a/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc
++++ b/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc
+ //
+ // Copyright (c)  2025  Xiaomi Corporation
+@@ -32,9 +33,8 @@
+       "You can pass multiple files, separated by ','. Example: "
+       "./lexicon-us-en.txt,./lexicon-zh.txt");
+   po->Register("kokoro-data-dir", &data_dir,
+-               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+-               "Use --kokoro-lexicon or "
+-               "GenerationConfig.phoneme_codepoints instead.");
++               "Unsupported in this lexicon-only build. "
++               "Use --kokoro-lexicon with text input.");
+   po->Register("kokoro-dict-dir", &dict_dir,
+                "Not used. You don't need to provide a value for it");
+   po->Register("kokoro-length-scale", &length_scale,
+@@ -85,25 +85,9 @@
+     }
+   }
+ 
+-  if (!data_dir.empty()) {
+-    SHERPA_ONNX_LOGE(
+-        "WARNING: --kokoro-data-dir is deprecated and ignored in "
+-        "sherpa-onnx >= v2.0.0. Please use --kokoro-lexicon or "
+-        "GenerationConfig.phoneme_codepoints with an external "
+-        "phonemizer (e.g. piper_phonemize) instead.");
+-  }
+-
+-  if (!lang.empty()) {
+-    SHERPA_ONNX_LOGE(
+-        "WARNING: --kokoro-lang is deprecated and ignored in "
+-        "sherpa-onnx >= v2.0.0. espeak-ng is no longer used. "
+-        "Language is determined by the lexicon files you provide.");
+-  }
+-
+-  if (!dict_dir.empty()) {
+-    SHERPA_ONNX_LOGE(
+-        "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+-        "dictDir for this model. Ignore this value.");
++  if (lexicon.empty() || !data_dir.empty() || !dict_dir.empty()) {
++    SHERPA_ONNX_LOGE("Provide a lexicon; legacy phonemizer directories are unsupported.");
++    return false;
+   }
+ 
+   return true;
+--- a/sherpa-onnx/csrc/offline-tts-kokoro-model.cc
++++ b/sherpa-onnx/csrc/offline-tts-kokoro-model.cc
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/offline-tts-kokoro-model.cc
+ //
+ // Copyright (c)  2025  Xiaomi Corporation
+@@ -149,10 +150,7 @@
+     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
+     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
+-    // has_espeak is legacy metadata and is unused: espeak-ng is no longer
+-    // used. Read optionally so models without the key still load.
+-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.has_espeak, "has_espeak",
+-                                            1);
++    // Tsuzuki lexicon-only profile does not read unused phonemizer metadata.
+     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
+                                                 "en-us");
+ 
+--- a/sherpa-onnx/csrc/version.cc
++++ b/sherpa-onnx/csrc/version.cc
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/version.h
+ //
+ // Copyright      2025  Xiaomi Corporation
+@@ -14,12 +15,12 @@
+ }
+ 
+ const char *GetGitSha1() {
+-  static const char *sha1 = "96255a1b";
++  static const char *sha1 = "af2d8d81dbfa61c4cea4c568da78f3982edca005";
+   return sha1;
+ }
+ 
+ const char *GetVersionStr() {
+-  static const char *version = "2.0.1";
++  static const char *version = "2.0.1-tsuzuki-kokoro-only";
+   return version;
+ }
+ 
+--- a/sherpa-onnx/csrc/offline-tts-kokoro-impl.h
++++ b/sherpa-onnx/csrc/offline-tts-kokoro-impl.h
+@@ -1,3 +1,4 @@
++// Modified by Tsuzuki: isolated lexicon-only Kokoro runtime profile.
+ // sherpa-onnx/csrc/offline-tts-kokoro-impl.h
+ //
+ // Copyright (c)  2025  Xiaomi Corporation
+@@ -127,8 +128,7 @@
+    *   - sid: Speaker ID for multi-speaker models
+    *   - speed: Speech speed factor (default: 1.0)
+    *   - silence_scale: Scale applied to pauses in the generated audio
+-   *   - tokens: Vector of sentences, each a vector of token strings.
+-   *     Takes precedence over text when provided.
++   *   - This profile accepts text only; tokens and phoneme_codepoints are rejected.
+    *
+    * Supported extra parameters:
+    *
+@@ -198,156 +198,11 @@
+ 
+     std::vector<TokenIDs> token_ids;
+ 
+-    if (!gen_config.tokens.empty()) {
+-      // tokens path: split at punctuation, merge short, split long
+-      // Flatten all tokens
+-      std::vector<std::string> all_tokens;
+-      for (const auto &sentence : gen_config.tokens) {
+-        for (const auto &tok : sentence) {
+-          all_tokens.push_back(tok);
+-        }
+-      }
+-
+-      // Split at punctuation tokens into sub-sentences
+-      auto IsPunctToken = [](const std::string &t) {
+-        return t == "," || t == "." || t == "!" || t == "?" || t == ";" ||
+-               t == ":";
+-      };
+-
+-      std::vector<std::vector<std::string>> token_sentences;
+-      std::vector<std::string> current;
+-      for (const auto &tok : all_tokens) {
+-        current.push_back(tok);
+-        if (IsPunctToken(tok)) {
+-          token_sentences.push_back(std::move(current));
+-          current.clear();
+-        }
+-      }
+-      if (!current.empty()) {
+-        token_sentences.push_back(std::move(current));
+-      }
+-
+-      // Merge short token sentences
+-      int32_t min_words = gen_config.GetExtraInt("min_words_in_sentence", 5);
+-      std::vector<std::vector<std::string>> merged;
+-      std::vector<std::string> buffer;
+-      for (auto &ts : token_sentences) {
+-        buffer.insert(buffer.end(), ts.begin(), ts.end());
+-        if (static_cast<int32_t>(buffer.size()) >= min_words) {
+-          merged.push_back(std::move(buffer));
+-          buffer.clear();
+-        }
+-      }
+-      if (!buffer.empty()) {
+-        if (!merged.empty()) {
+-          merged.back().insert(merged.back().end(), buffer.begin(),
+-                               buffer.end());
+-        } else {
+-          merged.push_back(std::move(buffer));
+-        }
+-      }
+-
+-      // Merge single-token sentences into previous
+-      std::vector<std::vector<std::string>> final_sentences;
+-      for (auto &ts : merged) {
+-        if (ts.size() == 1 && !final_sentences.empty()) {
+-          final_sentences.back().insert(final_sentences.back().end(),
+-                                        ts.begin(), ts.end());
+-        } else {
+-          final_sentences.push_back(std::move(ts));
+-        }
+-      }
+-
+-      // Convert token strings to IDs, wrap with PAD
+-      int32_t si = 0;
+-      for (const auto &sentence : final_sentences) {
+-        std::vector<int64_t> ids;
+-        ids.push_back(0);  // PAD at start
+-        for (const auto &tok : sentence) {
+-          auto it = token_str2id_.find(tok);
+-          if (it != token_str2id_.end()) {
+-            ids.push_back(it->second);
+-          } else {
+-            // Multi-character token not found as whole — split into
+-            // individual characters and look up each one.
+-            std::u32string u32 = Utf8ToUtf32(tok);
+-            bool found_sub = false;
+-            for (char32_t c : u32) {
+-              std::string ch = Utf32ToUtf8(std::u32string(1, c));
+-              auto it2 = token_str2id_.find(ch);
+-              if (it2 != token_str2id_.end()) {
+-                ids.push_back(it2->second);
+-                found_sub = true;
+-              }
+-            }
+-            if (!found_sub && debug) {
+-              SHERPA_ONNX_LOGE("Skip unknown token: '%s'", tok.c_str());
+-            }
+-          }
+-        }
+-        ids.push_back(0);  // PAD at end
+-
+-        if (debug) {
+-          std::ostringstream os;
+-          os << "Sentence " << si << " tokens: [";
+-          for (size_t j = 0; j < ids.size(); ++j) {
+-            if (j > 0) os << ", ";
+-            // Look up token string from id
+-            std::string tok_str = "?";
+-            for (const auto &kv : token_str2id_) {
+-              if (kv.second == ids[j]) {
+-                tok_str = kv.first;
+-                break;
+-              }
+-            }
+-            os << tok_str << "(" << ids[j] << ")";
+-          }
+-          os << "]";
+-#if __OHOS__
+-          SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+-#else
+-          SHERPA_ONNX_LOGE("%s", os.str().c_str());
+-#endif
+-        }
+-
+-        if (ids.size() > 2) {  // more than just PAD + PAD
+-          token_ids.emplace_back(std::move(ids));
+-        }
+-        ++si;
+-      }
+-    } else if (!gen_config.phoneme_codepoints.empty()) {
+-      // phoneme_codepoints path
+-      int32_t si = 0;
+-      for (const auto &sentence : gen_config.phoneme_codepoints) {
+-        std::vector<char32_t> phonemes(sentence.begin(), sentence.end());
+-        auto ids_list = PiperPhonemesToIdsMatcha(token2id_, phonemes, false);
+-        for (auto &ids : ids_list) {
+-          if (debug) {
+-            std::ostringstream os;
+-            os << "Sentence " << si << " IPA: '";
+-            for (char32_t cp : phonemes) {
+-              os << Utf32ToUtf8(std::u32string(1, cp));
+-            }
+-            os << "' -> IDs: [";
+-            for (size_t j = 0; j < ids.size(); ++j) {
+-              if (j > 0) os << ", ";
+-              os << ids[j];
+-            }
+-            os << "]";
+-#if __OHOS__
+-            SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+-#else
+-            SHERPA_ONNX_LOGE("%s", os.str().c_str());
+-#endif
+-          }
+-          // Wrap with PAD
+-          ids.insert(ids.begin(), 0);
+-          ids.push_back(0);
+-          token_ids.emplace_back(std::move(ids));
+-          ++si;
+-        }
+-      }
+-    } else {
++    if (!gen_config.tokens.empty() || !gen_config.phoneme_codepoints.empty()) {
++      SHERPA_ONNX_LOGE("This profile accepts text through a lexicon only.");
++      return {};
++    }
++    {
+       // Lexicon path: split text, tokenize each sentence, wrap with PAD
+       std::string normalized = NormalizeNfc(ReplacePunctuations(text));
+ 

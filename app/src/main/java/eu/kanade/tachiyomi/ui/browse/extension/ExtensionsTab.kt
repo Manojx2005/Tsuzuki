@@ -52,7 +52,12 @@ fun extensionsTab(
             ),
         ),
         content = { contentPadding, _ ->
-            BackHandler(enabled = state.searchQuery != null) {
+            BackHandler(
+                enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(
+                    state.searchQuery != null,
+                    eu.kanade.tachiyomi.ui.home.HomeScreen,
+                ),
+            ) {
                 extensionsViewModel.search(null)
             }
 

@@ -5,9 +5,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,13 +31,18 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.WarningBanner
+import eu.kanade.presentation.tsuzuki.settings.TsuzukiRestorePreview
+import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.SerializationException
 import mihon.core.viewmodel.StateViewModel
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.LabeledCheckbox
@@ -46,6 +53,9 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.EOFException
+import java.io.FileNotFoundException
+import java.util.zip.ZipException
 
 class RestoreBackupScreen(
     private val uri: String,
@@ -86,7 +96,11 @@ class RestoreBackupScreen(
                     }
                 }
 
-                if (state.canRestore) {
+                val contents = state.contents
+                if (contents != null) {
+                    item {
+                        if (isTsuzukiStyle()) TsuzukiRestorePreview(contents)
+                    }
                     item {
                         SectionCard {
                             RestoreOptions.options.forEach { option ->
@@ -99,6 +113,13 @@ class RestoreBackupScreen(
                                     enabled = option.enabled(state.options),
                                 )
                             }
+                        }
+                    }
+                } else if (state.error == null) {
+                    item {
+                        SectionCard {
+                            Text(stringResource(MR.strings.tsz_backup_checking))
+                            LinearProgressIndicator(Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -219,40 +240,37 @@ class RestoreBackupViewModel(
     private suspend fun validate(uri: Uri) {
         val results = try {
             BackupFileValidator(context).validate(uri)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            setError(
-                error = InvalidRestore(uri, e.message.toString()),
-                canRestore = false,
-            )
+            val message = when (e) {
+                is FileNotFoundException, is SecurityException -> context.stringResource(
+                    MR.strings.tsz_backup_unreadable,
+                )
+                is SerializationException, is EOFException, is ZipException ->
+                    context.stringResource(MR.strings.invalid_backup_file_unknown)
+                else -> e.localizedMessage ?: context.stringResource(MR.strings.invalid_backup_file_unknown)
+            }
+            mutableState.update { it.copy(error = InvalidRestore(uri, message)) }
             return
         }
 
-        if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
-            setError(
-                error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
-                canRestore = true,
-            )
-            return
+        val warning = if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
+            MissingRestoreComponents(uri, results.missingSources, results.missingTrackers)
+        } else {
+            null
         }
-
-        setError(error = null, canRestore = true)
-    }
-
-    private fun setError(error: Any?, canRestore: Boolean) {
-        mutableState.update {
-            it.copy(
-                error = error,
-                canRestore = canRestore,
-            )
-        }
+        mutableState.update { it.copy(error = warning, contents = results.contents) }
     }
 
     @Immutable
     data class State(
         val error: Any? = null,
-        val canRestore: Boolean = false,
+        val contents: BackupFileValidator.Contents? = null,
         val options: RestoreOptions = RestoreOptions(),
-    )
+    ) {
+        val canRestore get() = contents != null
+    }
 }
 
 private data class MissingRestoreComponents(

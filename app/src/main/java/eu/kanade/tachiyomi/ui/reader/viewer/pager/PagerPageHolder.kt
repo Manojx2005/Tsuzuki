@@ -78,7 +78,10 @@ class PagerPageHolder(
 
     private fun initProgressIndicator() {
         if (progressIndicator == null) {
-            progressIndicator = ReaderProgressIndicator(context)
+            progressIndicator = ReaderProgressIndicator(context).apply {
+                chapterName = page.chapter.chapter.name
+                onRetry = { page.chapter.pageLoader?.retryPage(page) }
+            }
             addView(progressIndicator)
         }
     }
@@ -304,6 +307,7 @@ class PagerPageHolder(
             ?: context.stringResource(MR.strings.decode_image_error)
 
         errorLayout?.root?.isVisible = true
+        eu.kanade.presentation.tsuzuki.components.bindTsuzukiPageError(errorLayout!!, error, page.chapter.chapter.name)
         return errorLayout!!
     }
 
@@ -311,7 +315,9 @@ class PagerPageHolder(
      * Removes the decode error layout from the holder, if found.
      */
     private fun removeErrorLayout() {
-        errorLayout?.root?.isVisible = false
-        errorLayout = null
+        errorLayout?.let {
+            removeView(it.root)
+            errorLayout = null
+        }
     }
 }

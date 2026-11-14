@@ -73,6 +73,8 @@ private val Credits = listOf(
     "Tsundoku" to "Apache-2.0",
     "LNReader plugins" to "MIT",
     "Keiyoushi extensions" to "Apache-2.0",
+    "Princeton University WordNet" to "WordNet License",
+    "EDRDG JMdict" to "CC BY-SA 4.0",
     // Bundled fonts; licence texts in docs/licenses/ (OFL-*.txt).
     "Doto, Instrument Serif, Space Mono, Manrope, Literata" to "OFL-1.1",
     "DotGothic16, M PLUS 1 Code, Noto Serif JP, Zen Kaku Gothic New" to "OFL-1.1",

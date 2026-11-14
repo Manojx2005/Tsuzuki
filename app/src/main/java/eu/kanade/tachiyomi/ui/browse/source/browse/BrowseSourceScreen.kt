@@ -142,7 +142,7 @@ data class BrowseSourceScreen(
         }
 
         // Intercept system back button with the same threshold logic
-        BackHandler(enabled = true) {
+        BackHandler(enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(true, this)) {
             navigateUp()
         }
 

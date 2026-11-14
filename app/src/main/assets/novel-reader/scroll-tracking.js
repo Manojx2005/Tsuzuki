@@ -60,7 +60,10 @@
         );
         var viewport = window.innerHeight || document.documentElement.clientHeight;
         var scrollable = docHeight - viewport;
-        var progress = scrollable > 0 ? scrollTop / scrollable : 1;
+        var recapHeight = window.__tszNovelRecapHeight ? window.__tszNovelRecapHeight() : 0;
+        var contentScrollable = scrollable - recapHeight;
+        var progress = contentScrollable > 0 ? Math.max(scrollTop - recapHeight, 0) / contentScrollable : 0;
+        if (scrollable <= 0) progress = 1;
         if (scrollable > 0 && scrollTop >= scrollable - 2) progress = 1.0;
         if (progress >= __DONE_THRESHOLD__) progress = 1.0;
         if (progress < 0) progress = 0;

@@ -5,12 +5,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.util.isTabletUi
+import eu.kanade.tachiyomi.tsuzuki.reader.listenDockChapterTitle
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
@@ -20,6 +22,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.webview.NovelWebViewViewer
 import kotlinx.coroutines.delay
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 internal data class ReaderFold(val top: Int, val bottom: Int)
 
@@ -65,6 +68,9 @@ internal data class ReaderListeningState(
     val paragraphs: List<String>,
     val voice: String,
     val timer: TtsSleepTimer,
+    val remainingSeconds: Long? = null,
+    val active: Boolean = true,
+    val playbackChapterId: Long? = null,
 )
 
 @Composable
@@ -80,7 +86,8 @@ internal fun rememberReaderListeningState(
         if (controller == null || !enabled) return@produceState
         while (true) {
             val paused = controller.isPaused()
-            value = if (paused || controller.isTtsAutoPlay || controller.isSpeaking() || controller.isStarting()) {
+            val active = paused || controller.isTtsAutoPlay || controller.isSpeaking() || controller.isStarting()
+            value = run {
                 val (index, count) = controller.getParagraphProgress()
                 ReaderListeningState(
                     paused = paused,
@@ -88,9 +95,10 @@ internal fun rememberReaderListeningState(
                     paragraphs = controller.listenParagraphs,
                     voice = controller.getCurrentVoiceLabel(appLocale, offlineLabel, onlineLabel),
                     timer = controller.sleepTimer,
+                    remainingSeconds = controller.remainingSleepSeconds(),
+                    active = active,
+                    playbackChapterId = controller.ttsPlaybackChapterId,
                 )
-            } else {
-                null
             }
             delay(300)
         }
@@ -102,6 +110,7 @@ internal class ReaderListenPanel(
     val sessionActive: Boolean,
     val paused: Boolean,
     val content: (@Composable (onClose: () -> Unit) -> Unit)?,
+    val miniContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)?,
 )
 
 @Composable
@@ -111,6 +120,7 @@ internal fun rememberTsuzukiListenPanel(
     preferences: ReaderPreferences,
     ttsActive: Boolean,
     ttsPaused: Boolean,
+    miniVisible: Boolean,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStepParagraph: (Boolean) -> Unit,
@@ -124,15 +134,25 @@ internal fun rememberTsuzukiListenPanel(
         is NovelWebViewViewer -> viewer.listeningController
         else -> null
     }
+    // Read at call time inside the panel lambdas: the viewer's loaded chapters are not Compose state.
+    val viewer = state.viewer
+    val playbackChapterName: () -> String? = {
+        when (viewer) {
+            is NovelViewer -> viewer.playbackChapterName
+            is NovelWebViewViewer -> viewer.playbackChapterName
+            else -> null
+        }
+    }
     val canDock =
         themed && (fold != null || shouldDockReaderPanel(isTabletUi(), LocalConfiguration.current.screenWidthDp))
-    val listening by rememberReaderListeningState(controller, canDock)
+    val listening by rememberReaderListeningState(controller, themed && (canDock || miniVisible))
     val snapshot = listening
-    val content: (@Composable (() -> Unit) -> Unit)? = if (snapshot != null && controller != null) {
+    val content: (@Composable (() -> Unit) -> Unit)? = if (canDock && snapshot?.active == true && controller != null) {
         { close ->
             val chapters = state.viewerChapters
             val chapterTitle = listOfNotNull(chapters?.currChapter, chapters?.prevChapter, chapters?.nextChapter)
                 .firstOrNull { it.chapter.id == controller.ttsPlaybackChapterId }?.chapter?.name
+                ?: playbackChapterName()
             TsuzukiReaderListenPanel(
                 manga = state.manga,
                 chapterTitle = chapterTitle,
@@ -152,10 +172,35 @@ internal fun rememberTsuzukiListenPanel(
     } else {
         null
     }
+    val mini: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = if (themed && controller != null) {
+        { modifier, close, toggle ->
+            val speed by preferences.novelTtsSpeed.collectAsState()
+            val title = listenDockChapterTitle(
+                playbackChapterId = snapshot?.playbackChapterId,
+                playbackChapterTitle = playbackChapterName(),
+                viewportChapterTitle =
+                state.novelVisibleChapter?.name ?: state.viewerChapters?.currChapter?.chapter?.name,
+            )
+            TsuzukiReaderListenDock(
+                manga = state.manga,
+                chapterTitle = title,
+                state = snapshot,
+                speed = speed,
+                onTogglePlayback = toggle,
+                onStepParagraph = onStepParagraph,
+                onSetTimer = controller::setSleepTimer,
+                onClose = close,
+                modifier = modifier,
+            )
+        }
+    } else {
+        null
+    }
     return ReaderListenPanel(
         fold = fold,
-        sessionActive = if (canDock) snapshot != null else ttsActive,
+        sessionActive = if (canDock) snapshot?.active == true else ttsActive,
         paused = snapshot?.paused ?: ttsPaused,
         content = content,
+        miniContent = mini,
     )
 }
