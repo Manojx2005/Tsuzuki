@@ -1,6 +1,10 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.text.webview
 
 import android.content.Context
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
+import eu.kanade.presentation.tsuzuki.components.errorAdvice
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ErrorFormatter
 import eu.kanade.tachiyomi.ui.reader.viewer.text.shared.localized
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.novel.TDMR
+import uy.kohesive.injekt.api.get
 
 internal class NovelWebViewInlineFeedback(
     private val context: Context,
@@ -108,14 +113,28 @@ internal class NovelWebViewInlineFeedback(
         autoDismissJob?.cancel()
         pendingRetry = onRetry
         val fmt = ErrorFormatter.format(error)
+        val themed = eu.kanade.presentation.tsuzuki.components.usesTsuzukiErrors()
+        val copy = if (themed) eu.kanade.tachiyomi.tsuzuki.error.errorCopy(error) else null
+        val tokens = eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor(
+            uy.kohesive.injekt.Injekt.get<eu.kanade.domain.ui.UiPreferences>().appTheme.get(),
+        )
+        val accent = eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ThemeUtils.colorToHex(tokens.accent.toArgb())
+        val muted = eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ThemeUtils.colorToHex(tokens.mutedText.toArgb())
+        val tile = eu.kanade.tachiyomi.ui.reader.viewer.text.shared.ThemeUtils.colorToHex(
+            tokens.tile.compositeOver(tokens.background).toArgb(),
+        )
 
         scope.launch(Dispatchers.Main) {
-            val escapedCategory = fmt.category.localized(context).jsEscape()
-            val escapedSummary = fmt.summary.jsEscape()
+            val escapedCategory = (copy?.let { context.errorHeading(it) } ?: fmt.category.localized(context)).jsEscape()
+            val escapedSummary = (
+                copy?.let {
+                    context.errorAdvice(it)
+                }.orEmpty().takeIf { copy != null } ?: fmt.summary
+                ).jsEscape()
             val retryLabel = context.stringResource(TDMR.strings.novel_error_retry).jsEscape()
             val copyLabel = context.stringResource(TDMR.strings.novel_error_copy_details).jsEscape()
             val base64Trace = android.util.Base64.encodeToString(
-                fmt.stackTrace.toByteArray(Charsets.UTF_8),
+                (copy?.technical ?: fmt.stackTrace).toByteArray(Charsets.UTF_8),
                 android.util.Base64.NO_WRAP,
             )
 
@@ -123,7 +142,7 @@ internal class NovelWebViewInlineFeedback(
                 """
                 var retryBtn = document.createElement('button');
                 retryBtn.textContent = '$retryLabel';
-                retryBtn.style.cssText = 'margin:0 6px;padding:6px 14px;border-radius:6px;border:1px solid #4a90d9;background:transparent;color:#4a90d9;font-size:13px;';
+                retryBtn.style.cssText = 'margin:0 6px;padding:12px 14px;min-height:48px;border-radius:24px;border:1px solid ${if (themed) accent else "#4a90d9"};background:transparent;color:${if (themed) accent else "#4a90d9"};font-size:13px;';
                 retryBtn.onclick = function() {
                     errorDiv.remove();
                     if (window.Android && window.Android.retryInlineError) window.Android.retryInlineError();
@@ -142,23 +161,23 @@ internal class NovelWebViewInlineFeedback(
                     errorDiv.id = '$ID_INLINE_ERROR';
                     errorDiv.style.textAlign = 'center';
                     errorDiv.style.padding = '16px';
-                    errorDiv.style.backgroundColor = 'rgba(255, 82, 82, 0.1)';
+                    errorDiv.style.backgroundColor = '${if (themed) tile else "rgba(255, 82, 82, 0.1)"}';
 
                     var categoryDiv = document.createElement('div');
                     categoryDiv.textContent = '$escapedCategory';
-                    categoryDiv.style.cssText = 'color:#FF5252;font-weight:bold;font-size:14px;margin-bottom:6px;';
+                    categoryDiv.style.cssText = 'color:${if (themed) accent else "#FF5252"};font-weight:bold;font-size:14px;margin-bottom:6px;';
                     errorDiv.appendChild(categoryDiv);
 
                     var summaryDiv = document.createElement('div');
                     summaryDiv.textContent = '$escapedSummary';
-                    summaryDiv.style.cssText = 'color:#888;font-size:13px;margin-bottom:10px;word-break:break-word;';
+                    summaryDiv.style.cssText = 'color:${if (themed) muted else "#888"};font-size:13px;margin-bottom:10px;word-break:break-word;';
                     errorDiv.appendChild(summaryDiv);
 
                     var btnRow = document.createElement('div');
                     $retryBtnJs
                     var copyBtn = document.createElement('button');
                     copyBtn.textContent = '$copyLabel';
-                    copyBtn.style.cssText = 'margin:0 6px;padding:6px 14px;border-radius:6px;border:1px solid #555;background:transparent;color:inherit;font-size:13px;';
+                    copyBtn.style.cssText = 'margin:0 6px;padding:12px 14px;min-height:48px;border-radius:24px;border:1px solid ${if (themed) muted else "#555"};background:transparent;color:inherit;font-size:13px;';
                     copyBtn.onclick = function() {
                         if (window.Android && window.Android.copyToClipboard) window.Android.copyToClipboard('$base64Trace');
                     };

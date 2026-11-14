@@ -56,6 +56,7 @@ fun GlobalSearchScreen(
     ) { paddingValues ->
         GlobalSearchContent(
             items = state.filteredItems,
+            operationKey = state.searchQuery,
             contentPadding = paddingValues,
             getManga = getManga,
             onClickSource = onClickSource,
@@ -80,6 +81,7 @@ internal fun GlobalSearchContent(
     onLongClickItem: (Manga) -> Unit,
     fromSourceId: Long? = null,
     header: (@Composable () -> Unit)? = null,
+    operationKey: Any? = null,
 ) {
     LazyColumn(
         contentPadding = contentPadding,
@@ -96,7 +98,23 @@ internal fun GlobalSearchContent(
                 ) {
                     when (result) {
                         SearchItemResult.Loading -> {
-                            GlobalSearchLoadingResultItem()
+                            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                                eu.kanade.presentation.tsuzuki.components.TsuzukiLoadingStages(
+                                    what = source.name,
+                                    steps = listOf(
+                                        tachiyomi.presentation.core.i18n.stringResource(
+                                            tachiyomi.i18n.MR.strings.tsz_error_fetch,
+                                        ),
+                                    ),
+                                    currentStep = 0,
+                                    operationKey = operationKey to source.id,
+                                    onRetry = {
+                                        onClickSource(source)
+                                    },
+                                )
+                            } else {
+                                GlobalSearchLoadingResultItem()
+                            }
                         }
                         is SearchItemResult.Success -> {
                             GlobalSearchCardRow(
@@ -107,7 +125,18 @@ internal fun GlobalSearchContent(
                             )
                         }
                         is SearchItemResult.Error -> {
-                            GlobalSearchErrorResultItem(message = result.throwable.message)
+                            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                                eu.kanade.presentation.tsuzuki.components.TsuzukiErrorState(
+                                    error = result.throwable,
+                                    whatFailed = source.name,
+                                    onRetry = {
+                                        onClickSource(source)
+                                    },
+                                    onExtensions = eu.kanade.presentation.tsuzuki.components.extensionsAction(),
+                                )
+                            } else {
+                                GlobalSearchErrorResultItem(message = result.throwable.message)
+                            }
                         }
                     }
                 }

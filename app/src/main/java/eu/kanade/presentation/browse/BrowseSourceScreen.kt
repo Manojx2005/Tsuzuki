@@ -21,6 +21,7 @@ import eu.kanade.presentation.browse.components.BrowseSourceComfortableGrid
 import eu.kanade.presentation.browse.components.BrowseSourceCompactGrid
 import eu.kanade.presentation.browse.components.BrowseSourceList
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.Source
 import kotlinx.coroutines.flow.StateFlow
@@ -61,11 +62,16 @@ fun BrowseSourceContent(
     skipCoverLoading: Boolean = false,
 ) {
     val context = LocalContext.current
+    val themedErrors = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
     val errorState = mangaList.loadState.refresh.takeIf { it is LoadState.Error }
         ?: mangaList.loadState.append.takeIf { it is LoadState.Error }
 
     val getErrorMessage: (LoadState.Error) -> String = { state ->
-        with(context) { state.error.formattedMessage }
+        if (themedErrors) {
+            context.errorHeading(eu.kanade.tachiyomi.tsuzuki.error.errorCopy(state.error))
+        } else {
+            with(context) { state.error.formattedMessage }
+        }
     }
 
     LaunchedEffect(errorState) {
@@ -79,6 +85,31 @@ fun BrowseSourceContent(
                 SnackbarResult.Dismissed -> snackbarHostState.currentSnackbarData?.dismiss()
                 SnackbarResult.ActionPerformed -> mangaList.retry()
             }
+        }
+    }
+
+    if (mangaList.itemCount == 0 && eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+        if (mangaList.loadState.refresh is LoadState.Loading) {
+            eu.kanade.presentation.tsuzuki.components.TsuzukiWaitingScreen(
+                what = source?.name.orEmpty(),
+                modifier = Modifier.padding(contentPadding),
+                onRetry = mangaList::refresh,
+            )
+            return
+        }
+        val failure = (errorState as? LoadState.Error)?.error
+        if (failure != null) {
+            eu.kanade.presentation.tsuzuki.components.TsuzukiErrorScreen(
+                error = failure,
+                whatFailed = source?.name.orEmpty(),
+                modifier = Modifier.padding(contentPadding),
+                onRetry = mangaList::retry,
+                onWebView = onWebViewClick.takeIf {
+                    source is eu.kanade.tachiyomi.source.online.HttpSource ||
+                        source is eu.kanade.tachiyomi.jsplugin.source.JsSource
+                },
+            )
+            return
         }
     }
 

@@ -1605,4 +1605,27 @@
     <string name="tsz_dictionary_save">ノートに追加</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">ウェブ検索</string>
+    <string name="tsz_error_failed">読み込めませんでした · %1$s</string>
+    <string name="tsz_error_network">配信元に接続できませんでした</string>
+    <string name="tsz_error_timeout">時間がかかりすぎています</string>
+    <string name="tsz_error_challenge">サイトでブラウザーの確認が必要です</string>
+    <string name="tsz_error_not_found">ページが見つかりません</string>
+    <string name="tsz_error_server">配信元のサーバーに問題があります</string>
+    <string name="tsz_error_parse">サイトの構造が変わった可能性があります</string>
+    <string name="tsz_error_extension">配信元の拡張機能を利用できません</string>
+    <string name="tsz_error_storage_full">ストレージの空き容量がありません</string>
+    <string name="tsz_error_permission">ストレージへのアクセスが拒否されました</string>
+    <string name="tsz_error_network_help">接続を確認してから再試行してください。</string>
+    <string name="tsz_error_retry_help">少し待ってから再試行してください。</string>
+    <string name="tsz_error_challenge_help">WebViewで開いて確認を完了し、戻って再試行してください。</string>
+    <string name="tsz_error_not_found_help">配信元がページを移動または削除した可能性があります。</string>
+    <string name="tsz_error_extension_help">拡張機能がインストール済みで、信頼済みかつ最新か確認してください。</string>
+    <string name="tsz_error_parse_help">配信元の拡張機能を更新して再試行してください。</string>
+    <string name="tsz_error_storage_help">空き容量を確保するか、アクセスできる保存先を選んでください。</string>
+    <string name="tsz_error_opening">開いています · %1$s</string>
+    <string name="tsz_error_loading">現在の処理を待っています</string>
+    <string name="tsz_error_seconds">%1$s · %2$d秒</string>
+    <string name="tsz_error_fetch">配信元から読み込み中</string>
+    <string name="tsz_error_layout">ページを準備中</string>
+    <string name="tsz_error_other">リクエストを完了できませんでした</string>
 </resources>

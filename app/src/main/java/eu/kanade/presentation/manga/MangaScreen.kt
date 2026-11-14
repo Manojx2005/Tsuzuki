@@ -530,6 +530,13 @@ private fun MangaScreenSmallImpl(
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
                         )
+                        if (isTsuzukiStyle()) {
+                            eu.kanade.presentation.tsuzuki.components.TsuzukiDetailsSourceStatus(
+                                state,
+                                onRefresh,
+                                onWebViewClicked,
+                            )
+                        }
                     }
 
                     item(
@@ -856,6 +863,13 @@ fun MangaScreenLargeImpl(
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
                         )
+                        if (isTsuzukiStyle()) {
+                            eu.kanade.presentation.tsuzuki.components.TsuzukiDetailsSourceStatus(
+                                state,
+                                onRefresh,
+                                onWebViewClicked,
+                            )
+                        }
                         MangaActionRow(
                             favorite = state.manga.favorite,
                             trackingCount = state.trackingCount,

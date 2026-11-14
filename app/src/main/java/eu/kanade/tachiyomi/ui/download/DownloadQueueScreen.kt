@@ -73,6 +73,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
+import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.presentation.tsuzuki.download.TsuzukiMangaDownloadQueue
 import eu.kanade.presentation.tsuzuki.download.rememberMangaQueueStatuses
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
@@ -925,7 +926,12 @@ private fun NovelDownloadCard(
                         }
                     }
                     IconButton(
-                        onClick = { context.copyToClipboard(errorLabel, item.fullErrorReport) },
+                        onClick = {
+                            context.copyToClipboard(
+                                errorLabel,
+                                eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(item.fullErrorReport),
+                            )
+                        },
                         modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
@@ -944,7 +950,14 @@ private fun NovelDownloadCard(
                 }
                 visibleErrors.forEach { (chapter, reason) ->
                     Text(
-                        text = "$chapter: $reason",
+                        text = if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                            eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(chapter) + ": " +
+                                context.errorHeading(
+                                    eu.kanade.tachiyomi.tsuzuki.error.errorCopy(IllegalStateException(reason)),
+                                )
+                        } else {
+                            "$chapter: $reason"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 2,

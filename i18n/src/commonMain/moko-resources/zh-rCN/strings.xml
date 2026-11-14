@@ -1386,4 +1386,27 @@
     <string name="tsz_dictionary_save">添加到笔记本</string>
     <string name="tsz_dictionary_update">更新</string>
     <string name="tsz_dictionary_web_search">网页搜索</string>
+    <string name="tsz_error_failed">无法加载 · %1$s</string>
+    <string name="tsz_error_network">无法连接到来源</string>
+    <string name="tsz_error_timeout">等待时间过长</string>
+    <string name="tsz_error_challenge">网站要求进行浏览器验证</string>
+    <string name="tsz_error_not_found">找不到页面</string>
+    <string name="tsz_error_server">来源服务器出现问题</string>
+    <string name="tsz_error_parse">网站可能已更改</string>
+    <string name="tsz_error_extension">来源扩展不可用</string>
+    <string name="tsz_error_storage_full">存储空间已满</string>
+    <string name="tsz_error_permission">存储访问被拒绝</string>
+    <string name="tsz_error_network_help">请检查连接后重试。</string>
+    <string name="tsz_error_retry_help">请稍等片刻后重试。</string>
+    <string name="tsz_error_challenge_help">请在 WebView 中完成验证，返回后重试。</string>
+    <string name="tsz_error_not_found_help">来源可能已移动或删除此页面。</string>
+    <string name="tsz_error_extension_help">请检查扩展是否已安装、受信任且为最新版本。</string>
+    <string name="tsz_error_parse_help">请更新来源扩展后重试。</string>
+    <string name="tsz_error_storage_help">请释放空间或选择可访问的存储文件夹。</string>
+    <string name="tsz_error_opening">正在打开 · %1$s</string>
+    <string name="tsz_error_loading">正在等待当前步骤</string>
+    <string name="tsz_error_seconds">%1$s · %2$d秒</string>
+    <string name="tsz_error_fetch">正在从来源加载</string>
+    <string name="tsz_error_layout">正在准备页面</string>
+    <string name="tsz_error_other">无法完成请求</string>
 </resources>

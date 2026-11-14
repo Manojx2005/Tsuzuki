@@ -1765,4 +1765,27 @@
     <string name="tsz_dictionary_save">Add to notebook</string>
     <string name="tsz_dictionary_update">Update</string>
     <string name="tsz_dictionary_web_search">Web search</string>
+    <string name="tsz_error_failed">Couldn’t load · %1$s</string>
+    <string name="tsz_error_network">The source could not be reached</string>
+    <string name="tsz_error_timeout">Took too long</string>
+    <string name="tsz_error_challenge">The site asked for a browser check</string>
+    <string name="tsz_error_not_found">The page was not found</string>
+    <string name="tsz_error_server">The source has a server problem</string>
+    <string name="tsz_error_parse">The site may have changed</string>
+    <string name="tsz_error_extension">The source extension is unavailable</string>
+    <string name="tsz_error_storage_full">Storage is full</string>
+    <string name="tsz_error_permission">Storage access was denied</string>
+    <string name="tsz_error_network_help">Check your connection, then retry.</string>
+    <string name="tsz_error_retry_help">Wait a moment, then retry.</string>
+    <string name="tsz_error_challenge_help">Open it in WebView, complete the check, then come back and retry.</string>
+    <string name="tsz_error_not_found_help">The source may have moved or removed this page.</string>
+    <string name="tsz_error_extension_help">Check that the extension is installed, trusted and up to date.</string>
+    <string name="tsz_error_parse_help">Update the source extension, then retry.</string>
+    <string name="tsz_error_storage_help">Free some space or choose an accessible storage folder.</string>
+    <string name="tsz_error_opening">Opening · %1$s</string>
+    <string name="tsz_error_loading">Waiting for the current step</string>
+    <string name="tsz_error_seconds">%1$s · %2$d s</string>
+    <string name="tsz_error_fetch">Loading from the source</string>
+    <string name="tsz_error_layout">Preparing the page</string>
+    <string name="tsz_error_other">The request could not be completed</string>
 </resources>

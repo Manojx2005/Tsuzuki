@@ -9,6 +9,7 @@ import androidx.annotation.IntRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -29,24 +30,46 @@ class ReaderProgressIndicator @JvmOverloads constructor(
 ) : AbstractComposeView(context, attrs, defStyleAttr) {
 
     init {
-        layoutParams = FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.CENTER)
+        layoutParams = FrameLayout.LayoutParams(
+            if (eu.kanade.presentation.tsuzuki.components.usesTsuzukiErrors()) {
+                FrameLayout.LayoutParams.MATCH_PARENT
+            } else {
+                WRAP_CONTENT
+            },
+            WRAP_CONTENT,
+            Gravity.CENTER,
+        )
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
     }
 
     private var progress by mutableFloatStateOf(0f)
+    private var showing by mutableStateOf(true)
+    var onRetry: (() -> Unit)? = null
+    var chapterName: String = ""
 
     @Composable
     override fun Content() {
         TachiyomiTheme {
-            CombinedCircularProgressIndicator(progress = { progress })
+            if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle() && showing) {
+                eu.kanade.presentation.tsuzuki.components.TsuzukiLoadingStages(
+                    chapterName,
+                    listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.tsz_error_fetch)),
+                    0,
+                    onRetry = onRetry,
+                )
+            } else {
+                CombinedCircularProgressIndicator(progress = { progress })
+            }
         }
     }
 
     fun show() {
+        showing = true
         isVisible = true
     }
 
     fun hide() {
+        showing = false
         isVisible = false
     }
 
