@@ -154,7 +154,11 @@ class TtsController internal constructor(
                     }
                 } else if (isLastChunk) {
                     callbacks.runOnUiThread {
-                        if (playbackQueue == queue) callbacks.onClearHighlights()
+                        if (playbackQueue == queue) {
+                            // Nothing follows this chapter: end the queue so a later pause() has nothing to replay.
+                            closePlaybackQueue()
+                            callbacks.onClearHighlights()
+                        }
                     }
                 }
             }
