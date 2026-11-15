@@ -75,4 +75,16 @@ class NovelChapterNavigationTest {
         pending.deferIfLoading(isLoading = false, forward = true, now = 1_000 + ADJACENT_TAP_COOL_DOWN_MS) shouldBe
             false
     }
+    @Test
+    fun `reader started load still replays a tap inside a previous user switch cooldown`() {
+        val pending = PendingAdjacentNavigation()
+        pending.beginUserLoad()
+        pending.endUserLoad(now = 1_000)
+        // Infinite scrolling or TTS may start another load immediately after the requested switch.
+        pending.deferIfLoading(isLoading = true, forward = false, now = 1_100) shouldBe true
+        pending.takeWhenIdle(isLoading = false) shouldBe false
+        // The replay must reach navigate() even if the old cooldown has not elapsed.
+        pending.deferIfLoading(isLoading = false, forward = false, now = 1_100) shouldBe false
+    }
+
 }

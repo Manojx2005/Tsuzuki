@@ -34,9 +34,14 @@ internal class PendingAdjacentNavigation {
      * in the [ADJACENT_TAP_COOL_DOWN_MS] after such a switch are dropped as well.
      */
     fun deferIfLoading(isLoading: Boolean, forward: Boolean, now: Long): Boolean {
-        if (userLoadInFlight || now < coolDownUntil) return true
-        if (isLoading) this.forward = forward
-        return isLoading
+        if (userLoadInFlight) return true
+        if (isLoading) {
+            this.forward = forward
+            // A later reader-started load is a distinct transition; its queued tap must be replayable.
+            coolDownUntil = 0L
+            return true
+        }
+        return now < coolDownUntil
     }
 
     fun beginUserLoad() {
