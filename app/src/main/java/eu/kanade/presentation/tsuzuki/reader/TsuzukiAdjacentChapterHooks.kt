@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.reader
 
+import android.os.SystemClock
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.tsuzuki.download.isChapterOnDisk
 import eu.kanade.tachiyomi.tsuzuki.reader.PendingAdjacentNavigation
@@ -36,9 +37,15 @@ internal class TsuzukiAdjacentNavigation {
         afterLoad: () -> Unit,
     ) {
         scope.launch {
-            if (pending.deferIfLoading(viewModel.state.value.isLoadingAdjacentChapter, forward)) return@launch
+            val now = SystemClock.uptimeMillis()
+            if (pending.deferIfLoading(viewModel.state.value.isLoadingAdjacentChapter, forward, now)) return@launch
             beforeLoad()
-            val loaded = if (forward) viewModel.loadNextChapter() else viewModel.loadPreviousChapter()
+            pending.beginUserLoad()
+            val loaded = try {
+                if (forward) viewModel.loadNextChapter() else viewModel.loadPreviousChapter()
+            } finally {
+                pending.endUserLoad(SystemClock.uptimeMillis())
+            }
             if (!loaded) return@launch
             val viewer = viewModel.state.value.viewer
             (viewer as? NovelWebViewViewer)?.onChapterNavigate(if (forward) "next" else "prev")

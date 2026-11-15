@@ -318,6 +318,8 @@ class ReaderActivity : BaseActivity() {
                 val isNovelViewer = viewModel.state.value.viewer is NovelViewer ||
                     viewModel.state.value.viewer is NovelWebViewViewer
                 if (!isNovelViewer) {
+                    // Tsuzuki: manga viewers show the loading dialog while the next chapter loads (as in Mihon).
+                    setProgressDialog(isLoading)
                     return@onEach
                 }
                 // Paged mode always does a full loadAdjacent switch, never an inline append, so
