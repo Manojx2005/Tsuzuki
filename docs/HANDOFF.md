@@ -3947,6 +3947,9 @@ Result: _pending_
 
 ## Log (newest first)
 
+- **2026-11-15 Codex anime lane — AY-PLAY device half:** `5d9c530da` passes source `mpvArgs` to per-file loadfile options, fixing reproduced AnimeKai image-prefixed HLS/PNG immediate EOF. Player-only Android 16 opt-out restores tablet landscape. 1,210 tests, Debug and 16 KB ZIP check pass. Tablet + S22 scratch-only Dot/Colour new/resume/EOF matrix; AnimePahe recovered and plays two episodes in Colour, Anikage returns zero videos with readable errors. Final APK b892ca50 reinstalled and smoked; Dot Homes inspected, crash buffers empty, Device lock free. Evidence `.worktrees/ay-play/app/build/review-evidence/ay-play/`. Independent RV3-S next; AY9 waits.
+
+
 - **2026-11-15 Codex review lane — 0.1.1 refresh complete.** Final source 6119f2613, BACK1 + 180 ms opening refinement (main cherry-pick 5c4b89421). Cached openings settle by 226–260 ms; final Back regression passes. Preview/Release + 1,091 tests, 15 APK alignment/profile audits and exact direct tagged-v0.1.0 Y4 upgrade comparison pass. Both final Dot Homes inspected, awake, crashes empty; lock free. Source-only startup warm-up and diagnostic commits remain unmerged; 500 ms startup target/follow-up stays open. Final hashes/artifacts in rel-011-refresh-final/final-audit.json. No tag/push; owner publishes.
 
 - **2026-11-15 Codex review lane — BACK1 passes with review fixes.** Original f9d047d95 merged only with 3305865d0 (saved Home key) and 7e3a3d635 (explicit root navigator). Original normal Back regression reproduced and corrected. 1,091 tests, 48 timed Back cases, 16 edge gestures and all four ordinary/process-restoration checks pass; Dot/Colour phone/tablet screenshots inspected, crashes empty. Candidate refresh follows; no tag/push. Evidence back1-review/.
