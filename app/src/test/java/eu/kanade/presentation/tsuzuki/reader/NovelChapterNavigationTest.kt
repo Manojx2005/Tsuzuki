@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.reader
 
+import eu.kanade.tachiyomi.tsuzuki.reader.ADJACENT_TAP_COOL_DOWN_MS
 import eu.kanade.tachiyomi.tsuzuki.reader.PendingAdjacentNavigation
 import eu.kanade.tachiyomi.tsuzuki.reader.adjacentNovelChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -48,14 +49,30 @@ class NovelChapterNavigationTest {
     @Test
     fun `the last tap during a load replays exactly once against the new active chapter`() {
         val pending = PendingAdjacentNavigation()
-        pending.deferIfLoading(isLoading = true, forward = false) shouldBe true
-        pending.deferIfLoading(isLoading = true, forward = true) shouldBe true
+        pending.deferIfLoading(isLoading = true, forward = false, now = 0) shouldBe true
+        pending.deferIfLoading(isLoading = true, forward = true, now = 0) shouldBe true
         pending.takeWhenIdle(isLoading = true) shouldBe null
         val forward = requireNotNull(pending.takeWhenIdle(isLoading = false))
         val newlyActive = ViewerChapters(chapters[1], chapters[0], chapters[2])
         adjacentNovelChapter(newlyActive, chapters, null, forward, infiniteScroll = true, paged = false) shouldBe
             chapters[2]
         pending.takeWhenIdle(isLoading = false) shouldBe null
-        pending.deferIfLoading(isLoading = false, forward = true) shouldBe false
+        pending.deferIfLoading(isLoading = false, forward = true, now = 0) shouldBe false
+    }
+
+    @Test
+    fun `a second tap during a chapter switch the reader asked for is dropped, not replayed`() {
+        val pending = PendingAdjacentNavigation()
+        pending.beginUserLoad()
+        // The view model has not flagged the load yet: the tap is still refused.
+        pending.deferIfLoading(isLoading = false, forward = true, now = 0) shouldBe true
+        pending.deferIfLoading(isLoading = true, forward = true, now = 0) shouldBe true
+        pending.endUserLoad(now = 1_000)
+        pending.takeWhenIdle(isLoading = false) shouldBe null
+        // The second tap of a double tap often lands just after a fast chapter finished loading.
+        pending.deferIfLoading(isLoading = false, forward = true, now = 1_000 + ADJACENT_TAP_COOL_DOWN_MS - 1) shouldBe
+            true
+        pending.deferIfLoading(isLoading = false, forward = true, now = 1_000 + ADJACENT_TAP_COOL_DOWN_MS) shouldBe
+            false
     }
 }
