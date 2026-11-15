@@ -84,3 +84,35 @@ hash-enforced path. Python HTTPS remains unverified on this machine because its 
 independent downloads used curl with normal TLS verification, then the converter verified the pin.
 Function-word reduction, suffixes, OOV/names, numbers/dates, British English and owner listening remain out of
 scope. Evidence: `.worktrees/review-nt-lex1/app/build/review-evidence/nt-lex1/`.
+
+## 5. Installing the debug listening-test pack (KOKORO-INTEGRATION, 2026-11-15)
+
+Debug builds only; the pack is never bundled and release/preview/FOSS do not contain the runtime.
+
+- **Upstream archive:** `https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2`,
+  SHA-256 `259c9c8bc906d6078e4e0570421885dabb68b539c2f970fcbb890a58eeaf3e9c` (checked by the packaging script).
+- **Build the zip:** `python scripts/package-kokoro-cmu-test.py <archive> app/build/kokoro-cmu-v1.zip --manifest app/src/debug/assets/kokoro-test-manifest.json`.
+  It takes only `model.int8.onnx`, `voices.bin`, `tokens.txt` and `LICENSE` from the archive (no `espeak-ng-data`, no
+  upstream lexicon), adds our CMUdict `lexicon-us-en.txt` (SHA-256 `3f9d0234...efb50`), notices and `manifest.json`, all
+  under a `kokoro-cmu-v1/` folder. The checked-in `kokoro-test-manifest.json` is the allowlist the app verifies against.
+  The reviewed zip used for testing is `app/build/kokoro-cmu-v1-reviewed.zip` (129,833,261 bytes).
+- **In the app (normal route):** Settings > Text-to-speech > "Kokoro · listening test" > *Install test voice pack*, pick
+  the zip. The zip is streamed; only `kokoro-cmu-v1/<allowlisted file>` entries are accepted (no extra files, `..`,
+  backslashes, absolute paths, duplicates or oversize entries), written to `files/tts/kokoro-cmu-v1.importing`, verified
+  with `KokoroPack.verify` (size and SHA-256 of every file) and only then renamed over the old install. A failed import
+  deletes the staging folder and leaves the old install alone. Replacing needs about twice the pack size free (about
+  300 MB). *Remove test voice pack* deletes the install and turns the switch off. The switch can always be turned off.
+- **adb `run-as` route (no picker):** extract the zip on the host (the phone has no `unzip` to rely on), then for each of
+  the eight files in the manifest:
+  `adb shell run-as io.github.manojx2005.tsuzuki.dev mkdir -p files/tts/kokoro-cmu-v1` once, and
+  `adb exec-in run-as io.github.manojx2005.tsuzuki.dev sh -c 'cat > files/tts/kokoro-cmu-v1/<name>' < <name>`
+  (`exec-in` keeps the bytes binary-safe; plain `adb shell` on Windows can mangle them). Add `manifest.json` too. This
+  skips verification at install time; the worker verifies every SHA-256 when it first loads the model, and the Settings
+  row only checks sizes.
+- **What the app does with text the pack cannot say:** digits, `@`, URLs, non-Latin text and unknown names are
+  *uncovered*. That chunk alone is spoken by the phone voice (same queue and utterance ids, so highlights and listening
+  statistics are unchanged) and neural playback resumes at the next chunk. Typographic text is normalised first (curly
+  quotes, ellipsis, dashes, accents, hyphenated words, edge apostrophes) and the normalised text is both checked and
+  sent to the runtime, so checker and runtime always see the same string. The mapping was not compared with the runtime
+  source (not in the repository); the listening test is the check. A real failure is retried once per chapter on a fresh
+  worker process, then the rest of the chapter uses the phone voice.
