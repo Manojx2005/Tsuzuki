@@ -66,9 +66,21 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
-## Current state (2026-11-15 afternoon, Codex — reader defaults and RV3-S checkpoint)
+## Current state (2026-11-15, Codex — RV3-S accepted)
 
-Owner asked for a handoff update before Codex usage runs out. **This block supersedes older next-action statements. No anime merge to main, push or tag. Claude can take over final RV3-S verification in the existing review worktree.**
+This block supersedes the afternoon checkpoint below. **RV3-S passed; the reviewed anime chain is ready for the local fast-forward into main. No push or tag.**
+
+- Final production code `03128b5ca` includes download-retention fix `a3740a40c` and the four-pill History sizing fix. Claude's code review and an independent second reviewer covered storage/backup/migrations and both fixes. Debug + optimized Preview rebuilt after all four pill modifiers: **1,215 app / 1,382 all-module tests, zero failures/errors/skips**; 686 locale/placeholder checks; all **10 APK ZIP / 100 included 64-bit ELF alignment checks** pass. Migration 36 unchanged; 37–39 additive.
+- Final History device matrix passed on tablet and hardware-verified wireless S22: Debug, Dot/Colour, anime on/off (eight cases); optimized Preview, Dot/Colour (four cases). All labels render, Anime opens persisted One Piece history, and disabling anime restores the normal three book filters. Representative screenshots inspected; crash buffers empty. Core real playback/resume/EOF/native-track and anime-off gate coverage from the checkpoint remains valid; no player source changed afterward. Authenticated trackers and multilingual subtitle rendering were not exercised; those documented parity sweeps remain future work.
+- Final ARM64 scratch Debug SHA-256 `14d3952dc91b0dce24c1d29afae44d4b32c5c5501a8862c7bb949ea99947815a`; Preview `c6ae55b72ab057010d438019958cbe04590515f4826d40c34dbcc29e1f695799`. Evidence archived in **`app/build/review-evidence/rv3-s-final/`**: accepted-history-audit.json, final History results/screenshots/XML, logs, helper source, restoration reports and both APKs. Temporary helper removed from module sources.
+- Scratch data restored from the latest `*-history-final-before.tar` snapshots: **10 tablet / 11 S22 DB+preference files byte-equal before launch**, original files restored, helper uninstalled. Final Debug scratch installed, both left awake on Dot Home; handback screenshots inspected, crash logs empty. Daily apps and owner phone untouched. **Device lock free.**
+- Owner 2026-11-15: **Dot book covers should be coloured by default.** Confirmed getter `tsuzukiDotColourCovers` already defaults true (also in v0.1.1) and shared book cover paths respect it. Corrected stale grayscale-default rules in AGENTS/PLAN/design docs; saved grayscale remains selectable. No new runtime migration required.
+- **READER-DEFAULTS remains review**, `tsuzuki/reader-defaults`, implementation `9a483ac31`, docs `0e33d9f43`: shared reader column 600 → 720 dp, 1,092 app tests. This chat implemented it; a separate reviewer must device-check and merge it. Do not self-merge.
+- Next anime card **AY9**, from accepted current main (retain both RV3-S fixes), then AY0/AY1 in Batch AY order. STR2/A11Y1 remain parked; neural voice/licence/listening gates unchanged. Owner's continue-until-usage goal remains active.
+
+## Earlier checkpoint (2026-11-15 afternoon, Codex — superseded by RV3-S acceptance above)
+
+Owner asked for a handoff update before Codex usage runs out. **This block supersedes older next-action statements. No anime merge to main, push or tag. Owner resumed Codex with the active goal to continue until usage runs out; Codex is completing final RV3-S verification in the existing review worktree.**
 
 - **READER-DEFAULTS is `review`**, `.worktrees/reader-defaults`, `tsuzuki/reader-defaults`: implementation **`9a483ac31`**, hash-recording doc commit **`0e33d9f43`**. Owner screenshot requests the same book-like serif/paragraph layout with less side whitespace as the first-install default. Shared Native/WebView column cap widened **600 → 720 dp**; on the 753 dp tablet portrait with default 16 dp margins, sides become **16/17 dp instead of 76/77 dp**. Tablet dispatch threshold remains 600 dp; phone layout and saved font/margin/line/paragraph choices unchanged. Scoped Spotless twice, Debug, **1,092 app tests**, diff check pass. Independent device review is still required; this chat implemented it and must not self-review/merge it. `docs/design/README.md` updated on its branch. APK/logs in that worktree under `app/build/reader-defaults/` and `app/build/outputs/apk/debug/`. The app was **not** installed on daily devices.
 - **RV3-S remains `codex-working`**, `.worktrees/rv3-s`, branch **`review/rv3-s`**, from main `ed5fd0c41`, merged `tsuzuki/ay-play` `644bb44e4`. Claude's code review/owner acceptance of libmpv shipping were read. Independent second agent reviewed storage/backup/migrations, then the new fixes. **Do not merge the chain until the final History fix is device-verified.**
@@ -883,22 +895,14 @@ Artifacts and evidence: `app/build/review-evidence/rel-011/`. Normal ARM64 Previ
 
 Stop point reached: owner handles official signing, owner-phone install, stale local tag resolution, tag and publish. No tag, push or official release was performed.
 
-#### RV3 Review: anime chain A2.3 → R-A5 (T4) — `codex-working` as **RV3-S** (2026-11-15, `.worktrees/rv3-s`, `review/rv3-s`; independent completion of Claude code review: review `tsuzuki/anime-sync`, the whole chain merged with v0.1.1, instead of `tsuzuki/r-a5`; see "Anime restart" in Batch AY)
-Merge **one** branch: `tsuzuki/r-a5` (it contains A2.3, A2.4, A3.0–A3.5, R-A2, R-A3, R-A5; 14 commits). Review it
-per card using each card's commits (`git log main..tsuzuki/r-a5`). Extra checks:
-1. Release gate: in the preview APK there is no Watch pill, no anime shelf, no anime settings, no anime in
-   Updates/History; `TsuzukiAnime.enabled` is the only gate.
-2. Upstream diff: `git diff --stat main...tsuzuki/r-a5` for `LibraryUpdateJob.kt` (≤ 5 lines),
-   `UpdatesScreen.kt` (≤ 15), `UpdatesViewModel.kt`, and every other upstream file. Compare with R-A5's Result.
-3. Migrations: `36.sqm` unchanged from v0.1.0 (`git diff v0.1.0 -- '*36.sqm'` is empty); `37.sqm` is the only new one;
-   the `docs/UPSTREAM.md` "Tsuzuki-owned migrations" table exists.
-4. Debug APK on the S22 (after a `.dev` backup): install an anime extension from a repo, browse, add to library,
-   open details, play with resume, change subtitle/audio, History and Updates show it. Tracker logins only if the
-   owner has already logged in; never type the owner's credentials.
-5. 16 KB check on the debug APK's `.so` files (`zipalign -c -P 16 -v 4`).
-Pass → `main` gets the chain, and the anime lane cards from A3.6 onwards start from `main` (their Needs merge is
-then a no-op). Fail → the fix card goes to lane 1 before A3.6.
-Review checkpoint (Codex, 2026-11-15; handoff to Claude): **not passed / not merged yet**. `review/rv3-s` contains the AY-PLAY chain, committed download retention fix **`a3740a40c`** and final four-pill History sizing fix **`03128b5ca`**. 1,382 all-module tests, Debug/Preview, alignment/locale audits and core device matrix passed before the final History patch. History reproduction is four blank pills despite a persisted anime watch record; final intrinsic-width fix is independently code-reviewed and formatted, but must be rebuilt and device-verified before acceptance. Full results, exact next commands/state and device restoration are in the afternoon Current state block. Worktree retained; devices free; no main merge/push.
+#### RV3-S Review: anime chain A2.3 → A6.4 + AY-PLAY (T4) — `done` (Codex independent review, 2026-11-15; review/rv3-s)
+Reviewed the whole anime chain, merged with v0.1.1 on anime-sync and AY-PLAY, in `review/rv3-s`.
+Checks completed: gate audit plus off-state Debug/Preview UI, upstream merge adapters, migration 36 unchanged
+and additive 37–39, scratch real-source browse/library/details/playback/resume/native-track/History/Updates,
+and 16 KB ZIP/ELF audit. Owner accepts native libraries and the arm64 toggle in release builds, off by default.
+No daily-app backup/install or credential entry was needed: only the designated animescratch package was used.
+
+Review verdict (Codex independent lane, 2026-11-15): **pass with review fixes `a3740a40c` and `03128b5ca`**. Whole chain on `review/rv3-s` includes v0.1.1 and AY-PLAY `644bb44e4`. The current acceptance block above is authoritative for updated gate policy (arm64 setting ships, off by default), migrations 37–39, scratch-only device scope, final hashes and coverage. 1,382 tests and final Debug/optimized Preview History matrix pass. Accepted for local merge; no push/tag. Remaining extended parity cases are recorded rather than claimed tested.
 
 #### RV4+ Keep going
 After RV3, each time 4–5 cards reach `review`, write the next RV card here (same format, same order the lanes
@@ -970,12 +974,9 @@ Kokoro answer supplied: the owner means the runtime built here, not a standalone
 - Known gaps from the merge: anime global-search results have no per-source Retry; the restore preview does not
   count anime; three anime activities are not gated by the setting (they are `exported="false"`); anime
   notification channels and the anime paths in `UpdatesViewModel`/`HistoryViewModel` were not checked for the gate.
-- **New rule: every anime card branches from `tsuzuki/anime-sync` (or from the card before it in the order), never
+- **Updated rule after RV3-S acceptance: every new anime card branches from accepted `main` (or its preceding card), retaining `a3740a40c` and `03128b5ca`; never
   from `tsuzuki/a6.4` or older.** Where a card says "needs `tsuzuki/a6.4`", read `tsuzuki/anime-sync`.
-- **Order now:** **AY-PLAY device half** (anime lane, with adb; the code half is on `tsuzuki/ay-play`, `review`) → **RV3-S** (review
-  lane: review the chain as it stands on `tsuzuki/anime-sync` instead of `tsuzuki/r-a5` alone; same five checks as
-  RV3 plus the merge resolutions above; on a pass the chain goes into `main` behind the setting, default off) →
-  AY9 → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8.
+- **Order now:** AY-PLAY and RV3-S passed. Local main accepts the whole chain, anime off by default. **AY9** → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8.
 - Anime implementers test their own cards with adb on the tablet and S22 (owner 2026-11-12), **scratch package
   only** (`…tsuzuki.animescratch` via an init script like `app/build/perf-details/scratch.init.gradle`; never the
   `.dev`, daily or `rv5debugscratch` apps), Device lock first.
@@ -989,14 +990,14 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex RV3-S handoff 2026-11-15; original animescratch snapshots restored (10 tablet / 11 S22 DB/pref files byte-verified), scratch test helpers removed, both Dot Home, awake, handback crash buffers empty. Daily apps and owner phone untouched. Final History fix 03128b5ca still needs a fresh build/device check.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free. RV3-S final validation complete; original scratch data restored, helpers removed, both on Dot Home, no crashes (2026-11-15).`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
 **Order:** A6.4 → **AY-PLAY** → **AY9** → AY0 → AY1 → AY2 → AY3 → AY4 → AY6 → A6.5 → AY5 → A6.8 → AY7 → A6.6 → A6.7 → AY8. Each card's Needs is the
 card before it in this order (`tsuzuki/ay0` needs `tsuzuki/a6.4`, `tsuzuki/a6.5` now needs `tsuzuki/ay6`, and so on).
 
-#### AY-PLAY Anime: videos from extensions don't play (T4) — `review` for the code half (Claude subagent, 2026-11-15, `tsuzuki/ay-play` `73a61f538`, `.worktrees/ay-play`); **device half `review` (Codex, 2026-11-15, `.worktrees/ay-play`): run the device script below with real sources, then fix what the log shows** (owner bug 2026-11-12)
+#### AY-PLAY Anime: videos from extensions do not play (T4) — `done` (code + device review passed RV3-S, 2026-11-15; tsuzuki/ay-play 644bb44e4)
 PARITY §7. Claude reproduced it on the tablet preview build: AnimeKai resolves after 25+ s, then sits at
 23:35 / −00:00 with a black picture and a dead Play button; AnimePahe shows "unknown error"; the app logs nothing
 from mpv. Evidence in `app/build/review-evidence/ay-play/` (main checkout). First make mpv and source errors
@@ -4015,7 +4016,7 @@ Result: _pending_
   unless asked.
 - Both devices may be used for reversible testing; preview build is the daily/test app; owner's `.dev` data stays
   untouched. Temporary EPUB / Royal Road imports allowed with cleanup.
-- Pushed screens follow the Settings boards, not the book palette. Dot "Colour covers" switch exists (default off).
+- Pushed screens follow the Settings boards, not the book palette. Dot "Colour covers" switch defaults on (owner reaffirmed 2026-11-15); grayscale remains selectable.
 - Anime native builds via GitHub Actions only; must stay non-GPL (LGPL dynamic libs OK with licences).
 - Owner 2026-11-05 (before leaving): push `main` after review — allowed; build the media-types onboarding step
   (novels + manga now); commit the anime spike WIP on its branch; Codex is out of usage, Claude continues alone.
@@ -4034,6 +4035,9 @@ Result: _pending_
 - Long Windows paths: use `git -c core.longpaths=true` for worktrees.
 
 ## Log (newest first)
+
+- **2026-11-15 Codex RV3-S final acceptance:** download protection `a3740a40c` and History pill sizing `03128b5ca` independently reviewed; final Debug/Preview builds, 1,382 tests, 686 locale checks, 10 APK/100 ELF alignment checks pass. History on/off/theme matrix in Debug plus both themes optimized Preview passed on tablet/S22. Scratch data restored byte-for-byte, helpers removed, screenshots inspected, crashes empty; devices free. Evidence/APKs archived `app/build/review-evidence/rv3-s-final/`. Dot book cover colour default confirmed; stale docs corrected. Reader defaults still separate-review pending. Local merge only, no push/tag.
+
 
 - **2026-11-15 Codex handoff checkpoint:** READER-DEFAULTS `9a483ac31` / docs `0e33d9f43` ready for independent review (720 dp shared cap, 1,092 tests). RV3-S on `review/rv3-s`: download-retention regression reproduced and fixed in `a3740a40c`; pre-History-fix candidate passes Debug/Preview, 1,382 all-module tests, 10 APK/100 ELF alignment checks, locales and both-device playback/gate matrix. Final blank History pill fix `03128b5ca` committed, independently code-reviewed and formatted; final rebuild and device verification remain before merge. Original scratch snapshots restored and verified, helpers removed, devices free on Dot Home, no crashes. Main code untouched; no push/tag. Evidence `.worktrees/rv3-s/app/build/review-evidence/rv3-s/`; complete continuation instructions in the afternoon Current state block.
 

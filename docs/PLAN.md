@@ -112,7 +112,7 @@ switching never moves anything, only the skin changes.
 | Display type | Instrument Serif italic | Doto (dot-matrix), uppercase |
 | Body type | Manrope | Space Mono, uppercase labels |
 | Progress | solid bar / solid ring | rows of dots / ring of dots, red = "you are here" |
-| Covers | full colour | greyscale (red is the only colour) |
+| Covers | full colour | full colour by default; optional greyscale (owner 2026-11-15) |
 | Reading text | Literata on deep book tint | Literata on black |
 
 - **Shared components:** Cover (generated art until real covers load), Icon, Nav (phone),

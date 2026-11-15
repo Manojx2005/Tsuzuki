@@ -21,7 +21,7 @@ see the end of this file). If it isn't there either, ask the owner instead of in
 | Text case | as written | UPPERCASE |
 | Display face | Instrument Serif italic | Doto 900 |
 | Body face | Manrope | Space Mono |
-| Covers | full colour | greyscale |
+| Covers | full colour | full colour by default; optional greyscale (owner 2026-11-15) |
 
 In code, read all of these from `TsuzukiTheme.tokens` and `MaterialTheme.typography`. Never hardcode them.
 

@@ -94,7 +94,8 @@ done
 - **Two themes, one layout.** Screens read colours from `TsuzukiTheme.tokens` (`app/.../presentation/theme/tsuzuki/`)
   and fonts from `MaterialTheme.typography` (display = Doto / Instrument Serif, body = Space Mono / Manrope).
   Don't hardcode theme colours in screens. In Dot, uppercase text with `tokens.case()`-style helpers, keep red
-  as the only colour, and show covers in greyscale.
+  as the only UI accent. Book covers keep their colours by default (owner 2026-11-15); respect the Appearance
+  "Colour covers" preference so a saved grayscale choice still applies.
 - **Japanese text** uses a partner font per theme face, chained behind the Latin font in `LnrTypography.kt`
   (Android 10+). Use `MaterialTheme.typography` styles so this applies; never set `fontFamily` directly.
   The Japanese fonts in `res/font/lnr_jp_*.ttf` are subsets (kana + JIS X 0208 kanji) made with the `subset-font`
