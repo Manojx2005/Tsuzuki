@@ -48,6 +48,7 @@ internal class AnimeLibraryStore(
     private val shelves: AnimeCategoryRepository,
     private val episodes: EpisodeRepository,
     private val history: AnimeHistoryRepository,
+    private val protectedEpisodeIds: suspend (Long) -> Set<Long> = { emptySet() },
 ) {
     private val refreshLock = Mutex()
 
@@ -228,7 +229,9 @@ internal class AnimeLibraryStore(
         val update = withContext(Dispatchers.IO) {
             source.fetchEpisodeUpdate(detailed, existing.map(Episode::toSourceEpisode), fetchDetails && !discoverType)
         }
-        syncEpisodes(source.source.id, update.anime, update.episodes)
+        // Await download restoration before opening the database transaction.
+        val protected = cached?.id?.let { protectedEpisodeIds(it) }.orEmpty()
+        syncEpisodes(source.source.id, update.anime, update.episodes, downloadedEpisodeIds = protected)
     }
 
     private suspend fun syncSeasons(source: Long, show: SAnime, available: List<SAnime>): Anime =

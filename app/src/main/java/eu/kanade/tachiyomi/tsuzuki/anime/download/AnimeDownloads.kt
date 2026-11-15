@@ -63,6 +63,10 @@ internal data class AnimeDownloadQueue(
     val paused: Boolean = false,
     val wifiOnly: Boolean = true,
 ) {
+    // Failed entries may have partial files; removing entries remain protected until deletion finishes.
+    fun protectedEpisodeIds(animeId: Long): Set<Long> =
+        entries.filter { it.animeId == animeId }.mapTo(hashSetOf()) { it.episodeId }
+
     val hasQueuedEpisodes: Boolean get() = entries.any { it.status == AnimeDownloadStatus.Queued }
 
     fun enqueue(entry: AnimeDownloadEntry): AnimeDownloadQueue {
@@ -119,6 +123,11 @@ internal class AnimeDownloads(
                 }
             }
         }
+    }
+
+    suspend fun protectedEpisodeIds(animeId: Long): Set<Long> {
+        initialized.await()
+        return state.value.protectedEpisodeIds(animeId)
     }
 
     fun restoreWhenEnabled() = command {

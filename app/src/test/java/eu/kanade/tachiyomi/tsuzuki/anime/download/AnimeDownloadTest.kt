@@ -46,6 +46,18 @@ class AnimeDownloadTest {
     }
 
     @Test
+    fun `all queue states protect their episode rows only for the matching anime`() {
+        val entries = AnimeDownloadStatus.entries.mapIndexed { index, status ->
+            AnimeDownloadEntry(1, 2, index.toLong(), "Source", "Anime", "Episode", status)
+        }
+        val other = AnimeDownloadEntry(1, 3, 100, "Source", "Other anime", "Episode")
+        val queue = AnimeDownloadQueue(entries + other)
+        assertEquals(entries.map { it.episodeId }.toSet(), queue.protectedEpisodeIds(2))
+        assertEquals(setOf(100L), queue.protectedEpisodeIds(3))
+        assertTrue(queue.protectedEpisodeIds(4).isEmpty())
+    }
+
+    @Test
     fun `wifi only requires a validated wifi connection`() {
         val cellular = NetworkState(isConnected = true, isValidated = true, isWifi = false)
         assertFalse(cellular.allowsAnimeDownloads(wifiOnly = true))

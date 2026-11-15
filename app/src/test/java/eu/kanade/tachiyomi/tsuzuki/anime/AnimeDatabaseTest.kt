@@ -365,6 +365,55 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun sourceRefreshRetainsDownloadRowsUntilQueueProtectionIsRemoved() = runBlocking {
+        withDatabase { _, db ->
+            val episodes = EpisodeRepositoryImpl(db)
+            var protected = emptySet<Long>()
+            var protectedAnimeId: Long? = null
+            val store = AnimeLibraryStore(
+                db,
+                AnimeRepositoryImpl(db),
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
+            ) { id ->
+                protectedAnimeId = id
+                protected
+            }
+            val show = SAnime.create().apply {
+                url = "/downloaded-show"
+                title = "Downloaded show"
+            }
+            val incoming = listOf("saved", "queued", "removed").map { url ->
+                SEpisode.create().apply {
+                    this.url = url
+                    name = url
+                }
+            }
+            val animeId = store.syncEpisodes(42, show, incoming).id
+            val before = episodes.awaitByAnimeId(animeId).associateBy(Episode::url)
+            protected = setOf(before.getValue("saved").id, before.getValue("queued").id)
+            val source = mockk<AnimeSource>()
+            every { source.id } returns 42
+            coEvery {
+                source.getAnimeEpisodeUpdate(any(), any(), fetchDetails = false, fetchEpisodes = true)
+            } returns SAnimeEpisodeUpdate(show, emptyList())
+            val entry = RegisteredAnimeSource(source, "fixture.anime", "Fixture", 17.0)
+
+            store.refresh(entry, show, fetchDetails = false)
+            assertEquals(animeId, protectedAnimeId)
+            assertEquals(protected, episodes.awaitByAnimeId(animeId).map { it.id }.toSet())
+            assertNotNull(store.getEpisode(before.getValue("saved").id))
+            assertNotNull(store.getEpisode(before.getValue("queued").id))
+            assertNull(store.getEpisode(before.getValue("removed").id))
+
+            protected = emptySet()
+            store.refresh(entry, show, fetchDetails = false)
+            assertTrue(episodes.awaitByAnimeId(animeId).isEmpty())
+        }
+    }
+
+    @Test
     fun openingASearchResultKeepsSourceMetadataAndReusesTheSavedEntry() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

@@ -140,6 +140,13 @@ done
 
 - **Download provider compatibility:** `data/download/DownloadProvider.kt` now follows Mihon with retained synchronous APIs and novel ZIP support; async caller migration remains open.
 
+- **Anime integration upstream adapters (RV3-S):** `presentation/browse/components/GlobalSearchToolbar.kt`,
+  `presentation/more/settings/screen/debug/DebugInfoScreen.kt`, `data/backup/create/BackupOptions.kt`,
+  `data/backup/restore/{BackupRestorer,RestoreOptions}.kt`, and the anime API adapter methods in
+  `data/track/{anilist/Anilist,anilist/AnilistApi,kitsu/Kitsu,kitsu/KitsuApi,myanimelist/MyAnimeList,myanimelist/MyAnimeListApi}.kt`.
+  Existing shared screen/backup hooks listed above also dispatch anime behind `TsuzukiAnime.enabled`.
+  `di/AppModule.kt` resolves download protection lazily when episode refresh runs, avoiding a constructor cycle.
+
 ## Progress, plan and history
 
 - Live state, Codex queue, owner decisions and log: **`docs/HANDOFF.md`** (the only handoff; don't create others).

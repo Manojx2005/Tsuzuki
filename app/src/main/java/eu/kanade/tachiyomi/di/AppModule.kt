@@ -145,7 +145,11 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { LibrarySettingsCache(app) }
 
         addSingletonFactory { NetworkHelper(app, get(), get()) }
-        addSingletonFactory { AnimeLibraryStore(get(), get(), get(), get(), get()) }
+        addSingletonFactory {
+            AnimeLibraryStore(get(), get(), get(), get(), get()) { animeId ->
+                get<AnimeDownloads>().protectedEpisodeIds(animeId)
+            }
+        }
         addSingletonFactory { AnimeDownloads(app, get(), get(), get(), get()) }
         addSingletonFactory {
             eu.kanade.tachiyomi.tsuzuki.anime.player.AniSkipLookup(get<NetworkHelper>().client, get())
