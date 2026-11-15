@@ -61,6 +61,13 @@ class AnimeSourceManagerTest {
         loads shouldBe 3
     }
 
+    @Test
+    fun `load failures are described`() {
+        animeLoadFailureMessage(listOf(AnimeLoadResult.Error, AnimeLoadResult.Error))
+            ?.contains("2 anime extension(s)") shouldBe true
+        animeLoadFailureMessage(emptyList()) shouldBe null
+    }
+
     private fun extension(source: AnimeSource): AnimeLoadResult = AnimeLoadResult.Success(
         AnimeExtension.Installed(
             name = "Fixture extension",

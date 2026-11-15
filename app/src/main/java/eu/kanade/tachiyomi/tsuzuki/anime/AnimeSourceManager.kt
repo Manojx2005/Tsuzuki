@@ -49,7 +49,9 @@ internal class AnimeSourceManager(
 
     private suspend fun load(): List<RegisteredAnimeSource> {
         val version = extensionChanges.value
-        val registered = loadExtensions()
+        val results = loadExtensions()
+        animeLoadFailureMessage(results)?.let { AnimeLog.w(it) }
+        val registered = results
             .filterIsInstance<AnimeLoadResult.Success>()
             .sortedBy { it.extension.pkgName }
             .flatMap { (extension) ->
@@ -93,4 +95,10 @@ internal class AnimeSourceManager(
             }
         }
     }
+}
+
+/** A log line for installed anime extensions that failed to load (the result carries no package name), or null. */
+internal fun animeLoadFailureMessage(results: List<AnimeLoadResult>): String? {
+    val errors = results.count { it == AnimeLoadResult.Error }
+    return if (errors == 0) null else "$errors anime extension(s) failed to load (signature, trust or loader error)"
 }

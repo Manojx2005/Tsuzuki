@@ -37,6 +37,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var eventObserver: MPVLib.EventObserver? = null
     private var logObserver: MPVLib.LogObserver? = null
     private var loadStartedAt = 0L
+    private var listener: AnimePlayerBackend.Listener? = null
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
@@ -50,6 +51,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
         File(configDir, "mpv.conf").apply { if (!exists()) createNewFile() }
 
+        this.listener = listener
         val events = newEventObserver(listener)
         eventObserver = events
         MpvPlayer.addObserver(events)
@@ -136,7 +138,10 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
 
         override fun efEvent(err: String?) {
-            if (err.isNullOrBlank()) return
+            if (err.isNullOrBlank()) {
+                AnimeLog.w("mpv end-file reported an error with no detail (${sinceLoad()})")
+                return
+            }
             AnimeLog.e("mpv end-file error: $err (${sinceLoad()})")
             listener.onError(err)
         }
@@ -148,6 +153,13 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         externalTracks = video
         loadStartedAt = SystemClock.elapsedRealtime()
         AnimeLog.i("mpv loadfile start=${"%.1f".format(resumePosition)}s ${describeAnimeVideo(video)}")
+        val command = try {
+            animeMpvLoadCommand(video, resumePosition)
+        } catch (e: AnimeUnsupportedVideoUrlException) {
+            AnimeLog.w("refused to load video: ${e.message}")
+            listener?.onError(e.message)
+            return
+        }
         val headers = video.headers
         MpvPlayer.property("referrer", headers?.get("Referer").orEmpty())
         MpvPlayer.property("user-agent", headers?.get("User-Agent") ?: defaultUserAgent.orEmpty())
@@ -159,7 +171,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
         // Sources can require demuxer options (e.g. force_mpegts for image-prefixed HLS segments).
         // Pass them to this file only, including the validated resume position.
-        MpvPlayer.command(*animeMpvLoadCommand(video, resumePosition))
+        MpvPlayer.command(*command)
     }
 
     override fun attach(surface: Surface) {
