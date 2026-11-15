@@ -311,6 +311,7 @@ private val settingScreens = listOf(
     SettingsLibraryScreen,
     SettingsReaderScreen,
     SettingsNovelReaderScreen,
+    eu.kanade.presentation.tsuzuki.settings.TtsSettingsScreen,
     SettingsDownloadScreen,
     SettingsNovelDownloadScreen,
     SettingsTranslationScreen,

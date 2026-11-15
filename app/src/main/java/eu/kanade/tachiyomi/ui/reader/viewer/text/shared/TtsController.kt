@@ -310,7 +310,8 @@ class TtsController internal constructor(
             ttsPaused = true
             return
         }
-        if (ttsInitialized && tts?.isSpeaking == true) {
+        // The engine can be silent between chunks while a completion/auto-next callback is still pending.
+        if (ttsInitialized && (tts?.isSpeaking == true || playbackQueue != null)) {
             ttsPaused = true
             ttsResumeChunkIndex = ttsCurrentChunkIndex
             closePlaybackQueue()

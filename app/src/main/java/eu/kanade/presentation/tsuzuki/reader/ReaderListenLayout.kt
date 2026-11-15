@@ -4,13 +4,19 @@ import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
+import eu.kanade.presentation.more.settings.PreferenceScreen
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.settings.TtsSettingsPreferences
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.tsuzuki.reader.listenDockChapterTitle
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
@@ -146,6 +152,21 @@ internal fun rememberTsuzukiListenPanel(
     val canDock =
         themed && (fold != null || shouldDockReaderPanel(isTabletUi(), LocalConfiguration.current.screenWidthDp))
     val listening by rememberReaderListeningState(controller, themed && (canDock || miniVisible))
+    var showSettings by remember(controller) { mutableStateOf(false) }
+    val openSettings: () -> Unit = {
+        if (controller?.pendingStartRequest != null) {
+            controller.pendingStartRequest = null
+            controller.isTtsAutoPlay = false
+        }
+        controller?.pause()
+        onPausedChanged(controller?.isPaused() == true)
+        showSettings = true
+    }
+    if (showSettings) {
+        TsuzukiAdaptiveSheet(onDismissRequest = { showSettings = false }) {
+            PreferenceScreen(items = TtsSettingsPreferences(), settingsTitle = MR.strings.tsz_tts_settings)
+        }
+    }
     val snapshot = listening
     val content: (@Composable (() -> Unit) -> Unit)? = if (canDock && snapshot?.active == true && controller != null) {
         { close ->
@@ -167,6 +188,7 @@ internal fun rememberTsuzukiListenPanel(
                 onStepParagraph = onStepParagraph,
                 onSeekParagraph = onSeekParagraph,
                 onClose = close,
+                onSettings = openSettings,
             )
         }
     } else {
@@ -190,6 +212,7 @@ internal fun rememberTsuzukiListenPanel(
                 onStepParagraph = onStepParagraph,
                 onSetTimer = controller::setSleepTimer,
                 onClose = close,
+                onSettings = openSettings,
                 modifier = modifier,
             )
         }

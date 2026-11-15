@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +71,7 @@ internal fun TsuzukiReaderListenDock(
     onStepParagraph: (Boolean) -> Unit,
     onSetTimer: (TtsSleepTimer) -> Unit,
     onClose: () -> Unit,
+    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -130,6 +132,9 @@ internal fun TsuzukiReaderListenDock(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            IconButton(onClick = onSettings, modifier = Modifier.size(48.dp)) {
+                Icon(Icons.Outlined.Tune, stringResource(MR.strings.tsz_tts_settings), tint = tokens.dotOn)
             }
             Box(
                 Modifier.height(48.dp).widthIn(max = 120.dp).tsuzukiClickable(role = Role.Button) {

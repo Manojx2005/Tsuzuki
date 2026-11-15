@@ -1860,4 +1860,21 @@
     <string name="tsz_nothing_before_last_read">No unread chapters before your last read</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
     <string name="tsz_history_clear_includes_anime">Anime watch history is cleared too.</string>
+    <string name="tsz_dictionary_builtin">Built-in</string>
+    <string name="tsz_dictionary_online">Online</string>
+    <string name="tsz_dictionary_online_notice">Free Dictionary API · Online lookup sends only the selected word. No API key needed.</string>
+    <string name="tsz_dictionary_lookup_error">Could not look up this word. Try again or use web search.</string>
+    <string name="tsz_tts_settings">Text-to-speech</string>
+    <string name="tsz_tts_settings_summary">TTS · voices, language, speed, pitch and read-along</string>
+    <string name="tsz_tts_phone_voice">Phone voice</string>
+    <string name="tsz_tts_engine_settings">Engine and installed voices</string>
+    <string name="tsz_tts_engine_summary">Open Android speech settings to choose an engine and install voice data</string>
+    <string name="tsz_tts_filter_language">Filter voices by language</string>
+    <string name="tsz_tts_all_languages">All languages</string>
+    <string name="tsz_tts_automatic_voice">Automatic · match the chapter language</string>
+    <string name="tsz_tts_play_sample">Play voice sample</string>
+    <string name="tsz_tts_voice_unavailable">Voice unavailable. Check Android speech settings and installed voice data.</string>
+    <string name="tsz_tts_engine_reopen">After changing the Android speech engine, reopen the novel. Voice, speed and pitch changes apply when speech resumes.</string>
+    <string name="tsz_tts_playback_settings">Playback</string>
+    <string name="tsz_tts_read_along">Read-along</string>
 </resources>

@@ -469,12 +469,18 @@ object SettingsNovelReaderScreen : SearchableSettings {
 
     @Composable
     private fun getTtsGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+        val navigator = LocalNavigator.currentOrThrow
         val ttsSpeed = readerPreferences.novelTtsSpeed.collectAsState().value
         val ttsPitch = readerPreferences.novelTtsPitch.collectAsState().value
 
         return Preference.PreferenceGroup(
             title = stringResource(TDMR.strings.pref_novel_tts_section),
             preferenceItems = listOf(
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.tsz_tts_settings),
+                    subtitle = stringResource(MR.strings.tsz_tts_settings_summary),
+                    onClick = { navigator.push(eu.kanade.presentation.tsuzuki.settings.TtsSettingsScreen) },
+                ),
                 Preference.PreferenceItem.SliderPreference(
                     value = (ttsSpeed * 10).toInt(),
                     valueRange = 1..30,

@@ -65,6 +65,7 @@ internal fun TsuzukiReaderListenPanel(
     onStepParagraph: (forward: Boolean) -> Unit,
     onSeekParagraph: (index: Int) -> Unit,
     onClose: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
     val speed by preferences.novelTtsSpeed.collectAsState()
@@ -121,6 +122,9 @@ internal fun TsuzukiReaderListenPanel(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+        item {
+            TextButton(onClick = onSettings) { Text(tsuzukiMenuLabel(stringResource(MR.strings.tsz_tts_settings))) }
         }
         state.position?.let { position ->
             item { TsuzukiProgressBar(position.progress, spreadDots = true) }

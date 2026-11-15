@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
@@ -279,6 +280,12 @@ object SettingsMainScreen : Screen() {
             icon = Icons.Outlined.PlayCircle,
             screen = AnimePlayerSettingsScreen,
             isAnimeOnly = true,
+        ),
+        Item(
+            titleRes = MR.strings.tsz_tts_settings,
+            subtitleRes = MR.strings.tsz_tts_settings_summary,
+            icon = Icons.Outlined.RecordVoiceOver,
+            screen = eu.kanade.presentation.tsuzuki.settings.TtsSettingsScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
