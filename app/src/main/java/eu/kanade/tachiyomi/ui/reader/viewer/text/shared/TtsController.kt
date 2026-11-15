@@ -5,10 +5,13 @@ import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.tsuzuki.tts.ChunkPlan
 import eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession
+import eu.kanade.tachiyomi.tsuzuki.tts.NeuralPlayer
+import eu.kanade.tachiyomi.tsuzuki.tts.NeuralSession
 import eu.kanade.tachiyomi.tsuzuki.tts.NeuralTtsClient
-import eu.kanade.tachiyomi.tsuzuki.tts.NeuralTtsProtocol
 import eu.kanade.tachiyomi.tsuzuki.tts.TTS_LANGUAGE_SAMPLE_LENGTH
+import eu.kanade.tachiyomi.tsuzuki.tts.TtsChunker
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
 import eu.kanade.tachiyomi.tsuzuki.tts.detectTtsLanguage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -30,6 +33,12 @@ class TtsController internal constructor(
     private val listening: ListeningSession,
     private val callbacks: Callbacks,
     private val elapsedMs: () -> Long = SystemClock::elapsedRealtime,
+    /** Whether the debug Kokoro voice is switched on and usable on this device. */
+    private val neuralGate: () -> Boolean = {
+        BuildConfig.BUILD_TYPE == "debug" && android.os.Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a" &&
+            eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference().get()
+    },
+    private val newNeuralPlayer: () -> NeuralPlayer? = { NeuralTtsClient.createIfEnabled(context, scope) },
 ) : TextToSpeech.OnInitListener {
 
     interface Callbacks {
@@ -46,13 +55,23 @@ class TtsController internal constructor(
     enum class StartRequest { NORMAL, VIEWPORT }
 
     private var tts: TextToSpeech? = null
-    private var neuralTts: NeuralTtsClient? = null
-    private var neuralFailed = false
     private var playbackListener: UtteranceProgressListener? = null
 
-    private fun kokoroRequested(): Boolean = BuildConfig.BUILD_TYPE == "debug" &&
-        android.os.Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a" &&
-        eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference().get()
+    /**
+     * Neural playback with per-chunk phone fallback: an uncovered chunk is spoken by the phone voice under the same
+     * queue and utterance ids (so highlights and listening stats keep working), then neural playback resumes.
+     */
+    private val neural = NeuralSession(
+        newPlayer = newNeuralPlayer,
+        speakPhone = ::speakPhone,
+        onStart = { queue, index -> playbackListener?.onStart("tts_utterance_${queue}_$index") },
+        onChunkDone = { queue, index -> playbackListener?.onDone("tts_utterance_${queue}_$index") },
+    )
+
+    private var chunkPlan: ChunkPlan? = null
+    private var chunkSourceText: String? = null
+
+    private fun kokoroRequested(): Boolean = neuralGate()
 
     @Volatile private var playbackQueue: Long? = null
     var ttsInitialized = false
@@ -141,6 +160,10 @@ class TtsController internal constructor(
                 val (queue, finishedIndex) = currentChunk(utteranceId) ?: return
                 val isLastChunk = finishedIndex == ttsChunks.lastIndex
                 if (!listening.endChunk(queue, finishedIndex, completedChapter = isLastChunk)) return
+                // The phone voice just spoke a chunk the neural voice could not: carry on neurally after it.
+                callbacks.runOnUiThread {
+                    if (playbackQueue == queue) neural.phoneChunkDone(queue, finishedIndex)
+                }
                 if (isLastChunk && sleepTimer == TtsSleepTimer.ChapterEnd) {
                     val chapterId = ttsPlaybackChapterId
                     callbacks.runOnUiThread {
@@ -229,49 +252,9 @@ class TtsController internal constructor(
         ttsPlaybackChapterId = chapterId
         ttsPaused = false
 
-        val maxLength = if (kokoroRequested()) {
-            NeuralTtsProtocol.CHUNK_LENGTH
-        } else {
-            TextToSpeech.getMaxSpeechInputLength().takeIf { it > 0 } ?: 4000
-        }
-        val paragraphs = TtsTextUtils.newlineParagraphBounds(text).map { (start, end) -> text.substring(start, end) }
-        val chunkParagraphIndexes = mutableListOf<Int>()
-
-        val chunks = if (paragraphs.size > 1) {
-            paragraphs.flatMapIndexed { paragraphIndex, para ->
-                val c = if (para.length <= maxLength) {
-                    listOf(para)
-                } else {
-                    TtsTextUtils.splitTextForTts(para, maxLength, allowLongWords = !kokoroRequested())
-                }
-                repeat(c.size) { chunkParagraphIndexes.add(paragraphIndex) }
-                c
-            }
-        } else if (text.length <= maxLength) {
-            chunkParagraphIndexes.add(0)
-            listOf(text)
-        } else {
-            val c = TtsTextUtils.splitTextForTts(text, maxLength, allowLongWords = !kokoroRequested())
-            repeat(c.size) { chunkParagraphIndexes.add(0) }
-            c
-        }
-        ttsChunks = chunks
-        listenParagraphs = paragraphs.map { it.take(180) }
-        ttsChunkParagraphIndexes = chunkParagraphIndexes
-
-        // Compute char offset per chunk so Spannable-based highlight can locate the right occurrence.
-        val offsets = mutableListOf<Int>()
-        var searchFrom = 0
-        for (chunk in ttsChunks) {
-            val idx = text.indexOf(chunk, searchFrom)
-            if (idx >= 0) {
-                offsets.add(idx)
-                searchFrom = idx + chunk.length
-            } else {
-                offsets.add(searchFrom)
-            }
-        }
-        ttsChunkStartOffsets = offsets
+        neural.beginChapter()
+        chunkSourceText = text
+        applyChunkPlan(TtsChunker.plan(text, kokoroRequested(), phoneMaxLength()))
 
         ttsCurrentChunkIndex = 0
         val startIndex = if (hasViewportStartOverride) {
@@ -285,11 +268,40 @@ class TtsController internal constructor(
         speakChunksFrom(startIndex.coerceIn(0, (ttsChunks.size - 1).coerceAtLeast(0)))
     }
 
-    fun speakChunksFrom(startIndex: Int) {
-        if (ttsChunks.isEmpty() || startIndex >= ttsChunks.size) return
+    private fun phoneMaxLength(): Int = runCatching { TextToSpeech.getMaxSpeechInputLength() }.getOrDefault(0)
+
+    private fun applyChunkPlan(plan: ChunkPlan) {
+        chunkPlan = plan
+        ttsChunks = plan.chunks
+        listenParagraphs = plan.paragraphs
+        ttsChunkParagraphIndexes = plan.paragraphIndexes
+        ttsChunkStartOffsets = plan.startOffsets
+    }
+
+    /**
+     * The voice switch can change while a chapter is loaded (Settings sheet, then Resume). Chunks cut for one engine
+     * must never reach the other: 4000-character chunks are not valid input for the neural worker, and 180-character
+     * chunks make the phone voice stutter. Re-cut from the source text and carry the position over by character offset.
+     */
+    private fun rechunkForEngine(index: Int): Int {
+        val source = chunkSourceText ?: return index
+        val current = chunkPlan ?: return index
+        val wantNeural = kokoroRequested()
+        if (current.forNeural == wantNeural) return index
+        val next = TtsChunker.plan(source, wantNeural, phoneMaxLength())
+        applyChunkPlan(next)
+        val mapped = TtsChunker.remapIndex(current, index, next)
+        ttsCurrentChunkIndex = mapped
+        ttsResumeChunkIndex = mapped
+        return mapped
+    }
+
+    fun speakChunksFrom(requestedIndex: Int) {
+        if (ttsChunks.isEmpty() || requestedIndex >= ttsChunks.size) return
         val engine = tts ?: return
+        val startIndex = rechunkForEngine(requestedIndex)
         languageJob?.cancel()
-        neuralTts?.stop()
+        neural.stop()
         closePlaybackQueue()
         if (applySettings(engine)) {
             enqueueChunks(engine, startIndex)
@@ -319,44 +331,26 @@ class TtsController internal constructor(
         playbackQueue = queue
         callbacks.onPlaybackStarted()
         val requested = kokoroRequested()
-        if (!requested) {
-            neuralTts?.close()
-            neuralTts = null
-            neuralFailed = false
-        }
+        if (!requested) neural.close()
         val english = (automaticLanguage ?: engine.voice?.locale)?.language == "en"
         val compatible = english && preferences.novelTtsPitch.get() == 1f && preferences.novelTtsSpeed.get() in 0.5f..2f
-        if (requested && compatible && !neuralFailed) {
-            val neural = neuralTts ?: NeuralTtsClient.createIfEnabled(context, scope)?.also { neuralTts = it }
-            if (neural != null) {
-                engine.stop()
-                neural.play(
-                    chunks = ttsChunks,
-                    startIndex = startIndex,
-                    speed = preferences.novelTtsSpeed.get(),
-                    onStart = { playbackListener?.onStart("tts_utterance_${queue}_$it") },
-                    onChunkDone = { playbackListener?.onDone("tts_utterance_${queue}_$it") },
-                    onDone = {},
-                    onFailure = { index ->
-                        if (playbackQueue == queue) {
-                            neuralFailed = true
-                            neural.close()
-                            neuralTts = null
-                            enqueueSystemChunks(engine, index, queue)
-                        }
-                    },
-                )
-                return
-            }
+        if (requested && compatible &&
+            neural.start(queue, ttsChunks, startIndex, preferences.novelTtsSpeed.get())
+        ) {
+            engine.stop()
+            return
         }
-        enqueueSystemChunks(engine, startIndex, queue)
+        speakPhone(queue, startIndex, ttsChunks.lastIndex)
     }
 
-    private fun enqueueSystemChunks(engine: TextToSpeech, startIndex: Int, queue: Long) {
-        ttsChunks.drop(startIndex).forEachIndexed { i, chunk ->
-            val actualIndex = startIndex + i
-            val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            engine.speak(chunk, mode, null, "tts_utterance_${queue}_$actualIndex")
+    /** Speak chunks [from]..[through] with the phone voice; the first flushes whatever the engine still holds. */
+    private fun speakPhone(queue: Long, from: Int, through: Int) {
+        val engine = tts ?: return
+        if (playbackQueue != queue) return
+        for (index in from..through) {
+            val chunk = ttsChunks.getOrNull(index) ?: break
+            val mode = if (index == from) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+            engine.speak(chunk, mode, null, "tts_utterance_${queue}_$index")
         }
     }
 
@@ -371,7 +365,7 @@ class TtsController internal constructor(
             ttsPaused = true
             ttsResumeChunkIndex = ttsCurrentChunkIndex
             closePlaybackQueue()
-            neuralTts?.stop()
+            neural.stop()
             tts?.stop()
         }
     }
@@ -415,7 +409,9 @@ class TtsController internal constructor(
         ttsCurrentChunkIndex = 0
         ttsResumeChunkIndex = 0
         hasViewportStartOverride = false
-        neuralTts?.stop()
+        chunkPlan = null
+        chunkSourceText = null
+        neural.stop()
         if (ttsInitialized) tts?.stop()
         ttsPlaybackChapterIndex = 0
         ttsPlaybackChapterId = null
@@ -457,12 +453,12 @@ class TtsController internal constructor(
         ttsCurrentChunkIndex = target
         ttsPaused = false
         closePlaybackQueue()
-        neuralTts?.stop()
+        neural.stop()
         tts?.stop()
         speakChunksFrom(target)
     }
 
-    fun isSpeaking(): Boolean = ttsInitialized && (neuralTts?.isPlaying == true || tts?.isSpeaking == true)
+    fun isSpeaking(): Boolean = ttsInitialized && (neural.isPlaying || tts?.isSpeaking == true)
     fun isPaused(): Boolean = ttsPaused
     fun isStarting(): Boolean =
         languageJob?.isActive == true || pendingStartRequest != null || (!ttsInitialized && tts != null) ||
@@ -521,15 +517,14 @@ class TtsController internal constructor(
         }?.sortedBy { it.second } ?: emptyList()
 
     internal fun getCurrentVoiceLabel(appLocale: Locale, offlineLabel: String, onlineLabel: String): String {
-        if (neuralTts?.isPlaying == true) return "Kokoro · test voice 0"
+        if (neural.isPlaying) return "Kokoro · test voice 0"
         val voice = tts?.voice ?: return preferences.novelTtsVoice.get()
         val connectionLabel = if (voice.isNetworkConnectionRequired) onlineLabel else offlineLabel
         return eu.kanade.tachiyomi.tsuzuki.tts.ttsVoiceLabel(voice.name, voice.locale, appLocale, connectionLabel)
     }
 
     fun destroy() {
-        neuralTts?.close()
-        neuralTts = null
+        neural.close()
         languageJob?.cancel()
         closePlaybackQueue()
         listening.endRun()

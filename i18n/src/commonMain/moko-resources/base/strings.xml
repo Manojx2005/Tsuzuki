@@ -1880,4 +1880,11 @@
     <string name="tsz_kokoro_test_title">Kokoro · listening test</string>
     <string name="tsz_kokoro_test_ready">Offline English test voice 0 · pitch 1× · speed 0.5–2×. Unsupported text uses the phone voice. Reopen the novel after changing this switch.</string>
     <string name="tsz_kokoro_test_missing">The test voice pack is not installed. Phone voices remain available.</string>
+    <string name="tsz_kokoro_test_import">Install test voice pack</string>
+    <string name="tsz_kokoro_test_import_summary">Choose kokoro-cmu-v1.zip. Every file is checked against its manifest before anything is replaced.</string>
+    <string name="tsz_kokoro_test_importing">Installing and checking the pack. This takes a minute.</string>
+    <string name="tsz_kokoro_test_imported">Test voice pack installed.</string>
+    <string name="tsz_kokoro_test_import_failed">Could not install the pack:</string>
+    <string name="tsz_kokoro_test_remove">Remove test voice pack</string>
+    <string name="tsz_kokoro_test_removed">Test voice pack removed.</string>
 </resources>

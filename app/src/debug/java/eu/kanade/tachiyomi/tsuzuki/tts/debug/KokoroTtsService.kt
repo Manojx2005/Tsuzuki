@@ -12,6 +12,7 @@ import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
 import android.os.RemoteException
+import android.os.SystemClock
 import androidx.core.os.BundleCompat
 import com.k2fsa.sherpa.onnx.GeneratedAudio
 import com.k2fsa.sherpa.onnx.OfflineTts
@@ -89,6 +90,8 @@ class KokoroTtsService : Service() {
         stop()
         request = id
         client = receiver
+        val requestedAt = SystemClock.elapsedRealtime()
+        var firstAudioLogged = false
         playback = scope.launch {
             try {
                 val chunks = ParcelFileDescriptor.AutoCloseInputStream(input).use { stream ->
@@ -103,10 +106,23 @@ class KokoroTtsService : Service() {
                     chunks = chunks,
                     firstIndex = first,
                     synthesize = { synthesize(it, speed) },
+                    covered = ::isCovered,
                     play = ::playAudio,
-                    onStart = { notify(receiver, Protocol.CHUNK_STARTED, id, it) },
+                    onStart = {
+                        if (!firstAudioLogged) {
+                            firstAudioLogged = true
+                            logcat(LogPriority.INFO) {
+                                "KokoroTiming firstAudio chunk=$it afterRequestMs=${SystemClock.elapsedRealtime() - requestedAt}"
+                            }
+                        }
+                        notify(receiver, Protocol.CHUNK_STARTED, id, it)
+                    },
                     onDone = { notify(receiver, Protocol.CHAPTER_DONE, id, 0) },
                     onChunkDone = { notify(receiver, Protocol.CHUNK_DONE, id, it) },
+                    onUncovered = {
+                        logcat(LogPriority.INFO) { "Kokoro: chunk $it is not covered; the phone voice speaks it" }
+                        notify(receiver, Protocol.UNCOVERED, id, it)
+                    },
                     onFailure = { index, error ->
                         logcat(LogPriority.WARN, error) { "Kokoro listening test failed at chunk $index" }
                         notify(receiver, Protocol.FAILED, id, index)
@@ -139,13 +155,24 @@ class KokoroTtsService : Service() {
         }
     }
 
+    /** Load the pack and model on first use. Call with [runtimeLock] held. */
+    private suspend fun engine(): OfflineTts = tts ?: createKokoro().also { tts = it }
+
+    private suspend fun isCovered(text: String): Boolean = withContext(Dispatchers.Default) {
+        runtimeLock.withLock {
+            engine()
+            eu.kanade.tachiyomi.tsuzuki.tts.isKokoroTextCovered(text, vocabulary)
+        }
+    }
+
     private suspend fun synthesize(text: String, speed: Float): GeneratedAudio = withContext(Dispatchers.Default) {
         val synthesis = currentCoroutineContext()
         runtimeLock.withLock {
-            val engine = tts ?: createKokoro().also { tts = it }
+            val engine = engine()
             check(eu.kanade.tachiyomi.tsuzuki.tts.isKokoroTextCovered(text, vocabulary)) {
                 "Phone voice required for uncovered text"
             }
+            val started = SystemClock.elapsedRealtime()
             val result = engine.generateWithCallback(
                 text = eu.kanade.tachiyomi.tsuzuki.tts.kokoroModelText(text),
                 sid = 0,
@@ -154,13 +181,21 @@ class KokoroTtsService : Service() {
                 if (synthesis.isActive) 1 else 0
             }
             check(result.sampleRate > 0 && result.samples.isNotEmpty()) { "Kokoro returned no audio" }
+            val synthMs = SystemClock.elapsedRealtime() - started
+            val audioMs = result.samples.size * 1_000L / result.sampleRate
+            logcat(LogPriority.INFO) {
+                "KokoroTiming synth chars=${text.length} speed=$speed synthMs=$synthMs audioMs=$audioMs " +
+                    "rtf=${"%.2f".format(synthMs.toDouble() / audioMs.coerceAtLeast(1))}"
+            }
             result
         }
     }
 
     private suspend fun createKokoro(): OfflineTts {
+        val loadStarted = SystemClock.elapsedRealtime()
         val voicePack = eu.kanade.tachiyomi.tsuzuki.tts.KokoroPack(this)
         vocabulary = voicePack.verify()
+        val verified = SystemClock.elapsedRealtime()
         val pack = voicePack.directory
         require(!File(pack, "espeak-ng-data").exists()) { "Only the lexicon-only pack is supported" }
         fun packFile(name: String): String {
@@ -171,7 +206,7 @@ class KokoroTtsService : Service() {
             return file.absolutePath
         }
 
-        return OfflineTts(
+        val loaded = OfflineTts(
             config = OfflineTtsConfig(
                 model = OfflineTtsModelConfig(
                     kokoro = OfflineTtsKokoroModelConfig(
@@ -184,6 +219,12 @@ class KokoroTtsService : Service() {
                 ),
             ),
         )
+        val ready = SystemClock.elapsedRealtime()
+        logcat(LogPriority.INFO) {
+            "KokoroTiming load verifyMs=${verified - loadStarted} modelMs=${ready - verified} " +
+                "processUptimeMs=${SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()}"
+        }
+        return loaded
     }
 }
 

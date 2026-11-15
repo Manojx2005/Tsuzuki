@@ -106,4 +106,81 @@ class NeuralChunkQueueTest {
         assertTrue(chunks.all { it.length <= NeuralTtsProtocol.CHUNK_LENGTH })
         assertTrue(TtsTextUtils.splitTextForTts(input, NeuralTtsProtocol.CHUNK_LENGTH).first().length > 180)
     }
+
+    @Test
+    fun `the first chunk is split after its first sentence so the first audio is short`() = runTest {
+        val synthesized = mutableListOf<String>()
+        val started = mutableListOf<Int>()
+        val completed = mutableListOf<Int>()
+        val played = mutableListOf<String>()
+        val firstChunk = "The morning began quietly. Nobody spoke until the bell rang!"
+        playNeuralChunks(
+            listOf(firstChunk, "Second chunk. Stays whole."),
+            firstIndex = 3,
+            synthesize = {
+                synthesized.add(it)
+                it
+            },
+            play = { played.add(it) },
+            onStart = { started.add(it) },
+            onDone = {},
+            onChunkDone = { completed.add(it) },
+            onFailure = { _, error -> throw error },
+        )
+        assertEquals(
+            listOf("The morning began quietly.", "Nobody spoke until the bell rang!", "Second chunk. Stays whole."),
+            synthesized,
+        )
+        assertEquals(synthesized, played)
+        // One start and one completion per chunk, not per piece.
+        assertEquals(listOf(3, 4), started)
+        assertEquals(listOf(3, 4), completed)
+        assertEquals(null, splitFirstSentence("No boundary here at all"))
+        assertEquals(null, splitFirstSentence("Only one sentence."))
+        assertEquals(null, splitFirstSentence("Mr. A"))
+    }
+
+    @Test
+    fun `a chunk the pack cannot speak stops playback and is reported without a failure`() = runTest {
+        val synthesized = mutableListOf<String>()
+        val started = mutableListOf<Int>()
+        val completed = mutableListOf<Int>()
+        val uncovered = mutableListOf<Int>()
+        playNeuralChunks(
+            listOf("covered", "UNKNOWN name", "never reached"),
+            firstIndex = 10,
+            synthesize = {
+                synthesized.add(it)
+                it
+            },
+            covered = { it != "UNKNOWN name" },
+            play = {},
+            onStart = { started.add(it) },
+            onDone = { error("The chapter did not finish") },
+            onChunkDone = { completed.add(it) },
+            onUncovered = { uncovered.add(it) },
+            onFailure = { _, error -> throw error },
+        )
+        assertEquals(listOf("covered"), synthesized)
+        assertEquals(listOf(10), started)
+        assertEquals(listOf(10), completed)
+        assertEquals(listOf(11), uncovered)
+    }
+
+    @Test
+    fun `an uncovered first chunk plays nothing from that chunk`() = runTest {
+        val uncovered = mutableListOf<Int>()
+        playNeuralChunks<String>(
+            listOf("An uncovered first sentence. And a second one."),
+            firstIndex = 2,
+            synthesize = { error("must not synthesize") },
+            covered = { false },
+            play = { error("must not play") },
+            onStart = { error("must not start") },
+            onDone = {},
+            onUncovered = { uncovered.add(it) },
+            onFailure = { _, error -> throw error },
+        )
+        assertEquals(listOf(2), uncovered)
+    }
 }

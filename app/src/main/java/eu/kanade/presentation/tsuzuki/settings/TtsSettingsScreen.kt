@@ -171,26 +171,7 @@ private fun ttsSettingsPreferences(speech: PhoneSpeech? = null): List<Preference
             }
         }
     }
-    val kokoroSupported = eu.kanade.tachiyomi.BuildConfig.BUILD_TYPE == "debug" &&
-        android.os.Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a"
-    val kokoroInstalled by androidx.compose.runtime.produceState(false, kokoroSupported) {
-        if (kokoroSupported && speech != null) value = eu.kanade.tachiyomi.tsuzuki.tts.KokoroPack(context).isInstalled()
-    }
-    val kokoro = if (kokoroSupported) listOf(
-        Preference.PreferenceGroup(
-            title = stringResource(MR.strings.tsz_kokoro_test_title),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = remember { eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference() },
-                    title = stringResource(MR.strings.tsz_kokoro_test_title),
-                    subtitle = stringResource(
-                        if (kokoroInstalled) MR.strings.tsz_kokoro_test_ready else MR.strings.tsz_kokoro_test_missing,
-                    ),
-                    enabled = kokoroInstalled,
-                ),
-            ),
-        ),
-    ) else emptyList()
+    val kokoro = kokoroTestPreferences(interactive = speech != null)
     return kokoro + listOf(
         Preference.PreferenceGroup(
             title = stringResource(MR.strings.tsz_tts_phone_voice),

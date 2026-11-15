@@ -59,11 +59,14 @@ internal object NeuralTtsProtocol {
     const val CHAPTER_DONE = 4
     const val FAILED = 5
     const val CHUNK_DONE = 6
+    const val UNCOVERED = 7
     const val CHUNKS = "chunks"
     const val SPEED = "speed"
     const val CHUNK_LENGTH = 180
     const val SERVICE = "eu.kanade.tachiyomi.tsuzuki.tts.debug.KokoroTtsService"
 }
+
+private const val BIND_TIMEOUT_MS = 30_000L
 
 /**
  * The native runtime lives in a private debug process. If native model loading terminates that
@@ -72,7 +75,7 @@ internal object NeuralTtsProtocol {
 internal class NeuralTtsClient private constructor(
     context: Context,
     private val scope: CoroutineScope,
-) {
+) : NeuralPlayer {
     private val context = context.applicationContext
     private var server: Messenger? = null
     private var connecting: CompletableDeferred<Messenger>? = null
@@ -81,26 +84,32 @@ internal class NeuralTtsClient private constructor(
     private var sender: Job? = null
     private var watchdog: Job? = null
 
-    private fun watch(playing: Playback) {
+    /** True until the worker process has answered once: it must start, hash the pack and load the model first. */
+    private var cold = true
+
+    private fun watch(playing: Playback, chars: Int) {
         watchdog?.cancel()
+        val wait = neuralWatchdogMs(chars, playing.speed, cold)
         watchdog = scope.launch {
-            delay(30_000L)
+            delay(wait)
             fail(playing, playing.index)
         }
     }
 
+    private fun length(playing: Playback, index: Int) = playing.chunks.getOrNull(index)?.length ?: 0
+
     @Volatile private var active: Playback? = null
-    val isPlaying: Boolean get() = active != null
+    override val isPlaying: Boolean get() = active != null
 
     private class Playback(
         val id: Int,
         var index: Int,
-        val onStart: (Int) -> Unit,
-        val onDone: () -> Unit,
-        val onChunkDone: (Int) -> Unit,
-        val lastIndex: Int,
-        val onFailure: (Int) -> Unit,
-    )
+        val chunks: List<String>,
+        val speed: Float,
+        val listener: NeuralListener,
+    ) {
+        val lastIndex: Int get() = chunks.lastIndex
+    }
 
     private val receiver = Messenger(
         Handler(Looper.getMainLooper()) { message ->
@@ -109,20 +118,30 @@ internal class NeuralTtsClient private constructor(
                 when (message.what) {
                     NeuralTtsProtocol.CHUNK_STARTED -> {
                         if (message.arg2 !in playing.index..playing.lastIndex) return@Handler true
+                        cold = false
                         playing.index = message.arg2
-                        watch(playing)
-                        playing.onStart(playing.index)
+                        // Playing this chunk while the next one is synthesized.
+                        watch(playing, length(playing, playing.index) + length(playing, playing.index + 1))
+                        playing.listener.onStart(playing.index)
                     }
                     NeuralTtsProtocol.CHUNK_DONE -> {
                         if (message.arg2 == playing.index) {
-                            watch(playing)
-                            playing.onChunkDone(message.arg2)
+                            watch(playing, length(playing, playing.index + 1))
+                            playing.listener.onChunkDone(message.arg2)
                         }
                     }
                     NeuralTtsProtocol.CHAPTER_DONE -> {
                         active = null
                         watchdog?.cancel()
-                        playing.onDone()
+                        playing.listener.onDone()
+                    }
+                    NeuralTtsProtocol.UNCOVERED -> {
+                        if (message.arg2 !in playing.index..playing.lastIndex) return@Handler true
+                        cold = false
+                        active = null
+                        watchdog?.cancel()
+                        watchdog = null
+                        playing.listener.onUncovered(message.arg2)
                     }
                     NeuralTtsProtocol.FAILED -> fail(playing, message.arg2)
                 }
@@ -144,21 +163,13 @@ internal class NeuralTtsClient private constructor(
         override fun onNullBinding(name: ComponentName) = disconnected()
     }
 
-    fun play(
-        chunks: List<String>,
-        startIndex: Int,
-        speed: Float,
-        onStart: (Int) -> Unit,
-        onDone: () -> Unit,
-        onFailure: (Int) -> Unit,
-        onChunkDone: (Int) -> Unit,
-    ) {
+    override fun play(chunks: List<String>, startIndex: Int, speed: Float, listener: NeuralListener) {
         require(startIndex in chunks.indices)
         require(chunks.size - startIndex <= 50_000)
         stop()
-        val playing = Playback(++nextId, startIndex, onStart, onDone, onChunkDone, chunks.lastIndex, onFailure)
+        val playing = Playback(++nextId, startIndex, chunks, speed, listener)
         active = playing
-        watch(playing)
+        watch(playing, length(playing, startIndex))
         sender = scope.launch {
             try {
                 val messenger = connect()
@@ -197,7 +208,7 @@ internal class NeuralTtsClient private constructor(
         }
     }
 
-    fun stop() {
+    override fun stop() {
         val playing = active
         active = null
         sender?.cancel()
@@ -213,15 +224,27 @@ internal class NeuralTtsClient private constructor(
         }
     }
 
-    fun close() {
+    override fun close(kill: Boolean) {
         stop()
         unbind()
+        if (kill) killWorker()
+    }
+
+    /** A hung native call keeps the worker's runtime lock, so a retry must start a new process. */
+    private fun killWorker() {
+        val manager = context.getSystemService(ActivityManager::class.java) ?: return
+        val name = "${context.packageName}:neural_tts"
+        manager.runningAppProcesses.orEmpty().filter { it.processName == name }.forEach {
+            Process.killProcess(it.pid)
+        }
+        cold = true
     }
 
     private suspend fun connect(): Messenger {
         server?.let { return it }
         val pending = connecting ?: CompletableDeferred<Messenger>().also {
             connecting = it
+            cold = true
             val intent = Intent().setClassName(context, NeuralTtsProtocol.SERVICE)
             bound = context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
             if (!bound) {
@@ -229,7 +252,7 @@ internal class NeuralTtsClient private constructor(
                 throw IOException("Neural TTS service is unavailable")
             }
         }
-        return withTimeoutOrNull(5_000L) { pending.await() } ?: run {
+        return withTimeoutOrNull(BIND_TIMEOUT_MS) { pending.await() } ?: run {
             unbind()
             throw IOException("Neural TTS service did not connect")
         }
@@ -252,7 +275,7 @@ internal class NeuralTtsClient private constructor(
     private fun fail(playing: Playback, index: Int) {
         if (active !== playing) return
         stop()
-        playing.onFailure(index.coerceIn(0, playing.lastIndex))
+        playing.listener.onFailure(index.coerceIn(0, playing.lastIndex))
     }
 
     companion object {
