@@ -1,6 +1,5 @@
 package eu.kanade.presentation.tsuzuki.home
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -76,6 +74,8 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.anime.TsuzukiAnimeWatch
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.tsuzuki.home.ChapterStatus
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeBook
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeState
@@ -113,7 +113,7 @@ fun TsuzukiHomeScreen(
     bottomBarOverlay: Boolean,
 ) {
     val t = TsuzukiTheme.tokens
-    // Read / Watch switch (boards Main, TabletLibrary). Watch is a placeholder until anime lands.
+    val animeEnabled = TsuzukiAnime.enabled
     var watching by rememberSaveable { mutableStateOf(false) }
     Column(
         Modifier
@@ -122,11 +122,13 @@ fun TsuzukiHomeScreen(
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().statusBarsPadding()) {
             val side = if (maxWidth < 600.dp) 16.dp else 28.dp
-            MediaSwitch(
-                watching = watching,
-                onChange = { watching = it },
-                modifier = Modifier.padding(start = side, end = side, top = 10.dp),
-            )
+            if (animeEnabled) {
+                MediaSwitch(
+                    watching = watching,
+                    onChange = { watching = it },
+                    modifier = Modifier.padding(start = side, end = side, top = 10.dp),
+                )
+            }
         }
         BoxWithConstraints(
             Modifier
@@ -136,7 +138,9 @@ fun TsuzukiHomeScreen(
         ) {
             val bottomPad = if (bottomBarOverlay) 110.dp else 24.dp
             when {
-                watching -> WatchPlaceholder(onBack = { watching = false })
+                showAnimeWatch(watching, animeEnabled) -> {
+                    TsuzukiAnimeWatch(bottomPad, actions.onBrowse)
+                }
                 state.loading -> Unit
                 state.isEmpty -> EmptyHome(actions, compact = maxWidth < 600.dp, bottomPad = bottomPad)
                 maxWidth < 600.dp -> PhoneHome(state, actions, bottomPad)
@@ -146,6 +150,9 @@ fun TsuzukiHomeScreen(
         }
     }
 }
+
+internal fun showAnimeWatch(watching: Boolean, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
+    watching && animeEnabled
 
 @Composable
 private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
@@ -189,39 +196,6 @@ private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier
                 )
             }
         }
-    }
-}
-
-/** Release teaser for the Watch half of Home. */
-@Composable
-private fun WatchPlaceholder(onBack: () -> Unit) {
-    BackHandler(onBack = onBack)
-    val t = TsuzukiTheme.tokens
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 24.dp)
-            .widthIn(max = 640.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(t.case(stringResource(MR.strings.tsz_watch)), style = displayStyle(56.sp), color = Color.White)
-        Text(
-            t.case(stringResource(MR.strings.tsz_watch_body)),
-            style = bodyStyle(14.sp, FontWeight.Medium).copy(lineHeight = 21.sp),
-            color = muted(t),
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            t.case(stringResource(MR.strings.tsz_back_to_reading)),
-            style = bodyStyle(15.sp, FontWeight.ExtraBold),
-            color = t.onAccent,
-            modifier = Modifier
-                .clip(RoundedCornerShape(26.dp))
-                .background(t.accent)
-                .tsuzukiClickable(role = Role.Button, onClick = onBack)
-                .padding(horizontal = 24.dp, vertical = 14.dp),
-        )
     }
 }
 

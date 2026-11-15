@@ -12,7 +12,11 @@ import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearchResults
+import eu.kanade.presentation.tsuzuki.browse.AnimeSearchFilterPills
+import eu.kanade.presentation.tsuzuki.browse.AnimeSearchMediaPills
 import eu.kanade.presentation.tsuzuki.browse.TsuzukiGlobalSearchSummary
+import eu.kanade.presentation.tsuzuki.browse.rememberAnimeGlobalSearch
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.nameWithTypeTag
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
@@ -34,17 +38,21 @@ fun GlobalSearchScreen(
     onClickSource: (Source) -> Unit,
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
+    allowAnimeSearch: Boolean = false,
+    booksAreNovels: Boolean = false,
     onRetrySource: ((Source) -> Unit)? = null,
 ) {
+    val animeSearch = rememberAnimeGlobalSearch(allowAnimeSearch)
+    val selectedAnimeSearch = animeSearch?.takeIf { it.selected }
     Scaffold(
         topBar = { scrollBehavior ->
             GlobalSearchToolbar(
                 searchQuery = state.searchQuery,
-                progress = state.progress,
+                progress = if (selectedAnimeSearch != null) 0 else state.progress,
                 total = state.total,
                 navigateUp = navigateUp,
                 onChangeSearchQuery = onChangeSearchQuery,
-                onSearch = onSearch,
+                onSearch = selectedAnimeSearch?.let { it::submit } ?: onSearch,
                 hideSourceFilter = false,
                 sourceFilter = state.sourceFilter,
                 pinGroups = state.pinGroups,
@@ -52,9 +60,15 @@ fun GlobalSearchScreen(
                 onlyShowHasResults = state.onlyShowHasResults,
                 onToggleResults = onToggleResults,
                 scrollBehavior = scrollBehavior,
+                mediaSelector = animeSearch?.let { { AnimeSearchMediaPills(it, state.searchQuery, booksAreNovels) } },
+                sourceFilters = selectedAnimeSearch?.let { { AnimeSearchFilterPills(it) } },
             )
         },
     ) { paddingValues ->
+        if (selectedAnimeSearch != null) {
+            AnimeGlobalSearchResults(selectedAnimeSearch, paddingValues)
+            return@Scaffold
+        }
         GlobalSearchContent(
             items = state.filteredItems,
             operationKey = state.searchQuery,

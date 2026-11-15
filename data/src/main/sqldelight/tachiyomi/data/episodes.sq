@@ -114,8 +114,28 @@ INSERT INTO episodes (
 updateProgress:
 UPDATE episodes SET seen = :seen, last_second_seen = :lastSecondSeen, total_seconds = :totalSeconds WHERE _id = :id;
 
+updateFromSource:
+UPDATE episodes SET name = :name, scanlator = :scanlator, fillermark = :fillermark,
+    episode_number = :episodeNumber, source_order = :sourceOrder, date_upload = :dateUpload,
+    summary = :summary, preview_url = :previewUrl, memo = :memo WHERE _id = :id;
+
+setBookmark:
+UPDATE episodes SET bookmark = :bookmark WHERE _id = :id;
+
 delete:
 DELETE FROM episodes WHERE _id = :id;
 
 lastInsertedId:
 SELECT last_insert_rowid();
+
+getLibraryUpdates:
+SELECT a._id, a.title, e._id, e.name, coalesce(e.preview_url, a.thumbnail_url), e.date_fetch, e.memo, e.scanlator, a.memo AS anime_memo
+FROM episodes AS e JOIN animes AS a ON a._id = e.anime_id
+WHERE a.favorite = 1 AND e.date_fetch >= :since AND e.date_fetch >= a.date_added
+ORDER BY e.date_fetch DESC, e.source_order, e._id DESC;
+
+getLibraryAiring:
+SELECT a._id, a.title, e._id, e.name, e.preview_url, e.date_upload, e.scanlator, a.memo AS anime_memo
+FROM episodes AS e JOIN animes AS a ON a._id = e.anime_id
+WHERE a.favorite = 1 AND e.date_upload >= :dayStart AND e.date_upload < :dayEnd
+ORDER BY e.date_upload, e._id;

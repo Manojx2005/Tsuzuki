@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_watch_stats_week">本周</string>
+    <string name="tsz_anime_watch_stats_month">本月</string>
+    <string name="tsz_anime_watch_stats_all_time">累计</string>
+    <string name="tsz_anime_watch_stats_episodes">已观看剧集</string>
+    <string name="tsz_anime_watch_stats_completed">已看完的动画</string>
+</resources>

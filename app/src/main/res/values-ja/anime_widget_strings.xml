@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_watching_widget_description">ホーム画面から最近見たアニメの続きを再生できます。</string>
+    <string name="tsz_watching_widget_empty">視聴中のアニメはありません</string>
+</resources>

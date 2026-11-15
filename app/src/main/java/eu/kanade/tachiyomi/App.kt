@@ -43,6 +43,7 @@ import eu.kanade.tachiyomi.di.PreferenceModule
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.interceptor.rateLimitExempt
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayerModule
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
@@ -123,6 +124,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(AppModule(this))
+        Injekt.importModule(AnimePlayerModule())
         Injekt.importModule(DomainModule())
         eu.kanade.tachiyomi.tsuzuki.migrateStoredThemes(Injekt.get<PreferenceStore>())
         if (isMainProcess) {
@@ -206,11 +208,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode.get())
 
-        // Tsuzuki: daily background check that notifies about a new app release.
-        eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
+        if (isMainProcess) {
+            // Tsuzuki: daily background check that notifies about a new app release.
+            eu.kanade.tachiyomi.tsuzuki.update.TsuzukiAppUpdateJob.setup(this)
+            eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime.initialize(this, scope)
 
-        // Updates widget update
-        WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+            // Updates widget update
+            WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+        }
 
         if (!LogcatLogger.isInstalled) {
             val minLogPriority = when {
@@ -222,7 +227,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
         }
 
-        initializeMigrator()
+        if (isMainProcess) initializeMigrator()
     }
 
     private fun initializeMigrator() {

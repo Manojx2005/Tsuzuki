@@ -33,6 +33,8 @@ class Kitsu(id: Long) : BaseTracker(id, "Kitsu"), DeletableTracker {
 
     private val api by lazy { KitsuApi(client, interceptor) }
 
+    internal val anime by lazy { api.anime(::getUserId) }
+
     override fun getLogo() = R.drawable.brand_kitsu
 
     override fun getStatusList(): List<Long> {

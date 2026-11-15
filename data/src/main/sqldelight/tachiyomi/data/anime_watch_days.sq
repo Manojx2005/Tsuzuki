@@ -1,0 +1,24 @@
+CREATE TABLE anime_watch_days (
+    episode_id INTEGER NOT NULL REFERENCES episodes (_id) ON DELETE CASCADE,
+    epoch_day INTEGER NOT NULL,
+    seconds INTEGER NOT NULL CHECK(seconds > 0),
+    PRIMARY KEY (episode_id, epoch_day)
+);
+
+CREATE INDEX anime_watch_days_epoch_day_index ON anime_watch_days(epoch_day);
+
+recordWatchDay:
+INSERT INTO anime_watch_days(episode_id, epoch_day, seconds)
+VALUES (:episodeId, :epochDay, :watchSeconds)
+ON CONFLICT(episode_id, epoch_day) DO UPDATE SET seconds = seconds + excluded.seconds;
+
+getWatchStats:
+SELECT
+    (SELECT coalesce(sum(seconds), 0) FROM anime_watch_days
+        WHERE epoch_day BETWEEN :weekStart AND :today) AS week_seconds,
+    (SELECT coalesce(sum(seconds), 0) FROM anime_watch_days
+        WHERE epoch_day BETWEEN :monthStart AND :today) AS month_seconds,
+    (SELECT coalesce(sum(time_watched), 0) FROM anime_history) AS all_time_seconds,
+    (SELECT count(*) FROM episodes WHERE seen = 1) AS episodes_seen,
+    (SELECT count(*) FROM animes
+        WHERE status = :completedStatus AND total_count > 0 AND total_count = seen_count) AS completed_anime;

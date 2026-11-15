@@ -10,7 +10,15 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.isBackupSourceName
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupEntry
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupFormat
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSummary
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionLoader
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
 import eu.kanade.tachiyomi.tsuzuki.backup.isBackupField
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.protobuf.ProtoBuf
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.source.service.SourceManager
@@ -38,6 +46,8 @@ class BackupFileValidator(
         var books = 0
         var shelves = 0
         var historyEntries = 0L
+        val anime = AnimeBackupSummary()
+        val animeTrackers = mutableMapOf<AnimeBackupFormat, MutableSet<Long>>()
         val reader = BackupProtoReader(context)
         var recognised = false
         reader.read(uri) { fieldNumber, data ->
@@ -61,25 +71,46 @@ class BackupFileValidator(
                 104 -> parser.decodeFromByteArray(BackupPreference.serializer(), data)
                 105 -> parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data)
                 106 -> parser.decodeFromByteArray(BackupExtensionStore.serializer(), data)
+                else -> if (TsuzukiAnime.enabled) {
+                    anime.record(fieldNumber, data, parser)
+                    AnimeBackupFormat.entries.firstOrNull { it.entries == fieldNumber }?.let { format ->
+                        recognised = true
+                        val entry = parser.decodeFromByteArray(AnimeBackupEntry.serializer(), data)
+                        entry.tracks.mapTo(animeTrackers.getOrPut(format, ::mutableSetOf)) { it.service }
+                    }
+                }
             }
         }
         if (!recognised) throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
 
         val sources = backupSources.associate { it.sourceId to it.name }
-        val missingSources = sources
+        val missingBookSources = sources
             .filter { sourceManager.get(it.key) == null }
             .map { (id, name) ->
                 if (name.isBackupSourceName()) name else sourceManager.getOrStub(id).toString()
             }
-            .distinct()
-            .sorted()
+        val missingAnimeSources = if (anime.sourceNames.isEmpty()) {
+            emptyList()
+        } else {
+            val installedIds = withContext(Dispatchers.IO) {
+                AnimeExtensionLoader.loadExtensions(context).filterIsInstance<AnimeLoadResult.Success>()
+                    .flatMap { it.extension.sources }.mapTo(hashSetOf()) { it.id }
+            }
+            anime.sourceNames.filter { it.id !in installedIds }.map { it.name.ifBlank { it.id.toString() } }
+        }
 
+        trackerIds +=
+            animeTrackers[anime.format].orEmpty().filter {
+                it == trackerManager.myAnimeList.id ||
+                    it == trackerManager.aniList.id
+            }
         val missingTrackers = trackerIds
             .mapNotNull { trackerManager.get(it) }
             .filter { !it.isLoggedIn }
             .map { it.name }
             .sorted()
 
+        val missingSources = (missingBookSources + missingAnimeSources).distinct().sorted()
         return Results(missingSources, missingTrackers, Contents(books, shelves, historyEntries))
     }
 

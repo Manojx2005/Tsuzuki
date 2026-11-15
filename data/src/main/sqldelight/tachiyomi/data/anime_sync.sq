@@ -15,6 +15,7 @@ CREATE TABLE anime_sync(
     start_date INTEGER NOT NULL,
     finish_date INTEGER NOT NULL,
     private INTEGER AS Boolean DEFAULT 0 NOT NULL,
+    mal_id INTEGER,
     UNIQUE (anime_id, sync_id) ON CONFLICT REPLACE,
     FOREIGN KEY(anime_id) REFERENCES animes (_id)
     ON DELETE CASCADE
@@ -25,16 +26,23 @@ CREATE INDEX idx_anime_sync_anime_id ON anime_sync(anime_id);
 getByAnimeId:
 SELECT * FROM anime_sync WHERE anime_id = :animeId ORDER BY sync_id;
 
+findFavoriteWithSameTracker:
+SELECT a._id FROM anime_sync AS known
+JOIN anime_sync AS linked ON known.sync_id = linked.sync_id AND known.remote_id = linked.remote_id
+JOIN animes AS a ON linked.anime_id = a._id
+WHERE known.anime_id = :animeId AND known.remote_id > 0 AND a.favorite = 1 AND a.source != :sourceId
+ORDER BY a._id LIMIT 1;
+
 upsert:
 INSERT INTO anime_sync (
     anime_id, sync_id, remote_id, library_id, title, last_episode_seen, total_episodes, status, score, remote_url,
-    start_date, finish_date, private
+    start_date, finish_date, private, mal_id
 ) VALUES ?
 ON CONFLICT(anime_id, sync_id) DO UPDATE SET
     remote_id = excluded.remote_id, library_id = excluded.library_id, title = excluded.title,
     last_episode_seen = excluded.last_episode_seen, total_episodes = excluded.total_episodes, status = excluded.status,
     score = excluded.score, remote_url = excluded.remote_url, start_date = excluded.start_date,
-    finish_date = excluded.finish_date, private = excluded.private;
+    finish_date = excluded.finish_date, private = excluded.private, mal_id = excluded.mal_id;
 
 delete:
 DELETE FROM anime_sync WHERE anime_id = :animeId AND sync_id = :syncId;

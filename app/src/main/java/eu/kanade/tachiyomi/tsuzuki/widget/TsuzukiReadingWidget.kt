@@ -232,7 +232,7 @@ private fun ReadingWidgetContent(
                 }
                 book?.progress?.let {
                     Spacer(GlanceModifier.height(6.dp))
-                    ReadingWidgetProgress(it, tokens)
+                    WidgetProgress(it, tokens)
                 }
             }
             if (book?.canResume == true) {
@@ -258,7 +258,7 @@ private fun ReadingWidgetContent(
 }
 
 @Composable
-private fun ReadingWidgetProgress(progress: Float, tokens: TsuzukiTokens) {
+internal fun WidgetProgress(progress: Float, tokens: TsuzukiTokens) {
     if (!tokens.isDot) {
         LinearProgressIndicator(
             progress = progress,
@@ -360,15 +360,21 @@ private fun label(color: Color, face: FontFamily) =
     TextStyle(color = ColorProvider(color), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = face)
 
 /** Loads a widget-sized cover, greyscale in Dot unless the cover-colour setting is on. */
-internal fun loadWidgetCover(context: Context, data: Any?, grey: Boolean): Bitmap? = runCatching {
+internal fun loadWidgetCover(
+    context: Context,
+    data: Any?,
+    grey: Boolean,
+    width: Int = 168,
+    height: Int = 252,
+): Bitmap? = runCatching {
     val request = coil3.request.ImageRequest.Builder(context)
         .data(data)
-        .size(168, 252)
+        .size(width, height)
         // Widgets parcel their bitmaps to the launcher; hardware bitmaps can't be parcelled.
         .allowHardware(false)
         .memoryCachePolicy(coil3.request.CachePolicy.DISABLED)
         .build()
-    val bitmap = context.imageLoader.executeBlocking(request).image?.toBitmap(168, 252) ?: return null
+    val bitmap = context.imageLoader.executeBlocking(request).image?.toBitmap(width, height) ?: return null
     if (!grey) return bitmap
     val out = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
     val paint = android.graphics.Paint().apply {

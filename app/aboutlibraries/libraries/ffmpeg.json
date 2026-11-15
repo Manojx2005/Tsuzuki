@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.anime-native:ffmpeg",
+  "name": "FFmpeg",
+  "artifactVersion": "b08d7969c550a804a59511c7b83f2dd8cc0499b8",
+  "description": "Included in the arm64 anime player. Corresponding source, exact revisions, build flags and patches are listed in the Tsuzuki native player notices.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/654e0dff6cb6270a4398a34d4c4013a0e462be1f/docs/licenses/anime-native/README.md#corresponding-source",
+  "licenses": [
+    "LGPL-3.0-or-later"
+  ]
+}

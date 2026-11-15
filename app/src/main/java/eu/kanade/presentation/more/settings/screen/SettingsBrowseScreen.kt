@@ -12,6 +12,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import eu.kanade.presentation.tsuzuki.browse.AnimeExtensionReposScreen
+import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.browse.extension.NovelExtensionReposScreen
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
@@ -23,6 +26,7 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 object SettingsBrowseScreen : SearchableSettings {
 
@@ -45,7 +49,7 @@ object SettingsBrowseScreen : SearchableSettings {
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.label_sources),
-                preferenceItems = listOf(
+                preferenceItems = listOfNotNull(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = sourcePreferences.hideInLibraryItems,
                         title = stringResource(MR.strings.pref_hide_in_library_items),
@@ -87,6 +91,23 @@ object SettingsBrowseScreen : SearchableSettings {
                             navigator.push(NovelExtensionReposScreen())
                         },
                     ),
+                    if (TsuzukiAnime.supported) {
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = remember { TsuzukiAnime.preference(Injekt.get()) },
+                            title = androidStringResource(R.string.tsz_anime_beta),
+                            subtitle = androidStringResource(R.string.tsz_anime_beta_summary),
+                        )
+                    } else {
+                        null
+                    },
+                    if (TsuzukiAnime.enabled) {
+                        Preference.PreferenceItem.TextPreference(
+                            title = androidStringResource(R.string.tsz_anime_extension_repos),
+                            onClick = { navigator.push(AnimeExtensionReposScreen) },
+                        )
+                    } else {
+                        null
+                    },
                 ),
             ),
             Preference.PreferenceGroup(

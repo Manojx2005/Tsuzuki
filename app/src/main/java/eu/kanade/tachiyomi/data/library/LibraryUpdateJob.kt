@@ -657,6 +657,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         ) {
             val preferences = Injekt.get<LibraryPreferences>()
             val interval = prefInterval ?: preferences.autoUpdateInterval.get()
+            eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob.setupTask(context, interval)
             if (interval > 0) {
                 val restrictions = preferences.autoUpdateDeviceRestrictions.get()
                 val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {

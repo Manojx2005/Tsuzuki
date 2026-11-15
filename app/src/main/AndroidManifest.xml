@@ -60,6 +60,26 @@
         android:theme="@style/Theme.Tachiyomi">
 
         <activity
+            android:name=".tsuzuki.anime.ui.AnimeCatalogueActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tsuzuki.anime.ui.AnimeMigrationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tsuzuki.anime.ui.AnimePlayerActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true">
+            <!-- The full-screen player follows its landscape request on Android 16 tablets. -->
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+                android:value="true" />
+        </activity>
+
+        <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
@@ -298,6 +318,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/tsz_reading_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="eu.kanade.tachiyomi.tsuzuki.widget.TsuzukiWatchingWidgetReceiver"
+            android:enabled="false"
+            android:exported="false"
+            android:label="@string/tsz_anime_continue_watching">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tsz_watching_widget_info" />
         </receiver>
 
         <!-- Tsuzuki: "Listening" home-screen widget (TTS now playing) -->

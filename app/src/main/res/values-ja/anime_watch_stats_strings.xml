@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_watch_stats_week">今週</string>
+    <string name="tsz_anime_watch_stats_month">今月</string>
+    <string name="tsz_anime_watch_stats_all_time">累計</string>
+    <string name="tsz_anime_watch_stats_episodes">視聴済みエピソード</string>
+    <string name="tsz_anime_watch_stats_completed">視聴完了したアニメ</string>
+</resources>

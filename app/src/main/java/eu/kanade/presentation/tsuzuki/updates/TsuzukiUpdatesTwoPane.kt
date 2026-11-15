@@ -95,7 +95,7 @@ internal fun otherNewChapters(items: List<UpdatesItem>, selected: UpdatesItem): 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TsuzukiUpdatesTwoPane(
+internal fun TsuzukiUpdatesTwoPane(
     state: UpdatesViewModel.State,
     selectedKey: Long?,
     onSelectKey: (Long) -> Unit,
@@ -113,6 +113,7 @@ fun TsuzukiUpdatesTwoPane(
     onClickNovelGroup: (Long) -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
+    anime: AnimeUpdatesSlots? = null,
 ) {
     val t = TsuzukiTheme.tokens
     var pendingSave by remember { mutableStateOf<List<UpdatesItem>?>(null) }
@@ -152,8 +153,12 @@ fun TsuzukiUpdatesTwoPane(
             state = listState,
             contentPadding = PaddingValues(bottom = 8.dp),
         ) {
-            if (showFilterChips) {
+            if (showFilterChips || anime?.mediaPills != null) {
                 item(key = "filters") {
+                    anime?.mediaPills?.let {
+                        it(true)
+                        return@item
+                    }
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -180,6 +185,7 @@ fun TsuzukiUpdatesTwoPane(
                     }
                 }
             }
+            anime?.airingStrip?.let { strip -> item(key = "airing_today") { strip() } }
             if (state.items.isNotEmpty()) {
                 item(key = "tiles") {
                     val unread = state.items.filter { !it.update.read }

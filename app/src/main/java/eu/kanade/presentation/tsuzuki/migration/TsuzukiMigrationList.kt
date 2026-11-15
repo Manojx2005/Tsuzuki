@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -268,6 +269,33 @@ private fun TsuzukiMigrationSide(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val count = pluralStringResource(MR.plurals.manga_num_chapters, chapterCount, chapterCount)
+    val latest = remember(latestChapter) { latestChapter?.let(::formatChapterNumber) }
+    TsuzukiMigrationPreviewTile(
+        label = label,
+        title = manga.title,
+        subtitle = listOfNotNull(count, manga.author?.takeIf(String::isNotBlank)).joinToString(" · "),
+        highlighted = highlighted,
+        modifier = modifier,
+        onClick = onClick,
+        footer = latest?.let { stringResource(MR.strings.migrationListScreen_latestChapterLabel, it) },
+        cover = {
+            MangaCover.Book(data = manga, modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth())
+        },
+    )
+}
+
+@Composable
+internal fun TsuzukiMigrationPreviewTile(
+    label: String,
+    title: String,
+    subtitle: String,
+    highlighted: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    footer: String? = null,
+    cover: @Composable ColumnScope.() -> Unit,
+) {
     val tokens = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(tokens.tileRadius)
     val outline = if (highlighted) Modifier.border(2.dp, tokens.accent, shape) else Modifier
@@ -276,7 +304,7 @@ private fun TsuzukiMigrationSide(
         modifier = modifier
             .then(outline)
             .clip(shape)
-            .tsuzukiClickable(role = Role.Button, onClick = onClick),
+            .then(onClick?.let { Modifier.tsuzukiClickable(role = Role.Button, onClick = it) } ?: Modifier),
         padding = 10.dp,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -287,32 +315,23 @@ private fun TsuzukiMigrationSide(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            MangaCover.Book(
-                data = manga,
-                modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(),
-            )
+            cover()
             Text(
-                text = tsuzukiCase(manga.title).orEmpty(),
+                text = tsuzukiCase(title).orEmpty(),
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val count = pluralStringResource(MR.plurals.manga_num_chapters, chapterCount, chapterCount)
             Text(
-                text = tsuzukiCase(
-                    listOfNotNull(count, manga.author?.takeIf(String::isNotBlank)).joinToString(" · "),
-                ).orEmpty(),
+                text = tsuzukiCase(subtitle).orEmpty(),
                 style = MaterialTheme.typography.labelSmall,
                 color = muted,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val latest = remember(latestChapter) { latestChapter?.let(::formatChapterNumber) }
-            if (latest != null) {
+            if (footer != null) {
                 Text(
-                    text = tsuzukiCase(
-                        stringResource(MR.strings.migrationListScreen_latestChapterLabel, latest),
-                    ).orEmpty(),
+                    text = tsuzukiCase(footer).orEmpty(),
                     style = MaterialTheme.typography.labelSmall,
                     color = muted,
                     maxLines = 1,

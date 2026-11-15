@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_watching_widget_description">홈 화면에서 최근에 시청한 애니메이션을 이어 보세요.</string>
+    <string name="tsz_watching_widget_empty">시청 중인 애니메이션 없음</string>
+</resources>

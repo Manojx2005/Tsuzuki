@@ -17,6 +17,10 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.download.DownloadCache
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupFormat
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupStore
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupSummary
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -121,6 +125,7 @@ class BackupRestorer(
 
         if (options.libraryEntries) {
             restoreAmount += summary.mangaCount
+            if (options.includeAnime) restoreAmount += summary.anime.count
         }
         if (options.categories) {
             restoreAmount += 1
@@ -155,6 +160,9 @@ class BackupRestorer(
             if (options.libraryEntries) {
                 restoreMangaStream(uri, if (options.categories) summary.backupCategories else emptyList(), options)
             }
+            if (TsuzukiAnime.enabled && options.includeAnime && summary.anime.format != null) {
+                restoreAnimeStream(uri, summary.anime, options)
+            }
             if (options.extensionStores) {
                 restoreExtensionStores(summary.backupExtensionStores)
             }
@@ -168,7 +176,9 @@ class BackupRestorer(
         val backupSources = mutableListOf<BackupSource>()
         val backupPreferences = mutableListOf<BackupPreference>()
         val backupSourcePreferences = mutableListOf<BackupSourcePreferences>()
-        val backupExtensionStores = mutableListOf<BackupExtensionStore>()
+        val extensionStoreFields = mutableListOf<ByteArray>()
+        val legacyStoreFields = mutableListOf<ByteArray>()
+        val anime = AnimeBackupSummary()
         var mangaCount = 0
 
         val reader = BackupProtoReader(context)
@@ -181,14 +191,12 @@ class BackupRestorer(
                 105 -> backupSourcePreferences.add(
                     parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data),
                 )
-                106 -> backupExtensionStores.add(
-                    parser.decodeFromByteArray(
-                        BackupExtensionStore.serializer(),
-                        BackupProtoMigration.migrateExtensionStore(data),
-                    ),
-                )
+                106 -> extensionStoreFields.add(data)
+                108 -> if (TsuzukiAnime.enabled) legacyStoreFields.add(data)
+                else -> if (TsuzukiAnime.enabled) anime.record(fieldNumber, data, parser)
             }
         }
+        val stores = if (anime.format == AnimeBackupFormat.LEGACY_ANIYOMI) legacyStoreFields else extensionStoreFields
 
         return BackupSummary(
             mangaCount = mangaCount,
@@ -196,7 +204,34 @@ class BackupRestorer(
             backupSources = backupSources,
             backupPreferences = backupPreferences,
             backupSourcePreferences = backupSourcePreferences,
-            backupExtensionStores = backupExtensionStores,
+            backupExtensionStores = stores.map { bytes ->
+                val migrated = BackupProtoMigration.migrateExtensionStore(bytes)
+                parser.decodeFromByteArray(BackupExtensionStore.serializer(), migrated)
+            },
+            anime = anime,
+        )
+    }
+
+    private fun CoroutineScope.restoreAnimeStream(
+        uri: Uri,
+        summary: AnimeBackupSummary,
+        options: RestoreOptions,
+    ) = launch {
+        val reader = BackupProtoReader(context)
+        AnimeBackupStore(database).restore(
+            summary = summary,
+            parser = parser,
+            includeEntries = options.libraryEntries,
+            includeCategories = options.categories,
+            read = { callback -> reader.read(uri, callback) },
+            onEntry = { title, error ->
+                val label = title ?: context.stringResource(MR.strings.tsz_anime_media)
+                if (error != null) errors.add(Date() to "$label: ${error.message}")
+                val progress = restoreProgress.incrementAndFetch()
+                if (progress % NOTIFY_INTERVAL == 0 || progress == restoreAmount) {
+                    notifier.showRestoreProgress(label, progress, restoreAmount, isSync)
+                }
+            },
         )
     }
 
@@ -251,6 +286,7 @@ class BackupRestorer(
         val backupPreferences: List<BackupPreference>,
         val backupSourcePreferences: List<BackupSourcePreferences>,
         val backupExtensionStores: List<BackupExtensionStore>,
+        val anime: AnimeBackupSummary,
     )
 
     private fun CoroutineScope.restoreCategories(backupCategories: List<BackupCategory>) = launch {

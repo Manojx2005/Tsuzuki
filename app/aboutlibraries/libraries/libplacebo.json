@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.anime-native:libplacebo",
+  "name": "libplacebo",
+  "artifactVersion": "1fd3c7bde7b943fe8985c893310b5269a09b46c5",
+  "description": "Included in the arm64 anime player. Corresponding source, exact revisions, build flags and patches are listed in the Tsuzuki native player notices.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/654e0dff6cb6270a4398a34d4c4013a0e462be1f/docs/licenses/anime-native/README.md#corresponding-source",
+  "licenses": [
+    "LGPL-2.1-or-later"
+  ]
+}

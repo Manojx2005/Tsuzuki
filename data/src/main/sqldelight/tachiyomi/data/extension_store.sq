@@ -9,25 +9,30 @@ CREATE TABLE extension_store(
     contact_discord TEXT,
     is_legacy INTEGER AS Boolean NOT NULL,
     is_novel INTEGER AS Boolean NOT NULL DEFAULT 0,
-    extension_list_url TEXT
+    extension_list_url TEXT,
+    media TEXT NOT NULL DEFAULT 'manga' CHECK (media IN ('novel', 'manga', 'anime'))
 );
 
 get:
-SELECT *
+SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord,
+    is_legacy, is_novel, extension_list_url
 FROM extension_store
-WHERE index_url = :indexUrl;
+WHERE index_url = :indexUrl AND media != 'anime';
 
 getAll:
-SELECT *
-FROM extension_store;
+SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord,
+    is_legacy, is_novel, extension_list_url
+FROM extension_store WHERE media != 'anime';
 
 getCount:
 SELECT COUNT(*)
-FROM extension_store;
+FROM extension_store WHERE media != 'anime';
 
 upsert:
-INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, contact_discord, is_legacy, is_novel, extension_list_url)
-VALUES (:indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :contactDiscord, :isLegacy, :isNovel, :extensionListUrl)
+INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, contact_discord,
+    is_legacy, is_novel, extension_list_url, media)
+VALUES (:indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :contactDiscord,
+    :isLegacy, :isNovel, :extensionListUrl, CASE WHEN :isNovel THEN 'novel' ELSE 'manga' END)
 ON CONFLICT(index_url)
 DO UPDATE
 SET
@@ -38,9 +43,20 @@ SET
     contact_discord = :contactDiscord,
     is_legacy = :isLegacy,
     is_novel = :isNovel,
-    extension_list_url = :extensionListUrl
-WHERE index_url = :indexUrl;
+    extension_list_url = :extensionListUrl,
+    media = excluded.media
+WHERE index_url = :indexUrl AND extension_store.media != 'anime';
 
 delete:
 DELETE FROM extension_store
-WHERE index_url = :indexUrl;
+WHERE index_url = :indexUrl AND media != 'anime';
+
+getAnimeStores:
+SELECT index_url, name FROM extension_store WHERE media = 'anime' ORDER BY name, index_url;
+
+insertAnimeStore:
+INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, is_legacy, media)
+VALUES (:indexUrl, :name, 'Anime', '', '', 1, 'anime');
+
+deleteAnimeStore:
+DELETE FROM extension_store WHERE index_url = :indexUrl AND media = 'anime';

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore
 
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 
@@ -12,6 +13,7 @@ data class RestoreOptions(
     val appSettings: Boolean = true,
     val extensionStores: Boolean = true,
     val sourceSettings: Boolean = true,
+    val includeAnime: Boolean = true,
 ) {
 
     fun asBooleanArray() = booleanArrayOf(
@@ -22,12 +24,13 @@ data class RestoreOptions(
         sourceSettings,
         includeManga,
         includeNovels,
+        includeAnime,
     )
 
     fun canRestore() = libraryEntries || categories || appSettings || extensionStores || sourceSettings
 
     companion object {
-        val options = listOf(
+        val options = listOfNotNull(
             Entry(
                 label = MR.strings.label_library,
                 getter = RestoreOptions::libraryEntries,
@@ -45,6 +48,16 @@ data class RestoreOptions(
                 setter = { options, enabled -> options.copy(includeNovels = enabled) },
                 enabled = { it.libraryEntries },
             ),
+            if (TsuzukiAnime.enabled) {
+                Entry(
+                    label = MR.strings.tsz_anime_media,
+                    getter = RestoreOptions::includeAnime,
+                    setter = { options, enabled -> options.copy(includeAnime = enabled) },
+                    enabled = { it.libraryEntries || it.categories },
+                )
+            } else {
+                null
+            },
             Entry(
                 label = MR.strings.categories,
                 getter = RestoreOptions::categories,
@@ -75,6 +88,7 @@ data class RestoreOptions(
             sourceSettings = array[4],
             includeManga = array.getOrElse(5) { true },
             includeNovels = array.getOrElse(6) { true },
+            includeAnime = array.getOrElse(7) { true },
         )
     }
 

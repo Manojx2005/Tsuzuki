@@ -70,12 +70,56 @@ internal fun TsuzukiDuplicateMangaDialog(
     modifier: Modifier,
     canAddAnyway: Boolean,
 ) {
-    val tokens = TsuzukiTheme.tokens
     val sourceManager = remember { Injekt.get<SourceManager>() }
     var selectedId by rememberSaveable { mutableStateOf<Long?>(null) }
     val selected = duplicates.firstOrNull { it.manga.id == selectedId } ?: duplicates.firstOrNull()
     val openLabel = stringResource(MR.strings.tsz_open)
 
+    TsuzukiDuplicateDialog(
+        onDismissRequest = onDismissRequest,
+        onConfirm = onConfirm.takeIf { canAddAnyway },
+        onOpen = selected?.let { duplicate -> { onOpenManga(duplicate.manga) } },
+        onMigrate = selected?.let { duplicate -> { onMigrate(duplicate.manga) } },
+        summary = stringResource(MR.strings.possible_duplicates_summary),
+        modifier = modifier,
+    ) {
+        if (selected != null) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val cardWidth = (maxWidth - 10.dp) / 2
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                ) {
+                    items(duplicates, key = { it.manga.id }, contentType = { "duplicate_card" }) { duplicate ->
+                        val source = sourceManager.getOrStub(duplicate.manga.source)
+                        TsuzukiDuplicateCard(
+                            duplicate = duplicate,
+                            sourceName = source.name,
+                            isStubSource = source is StubSource,
+                            isSelected = duplicate.manga.id == selected.manga.id,
+                            openLabel = openLabel,
+                            onSelect = { selectedId = duplicate.manga.id },
+                            onOpen = { onOpenManga(duplicate.manga) },
+                            modifier = Modifier.width(cardWidth),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun TsuzukiDuplicateDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (() -> Unit)?,
+    onOpen: (() -> Unit)?,
+    onMigrate: (() -> Unit)?,
+    summary: String? = null,
+    modifier: Modifier = Modifier,
+    cards: @Composable () -> Unit,
+) {
+    val tokens = TsuzukiTheme.tokens
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -103,37 +147,19 @@ internal fun TsuzukiDuplicateMangaDialog(
                     modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.headlineLarge,
                 )
-                Text(
-                    text = stringResource(MR.strings.possible_duplicates_summary),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = tokens.dotOn.copy(alpha = 0.72f),
-                )
-                if (selected != null) {
-                    BoxWithConstraints(Modifier.fillMaxWidth()) {
-                        val cardWidth = (maxWidth - 10.dp) / 2
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
-                        ) {
-                            items(duplicates, key = { it.manga.id }, contentType = { "duplicate_card" }) { duplicate ->
-                                val source = sourceManager.getOrStub(duplicate.manga.source)
-                                TsuzukiDuplicateCard(
-                                    duplicate = duplicate,
-                                    sourceName = source.name,
-                                    isStubSource = source is StubSource,
-                                    isSelected = duplicate.manga.id == selected.manga.id,
-                                    openLabel = openLabel,
-                                    onSelect = { selectedId = duplicate.manga.id },
-                                    onOpen = { onOpenManga(duplicate.manga) },
-                                    modifier = Modifier.width(cardWidth),
-                                )
-                            }
-                        }
-                    }
+                if (summary != null) {
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.dotOn.copy(alpha = 0.72f),
+                    )
+                }
+                cards()
+                if (onMigrate != null) {
                     Button(
                         onClick = {
                             onDismissRequest()
-                            onMigrate(selected.manga)
+                            onMigrate()
                         },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -146,8 +172,10 @@ internal fun TsuzukiDuplicateMangaDialog(
                             style = MaterialTheme.typography.labelLarge,
                         )
                     }
+                }
+                if (onOpen != null) {
                     OutlinedButton(
-                        onClick = { onOpenManga(selected.manga) },
+                        onClick = onOpen,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = tokens.tile,
@@ -155,10 +183,13 @@ internal fun TsuzukiDuplicateMangaDialog(
                         ),
                         border = BorderStroke(1.dp, tokens.tileBorder ?: tokens.track),
                     ) {
-                        Text(text = tsuzukiCase(openLabel).orEmpty(), style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = tsuzukiCase(stringResource(MR.strings.tsz_open)).orEmpty(),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
                     }
                 }
-                if (canAddAnyway) {
+                if (onConfirm != null) {
                     TextButton(
                         onClick = {
                             onDismissRequest()

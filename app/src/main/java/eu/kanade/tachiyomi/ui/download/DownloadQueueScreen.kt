@@ -73,7 +73,9 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.components.errorHeading
+import eu.kanade.presentation.tsuzuki.download.TsuzukiAnimeDownloadQueue
 import eu.kanade.presentation.tsuzuki.download.TsuzukiMangaDownloadQueue
 import eu.kanade.presentation.tsuzuki.download.rememberMangaQueueStatuses
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
@@ -81,6 +83,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.translation.TranslationService
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.i18n.MR
@@ -117,7 +121,12 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
         val translationQueue by translationService.queueState.collectAsState()
         val currentTranslatingChapterId by translationService.currentTranslatingChapterId.collectAsState()
 
-        var selectedTab by remember { mutableStateOf(initialTab.coerceIn(0, 2)) }
+        val animeEnabled = TsuzukiAnime.enabled
+        val animeDownloads = if (animeEnabled) remember { Injekt.get<AnimeDownloads>() } else null
+        val animeQueue = animeDownloads?.state?.collectAsState()?.value
+        var requestedTab by remember { mutableStateOf(initialTab) }
+        val selectedTab = requestedTab.coerceIn(0, if (animeEnabled) 3 else 2)
+        val animeSelected = selectedTab == 3 && animeDownloads != null
         var filterMode by remember { mutableStateOf(DownloadQueueFilter.All) }
         val canReorder = filterMode == DownloadQueueFilter.All
         val themed = isTsuzukiStyle()
@@ -173,11 +182,15 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
             derivedStateOf { novelList.sumOf { it.totalChapters } }
         }
 
-        val tabs = listOf(
-            "${stringResource(TDMR.strings.label_novels)} ($novelCount)",
-            "${stringResource(TDMR.strings.label_manga)} ($mangaCount)",
-            "${stringResource(TDMR.strings.label_translations)} (${translationQueue.size})",
-        )
+        val labels = listOf(
+            stringResource(TDMR.strings.label_novels),
+            stringResource(TDMR.strings.label_manga),
+            stringResource(TDMR.strings.label_translations),
+        ) + if (animeDownloads != null) listOf(stringResource(MR.strings.tsz_anime_media)) else emptyList()
+        val counts = listOf(novelCount, mangaCount, translationQueue.size) +
+            if (animeQueue != null) listOf(animeQueue.entries.size) else emptyList()
+
+        val tabs = labels.zip(counts) { label, count -> "$label ($count)" }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
@@ -212,7 +225,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                 AppBar(
                     titleContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Tsuzuki: AppBarTitle gives the display face in the Tsuzuki themes; same text style in stock.
+                            // AppBarTitle uses the display face in the Tsuzuki themes.
                             eu.kanade.presentation.components.AppBarTitle(
                                 title = stringResource(MR.strings.label_download_queue),
                                 modifier = Modifier.weight(1f, false),
@@ -494,7 +507,8 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                 )
             },
             floatingActionButton = {
-                val isRunning by viewModel.isDownloaderRunning.collectAsState()
+                val sharedRunning by viewModel.isDownloaderRunning.collectAsState()
+                val isRunning = if (animeSelected) animeQueue?.paused == false else sharedRunning
                 SmallExtendedFloatingActionButton(
                     text = {
                         val id = if (isRunning) {
@@ -502,7 +516,7 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                         } else {
                             MR.strings.action_resume
                         }
-                        Text(text = stringResource(id))
+                        Text(text = if (animeSelected) tsuzukiMenuLabel(stringResource(id)) else stringResource(id))
                     },
                     icon = {
                         val icon = if (isRunning) {
@@ -513,7 +527,9 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                         Icon(imageVector = icon, contentDescription = null)
                     },
                     onClick = {
-                        if (isRunning) {
+                        if (animeSelected) {
+                            animeDownloads.setPaused(isRunning)
+                        } else if (isRunning) {
                             viewModel.pauseDownloads()
                         } else {
                             viewModel.startDownloads()
@@ -522,7 +538,8 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                     expanded = fabExpanded,
                     modifier = Modifier.animateFloatingActionButton(
                         visible = (selectedTab == 1 && mangaList.isNotEmpty()) ||
-                            (selectedTab == 0 && novelList.isNotEmpty()),
+                            (selectedTab == 0 && novelList.isNotEmpty()) ||
+                            (animeSelected && animeQueue?.hasQueuedEpisodes == true),
                         alignment = Alignment.BottomEnd,
                     ),
                 )
@@ -532,28 +549,27 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                 // Tsuzuki (board 07-system "Downloads"): queued tile, Wi-Fi chip and pill tabs instead of the TabRow.
                 if (themed) {
                     eu.kanade.presentation.tsuzuki.settings.TsuzukiDownloadQueueHeader(
-                        labels = listOf(
-                            stringResource(TDMR.strings.label_novels),
-                            stringResource(TDMR.strings.label_manga),
-                            stringResource(TDMR.strings.label_translations),
-                        ),
-                        counts = listOf(novelCount, mangaCount, translationQueue.size),
+                        labels = labels,
+                        counts = counts,
+                        showSharedSummary = !animeSelected,
                         selected = selectedTab,
-                        onSelect = { selectedTab = it },
+                        onSelect = { requestedTab = it },
                     )
                 } else {
                     TabRow(selectedTabIndex = selectedTab) {
                         tabs.forEachIndexed { index, titleRes ->
                             Tab(
                                 selected = selectedTab == index,
-                                onClick = { selectedTab = index },
+                                onClick = { requestedTab = index },
                                 text = { Text(titleRes) },
                             )
                         }
                     }
                 }
 
-                if ((selectedTab == 1 && filteredMangaList.isEmpty()) ||
+                if (animeSelected) {
+                    TsuzukiAnimeDownloadQueue(animeDownloads, contentPadding)
+                } else if ((selectedTab == 1 && filteredMangaList.isEmpty()) ||
                     (selectedTab == 0 && filteredNovelList.isEmpty()) ||
                     (selectedTab == 2 && translationQueue.isEmpty() && !translationProgress.isRunning)
                 ) {

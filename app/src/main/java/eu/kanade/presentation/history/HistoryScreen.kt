@@ -1,12 +1,14 @@
 package eu.kanade.presentation.history
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -19,7 +21,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -31,7 +37,11 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.tsuzuki.history.TsuzukiAnimeHistory
 import eu.kanade.presentation.tsuzuki.history.TsuzukiHistorySelection
+import eu.kanade.presentation.tsuzuki.history.rememberAnimeHistory
+import eu.kanade.presentation.tsuzuki.history.showAnimeHistory
 import eu.kanade.presentation.tsuzuki.selection.SelectionAction
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectionBar
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
@@ -68,12 +78,21 @@ fun HistoryScreen(
     onRemoveSelected: ((List<HistoryWithRelations>) -> Unit)? = null,
 ) {
     val tsuzuki = isTsuzukiStyle()
+    val animeHistory = if (tsuzuki) rememberAnimeHistory() else emptyList()
+    val hasAnimeHistory = showAnimeHistory(animeHistory.isNotEmpty())
+    var animeSelected by rememberSaveable { mutableStateOf(false) }
+    val showingAnime = hasAnimeHistory && animeSelected
     val selection = remember { TsuzukiHistorySelection() }
     val rows = remember(state.list) { state.list.orEmpty().filterIsInstance<HistoryUiModel.Item>().map { it.item } }
     val selected = remember(rows, selection.ids) { rows.filter { it.id in selection.ids } }
-    val selecting = selected.isNotEmpty()
+    val selecting = selected.isNotEmpty() && !showingAnime
     BackHandler(enabled = selecting, onBack = selection::clear)
     LaunchedEffect(state.searchQuery, state.filter, state.groupByNovel) { selection.clear() }
+
+    fun selectBookFilter(filter: HistoryFilter) {
+        animeSelected = false
+        onFilterSelected(filter)
+    }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -101,7 +120,8 @@ fun HistoryScreen(
                 titleContent = { AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
-                actions = {
+                actions = historyActions@{
+                    if (showingAnime) return@historyActions
                     AppBarActions(
                         listOf(
                             AppBar.Action(
@@ -141,10 +161,12 @@ fun HistoryScreen(
         Column(
             modifier = Modifier.padding(contentPadding),
         ) {
-            if (showFilterChips) {
+            if (showFilterChips || hasAnimeHistory) {
+                val filterScroll = if (hasAnimeHistory) Modifier.horizontalScroll(rememberScrollState()) else Modifier
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(filterScroll)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -155,22 +177,32 @@ fun HistoryScreen(
                         if (showAllFilter) {
                             eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
                                 text = stringResource(MR.strings.all),
-                                selected = state.filter == HistoryFilter.ALL,
-                                onClick = { onFilterSelected(HistoryFilter.ALL) },
+                                selected = !showingAnime && state.filter == HistoryFilter.ALL,
+                                onClick = { selectBookFilter(HistoryFilter.ALL) },
                             )
                         }
                         if (showMangaFilter) {
                             eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
                                 text = stringResource(TDMR.strings.label_manga),
-                                selected = state.filter == HistoryFilter.MANGA,
-                                onClick = { onFilterSelected(HistoryFilter.MANGA) },
+                                selected = !showingAnime && state.filter == HistoryFilter.MANGA,
+                                onClick = { selectBookFilter(HistoryFilter.MANGA) },
                             )
                         }
                         eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
                             text = stringResource(TDMR.strings.label_novels),
-                            selected = state.filter == HistoryFilter.NOVELS,
-                            onClick = { onFilterSelected(HistoryFilter.NOVELS) },
+                            selected = !showingAnime && state.filter == HistoryFilter.NOVELS,
+                            onClick = { selectBookFilter(HistoryFilter.NOVELS) },
                         )
+                        if (hasAnimeHistory) {
+                            TsuzukiPill(
+                                text = stringResource(MR.strings.tsz_anime_media),
+                                selected = showingAnime,
+                                onClick = {
+                                    selection.clear()
+                                    animeSelected = true
+                                },
+                            )
+                        }
                     } else {
                         if (showAllFilter) {
                             FilterChip(
@@ -195,6 +227,10 @@ fun HistoryScreen(
                 }
             }
 
+            if (showingAnime) {
+                TsuzukiAnimeHistory(animeHistory, state.searchQuery)
+                return@Scaffold
+            }
             state.list.let {
                 if (it == null) {
                     LoadingScreen()

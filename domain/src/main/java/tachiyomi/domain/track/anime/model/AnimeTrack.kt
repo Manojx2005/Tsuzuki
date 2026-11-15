@@ -15,4 +15,5 @@ data class AnimeTrack(
     val startDate: Long = 0,
     val finishDate: Long = 0,
     val isPrivate: Boolean = false,
+    val malId: Long? = null,
 )

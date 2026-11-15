@@ -6,10 +6,5 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTop" />
-        <!-- Debug-only libmpv test player. Launch with adb: am start -n PKG/eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugPlayerActivity, extra string "url". -->
-        <activity
-            android:name="eu.kanade.tachiyomi.tsuzuki.anime.debug.AnimeDebugPlayerActivity"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden" />
     </application>
 </manifest>

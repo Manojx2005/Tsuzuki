@@ -90,6 +90,21 @@ SELECT * FROM animes WHERE source = :source AND url = :url ORDER BY _id LIMIT 1;
 getLibrary:
 SELECT * FROM animes WHERE favorite = 1 ORDER BY title COLLATE NOCASE, _id;
 
+getSeasons:
+SELECT * FROM animes
+WHERE parent_id = :parentId AND _id != :parentId
+ORDER BY season_number < 0, CASE WHEN season_number >= 0 THEN season_number END, season_source_order, _id;
+
+getBackupIds:
+SELECT _id FROM animes
+WHERE _id > :afterId AND (
+    favorite = 1 OR EXISTS (
+        SELECT 1 FROM episodes JOIN anime_history ON anime_history.episode_id = episodes._id
+        WHERE episodes.anime_id = animes._id
+    )
+)
+ORDER BY _id LIMIT :pageSize;
+
 insert:
 INSERT INTO animes (
     source, url, title, artist, author, description, genre, alternative_titles, status, thumbnail_url, background_url,
@@ -118,3 +133,6 @@ DELETE FROM animes WHERE _id = :id;
 
 lastInsertedId:
 SELECT last_insert_rowid();
+
+recordLibraryRefresh:
+UPDATE animes SET last_update = :timestamp WHERE _id = :id;

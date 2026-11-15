@@ -272,37 +272,25 @@ Existing top-level numbers in `Backup.kt`: 1 manga, 2 categories, 101 sources, 1
 106 extension stores. `BackupManga` uses 1–18, 100–112, 8000, 8001; `BackupCategory` 1–3, 100, 8001
 (`contentType`). Tsuzuki's own additions live in the 8000s.
 
-**Decision: use Aniyomi's modern numbers at top level so one file format round-trips with Aniyomi.**
+Per §9 Q1 and Q2, anime shelves use separate fields and Aniyomi interoperability is import-only.
 
-| Backup field | Number | Aniyomi? | Collision check |
+| Contents | Tsuzuki | Aniyomi import | Legacy Aniyomi import |
 |---|---|---|---|
-| `backupAnime: List<BackupAnime>` | **501** | yes (modern `Backup`) | free |
-| `backupAnimeCategories: List<BackupCategory>` | **502** | yes | free |
-| `backupAnimeSources: List<BackupAnimeSource>` | **503** | yes | free |
-| (reserve 500 = Aniyomi `isLegacy`, 504–506 = Aniyomi extensions/stores/buttons) | not used | yes | do not reuse for anything else |
+| Anime entries | 8000 | 501 | 3 |
+| Anime shelves | 8001 | 502 | 4 |
+| Anime source names | 8002 | 503 | 103 |
 
-- **Anime categories are not duplicated**: since categories are shared (§2.4), `backupCategories` (2) keeps carrying
-  every shelf incl. `contentType = 3`, and anime rows reference them by the existing `categories: List<Long>` id
-  list inside `BackupAnime`. Field 502 is *read* when present (Aniyomi imports, mapped by name into shared
-  categories with `content_type = 3`) and *written* only if Q1 is answered B. Default: write nothing to 502.
-- `BackupAnime` / `BackupEpisode` / `BackupAnimeHistory` / `BackupAnimeTracking`: copy the Aniyomi proto numbers
-  exactly (listed in the Aniyomi files above): shared 1–18, 100–112 as in `BackupManga`, Aniyomi extras 500+
-  (`backgroundUrl` 500, `parentId` 502, `id` 503, `seasonFlags` 504, `seasonNumber` 505, `seasonSourceOrder` 506,
-  `fetchType` 507); `BackupEpisode` `lastSecondSeen` 6, `totalSeconds` 16, extras 501–503; `BackupAnimeHistory`
-  1–3 (`readDuration` ↔ `time_watched`); `BackupAnimeTracking` 1–12, 100. **Tsuzuki-only extras** go in the 8000s
-  like the manga ones: `BackupAnime.notes` 8100, `alternativeTitles` 8101.
-- Legacy Aniyomi files (top-level 3/4 for anime and anime categories) are read by a small `LegacyAnimeBackup`
-  decoder path only if the sniff of 501 fails; they are never written. Tsuzuki top-level 3/4 stay unused.
-- Backups written by an older Tsuzuki simply have no 501–503: decode default `emptyList()`, restore does nothing
-  for anime. Backups written by this version opened in an older Tsuzuki: unknown fields are skipped by
-  kotlinx-protobuf (`ignoreUnknownKeys` behaviour for protobuf is the default). **Verify in the round-trip test** (§7).
-- Creator/restorer: `AnimeBackupCreator`, `AnimeBackupRestorer` mirror `MangaBackupCreator`/`MangaRestorer`;
-  `BackupOptions` gets an `anime` toggle (default on) so people can omit it. Restore matches anime by
-  `(source, url)`, episodes by `url`, history by episode `url`, as manga does.
-- **OPEN Q2**: Aniyomi `Backup.isLegacy` (500) defaults to `true` and Aniyomi uses it to choose the decoder. A
-  Tsuzuki-written file lacks it, so Aniyomi would decode it as *legacy* (anime in 3/4, not 501) and see no anime.
-  Fix is to also write `isLegacy = false` at 500 in Tsuzuki backups (harmless to Tsundoku, an unknown field).
-  Recommend yes; the owner should confirm we want export-to-Aniyomi to work at all.
+- The streaming reader skips Aniyomi's scalar flag at 500. When more than one anime layout appears, it
+  prefers Tsuzuki, then modern Aniyomi, then legacy Aniyomi.
+- Nested entry, episode, shelf, source, history and tracking fields follow Aniyomi's field numbers. The
+  importer converts Aniyomi's episode position and duration from milliseconds. Tsuzuki stores both in seconds.
+  Tsuzuki uses nested fields 8100–8102 for notes, alternate titles and initialization and 8000-range fields for precise
+  episode numbers, tracker progress, score, MyAnimeList IDs and source language.
+- `AnimeBackupStore` streams alongside the book backup, with an Anime option enabled by default in debug
+  builds. Restore matches titles by source and URL and episodes by URL within a title. It maps shelf IDs by
+  name and remaps parent IDs when the corresponding parent is present in the file.
+- A pre-anime backup has no anime records. The synthetic gzip round trip verifies that the pre-anime
+  protobuf model still reads the manga and novel records from a file containing Tsuzuki anime records.
 
 ## 5. Source-side Kotlin types needing a stable id
 

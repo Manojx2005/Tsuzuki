@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">첫 에피소드 재생</string>
+    <string name="tsz_anime_play_next">다음 에피소드 재생</string>
+    <string name="tsz_anime_no_episodes">에피소드를 찾을 수 없습니다</string>
+    <string name="tsz_anime_player_unavailable">애니메이션 플레이어를 사용할 수 없습니다</string>
+    <string name="tsz_anime_episode_title">%1$s화 · %2$s</string>
+    <string name="tsz_anime_play_episode">%s화 재생</string>
+    <string name="tsz_anime_resume_episode">%s화 이어보기</string>
+    <string name="tsz_anime_episode_number">회차 번호</string>
+    <string name="tsz_anime_watched">시청 완료</string>
+    <string name="tsz_anime_filler">오리지널 회차</string>
+    <string name="tsz_anime_mark_seen">시청 완료로 표시</string>
+    <string name="tsz_anime_mark_unseen">미시청으로 표시</string>
+    <string name="tsz_anime_mark_previous">이전 회차를 시청 완료로 표시</string>
+    <string name="tsz_anime_bookmark">북마크 추가</string>
+    <string name="tsz_anime_unbookmark">북마크 삭제</string>
+    <string name="tsz_anime_unseen_only">미시청만</string>
+    <string name="tsz_anime_bookmarked_only">북마크만</string>
+    <string name="tsz_anime_upcoming">공개 예정</string>
+    <string name="tsz_anime_extension_repos">애니메이션 확장 저장소</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi 형식</string>
+    <string name="tsz_anime_extensions_available">설치 가능</string>
+    <string name="tsz_anime_history_episode">%s화</string>
+    <string name="tsz_anime_history_remaining">%s 남음</string>
+    <string name="tsz_anime_history_remove_all">이 애니메이션의 모든 회차를 기록에서 삭제</string>
+    <string name="tsz_anime_airing_today">오늘 방영</string>
+    <string name="tsz_anime_updates_empty">새로운 애니메이션 에피소드가 없습니다</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="other">새 에피소드 %d개</item>
+    </plurals>
+    <string name="tsz_anime_track_linked_count">%d개 연결됨</string>
+    <string name="tsz_anime_track_auto_update">에피소드마다 업데이트</string>
+    <string name="tsz_anime_track_login">추적 설정에서 로그인하세요</string>
+    <string name="tsz_anime_track_unlink">추적 연결 해제</string>
+    <string name="tsz_anime_track_episode_count">에피소드: %d</string>
+    <string name="tsz_anime_track_watching">시청 중</string>
+    <string name="tsz_anime_track_planning">시청 예정</string>
+    <string name="tsz_anime_track_rewatching">다시 보는 중</string>
+    <string name="tsz_anime_player_unsupported_device">이 기기에서는 애니메이션 재생을 지원하지 않습니다</string>
+    <string name="tsz_anime_beta">애니메이션(베타)</string>
+    <string name="tsz_anime_beta_summary">애니메이션 서가, 소스 및 플레이어를 표시합니다</string>
+    <string name="tsz_anime_group_seasons">시즌 묶기</string>
+    <string name="tsz_anime_season_short">시즌 %1$s</string>
+    <string name="tsz_anime_exclude_groups">자막 그룹 숨기기</string>
+    <string name="tsz_anime_migration_matches">일치하는 에피소드: %1$d</string>
+    <string name="tsz_anime_migration_carry">일치한 에피소드의 진행 상황, 선반, 트래커 연결 및 숨긴 그룹을 이어받습니다. 교체하면 원래 작품이 라이브러리에서 제거됩니다.</string>
+    <string name="tsz_anime_migration_replace">교체</string>
+</resources>

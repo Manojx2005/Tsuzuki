@@ -31,4 +31,31 @@ class BrowseHeaderSectionsTest {
     fun `without manga only the novel pages exist`() {
         browsePagesFor(browsePages(hideManga = true), BrowseMedia.MANGA) shouldBe emptyList()
     }
+
+    @Test
+    fun `anime pages are absent when the caller does not provide installed sources`() {
+        browsePagesFor(browsePages(hideManga = false), BrowseMedia.ANIME) shouldBe emptyList()
+    }
+
+    @Test
+    fun `anime repos expose sources and extensions even with no sources installed`() {
+        val pages = browsePages(hideManga = true, animeEnabled = true, hasAnimeRepos = true)
+        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe
+            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_EXTENSIONS)
+    }
+
+    @Test
+    fun `installed anime sources remain accessible when there are no repos`() {
+        val pages = browsePages(hideManga = true, animeEnabled = true)
+        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe listOf(BrowsePage.ANIME_SOURCES)
+    }
+
+    @Test
+    fun `anime migration requires the beta gate and at least one library anime`() {
+        val pages = browsePages(hideManga = true, animeEnabled = true, hasAnimeLibrary = true)
+        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe
+            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_MIGRATION)
+        browsePages(hideManga = false, animeEnabled = false, hasAnimeLibrary = true)
+            .pageIndex(BrowseMedia.ANIME, BrowseSection.MIGRATION) shouldBe -1
+    }
 }

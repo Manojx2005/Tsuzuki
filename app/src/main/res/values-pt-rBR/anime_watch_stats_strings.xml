@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_watch_stats_week">Esta semana</string>
+    <string name="tsz_anime_watch_stats_month">Este mês</string>
+    <string name="tsz_anime_watch_stats_all_time">Todo o período</string>
+    <string name="tsz_anime_watch_stats_episodes">Episódios assistidos</string>
+    <string name="tsz_anime_watch_stats_completed">Animes concluídos</string>
+</resources>

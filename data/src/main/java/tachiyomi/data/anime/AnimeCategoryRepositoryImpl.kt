@@ -2,6 +2,7 @@ package tachiyomi.data.anime
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import kotlinx.coroutines.flow.map
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.domain.category.anime.model.AnimeCategory
@@ -14,6 +15,9 @@ class AnimeCategoryRepositoryImpl(private val database: Database) : AnimeCategor
     override suspend fun awaitAll() = queries.getAll(::AnimeCategory).awaitAsList()
 
     override fun subscribeAll() = queries.getAll(::AnimeCategory).subscribeToList()
+    override fun subscribeMemberships() = links.getMemberships(::Pair).subscribeToList().map { rows ->
+        rows.groupBy({ it.first }, { it.second }).mapValues { (_, ids) -> ids.toSet() }
+    }
 
     override suspend fun awaitByAnimeId(animeId: Long) =
         queries.getForAnime(animeId, ::AnimeCategory).awaitAsList()
@@ -25,7 +29,8 @@ class AnimeCategoryRepositoryImpl(private val database: Database) : AnimeCategor
     }
 
     override suspend fun update(category: AnimeCategory) {
-        require(category.isSystem || category.name.isNotBlank())
+        if (category.isSystem) return
+        require(category.name.isNotBlank())
         queries.update(category.name, category.flags, category.id)
     }
 
@@ -42,11 +47,11 @@ class AnimeCategoryRepositoryImpl(private val database: Database) : AnimeCategor
 
     override suspend fun setForAnime(animeId: Long, categoryIds: Set<Long>) = database.transaction {
         val current = awaitByAnimeId(animeId).mapTo(mutableSetOf(), AnimeCategory::id)
-        val requested = categoryIds.ifEmpty { setOf(0L) }
-        if (current == requested) return@transaction
+        val requested = categoryIds - 0L
+        if (current == requested.ifEmpty { setOf(0L) }) return@transaction
 
         links.clearForAnime(animeId)
         // No explicit links is the default shelf.
-        if (requested != setOf(0L)) requested.forEach { links.insert(animeId, it) }
+        requested.forEach { links.insert(animeId, it) }
     }
 }

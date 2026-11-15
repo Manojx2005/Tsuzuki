@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">播放第一集</string>
+    <string name="tsz_anime_play_next">播放下一集</string>
+    <string name="tsz_anime_no_episodes">未找到剧集</string>
+    <string name="tsz_anime_player_unavailable">动漫播放器不可用</string>
+    <string name="tsz_anime_episode_title">第%1$s集 · %2$s</string>
+    <string name="tsz_anime_play_episode">播放第%s集</string>
+    <string name="tsz_anime_resume_episode">继续播放第%s集</string>
+    <string name="tsz_anime_episode_number">集数</string>
+    <string name="tsz_anime_watched">已观看</string>
+    <string name="tsz_anime_filler">动画原创</string>
+    <string name="tsz_anime_mark_seen">标记为已观看</string>
+    <string name="tsz_anime_mark_unseen">标记为未观看</string>
+    <string name="tsz_anime_mark_previous">将之前的剧集标记为已观看</string>
+    <string name="tsz_anime_bookmark">添加书签</string>
+    <string name="tsz_anime_unbookmark">移除书签</string>
+    <string name="tsz_anime_unseen_only">仅未观看</string>
+    <string name="tsz_anime_bookmarked_only">仅有书签</string>
+    <string name="tsz_anime_upcoming">即将播出</string>
+    <string name="tsz_anime_extension_repos">动漫扩展仓库</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi 格式</string>
+    <string name="tsz_anime_extensions_available">可用</string>
+    <string name="tsz_anime_history_episode">第%s集</string>
+    <string name="tsz_anime_history_remaining">剩余%s</string>
+    <string name="tsz_anime_history_remove_all">从历史记录中移除此动漫的所有剧集</string>
+    <string name="tsz_anime_airing_today">今日播出</string>
+    <string name="tsz_anime_updates_empty">没有新的动画剧集</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="other">%d 集新剧集</item>
+    </plurals>
+    <string name="tsz_anime_track_linked_count">已关联 %d 个</string>
+    <string name="tsz_anime_track_auto_update">每集结束后更新</string>
+    <string name="tsz_anime_track_login">请在追踪设置中登录</string>
+    <string name="tsz_anime_track_unlink">取消关联追踪服务</string>
+    <string name="tsz_anime_track_episode_count">剧集数：%d</string>
+    <string name="tsz_anime_track_watching">正在观看</string>
+    <string name="tsz_anime_track_planning">计划观看</string>
+    <string name="tsz_anime_track_rewatching">重新观看</string>
+    <string name="tsz_anime_player_unsupported_device">此设备不支持播放动漫</string>
+    <string name="tsz_anime_beta">动漫（测试版）</string>
+    <string name="tsz_anime_beta_summary">显示动漫书架、来源和播放器</string>
+    <string name="tsz_anime_group_seasons">合并显示各季</string>
+    <string name="tsz_anime_season_short">第%1$s季</string>
+    <string name="tsz_anime_exclude_groups">隐藏字幕组</string>
+    <string name="tsz_anime_migration_matches">匹配的剧集：%1$d</string>
+    <string name="tsz_anime_migration_carry">保留匹配剧集的进度、书架、追踪关联和隐藏字幕组。替换后会从资料库移除原条目。</string>
+    <string name="tsz_anime_migration_replace">替换</string>
+</resources>

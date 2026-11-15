@@ -49,6 +49,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressRing
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.tsuzuki.anime.TsuzukiWatchStats
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.tsuzuki.ReadingBar
 import eu.kanade.tachiyomi.tsuzuki.ReadingChart
@@ -69,7 +70,8 @@ import java.util.Locale
 
 /**
  * The "Stats & goals" board: daily goal ring, minutes chart (week / month / year) and chapter count, all from
- * [ReadingDays] and history. The listening tile appears after TTS records playback.
+ * [ReadingDays] and history. The listening tile appears after TTS records playback. Anime has a separate watch
+ * section when the app has watch data.
  * "All statistics" opens Mihon's library statistics.
  */
 class TsuzukiStatsScreen : Screen() {
@@ -225,6 +227,8 @@ class TsuzukiStatsScreen : Screen() {
                     )
                 }
                 if (listening != null) ListeningTile(listening)
+
+                TsuzukiWatchStats(today)
 
                 TextButton(onClick = { navigator.push(StatsScreen()) }, modifier = Modifier.align(Alignment.End)) {
                     Icon(Icons.Outlined.QueryStats, null, Modifier.padding(end = 8.dp).size(18.dp))

@@ -17,6 +17,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.source.isNovelSource
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupStore
 import eu.kanade.tachiyomi.tsuzuki.backup.AutomaticBackupFiles
 import eu.kanade.tachiyomi.tsuzuki.backup.BackupSizeSink
 import eu.kanade.tachiyomi.tsuzuki.backup.TsuzukiBackupPreferences
@@ -184,6 +186,12 @@ class BackupCreator(
                 backupExtensionStores.forEach { er ->
                     val bytes = parser.encodeToByteArray(BackupExtensionStore.serializer(), er)
                     writeProtoField(gzipOut.outputStream(), 106, bytes)
+                }
+                if (TsuzukiAnime.enabled && options.includeAnime) {
+                    val stream = gzipOut.outputStream()
+                    AnimeBackupStore(Injekt.get()).export(options, parser) { field, bytes ->
+                        writeProtoField(stream, field, bytes)
+                    }
                 }
 
                 gzipOut.flush()

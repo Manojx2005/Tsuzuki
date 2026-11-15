@@ -42,53 +42,57 @@ fun TsuzukiDownloadQueueHeader(
     counts: List<Int>,
     selected: Int,
     onSelect: (Int) -> Unit,
+    showSharedSummary: Boolean = true,
 ) {
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
     val wifiOnly by remember { Injekt.get<DownloadPreferences>().downloadOnlyOverWifi }.collectAsState()
     val shape = RoundedCornerShape(t.tileRadius)
     Column {
-        Row(
-            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                Modifier
-                    .clip(shape)
-                    .background(t.tile)
-                    .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-                    .padding(horizontal = 18.dp, vertical = 12.dp),
+        if (showSharedSummary) {
+            Row(
+                Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    stringResource(MR.strings.tsz_downloads_queued).uppercase(),
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
-                    fontWeight = FontWeight.Bold,
-                    color = muted,
-                )
-                Text(
-                    "${counts.take(2).sum()}",
-                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 44.sp),
-                    color = Color.White,
-                )
-            }
-            if (wifiOnly) {
-                Box(
+                Column(
                     Modifier
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(19.dp))
+                        .clip(shape)
                         .background(t.tile)
-                        .then(t.tileBorder?.let { Modifier.border(1.dp, it, RoundedCornerShape(19.dp)) } ?: Modifier)
-                        .padding(horizontal = 14.dp),
-                    contentAlignment = Alignment.Center,
+                        .then(t.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
+                        .padding(horizontal = 18.dp, vertical = 12.dp),
                 ) {
-                    val label = stringResource(MR.strings.connected_to_wifi)
                     Text(
-                        if (t.isDot) label.uppercase() else label,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        stringResource(MR.strings.tsz_downloads_queued).uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = muted,
+                    )
+                    Text(
+                        "${counts.take(2).sum()}",
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 44.sp),
                         color = Color.White,
                     )
+                }
+                if (wifiOnly) {
+                    val wifiShape = RoundedCornerShape(19.dp)
+                    Box(
+                        Modifier
+                            .height(38.dp)
+                            .clip(wifiShape)
+                            .background(t.tile)
+                            .then(t.tileBorder?.let { Modifier.border(1.dp, it, wifiShape) } ?: Modifier)
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val label = stringResource(MR.strings.connected_to_wifi)
+                        Text(
+                            if (t.isDot) label.uppercase() else label,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                        )
+                    }
                 }
             }
         }

@@ -20,9 +20,11 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.presentation.tsuzuki.anime.AnimeShelvesScreen
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiLibraryUpdateGroup
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
 import tachiyomi.domain.category.interactor.GetCategories
@@ -88,7 +90,7 @@ object SettingsLibraryScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.categories),
-            preferenceItems = listOf(
+            preferenceItems = listOfNotNull(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.action_edit_categories),
                     subtitle = pluralStringResource(
@@ -98,6 +100,14 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     onClick = { navigator.push(CategoryScreen()) },
                 ),
+                if (TsuzukiAnime.enabled) {
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.tsz_anime_shelves),
+                        onClick = { navigator.push(AnimeShelvesScreen()) },
+                    )
+                } else {
+                    null
+                },
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.defaultCategory,
                     entries = ids.zip(labels).toMap(),

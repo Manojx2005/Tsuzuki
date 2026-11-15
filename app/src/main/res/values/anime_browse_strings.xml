@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_play_first">Play first episode</string>
+    <string name="tsz_anime_play_next">Play next episode</string>
+    <string name="tsz_anime_no_episodes">No episodes found</string>
+    <string name="tsz_anime_player_unavailable">Anime player unavailable</string>
+    <string name="tsz_anime_episode_title">Ep %1$s · %2$s</string>
+    <string name="tsz_anime_play_episode">Play Ep %s</string>
+    <string name="tsz_anime_resume_episode">Resume Ep %s</string>
+    <string name="tsz_anime_episode_number">Episode number</string>
+    <string name="tsz_anime_watched">Watched</string>
+    <string name="tsz_anime_filler">Filler</string>
+    <string name="tsz_anime_mark_seen">Mark as watched</string>
+    <string name="tsz_anime_mark_unseen">Mark as unwatched</string>
+    <string name="tsz_anime_mark_previous">Mark previous as watched</string>
+    <string name="tsz_anime_bookmark">Bookmark</string>
+    <string name="tsz_anime_unbookmark">Remove bookmark</string>
+    <string name="tsz_anime_unseen_only">Unwatched only</string>
+    <string name="tsz_anime_bookmarked_only">Bookmarked only</string>
+    <string name="tsz_anime_upcoming">Upcoming</string>
+    <string name="tsz_anime_extension_repos">Anime extension repos</string>
+    <string name="tsz_anime_aniyomi_format">Aniyomi format</string>
+    <string name="tsz_anime_extensions_available">Available</string>
+    <string name="tsz_anime_history_episode">Ep %s</string>
+    <string name="tsz_anime_history_remaining">%s left</string>
+    <string name="tsz_anime_history_remove_all">Remove all episodes of this anime from history</string>
+    <string name="tsz_anime_airing_today">Airing today</string>
+    <string name="tsz_anime_updates_empty">No new anime episodes</string>
+    <plurals name="tsz_anime_new_episodes">
+        <item quantity="one">%d new episode</item>
+        <item quantity="other">%d new episodes</item>
+    </plurals>
+    <string name="tsz_anime_track_linked_count">%d linked</string>
+    <string name="tsz_anime_track_auto_update">Update after each episode</string>
+    <string name="tsz_anime_track_login">Sign in from Tracking settings</string>
+    <string name="tsz_anime_track_unlink">Unlink tracker</string>
+    <string name="tsz_anime_track_episode_count">Episodes: %d</string>
+    <string name="tsz_anime_track_watching">Watching</string>
+    <string name="tsz_anime_track_planning">Plan to watch</string>
+    <string name="tsz_anime_track_rewatching">Rewatching</string>
+    <string name="tsz_anime_player_unsupported_device">Anime playback isn’t supported on this device</string>
+    <string name="tsz_anime_beta">Anime (beta)</string>
+    <string name="tsz_anime_beta_summary">Show anime shelves, sources and the player</string>
+    <string name="tsz_anime_group_seasons">Group seasons</string>
+    <string name="tsz_anime_season_short">S%1$s</string>
+    <string name="tsz_anime_exclude_groups">Exclude groups</string>
+    <string name="tsz_anime_migration_matches">Matched episodes: %1$d</string>
+    <string name="tsz_anime_migration_carry">Matched progress, shelves, tracker links and excluded groups carry over. Replacing removes the original from the library.</string>
+    <string name="tsz_anime_migration_replace">Replace</string>
+</resources>

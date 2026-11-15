@@ -37,7 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun TsuzukiGlobalSearchResultItem(
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -57,7 +57,7 @@ fun TsuzukiGlobalSearchResultItem(
         Row(
             Modifier
                 .fillMaxWidth()
-                .clickable(role = Role.Button, onClick = onClick)
+                .then(onClick?.let { Modifier.clickable(role = Role.Button, onClick = it) } ?: Modifier)
                 .padding(start = 18.dp, end = 12.dp, top = 14.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -79,7 +79,9 @@ fun TsuzukiGlobalSearchResultItem(
                     maxLines = 1,
                 )
             }
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = Color.White)
+            if (onClick != null) {
+                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = Color.White)
+            }
         }
         content()
     }

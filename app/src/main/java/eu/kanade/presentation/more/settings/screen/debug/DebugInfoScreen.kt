@@ -24,6 +24,7 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -55,7 +56,7 @@ class DebugInfoScreen : Screen() {
                         title = BackupSchemaScreen.TITLE,
                         onClick = { navigator.push(BackupSchemaScreen()) },
                     ),
-                    if (BuildConfig.BUILD_TYPE == "debug") {
+                    if (BuildConfig.DEBUG && TsuzukiAnime.enabled) {
                         Preference.PreferenceItem.TextPreference(
                             title = stringResource(MR.strings.tsz_anime_debug_title),
                             onClick = {

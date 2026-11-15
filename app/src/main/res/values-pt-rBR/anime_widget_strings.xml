@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_watching_widget_description">Continue assistindo aos animes recentes pela tela inicial.</string>
+    <string name="tsz_watching_widget_empty">Nenhum anime em andamento</string>
+</resources>

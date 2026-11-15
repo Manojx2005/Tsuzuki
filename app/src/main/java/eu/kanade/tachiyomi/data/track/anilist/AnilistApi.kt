@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.interceptor.rateLimit
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
+import eu.kanade.tachiyomi.tsuzuki.anime.track.AniListAnimeApi
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -40,6 +41,8 @@ class AnilistApi(val client: OkHttpClient, interceptor: AnilistInterceptor) {
         .addInterceptor(interceptor)
         .rateLimit(permits = 85, period = 1.minutes)
         .build()
+
+    internal val anime by lazy { AniListAnimeApi(authClient, json) }
 
     suspend fun addLibManga(track: Track): Track {
         return withIOContext {

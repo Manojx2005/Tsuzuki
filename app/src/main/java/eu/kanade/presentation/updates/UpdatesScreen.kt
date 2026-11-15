@@ -57,7 +57,7 @@ import tachiyomi.presentation.core.theme.active
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun UpdateScreen(
+internal fun UpdateScreen(
     state: UpdatesViewModel.State,
     snackbarHostState: SnackbarHostState,
     showFilterChips: Boolean = true,
@@ -81,6 +81,7 @@ fun UpdateScreen(
     onToggleGroupByNovel: () -> Unit = {},
     onClickNovelGroup: (Long) -> Unit = {},
     onLoadMore: () -> Unit = {},
+    anime: eu.kanade.presentation.tsuzuki.updates.AnimeUpdatesSlots? = null,
 ) {
     BackHandler(enabled = state.selectionMode) {
         onSelectAll(false)
@@ -89,6 +90,8 @@ fun UpdateScreen(
     val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
     var selectedPreviewKey by rememberSaveable { mutableStateOf<Long?>(null) }
     val tsuzukiTwoPane = eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesTwoPaneEnabled()
+
+    anime?.screen?.let { return it(snackbarHostState) }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -142,6 +145,7 @@ fun UpdateScreen(
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                 onClickNovelGroup = onClickNovelGroup,
                 onLoadMore = onLoadMore,
+                anime = anime,
             )
             else -> {
                 val scope = rememberCoroutineScope()
@@ -182,8 +186,12 @@ fun UpdateScreen(
                         contentPadding = contentPadding,
                         state = lazyListState,
                     ) {
-                        if (showFilterChips) {
+                        if (showFilterChips || anime?.mediaPills != null) {
                             item(key = "filter_chips") {
+                                anime?.mediaPills?.let {
+                                    it(false)
+                                    return@item
+                                }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -237,6 +245,8 @@ fun UpdateScreen(
                                 }
                             }
                         }
+
+                        anime?.airingStrip?.let { strip -> item(key = "airing_today") { strip() } }
 
                         // Tsuzuki themes: stat tiles above the list (board "Updates").
                         if (state.items.isNotEmpty()) {
