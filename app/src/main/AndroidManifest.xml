@@ -72,7 +72,12 @@
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTask"
-            android:supportsPictureInPicture="true" />
+            android:supportsPictureInPicture="true">
+            <!-- The full-screen player follows its landscape request on Android 16 tablets. -->
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+                android:value="true" />
+        </activity>
 
         <activity
             android:name=".ui.main.MainActivity"

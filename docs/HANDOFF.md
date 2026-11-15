@@ -913,7 +913,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — Codex review lane completed BACK1 and candidate refresh 2026-11-15. Tablet + S22 final 6119f2613 optimized candidate scratch Dot Home, both 500 books and awake; crash buffers empty. Daily apps and owner phone untouched.`
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free — AY-PLAY completed 2026-11-15; tablet + S22 on final animescratch APK b892ca50, Dot Home, awake; crash buffers empty. Daily apps and owner phone untouched.`
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 

@@ -157,9 +157,9 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 MpvPlayer.command("change-list", "http-header-fields", "append", "$name: $value")
             }
         }
-        // mpv's `start` is a global option: always set it, and never to a negative or non-finite value.
-        setOpt("start", (resumePosition.takeIf { it.isFinite() && it > 0 } ?: 0.0).toString())
-        MpvPlayer.command("loadfile", video.videoUrl, "replace")
+        // Sources can require demuxer options (e.g. force_mpegts for image-prefixed HLS segments).
+        // Pass them to this file only, including the validated resume position.
+        MpvPlayer.command(*animeMpvLoadCommand(video, resumePosition))
     }
 
     override fun attach(surface: Surface) {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,7 +66,7 @@ class ExtensionSignatureTest {
             val listing = Extension.Available(
                 name = "Signature rejection test", pkgName = "tsuzuki.signature.test",
                 versionName = "1", versionCode = 1, libVersion = 1.4, lang = "en",
-                isNsfw = false, isNovel = false, sources = emptyList(),
+                contentWarning = ContentWarning.SAFE, isNovel = false, sources = emptyList(),
                 apkUrl = "http://127.0.0.1:${server.localPort}/extension.apk", iconUrl = "",
                 store = ExtensionStore(
                     indexUrl = "https://test.invalid/repo",
