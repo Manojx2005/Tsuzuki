@@ -1877,4 +1877,7 @@
     <string name="tsz_tts_engine_reopen">After changing the Android speech engine, reopen the novel. Voice, speed and pitch changes apply when speech resumes.</string>
     <string name="tsz_tts_playback_settings">Playback</string>
     <string name="tsz_tts_read_along">Read-along</string>
+    <string name="tsz_kokoro_test_title">Kokoro · listening test</string>
+    <string name="tsz_kokoro_test_ready">Offline English test voice 0 · pitch 1× · speed 0.5–2×. Unsupported text uses the phone voice. Reopen the novel after changing this switch.</string>
+    <string name="tsz_kokoro_test_missing">The test voice pack is not installed. Phone voices remain available.</string>
 </resources>

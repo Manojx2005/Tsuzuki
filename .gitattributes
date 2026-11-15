@@ -28,3 +28,9 @@
 
 # Unified diffs retain a single leading context marker on blank lines.
 /scripts/neural-tts/*.patch whitespace=-blank-at-eol,-blank-at-eof
+
+# Compressed offline dictionary assets must retain their exact gzip bytes.
+/app/src/main/assets/dictionaries/*.pack binary
+
+# Source-built Kokoro JNI runtime.
+/app/libs/*.aar binary

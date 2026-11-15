@@ -1,0 +1,42 @@
+{
+  "archiveSha256": "259c9c8bc906d6078e4e0570421885dabb68b539c2f970fcbb890a58eeaf3e9c",
+  "cmuCommit": "74790861f652b15e4ac49015a90074ad62a27690",
+  "files": {
+    "CMUDICT-LICENSE.txt": {
+      "sha256": "bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a",
+      "size": 1754
+    },
+    "CMUDICT-NOTICE.txt": {
+      "sha256": "12910124f8414238a78711e414af47704e4cd09999c6b754d719c15b6acd2717",
+      "size": 454
+    },
+    "LICENSE": {
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "size": 11358
+    },
+    "NOTICE.txt": {
+      "sha256": "fbdc0c38458acf159de36ec4745e9a7f3450c4c717a978d7ded19345aef96972",
+      "size": 374
+    },
+    "lexicon-us-en.txt": {
+      "sha256": "3f9d023400a8b0c4730c095729363c9374c8e8efbf65ad62e2df67f0d18efb50",
+      "size": 3537261
+    },
+    "model.int8.onnx": {
+      "sha256": "05d793700b0b507f760c183c0e39bdd6a97b43d32fdc7bf7b54a5179f1b11222",
+      "size": 114203914
+    },
+    "tokens.txt": {
+      "sha256": "931ab2df2400cd65d580a22402024c2347ced8ae9ea300e545144b1aacc48e14",
+      "size": 1111
+    },
+    "voices.bin": {
+      "sha256": "e64a5a581d8c2a350d848f51c3121657cd83aa07ed6109172177345874a7244c",
+      "size": 53790720
+    }
+  },
+  "language": "en",
+  "pack": "kokoro-cmu-v1",
+  "schema": 1,
+  "speaker": 0
+}

@@ -4,7 +4,10 @@ import android.content.Context
 import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession
+import eu.kanade.tachiyomi.tsuzuki.tts.NeuralTtsClient
+import eu.kanade.tachiyomi.tsuzuki.tts.NeuralTtsProtocol
 import eu.kanade.tachiyomi.tsuzuki.tts.TTS_LANGUAGE_SAMPLE_LENGTH
 import eu.kanade.tachiyomi.tsuzuki.tts.TtsSleepTimer
 import eu.kanade.tachiyomi.tsuzuki.tts.detectTtsLanguage
@@ -43,6 +46,13 @@ class TtsController internal constructor(
     enum class StartRequest { NORMAL, VIEWPORT }
 
     private var tts: TextToSpeech? = null
+    private var neuralTts: NeuralTtsClient? = null
+    private var neuralFailed = false
+    private var playbackListener: UtteranceProgressListener? = null
+
+    private fun kokoroRequested(): Boolean = BuildConfig.BUILD_TYPE == "debug" &&
+        android.os.Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a" &&
+        eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference().get()
 
     @Volatile private var playbackQueue: Long? = null
     var ttsInitialized = false
@@ -110,7 +120,7 @@ class TtsController internal constructor(
     }
 
     private fun setupListener() {
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+        val listener = object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
                 val (queue, chunkIndex) = currentChunk(utteranceId) ?: return
                 listening.startChunk(queue, chunkIndex)
@@ -172,7 +182,9 @@ class TtsController internal constructor(
             override fun onStop(utteranceId: String?, interrupted: Boolean) {
                 endInterruptedChunk(utteranceId)
             }
-        })
+        }
+        playbackListener = listener
+        tts?.setOnUtteranceProgressListener(listener)
     }
 
     private fun currentChunk(utteranceId: String?): Pair<Long, Int>? {
@@ -217,7 +229,11 @@ class TtsController internal constructor(
         ttsPlaybackChapterId = chapterId
         ttsPaused = false
 
-        val maxLength = TextToSpeech.getMaxSpeechInputLength().takeIf { it > 0 } ?: 4000
+        val maxLength = if (kokoroRequested()) {
+            NeuralTtsProtocol.CHUNK_LENGTH
+        } else {
+            TextToSpeech.getMaxSpeechInputLength().takeIf { it > 0 } ?: 4000
+        }
         val paragraphs = TtsTextUtils.newlineParagraphBounds(text).map { (start, end) -> text.substring(start, end) }
         val chunkParagraphIndexes = mutableListOf<Int>()
 
@@ -226,7 +242,7 @@ class TtsController internal constructor(
                 val c = if (para.length <= maxLength) {
                     listOf(para)
                 } else {
-                    TtsTextUtils.splitTextForTts(para, maxLength)
+                    TtsTextUtils.splitTextForTts(para, maxLength, allowLongWords = !kokoroRequested())
                 }
                 repeat(c.size) { chunkParagraphIndexes.add(paragraphIndex) }
                 c
@@ -235,7 +251,7 @@ class TtsController internal constructor(
             chunkParagraphIndexes.add(0)
             listOf(text)
         } else {
-            val c = TtsTextUtils.splitTextForTts(text, maxLength)
+            val c = TtsTextUtils.splitTextForTts(text, maxLength, allowLongWords = !kokoroRequested())
             repeat(c.size) { chunkParagraphIndexes.add(0) }
             c
         }
@@ -273,6 +289,7 @@ class TtsController internal constructor(
         if (ttsChunks.isEmpty() || startIndex >= ttsChunks.size) return
         val engine = tts ?: return
         languageJob?.cancel()
+        neuralTts?.stop()
         closePlaybackQueue()
         if (applySettings(engine)) {
             enqueueChunks(engine, startIndex)
@@ -301,6 +318,41 @@ class TtsController internal constructor(
         listening.beginQueue(queue, ttsPlaybackChapterId)
         playbackQueue = queue
         callbacks.onPlaybackStarted()
+        val requested = kokoroRequested()
+        if (!requested) {
+            neuralTts?.close()
+            neuralTts = null
+            neuralFailed = false
+        }
+        val english = (automaticLanguage ?: engine.voice?.locale)?.language == "en"
+        val compatible = english && preferences.novelTtsPitch.get() == 1f && preferences.novelTtsSpeed.get() in 0.5f..2f
+        if (requested && compatible && !neuralFailed) {
+            val neural = neuralTts ?: NeuralTtsClient.createIfEnabled(context, scope)?.also { neuralTts = it }
+            if (neural != null) {
+                engine.stop()
+                neural.play(
+                    chunks = ttsChunks,
+                    startIndex = startIndex,
+                    speed = preferences.novelTtsSpeed.get(),
+                    onStart = { playbackListener?.onStart("tts_utterance_${queue}_$it") },
+                    onChunkDone = { playbackListener?.onDone("tts_utterance_${queue}_$it") },
+                    onDone = {},
+                    onFailure = { index ->
+                        if (playbackQueue == queue) {
+                            neuralFailed = true
+                            neural.close()
+                            neuralTts = null
+                            enqueueSystemChunks(engine, index, queue)
+                        }
+                    },
+                )
+                return
+            }
+        }
+        enqueueSystemChunks(engine, startIndex, queue)
+    }
+
+    private fun enqueueSystemChunks(engine: TextToSpeech, startIndex: Int, queue: Long) {
         ttsChunks.drop(startIndex).forEachIndexed { i, chunk ->
             val actualIndex = startIndex + i
             val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
@@ -315,10 +367,11 @@ class TtsController internal constructor(
             return
         }
         // The engine can be silent between chunks while a completion/auto-next callback is still pending.
-        if (ttsInitialized && (tts?.isSpeaking == true || playbackQueue != null)) {
+        if (ttsInitialized && (isSpeaking() || playbackQueue != null)) {
             ttsPaused = true
             ttsResumeChunkIndex = ttsCurrentChunkIndex
             closePlaybackQueue()
+            neuralTts?.stop()
             tts?.stop()
         }
     }
@@ -362,6 +415,7 @@ class TtsController internal constructor(
         ttsCurrentChunkIndex = 0
         ttsResumeChunkIndex = 0
         hasViewportStartOverride = false
+        neuralTts?.stop()
         if (ttsInitialized) tts?.stop()
         ttsPlaybackChapterIndex = 0
         ttsPlaybackChapterId = null
@@ -403,11 +457,12 @@ class TtsController internal constructor(
         ttsCurrentChunkIndex = target
         ttsPaused = false
         closePlaybackQueue()
+        neuralTts?.stop()
         tts?.stop()
         speakChunksFrom(target)
     }
 
-    fun isSpeaking(): Boolean = ttsInitialized && tts?.isSpeaking == true
+    fun isSpeaking(): Boolean = ttsInitialized && (neuralTts?.isPlaying == true || tts?.isSpeaking == true)
     fun isPaused(): Boolean = ttsPaused
     fun isStarting(): Boolean =
         languageJob?.isActive == true || pendingStartRequest != null || (!ttsInitialized && tts != null) ||
@@ -466,12 +521,15 @@ class TtsController internal constructor(
         }?.sortedBy { it.second } ?: emptyList()
 
     internal fun getCurrentVoiceLabel(appLocale: Locale, offlineLabel: String, onlineLabel: String): String {
+        if (neuralTts?.isPlaying == true) return "Kokoro · test voice 0"
         val voice = tts?.voice ?: return preferences.novelTtsVoice.get()
         val connectionLabel = if (voice.isNetworkConnectionRequired) onlineLabel else offlineLabel
         return eu.kanade.tachiyomi.tsuzuki.tts.ttsVoiceLabel(voice.name, voice.locale, appLocale, connectionLabel)
     }
 
     fun destroy() {
+        neuralTts?.close()
+        neuralTts = null
         languageJob?.cancel()
         closePlaybackQueue()
         listening.endRun()

@@ -4,6 +4,8 @@ import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import java.io.FileInputStream
+import java.security.MessageDigest
+import java.util.HexFormat
 import java.util.Properties
 import kotlin.io.encoding.Base64
 
@@ -23,6 +25,19 @@ if (Config.includeTelemetry) {
         apply(libs.plugins.firebase.crashlytics.get().pluginId)
     }
 }
+
+// Debug listening-test runtime only. Release/preview/FOSS remain on the phone engine until NT2 passes.
+val kokoroRuntime = layout.projectDirectory.file("libs/sherpa-onnx-2.0.1-tsuzuki-kokoro-arm64.aar")
+val verifyKokoroRuntime = tasks.register("verifyKokoroRuntime") {
+    inputs.file(kokoroRuntime)
+    doLast {
+        val digest = MessageDigest.getInstance("SHA-256").digest(kokoroRuntime.asFile.readBytes())
+        check(HexFormat.of().formatHex(digest) == "1f70ec2b28f40dfe760a5fe1283e623a1163155c5c530b5a70ae06df1eae4ec1") {
+            "Unexpected Kokoro runtime. Rebuild and independently audit it before updating the pin."
+        }
+    }
+}
+tasks.matching { it.name == "preDebugBuild" }.configureEach { dependsOn(verifyKokoroRuntime) }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 
@@ -240,6 +255,7 @@ aboutLibraries {
 }
 
 dependencies {
+    debugImplementation(files(kokoroRuntime))
     baselineProfile(projects.baselineProfile)
 
     implementation(projects.i18n)
