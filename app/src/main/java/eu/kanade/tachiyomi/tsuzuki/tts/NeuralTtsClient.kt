@@ -169,6 +169,8 @@ internal class NeuralTtsClient private constructor(
         stop()
         val playing = Playback(++nextId, startIndex, chunks, speed, listener)
         active = playing
+        // A worker that died while idle must get the cold-start allowance (process start, hashing, model load).
+        if (server == null) cold = true
         watch(playing, length(playing, startIndex))
         sender = scope.launch {
             try {

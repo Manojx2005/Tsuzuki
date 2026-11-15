@@ -19,7 +19,9 @@ import eu.kanade.tachiyomi.tsuzuki.tts.KokoroPackImporter
 import eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -49,8 +51,11 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
             busy = true
             scope.launch {
                 val message = try {
-                    val stream = context.contentResolver.openInputStream(uri) ?: error("Could not open the file")
-                    stream.use { KokoroPackImporter(KokoroPack(context)).import(it) }
+                    // A slow document provider must not block the UI thread.
+                    withContext(Dispatchers.IO) {
+                        val stream = context.contentResolver.openInputStream(uri) ?: error("Could not open the file")
+                        stream.use { KokoroPackImporter(KokoroPack(context)).import(it) }
+                    }
                     installedMessage
                 } catch (error: CancellationException) {
                     throw error
