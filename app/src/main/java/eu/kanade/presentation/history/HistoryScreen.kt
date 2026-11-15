@@ -4,9 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -163,6 +165,8 @@ fun HistoryScreen(
         ) {
             if (showFilterChips || hasAnimeHistory) {
                 val filterScroll = if (hasAnimeHistory) Modifier.horizontalScroll(rememberScrollState()) else Modifier
+                // A pill's weighted label needs finite width inside the scrollable row.
+                val pillModifier = if (hasAnimeHistory) Modifier.width(IntrinsicSize.Max) else Modifier
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -176,6 +180,7 @@ fun HistoryScreen(
                         // Tsuzuki themes: pills (board "History").
                         if (showAllFilter) {
                             eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                modifier = pillModifier,
                                 text = stringResource(MR.strings.all),
                                 selected = !showingAnime && state.filter == HistoryFilter.ALL,
                                 onClick = { selectBookFilter(HistoryFilter.ALL) },
@@ -183,18 +188,21 @@ fun HistoryScreen(
                         }
                         if (showMangaFilter) {
                             eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                                modifier = pillModifier,
                                 text = stringResource(TDMR.strings.label_manga),
                                 selected = !showingAnime && state.filter == HistoryFilter.MANGA,
                                 onClick = { selectBookFilter(HistoryFilter.MANGA) },
                             )
                         }
                         eu.kanade.presentation.theme.tsuzuki.TsuzukiPill(
+                            modifier = pillModifier,
                             text = stringResource(TDMR.strings.label_novels),
                             selected = !showingAnime && state.filter == HistoryFilter.NOVELS,
                             onClick = { selectBookFilter(HistoryFilter.NOVELS) },
                         )
                         if (hasAnimeHistory) {
                             TsuzukiPill(
+                                modifier = pillModifier,
                                 text = stringResource(MR.strings.tsz_anime_media),
                                 selected = showingAnime,
                                 onClick = {
