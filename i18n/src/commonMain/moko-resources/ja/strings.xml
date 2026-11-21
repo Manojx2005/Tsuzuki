@@ -1671,4 +1671,6 @@
     <string name="tsz_duration_hours_minutes">%1$d時間%2$d分</string>
     <string name="tsz_duration_minutes">%1$d分</string>
     <string name="tsz_startup_tagline">続き · 次の展開を読もう</string>
+    <string name="tsz_download_done">完了</string>
+    <string name="tsz_download_pending">準備中</string>
 </resources>

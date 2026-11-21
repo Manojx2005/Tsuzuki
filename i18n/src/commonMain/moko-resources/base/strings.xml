@@ -1831,4 +1831,6 @@
     <string name="tsz_duration_hours_minutes">%1$d h %2$d m</string>
     <string name="tsz_duration_minutes">%1$d m</string>
     <string name="tsz_startup_tagline">続き · read what happens next</string>
+    <string name="tsz_download_done">Completed</string>
+    <string name="tsz_download_pending">Pending</string>
 </resources>

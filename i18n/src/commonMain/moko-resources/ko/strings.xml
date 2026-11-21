@@ -1454,4 +1454,6 @@
     <string name="tsz_duration_hours_minutes">%1$d시간 %2$d분</string>
     <string name="tsz_duration_minutes">%1$d분</string>
     <string name="tsz_startup_tagline">続き · 다음 이야기를 읽어 보세요</string>
+    <string name="tsz_download_done">완료</string>
+    <string name="tsz_download_pending">대기 중</string>
 </resources>

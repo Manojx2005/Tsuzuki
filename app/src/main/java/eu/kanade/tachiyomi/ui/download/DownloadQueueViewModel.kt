@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.download
 import android.view.MenuItem
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -31,6 +32,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.asMangaCover
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
@@ -75,12 +77,13 @@ data class NovelDownloadItem(
         "${dl.chapterName}\n${dl.error ?: "Unknown error"}"
     }
 
-    val statusText: String get() = when {
-        hasError -> "Error"
-        isActive -> "Downloading"
-        statuses.all { it == Download.State.QUEUE } && statuses.isNotEmpty() -> "Queued"
-        downloadedChapters == totalChapters -> "Completed"
-        else -> "Pending"
+    // Tsuzuki: translated status (was English literals).
+    val status: StringResource get() = when {
+        hasError -> MR.strings.chapter_error
+        isActive -> MR.strings.ext_downloading
+        statuses.all { it == Download.State.QUEUE } && statuses.isNotEmpty() -> MR.strings.tsz_downloads_queued
+        downloadedChapters == totalChapters -> MR.strings.tsz_download_done
+        else -> MR.strings.tsz_download_pending
     }
 }
 
