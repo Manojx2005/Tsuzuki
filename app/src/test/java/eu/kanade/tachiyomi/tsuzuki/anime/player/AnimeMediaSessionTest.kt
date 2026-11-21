@@ -54,4 +54,33 @@ class AnimeMediaSessionTest {
         assertNull(animeKeyAction(KeyEvent.KEYCODE_VOLUME_UP))
         assertNull(animeKeyAction(KeyEvent.KEYCODE_BACK))
     }
+
+    @Test
+    fun `a held toggle key acts once per press`() {
+        // Held Space or a repeated media play/pause: down events with repeatCount 0, 1, 2, ...
+        var playing = true
+        repeat(2) {
+            // two physical presses
+            (0..6).forEach { repeatCount ->
+                if (AnimeKeyAction.TOGGLE.runsOnDown(repeatCount)) playing = !playing
+            }
+        }
+        assertTrue(playing) // paused by the first press, resumed by the second, never flipped by repeats
+        for (action in listOf(
+            AnimeKeyAction.PLAY,
+            AnimeKeyAction.PAUSE,
+            AnimeKeyAction.NEXT,
+            AnimeKeyAction.PREVIOUS,
+        )) {
+            assertTrue(action.runsOnDown(0))
+            assertFalse(action.runsOnDown(1))
+        }
+    }
+
+    @Test
+    fun `held seek keys keep seeking`() {
+        val seeks = (0..4).count { AnimeKeyAction.FORWARD_10.runsOnDown(it) }
+        assertEquals(5, seeks)
+        assertTrue(AnimeKeyAction.BACK_10.runsOnDown(3))
+    }
 }

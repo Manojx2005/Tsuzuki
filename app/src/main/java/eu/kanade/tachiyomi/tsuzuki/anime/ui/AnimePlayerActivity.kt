@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerModel
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 import eu.kanade.tachiyomi.tsuzuki.anime.player.animeKeyAction
 import eu.kanade.tachiyomi.tsuzuki.anime.player.perform
+import eu.kanade.tachiyomi.tsuzuki.anime.player.runsOnDown
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -224,7 +225,8 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         val player = model
         val action = animeKeyAction(keyCode)
         if (player == null || action == null || !hasWindowFocus()) return super.onKeyDown(keyCode, event)
-        player.perform(action)
+        // Held keys: consume every repeat so the system never sees them, but only seeking acts on them.
+        if (action.runsOnDown(event.repeatCount)) player.perform(action)
         return true
     }
 
