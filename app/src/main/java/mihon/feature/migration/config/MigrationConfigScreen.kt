@@ -3,7 +3,6 @@ package mihon.feature.migration.config
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -330,15 +329,21 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SourceIcon(source = source.source)
-                Text(
-                    text = tsuzukiMenuLabel(source.name),
-                    maxLines = if (isTsuzukiStyle()) 2 else 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                SourceTypeBadge(source = source.source)
-                Spacer(modifier = Modifier.weight(1f))
+                // Tsuzuki (V8.4): name and badge share one weighted row so the language pills line up at the end.
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = tsuzukiMenuLabel(source.name),
+                        maxLines = if (isTsuzukiStyle()) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    SourceTypeBadge(source = source.source)
+                }
                 if (showLanguage) {
                     Pill(
                         text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true),
