@@ -13,14 +13,24 @@ private val languageAliases by lazy {
             put(code, code)
             runCatching { locale.isO3Language }.getOrNull()?.let { put(it, code) }
             put(locale.getDisplayLanguage(Locale.ENGLISH).lowercase(Locale.ROOT), code)
+            // Native names too ("日本語", "español"), as extensions often label tracks that way (AY3).
+            locale.getDisplayLanguage(locale).lowercase(locale).takeIf(String::isNotBlank)?.let {
+                putIfAbsent(it, code)
+            }
         }
         putAll(mapOf("fre" to "fr", "ger" to "de", "chi" to "zh", "dut" to "nl", "cze" to "cs"))
     }
 }
 
+private val labelWords = Regex("[^\\p{L}]+")
+
 internal fun normalizeAnimeLanguage(value: String?): String? {
     val key = value?.trim()?.lowercase(Locale.ROOT) ?: return null
-    return languageAliases[key] ?: languageAliases[key.substringBefore('-').substringBefore('_')]
+    return languageAliases[key]
+        ?: languageAliases[key.substringBefore('-').substringBefore('_')]
+        // Extension labels such as "English (SRT)", "Japanese - Signs" or "[Eng] Full" (AY3): the first word of three
+        // or more letters that names a language. Shorter words ("it", "no") are skipped; they'd match codes by chance.
+        ?: key.split(labelWords).filter { it.length >= 3 }.firstNotNullOfOrNull { languageAliases[it] }
 }
 
 private fun AnimeTrackKind.isOff(value: String) =
@@ -44,7 +54,12 @@ internal fun chooseAnimeTrack(
     fun byLanguage(language: String): AnimePlayerTrack? = available
         .filter { normalizeAnimeLanguage(it.language) == language }
         .minByOrNull { track ->
-            kind == AnimeTrackKind.SUBTITLE && (track.forced || partialSubtitle.containsMatchIn(track.title.orEmpty()))
+            kind == AnimeTrackKind.SUBTITLE &&
+                (
+                    track.forced || partialSubtitle.containsMatchIn(
+                        "${track.title.orEmpty()} ${track.language.orEmpty()}",
+                    )
+                    )
         }
 
     fun byKey(key: String): AnimeTrackChoice? {
@@ -62,3 +77,11 @@ internal fun chooseAnimeTrack(
     }
     return legacy.takeIf { languages.isEmpty() && it.isNotBlank() }?.let(::byKey)
 }
+
+/**
+ * `sub-add` / `audio-add` arguments for an extension track (AY3). Extensions give one label ("English (CC)",
+ * "日本語 (SRT)"): it becomes the track's title, so the track sheet and the forced/signs rule see it, and its
+ * language code (when the label names one) becomes the track's language.
+ */
+internal fun externalTrackArgs(url: String, label: String): Array<String> =
+    arrayOf(url, "auto", label, normalizeAnimeLanguage(label) ?: label)

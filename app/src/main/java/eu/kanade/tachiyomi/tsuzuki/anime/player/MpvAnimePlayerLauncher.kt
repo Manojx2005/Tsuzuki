@@ -50,6 +50,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
             }
         }
         File(configDir, "mpv.conf").apply { if (!exists()) createNewFile() }
+        val fontsDir = AnimeSubtitleFonts.install(context, configDir)
 
         this.listener = listener
         val events = newEventObserver(listener)
@@ -76,6 +77,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         setOpt("ytdl", "no")
         setOpt("tls-verify", "yes")
         setOpt("tls-ca-file", caFile.path)
+        AnimeSubtitleFonts.options(fontsDir).forEach { (name, value) -> setOpt(name, value) }
         setOpt("demuxer-max-bytes", "${64 * 1024 * 1024}")
         setOpt("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
         setOpt("input-default-bindings", "yes")
@@ -230,12 +232,16 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         externalTracks?.let { video ->
             externalTracks = null
             video.subtitleTracks.forEach { track ->
-                track.url.toHttpUrlOrNull()?.let { MpvPlayer.command("sub-add", it.toString(), "auto", "", track.lang) }
+                track.url.toHttpUrlOrNull()?.let {
+                    MpvPlayer.command("sub-add", *externalTrackArgs(it.toString(), track.lang))
+                }
+                    ?: AnimeLog.w("skipped a subtitle track that is not an http(s) address")
             }
             video.audioTracks.forEach { track ->
                 track.url.toHttpUrlOrNull()?.let {
-                    MpvPlayer.command("audio-add", it.toString(), "auto", "", track.lang)
+                    MpvPlayer.command("audio-add", *externalTrackArgs(it.toString(), track.lang))
                 }
+                    ?: AnimeLog.w("skipped an audio track that is not an http(s) address")
             }
         }
         val count = MPVLib.getPropertyInt("track-list/count") ?: 0
