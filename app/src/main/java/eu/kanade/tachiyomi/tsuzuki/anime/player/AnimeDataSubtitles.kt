@@ -115,6 +115,9 @@ internal fun writeAnimeDataSubtitle(dir: File, subtitle: AnimeDataSubtitle): Fil
                     StandardCopyOption.ATOMIC_MOVE,
                     StandardCopyOption.REPLACE_EXISTING,
                 )
+            } catch (e: IOException) {
+                // Another preparation may already have published the file for these same bytes.
+                if (!file.isFile || file.length() != subtitle.bytes.size.toLong()) throw e
             } finally {
                 partial.delete()
             }
