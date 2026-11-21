@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.tsuzuki.migration.isMigrationTarget
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import kotlinx.coroutines.flow.update
@@ -57,6 +58,9 @@ class MigrateSearchViewModel(
     }
 
     override fun getEnabledSources(): List<Source> {
+        // Tsuzuki: only sources of the book's kind (novel or manga); `from` is set before search() runs.
+        val kinds = setOfNotNull(state.value.from?.isNovel)
         return migrationSources.mapNotNull { sourceManager.get(it) }
+            .filter { isMigrationTarget(it.isNovelSource, kinds) }
     }
 }

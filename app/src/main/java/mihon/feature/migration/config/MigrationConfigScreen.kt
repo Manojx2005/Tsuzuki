@@ -56,6 +56,9 @@ import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsBackground
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiSettingsContainer
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.tsuzuki.migration.isMigrationTarget
+import eu.kanade.tachiyomi.tsuzuki.migration.mergeMigrationSources
+import eu.kanade.tachiyomi.tsuzuki.migration.migrationBookKinds
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.update
@@ -66,6 +69,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
@@ -87,7 +91,7 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val viewModel = viewModel<Model>()
+        val viewModel = viewModel { Model(mangaIds) }
         val state by viewModel.state.collectAsState()
 
         var migrationSheetOpen by rememberSaveable { mutableStateOf(false) }
@@ -346,9 +350,14 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
     }
 
     class Model(
+        private val mangaIds: Collection<Long> = emptyList(),
         val sourcePreferences: SourcePreferences = Injekt.get(),
         private val sourceManager: SourceManager = Injekt.get(),
+        private val getManga: GetManga = Injekt.get(),
     ) : StateViewModel<Model.State>(State()) {
+
+        // Tsuzuki: only sources of the migrating books' kind are shown (novel or manga).
+        private var shownSources: Set<Long> = emptySet()
 
         private val sourcesComparator = { includedSources: List<Long> ->
             compareBy<MigrationSource> { !it.isSelected }
@@ -372,15 +381,18 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
             saveSources()
         }
 
-        private fun initSources() {
+        private suspend fun initSources() {
             val languages = sourcePreferences.enabledLanguages.get()
             val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
-            val includedSources = sourcePreferences.migrationSources.get()
+            val bookKinds = migrationBookKinds(mangaIds, getManga)
+            val candidates = sourceManager.getAll()
+                .filter { it.lang in languages && isMigrationTarget(it.isNovelSource, bookKinds) }
+            shownSources = candidates.mapTo(HashSet()) { it.id }
+            val includedSources = sourcePreferences.migrationSources.get().filter { it in shownSources }
             val disabledSources = sourcePreferences.disabledSources.get()
                 .mapNotNull { it.toLongOrNull() }
-            val sources = sourceManager.getAll()
+            val sources = candidates
                 .asSequence()
-                .filter { it.lang in languages }
                 .map {
                     val source = Source(
                         id = it.id,
@@ -445,7 +457,10 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
             state.value.sources
                 .filter { source -> source.isSelected }
                 .map { source -> source.source.id }
-                .let { sources -> sourcePreferences.migrationSources.set(sources) }
+                .let { sources ->
+                    val saved = sourcePreferences.migrationSources.get()
+                    sourcePreferences.migrationSources.set(mergeMigrationSources(saved, shownSources, sources))
+                }
         }
 
         data class State(
