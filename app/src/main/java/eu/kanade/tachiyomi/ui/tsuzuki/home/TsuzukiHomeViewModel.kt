@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.tsuzuki.home
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.tsuzuki.novel.novelChapterHeading
 import kotlinx.coroutines.flow.Flow
@@ -131,6 +132,7 @@ class TsuzukiHomeViewModel(
         history: List<HistoryWithRelations>,
         library: List<LibraryManga>,
     ): HomeState {
+        val localizedContext = ContextCompat.getContextForLanguage(context)
         val byId = library.associateBy { it.id }
 
         val recent = history
@@ -151,18 +153,17 @@ class TsuzukiHomeViewModel(
                     chapterId = h.chapterId,
                     title = h.title,
                     cover = h.coverData,
-                    chapterLabel =
-                    current?.name?.takeIf { it.isNotBlank() }
+                    chapterLabel = current?.name?.takeIf { it.isNotBlank() }
                         ?: homeChapterLabel(h.chapterNumber) {
-                            context.stringResource(MR.strings.tsz_home_chapter_label, it)
+                            localizedContext.stringResource(MR.strings.tsz_home_chapter_label, it)
                         },
                     progress = lib?.progress(),
                     unread = chapters.count { !it.read && it.dateFetch > lastRead },
                     isNovel = h.isNovel,
                     recentChapters = chapters.toRecent(lastRead, h.isNovel),
                     meta = listOfNotNull(
-                        context.stringResource(MR.strings.tsz_home_chapter_count, chapters.size).takeIf {
-                            chapters.isNotEmpty()
+                        chapters.takeIf { it.isNotEmpty() }?.let {
+                            localizedContext.stringResource(MR.strings.tsz_home_chapter_count, it.size)
                         },
                         sourceName,
                     ).joinToString(" · "),
@@ -191,8 +192,9 @@ class TsuzukiHomeViewModel(
                         isNovel = lib.manga.isNovel,
                         recentChapters = chapters.toRecent(Long.MAX_VALUE, lib.manga.isNovel),
                         meta = listOfNotNull(
-                            context.stringResource(MR.strings.tsz_home_chapter_count, chapters.size)
-                                .takeIf { chapters.isNotEmpty() },
+                            chapters.takeIf { it.isNotEmpty() }?.let {
+                                localizedContext.stringResource(MR.strings.tsz_home_chapter_count, it.size)
+                            },
                             sourceManager.getOrStub(lib.manga.source).name,
                         ).joinToString(" · "),
                     )
