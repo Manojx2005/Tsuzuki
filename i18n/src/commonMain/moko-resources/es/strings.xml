@@ -1433,4 +1433,7 @@
     <string name="tsz_error_other">No se pudo completar la solicitud</string>
     <string name="tsz_error_open">Abriendo</string>
     <string name="tsz_export_choose_columns">Seleccionar columnas para exportar</string>
+    <string name="tsz_action_mark_until_last_read">Marcar hasta lo último leído</string>
+    <string name="tsz_pending_mark_until_last_read">Los capítulos anteriores al último leído se marcarán como leídos</string>
+    <string name="tsz_nothing_before_last_read">No hay capítulos sin leer antes del último leído</string>
 </resources>

@@ -981,6 +981,16 @@ class LibraryViewModel(
         }
     }
 
+    /** Tsuzuki: marks the unread chapters before each selected book's last read chapter. */
+    fun markUntilLastReadSelection() {
+        val selection = state.value.selectedManga
+        if (selection.isEmpty()) return
+        clearSelection()
+        viewModelScope.launchIO {
+            eu.kanade.tachiyomi.tsuzuki.library.runMarkUntilLastRead(selection, snackbarHostState, getLibraryManga)
+        }
+    }
+
     private suspend fun applyReadSelection(selection: List<Manga>, read: Boolean) =
         tachiyomi.core.common.util.lang.withNonCancellableContext {
             selection.forEach { manga ->

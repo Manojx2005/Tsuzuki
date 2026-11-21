@@ -1446,4 +1446,7 @@
     <string name="tsz_error_other">无法完成请求</string>
     <string name="tsz_error_open">正在打开</string>
     <string name="tsz_export_choose_columns">选择要导出的列</string>
+    <string name="tsz_action_mark_until_last_read">标记到上次阅读处</string>
+    <string name="tsz_pending_mark_until_last_read">上次阅读章节之前的章节将标为已读</string>
+    <string name="tsz_nothing_before_last_read">上次阅读章节之前没有未读章节</string>
 </resources>

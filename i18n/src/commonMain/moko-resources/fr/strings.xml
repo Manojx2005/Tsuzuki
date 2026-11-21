@@ -1439,4 +1439,7 @@
     <string name="tsz_error_other">La requête n’a pas pu aboutir</string>
     <string name="tsz_error_open">Ouverture en cours</string>
     <string name="tsz_export_choose_columns">Choisir les colonnes à exporter</string>
+    <string name="tsz_action_mark_until_last_read">Marquer jusqu’au dernier lu</string>
+    <string name="tsz_pending_mark_until_last_read">Les chapitres avant le dernier lu seront marqués comme lus</string>
+    <string name="tsz_nothing_before_last_read">Aucun chapitre non lu avant le dernier lu</string>
 </resources>

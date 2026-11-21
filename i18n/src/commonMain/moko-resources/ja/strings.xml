@@ -1665,4 +1665,7 @@
     <string name="tsz_error_other">リクエストを完了できませんでした</string>
     <string name="tsz_error_open">開いています</string>
     <string name="tsz_export_choose_columns">エクスポートする項目を選択</string>
+    <string name="tsz_action_mark_until_last_read">最後に読んだ所まで既読</string>
+    <string name="tsz_pending_mark_until_last_read">最後に読んだチャプターより前を既読にします</string>
+    <string name="tsz_nothing_before_last_read">最後に読んだチャプターより前に未読はありません</string>
 </resources>

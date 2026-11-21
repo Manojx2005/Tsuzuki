@@ -337,6 +337,7 @@ fun LibraryBottomActionMenu(
     onTranslateClicked: (() -> Unit)? = null,
     onExportEpubClicked: (() -> Unit)? = null,
     onRemoveFromLibraryClicked: (() -> Unit)? = null,
+    onMarkUntilLastReadClicked: (() -> Unit)? = null,
 ) {
     if (isTsuzukiStyle()) {
         if (!visible) return
@@ -353,6 +354,7 @@ fun LibraryBottomActionMenu(
             onTranslateClicked = onTranslateClicked,
             onExportEpubClicked = onExportEpubClicked,
             onRemoveFromLibraryClicked = onRemoveFromLibraryClicked,
+            onMarkUntilLastReadClicked = onMarkUntilLastReadClicked,
         )
         return
     }

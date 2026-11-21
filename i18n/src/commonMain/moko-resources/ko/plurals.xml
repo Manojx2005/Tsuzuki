@@ -69,4 +69,7 @@
     <plurals name="notification_update_error">
         <item quantity="other">%1$d개 업데이트 실패</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="other">챕터 %1$d개를 읽음으로 표시했습니다</item>
+    </plurals>
 </resources>
