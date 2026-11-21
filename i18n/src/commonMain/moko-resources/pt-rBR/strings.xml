@@ -1481,4 +1481,16 @@
     <string name="tsz_nothing_before_last_read">Nenhum capítulo não lido antes do último lido</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
     <string name="tsz_history_clear_includes_anime">O histórico de animes também será apagado.</string>
+    <string name="tsz_kokoro_download">Baixar pacote de voz de teste</string>
+    <string name="tsz_kokoro_download_summary">Cerca de 124 MB, uma única vez. Cada arquivo é verificado antes da instalação.</string>
+    <string name="tsz_kokoro_download_title">Baixando a voz de teste</string>
+    <string name="tsz_kokoro_download_starting">Conectando…</string>
+    <string name="tsz_kokoro_download_progress">%1$s de %2$s MB · %3$s</string>
+    <string name="tsz_kokoro_download_wifi">Wi-Fi</string>
+    <string name="tsz_kokoro_download_mobile">Dados móveis</string>
+    <string name="tsz_kokoro_download_paused">Pausado. Retomar continua de onde parou.</string>
+    <string name="tsz_kokoro_download_space">Espaço livre %1$s · precisa de %2$s durante a instalação</string>
+    <string name="tsz_kokoro_download_pause">Pausar</string>
+    <string name="tsz_kokoro_download_resume">Retomar</string>
+    <string name="tsz_kokoro_download_not_published">O pacote de voz ainda não foi publicado. Instale-o a partir de um arquivo.</string>
 </resources>

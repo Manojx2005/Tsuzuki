@@ -1484,4 +1484,16 @@
     <string name="tsz_nothing_before_last_read">Keine ungelesenen Kapitel vor dem zuletzt gelesenen</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
     <string name="tsz_history_clear_includes_anime">Der Anime-Verlauf wird ebenfalls gelöscht.</string>
+    <string name="tsz_kokoro_download">Test-Stimmpaket herunterladen</string>
+    <string name="tsz_kokoro_download_summary">Etwa 124 MB, einmalig. Jede Datei wird vor der Installation geprüft.</string>
+    <string name="tsz_kokoro_download_title">Teststimme wird heruntergeladen</string>
+    <string name="tsz_kokoro_download_starting">Verbinde…</string>
+    <string name="tsz_kokoro_download_progress">%1$s von %2$s MB · %3$s</string>
+    <string name="tsz_kokoro_download_wifi">WLAN</string>
+    <string name="tsz_kokoro_download_mobile">Mobile Daten</string>
+    <string name="tsz_kokoro_download_paused">Pausiert. Fortsetzen macht dort weiter, wo es aufgehört hat.</string>
+    <string name="tsz_kokoro_download_space">Freier Speicher %1$s · benötigt %2$s während der Installation</string>
+    <string name="tsz_kokoro_download_pause">Pausieren</string>
+    <string name="tsz_kokoro_download_resume">Fortsetzen</string>
+    <string name="tsz_kokoro_download_not_published">Das Stimmpaket ist noch nicht veröffentlicht. Installiere es stattdessen aus einer Datei.</string>
 </resources>

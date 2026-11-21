@@ -1484,4 +1484,16 @@
     <string name="tsz_nothing_before_last_read">上次阅读章节之前没有未读章节</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
     <string name="tsz_history_clear_includes_anime">动画观看记录也会被清除。</string>
+    <string name="tsz_kokoro_download">下载测试语音包</string>
+    <string name="tsz_kokoro_download_summary">约 124 MB，仅需一次。安装前会检查每个文件。</string>
+    <string name="tsz_kokoro_download_title">正在下载测试语音</string>
+    <string name="tsz_kokoro_download_starting">正在连接…</string>
+    <string name="tsz_kokoro_download_progress">%1$s / %2$s MB · %3$s</string>
+    <string name="tsz_kokoro_download_wifi">Wi-Fi</string>
+    <string name="tsz_kokoro_download_mobile">移动数据</string>
+    <string name="tsz_kokoro_download_paused">已暂停。继续后将从中断处接着下载。</string>
+    <string name="tsz_kokoro_download_space">可用空间 %1$s · 安装时需要 %2$s</string>
+    <string name="tsz_kokoro_download_pause">暂停</string>
+    <string name="tsz_kokoro_download_resume">继续</string>
+    <string name="tsz_kokoro_download_not_published">语音包尚未发布。请改为从文件安装。</string>
 </resources>

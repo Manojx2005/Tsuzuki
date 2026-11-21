@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Request
@@ -36,6 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 private sealed interface DownloadState {
     data class Running(val done: Long, val total: Long) : DownloadState
@@ -61,12 +63,21 @@ internal fun KokoroDownloadDialog(url: String, onDismiss: () -> Unit, onInstalle
     val target = remember { kokoroDownloadFile(context) }
     var state by remember { mutableStateOf<DownloadState>(DownloadState.Running(target.lengthOrZero(), -1)) }
     var job by remember { mutableStateOf<Job?>(null) }
+    // KOKORO-TRANSFER-F: every Resume/Pause/Cancel bumps this; callbacks from an older transfer are ignored.
+    val generation = remember { AtomicInteger() }
     val notPublished = stringResource(MR.strings.tsz_kokoro_download_not_published)
 
     fun start() {
-        job?.cancel()
-        state = DownloadState.Running(target.lengthOrZero(), (state as? DownloadState.Paused)?.total ?: -1)
+        val previous = job
+        val current = generation.incrementAndGet()
+        val knownTotal = (state as? DownloadState.Paused)?.total ?: -1
+        state = DownloadState.Running(target.lengthOrZero(), knownTotal)
         job = scope.launch {
+            // The old writer must release the partial file before this one opens it.
+            previous?.cancelAndJoin()
+            fun update(next: DownloadState) {
+                if (generation.get() == current) state = next
+            }
             try {
                 val client = Injekt.get<NetworkHelper>().client
                 KokoroPackDownload(target) { offset ->
@@ -75,8 +86,14 @@ internal fun KokoroDownloadDialog(url: String, onDismiss: () -> Unit, onInstalle
                         .build()
                     val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
                     val body = response.body
-                    KokoroPackDownload.Opened(response.code, body.contentLength(), body.byteStream())
-                }.run { done, total -> state = DownloadState.Running(done, total) }
+                    KokoroPackDownload.Opened(
+                        code = response.code,
+                        length = body.contentLength(),
+                        body = body.byteStream(),
+                        rangeStart = KokoroPackDownload.rangeStart(response.header("Content-Range")),
+                    )
+                }.run { done, total -> update(DownloadState.Running(done, total)) }
+                if (generation.get() != current) return@launch
                 state = DownloadState.Installing
                 withContext(Dispatchers.IO) {
                     target.inputStream().use { KokoroPackImporter(KokoroPack(context)).import(it) }
@@ -86,9 +103,9 @@ internal fun KokoroDownloadDialog(url: String, onDismiss: () -> Unit, onInstalle
             } catch (error: CancellationException) {
                 throw error
             } catch (error: KokoroPackDownload.NotPublishedException) {
-                state = DownloadState.Failed(notPublished)
+                update(DownloadState.Failed(notPublished))
             } catch (error: Exception) {
-                state = DownloadState.Failed(error.message ?: error.javaClass.simpleName)
+                update(DownloadState.Failed(error.message ?: error.javaClass.simpleName))
             }
         }
     }
@@ -160,8 +177,15 @@ internal fun KokoroDownloadDialog(url: String, onDismiss: () -> Unit, onInstalle
         confirmButton = {
             when (val current = state) {
                 is DownloadState.Running -> TextButton(onClick = {
-                    job?.cancel()
-                    state = DownloadState.Paused(target.lengthOrZero(), current.total)
+                    val transfer = job
+                    val pausing = generation.incrementAndGet()
+                    scope.launch {
+                        // Show Paused (and offer Resume) only once the old writer has stopped.
+                        transfer?.cancelAndJoin()
+                        if (generation.get() == pausing) {
+                            state = DownloadState.Paused(target.lengthOrZero(), current.total)
+                        }
+                    }
                 }) { Text(stringResource(MR.strings.tsz_kokoro_download_pause)) }
                 is DownloadState.Paused, is DownloadState.Failed -> TextButton(onClick = ::start) {
                     Text(stringResource(MR.strings.tsz_kokoro_download_resume))
@@ -172,9 +196,14 @@ internal fun KokoroDownloadDialog(url: String, onDismiss: () -> Unit, onInstalle
         dismissButton = {
             if (state != DownloadState.Installing) {
                 TextButton(onClick = {
-                    job?.cancel()
-                    target.delete()
-                    onDismiss()
+                    val transfer = job
+                    generation.incrementAndGet()
+                    scope.launch {
+                        // Delete the partial file only after the writer has let go of it.
+                        transfer?.cancelAndJoin()
+                        target.delete()
+                        onDismiss()
+                    }
                 }) { Text(stringResource(MR.strings.action_cancel)) }
             }
         },

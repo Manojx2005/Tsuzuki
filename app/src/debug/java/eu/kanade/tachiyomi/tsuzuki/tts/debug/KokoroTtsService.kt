@@ -22,7 +22,6 @@ import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import eu.kanade.tachiyomi.tsuzuki.tts.playNeuralChunks
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -55,14 +54,17 @@ class KokoroTtsService : Service() {
     /**
      * Audio being prepared for the next request's first piece while the phone voice speaks a chunk Kokoro can't
      * say (keyed by speed and text). Removes the ~2.6 s silence before every Kokoro chunk after a phone-voice
-     * chunk on the Tab S11 (2026-11-21). Main thread only.
+     * chunk on the Tab S11 (2026-11-21). Kept for the matching continuation, cancelled on STOP, unbind or another
+     * text (KOKORO-TRANSFER-F). Main thread only.
      */
-    private var prefetch: Pair<String, Deferred<GeneratedAudio?>>? = null
+    private val prefetch = eu.kanade.tachiyomi.tsuzuki.tts.NeuralPrefetchSlot<GeneratedAudio?>()
     private val incoming = Messenger(
         Handler(Looper.getMainLooper()) { message ->
             when (message.what) {
                 Protocol.PLAY -> start(message)
-                Protocol.STOP -> if (message.replyTo == client && message.arg1 == request) stop()
+                Protocol.STOP -> if (message.replyTo == client && message.arg1 == request) {
+                    stop(cancelPrefetch = true)
+                }
             }
             true
         },
@@ -71,12 +73,12 @@ class KokoroTtsService : Service() {
     override fun onBind(intent: Intent): IBinder = incoming.binder
 
     override fun onUnbind(intent: Intent): Boolean {
-        stop()
+        stop(cancelPrefetch = true)
         return false
     }
 
     override fun onDestroy() {
-        stop()
+        stop(cancelPrefetch = true)
         scope.cancel()
         CoroutineScope(Dispatchers.Default).launch {
             runtimeLock.withLock {
@@ -97,7 +99,8 @@ class KokoroTtsService : Service() {
             notify(receiver, Protocol.FAILED, id, first)
             return
         }
-        stop()
+        // A new request may be the continuation the prefetch was made for; synthesizeOrPrefetched decides.
+        stop(cancelPrefetch = false)
         request = id
         client = receiver
         val requestedAt = SystemClock.elapsedRealtime()
@@ -151,10 +154,13 @@ class KokoroTtsService : Service() {
         }
     }
 
-    private fun stop() {
+    private fun stop(cancelPrefetch: Boolean) {
         playback?.cancel()
         playback = null
-        client = null
+        if (cancelPrefetch) {
+            prefetch.cancel()
+            client = null
+        }
     }
 
     private fun notify(receiver: Messenger, event: Int, id: Int, index: Int) {
@@ -162,7 +168,7 @@ class KokoroTtsService : Service() {
             receiver.send(Message.obtain(null, event, id, index))
         } catch (error: RemoteException) {
             logcat(LogPriority.WARN, error) { "Neural TTS client disconnected" }
-            stop()
+            stop(cancelPrefetch = true)
         }
     }
 
@@ -202,13 +208,11 @@ class KokoroTtsService : Service() {
     }
 
     private suspend fun synthesizeOrPrefetched(text: String, speed: Float): GeneratedAudio {
-        val key = prefetchKey(text, speed)
-        val pending = prefetch
-        prefetch = null
+        val pending = prefetch.take(prefetchKey(text, speed))
         if (pending != null) {
-            if (pending.first == key) {
+            run {
                 val audio = try {
-                    pending.second.await()
+                    pending.await()
                 } catch (error: CancellationException) {
                     currentCoroutineContext().ensureActive()
                     null
@@ -220,8 +224,6 @@ class KokoroTtsService : Service() {
                     logcat(LogPriority.INFO) { "KokoroTiming prefetch hit chars=${text.length}" }
                     return audio
                 }
-            } else {
-                pending.second.cancel()
             }
         }
         return synthesize(text, speed)
@@ -229,10 +231,10 @@ class KokoroTtsService : Service() {
 
     private fun prepareAfterUncovered(chunks: List<String>, uncoveredOffset: Int, speed: Float) {
         val (chunk, text) = eu.kanade.tachiyomi.tsuzuki.tts.nextNeuralPrefetch(chunks, uncoveredOffset) ?: return
-        prefetch?.second?.cancel()
-        prefetch = prefetchKey(text, speed) to scope.async {
-            if (isCovered(chunk)) synthesize(text, speed) else null
-        }
+        prefetch.prepare(
+            prefetchKey(text, speed),
+            scope.async { if (isCovered(chunk)) synthesize(text, speed) else null },
+        )
     }
 
     private fun prefetchKey(text: String, speed: Float) = "$speed|$text"

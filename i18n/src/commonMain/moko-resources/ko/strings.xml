@@ -1483,4 +1483,16 @@
     <string name="tsz_nothing_before_last_read">마지막으로 읽은 챕터 이전에 안 읽은 챕터가 없습니다</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
     <string name="tsz_history_clear_includes_anime">애니메이션 시청 기록도 삭제됩니다.</string>
+    <string name="tsz_kokoro_download">테스트 음성 팩 다운로드</string>
+    <string name="tsz_kokoro_download_summary">약 124MB, 한 번만. 설치 전에 모든 파일을 확인합니다.</string>
+    <string name="tsz_kokoro_download_title">테스트 음성 다운로드 중</string>
+    <string name="tsz_kokoro_download_starting">연결 중…</string>
+    <string name="tsz_kokoro_download_progress">%1$s / %2$s MB · %3$s</string>
+    <string name="tsz_kokoro_download_wifi">Wi-Fi</string>
+    <string name="tsz_kokoro_download_mobile">모바일 데이터</string>
+    <string name="tsz_kokoro_download_paused">일시정지됨. 다시 시작하면 멈춘 곳부터 이어서 받습니다.</string>
+    <string name="tsz_kokoro_download_space">여유 공간 %1$s · 설치 중 %2$s 필요</string>
+    <string name="tsz_kokoro_download_pause">일시정지</string>
+    <string name="tsz_kokoro_download_resume">다시 시작</string>
+    <string name="tsz_kokoro_download_not_published">음성 팩이 아직 공개되지 않았습니다. 파일에서 설치하세요.</string>
 </resources>

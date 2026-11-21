@@ -1,15 +1,24 @@
 package eu.kanade.tachiyomi.tsuzuki.tts
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class KokoroPackDownloadTest {
     @TempDir
@@ -26,7 +35,7 @@ class KokoroPackDownloadTest {
                 206 -> bytes.copyOfRange(offset.toInt(), bytes.size)
                 else -> ByteArray(0)
             }
-            KokoroPackDownload.Opened(c, body.size.toLong(), ByteArrayInputStream(body))
+            KokoroPackDownload.Opened(c, body.size.toLong(), ByteArrayInputStream(body), offset.takeIf { c == 206 })
         }
 
     @Test
@@ -75,5 +84,75 @@ class KokoroPackDownloadTest {
     @Test
     fun `space needed covers the zip and the installed pack`() {
         assertEquals(130L + 167L + 16L * 1024 * 1024, KokoroPackDownload.spaceNeeded(130, 167))
+    }
+
+    /** Gives [first] bytes, then blocks like a stalled socket until it is closed. */
+    private class StalledBody(private val data: ByteArray, private val first: Int) : InputStream() {
+        private var position = 0
+        private val closed = CountDownLatch(1)
+        val firstChunkRead = CountDownLatch(1)
+
+        override fun read(): Int = throw UnsupportedOperationException()
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+            if (position < first) {
+                val count = minOf(length, first - position)
+                data.copyInto(buffer, offset, position, position + count)
+                position += count
+                if (position == first) firstChunkRead.countDown()
+                return count
+            }
+            if (!closed.await(10, TimeUnit.SECONDS)) error("the stalled read was never released")
+            throw IOException("Socket closed")
+        }
+
+        override fun close() = closed.countDown()
+    }
+
+    @Test
+    fun `pause during a stalled read stops at once and writes nothing more; resume completes it`() = runBlocking {
+        val target = File(dir, "pack.zip")
+        val first = 64 * 1024
+        val stalled = StalledBody(bytes, first)
+        val reports = mutableListOf<Long>()
+        val transfer = launch(Dispatchers.Default) {
+            KokoroPackDownload(target) { KokoroPackDownload.Opened(200, bytes.size.toLong(), stalled) }
+                .run { done, _ -> synchronized(reports) { reports += done } }
+        }
+        assertTrue(stalled.firstChunkRead.await(10, TimeUnit.SECONDS))
+        // Pause: cancel and wait for the writer to let go of the file (as the dialog does).
+        withTimeout(5_000) { transfer.cancelAndJoin() }
+        val reportsAtPause = synchronized(reports) { reports.toList() }
+        assertEquals(first.toLong(), target.length())
+        Thread.sleep(100)
+        assertEquals(first.toLong(), target.length())
+        assertEquals(reportsAtPause, synchronized(reports) { reports.toList() })
+
+        // Resume: a range request from the paused length finishes the same file.
+        val requests = mutableListOf<Long>()
+        KokoroPackDownload(target, server(requests)).run { _, _ -> }
+        assertEquals(listOf(first.toLong()), requests)
+        assertArrayEquals(bytes, target.readBytes())
+    }
+
+    @Test
+    fun `a 206 for another offset is refused and the partial file dropped`() = runTest {
+        val target = File(dir, "pack.zip").apply { writeBytes(bytes.copyOfRange(0, 300_000)) }
+        val wrong = { _: Long ->
+            KokoroPackDownload.Opened(206, 10, ByteArrayInputStream(ByteArray(10)), rangeStart = 0)
+        }
+        assertThrows<IOException> { KokoroPackDownload(target, wrong).run { _, _ -> } }
+        assertFalse(target.exists())
+        val missing = { _: Long -> KokoroPackDownload.Opened(206, 10, ByteArrayInputStream(ByteArray(10))) }
+        target.writeBytes(bytes.copyOfRange(0, 300_000))
+        assertThrows<IOException> { KokoroPackDownload(target, missing).run { _, _ -> } }
+    }
+
+    @Test
+    fun `content-range headers give the first byte`() {
+        assertEquals(300_000L, KokoroPackDownload.rangeStart("bytes 300000-699999/700000"))
+        assertEquals(5L, KokoroPackDownload.rangeStart("bytes 5-9/*"))
+        assertEquals(null, KokoroPackDownload.rangeStart(null))
+        assertEquals(null, KokoroPackDownload.rangeStart("bytes */700000"))
     }
 }

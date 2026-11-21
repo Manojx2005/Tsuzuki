@@ -99,6 +99,9 @@ internal class NeuralTtsClient private constructor(
     private fun length(playing: Playback, index: Int) = playing.chunks.getOrNull(index)?.length ?: 0
 
     @Volatile private var active: Playback? = null
+
+    /** KOKORO-TRANSFER-F: a stop during a phone-voice hand-off still names the request the worker is preparing. */
+    private val stopTarget = NeuralStopTarget()
     override val isPlaying: Boolean get() = active != null
 
     private class Playback(
@@ -131,6 +134,7 @@ internal class NeuralTtsClient private constructor(
                         }
                     }
                     NeuralTtsProtocol.CHAPTER_DONE -> {
+                        stopTarget.finished(playing.id)
                         active = null
                         watchdog?.cancel()
                         playing.listener.onDone()
@@ -138,6 +142,7 @@ internal class NeuralTtsClient private constructor(
                     NeuralTtsProtocol.UNCOVERED -> {
                         if (message.arg2 !in playing.index..playing.lastIndex) return@Handler true
                         cold = false
+                        stopTarget.uncovered(playing.id)
                         active = null
                         watchdog?.cancel()
                         watchdog = null
@@ -166,9 +171,11 @@ internal class NeuralTtsClient private constructor(
     override fun play(chunks: List<String>, startIndex: Int, speed: Float, listener: NeuralListener) {
         require(startIndex in chunks.indices)
         require(chunks.size - startIndex <= 50_000)
-        stop()
+        // Not stop(): the worker may be preparing this request's first piece after a phone-voice hand-off.
+        stopActive()
         val playing = Playback(++nextId, startIndex, chunks, speed, listener)
         active = playing
+        stopTarget.started(playing.id)
         // A worker that died while idle must get the cold-start allowance (process start, hashing, model load).
         if (server == null) cold = true
         watch(playing, length(playing, startIndex))
@@ -210,19 +217,36 @@ internal class NeuralTtsClient private constructor(
         }
     }
 
+    /** Stops the reader's request, including audio the worker prepares during a phone-voice hand-off. */
     override fun stop() {
+        clearActive()
+        sendStop(stopTarget.stop())
+    }
+
+    /** Stops only a request that is still playing; a handed-off request's prepared audio stays for [play]. */
+    private fun stopActive() {
         val playing = active
+        clearActive()
+        if (playing != null) {
+            stopTarget.finished(playing.id)
+            sendStop(playing.id)
+        }
+    }
+
+    private fun clearActive() {
         active = null
         sender?.cancel()
         sender = null
         watchdog?.cancel()
         watchdog = null
-        if (playing != null) {
-            try {
-                server?.send(Message.obtain(null, NeuralTtsProtocol.STOP, playing.id, 0).apply { replyTo = receiver })
-            } catch (error: RemoteException) {
-                logcat(LogPriority.WARN, error) { "Neural TTS service disconnected during stop" }
-            }
+    }
+
+    private fun sendStop(id: Int?) {
+        if (id == null) return
+        try {
+            server?.send(Message.obtain(null, NeuralTtsProtocol.STOP, id, 0).apply { replyTo = receiver })
+        } catch (error: RemoteException) {
+            logcat(LogPriority.WARN, error) { "Neural TTS service disconnected during stop" }
         }
     }
 
