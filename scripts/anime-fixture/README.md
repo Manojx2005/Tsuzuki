@@ -17,7 +17,7 @@ extensions tab, which lists APKs).
 bash scripts/anime-fixture/make-media.sh          # once; needs ffmpeg; writes media/ (git-ignored, ~15 MB)
 python scripts/anime-fixture/serve.py              # 127.0.0.1:8765, one log line per request
 adb -s <serial> reverse tcp:8765 tcp:8765          # per device; the app then reaches the PC at 127.0.0.1:8765
-adb -s <serial> reverse --remove-all               # afterwards
+adb -s <serial> reverse --remove tcp:8765        # afterwards
 ```
 
 - `make-media.sh` gives byte-identical files on every run (fixed patterns, single-threaded x264, bitexact
