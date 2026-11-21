@@ -170,17 +170,7 @@ class JsPluginManager(
 
                 val dedupedPlugins = allPlugins
                     .groupBy { it.id }
-                    .map { (_, dupes) ->
-                        dupes.reduce { newest, cur ->
-                            if (compareVersions(cur.version, newest.version) >
-                                0
-                            ) {
-                                cur
-                            } else {
-                                newest
-                            }
-                        }
-                    }
+                    .map { (_, dupes) -> dupes.reduce { newest, cur -> if (compareVersions(cur.version, newest.version) > 0) cur else newest } }
                 _availablePlugins.value = dedupedPlugins
 
                 // Save to cache file

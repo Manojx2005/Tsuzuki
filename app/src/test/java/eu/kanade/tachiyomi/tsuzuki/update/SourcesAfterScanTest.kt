@@ -2,8 +2,13 @@ package eu.kanade.tachiyomi.tsuzuki.update
 
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -57,5 +62,29 @@ class SourcesAfterScanTest {
         // The new shape reads the manager's own state, so ready always carries the scan.
         val newShape = afterScan(map, scanned).filterNotNull().first()
         assertEquals(mapOf("ext" to "source"), newShape)
+    }
+
+    @Test
+    fun `readiness snapshots the completed map even if its collection is delayed`() = runTest {
+        val items = MutableStateFlow(emptyMap<String, String>())
+        val scanned = MutableStateFlow(false)
+        val delayed = object : StateFlow<Map<String, String>> by items {
+            override suspend fun collect(collector: FlowCollector<Map<String, String>>): Nothing {
+                items.collect { snapshot ->
+                    if (snapshot.isNotEmpty()) delay(100)
+                    collector.emit(snapshot)
+                }
+                awaitCancellation()
+            }
+        }
+        val ready = async { afterScan(delayed, scanned).filterNotNull().first() }
+        testScheduler.runCurrent()
+
+        val completed = mapOf("ext" to "source")
+        items.value = completed
+        scanned.value = true
+        testScheduler.runCurrent()
+        assertTrue(ready.isCompleted)
+        assertEquals(completed, ready.await())
     }
 }
