@@ -22,3 +22,6 @@ local.properties
 # Reproducible neural runtime investigation/build outputs
 /.native/
 scripts/**/__pycache__/
+
+# Anime fixture media (card AY0), made by scripts/anime-fixture/make-media.sh
+scripts/anime-fixture/media/

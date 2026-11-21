@@ -62,6 +62,32 @@ class AnimeSourceManagerTest {
     }
 
     @Test
+    fun `built-in sources are merged, installed ids win, and nothing is added when there are none`() = runTest {
+        fun source(id: Long, name: String) = mockk<AnimeSource> {
+            every { this@mockk.id } returns id
+            every { this@mockk.name } returns name
+            every { lang } returns "all"
+        }
+        val installed = source(1L, "Installed")
+        val clash = source(1L, "Built-in with an installed id")
+        val fixture = source(2L, "Fixture")
+        val builtIn = listOf(clash, fixture).map { RegisteredAnimeSource(it, "tsuzuki.fixture", "Fixture", 16.0) }
+        val manager = AnimeSourceManager(MemoryAnimeSources(), { builtIn }) { listOf(extension(installed)) }
+
+        manager.refresh().map { it.source } shouldBe listOf(installed, fixture)
+        manager.get(2L)?.extensionPackage shouldBe "tsuzuki.fixture"
+        AnimeSourceManager(MemoryAnimeSources()) { listOf(extension(installed)) }.refresh().map { it.source } shouldBe
+            listOf(installed)
+    }
+
+    @Test
+    fun `fixture sources stay out of non-debug builds and a missing class is harmless`() {
+        debugBuiltInAnimeSources(debug = false) shouldBe emptyList()
+        debugBuiltInAnimeSources(debug = true, className = "eu.kanade.tachiyomi.tsuzuki.NoSuchFixture") shouldBe
+            emptyList()
+    }
+
+    @Test
     fun `load failures are described`() {
         animeLoadFailureMessage(listOf(AnimeLoadResult.Error, AnimeLoadResult.Error))
             ?.contains("2 anime extension(s)") shouldBe true
