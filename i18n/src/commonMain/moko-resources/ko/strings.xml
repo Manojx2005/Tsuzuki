@@ -1478,4 +1478,8 @@
     <string name="tsz_track_token_novelupdates_steps">1. 브라우저에서 novelupdates.com에 로그인\n2. DevTools(F12) → Application → Cookies 열기\n3. 모든 쿠키 값 복사\n4. 아래에 cookie_name=value; cookie_name2=value2 형식으로 붙여넣기</string>
     <string name="tsz_track_token_prompt">인증 토큰을 입력하세요</string>
     <string name="tsz_track_lists_failed">목록을 가져오지 못했습니다</string>
+    <string name="tsz_action_mark_until_last_read">마지막으로 읽은 곳까지 읽음 표시</string>
+    <string name="tsz_pending_mark_until_last_read">마지막으로 읽은 챕터 이전을 읽음으로 표시합니다</string>
+    <string name="tsz_nothing_before_last_read">마지막으로 읽은 챕터 이전에 안 읽은 챕터가 없습니다</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

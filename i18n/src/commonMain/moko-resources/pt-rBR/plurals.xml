@@ -115,4 +115,12 @@
         <item quantity="many">%1$d atualizações falharam</item>
         <item quantity="other">%1$d atualizações falharam</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="one">%1$d capítulo marcado como lido</item>
+        <item quantity="other">%1$d capítulos marcados como lidos</item>
+    </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="one">Não foi possível marcar capítulos em %1$d livro</item>
+        <item quantity="other">Não foi possível marcar capítulos em %1$d livros</item>
+    </plurals>
 </resources>

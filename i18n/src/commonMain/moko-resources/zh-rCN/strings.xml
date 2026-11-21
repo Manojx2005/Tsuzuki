@@ -1479,4 +1479,8 @@
     <string name="tsz_track_token_novelupdates_steps">1. 在浏览器中登录 novelupdates.com\n2. 打开 DevTools（F12）→ Application → Cookies\n3. 复制所有 Cookie 值\n4. 按 cookie_name=value; cookie_name2=value2 的格式粘贴到下方</string>
     <string name="tsz_track_token_prompt">请输入你的身份验证令牌</string>
     <string name="tsz_track_lists_failed">无法获取列表</string>
+    <string name="tsz_action_mark_until_last_read">标记到上次阅读处</string>
+    <string name="tsz_pending_mark_until_last_read">上次阅读章节之前的章节将标为已读</string>
+    <string name="tsz_nothing_before_last_read">上次阅读章节之前没有未读章节</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

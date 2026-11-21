@@ -114,4 +114,12 @@
         <item quantity="one">%1$d update failed</item>
         <item quantity="other">%1$d updates failed</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="one">%1$d chapter marked as read</item>
+        <item quantity="other">%1$d chapters marked as read</item>
+    </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="one">Couldn't mark chapters in %1$d book</item>
+        <item quantity="other">Couldn't mark chapters in %1$d books</item>
+    </plurals>
 </resources>

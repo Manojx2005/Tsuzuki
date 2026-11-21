@@ -106,6 +106,7 @@ internal fun TsuzukiLibrarySelectionBar(
     onTranslateClicked: (() -> Unit)?,
     onExportEpubClicked: (() -> Unit)?,
     onRemoveFromLibraryClicked: (() -> Unit)?,
+    onMarkUntilLastReadClicked: (() -> Unit)? = null,
 ) {
     val actions = listOfNotNull(
         SelectionAction(
@@ -141,6 +142,13 @@ internal fun TsuzukiLibrarySelectionBar(
         ),
     )
     val more = listOfNotNull(
+        onMarkUntilLastReadClicked?.let {
+            SelectionAction(
+                stringResource(MR.strings.tsz_action_mark_until_last_read),
+                ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
+                it,
+            )
+        },
         SelectionAction(
             stringResource(MR.strings.action_mark_as_unread),
             Icons.Outlined.RemoveDone,
