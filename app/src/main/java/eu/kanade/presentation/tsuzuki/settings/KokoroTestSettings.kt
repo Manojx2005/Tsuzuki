@@ -22,9 +22,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import tachiyomi.core.common.preference.Preference as CorePreference
 
 /**
  * Debug-only Kokoro listening test: the switch, and import/remove of the voice pack zip. Import and remove need an
@@ -38,6 +42,7 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
     val switchOn by switch.collectAsState()
     var revision by remember { mutableIntStateOf(0) }
     var busy by remember { mutableStateOf(false) }
+    var downloading by remember { mutableStateOf(false) }
     val installed by produceState(false, interactive, revision) {
         if (interactive) value = KokoroPack(context).isInstalled()
     }
@@ -45,6 +50,18 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
     val installedMessage = stringResource(MR.strings.tsz_kokoro_test_imported)
     val removedMessage = stringResource(MR.strings.tsz_kokoro_test_removed)
     val failedMessage = stringResource(MR.strings.tsz_kokoro_test_import_failed)
+    if (downloading && interactive) {
+        val packUrl = remember { kokoroPackUrlPreference().get() }
+        KokoroDownloadDialog(
+            url = packUrl,
+            onDismiss = { downloading = false },
+            onInstalled = {
+                downloading = false
+                revision++
+                context.toast(installedMessage)
+            },
+        )
+    }
     val picker = if (interactive) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri == null) return@rememberLauncherForActivityResult
@@ -84,6 +101,12 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
     )
     if (picker != null) {
         items += Preference.PreferenceItem.TextPreference(
+            title = stringResource(MR.strings.tsz_kokoro_download),
+            subtitle = stringResource(MR.strings.tsz_kokoro_download_summary),
+            enabled = !busy,
+            onClick = { downloading = true },
+        )
+        items += Preference.PreferenceItem.TextPreference(
             title = stringResource(MR.strings.tsz_kokoro_test_import),
             subtitle = stringResource(
                 if (busy) MR.strings.tsz_kokoro_test_importing else MR.strings.tsz_kokoro_test_import_summary,
@@ -113,3 +136,12 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
         ),
     )
 }
+
+/**
+ * Where the debug build downloads the test pack. Default: the release asset NT4 will publish (404 until then).
+ * A tester can point it at a local server: `adb reverse` + editing this preference with `run-as`.
+ */
+internal fun kokoroPackUrlPreference() = Injekt.get<PreferenceStore>().getString(
+    CorePreference.appStateKey("tsz_kokoro_pack_url"),
+    "https://github.com/Manojx2005/Tsuzuki/releases/download/voices-v1/kokoro-cmu-v1.zip",
+)
