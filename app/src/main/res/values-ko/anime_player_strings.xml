@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">이전 회차</string>
     <string name="tsz_anime_player_quality">화질</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">최고 화질</string>
+    <string name="tsz_anime_player_auto_quality">자동</string>
     <string name="tsz_anime_player_orientation_lock">화면 방향 잠금</string>
     <string name="tsz_anime_player_orientation_unlock">화면 방향 잠금 해제</string>
     <string name="tsz_anime_player_autoplay_on">자동 재생 켜기</string>
@@ -50,4 +50,7 @@
     <string name="tsz_anime_previews_on">켜기</string>
     <string name="tsz_anime_previews_wifi">Wi-Fi에서만</string>
     <string name="tsz_anime_preview_remaining">%1$s화 · %2$s 남음</string>
+    <string name="tsz_anime_player_server_load">탭하여 불러오기</string>
+    <string name="tsz_anime_player_server_loading">불러오는 중…</string>
+    <string name="tsz_anime_player_server_failed">불러오지 못했습니다 — 탭하여 다시 시도</string>
 </resources>

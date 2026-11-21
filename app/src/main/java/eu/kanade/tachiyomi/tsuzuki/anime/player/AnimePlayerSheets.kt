@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
@@ -165,7 +166,7 @@ internal fun AnimePlayerSheets(
                                     item { AnimePlayerEmptyOptions() }
                                 } else {
                                     item {
-                                        AnimePlayerOption(stringResource(R.string.tsz_anime_player_best)) {
+                                        AnimePlayerOption(stringResource(R.string.tsz_anime_player_auto_quality)) {
                                             model.setQuality(0)
                                             onDismiss()
                                         }
@@ -177,6 +178,44 @@ internal fun AnimePlayerSheets(
                                         ) {
                                             model.setQuality(resolution)
                                             onDismiss()
+                                        }
+                                    }
+                                }
+                                state.hosters.forEachIndexed { index, entry ->
+                                    if (entry.isPlainList) return@forEachIndexed
+                                    when (val server = entry.state) {
+                                        is AnimeHosterState.Ready -> {
+                                            if (server.videos.isEmpty()) return@forEachIndexed
+                                            item(key = "server_${index}_title") {
+                                                TsuzukiSectionLabel(entry.hoster.hosterName)
+                                            }
+                                            server.videos.forEachIndexed { videoIndex, video ->
+                                                item(key = "server_${index}_video_$videoIndex") {
+                                                    AnimePlayerOption(
+                                                        label = video.videoTitle.ifBlank { entry.hoster.hosterName },
+                                                        detail = video.animeResolution?.let {
+                                                            stringResource(R.string.tsz_anime_player_quality_value, it)
+                                                        }?.takeUnless {
+                                                            it.equals(video.videoTitle, ignoreCase = true)
+                                                        },
+                                                    ) {
+                                                        model.selectHosterVideo(index, videoIndex)
+                                                        onDismiss()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else -> item(key = "server_$index") {
+                                            val detail = when (server) {
+                                                AnimeHosterState.Loading -> R.string.tsz_anime_player_server_loading
+                                                is AnimeHosterState.Error -> R.string.tsz_anime_player_server_failed
+                                                else -> R.string.tsz_anime_player_server_load
+                                            }
+                                            AnimePlayerOption(
+                                                entry.hoster.hosterName,
+                                                detail = stringResource(detail),
+                                                enabled = server != AnimeHosterState.Loading,
+                                            ) { model.loadHoster(index) }
                                         }
                                     }
                                 }
@@ -224,6 +263,7 @@ internal fun AnimePlayerOption(
     label: String,
     detail: String? = null,
     selected: Boolean = false,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -234,6 +274,7 @@ internal fun AnimePlayerOption(
         color = if (selected) tokens.accent else tokens.tile,
         border = tokens.tileBorder?.takeUnless { selected }?.let { BorderStroke(1.dp, it) },
         contentColor = content,
+        enabled = enabled,
         onClick = onClick,
     ) {
         Row(

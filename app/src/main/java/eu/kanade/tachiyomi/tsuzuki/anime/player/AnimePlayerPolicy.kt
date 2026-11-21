@@ -25,8 +25,10 @@ internal fun rankAnimeVideos(videos: List<Video>, preferred: Int): List<Video> =
     }.thenByDescending { it.preferred }.thenByDescending { it.bitrate ?: 0 },
 )
 
-internal class AnimeStreamQueue(videos: List<Video>, preferred: Int) {
-    private val candidates = rankAnimeVideos(videos, preferred).iterator()
+internal class AnimeStreamQueue(videos: List<Video>, preferred: Int, first: Pair<Video, Video>? = null) {
+    private val candidates = animePlaybackOrder(videos, preferred).let { ordered ->
+        if (first == null) ordered else listOf(first.second) + ordered.filterNot { it === first.first }
+    }.iterator()
 
     suspend fun next(resolve: suspend (Video) -> Video): Video? {
         while (candidates.hasNext()) {
@@ -80,3 +82,6 @@ internal enum class AnimePlayAfterEnd { SEEK_TO_START, RELOAD }
 /** Play on a finished file: seek back when the duration is known, otherwise load the stream again from 0. */
 internal fun animePlayAfterEnd(duration: Double): AnimePlayAfterEnd =
     if (duration.isFinite() && duration > 0) AnimePlayAfterEnd.SEEK_TO_START else AnimePlayAfterEnd.RELOAD
+
+/** AY1: how long a load may go without mpv's FILE_LOADED or an error before it counts as failed. */
+internal const val ANIME_FILE_LOADED_WATCHDOG_MS = 30_000L

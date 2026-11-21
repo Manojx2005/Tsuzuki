@@ -361,7 +361,7 @@ private fun AnimePlayerTopBar(
                 )
             }
         }
-        if (state.qualities.isNotEmpty()) {
+        if (state.qualities.isNotEmpty() || state.hosters.any { !it.isPlainList }) {
             TsuzukiPill(
                 text = state.resolution?.let { stringResource(R.string.tsz_anime_player_quality_value, it) }
                     ?: stringResource(R.string.tsz_anime_player_quality),
