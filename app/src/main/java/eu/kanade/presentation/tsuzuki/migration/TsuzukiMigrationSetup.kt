@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.migration
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Button
@@ -24,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,46 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 private const val BOOK_PREVIEW_LIMIT = 5
+
+/**
+ * A book in Browse › Migrate › source (V8.4): the same tile as the migration setup summary, checked when selected.
+ * Tapping the row selects it; tapping the cover opens the book.
+ */
+@Composable
+internal fun TsuzukiMigrateBookRow(
+    manga: Manga,
+    selected: Boolean,
+    onClick: () -> Unit,
+    onClickCover: () -> Unit,
+) {
+    val tokens = TsuzukiTheme.tokens
+    TsuzukiTile(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 3.dp)
+            .clip(RoundedCornerShape(tokens.tileRadius))
+            .clickable(onClick = onClick),
+        padding = 10.dp,
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MangaCover.Book(data = manga, modifier = Modifier.width(42.dp), onClick = onClickCover)
+            Text(
+                tsuzukiMenuLabel(manga.title),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (selected) {
+                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(22.dp), tint = tokens.accent)
+            }
+        }
+    }
+}
 
 @Composable
 internal fun TsuzukiMigrationSetupSummary(mangaIds: Collection<Long>, selectedSourceCount: Int) {

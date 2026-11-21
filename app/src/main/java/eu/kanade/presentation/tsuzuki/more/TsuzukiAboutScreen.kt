@@ -241,7 +241,12 @@ fun TsuzukiAboutScreen(
                             color = Color.White,
                             modifier = Modifier.weight(1f),
                         )
-                        Text(licence, style = body(14.sp, FontWeight.Medium), color = muted)
+                        Text(
+                            licence,
+                            style = body(14.sp, FontWeight.Medium),
+                            color = muted,
+                            modifier = Modifier.padding(start = 12.dp),
+                        )
                     }
                 }
             }
@@ -293,8 +298,8 @@ private fun ActionTile(
             t.case(label),
             style = body(15.sp, FontWeight.ExtraBold),
             color = Color.White,
-            maxLines = 1,
-            softWrap = false,
+            // Two lines: Japanese labels such as オープンソースライセンス don't fit one line in the two-pane width.
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         sub?.let {

@@ -240,6 +240,15 @@ data class MigrateMangaScreen(
         onClickCover: (Manga) -> Unit,
         modifier: Modifier = Modifier,
     ) {
+        if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+            eu.kanade.presentation.tsuzuki.migration.TsuzukiMigrateBookRow(
+                manga = manga,
+                selected = isSelected,
+                onClick = { onClickItem(manga) },
+                onClickCover = { onClickCover(manga) },
+            )
+            return
+        }
         BaseMangaListItem(
             modifier = modifier.selectedBackground(isSelected),
             manga = manga,
