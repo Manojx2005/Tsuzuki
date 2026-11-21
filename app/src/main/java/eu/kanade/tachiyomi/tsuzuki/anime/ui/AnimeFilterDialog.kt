@@ -169,18 +169,59 @@ private fun AnimeFilterChoice(name: String, options: List<String>, selected: Int
     }
 }
 
-/** Drafts come from the source and are independent of the filters an active request is using. */
+/**
+ * Copies the values of [previous] onto [draft], the fresh filters of a source. Drafts come from the source and are
+ * independent of the filters an active request is using.
+ *
+ * AY2-F: [previous] may come from an older instance of the source, loaded by another class loader after its
+ * settings changed, so filters are matched by class name and title, never by class identity, and only values of
+ * the shared source-api types are copied. Select and sort choices follow their displayed label across
+ * reorderings. A missing or ambiguous choice keeps the source's default.
+ */
 internal fun restoreAnimeFilterStates(previous: List<AnimeFilter<*>>, draft: List<AnimeFilter<*>>) {
-    previous.zip(draft).forEach { (old, new) ->
-        if (old.name != new.name || old.javaClass != new.javaClass) return@forEach
-        if (old is AnimeFilter.Group<*> && new is AnimeFilter.Group<*>) {
-            restoreAnimeFilterStates(
+    fun identity(filter: AnimeFilter<*>) = filter.javaClass.name to filter.name
+    val oldByIdentity = previous.groupBy(::identity)
+    val newByIdentity = draft.groupBy(::identity)
+    newByIdentity.forEach { (key, matches) ->
+        val new = matches.singleOrNull() ?: return@forEach
+        val old = oldByIdentity[key]?.singleOrNull() ?: return@forEach
+        when {
+            old is AnimeFilter.Group<*> && new is AnimeFilter.Group<*> -> restoreAnimeFilterStates(
                 old.state.filterIsInstance<AnimeFilter<*>>(),
                 new.state.filterIsInstance<AnimeFilter<*>>(),
             )
-        } else {
-            @Suppress("UNCHECKED_CAST")
-            (new as AnimeFilter<Any?>).state = old.state
+            old is AnimeFilter.Select<*> && new is AnimeFilter.Select<*> ->
+                matchingChoice(old.values, old.state, new.values)?.let { new.state = it }
+            old is AnimeFilter.Sort && new is AnimeFilter.Sort -> {
+                val selection = old.state
+                if (selection == null) {
+                    new.state = null
+                } else {
+                    matchingChoice(old.values, selection.index, new.values)?.let {
+                        new.state = selection.copy(index = it)
+                    }
+                }
+            }
+            old is AnimeFilter.Text && new is AnimeFilter.Text -> new.state = old.state
+            old is AnimeFilter.CheckBox && new is AnimeFilter.CheckBox -> new.state = old.state
+            old is AnimeFilter.TriState && new is AnimeFilter.TriState -> new.state = old.state
         }
     }
+}
+
+private fun matchingChoice(old: Array<out Any?>, index: Int, new: Array<out Any?>): Int? {
+    if (index !in old.indices) return null
+    val label = old[index].toString()
+    if (old.count { it.toString() == label } != 1) return null
+    return new.indices.singleOrNull { new[it].toString() == label }
+}
+
+/**
+ * The filters to use with [freshFilters] (the new source instance's list) after the source was reloaded (AY2-F):
+ * no filters stay no filters, otherwise the new instance's own filter objects with the compatible values of
+ * [applied]. Extension-owned filter objects from the old instance are never handed to the new one.
+ */
+internal fun carryAnimeFilters(applied: AnimeFilterList, freshFilters: () -> AnimeFilterList): AnimeFilterList {
+    if (applied.isEmpty()) return applied
+    return freshFilters().also { restoreAnimeFilterStates(applied, it) }
 }
