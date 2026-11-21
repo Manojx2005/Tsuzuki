@@ -171,12 +171,15 @@ data object NovelsTab : Tab {
                 )
                 LibraryToolbar(
                     below = {
-                        if (mixedLibrary && !state.selectionMode && state.toolbarQuery == null) {
+                        // Tsuzuki: keep the All/Novels/Manga/Anime pills while searching (V8.5).
+                        if (mixedLibrary && !state.selectionMode) {
                             val animeTabs = cafe.adriel.voyager.navigator.tab.LocalTabNavigator.current
                             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
                                 novelCount = state.libraryData.novelCount,
                                 mangaCount = state.libraryData.mangaCount,
-                                showCounts = !viewModel.paginationEnabled && !state.isLoading,
+                                // Library totals, so hidden while a search narrows the grid (V8.5).
+                                showCounts = !viewModel.paginationEnabled && !state.isLoading &&
+                                    state.searchQuery.isNullOrBlank(),
                                 onFilterChanged = viewModel::clearSelection,
                                 onOpenAnime = if (TsuzukiAnime.enabled) {
                                     { animeTabs.current = AnimeLibraryTab }
