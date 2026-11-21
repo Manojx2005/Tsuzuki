@@ -62,13 +62,14 @@ class AnimeExtensionAbiTest {
                 "Lokhttp3/Headers;Ljava/util/List;Ljava/util/List;)Leu/kanade/tachiyomi/animesource/model/Video;" to
                 LIB14_VIDEO,
             "eu.kanade.tachiyomi.animesource.model.Video#copy\$default (Leu/kanade/tachiyomi/animesource/model/Video;" +
-                "Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lokhttp3/Headers;Ljava/util/List;Ljava/util/List;" +
+                "Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lokhttp3/Headers;" +
+                "Ljava/util/List;Ljava/util/List;" +
                 "ILjava/lang/Object;)Leu/kanade/tachiyomi/animesource/model/Video;" to LIB14_VIDEO,
         )
 
         private const val LIB14_VIDEO = "lib 14 Video data-class members: Kotlin can't declare componentN with the " +
-            "lib-16 component's name and another return type, and an old copy() overload would make every copy() call " +
-            "ambiguous; lib-14 constructors are bridged (AY1)"
+            "lib-16 component's name and another return type, and an old copy() overload would make every " +
+            "copy() call ambiguous; lib-14 constructors are bridged (AY1)"
 
         fun abiMisses(lines: List<String>): List<String> = lines
             .filterNot { it.startsWith("android.") }
@@ -103,7 +104,9 @@ class AnimeExtensionAbiTest {
                 runCatching { current.declaredMethods }.getOrDefault(emptyArray()).forEach { out += it.entry() }
                 runCatching { current.declaredFields }.getOrDefault(emptyArray()).forEach { out += it.entry() }
                 if (current == type) {
-                    runCatching { current.declaredConstructors }.getOrDefault(emptyArray()).forEach { out += it.entry() }
+                    runCatching {
+                        current.declaredConstructors
+                    }.getOrDefault(emptyArray()).forEach { out += it.entry() }
                 }
                 current.superclass?.let(queue::add)
                 current.interfaces.forEach(queue::add)
@@ -112,7 +115,13 @@ class AnimeExtensionAbiTest {
         }
 
         private fun Method.entry() =
-            Triple(name, "(${parameterTypes.joinToString("") { it.descriptor() }})${returnType.descriptor()}", modifiers)
+            Triple(
+                name,
+                "(${parameterTypes.joinToString("") {
+                    it.descriptor()
+                }})${returnType.descriptor()}",
+                modifiers,
+            )
 
         private fun Constructor<*>.entry() =
             Triple("<init>", "(${parameterTypes.joinToString("") { it.descriptor() }})V", modifiers)
