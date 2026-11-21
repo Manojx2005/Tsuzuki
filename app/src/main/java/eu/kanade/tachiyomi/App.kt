@@ -131,6 +131,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             eu.kanade.tachiyomi.tsuzuki.widget.watchWidgetTheme(applicationContext, Injekt.get())
         }
 
+        // Tsuzuki (PERF-START-2-F): build the theme's font families off the UI thread so the first
+        // composition finds them cached instead of loading them itself.
+        if (isMainProcess) {
+            Injekt.get<CoroutineScope>().launchIO {
+                eu.kanade.presentation.theme.lnrTypography(Injekt.get<UiPreferences>().appTheme.get(), resources)
+            }
+        }
+
         // Asynchronously init expensive components for a faster cold start. Must run after all
         // modules are imported
         Injekt.get<CoroutineScope>().launchIO {
