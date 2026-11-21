@@ -261,14 +261,16 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         externalTracks?.let { video ->
             externalTracks = null
             video.subtitleTracks.forEach { track ->
-                val target = track.url.toHttpUrlOrNull()?.toString()
-                    ?: decodeAnimeDataSubtitle(track.url)?.let { sub ->
-                        subtitlesDir?.let { dir -> writeAnimeDataSubtitle(dir, sub).path }
-                    }
-                if (target != null) {
-                    MpvPlayer.command("sub-add", *externalTrackArgs(target, track.lang))
-                } else {
-                    AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
+                val http = track.url.toHttpUrlOrNull()?.toString()
+                val inline = if (http == null) decodeAnimeDataSubtitle(track.url) else null
+                // AY3-F: a cache that can't be written skips this subtitle only; video and other tracks go on.
+                val target = http ?: inline?.let { sub ->
+                    subtitlesDir?.let { dir -> writeAnimeDataSubtitle(dir, sub)?.path }
+                }
+                when {
+                    target != null -> MpvPlayer.command("sub-add", *externalTrackArgs(target, track.lang))
+                    inline != null -> AnimeLog.w("skipped an inline subtitle: the subtitle cache could not be written")
+                    else -> AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
                 }
             }
             video.audioTracks.forEach { track ->
