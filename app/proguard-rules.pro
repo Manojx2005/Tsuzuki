@@ -32,6 +32,8 @@
 -keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
 -keep class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
+# AY6: extensions construct JavaScriptEngine(context); R8 dropped the constructor (scripts/anime-abi/check_apk.py).
+-keep,allowoptimization class eu.kanade.tachiyomi.network.JavaScriptEngine { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
 -keepclassmembers class * implements java.io.Serializable {
