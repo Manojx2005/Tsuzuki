@@ -245,7 +245,7 @@ internal fun AnimePlayerContent(
                 }
             }
         }
-        if (state.loading) {
+        if (state.loading || (state.buffering && !state.failed)) {
             CircularProgressIndicator(Modifier.align(Alignment.Center), color = tokens.accent)
         }
         if (state.failed) {

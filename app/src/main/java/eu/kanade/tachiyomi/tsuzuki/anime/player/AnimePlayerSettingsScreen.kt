@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -44,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
@@ -158,7 +160,8 @@ internal object AnimePlayerSettingsScreen : Screen() {
                         TextButton(onClick = { showSpeed = true }) { Text(formatAnimeSpeed(settings.speed)) }
                     }
                 }
-                item {
+                // Full width: the subtitle look rows (AY3) are too many for one grid column.
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     PlayerSettingCard(
                         stringResource(R.string.tsz_anime_player_subtitles),
                         Icons.Outlined.TextFields,
@@ -172,6 +175,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
                         TextButton(onClick = { languageKind = AnimeTrackKind.SUBTITLE }) {
                             Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_preferred_languages)))
                         }
+                        SubtitleStyleRows(settings.subtitleStyle) { update(settings.copy(subtitleStyle = it)) }
                     }
                 }
                 item {
@@ -345,3 +349,75 @@ private fun previewModeLabel(mode: eu.kanade.tachiyomi.tsuzuki.anime.preview.Epi
         eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.OFF -> R.string.tsz_anime_player_track_off
     },
 )
+
+/** The subtitle look (AY3): rows inside the Subtitles card; the player applies changes live. */
+@Composable
+private fun SubtitleStyleRows(style: AnimeSubtitleStyle, onChange: (AnimeSubtitleStyle) -> Unit) {
+    fun set(next: AnimeSubtitleStyle) = onChange(next.bounded())
+    AnimePlayerStepper(
+        label = stringResource(R.string.tsz_anime_player_sub_font_size),
+        value = style.fontSize.toString(),
+        decrease = { set(style.copy(fontSize = style.fontSize - AnimeSubtitleStyle.FONT_SIZE_STEP)) },
+        increase = { set(style.copy(fontSize = style.fontSize + AnimeSubtitleStyle.FONT_SIZE_STEP)) },
+    )
+    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_bold), style.bold) {
+        set(style.copy(bold = it))
+    }
+    PlayerSettingLabel(stringResource(R.string.tsz_anime_player_sub_color))
+    TsuzukiPillRow(
+        labels = AnimeSubtitleColor.entries.map { stringResource(it.label) },
+        selected = style.color.ordinal,
+        onClick = { set(style.copy(color = AnimeSubtitleColor.entries[it])) },
+    )
+    PlayerSettingLabel(stringResource(R.string.tsz_anime_player_sub_border))
+    TsuzukiPillRow(
+        labels = AnimeSubtitleBorder.entries.map { stringResource(it.label) },
+        selected = style.border.ordinal,
+        onClick = { set(style.copy(border = AnimeSubtitleBorder.entries[it])) },
+    )
+    if (style.border != AnimeSubtitleBorder.NONE) {
+        AnimePlayerStepper(
+            label = stringResource(R.string.tsz_anime_player_sub_border_size),
+            value = style.borderSize.toString(),
+            decrease = { set(style.copy(borderSize = style.borderSize - 1)) },
+            increase = { set(style.copy(borderSize = style.borderSize + 1)) },
+        )
+    }
+    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_background), style.background) {
+        set(style.copy(background = it))
+    }
+    AnimePlayerStepper(
+        label = stringResource(R.string.tsz_anime_player_sub_position),
+        value = "${style.position}%",
+        decrease = { set(style.copy(position = style.position - AnimeSubtitleStyle.POSITION_STEP)) },
+        increase = { set(style.copy(position = style.position + AnimeSubtitleStyle.POSITION_STEP)) },
+    )
+    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_override_ass), style.overrideAss) {
+        set(style.copy(overrideAss = it))
+    }
+}
+
+@Composable
+private fun PlayerSettingLabel(text: String) {
+    Text(
+        tsuzukiMenuLabel(text),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        color = TsuzukiTheme.tokens.mutedText,
+        style = MaterialTheme.typography.labelMedium,
+    )
+}
+
+private val AnimeSubtitleColor.label: Int
+    get() = when (this) {
+        AnimeSubtitleColor.WHITE -> R.string.tsz_anime_player_sub_white
+        AnimeSubtitleColor.YELLOW -> R.string.tsz_anime_player_sub_yellow
+        AnimeSubtitleColor.CYAN -> R.string.tsz_anime_player_sub_cyan
+        AnimeSubtitleColor.GREEN -> R.string.tsz_anime_player_sub_green
+    }
+
+private val AnimeSubtitleBorder.label: Int
+    get() = when (this) {
+        AnimeSubtitleBorder.BLACK -> R.string.tsz_anime_player_sub_black
+        AnimeSubtitleBorder.GREY -> R.string.tsz_anime_player_sub_grey
+        AnimeSubtitleBorder.NONE -> R.string.tsz_anime_player_sub_none
+    }

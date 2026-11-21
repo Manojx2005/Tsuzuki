@@ -13,7 +13,10 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.parseAs
+import eu.kanade.tachiyomi.util.asJsoup
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import okhttp3.Headers
 import java.io.IOException
@@ -48,8 +51,17 @@ internal abstract class FixtureCatalogueSource : AnimeHttpSource() {
         .add("User-Agent", "TsuzukiFixture/1")
         .add("Referer", "$baseUrl/")
 
+    private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * AY6: goes through the helpers real extensions link against (`GET`, `awaitSuccess`, `asJsoup`, `parseAs`), so
+     * the fixture fails loudly in debug builds if a dependency bump drops or renames one.
+     */
     protected suspend fun fetch(path: String): String =
-        client.newCall(GET(baseUrl + path, headers)).awaitSuccess().use { it.body.string() }
+        client.newCall(GET(baseUrl + path, headers)).awaitSuccess().use { response ->
+            check(response.asJsoup("").location() == response.request.url.toString()) { "asJsoup lost its base URL" }
+            with(json) { response.parseAs<JsonElement>() }.toString()
+        }
 
     private suspend fun cases(): List<SAnime> = FixtureJson.animeList(fetch("/api/anime.json"), noHosters)
 

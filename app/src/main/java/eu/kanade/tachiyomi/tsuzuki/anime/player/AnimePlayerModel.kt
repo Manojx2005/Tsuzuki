@@ -10,6 +10,7 @@ import android.os.SystemClock
 import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
@@ -49,6 +50,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.items.episode.model.Episode
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -77,6 +79,8 @@ internal data class AnimePlayerState(
     val aniSkipSegments: List<AniSkipSegment> = emptyList(),
     /** AY1: the episode's hosters and their loading state, for the quality sheet. */
     val hosters: List<AnimeHosterEntry> = emptyList(),
+    /** AY4: mpv is waiting for data or a seek; [playing] stays true so the screen stays on. */
+    val buffering: Boolean = false,
 ) {
     val activeAniSkip: AniSkipSegment?
         get() = if (loading || failed || ended || settings.aniSkipMode == AniSkipMode.OFF) {
@@ -133,7 +137,10 @@ internal class AnimePlayerModel(
     private var episodeGroupsJob: Job? = null
     private var countdownJob: Job? = null
     private var cancelledCountdown = false
-    private var pendingVideo: Video? = null
+    private data class PendingLoad(val video: Video, val subtitles: List<Track>)
+
+    private var pendingLoad: PendingLoad? = null
+    private var videoPreparation: Job? = null
     private var streams: AnimeStreamQueue? = null
     private var hosterLoader: AnimeHosterLoader? = null
     private var hosterChoiceJob: Job? = null
@@ -145,6 +152,9 @@ internal class AnimePlayerModel(
     private var currentVideo: Video? = null
     private var loadedStart = 0.0
     private var resumeChecked = true
+
+    /** AY4: the first load after process death keeps its restored position even near the end. */
+    private var keepRestoredStart = false
     private var restartPending = false
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
@@ -178,7 +188,7 @@ internal class AnimePlayerModel(
             when (request) {
                 is AnimePlayback.Request.Direct -> {
                     mutableState.update { it.copy(title = request.video.videoTitle) }
-                    pendingVideo = request.video
+                    queueVideo(request.video)
                 }
                 is AnimePlayback.Request.Episode -> openEpisode(request.id, restoredPosition)
             }
@@ -246,8 +256,7 @@ internal class AnimePlayerModel(
                 cancelCountdown()
                 tracker.skipNextIncrement()
                 mutableState.update { it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true) }
-                pendingVideo = video
-                loadPending()
+                queueVideo(video)
             }
         }
     }
@@ -382,8 +391,7 @@ internal class AnimePlayerModel(
             openEpisode(episode, current.position.takeUnless { animeStartIsAtEnd(it, current.duration) } ?: 0.0)
         } else if (request is AnimePlayback.Request.Direct) {
             mutableState.update { it.copy(loading = true, failed = false) }
-            pendingVideo = request.video
-            loadPending()
+            queueVideo(request.video)
         }
     }
 
@@ -406,7 +414,7 @@ internal class AnimePlayerModel(
         fileWatchdog?.cancel()
         episodeGroupsJob?.cancel()
         waitingForFile = false
-        pendingVideo = null
+        cancelPendingLoad()
         streams = null
         candidates = emptyList()
         hosterLoader = null
@@ -428,11 +436,14 @@ internal class AnimePlayerModel(
                 val episode = checkNotNull(library.getEpisode(id))
                 val anime = checkNotNull(library.getAnime(episode.animeId))
                 val episodes = library.getEpisodes(anime.id)
+                val restored = restoredPosition?.takeIf { it.isFinite() && it >= 0 }
                 val start = animeResumeStart(
-                    saved = restoredPosition?.takeIf { it.isFinite() && it >= 0 } ?: episode.lastSecondSeen.toDouble(),
-                    seen = restoredPosition == null && episode.seen,
+                    saved = restored ?: episode.lastSecondSeen.toDouble(),
+                    seen = restored == null && episode.seen,
                     knownDuration = episode.totalSeconds.toDouble(),
+                    restored = restored != null,
                 )
+                keepRestoredStart = restored != null
                 mutableState.update {
                     it.copy(
                         title = anime.title,
@@ -448,8 +459,7 @@ internal class AnimePlayerModel(
                 }
                 val offline = downloads.offlineVideo(anime.source, anime.id, episode.id)
                 if (offline != null) {
-                    pendingVideo = offline
-                    loadPending()
+                    queueVideo(offline)
                     return@launch
                 }
                 AnimeLog.i("open episode ${episode.id}: source=${anime.source} start=${"%.1f".format(start)}s")
@@ -529,7 +539,7 @@ internal class AnimePlayerModel(
         val queue = streams ?: return fail(lastFailure)
         fileWatchdog?.cancel()
         waitingForFile = false
-        pendingVideo = null
+        cancelPendingLoad()
         tracker.skipNextIncrement()
         mutableState.update {
             it.copy(
@@ -563,24 +573,40 @@ internal class AnimePlayerModel(
                 AnimeLog.e("no playable video left (fallback=$fallback)")
                 fail(lastFailure ?: AnimeNoPlayableVideoException())
             } else {
-                pendingVideo = video
-                loadPending()
+                queueVideo(video)
             }
         }
         oldJob?.cancel()
     }
 
+    private fun queueVideo(video: Video) {
+        cancelPendingLoad()
+        videoPreparation = viewModelScope.launch {
+            val subtitles = prepareAnimeSubtitleTracks(video.subtitleTracks) { File(context.cacheDir, "anime-subs") }
+            pendingLoad = PendingLoad(video, subtitles)
+            loadPending()
+        }
+    }
+
+    private fun cancelPendingLoad() {
+        videoPreparation?.cancel()
+        videoPreparation = null
+        pendingLoad = null
+    }
+
     private fun loadPending() {
         if (!attached) return
-        val video = pendingVideo ?: return
-        pendingVideo = null
+        val (video, subtitles) = pendingLoad ?: return
+        pendingLoad = null
         waitingForFile = true
         currentVideo = video
         loadedStart = state.value.position
-        resumeChecked = loadedStart <= 0
+        resumeChecked = loadedStart <= 0 || keepRestoredStart
+        keepRestoredStart = false
         restartPending = false
-        mutableState.update { it.copy(resolution = video.animeResolution) }
-        backend.load(video, state.value.position)
+        mutableState.update { it.copy(resolution = video.animeResolution, buffering = false) }
+        backend.setMediaTitle(animeMediaTitle(state.value.title, state.value.episode?.name))
+        backend.load(video, state.value.position, subtitles)
         // AY1: mpv can stall without FILE_LOADED or an error; treat silence as a failed stream.
         fileWatchdog?.cancel()
         fileWatchdog = viewModelScope.launch {
@@ -622,6 +648,10 @@ internal class AnimePlayerModel(
         }
 
         override fun onSeek() = onMain { tracker.skipNextIncrement() }
+
+        override fun onBuffering(buffering: Boolean) = onMain {
+            if (state.value.buffering != buffering) mutableState.update { it.copy(buffering = buffering) }
+        }
 
         override fun onLoaded() = onMain {
             if (!waitingForFile) return@onMain
@@ -739,6 +769,7 @@ internal class AnimePlayerModel(
     }
 
     private fun fail(error: Throwable? = null) {
+        cancelPendingLoad()
         waitingForFile = false
         mutableState.update { it.copy(loading = false, failed = true, error = error) }
         syncPause()
@@ -845,6 +876,7 @@ internal class AnimePlayerModel(
 
     override fun onCleared() {
         capturePreview(closing = true)
+        cancelPendingLoad()
         saveProgress()
         writes.close()
         abandonFocus()

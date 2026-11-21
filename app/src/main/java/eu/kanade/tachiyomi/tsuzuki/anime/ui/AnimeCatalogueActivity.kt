@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -101,7 +103,9 @@ class AnimeCatalogueActivity : BaseActivity() {
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
-                val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading) {
+                // AY2: after the source's settings change, load the fresh instance (and its first page) again.
+                val sourceVersion by AnimeSourceManager.extensionChanges.collectAsState()
+                val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading, sourceVersion) {
                     value = try {
                         sources.ensureLoaded()
                         val saved = if (savedId >= 0) library.getAnime(savedId) else null
@@ -150,6 +154,11 @@ class AnimeCatalogueActivity : BaseActivity() {
                                     onApplyFilters = { appliedFilters = it },
                                     onBack = ::finish,
                                     onOpen = { selected = it },
+                                    onSettings = {
+                                        startActivity(
+                                            AnimeSourcePreferencesActivity.intent(this, result.entry.source.id),
+                                        )
+                                    }.takeIf { hasAnimeSourceSettings(result.entry.source) },
                                 )
                             }
                         } else {
@@ -193,6 +202,7 @@ private fun AnimeCatalogueScreen(
     onApplyFilters: (AnimeFilterList) -> Unit,
     onBack: () -> Unit,
     onOpen: (SAnime) -> Unit,
+    onSettings: (() -> Unit)? = null,
 ) {
     val modes = remember(source) {
         AnimeCatalogueMode.entries.filter { it != AnimeCatalogueMode.LATEST || source.supportsLatest }
@@ -226,7 +236,19 @@ private fun AnimeCatalogueScreen(
     Scaffold(
         modifier = Modifier.tsuzukiBackground(tokens),
         containerColor = Color.Transparent,
-        topBar = { AppBar(title = tsuzukiMenuLabel(source.name), navigateUp = onBack) },
+        topBar = {
+            AppBar(
+                title = tsuzukiMenuLabel(source.name),
+                navigateUp = onBack,
+                actions = {
+                    if (onSettings != null) {
+                        IconButton(onClick = onSettings) {
+                            Icon(Icons.Outlined.Settings, stringResource(MR.strings.source_settings))
+                        }
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             TsuzukiSegments(

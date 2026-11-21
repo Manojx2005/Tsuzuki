@@ -53,4 +53,19 @@
     <string name="tsz_anime_player_server_load">点按加载</string>
     <string name="tsz_anime_player_server_loading">正在加载…</string>
     <string name="tsz_anime_player_server_failed">无法加载 — 点按重试</string>
+    <string name="tsz_anime_player_sub_font_size">字体大小</string>
+    <string name="tsz_anime_player_sub_bold">粗体</string>
+    <string name="tsz_anime_player_sub_color">文字颜色</string>
+    <string name="tsz_anime_player_sub_border">描边</string>
+    <string name="tsz_anime_player_sub_border_size">描边粗细</string>
+    <string name="tsz_anime_player_sub_background">背景框</string>
+    <string name="tsz_anime_player_sub_position">位置</string>
+    <string name="tsz_anime_player_sub_override_ass">重新设置带样式 (ASS) 字幕</string>
+    <string name="tsz_anime_player_sub_white">白色</string>
+    <string name="tsz_anime_player_sub_yellow">黄色</string>
+    <string name="tsz_anime_player_sub_cyan">青色</string>
+    <string name="tsz_anime_player_sub_green">绿色</string>
+    <string name="tsz_anime_player_sub_black">黑色</string>
+    <string name="tsz_anime_player_sub_grey">灰色</string>
+    <string name="tsz_anime_player_sub_none">无</string>
 </resources>

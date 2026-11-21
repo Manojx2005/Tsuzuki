@@ -53,4 +53,19 @@
     <string name="tsz_anime_player_server_load">タップして読み込む</string>
     <string name="tsz_anime_player_server_loading">読み込み中…</string>
     <string name="tsz_anime_player_server_failed">読み込めませんでした — タップで再試行</string>
+    <string name="tsz_anime_player_sub_font_size">文字サイズ</string>
+    <string name="tsz_anime_player_sub_bold">太字</string>
+    <string name="tsz_anime_player_sub_color">文字の色</string>
+    <string name="tsz_anime_player_sub_border">縁取り</string>
+    <string name="tsz_anime_player_sub_border_size">縁取りの太さ</string>
+    <string name="tsz_anime_player_sub_background">背景ボックス</string>
+    <string name="tsz_anime_player_sub_position">位置</string>
+    <string name="tsz_anime_player_sub_override_ass">スタイル付き (ASS) 字幕も変更</string>
+    <string name="tsz_anime_player_sub_white">白</string>
+    <string name="tsz_anime_player_sub_yellow">黄</string>
+    <string name="tsz_anime_player_sub_cyan">シアン</string>
+    <string name="tsz_anime_player_sub_green">緑</string>
+    <string name="tsz_anime_player_sub_black">黒</string>
+    <string name="tsz_anime_player_sub_grey">灰色</string>
+    <string name="tsz_anime_player_sub_none">なし</string>
 </resources>

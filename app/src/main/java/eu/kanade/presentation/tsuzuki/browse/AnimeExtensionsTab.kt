@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtension
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionCatalogue
@@ -53,6 +55,8 @@ import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeStoreAction
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeStoreRow
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.animeStoreRows
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeSourcePreferencesActivity
+import eu.kanade.tachiyomi.tsuzuki.anime.ui.hasAnimeSourceSettings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -87,6 +91,27 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>) =
                 AnimeSourceManager.extensionChanges.collect {
                     value = installer.installed()
                 }
+            }
+        }
+        // AY2: the loaded sources with settings of their own, by extension package.
+        val configurable by produceState(emptyMap<String, List<AnimeSource>>(), installed) {
+            value = try {
+                Injekt.get<AnimeSourceManager>().ensureLoaded()
+                    .filter { hasAnimeSourceSettings(it.source) }
+                    .groupBy({ it.extensionPackage }, { it.source })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                emptyMap()
+            }
+        }
+        var pickSettings by remember { mutableStateOf<List<AnimeSource>?>(null) }
+        val activityContext = LocalContext.current
+        val openSettings = { sources: List<AnimeSource> ->
+            if (sources.size == 1) {
+                activityContext.startActivity(AnimeSourcePreferencesActivity.intent(activityContext, sources[0].id))
+            } else {
+                pickSettings = sources
             }
         }
         val rows by produceState(emptyList<AnimeStoreRow>(), catalogue, installed) {
@@ -194,8 +219,31 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>) =
                         }
                     },
                     onRemove = { remove = row },
+                    onSettings = configurable[row.pkgName]?.let { sources -> { openSettings(sources) } },
                 )
             }
+        }
+        pickSettings?.let { sources ->
+            AlertDialog(
+                title = { Text(stringResource(MR.strings.source_settings)) },
+                text = {
+                    Column {
+                        sources.forEach { source ->
+                            TextButton(onClick = {
+                                pickSettings = null
+                                activityContext.startActivity(
+                                    AnimeSourcePreferencesActivity.intent(activityContext, source.id),
+                                )
+                            }) { Text(tsuzukiMenuLabel("${source.name} · ${source.lang}")) }
+                        }
+                    }
+                },
+                onDismissRequest = { pickSettings = null },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { pickSettings = null }) { Text(stringResource(MR.strings.action_cancel)) }
+                },
+            )
         }
         trust?.let { extension ->
             ExtensionTrustDialog(
@@ -234,6 +282,7 @@ private fun AnimeStoreExtensionRow(
     enabled: Boolean,
     onAction: () -> Unit,
     onRemove: () -> Unit,
+    onSettings: (() -> Unit)? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val action = when (row.action) {
@@ -274,6 +323,11 @@ private fun AnimeStoreExtensionRow(
                 if (action != null) {
                     TextButton(onClick = onAction, enabled = enabled) {
                         Text(tsuzukiMenuLabel(stringResource(action)))
+                    }
+                }
+                if (onSettings != null) {
+                    IconButton(onClick = onSettings, enabled = enabled) {
+                        Icon(Icons.Outlined.Settings, stringResource(MR.strings.source_settings))
                     }
                 }
                 if (row.removable) {
