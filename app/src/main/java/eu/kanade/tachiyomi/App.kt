@@ -263,6 +263,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(coil3.svg.SvgDecoder.Factory())
                 // Fetcher.Factory
                 add(BufferedSourceFetcher.Factory())
+                add(eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimePreviewFetcher.Factory())
+                add(eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimePreviewKeyer())
                 add(MangaCoverFetcher.MangaCoverFactory(callFactoryLazy))
                 add(MangaCoverFetcher.MangaFactory(callFactoryLazy))
                 // Keyer

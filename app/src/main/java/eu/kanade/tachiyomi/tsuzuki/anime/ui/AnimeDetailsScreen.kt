@@ -436,10 +436,11 @@ internal fun AnimeDetailsScreen(
                 if (filtered.isEmpty() && seasons.isEmpty() && !details.refreshing && !details.refreshFailed) {
                     item { AnimeCatalogueStatus(androidStringResource(R.string.tsz_anime_no_episodes)) }
                 }
-                items(filtered, key = Episode::id) { episode ->
+                items(filtered, key = Episode::id, contentType = { "anime_episode" }) { episode ->
                     AnimeEpisodeTile(
                         source = entry.source,
                         episode = episode,
+                        coverUrl = display.thumbnail_url,
                         selected = episode.id in selection,
                         enabled = !saving,
                         onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },

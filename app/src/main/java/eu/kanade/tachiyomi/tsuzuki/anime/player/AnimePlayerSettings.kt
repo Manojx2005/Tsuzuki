@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.getEnum
 import java.util.Locale
 
 internal enum class AnimeTrackKind(val mpvType: String) {
@@ -38,6 +39,7 @@ internal data class AnimePlayerSettings(
 )
 
 internal class AnimePlayerPreferences(private val store: PreferenceStore) {
+    val episodePreviews = store.getEnum("tsuzuki_anime_episode_previews", eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON)
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
     val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)

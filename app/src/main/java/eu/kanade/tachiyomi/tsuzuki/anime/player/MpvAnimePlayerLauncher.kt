@@ -30,6 +30,7 @@ internal object MpvAnimePlayerLauncher : AnimePlayerLauncher {
 
 private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var created = false
+    private var previewCache: File? = null
     private var defaultUserAgent: String? = null
     private var originalVolume: Double? = null
     private var appliedSettings: AnimePlayerSettings? = null
@@ -41,6 +42,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
+        previewCache = context.cacheDir
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
@@ -259,6 +261,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     override fun selectTrack(kind: AnimeTrackKind, id: Int?) {
         val property = if (kind == AnimeTrackKind.SUBTITLE) "sid" else "aid"
         MpvPlayer.property(property, id?.toString() ?: "no")
+    }
+
+    override fun capturePreview(): File? {
+        if (!created) return null
+        val target = File(previewCache ?: return null, "anime-preview-${java.util.UUID.randomUUID()}.png")
+        // libmpv's async command prefix moves screenshot encoding/writing off the caller thread.
+        // Request while the video is still attached; the frame store waits for a complete PNG on IO.
+        MpvPlayer.command("async", "screenshot-to-file", target.path, "video")
+        return target
     }
 
     override fun close() {

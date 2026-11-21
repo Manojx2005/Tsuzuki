@@ -46,4 +46,8 @@
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Picture-in-picture</string>
     <string name="tsz_anime_player_preferred_languages">Preferred languages</string>
+    <string name="tsz_anime_episode_previews">Episode previews</string>
+    <string name="tsz_anime_previews_on">On</string>
+    <string name="tsz_anime_previews_wifi">Wi-Fi only</string>
+    <string name="tsz_anime_preview_remaining">Ep %1$s · %2$s left</string>
 </resources>

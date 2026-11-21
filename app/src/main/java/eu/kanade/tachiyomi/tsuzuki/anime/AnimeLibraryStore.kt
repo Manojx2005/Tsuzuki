@@ -48,6 +48,7 @@ internal class AnimeLibraryStore(
     private val shelves: AnimeCategoryRepository,
     private val episodes: EpisodeRepository,
     private val history: AnimeHistoryRepository,
+    private val prunePreviewFrames: suspend (Long, Set<Long>?) -> Unit = { _, _ -> },
     private val protectedEpisodeIds: suspend (Long) -> Set<Long> = { emptySet() },
 ) {
     private val refreshLock = Mutex()
@@ -159,7 +160,7 @@ internal class AnimeLibraryStore(
             val entry = saveAnime(source, show, favorite)
             if (favorite) shelves.setForAnime(entry.id, shelfIds)
             entry.id
-        }
+        }.also { if (!favorite) prunePreviewFrames(it, null) }
 
     suspend fun migrateFavorite(
         originalId: Long,
@@ -196,7 +197,7 @@ internal class AnimeLibraryStore(
             ),
         )
         if (mode == AnimeMigrationMode.REPLACE) anime.setFavorite(originalId, false, original.dateAdded)
-    }
+    }.also { if (mode == AnimeMigrationMode.REPLACE) prunePreviewFrames(originalId, null) }
 
     suspend fun refresh(
         source: RegisteredAnimeSource,
@@ -298,7 +299,7 @@ internal class AnimeLibraryStore(
         }.forEach { episodes.delete(it.id) }
         database.animesQueries.recordLibraryRefresh(now, entry.id)
         entry.copy(lastUpdate = now)
-    }
+    }.also { entry -> prunePreviewFrames(entry.id, getEpisodes(entry.id).mapTo(hashSetOf(), Episode::id)) }
 
     suspend fun setEpisodeDisplay(animeId: Long, display: AnimeEpisodeDisplay, excludedGroups: Set<String>? = null) =
         database.transaction {
