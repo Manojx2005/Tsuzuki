@@ -93,6 +93,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         MpvPlayer.observeProperty("duration", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("demuxer-cache-time", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("eof-reached", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
+        MpvPlayer.observeProperty("paused-for-cache", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
+        MpvPlayer.observeProperty("seeking", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
         MpvPlayer.observeProperty("track-list/count", MPVLib.mpvFormat.MPV_FORMAT_INT64)
         MpvPlayer.observeProperty("sid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
         MpvPlayer.observeProperty("aid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
@@ -100,6 +102,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     private fun setOpt(name: String, value: String) {
         if (!MpvPlayer.optionOrFalse(name, value)) AnimeLog.w("mpv rejected option $name=$value")
+    }
+
+    private var pausedForCache = false
+    private var seeking = false
+
+    private fun reportBuffering(listener: AnimePlayerBackend.Listener) = listener.onBuffering(pausedForCache || seeking)
+
+    override fun setMediaTitle(title: String) {
+        MpvPlayer.property("force-media-title", title)
     }
 
     private fun newEventObserver(listener: AnimePlayerBackend.Listener) = object : MPVLib.EventObserver {
@@ -116,7 +127,17 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
 
         override fun eventProperty(property: String, value: Boolean) {
-            if (property == "eof-reached" && value) listener.onEnded()
+            when (property) {
+                "eof-reached" -> if (value) listener.onEnded()
+                "paused-for-cache" -> {
+                    pausedForCache = value
+                    reportBuffering(listener)
+                }
+                "seeking" -> {
+                    seeking = value
+                    reportBuffering(listener)
+                }
+            }
         }
 
         override fun eventProperty(property: String, value: Double) {

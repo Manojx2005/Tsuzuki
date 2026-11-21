@@ -28,6 +28,9 @@ internal interface AnimePlayerBackend : AutoCloseable {
     fun tracks(): List<AnimePlayerTrack>
     fun selectTrack(kind: AnimeTrackKind, id: Int?)
 
+    /** AY4: the title mpv shows (PiP, its own OSD); "Anime — Episode". */
+    fun setMediaTitle(title: String) = Unit
+
     interface Listener {
         fun onPosition(seconds: Double)
         fun onDuration(seconds: Double)
@@ -37,5 +40,8 @@ internal interface AnimePlayerBackend : AutoCloseable {
         fun onTracksChanged()
         fun onEnded()
         fun onError(detail: String?)
+
+        /** AY4: waiting for data (mpv `paused-for-cache`) or for a seek to finish. */
+        fun onBuffering(buffering: Boolean) = Unit
     }
 }

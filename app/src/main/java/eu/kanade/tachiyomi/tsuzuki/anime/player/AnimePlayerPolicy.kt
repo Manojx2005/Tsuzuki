@@ -71,8 +71,16 @@ internal fun animeStartIsAtEnd(start: Double, duration: Double): Boolean =
  * Where to start an episode. A seen episode starts over; a saved position at the end of the known duration
  * ([knownDuration] is 0 when it was never stored) starts over too instead of opening on the last frame.
  */
-internal fun animeResumeStart(saved: Double, seen: Boolean, knownDuration: Double): Double = when {
+internal fun animeResumeStart(
+    saved: Double,
+    seen: Boolean,
+    knownDuration: Double,
+    restored: Boolean = false,
+): Double = when {
     !saved.isFinite() || saved <= 0 || seen -> 0.0
+    // AY4: a position restored after process death is where the viewer was, not "almost finished": keep it
+    // unless it is the very end.
+    restored -> if (knownDuration > 0 && saved >= knownDuration - 1) 0.0 else saved
     animeStartIsAtEnd(saved, knownDuration) -> 0.0
     else -> saved
 }

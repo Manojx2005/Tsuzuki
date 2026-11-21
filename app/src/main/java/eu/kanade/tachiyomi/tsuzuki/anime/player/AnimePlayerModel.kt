@@ -77,6 +77,8 @@ internal data class AnimePlayerState(
     val aniSkipSegments: List<AniSkipSegment> = emptyList(),
     /** AY1: the episode's hosters and their loading state, for the quality sheet. */
     val hosters: List<AnimeHosterEntry> = emptyList(),
+    /** AY4: mpv is waiting for data or a seek; [playing] stays true so the screen stays on. */
+    val buffering: Boolean = false,
 ) {
     val activeAniSkip: AniSkipSegment?
         get() = if (loading || failed || ended || settings.aniSkipMode == AniSkipMode.OFF) {
@@ -142,6 +144,9 @@ internal class AnimePlayerModel(
     private var currentVideo: Video? = null
     private var loadedStart = 0.0
     private var resumeChecked = true
+
+    /** AY4: the first load after process death keeps its restored position even near the end. */
+    private var keepRestoredStart = false
     private var restartPending = false
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
@@ -422,11 +427,14 @@ internal class AnimePlayerModel(
                 val episode = checkNotNull(library.getEpisode(id))
                 val anime = checkNotNull(library.getAnime(episode.animeId))
                 val episodes = library.getEpisodes(anime.id)
+                val restored = restoredPosition?.takeIf { it.isFinite() && it >= 0 }
                 val start = animeResumeStart(
-                    saved = restoredPosition?.takeIf { it.isFinite() && it >= 0 } ?: episode.lastSecondSeen.toDouble(),
-                    seen = restoredPosition == null && episode.seen,
+                    saved = restored ?: episode.lastSecondSeen.toDouble(),
+                    seen = restored == null && episode.seen,
                     knownDuration = episode.totalSeconds.toDouble(),
+                    restored = restored != null,
                 )
+                keepRestoredStart = restored != null
                 mutableState.update {
                     it.copy(
                         title = anime.title,
@@ -571,9 +579,11 @@ internal class AnimePlayerModel(
         waitingForFile = true
         currentVideo = video
         loadedStart = state.value.position
-        resumeChecked = loadedStart <= 0
+        resumeChecked = loadedStart <= 0 || keepRestoredStart
+        keepRestoredStart = false
         restartPending = false
-        mutableState.update { it.copy(resolution = video.animeResolution) }
+        mutableState.update { it.copy(resolution = video.animeResolution, buffering = false) }
+        backend.setMediaTitle(animeMediaTitle(state.value.title, state.value.episode?.name))
         backend.load(video, state.value.position)
         // AY1: mpv can stall without FILE_LOADED or an error; treat silence as a failed stream.
         fileWatchdog?.cancel()
@@ -616,6 +626,10 @@ internal class AnimePlayerModel(
         }
 
         override fun onSeek() = onMain { tracker.skipNextIncrement() }
+
+        override fun onBuffering(buffering: Boolean) = onMain {
+            if (state.value.buffering != buffering) mutableState.update { it.copy(buffering = buffering) }
+        }
 
         override fun onLoaded() = onMain {
             if (!waitingForFile) return@onMain
