@@ -1449,4 +1449,5 @@
     <string name="tsz_action_mark_until_last_read">标记到上次阅读处</string>
     <string name="tsz_pending_mark_until_last_read">上次阅读章节之前的章节将标为已读</string>
     <string name="tsz_nothing_before_last_read">上次阅读章节之前没有未读章节</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

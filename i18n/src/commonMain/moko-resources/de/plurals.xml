@@ -96,4 +96,8 @@
         <item quantity="one">%1$d Kapitel als gelesen markiert</item>
         <item quantity="other">%1$d Kapitel als gelesen markiert</item>
     </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="one">Kapitel in %1$d Buch konnten nicht markiert werden</item>
+        <item quantity="other">Kapitel in %1$d Büchern konnten nicht markiert werden</item>
+    </plurals>
 </resources>

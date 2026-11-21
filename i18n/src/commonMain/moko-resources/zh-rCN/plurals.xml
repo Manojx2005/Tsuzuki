@@ -72,4 +72,7 @@
     <plurals name="tsz_marked_until_last_read">
         <item quantity="other">已将 %1$d 个章节标为已读</item>
     </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="other">%1$d 本书的章节未能标记为已读</item>
+    </plurals>
 </resources>

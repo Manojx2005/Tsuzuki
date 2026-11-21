@@ -1448,4 +1448,5 @@
     <string name="tsz_action_mark_until_last_read">마지막으로 읽은 곳까지 읽음 표시</string>
     <string name="tsz_pending_mark_until_last_read">마지막으로 읽은 챕터 이전을 읽음으로 표시합니다</string>
     <string name="tsz_nothing_before_last_read">마지막으로 읽은 챕터 이전에 안 읽은 챕터가 없습니다</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

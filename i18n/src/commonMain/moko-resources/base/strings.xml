@@ -1828,4 +1828,5 @@
     <string name="tsz_action_mark_until_last_read">Mark until last read</string>
     <string name="tsz_pending_mark_until_last_read">Chapters before your last read will be marked as read</string>
     <string name="tsz_nothing_before_last_read">No unread chapters before your last read</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

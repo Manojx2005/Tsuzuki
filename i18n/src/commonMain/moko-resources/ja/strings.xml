@@ -1668,4 +1668,5 @@
     <string name="tsz_action_mark_until_last_read">最後に読んだ所まで既読</string>
     <string name="tsz_pending_mark_until_last_read">最後に読んだチャプターより前を既読にします</string>
     <string name="tsz_nothing_before_last_read">最後に読んだチャプターより前に未読はありません</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s・%2$s</string>
 </resources>

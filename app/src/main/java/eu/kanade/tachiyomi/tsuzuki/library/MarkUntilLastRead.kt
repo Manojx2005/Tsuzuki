@@ -35,25 +35,74 @@ internal fun chaptersBeforeLastRead(chapters: List<Chapter>, history: List<Histo
     return chapters.subList(0, anchor).filterNot { it.read }
 }
 
+/** What one run of "Mark until last read" did. */
+internal data class MarkUntilLastReadOutcome(
+    /** Chapters marked for each book whose write succeeded (books with nothing to mark are left out). */
+    val marked: Map<Long, Int>,
+    /** Books whose chapter write failed; nothing is counted for them. */
+    val failedBooks: Int,
+)
+
 /** Library selection action "Mark until last read". */
 internal class MarkUntilLastRead(
-    private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get(),
-    private val getHistory: GetHistory = Injekt.get(),
-    private val setReadStatus: SetReadStatus = Injekt.get(),
+    private val chaptersOf: suspend (Manga) -> List<Chapter> = Injekt.get<GetChaptersByMangaId>().let { get ->
+        { manga -> get.await(manga.id, applyScanlatorFilter = true) }
+    },
+    private val historyOf: suspend (Long) -> List<History> = Injekt.get<GetHistory>().let { get ->
+        { mangaId -> get.await(mangaId) }
+    },
+    private val markRead: suspend (List<Chapter>) -> SetReadStatus.Result = Injekt.get<SetReadStatus>().let { set ->
+        { chapters -> set.await(true, *chapters.toTypedArray()) }
+    },
 ) {
-    /** Marks the chapters and returns how many were marked for each book id. */
-    suspend fun await(books: List<Manga>): Map<Long, Int> = books.associate { manga ->
-        val chapters = getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
-            .sortedWith(getChapterSort(manga, sortDescending = false))
-        val toMark = chaptersBeforeLastRead(chapters, getHistory.await(manga.id))
-        if (toMark.isNotEmpty()) setReadStatus.await(true, *toMark.toTypedArray())
-        manga.id to toMark.size
+    /**
+     * Marks the chapters book by book. Only successful writes are counted; a book whose write
+     * fails is counted in [MarkUntilLastReadOutcome.failedBooks] and the others still go ahead.
+     */
+    suspend fun await(books: List<Manga>): MarkUntilLastReadOutcome {
+        val marked = mutableMapOf<Long, Int>()
+        var failed = 0
+        for (manga in books) {
+            val chapters = chaptersOf(manga).sortedWith(getChapterSort(manga, sortDescending = false))
+            val toMark = chaptersBeforeLastRead(chapters, historyOf(manga.id))
+            if (toMark.isEmpty()) continue
+            when (markRead(toMark)) {
+                SetReadStatus.Result.Success -> marked[manga.id] = toMark.size
+                // Another writer already marked them; nothing changed here.
+                SetReadStatus.Result.NoChapters -> Unit
+                is SetReadStatus.Result.InternalError -> failed++
+            }
+        }
+        return MarkUntilLastReadOutcome(marked, failed)
+    }
+}
+
+/** The snackbar text for [outcome]. */
+internal fun markUntilLastReadMessage(application: android.app.Application, outcome: MarkUntilLastReadOutcome): String {
+    val total = outcome.marked.values.sum()
+    return when {
+        outcome.failedBooks > 0 && total > 0 -> application.stringResource(
+            MR.strings.tsz_mark_until_last_read_partial,
+            application.pluralStringResource(MR.plurals.tsz_marked_until_last_read, total, total),
+            application.pluralStringResource(
+                MR.plurals.tsz_mark_until_last_read_failed,
+                outcome.failedBooks,
+                outcome.failedBooks,
+            ),
+        )
+        outcome.failedBooks > 0 -> application.pluralStringResource(
+            MR.plurals.tsz_mark_until_last_read_failed,
+            outcome.failedBooks,
+            outcome.failedBooks,
+        )
+        total == 0 -> application.stringResource(MR.strings.tsz_nothing_before_last_read)
+        else -> application.pluralStringResource(MR.plurals.tsz_marked_until_last_read, total, total)
     }
 }
 
 /**
  * Runs the action for [selection]: offers undo first, then marks the chapters, updates the
- * library counts in place and says how many chapters changed.
+ * library counts in place for the books that were written and says what changed.
  */
 internal suspend fun runMarkUntilLastRead(
     selection: List<Manga>,
@@ -68,10 +117,10 @@ internal suspend fun runMarkUntilLastRead(
     ) {
         return
     }
-    val marked = withNonCancellableContext {
-        MarkUntilLastRead().await(selection).filterValues { it > 0 }.also { counts ->
+    val outcome = withNonCancellableContext {
+        MarkUntilLastRead().await(selection).also { result ->
             getLibraryManga.applyBatchChapterUpdates(
-                counts.mapValues { (_, count) ->
+                result.marked.mapValues { (_, count) ->
                     val update: LibraryManga.() -> LibraryManga = {
                         copy(readCount = (readCount + count).coerceAtMost(totalChapters))
                     }
@@ -80,12 +129,5 @@ internal suspend fun runMarkUntilLastRead(
             )
         }
     }
-    val total = marked.values.sum()
-    snackbarHostState.showSnackbar(
-        if (total == 0) {
-            application.stringResource(MR.strings.tsz_nothing_before_last_read)
-        } else {
-            application.pluralStringResource(MR.plurals.tsz_marked_until_last_read, total, total)
-        },
-    )
+    snackbarHostState.showSnackbar(markUntilLastReadMessage(application, outcome))
 }

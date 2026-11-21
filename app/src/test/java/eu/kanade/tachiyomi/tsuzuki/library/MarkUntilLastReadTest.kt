@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.tsuzuki.library
 
+import eu.kanade.domain.chapter.interactor.SetReadStatus
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.history.model.History
+import tachiyomi.domain.manga.model.Manga
 import java.util.Date
 
 class MarkUntilLastReadTest {
@@ -43,5 +46,36 @@ class MarkUntilLastReadTest {
     fun `history for a chapter no longer listed is ignored`() {
         val chapters = listOf(chapter(1), chapter(2), chapter(3, read = true))
         assertEquals(listOf(1L, 2L), ids(chaptersBeforeLastRead(chapters, listOf(history(99, at = 5)))))
+    }
+
+    private fun runBatch(failing: Set<Long>, alreadyRead: Set<Long> = emptySet()): MarkUntilLastReadOutcome {
+        val action = MarkUntilLastRead(
+            // Book n has chapters n*10+1..n*10+3, with the last one read.
+            chaptersOf = { manga -> (1L..3L).map { chapter(manga.id * 10 + it, read = it == 3L) } },
+            historyOf = { emptyList() },
+            markRead = { chapters ->
+                val book = chapters.first().id / 10
+                when (book) {
+                    in failing -> SetReadStatus.Result.InternalError(IllegalStateException("disk full"))
+                    in alreadyRead -> SetReadStatus.Result.NoChapters
+                    else -> SetReadStatus.Result.Success
+                }
+            },
+        )
+        return runBlocking { action.await(listOf(1L, 2L, 3L).map { Manga.create().copy(id = it) }) }
+    }
+
+    @Test
+    fun `a failed write is not counted as marked`() {
+        val outcome = runBatch(failing = setOf(1L, 2L, 3L))
+        assertEquals(emptyMap<Long, Int>(), outcome.marked)
+        assertEquals(3, outcome.failedBooks)
+    }
+
+    @Test
+    fun `a mixed batch counts only the books that were written`() {
+        val outcome = runBatch(failing = setOf(2L), alreadyRead = setOf(3L))
+        assertEquals(mapOf(1L to 2), outcome.marked)
+        assertEquals(1, outcome.failedBooks)
     }
 }
