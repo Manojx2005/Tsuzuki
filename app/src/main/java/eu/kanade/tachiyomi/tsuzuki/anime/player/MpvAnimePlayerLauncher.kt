@@ -270,6 +270,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 when {
                     target != null -> MpvPlayer.command("sub-add", *externalTrackArgs(target, track.lang))
                     inline != null -> AnimeLog.w("skipped an inline subtitle: the subtitle cache could not be written")
+                    track.url.startsWith("data:", ignoreCase = true) ->
+                        AnimeLog.w("skipped an inline subtitle: the data: address is malformed")
                     else -> AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
                 }
             }
