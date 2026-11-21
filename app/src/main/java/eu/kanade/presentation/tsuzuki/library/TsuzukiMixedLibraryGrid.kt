@@ -22,8 +22,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -46,20 +44,15 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.presentation.tsuzuki.anime.allPageAnimeSection
 import eu.kanade.presentation.tsuzuki.anime.openAnime
-import eu.kanade.presentation.tsuzuki.anime.rememberAllPageAnime
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
-import tachiyomi.core.common.preference.TriState
+import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.model.LibraryManga
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.plus
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 /** Board LibraryMixed, with the stock click, range-selection, resume and paging callbacks. */
@@ -78,15 +71,9 @@ fun TsuzukiMixedLibraryGrid(
     onLoadMore: (() -> Unit)?,
     loadMoreKey: Long,
     titleMaxLines: Int,
-    firstPage: Boolean = false,
+    // AY-INT item 1: the anime section, on the first shelf page of All only (see [rememberAllPageAnime]).
+    anime: List<Anime> = emptyList(),
 ) {
-    // AY-INT item 1: the anime section sits on the first shelf page of All, not on every page.
-    val filter by remember { Injekt.get<LibraryPreferences>().filterNovel() }.collectAsState()
-    val anime = if (firstPage && searchQuery.isNullOrEmpty() && filter == TriState.DISABLED) {
-        rememberAllPageAnime()
-    } else {
-        emptyList()
-    }
     val context = LocalContext.current
     val animeTitle = stringResource(MR.strings.tsz_anime_media)
     FastScrollLazyVerticalGrid(

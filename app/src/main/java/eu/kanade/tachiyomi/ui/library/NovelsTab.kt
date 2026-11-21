@@ -273,11 +273,18 @@ data object NovelsTab : Tab {
                 if (isTsuzukiStyle()) TsuzukiUndoSnackbarHost(snackbarHostState) else SnackbarHost(snackbarHostState)
             },
         ) { contentPadding ->
+            // AY-INT: an anime-only library still opens on All with its anime section.
+            val allPageAnime = if (mixedLibrary) {
+                eu.kanade.presentation.tsuzuki.anime.rememberAllPageAnime()
+            } else {
+                emptyList()
+            }
             when {
                 state.isLoading -> {
                     LoadingScreen(Modifier.padding(contentPadding))
                 }
-                state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty -> {
+                state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty &&
+                    allPageAnime.isEmpty() -> {
                     val handler = LocalUriHandler.current
                     EmptyScreen(
                         stringRes = MR.strings.information_empty_library,
@@ -294,7 +301,11 @@ data object NovelsTab : Tab {
                 else -> {
                     LibraryContent(
                         mixedLibrary = mixedLibrary,
-                        categories = state.displayedCategories,
+                        categories = eu.kanade.presentation.tsuzuki.anime.allPageShelves(
+                            state.displayedCategories,
+                            state.libraryData.categories,
+                            allPageAnime.isNotEmpty(),
+                        ),
                         searchQuery = state.searchQuery,
                         selection = state.selection,
                         contentPadding = contentPadding,

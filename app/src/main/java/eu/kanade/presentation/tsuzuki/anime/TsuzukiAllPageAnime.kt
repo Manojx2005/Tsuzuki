@@ -14,7 +14,10 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import tachiyomi.core.common.preference.TriState
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -25,24 +28,53 @@ import uy.kohesive.injekt.api.get
  * More › Downloaded only narrows it like the anime library does.
  */
 @Composable
-internal fun rememberAllPageAnime(): List<Anime> {
+internal fun rememberAllPageAnime(searchQuery: String? = null): List<Anime> {
     if (!TsuzukiAnime.enabled) return emptyList()
+    // Only the All pill: the Novels and Manga pills share this filter and never show anime.
+    val filter by remember { Injekt.get<LibraryPreferences>().filterNovel() }.collectAsState()
+    if (filter != TriState.DISABLED) return emptyList()
     val store = remember { Injekt.get<AnimeLibraryStore>() }
     val library by remember { store.observeLibrary() }.collectAsState(emptyList())
     val downloadedOnly by remember { Injekt.get<BasePreferences>().downloadedOnly }.collectAsState()
     val downloads by remember { Injekt.get<AnimeDownloads>().state }.collectAsState()
-    return remember(library, downloadedOnly, downloads) {
-        allPageAnime(library.map { it.anime }, downloadedOnly, downloads.savedAnimeIds())
+    return remember(library, downloadedOnly, downloads, searchQuery) {
+        allPageAnime(library.map { it.anime }, downloadedOnly, downloads.savedAnimeIds(), searchQuery)
     }
 }
 
-/** The anime shown on Library › All: alphabetical, and only downloaded ones while Downloaded only is on. */
-internal fun allPageAnime(library: List<Anime>, downloadedOnly: Boolean, savedAnimeIds: Set<Long>): List<Anime> =
-    library.asSequence()
+/**
+ * The anime shown on Library › All: alphabetical, only downloaded ones while Downloaded only is on, and only
+ * titles containing [searchQuery] (ignoring case) while the library is searched.
+ */
+internal fun allPageAnime(
+    library: List<Anime>,
+    downloadedOnly: Boolean,
+    savedAnimeIds: Set<Long>,
+    searchQuery: String? = null,
+): List<Anime> {
+    val query = searchQuery?.trim().orEmpty()
+    return library.asSequence()
         .filter { !downloadedOnly || it.id in savedAnimeIds }
+        .filter { query.isEmpty() || it.title.contains(query, ignoreCase = true) }
         .distinctBy { it.id }
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
         .toList()
+}
+
+/**
+ * The shelf pages for Library › All. With no books, the default shelf is hidden and there are no pages at all,
+ * so an anime-only library gets the default shelf back to hold its anime section.
+ */
+internal fun allPageShelves(
+    displayed: List<Category>,
+    allCategories: List<Category>,
+    hasAnime: Boolean,
+): List<Category> {
+    if (displayed.isNotEmpty() || !hasAnime) return displayed
+    val default = allCategories.firstOrNull { it.isSystemCategory }
+        ?: Category(id = Category.UNCATEGORIZED_ID, name = "", order = 0, flags = 0)
+    return listOf(default)
+}
 
 /** A full-width "Anime" heading followed by the anime tiles, inside a library grid. */
 internal fun LazyGridScope.allPageAnimeSection(anime: List<Anime>, title: String, onOpen: (Long) -> Unit) {

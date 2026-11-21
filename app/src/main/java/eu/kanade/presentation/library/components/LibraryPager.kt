@@ -65,12 +65,18 @@ fun LibraryPager(
         }
         val category = getCategoryForPage(page)
         val items = getItemsForCategory(category)
+        // AY-INT: Library › All keeps its anime section on the first page, even over an empty shelf or search.
+        val allPageAnime = if (mixedLibrary && page == 0) {
+            eu.kanade.presentation.tsuzuki.anime.rememberAllPageAnime(searchQuery)
+        } else {
+            emptyList()
+        }
 
         if (paginationEnabled) {
             LaunchedEffect(category.id) { onCategoryFirstVisible(category) }
         }
 
-        if (items.isEmpty()) {
+        if (items.isEmpty() && allPageAnime.isEmpty()) {
             if (paginationEnabled && isCategoryLoading(category)) {
                 Box(
                     modifier = Modifier
@@ -112,7 +118,7 @@ fun LibraryPager(
         val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
         val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
 
-        if (mixedLibrary && displayMode != LibraryDisplayMode.List) {
+        if (mixedLibrary && (displayMode != LibraryDisplayMode.List || items.isEmpty())) {
             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryGrid(
                 items = items,
                 columns = columns,
@@ -127,7 +133,7 @@ fun LibraryPager(
                 onLoadMore = onLoadMoreForCategory,
                 loadMoreKey = loadMoreKey,
                 titleMaxLines = titleMaxLines,
-                firstPage = page == 0,
+                anime = allPageAnime,
             )
             return@HorizontalPager
         }
