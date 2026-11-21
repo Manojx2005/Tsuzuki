@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
 import android.content.Context
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionLoader
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
@@ -25,6 +26,8 @@ internal data class RegisteredAnimeSource(
 
 internal class AnimeSourceManager(
     private val repository: AnimeSourceRepository,
+    /** Sources compiled into the app (only the debug fixture, AY0); installed extensions win on the same id. */
+    private val builtIn: () -> List<RegisteredAnimeSource> = { emptyList() },
     private val loadExtensions: suspend () -> List<AnimeLoadResult>,
 ) {
     private val refreshLock = Mutex()
@@ -64,6 +67,7 @@ internal class AnimeSourceManager(
                     )
                 }
             }
+            .plus(builtIn())
             .distinctBy { it.source.id }
         val saved = repository.awaitAll().associateBy { it.id }
         registered.forEach { entry ->
@@ -90,9 +94,11 @@ internal class AnimeSourceManager(
 
         fun create(context: Context): AnimeSourceManager {
             val appContext = context.applicationContext
-            return AnimeSourceManager(Injekt.get()) {
-                withContext(Dispatchers.IO) { AnimeExtensionLoader.loadExtensions(appContext) }
-            }
+            return AnimeSourceManager(
+                Injekt.get(),
+                loadExtensions = { withContext(Dispatchers.IO) { AnimeExtensionLoader.loadExtensions(appContext) } },
+                builtIn = ::debugBuiltInAnimeSources,
+            )
         }
     }
 }
@@ -101,4 +107,33 @@ internal class AnimeSourceManager(
 internal fun animeLoadFailureMessage(results: List<AnimeLoadResult>): String? {
     val errors = results.count { it == AnimeLoadResult.Error }
     return if (errors == 0) null else "$errors anime extension(s) failed to load (signature, trust or loader error)"
+}
+
+/** Class name of the debug-only fixture sources (`app/src/debug`); absent from preview and release builds. */
+internal const val FIXTURE_SOURCES_CLASS = "eu.kanade.tachiyomi.tsuzuki.anime.debug.FixtureAnimeSources"
+
+/**
+ * The fixture sources in debug builds, found by name so main code never imports a debug class (the pattern
+ * `DebugInfoScreen` uses for `AnimeDebugActivity`). Empty in other builds or if the class is missing.
+ */
+internal fun debugBuiltInAnimeSources(
+    debug: Boolean = BuildConfig.DEBUG,
+    className: String = FIXTURE_SOURCES_CLASS,
+): List<RegisteredAnimeSource> {
+    if (!debug) return emptyList()
+    return try {
+        val holder = Class.forName(className)
+        val instance = holder.getField("INSTANCE").get(null)
+        (holder.getMethod("all").invoke(instance) as List<*>).filterIsInstance<AnimeSource>().map {
+            RegisteredAnimeSource(
+                it,
+                extensionPackage = "tsuzuki.fixture",
+                extensionName = "Tsuzuki Fixture",
+                libVersion = 16.0,
+            )
+        }
+    } catch (e: ReflectiveOperationException) {
+        AnimeLog.d("No built-in fixture sources: ${e.javaClass.simpleName}")
+        emptyList()
+    }
 }
