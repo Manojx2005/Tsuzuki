@@ -115,4 +115,12 @@
         <item quantity="many">%1$d mises à jour échouées</item>
         <item quantity="other">%1$d mises à jour échouées</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="one">%1$d chapitre marqué comme lu</item>
+        <item quantity="other">%1$d chapitres marqués comme lus</item>
+    </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="one">Impossible de marquer les chapitres de %1$d livre</item>
+        <item quantity="other">Impossible de marquer les chapitres de %1$d livres</item>
+    </plurals>
 </resources>

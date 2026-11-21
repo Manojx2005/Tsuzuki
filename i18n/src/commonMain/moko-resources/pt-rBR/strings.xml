@@ -1476,4 +1476,8 @@
     <string name="tsz_track_token_novelupdates_steps">1. Entre no novelupdates.com em um navegador\n2. Abra o DevTools (F12) → Application → Cookies\n3. Copie todos os valores dos cookies\n4. Cole abaixo como: cookie_name=value; cookie_name2=value2</string>
     <string name="tsz_track_token_prompt">Digite seu token de autenticação</string>
     <string name="tsz_track_lists_failed">Não foi possível obter as listas</string>
+    <string name="tsz_action_mark_until_last_read">Marcar até o último lido</string>
+    <string name="tsz_pending_mark_until_last_read">Os capítulos antes do último lido serão marcados como lidos</string>
+    <string name="tsz_nothing_before_last_read">Nenhum capítulo não lido antes do último lido</string>
+    <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
 </resources>

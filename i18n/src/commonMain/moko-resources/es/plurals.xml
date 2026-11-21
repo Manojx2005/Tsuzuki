@@ -115,4 +115,12 @@
         <item quantity="many">No se han podido actualizar %1$d elementos</item>
         <item quantity="other">No se han podido actualizar %1$d elementos</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="one">%1$d capítulo marcado como leído</item>
+        <item quantity="other">%1$d capítulos marcados como leídos</item>
+    </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="one">No se pudieron marcar capítulos en %1$d libro</item>
+        <item quantity="other">No se pudieron marcar capítulos en %1$d libros</item>
+    </plurals>
 </resources>

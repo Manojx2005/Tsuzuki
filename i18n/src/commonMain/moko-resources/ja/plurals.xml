@@ -69,4 +69,10 @@
     <plurals name="notification_update_error">
         <item quantity="other">%1$d 件の更新が失敗しました</item>
     </plurals>
+    <plurals name="tsz_marked_until_last_read">
+        <item quantity="other">%1$d 件のチャプターを既読にしました</item>
+    </plurals>
+    <plurals name="tsz_mark_until_last_read_failed">
+        <item quantity="other">%1$d 冊のチャプターを既読にできませんでした</item>
+    </plurals>
 </resources>

@@ -249,6 +249,7 @@ data object NovelsTab : Tab {
                         { viewModel.showMarkReadConfirmation(true) }
                     },
                     onMarkAsUnreadClicked = { viewModel.showMarkReadConfirmation(false) },
+                    onMarkUntilLastReadClicked = viewModel::markUntilLastReadSelection,
                     onDownloadClicked = viewModel::performDownloadAction
                         .takeIf { state.selectedManga.fastAll { !it.isLocal() } },
                     onDeleteClicked = viewModel::openDeleteMangaDialog,
