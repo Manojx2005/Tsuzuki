@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.describeAnimeVideo
@@ -33,19 +34,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var defaultUserAgent: String? = null
     private var originalVolume: Double? = null
     private var appliedSettings: AnimePlayerSettings? = null
-    private var externalTracks: Video? = null
+    private var externalTracks: Pair<List<Track>, List<Track>>? = null
     private var eventObserver: MPVLib.EventObserver? = null
     private var logObserver: MPVLib.LogObserver? = null
     private var loadStartedAt = 0L
     private var listener: AnimePlayerBackend.Listener? = null
 
-    /** AY3: where inline `data:` subtitles are written so mpv can open them as files. */
-    private var subtitlesDir: File? = null
-
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
-        subtitlesDir = File(context.cacheDir, "anime-subs")
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
         context.assets.open("cacert.pem").use { input ->
@@ -176,8 +173,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     private fun sinceLoad() = "+${SystemClock.elapsedRealtime() - loadStartedAt} ms since loadfile"
 
-    override fun load(video: Video, resumePosition: Double) {
-        externalTracks = video
+    override fun load(video: Video, resumePosition: Double, subtitles: List<Track>) {
+        externalTracks = subtitles to video.audioTracks
         loadStartedAt = SystemClock.elapsedRealtime()
         AnimeLog.i("mpv loadfile start=${"%.1f".format(resumePosition)}s ${describeAnimeVideo(video)}")
         val command = try {
@@ -258,24 +255,12 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     override fun tracks(): List<AnimePlayerTrack> {
-        externalTracks?.let { video ->
+        externalTracks?.let { (subtitles, audio) ->
             externalTracks = null
-            video.subtitleTracks.forEach { track ->
-                val http = track.url.toHttpUrlOrNull()?.toString()
-                val inline = if (http == null) decodeAnimeDataSubtitle(track.url) else null
-                // AY3-F: a cache that can't be written skips this subtitle only; video and other tracks go on.
-                val target = http ?: inline?.let { sub ->
-                    subtitlesDir?.let { dir -> writeAnimeDataSubtitle(dir, sub)?.path }
-                }
-                when {
-                    target != null -> MpvPlayer.command("sub-add", *externalTrackArgs(target, track.lang))
-                    inline != null -> AnimeLog.w("skipped an inline subtitle: the subtitle cache could not be written")
-                    track.url.startsWith("data:", ignoreCase = true) ->
-                        AnimeLog.w("skipped an inline subtitle: the data: address is malformed")
-                    else -> AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
-                }
+            subtitles.forEach { track ->
+                MpvPlayer.command("sub-add", *externalTrackArgs(track.url, track.lang))
             }
-            video.audioTracks.forEach { track ->
+            audio.forEach { track ->
                 track.url.toHttpUrlOrNull()?.let {
                     MpvPlayer.command("audio-add", *externalTrackArgs(it.toString(), track.lang))
                 }

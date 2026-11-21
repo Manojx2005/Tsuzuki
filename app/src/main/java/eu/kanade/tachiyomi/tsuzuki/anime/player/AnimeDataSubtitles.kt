@@ -1,12 +1,49 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
+import eu.kanade.tachiyomi.animesource.model.Track
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.util.Base64
 
 /** A subtitle given inline as a `data:` URL (AY3): its bytes and the file extension mpv needs to detect it. */
 internal class AnimeDataSubtitle(val bytes: ByteArray, val extension: String)
+
+/** Only HTTP(S) URLs and app-written files are handed to mpv. */
+internal suspend fun prepareAnimeSubtitleTracks(tracks: List<Track>, cacheDirectory: () -> File): List<Track> {
+    if (tracks.none { it.url.startsWith("data:", ignoreCase = true) }) {
+        return tracks.mapNotNull { it.asHttpSubtitle() }
+    }
+    return withContext(Dispatchers.IO) {
+        tracks.mapNotNull { track ->
+            ensureActive()
+            if (!track.url.startsWith("data:", ignoreCase = true)) return@mapNotNull track.asHttpSubtitle()
+            val inline = decodeAnimeDataSubtitle(track.url)
+            if (inline == null) {
+                AnimeLog.w("skipped an inline subtitle: the data: address is malformed")
+                return@mapNotNull null
+            }
+            val file = writeAnimeDataSubtitle(cacheDirectory(), inline)
+            if (file == null) {
+                AnimeLog.w("skipped an inline subtitle: the subtitle cache could not be written")
+            }
+            file?.let { Track(it.path, track.lang) }
+        }
+    }
+}
+
+private fun Track.asHttpSubtitle(): Track? {
+    val http = url.toHttpUrlOrNull()
+    if (http == null) AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
+    return http?.let { Track(it.toString(), lang) }
+}
 
 /** Decodes `data:[<mime>][;base64],<payload>`; null for anything else or a malformed URL. */
 internal fun decodeAnimeDataSubtitle(url: String): AnimeDataSubtitle? {
@@ -66,14 +103,20 @@ internal fun percentDecodeBytes(text: String): ByteArray? {
 internal fun writeAnimeDataSubtitle(dir: File, subtitle: AnimeDataSubtitle): File? {
     val hash = MessageDigest.getInstance("SHA-1").digest(subtitle.bytes).joinToString("") { "%02x".format(it) }
     return try {
-        if (!dir.isDirectory && !dir.mkdirs()) throw IOException("can't create $dir")
+        if (!dir.isDirectory && !dir.mkdirs() && !dir.isDirectory) return null
         val file = File(dir, "$hash.${subtitle.extension}")
         if (!file.isFile || file.length() != subtitle.bytes.size.toLong()) {
-            val partial = File(dir, "$hash.${subtitle.extension}.part")
-            partial.writeBytes(subtitle.bytes)
-            if (!partial.renameTo(file)) {
-                file.delete()
-                if (!partial.renameTo(file)) throw IOException("can't move $partial")
+            val partial = File.createTempFile("subtitle-", ".part", dir)
+            try {
+                partial.writeBytes(subtitle.bytes)
+                Files.move(
+                    partial.toPath(),
+                    file.toPath(),
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+            } finally {
+                partial.delete()
             }
         }
         file

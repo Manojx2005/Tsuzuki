@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime.ui
 import android.content.Context
 import android.view.Surface
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettings
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerTrack
@@ -17,7 +18,7 @@ internal interface AnimePlayerLauncher {
 
 internal interface AnimePlayerBackend : AutoCloseable {
     fun initialize(context: Context, listener: Listener)
-    fun load(video: Video, resumePosition: Double)
+    fun load(video: Video, resumePosition: Double, subtitles: List<Track>)
     fun attach(surface: Surface)
     fun resize(width: Int, height: Int)
     fun detach()
