@@ -177,9 +177,8 @@ class KokoroTtsService : Service() {
                 text = eu.kanade.tachiyomi.tsuzuki.tts.kokoroModelText(text),
                 sid = 0,
                 speed = speed,
-            ) {
-                if (synthesis.isActive) 1 else 0
-            }
+                callback = KokoroProgressCallback { synthesis.isActive },
+            )
             check(result.sampleRate > 0 && result.samples.isNotEmpty()) { "Kokoro returned no audio" }
             val synthMs = SystemClock.elapsedRealtime() - started
             val audioMs = result.samples.size * 1_000L / result.sampleRate
@@ -259,4 +258,13 @@ private suspend fun playAudio(audio: GeneratedAudio) = withContext(Dispatchers.I
     } finally {
         track.release()
     }
+}
+
+/**
+ * The sherpa-onnx JNI calls `invoke([F)Ljava/lang/Integer;` on the callback object. A Kotlin lambda compiles to a
+ * synthetic class with only the erased `invoke(Object)`, so the native lookup fails and ART aborts the process
+ * (seen on the Tab S11, 2026-11-15). A named class keeps the typed method. Return 1 to continue, 0 to stop.
+ */
+private class KokoroProgressCallback(private val active: () -> Boolean) : (FloatArray) -> Int {
+    override fun invoke(samples: FloatArray): Int = if (active()) 1 else 0
 }
