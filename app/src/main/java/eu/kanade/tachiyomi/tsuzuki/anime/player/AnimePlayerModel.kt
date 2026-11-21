@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
@@ -74,6 +75,8 @@ internal data class AnimePlayerState(
     val nextIn: Int? = null,
     val fallbackNotice: Int = 0,
     val aniSkipSegments: List<AniSkipSegment> = emptyList(),
+    /** AY1: the episode's hosters and their loading state, for the quality sheet. */
+    val hosters: List<AnimeHosterEntry> = emptyList(),
 ) {
     val activeAniSkip: AniSkipSegment?
         get() = if (loading || failed || ended || settings.aniSkipMode == AniSkipMode.OFF) {
@@ -129,6 +132,9 @@ internal class AnimePlayerModel(
     private var cancelledCountdown = false
     private var pendingVideo: Video? = null
     private var streams: AnimeStreamQueue? = null
+    private var hosterLoader: AnimeHosterLoader? = null
+    private var hosterChoiceJob: Job? = null
+    private var fileWatchdog: Job? = null
     private var source: RegisteredAnimeSource? = null
     private var candidates = emptyList<Video>()
     private val directTrackOverrides = mutableMapOf<AnimeTrackKind, String>()
@@ -313,6 +319,44 @@ internal class AnimePlayerModel(
         tryNextStream()
     }
 
+    /**
+     * AY1: load a hoster the user picked in the quality sheet (a lazy one, or a retry of a failed one) and play
+     * its videos, in the source's order: an explicit choice of server is not overridden by another hoster.
+     */
+    fun loadHoster(index: Int) {
+        val loader = hosterLoader ?: return
+        val entry = loader.states.value.getOrNull(index) ?: return
+        if (entry.state == AnimeHosterState.Loading || hosterChoiceJob?.isActive == true) return
+        hosterChoiceJob = viewModelScope.launch {
+            val stateJob = launch { loader.states.collect { list -> mutableState.update { it.copy(hosters = list) } } }
+            try {
+                withContext(Dispatchers.IO) { loader.loadHoster(index) }
+            } finally {
+                stateJob.cancel()
+            }
+            val picked = (loader.states.value[index].state as? AnimeHosterState.Ready)?.videos.orEmpty()
+            mutableState.update { it.copy(hosters = loader.states.value) }
+            if (picked.isEmpty()) return@launch
+            candidates = loader.videos()
+            val qualities = candidates.mapNotNull(Video::animeResolution).distinct().sortedDescending()
+            mutableState.update { it.copy(qualities = qualities) }
+            playHosterVideos(picked)
+        }
+    }
+
+    fun selectHosterVideo(hosterIndex: Int, videoIndex: Int) {
+        val entry = hosterLoader?.states?.value?.getOrNull(hosterIndex) ?: return
+        val videos = (entry.state as? AnimeHosterState.Ready)?.videos ?: return
+        val selected = videos.getOrNull(videoIndex) ?: return
+        playHosterVideos(videos, selected)
+    }
+
+    private fun playHosterVideos(videos: List<Video>, selected: Video? = null) {
+        saveProgress()
+        streams = AnimeStreamQueue(videos, 0, selected?.let { it to it })
+        tryNextStream()
+    }
+
     fun setAutoplay(enabled: Boolean) {
         autoplay.set(enabled)
         mutableState.update { it.copy(autoplay = enabled) }
@@ -352,11 +396,14 @@ internal class AnimePlayerModel(
         cancelCountdown()
         cancelledCountdown = false
         loadingJob?.cancel()
+        hosterChoiceJob?.cancel()
+        fileWatchdog?.cancel()
         episodeGroupsJob?.cancel()
         waitingForFile = false
         pendingVideo = null
         streams = null
         candidates = emptyList()
+        hosterLoader = null
         source = null
         lastFailure = null
         tracker = AnimePlaybackProgress()
@@ -400,21 +447,50 @@ internal class AnimePlayerModel(
                     return@launch
                 }
                 AnimeLog.i("open episode ${episode.id}: source=${anime.source} start=${"%.1f".format(start)}s")
-                val (entry, videos) = withContext(Dispatchers.IO) {
+                val (entry, loader) = withContext(Dispatchers.IO) {
                     val sources = Injekt.get<AnimeSourceManager>()
                     sources.ensureLoaded()
                     AnimeLog.i("extensions loaded (+${SystemClock.elapsedRealtime() - openedAt} ms)")
                     val entry = checkNotNull(sources.get(anime.source)) { "Source not installed: ${anime.source}" }
                     AnimeLog.i("requesting videos from ${entry.extensionName} (lib ${entry.libVersion})")
-                    entry to AnimeStreamResolver.videos(entry.source, entry.libVersion, episode.toSourceEpisode())
+                    // AY1: every non-lazy hoster at once; a dead or hanging one doesn't fail the episode.
+                    val hosters = withTimeoutOrNull(ANIME_HOSTER_TIMEOUT_MS) {
+                        AnimeStreamResolver.hosters(entry.source, entry.libVersion, episode.toSourceEpisode())
+                    } ?: throw AnimeStreamException("The source did not respond within 20 s")
+                    entry to AnimeHosterLoader(hosters, { AnimeStreamResolver.hosterVideos(entry.source, it) })
                 }
+                val selectedQuality = quality.get()
+                val first = withContext(Dispatchers.IO) {
+                    val resolvePreferred: (suspend (Video) -> Video?)? = if (selectedQuality <= 0) {
+                        { candidate ->
+                            try {
+                                resolveStream(entry, candidate)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                AnimeLog.w("could not resolve preferred video ${describeAnimeVideo(candidate)}", e)
+                                null
+                            }
+                        }
+                    } else {
+                        null
+                    }
+                    loader.loadAll(resolvePreferred)
+                }
+                hosterLoader = loader
+                val videos = loader.videos()
                 AnimeLog.i("source returned ${videos.size} video(s) (+${SystemClock.elapsedRealtime() - openedAt} ms)")
                 videos.forEach { AnimeLog.d("candidate ${describeAnimeVideo(it)}") }
                 source = entry
                 candidates = videos
+                if (videos.isEmpty()) {
+                    // Every hoster failed: show the first real cause, not a generic "no video".
+                    lastFailure = hosterLoader?.states?.value
+                        ?.firstNotNullOfOrNull { (it.state as? AnimeHosterState.Error)?.cause }
+                }
                 val qualities = candidates.mapNotNull(Video::animeResolution).distinct().sortedDescending()
-                mutableState.update { it.copy(qualities = qualities) }
-                streams = AnimeStreamQueue(candidates, quality.get())
+                mutableState.update { it.copy(qualities = qualities, hosters = hosterLoader?.states?.value.orEmpty()) }
+                streams = AnimeStreamQueue(candidates, selectedQuality, first)
                 tryNextStream()
             } catch (e: CancellationException) {
                 throw e
@@ -434,9 +510,18 @@ internal class AnimePlayerModel(
         if (next == null) cancelCountdown()
     }
 
+    private suspend fun resolveStream(entry: RegisteredAnimeSource, candidate: Video): Video {
+        val video = withTimeoutOrNull(ANIME_HOSTER_TIMEOUT_MS) {
+            AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate)
+        } ?: throw AnimeStreamException("The source did not resolve the stream within 20 s")
+        return AnimeStreamResolver.withSourceHeaders(entry.source, video)
+            .also { AnimeLog.i("resolved video ${describeAnimeVideo(it)}") }
+    }
+
     private fun tryNextStream(fallback: Boolean = false) {
         val entry = source ?: return fail(lastFailure)
         val queue = streams ?: return fail(lastFailure)
+        fileWatchdog?.cancel()
         waitingForFile = false
         pendingVideo = null
         tracker.skipNextIncrement()
@@ -458,10 +543,7 @@ internal class AnimePlayerModel(
             val video = withContext(Dispatchers.IO) {
                 queue.next { candidate ->
                     try {
-                        AnimeStreamResolver.withSourceHeaders(
-                            entry.source,
-                            AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate),
-                        ).also { AnimeLog.i("resolved video ${describeAnimeVideo(it)}") }
+                        resolveStream(entry, candidate)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
@@ -493,6 +575,17 @@ internal class AnimePlayerModel(
         restartPending = false
         mutableState.update { it.copy(resolution = video.animeResolution) }
         backend.load(video, state.value.position)
+        // AY1: mpv can stall without FILE_LOADED or an error; treat silence as a failed stream.
+        fileWatchdog?.cancel()
+        fileWatchdog = viewModelScope.launch {
+            delay(ANIME_FILE_LOADED_WATCHDOG_MS)
+            if (waitingForFile && currentVideo === video) {
+                AnimeLog.w("mpv FILE_LOADED watchdog: nothing after ${ANIME_FILE_LOADED_WATCHDOG_MS / 1000} s")
+                val failure = AnimeStreamException("The stream did not start within 30 s")
+                lastFailure = failure
+                if (streams == null) fail(failure) else tryNextStream(fallback = true)
+            }
+        }
     }
 
     private fun playerEvents() = object : AnimePlayerBackend.Listener {
@@ -526,6 +619,7 @@ internal class AnimePlayerModel(
 
         override fun onLoaded() = onMain {
             if (!waitingForFile) return@onMain
+            fileWatchdog?.cancel()
             waitingForFile = false
             mutableState.update { it.copy(loading = false) }
             restartIfStartedAtEnd()
@@ -550,6 +644,7 @@ internal class AnimePlayerModel(
 
         override fun onError(detail: String?) = onMain {
             if (state.value.failed || (!waitingForFile && state.value.loading)) return@onMain
+            fileWatchdog?.cancel()
             val failure = AnimeStreamException(detail)
             lastFailure = failure
             if (streams == null) fail(failure) else tryNextStream(fallback = true)

@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">前の話</string>
     <string name="tsz_anime_player_quality">画質</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">最高画質</string>
+    <string name="tsz_anime_player_auto_quality">自動</string>
     <string name="tsz_anime_player_orientation_lock">画面の向きを固定</string>
     <string name="tsz_anime_player_orientation_unlock">画面の向きの固定を解除</string>
     <string name="tsz_anime_player_autoplay_on">自動再生を有効にする</string>
@@ -46,4 +46,7 @@
     <string name="tsz_anime_skip_seconds">%1$d 秒</string>
     <string name="tsz_anime_player_picture_in_picture">ピクチャー イン ピクチャー</string>
     <string name="tsz_anime_player_preferred_languages">優先言語</string>
+    <string name="tsz_anime_player_server_load">タップして読み込む</string>
+    <string name="tsz_anime_player_server_loading">読み込み中…</string>
+    <string name="tsz_anime_player_server_failed">読み込めませんでした — タップで再試行</string>
 </resources>

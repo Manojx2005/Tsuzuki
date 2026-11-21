@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">上一集</string>
     <string name="tsz_anime_player_quality">画质</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">最高画质</string>
+    <string name="tsz_anime_player_auto_quality">自动</string>
     <string name="tsz_anime_player_orientation_lock">锁定屏幕方向</string>
     <string name="tsz_anime_player_orientation_unlock">解锁屏幕方向</string>
     <string name="tsz_anime_player_autoplay_on">开启自动播放</string>
@@ -46,4 +46,7 @@
     <string name="tsz_anime_skip_seconds">%1$d 秒</string>
     <string name="tsz_anime_player_picture_in_picture">画中画</string>
     <string name="tsz_anime_player_preferred_languages">首选语言</string>
+    <string name="tsz_anime_player_server_load">点按加载</string>
+    <string name="tsz_anime_player_server_loading">正在加载…</string>
+    <string name="tsz_anime_player_server_failed">无法加载 — 点按重试</string>
 </resources>

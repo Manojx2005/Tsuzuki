@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">Episódio anterior</string>
     <string name="tsz_anime_player_quality">Qualidade de vídeo</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">Melhor disponível</string>
+    <string name="tsz_anime_player_auto_quality">Automática</string>
     <string name="tsz_anime_player_orientation_lock">Bloquear orientação</string>
     <string name="tsz_anime_player_orientation_unlock">Desbloquear orientação</string>
     <string name="tsz_anime_player_autoplay_on">Ativar reprodução automática</string>
@@ -46,4 +46,7 @@
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Picture-in-picture</string>
     <string name="tsz_anime_player_preferred_languages">Idiomas preferidos</string>
+    <string name="tsz_anime_player_server_load">Toque para carregar</string>
+    <string name="tsz_anime_player_server_loading">Carregando…</string>
+    <string name="tsz_anime_player_server_failed">Não foi possível carregar — toque para tentar de novo</string>
 </resources>
