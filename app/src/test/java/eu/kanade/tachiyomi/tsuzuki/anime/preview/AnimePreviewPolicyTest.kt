@@ -1,0 +1,70 @@
+package eu.kanade.tachiyomi.tsuzuki.anime.preview
+
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
+
+class AnimePreviewPolicyTest {
+    @Test
+    fun sourceOrderDeduplicatesAndOffNeverReturnsNetworkUrls() {
+        assertEquals(listOf("preview", "cover"), previewUrls("preview", "cover", true))
+        assertEquals(listOf("cover"), previewUrls(" ", "cover", true))
+        assertEquals(listOf("same"), previewUrls("same", "same", true))
+        assertTrue(previewUrls("preview", "cover", false).isEmpty())
+    }
+
+    @Test
+    fun wifiPolicyAndSavedModeSurvivePlayerRecreation() {
+        assertTrue(previewNetworkAllowed(EpisodePreviewMode.ON, false))
+        assertFalse(previewNetworkAllowed(EpisodePreviewMode.WIFI_ONLY, false))
+        assertTrue(previewNetworkAllowed(EpisodePreviewMode.WIFI_ONLY, true))
+        assertFalse(previewNetworkAllowed(EpisodePreviewMode.OFF, true))
+        val store = InMemoryPreferenceStore()
+        assertEquals(EpisodePreviewMode.ON, AnimePlayerPreferences(store).episodePreviews.get())
+        AnimePlayerPreferences(store).episodePreviews.set(EpisodePreviewMode.OFF)
+        assertEquals(EpisodePreviewMode.OFF, AnimePlayerPreferences(store).episodePreviews.get())
+    }
+
+    @Test
+    fun rejectBlackFadeButKeepVisibleFrameAtThreshold() {
+        assertFalse(frameIsVisible(IntArray(100) { 0xff070707.toInt() }))
+        assertFalse(frameIsVisible(intArrayOf()))
+        assertTrue(frameIsVisible(IntArray(100) { 0xff080808.toInt() }))
+        assertTrue(frameIsVisible(intArrayOf(0xffff0000.toInt())))
+    }
+
+    @Test
+    fun capEvictsOldestUntilUnderLimitWithDeterministicTieBreak() {
+        val files = listOf(PreviewFile("b", 40, 1), PreviewFile("c", 70, 2), PreviewFile("a", 10, 1))
+        assertEquals(listOf("a", "b"), previewFilesToEvict(files, 70))
+        assertTrue(previewFilesToEvict(files, 120).isEmpty())
+        assertEquals(listOf("a", "b", "c"), previewFilesToEvict(files, 0))
+    }
+
+    @Test
+    fun frameAndNetworkPolicyInvalidateCacheAndUnknownDurationHasNoChip() {
+        val model = AnimeEpisodePreview(1, 2, "preview", "cover", 10, 3, true)
+        assertNotEquals(model.cacheKey, model.copy(frameVersion = 11).cacheKey)
+        assertNotEquals(model.cacheKey, model.copy(networkAllowed = false).cacheKey)
+        assertNotEquals(model.cacheKey, model.copy(sourceId = 4).cacheKey)
+        assertNull(previewRemaining(5, 0))
+        assertNull(previewRemaining(5, -1))
+        assertEquals(15L, previewRemaining(5, 20))
+        assertEquals(0L, previewRemaining(25, 20))
+    }
+
+    @Test
+    fun captureThrottleDoesNotLoseFinalCloseOrAllowIncognito() {
+        val gate = PreviewCaptureGate()
+        assertFalse(gate.acquire(1, 4.9, 0, false, false))
+        assertFalse(gate.acquire(1, 10.0, 0, false, true))
+        assertTrue(gate.acquire(1, 10.0, 0, false, false))
+        assertFalse(gate.acquire(1, 20.0, 29_999, false, false))
+        assertTrue(gate.acquire(1, 40.0, 30_000, false, false))
+        assertTrue(gate.acquire(2, 10.0, 30_001, false, false))
+        assertTrue(gate.acquire(1, 40.0, 30_002, true, false))
+        assertFalse(gate.acquire(1, 40.0, 30_003, true, false))
+        assertFalse(gate.acquire(1, Double.NaN, 60_000, false, false))
+    }
+}

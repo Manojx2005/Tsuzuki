@@ -91,10 +91,13 @@ internal class AnimePlayerModel(
     private val downloads: AnimeDownloads,
     preferences: PreferenceStore,
     private val aniSkip: AniSkipLookup,
-    processScope: CoroutineScope,
+    private val processScope: CoroutineScope,
     restoredPosition: Double?,
     restoredPaused: Boolean,
 ) : ViewModel() {
+    private val previewGate = eu.kanade.tachiyomi.tsuzuki.anime.preview.PreviewCaptureGate()
+    private val frames by lazy { Injekt.get<eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeFrameStore>() }
+    private val basePreferences by lazy { Injekt.get<eu.kanade.domain.base.BasePreferences>() }
     private val playerPreferences = AnimePlayerPreferences(preferences)
     private val quality = playerPreferences.quality
     private val autoplay = playerPreferences.autoplay
@@ -191,8 +194,10 @@ internal class AnimePlayerModel(
         if (attached) backend.resize(width, height)
     }
 
-    fun detach() {
+    fun detach(closing: Boolean = false) {
         if (!attached) return
+        // Surface destruction can precede onStop/onCleared. Request while the native video output still exists.
+        capturePreview(closing = closing)
         attached = false
         syncPause()
         backend.detach()
@@ -345,6 +350,7 @@ internal class AnimePlayerModel(
     }
 
     private fun openEpisode(id: Long, restoredPosition: Double? = null) {
+        capturePreview()
         targetEpisodeId = id
         resetAniSkip()
         skippedSegments.clear()
@@ -699,9 +705,35 @@ internal class AnimePlayerModel(
         val current = state.value
         val playing = foreground && attached && focused && wantsPlayback &&
             !current.loading && !current.ended && !current.failed
+        if (current.playing && !playing) capturePreview()
         if (current.playing != playing) tracker.skipNextIncrement()
         if (initialized) backend.setPaused(!playing)
         mutableState.update { it.copy(playing = playing) }
+    }
+
+    private fun capturePreview(closing: Boolean = false) {
+        if (!initialized || !attached || state.value.loading || state.value.failed) return
+        if ((request as? AnimePlayback.Request.Episode)?.track != true) return
+        val current = state.value
+        val episode = current.episode ?: return
+        if (!previewGate.acquire(episode.id, current.position, SystemClock.elapsedRealtime(), closing, basePreferences.incognitoMode.get())) return
+        val generation = frames.generation(episode.animeId)
+        val raw = try {
+            backend.capturePreview()
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Could not request anime preview capture" }
+            null
+        } ?: return
+        val sequence = frames.captureSequence(episode.id)
+        processScope.launch(Dispatchers.IO) {
+            try {
+                frames.accept(episode.animeId, episode.id, raw, generation, sequence) { !basePreferences.incognitoMode.get() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) { "Could not save anime preview capture" }
+            }
+        }
     }
 
     private fun saveProgress() {
@@ -717,6 +749,7 @@ internal class AnimePlayerModel(
     }
 
     override fun onCleared() {
+        capturePreview(closing = true)
         saveProgress()
         writes.close()
         abandonFocus()

@@ -146,11 +146,14 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { NetworkHelper(app, get(), get()) }
         addSingletonFactory {
-            AnimeLibraryStore(get(), get(), get(), get(), get()) { animeId ->
+            AnimeLibraryStore(get(), get(), get(), get(), get(), prunePreviewFrames = { animeId, retained ->
+                get<eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeFrameStore>().prune(animeId, retained)
+            }) { animeId ->
                 get<AnimeDownloads>().protectedEpisodeIds(animeId)
             }
         }
         addSingletonFactory { AnimeDownloads(app, get(), get(), get(), get()) }
+        addSingletonFactory { eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeFrameStore(app, get(), get()) }
         addSingletonFactory {
             eu.kanade.tachiyomi.tsuzuki.anime.player.AniSkipLookup(get<NetworkHelper>().client, get())
         }

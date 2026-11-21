@@ -27,6 +27,8 @@ internal interface AnimePlayerBackend : AutoCloseable {
     fun applySettings(settings: AnimePlayerSettings)
     fun tracks(): List<AnimePlayerTrack>
     fun selectTrack(kind: AnimeTrackKind, id: Int?)
+    /** Submit a video-only screenshot before native teardown; encoding is asynchronous. */
+    fun capturePreview(): java.io.File? = null
 
     interface Listener {
         fun onPosition(seconds: Double)

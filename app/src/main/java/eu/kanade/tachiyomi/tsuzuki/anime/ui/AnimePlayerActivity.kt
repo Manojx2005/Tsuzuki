@@ -152,7 +152,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         // Reuse the Android task, but release the previous video and its ViewModel
         // before creating one for the new playback request.
         model?.setForeground(false)
-        model?.detach()
+        model?.detach(closing = true)
         model = null
         viewModelStore.clear()
         setIntent(intent)
@@ -243,7 +243,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        model?.detach()
+        model?.detach(closing = isFinishing)
     }
 
     override fun onStart() {
@@ -276,7 +276,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     override fun onDestroy() {
         pip?.close()
         pip = null
-        model?.detach()
+        model?.detach(closing = isFinishing)
         model = null
         super.onDestroy()
     }

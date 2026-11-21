@@ -276,9 +276,6 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     val foreground = if (tokens.isDot) tokens.dotOn else tokens.onAccent
     val muted = if (tokens.isDot) tokens.mutedText else foreground.copy(alpha = 0.75f)
-    val position = resume.episode.lastSecondSeen
-    val duration = resume.episode.totalSeconds
-    val artwork = resume.episode.previewUrl ?: resume.anime.backgroundUrl ?: resume.anime.thumbnailUrl
     TsuzukiTile(
         modifier = Modifier.fillMaxWidth().tsuzukiClickable(role = Role.Button, onClick = onOpen),
         padding = 0.dp,
@@ -288,38 +285,13 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
-                Modifier.fillMaxWidth().heightIn(max = 252.dp).aspectRatio(2f)
-                    .clip(RoundedCornerShape(16.dp)).background(tokens.background),
-            ) {
-                AsyncImage(
-                    model = artwork,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = DotCoverFilter.takeIf { tokens.isDot },
-                )
-                if (position in 1L until duration) {
-                    val left = DateUtils.formatElapsedTime(duration - position)
-                    Text(
-                        tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_history_remaining, left)),
-                        modifier = Modifier.align(Alignment.TopStart).padding(10.dp)
-                            .clip(RoundedCornerShape(8.dp)).background(tokens.background.copy(alpha = 0.85f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = tokens.dotOn,
-                    )
-                }
-                if (duration > 0) {
-                    TsuzukiProgressBar(
-                        progress = (position.toDouble() / duration).toFloat(),
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        fill = tokens.dotOn,
-                        thickness = 4.dp,
-                        spreadDots = true,
-                    )
-                }
-            }
+            eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
+                sourceId = resume.anime.source,
+                episode = resume.episode,
+                coverUrl = resume.anime.thumbnailUrl,
+                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                hero = true,
+            )
             Row(
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,

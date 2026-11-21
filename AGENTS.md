@@ -171,3 +171,4 @@ done
 - **V8.4 (2026-11-19):** `MigrationConfigScreen.kt` (source row: name + badge in one weighted row so language pills align) and `ui/browse/migration/manga/MigrateMangaScreen.kt` (Tsuzuki dispatch to `TsuzukiMigrateBookRow`).
 - **READER-JP-FONT (2026-11-19):** `ui/reader/viewer/text/textview/NovelViewer.kt` (Literata branch calls `presentation/tsuzuki/reader/readingTypeface()` first: Literata + bundled Noto Serif JP, Android 10+).
 - **STR3 (2026-11-19):** `SettingsTrackingScreen.kt` — 32 hardcoded English titles/subtitles/info/instructions/toast replaced by `tsz_track_*` resources (literal swaps only).
+- **AY9 preview adapters:** `App.kt` (Coil model fetcher/keyer registration), `di/AppModule.kt` (frame-store factory and cleanup callback). All frame capture, storage, fetch and UI logic lives in Tsuzuki anime packages.

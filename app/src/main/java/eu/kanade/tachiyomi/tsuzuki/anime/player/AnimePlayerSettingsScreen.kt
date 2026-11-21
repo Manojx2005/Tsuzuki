@@ -69,6 +69,8 @@ internal object AnimePlayerSettingsScreen : Screen() {
         val autoplay by preferences.autoplay.collectAsState()
         val pictureInPicture by preferences.pictureInPicture.collectAsState()
         val supportsPip = LocalContext.current.supportsAnimePictureInPicture()
+        val previewMode by preferences.episodePreviews.collectAsState()
+        var showPreviews by remember { mutableStateOf(false) }
         var showSpeed by remember { mutableStateOf(false) }
         var showAniSkip by remember { mutableStateOf(false) }
         var languageKind by remember { mutableStateOf<AnimeTrackKind?>(null) }
@@ -96,6 +98,18 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    PlayerSettingCard(
+                        stringResource(R.string.tsz_anime_episode_previews),
+                        Icons.Outlined.Videocam,
+                        active = previewMode != eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.OFF,
+                    ) { color ->
+                        TextButton(
+                            onClick = { showPreviews = true },
+                            colors = ButtonDefaults.textButtonColors(contentColor = color),
+                        ) { Text(tsuzukiMenuLabel(previewModeLabel(previewMode))) }
+                    }
+                }
                 item {
                     PlayerSettingCard(
                         stringResource(R.string.tsz_anime_aniskip),
@@ -213,6 +227,23 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 },
             )
         }
+        if (showPreviews) {
+            AlertDialog(
+                onDismissRequest = { showPreviews = false },
+                title = { Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_episode_previews))) },
+                text = {
+                    Column {
+                        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.entries.forEach { mode ->
+                            TextButton(onClick = {
+                                preferences.episodePreviews.set(mode)
+                                showPreviews = false
+                            }) { Text(tsuzukiMenuLabel(previewModeLabel(mode))) }
+                        }
+                    }
+                },
+                confirmButton = {},
+            )
+        }
         if (showSpeed) {
             AlertDialog(
                 onDismissRequest = { showSpeed = false },
@@ -305,3 +336,12 @@ private fun PlayerSettingSwitch(label: String, checked: Boolean, onChange: (Bool
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }
+
+@Composable
+private fun previewModeLabel(mode: eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode): String = stringResource(
+    when (mode) {
+        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON -> R.string.tsz_anime_previews_on
+        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.WIFI_ONLY -> R.string.tsz_anime_previews_wifi
+        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.OFF -> R.string.tsz_anime_player_track_off
+    },
+)

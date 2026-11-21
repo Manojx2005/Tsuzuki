@@ -251,6 +251,36 @@ class AnimeDatabaseTest {
     )
 
     @Test
+    fun previewCleanupRunsAfterEpisodeDeletionAndLibraryRemoval() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val prunes = mutableListOf<Pair<Long, Set<Long>?>>()
+            val store = AnimeLibraryStore(
+                db, anime, AnimeCategoryRepositoryImpl(db), episodes, AnimeHistoryRepositoryImpl(db),
+                prunePreviewFrames = { id, retained ->
+                    // The callback must run after commit: files must never disappear for a rolled-back deletion.
+                    assertEquals(retained, retained?.let { episodes.awaitByAnimeId(id).mapTo(hashSetOf(), Episode::id) })
+                    prunes += id to retained
+                },
+            )
+            val show = SAnime.create().apply { url = "/previews"; title = "Preview cleanup" }
+            val first = SEpisode.create().apply { url = "/first"; name = "First" }
+            val second = SEpisode.create().apply { url = "/second"; name = "Second" }
+            val id = store.setFavorite(8, show, true, emptySet())
+            assertTrue(prunes.isEmpty())
+            store.syncEpisodes(8, show, listOf(first, second))
+            val firstId = episodes.awaitByAnimeId(id).single { it.url == "/first" }.id
+            val secondId = episodes.awaitByAnimeId(id).single { it.url == "/second" }.id
+            assertEquals(id to setOf(firstId, secondId), prunes.last())
+            store.syncEpisodes(8, show, listOf(first))
+            assertEquals(id to setOf(firstId), prunes.last())
+            store.setFavorite(8, show, false, emptySet())
+            assertEquals(id to null, prunes.last())
+        }
+    }
+
+    @Test
     fun animeShelfEditsKeepDefaultImplicitAndUpdateAnExistingFavorite() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

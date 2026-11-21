@@ -129,6 +129,7 @@ internal fun AnimeResumeTile(episode: Episode, enabled: Boolean, onPlay: () -> U
 internal fun AnimeEpisodeTile(
     source: AnimeSource,
     episode: Episode,
+    coverUrl: String?,
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -164,15 +165,12 @@ internal fun AnimeEpisodeTile(
             if (selected) {
                 Icon(Icons.Outlined.Check, contentDescription = null, tint = tokens.accent)
             }
-            episode.previewUrl?.takeIf(String::isNotBlank)?.let { preview ->
-                AsyncImage(
-                    model = rememberAnimeImage(source, preview),
-                    contentDescription = null,
-                    modifier = Modifier.size(104.dp, 58.dp).clip(RoundedCornerShape(10.dp)),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = DotCoverFilter.takeIf { tokens.isDot },
-                )
-            }
+            eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
+                sourceId = source.id,
+                episode = episode,
+                coverUrl = coverUrl,
+                modifier = Modifier.size(104.dp, 58.dp),
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     tsuzukiMenuLabel(title),
