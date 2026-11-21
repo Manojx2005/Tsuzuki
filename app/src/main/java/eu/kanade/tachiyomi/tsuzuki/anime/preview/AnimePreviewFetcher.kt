@@ -44,7 +44,8 @@ internal class AnimePreviewFetcher(
         val frames = Injekt.get<AnimeFrameStore>()
         val captured = frames.file(data.animeId, data.episodeId)
         try {
-            if (captured.isFile) {
+            // Only a published frame (version > 0): a shared-artwork key must never cache one episode's frame.
+            if (data.frameVersion > 0 && captured.isFile) {
                 load(Buffer().write(captured.readBytes()), DataSource.DISK)?.let { return@withContext it }
             }
         } catch (e: CancellationException) {

@@ -11,9 +11,16 @@ internal data class AnimeEpisodePreview(
     val sourceId: Long,
     val networkAllowed: Boolean,
 ) {
+    /**
+     * A captured frame belongs to one episode. Without one, the artwork is the source's preview or the show's
+     * cover, often shared by hundreds of episodes, so it is keyed without the episode and decoded once.
+     */
     val cacheKey: String
-        get() = listOf("anime-preview", animeId, episodeId, frameVersion, sourceId, previewUrl, coverUrl, networkAllowed)
-            .joinToString(";")
+        get() = if (frameVersion > 0) {
+            listOf("anime-preview", animeId, episodeId, frameVersion, sourceId, previewUrl, coverUrl, networkAllowed)
+        } else {
+            listOf("anime-artwork", sourceId, previewUrl, coverUrl, networkAllowed)
+        }.joinToString(";")
 }
 
 internal fun previewNetworkAllowed(mode: EpisodePreviewMode, wifi: Boolean): Boolean = when (mode) {
