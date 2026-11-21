@@ -1097,7 +1097,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (Claude AY4 done 2026-11-21; both ayscratch apps on the AY4 build at Dot Home, crash buffers empty, reverse removed, fixture server stopped, auto-rotate on, PiP pref back on).` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (Claude AY6 step 5 check done 2026-11-21; tablet ayscratch on the AY6 build at Dot Home, crash buffer empty, reverse removed, fixture server stopped; S22 still on the AY4 build).` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
@@ -1261,11 +1261,11 @@ Result (Claude 2026-11-21): **committed `922c9866b` on `tsuzuki/ay4` (worktree `
 - **Not checked:** noisy pause with real headphones (none connected; no broadcast simulated); PiP window title (step 5); case 02 far seek; the tablet keyboard cover. No background playback, notification or foreground service in v0.2 — a later card.
 
 
-#### AY6 Anime: extension ABI audit (T4) — `ready` (needs `tsuzuki/ay4`; lane 1)
+#### AY6 Anime: extension ABI audit (T4) — `blocked` (needs owner OK to download `aniyomiorg/extensions-lib`; step 5 done on `tsuzuki/ay6`; lane 1)
 **Detailed plan: PARITY §9.6.** PARITY §5 AY6, finding 13. Reflection table of every class/method the `extensions-lib` stubs (14, 16, 17) expose,
 checked against the app and against the minified preview dex (`scripts/anime-abi-check.sh`); bridges for misses;
 keep rules compared with Aniyomi's.
-Result: _pending_
+Result (Claude 2026-11-21): **step 5 only**, committed on `tsuzuki/ay6` (from `tsuzuki/ay4`, which also carries `02948285a`, the debug Anime test back-arrow mojibake fix): the fixture's `fetch` now goes through `GET` → `awaitSuccess` → `asJsoup` (base URL check) → `parseAs<JsonElement>()`; `FixtureAnimeSourceTest` 8 pass; tablet cases 01 and 16 play through it (8 API calls, no crash). **Blocked:** steps 1–4 and 6 need the `aniyomiorg/extensions-lib` lib 14/16/17 stubs from GitHub; asked the owner 2026-11-21 (downloads need explicit approval).
 
 #### REL-0.2 Anime release: chain review, audit, upgrade test from 0.1.1 — `ready` (needs `tsuzuki/ay6` in `review`; review lane)
 **Detailed plan: PARITY §9.7.** One reviewer who implemented none of AY9–AY6: `review/v0.2` from main + `tsuzuki/ay6`; every card's device script re-run on the merged build; anime off by default on fresh and upgraded installs; v0.1.1 → v0.2 upgrade with the 500-book synthetic backup; all-module tests, Debug/Preview/Release, 16 KB and ABI checks; CHANGELOG v0.2, versionCode 26 / 0.2.0. Ask the owner whether `review/app-chain` rides along. Owner tags and publishes.
