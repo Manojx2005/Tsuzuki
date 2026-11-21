@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 
 /** Filters an extension would define (public with no-arg constructors so a second class loader can build them). */
-class CarryGenre : AnimeFilter.Select<String>("Genre", arrayOf("Any", "Action", "Drama"))
+class CarryGenre(values: Array<String> = arrayOf("Any", "Action", "Drama")) :
+    AnimeFilter.Select<String>("Genre", values)
 class CarryDubbed : AnimeFilter.CheckBox("Dubbed")
 class CarryYear : AnimeFilter.Text("Year")
-class CarrySort : AnimeFilter.Sort("Sort", arrayOf("Name", "Date"))
+class CarrySort(values: Array<String> = arrayOf("Name", "Date")) : AnimeFilter.Sort("Sort", values)
 class CarryTags : AnimeFilter.Group<AnimeFilter.TriState>("Tags", listOf(CarryTag("Isekai"), CarryTag("Mecha")))
 class CarryTag(name: String) : AnimeFilter.TriState(name)
 
@@ -80,6 +81,27 @@ class AnimeFilterCarryTest {
         }
         assertEquals(0, carried.size)
         assertEquals(false, asked)
+    }
+
+    @Test
+    fun `reordered filters and choices keep the selected labels and sort direction`() {
+        val sort = CarrySort(arrayOf("Date", "Name"))
+        val genre = CarryGenre(arrayOf("Drama", "Any", "Action")).apply { state = 1 }
+        val year = CarryYear()
+        restoreAnimeFilterStates(applied(), AnimeFilterList(sort, genre, year))
+        assertEquals(0, genre.state)
+        assertEquals(AnimeFilter.Sort.Selection(0, ascending = false), sort.state)
+        assertEquals("2024", year.state)
+    }
+
+    @Test
+    fun `removed or ambiguous choices keep the fresh default`() {
+        val removed = CarryGenre(arrayOf("Any", "Action"))
+        val ambiguous = CarryGenre(arrayOf("Any", "Drama", "Drama"))
+        for (draft in listOf(removed, ambiguous)) {
+            restoreAnimeFilterStates(applied(), AnimeFilterList(draft))
+            assertEquals(0, draft.state)
+        }
     }
 
     @Test

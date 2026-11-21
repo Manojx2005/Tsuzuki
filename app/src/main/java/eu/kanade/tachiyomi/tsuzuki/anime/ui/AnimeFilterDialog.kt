@@ -175,33 +175,45 @@ private fun AnimeFilterChoice(name: String, options: List<String>, selected: Int
  *
  * AY2-F: [previous] may come from an older instance of the source, loaded by another class loader after its
  * settings changed, so filters are matched by class name and title, never by class identity, and only values of
- * the shared source-api types (Int, Boolean, String, [AnimeFilter.Sort.Selection]) are copied. A value that no
- * longer fits (a select index past the new options, a different value type) keeps the source's default.
+ * the shared source-api types are copied. Select and sort choices follow their displayed label across
+ * reorderings. A missing or ambiguous choice keeps the source's default.
  */
 internal fun restoreAnimeFilterStates(previous: List<AnimeFilter<*>>, draft: List<AnimeFilter<*>>) {
-    previous.zip(draft).forEach { (old, new) ->
-        if (old.name != new.name || old.javaClass.name != new.javaClass.name) return@forEach
-        if (old is AnimeFilter.Group<*> && new is AnimeFilter.Group<*>) {
-            restoreAnimeFilterStates(
+    fun identity(filter: AnimeFilter<*>) = filter.javaClass.name to filter.name
+    val oldByIdentity = previous.groupBy(::identity)
+    val newByIdentity = draft.groupBy(::identity)
+    newByIdentity.forEach { (key, matches) ->
+        val new = matches.singleOrNull() ?: return@forEach
+        val old = oldByIdentity[key]?.singleOrNull() ?: return@forEach
+        when {
+            old is AnimeFilter.Group<*> && new is AnimeFilter.Group<*> -> restoreAnimeFilterStates(
                 old.state.filterIsInstance<AnimeFilter<*>>(),
                 new.state.filterIsInstance<AnimeFilter<*>>(),
             )
-            return@forEach
+            old is AnimeFilter.Select<*> && new is AnimeFilter.Select<*> ->
+                matchingChoice(old.values, old.state, new.values)?.let { new.state = it }
+            old is AnimeFilter.Sort && new is AnimeFilter.Sort -> {
+                val selection = old.state
+                if (selection == null) {
+                    new.state = null
+                } else {
+                    matchingChoice(old.values, selection.index, new.values)?.let {
+                        new.state = selection.copy(index = it)
+                    }
+                }
+            }
+            old is AnimeFilter.Text && new is AnimeFilter.Text -> new.state = old.state
+            old is AnimeFilter.CheckBox && new is AnimeFilter.CheckBox -> new.state = old.state
+            old is AnimeFilter.TriState && new is AnimeFilter.TriState -> new.state = old.state
         }
-        val value = old.state
-        val fits = when (new) {
-            is AnimeFilter.Select<*> -> value is Int && value in new.values.indices
-            is AnimeFilter.Sort ->
-                value == null ||
-                    (value is AnimeFilter.Sort.Selection && value.index in new.values.indices)
-            is AnimeFilter.Text -> value is String
-            is AnimeFilter.CheckBox -> value is Boolean
-            is AnimeFilter.TriState -> value is Int
-            else -> false // Header, Separator: nothing to carry
-        }
-        @Suppress("UNCHECKED_CAST")
-        if (fits) (new as AnimeFilter<Any?>).state = value
     }
+}
+
+private fun matchingChoice(old: Array<out Any?>, index: Int, new: Array<out Any?>): Int? {
+    if (index !in old.indices) return null
+    val label = old[index].toString()
+    if (old.count { it.toString() == label } != 1) return null
+    return new.indices.singleOrNull { new[it].toString() == label }
 }
 
 /**
