@@ -110,7 +110,7 @@ class KokoroPackDownloadTest {
     }
 
     @Test
-    fun `pause during a stalled read stops at once and writes nothing more; resume completes it`() = runBlocking {
+    fun `pause during a stalled read stops at once and writes nothing more, then resume completes it`() = runBlocking {
         val target = File(dir, "pack.zip")
         val first = 64 * 1024
         val stalled = StalledBody(bytes, first)
