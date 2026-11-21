@@ -64,6 +64,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".tsuzuki.anime.ui.AnimeSourcePreferencesActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".tsuzuki.anime.ui.AnimeMigrationActivity"
             android:exported="false" />
 
