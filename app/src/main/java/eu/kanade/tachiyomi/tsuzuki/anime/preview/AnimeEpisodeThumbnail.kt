@@ -85,11 +85,12 @@ internal fun AnimeEpisodeThumbnail(
             )
         }
         if (episode.totalSeconds > 0 && episode.lastSecondSeen > 0) {
+            val fill = if (hero && !tokens.isDot) tokens.dotOn else tokens.accent
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(tokens.track))
             Box(
                 Modifier.align(Alignment.BottomStart)
                     .fillMaxWidth((episode.lastSecondSeen.toDouble() / episode.totalSeconds).toFloat().coerceIn(0f, 1f))
-                    .height(3.dp).background(tokens.accent),
+                    .height(3.dp).background(fill),
             )
         }
     }
