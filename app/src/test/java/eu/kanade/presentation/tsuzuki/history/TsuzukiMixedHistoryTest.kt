@@ -110,4 +110,11 @@ class TsuzukiMixedHistoryTest {
     fun `only anime still get headers`() {
         assertEquals(listOf("# 1970-01-03", "a:Anime 1"), merge(emptyList(), listOf(anime(1, 2 * day))))
     }
+
+    @Test
+    fun `search can return an anime title with no matching book rows`() {
+        val watched = listOf(anime(1, 2 * day, title = "Frieren"), anime(2, day))
+        assertEquals(listOf("# 1970-01-03", "a:Frieren"), merge(emptyList(), watched, query = "frieren"))
+        assertEquals(emptyList<String>(), merge(emptyList(), watched, query = "unrelated"))
+    }
 }

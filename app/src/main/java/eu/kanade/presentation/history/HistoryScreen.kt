@@ -239,10 +239,24 @@ fun HistoryScreen(
                 TsuzukiAnimeHistory(animeHistory, state.searchQuery)
                 return@Scaffold
             }
-            state.list.let {
-                if (it == null) {
+            val history = state.list?.let { books ->
+                if (hasAnimeHistory && state.filter == HistoryFilter.ALL) {
+                    eu.kanade.presentation.tsuzuki.history.mergeAnimeIntoHistory(
+                        books = books,
+                        anime = animeHistory,
+                        searchQuery = state.searchQuery,
+                        allBooksLoaded = rows.size < state.limit,
+                        timeZone = kotlinx.datetime.TimeZone.currentSystemDefault(),
+                    )
+                } else {
+                    books
+                }
+            }
+            when {
+                history == null -> {
                     LoadingScreen()
-                } else if (it.isEmpty()) {
+                }
+                history.isEmpty() -> {
                     val msg = if (!state.searchQuery.isNullOrEmpty()) {
                         MR.strings.no_results_found
                     } else {
@@ -251,20 +265,10 @@ fun HistoryScreen(
                     EmptyScreen(
                         stringRes = msg,
                     )
-                } else {
+                }
+                else -> {
                     HistoryScreenContent(
-                        // Tsuzuki (AY-INT): All also lists watched episodes, by time.
-                        history = if (hasAnimeHistory && state.filter == HistoryFilter.ALL) {
-                            eu.kanade.presentation.tsuzuki.history.mergeAnimeIntoHistory(
-                                books = it,
-                                anime = animeHistory,
-                                searchQuery = state.searchQuery,
-                                allBooksLoaded = rows.size < state.limit,
-                                timeZone = kotlinx.datetime.TimeZone.currentSystemDefault(),
-                            )
-                        } else {
-                            it
-                        },
+                        history = history,
                         onClickCover = { history -> onClickCover(history.mangaId) },
                         onClickResume = { history -> onClickResume(history.mangaId, history.chapterId) },
                         onClickDelete = { item -> onDialogChange(HistoryViewModel.Dialog.Delete(item)) },
