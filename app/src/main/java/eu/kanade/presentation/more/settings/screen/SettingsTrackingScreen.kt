@@ -68,6 +68,7 @@ import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.ui.webview.TrackerWebViewLoginActivity
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.source.service.SourceManager
@@ -170,13 +171,13 @@ object SettingsTrackingScreen : SearchableSettings {
             ),
             Preference.PreferenceItem.EditTextPreference(
                 preference = trackPreferences.minChaptersBeforeTrackingManga,
-                title = "Minimum chapters before tracking (Manga)",
-                subtitle = "Number of chapters that must be read before auto-tracking starts for manga (0 = always track)",
+                title = stringResource(MR.strings.tsz_track_min_chapters_manga),
+                subtitle = stringResource(MR.strings.tsz_track_min_chapters_manga_summary),
             ),
             Preference.PreferenceItem.EditTextPreference(
                 preference = trackPreferences.minChaptersBeforeTrackingNovel,
-                title = "Minimum chapters before tracking (Novels)",
-                subtitle = "Number of chapters that must be read before auto-tracking starts for novels (0 = always track)",
+                title = stringResource(MR.strings.tsz_track_min_chapters_novels),
+                subtitle = stringResource(MR.strings.tsz_track_min_chapters_novels_summary),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
@@ -208,13 +209,13 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.mangaBakaMarkChaptersAsRead,
-                        title = "Mark chapters as read on MangaBaka",
-                        subtitle = "Automatically mark chapters as read when you read them in the app",
+                        title = stringResource(MR.strings.tsz_track_mark_read_on, "MangaBaka"),
+                        subtitle = stringResource(MR.strings.tsz_track_mark_read_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.mangaBakaSyncReadingList,
-                        title = "Sync reading list",
-                        subtitle = "Keep reading list status in sync with MangaBaka",
+                        title = stringResource(MR.strings.tsz_track_sync_list),
+                        subtitle = stringResource(MR.strings.tsz_track_sync_list_summary, "MangaBaka"),
                     ),
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.shikimori,
@@ -235,7 +236,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 ),
             ),
             Preference.PreferenceGroup(
-                title = "Novel Trackers",
+                title = stringResource(MR.strings.tsz_tracker_novel_services),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.novelUpdates,
@@ -253,22 +254,22 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.novelUpdatesMarkChaptersAsRead,
-                        title = "Mark chapters as read on NovelUpdates",
-                        subtitle = "Automatically mark chapters as read when you read them in the app",
+                        title = stringResource(MR.strings.tsz_track_mark_read_on, "NovelUpdates"),
+                        subtitle = stringResource(MR.strings.tsz_track_mark_read_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.novelUpdatesSyncReadingList,
-                        title = "Sync reading list",
-                        subtitle = "Keep reading list status in sync with NovelUpdates",
+                        title = stringResource(MR.strings.tsz_track_sync_list),
+                        subtitle = stringResource(MR.strings.tsz_track_sync_list_summary, "NovelUpdates"),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.novelUpdatesUseCustomListMapping,
-                        title = "Custom list mapping",
-                        subtitle = "Map statuses to custom NovelUpdates lists",
+                        title = stringResource(MR.strings.tsz_track_custom_mapping),
+                        subtitle = stringResource(MR.strings.tsz_track_custom_mapping_summary, "NovelUpdates"),
                     ),
                     Preference.PreferenceItem.TextPreference(
-                        title = "Configure list mapping",
-                        subtitle = "Choose which list each status maps to",
+                        title = stringResource(MR.strings.tsz_track_configure_mapping),
+                        subtitle = stringResource(MR.strings.tsz_track_configure_mapping_summary),
                         onClick = { dialog = NovelUpdatesListMappingDialog },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
@@ -287,13 +288,13 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.novelListMarkChaptersAsRead,
-                        title = "Mark chapters as read on NovelList",
-                        subtitle = "Automatically mark chapters as read when you read them in the app",
+                        title = stringResource(MR.strings.tsz_track_mark_read_on, "NovelList"),
+                        subtitle = stringResource(MR.strings.tsz_track_mark_read_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.novelListSyncReadingList,
-                        title = "Sync reading list",
-                        subtitle = "Keep reading list status in sync with NovelList",
+                        title = stringResource(MR.strings.tsz_track_sync_list),
+                        subtitle = stringResource(MR.strings.tsz_track_sync_list_summary, "NovelList"),
                     ),
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.ranobeDb,
@@ -310,30 +311,29 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.ranobeDbMarkChaptersAsRead,
-                        title = "Mark chapters as read on RanobeDB",
-                        subtitle = "Automatically mark chapters/volumes as read when you read them in the app",
+                        title = stringResource(MR.strings.tsz_track_mark_read_on, "RanobeDB"),
+                        subtitle = stringResource(MR.strings.tsz_track_mark_read_volumes_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.ranobeDbSyncReadingList,
-                        title = "Sync reading list",
-                        subtitle = "Keep reading list status in sync with RanobeDB",
+                        title = stringResource(MR.strings.tsz_track_sync_list),
+                        subtitle = stringResource(MR.strings.tsz_track_sync_list_summary, "RanobeDB"),
                     ),
                     Preference.PreferenceItem.InfoPreference(
-                        "Login via WebView. Cookies will be automatically extracted after successful login.",
+                        stringResource(MR.strings.tsz_track_webview_login_info),
                     ),
                 ),
             ),
             Preference.PreferenceGroup(
-                title = "Source-defined trackers",
+                title = stringResource(MR.strings.tsz_track_source_trackers),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = trackPreferences.migrationTriggersSourceTracker,
-                        title = "Run source trackers on migration",
-                        subtitle = "Fire source-defined tracker events when migrating or quick-migrating an entry",
+                        title = stringResource(MR.strings.tsz_track_source_on_migration),
+                        subtitle = stringResource(MR.strings.tsz_track_source_on_migration_summary),
                     ),
                     Preference.PreferenceItem.InfoPreference(
-                        "Some sources implement their own tracking. They are notified when you mark chapters read, " +
-                            "favorite/unfavorite, or migrate. Failures don't block reading and don't affect the regular trackers above.",
+                        stringResource(MR.strings.tsz_track_source_trackers_info),
                     ),
                 ),
             ),
@@ -530,25 +530,9 @@ object SettingsTrackingScreen : SearchableSettings {
         var inputError by remember { mutableStateOf(false) }
 
         val instructions = when (trackerName) {
-            "NovelList" -> {
-                // Use a raw string split across multiple source lines to keep line lengths short
-                """
-                1. Login to novellist.co in browser
-                2. Open DevTools (F12) → Application → Cookies
-                3. Find 'novellist' cookie
-                4. If it starts with 'base64-', decode it and extract 'access_token'
-                5. Paste the token below
-                """.trimIndent()
-            }
-            "NovelUpdates" -> {
-                """
-                1. Login to novelupdates.com in browser
-                2. Open DevTools (F12) → Application → Cookies
-                3. Copy all cookie values
-                4. Paste below as: cookie_name=value; cookie_name2=value2
-                """.trimIndent()
-            }
-            else -> "Enter your authentication token"
+            "NovelList" -> stringResource(MR.strings.tsz_track_token_novellist_steps)
+            "NovelUpdates" -> stringResource(MR.strings.tsz_track_token_novelupdates_steps)
+            else -> stringResource(MR.strings.tsz_track_token_prompt)
         }
 
         AlertDialog(
@@ -734,7 +718,11 @@ object SettingsTrackingScreen : SearchableSettings {
                                     }
                                     withUIContext {
                                         isLoading = false
-                                        if (lists.isEmpty()) context.toast("Failed to fetch lists")
+                                        if (lists.isEmpty()) {
+                                            context.toast(
+                                                context.stringResource(MR.strings.tsz_track_lists_failed),
+                                            )
+                                        }
                                     }
                                 }
                             },

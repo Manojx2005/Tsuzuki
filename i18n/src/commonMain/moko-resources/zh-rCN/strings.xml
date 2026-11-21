@@ -1446,4 +1446,26 @@
     <string name="tsz_error_other">无法完成请求</string>
     <string name="tsz_error_open">正在打开</string>
     <string name="tsz_export_choose_columns">选择要导出的列</string>
+    <string name="tsz_track_min_chapters_manga">开始跟踪前的最少章节（漫画）</string>
+    <string name="tsz_track_min_chapters_manga_summary">自动跟踪漫画前必须阅读的章节数（0 = 始终跟踪）</string>
+    <string name="tsz_track_min_chapters_novels">开始跟踪前的最少章节（小说）</string>
+    <string name="tsz_track_min_chapters_novels_summary">自动跟踪小说前必须阅读的章节数（0 = 始终跟踪）</string>
+    <string name="tsz_track_mark_read_on">在 %1$s 上将章节标为已读</string>
+    <string name="tsz_track_mark_read_summary">在应用中阅读的章节会自动标为已读</string>
+    <string name="tsz_track_mark_read_volumes_summary">在应用中阅读的章节/卷会自动标为已读</string>
+    <string name="tsz_track_sync_list">同步阅读列表</string>
+    <string name="tsz_track_sync_list_summary">与 %1$s 保持阅读列表状态同步</string>
+    <string name="tsz_track_custom_mapping">自定义列表映射</string>
+    <string name="tsz_track_custom_mapping_summary">将状态映射到 %1$s 的自定义列表</string>
+    <string name="tsz_track_configure_mapping">配置列表映射</string>
+    <string name="tsz_track_configure_mapping_summary">选择每个状态对应的列表</string>
+    <string name="tsz_track_source_trackers">来源定义的跟踪器</string>
+    <string name="tsz_track_source_on_migration">迁移时运行来源跟踪器</string>
+    <string name="tsz_track_source_on_migration_summary">迁移或快速迁移条目时触发来源定义的跟踪器事件</string>
+    <string name="tsz_track_webview_login_info">通过 WebView 登录。登录成功后会自动获取 Cookie。</string>
+    <string name="tsz_track_source_trackers_info">部分来源有自己的跟踪功能。将章节标为已读、收藏或取消收藏、迁移时会通知它们。失败不会阻止阅读，也不会影响上方的跟踪器。</string>
+    <string name="tsz_track_token_novellist_steps">1. 在浏览器中登录 novellist.co\n2. 打开 DevTools（F12）→ Application → Cookies\n3. 找到 \'novellist\' Cookie\n4. 如果以 \'base64-\' 开头，解码后取出 \'access_token\'\n5. 将令牌粘贴到下方</string>
+    <string name="tsz_track_token_novelupdates_steps">1. 在浏览器中登录 novelupdates.com\n2. 打开 DevTools（F12）→ Application → Cookies\n3. 复制所有 Cookie 值\n4. 按 cookie_name=value; cookie_name2=value2 的格式粘贴到下方</string>
+    <string name="tsz_track_token_prompt">请输入你的身份验证令牌</string>
+    <string name="tsz_track_lists_failed">无法获取列表</string>
 </resources>

@@ -73,8 +73,8 @@ internal fun tsuzukiAdvancedPreferences(items: List<Preference>, settingsTitle: 
         )
         MR.strings.browse -> setOf("Page load delay", "Skip cover loading", "Confirm back after pages")
         MR.strings.pref_category_tracking -> setOf(
-            "Minimum chapters before tracking (Manga)",
-            "Minimum chapters before tracking (Novels)",
+            stringResource(MR.strings.tsz_track_min_chapters_manga),
+            stringResource(MR.strings.tsz_track_min_chapters_novels),
         )
         else -> emptySet()
     }
