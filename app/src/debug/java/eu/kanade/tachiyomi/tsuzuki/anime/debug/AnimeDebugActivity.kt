@@ -252,7 +252,7 @@ private fun AnimeDebugScreen(flow: AnimeDebugFlow, close: () -> Unit, play: (Vid
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                TextButton(onClick = close) { Text("â€¹", style = MaterialTheme.typography.titleLarge) }
+                TextButton(onClick = close) { Text("‹", style = MaterialTheme.typography.titleLarge) }
                 Text(
                     stringResource(MR.strings.tsz_anime_debug_title).uppercase(),
                     Modifier.weight(1f),
