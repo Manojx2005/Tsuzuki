@@ -10,6 +10,7 @@ import androidx.work.WorkInfo
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
+import eu.kanade.tachiyomi.tsuzuki.migration.isMigrationTarget
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -146,6 +147,8 @@ class MigrationListViewModel(
             .mapNotNull { sourceManager.get(it) }
 
         for (manga in mangas) {
+            // Tsuzuki: novels migrate only to novel sources, manga only to manga sources.
+            val targets = sources.filter { isMigrationTarget(it.isNovelSource, setOf(manga.manga.isNovel)) }
             if (!currentCoroutineContext().isActive) break
             if (manga.manga.id !in state.value.mangaIds) continue
             if (manga.searchResult.value != SearchResult.Searching) continue
@@ -155,7 +158,7 @@ class MigrationListViewModel(
                 manga.migrationScope.async {
                     if (prioritizeByChapters) {
                         val sourceSemaphore = Semaphore(5)
-                        sources.map { source ->
+                        targets.map { source ->
                             async innerAsync@{
                                 sourceSemaphore.withPermit {
                                     val result = searchSource(manga.manga, source, deepSearchMode)
@@ -167,7 +170,7 @@ class MigrationListViewModel(
                             .mapNotNull { it.await() }
                             .maxByOrNull { it.second.latestChapter ?: 0.0 }
                     } else {
-                        sources.forEach { source ->
+                        targets.forEach { source ->
                             val result = searchSource(manga.manga, source, deepSearchMode)
                             if (result != null) return@async result
                         }
