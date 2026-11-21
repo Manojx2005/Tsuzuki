@@ -370,7 +370,7 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+internal fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     Column(
         modifier.tsuzukiClickable(role = Role.Button, onClick = onOpen),

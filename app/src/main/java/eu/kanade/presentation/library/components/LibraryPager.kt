@@ -127,6 +127,7 @@ fun LibraryPager(
                 onLoadMore = onLoadMoreForCategory,
                 loadMoreKey = loadMoreKey,
                 titleMaxLines = titleMaxLines,
+                firstPage = page == 0,
             )
             return@HorizontalPager
         }

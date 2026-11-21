@@ -45,7 +45,12 @@ class TsuzukiMixedHistoryTest {
         }
     }
 
-    private fun merge(books: List<HistoryUiModel>, anime: List<AnimeHistoryDisplay>, query: String? = null, all: Boolean = true) =
+    private fun merge(
+        books: List<HistoryUiModel>,
+        anime: List<AnimeHistoryDisplay>,
+        query: String? = null,
+        all: Boolean = true,
+    ) =
         describe(mergeAnimeIntoHistory(books, anime, query, all, TimeZone.UTC))
 
     @Test
@@ -60,9 +65,14 @@ class TsuzukiMixedHistoryTest {
         val anime = listOf(anime(3, 2 * day + 20), anime(4, 1 * day + 5), anime(5, 3 * day))
         assertEquals(
             listOf(
-                "# 1970-01-04", "a:Anime 5",
-                "# 1970-01-03", "a:Anime 3", "b:Book 1",
-                "# 1970-01-02", "b:Book 2", "a:Anime 4",
+                "# 1970-01-04",
+                "a:Anime 5",
+                "# 1970-01-03",
+                "a:Anime 3",
+                "b:Book 1",
+                "# 1970-01-02",
+                "b:Book 2",
+                "a:Anime 4",
             ),
             merge(books, anime),
         )
@@ -72,7 +82,10 @@ class TsuzukiMixedHistoryTest {
     fun `while more book pages may follow, older anime wait for them`() {
         val books = bookList(book(1, 5 * day), book(2, 4 * day))
         val anime = listOf(anime(3, 4 * day + 1), anime(4, 2 * day))
-        assertEquals(listOf("# 1970-01-06", "b:Book 1", "# 1970-01-05", "a:Anime 3", "b:Book 2"), merge(books, anime, all = false))
+        assertEquals(
+            listOf("# 1970-01-06", "b:Book 1", "# 1970-01-05", "a:Anime 3", "b:Book 2"),
+            merge(books, anime, all = false),
+        )
         assertEquals(
             listOf("# 1970-01-06", "b:Book 1", "# 1970-01-05", "a:Anime 3", "b:Book 2", "# 1970-01-03", "a:Anime 4"),
             merge(books, anime, all = true),
@@ -82,7 +95,10 @@ class TsuzukiMixedHistoryTest {
     @Test
     fun `anime follow the search on title or episode name`() {
         val books = bookList(book(1, 5 * day, title = "Frieren novel"))
-        val anime = listOf(anime(2, 4 * day, title = "Frieren"), anime(3, 3 * day, title = "Other", episode = "frieren special"))
+        val anime = listOf(
+            anime(2, 4 * day, title = "Frieren"),
+            anime(3, 3 * day, title = "Other", episode = "frieren special"),
+        )
         val other = listOf(anime(4, 2 * day, title = "Unrelated"))
         assertEquals(
             listOf("# 1970-01-06", "b:Frieren novel", "# 1970-01-05", "a:Frieren", "# 1970-01-04", "a:Other"),

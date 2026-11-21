@@ -251,7 +251,11 @@ internal fun UpdateScreen(
 
                         // Tsuzuki themes: stat tiles above the list (board "Updates").
                         if (state.items.isNotEmpty() ||
-                            eu.kanade.presentation.tsuzuki.updates.hasAnimeInAll(anime, state.filter, state.groupByNovel)
+                            eu.kanade.presentation.tsuzuki.updates.hasAnimeInAll(
+                                anime,
+                                state.filter,
+                                state.groupByNovel,
+                            )
                         ) {
                             item(key = "tsuzuki_update_tiles") {
                                 if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
@@ -263,12 +267,13 @@ internal fun UpdateScreen(
                                             eu.kanade.tachiyomi.data.download.model.Download.State.NOT_DOWNLOADED
                                     }
                                     // Tsuzuki (AY-INT): All also counts and saves new episodes.
-                                    val (newCount, saveCount) = eu.kanade.presentation.tsuzuki.updates.updatesTileCounts(
-                                        unread.size,
-                                        toSave.size,
-                                        anime,
-                                        state.filter,
-                                    )
+                                    val (newCount, saveCount) =
+                                        eu.kanade.presentation.tsuzuki.updates.updatesTileCounts(
+                                            unread.size,
+                                            toSave.size,
+                                            anime,
+                                            state.filter,
+                                        )
                                     eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTiles(
                                         newCount = newCount,
                                         toSave = saveCount,
