@@ -66,6 +66,30 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Codex next steps (Claude, 2026-11-21) — start here
+
+Goal: ship **v0.2** (first anime release). Two Codex threads can run at once: the **anime lane** (implements, may use the tablet/S22 under the Device lock) and the **review lane** (reviews and merges into `main` locally, Batch T rules; never reviews its own work). Claude implemented most of the waiting branches, so Claude must not review them.
+
+**Anime lane, in this order (one card at a time; each branches from the previous card):**
+1. **AY1** — finish from the handoff on its card (`.worktrees/ay1`, uncommitted; cases 03–06 already pass): remaining fixture cases, full tests, scoped Spotless, restore tablet data, commit on `tsuzuki/ay1`, set `review`.
+2. **AY9** — Codex's own card, untouched since 2026-11-15 (`.worktrees/ay9`, uncommitted, claims the old Device lock). Finish it or reset it; read Claude's early notes on its card. AY1 was built without AY9: merge `tsuzuki/ay9` into `tsuzuki/ay1` (or the reverse) once AY9 is committed, and rerun AY1's fixture cases.
+3. **AY2 → AY3 → AY4 → AY6** — plans in `docs/ANIME_ANIYOMI_PARITY.md` §9.3–§9.6 (written from the code, with tests and device scripts).
+4. **REL-0.2** (review lane, after AY6) — §9.7: chain review, anime off by default, v0.1.1 → v0.2 upgrade test, all-module tests, 16 KB + ABI checks, changelog, versionCode 26; owner tags.
+Not in v0.2: A6.5, AY5, A6.8, AY7, A6.6, A6.7, AY8.
+
+**Review lane, in this order (each committed on its card branch, independent review needed):**
+1. **Main-based set**, merge order (trial integration passed 1,231 tests, see 2026-11-19): STR2 `82e3648bb` → V8.1 `d850b3a2f` → V8.3 `c512c23b2` → V8.4 `73850a4b7` → V8.5 `24d465e57` → READER-JP-FONT `d0773b3d9` → STR3 `ce240fa11` → AY-INT `641018f95`+`b0fdce1eb`. Expect append-only conflicts in the 8 `strings.xml` tails and AGENTS.md (keep both). Drop STR2's stale comment in `TsuzukiAdvancedPreferences.kt` when STR3 lands.
+2. **MARK-UNTIL-LAST-READ** `7139eef26`, **AY0** `70974003a` (fixture server/sources; AY1 builds on it).
+3. **PERF-START-2-F** `2c772793d` + gate `45cf42deb`: measure optimized Preview on the **S22**, 20 cold launches baseline vs candidate; keep the gate only with a gain beyond run ranges and Home-observed not worse; also a cold library update with the process dead. Tablet debug showed no gain.
+4. **App chain** (`review/app-chain` + `d9b94f259`): first resume or restart the stalled **RECAP-F** review (`.worktrees/review-recap-f`; `animescratch` was left unrestored there), then TTS-POLISH, then DICT-F `900f081f1`. Merge only after the owner decides the +29 MB bundled dictionaries and whether the chain ships in v0.2.
+5. **KOKORO-INTEGRATION** (debug only; crash fix `7c297e232`, prefetch `b9f2eca6f`, download screen `75fc7715b`): code review; it stays behind NT1/NT2 and the owner's listening test. `app/libs/*.aar` stays untracked until the owner decides.
+
+**Waiting on the owner (don't guess):** +29 MB dictionaries; publishing dictionary packs; voice-pack host (default `releases/download/voices-v1/kokoro-cmu-v1.zip`); Kokoro listening test (S22 RTF 1.05–1.09, ~590 MB); V8.2 board; V8.6 help links; whether the app chain rides in v0.2.
+
+**Prompts to paste:**
+- Anime lane: `Read AGENTS.md, docs/HANDOFF.md ("Codex next steps") and docs/ANIME_ANIYOMI_PARITY.md (§3, §9). You are the anime lane: finish AY1 from the handoff on its card, then AY9, then AY2, AY3, AY4, AY6 in order. Claim the Device lock before adb.`
+- Review lane: `Read AGENTS.md and docs/HANDOFF.md ("Codex next steps"). You are the review lane (Batch T): review and merge the main-based set in the listed order, then MARK-UNTIL and AY0, then measure PERF-START-2-F on the S22. Don't merge the app chain or Kokoro until the owner decides.`
+
 ## Current state (2026-11-21, Claude)
 
 Owner answers 2026-11-21: **commit everything on card branches**; **Library › All: anime sit on the All page in their own section** (the Anime pill stays); **Updates › All per-chapter list: tapping an episode keeps playing it**; **PERF-START-2-F: build the app-ready gate**.
