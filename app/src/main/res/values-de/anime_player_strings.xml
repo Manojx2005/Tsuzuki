@@ -49,4 +49,19 @@
     <string name="tsz_anime_player_server_load">Zum Laden tippen</string>
     <string name="tsz_anime_player_server_loading">Wird geladen…</string>
     <string name="tsz_anime_player_server_failed">Laden fehlgeschlagen – zum Wiederholen tippen</string>
+    <string name="tsz_anime_player_sub_font_size">Schriftgröße</string>
+    <string name="tsz_anime_player_sub_bold">Fett</string>
+    <string name="tsz_anime_player_sub_color">Textfarbe</string>
+    <string name="tsz_anime_player_sub_border">Umrandung</string>
+    <string name="tsz_anime_player_sub_border_size">Umrandungsbreite</string>
+    <string name="tsz_anime_player_sub_background">Hintergrundkasten</string>
+    <string name="tsz_anime_player_sub_position">Position</string>
+    <string name="tsz_anime_player_sub_override_ass">Formatierte (ASS-)Untertitel umgestalten</string>
+    <string name="tsz_anime_player_sub_white">Weiß</string>
+    <string name="tsz_anime_player_sub_yellow">Gelb</string>
+    <string name="tsz_anime_player_sub_cyan">Cyan</string>
+    <string name="tsz_anime_player_sub_green">Grün</string>
+    <string name="tsz_anime_player_sub_black">Schwarz</string>
+    <string name="tsz_anime_player_sub_grey">Grau</string>
+    <string name="tsz_anime_player_sub_none">Keine</string>
 </resources>

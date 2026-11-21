@@ -49,4 +49,19 @@
     <string name="tsz_anime_player_server_load">탭하여 불러오기</string>
     <string name="tsz_anime_player_server_loading">불러오는 중…</string>
     <string name="tsz_anime_player_server_failed">불러오지 못했습니다 — 탭하여 다시 시도</string>
+    <string name="tsz_anime_player_sub_font_size">글자 크기</string>
+    <string name="tsz_anime_player_sub_bold">굵게</string>
+    <string name="tsz_anime_player_sub_color">글자 색</string>
+    <string name="tsz_anime_player_sub_border">테두리</string>
+    <string name="tsz_anime_player_sub_border_size">테두리 두께</string>
+    <string name="tsz_anime_player_sub_background">배경 상자</string>
+    <string name="tsz_anime_player_sub_position">위치</string>
+    <string name="tsz_anime_player_sub_override_ass">스타일 자막(ASS)도 변경</string>
+    <string name="tsz_anime_player_sub_white">흰색</string>
+    <string name="tsz_anime_player_sub_yellow">노란색</string>
+    <string name="tsz_anime_player_sub_cyan">청록색</string>
+    <string name="tsz_anime_player_sub_green">초록색</string>
+    <string name="tsz_anime_player_sub_black">검은색</string>
+    <string name="tsz_anime_player_sub_grey">회색</string>
+    <string name="tsz_anime_player_sub_none">없음</string>
 </resources>

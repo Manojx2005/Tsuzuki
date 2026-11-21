@@ -222,6 +222,10 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         if (settings.subtitleDelay != previous?.subtitleDelay) {
             MPVLib.setPropertyDouble("sub-delay", settings.subtitleDelay.toDouble())
         }
+        // mpv logs a rejected value itself (e.g. sub-border-style on an older libmpv).
+        changedSubtitleStyleOptions(previous?.subtitleStyle, settings.subtitleStyle).forEach { (name, value) ->
+            MpvPlayer.property(name, value)
+        }
         if (settings.hardwareDecoding != previous?.hardwareDecoding) {
             MpvPlayer.property("hwdec", if (settings.hardwareDecoding) "auto" else "no")
         }
