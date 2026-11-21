@@ -82,3 +82,13 @@ internal suspend fun <Audio : Any> playNeuralChunks(
     }
     onDone()
 }
+
+/**
+ * After chunk [uncoveredOffset] is handed to the phone voice, the next request starts at the following chunk and
+ * plays its first sentence first (see [playNeuralChunks]). Returns that chunk and the exact text its first piece
+ * will synthesize, so the worker can prepare it while the phone voice speaks; null at the end of the chapter.
+ */
+internal fun nextNeuralPrefetch(chunks: List<String>, uncoveredOffset: Int): Pair<String, String>? {
+    val chunk = chunks.getOrNull(uncoveredOffset + 1) ?: return null
+    return chunk to (splitFirstSentence(chunk)?.first ?: chunk)
+}

@@ -183,4 +183,14 @@ class NeuralChunkQueueTest {
         )
         assertEquals(listOf(2), uncovered)
     }
+
+    @Test
+    fun `after a phone-voice chunk the next chunk's first piece is prepared, exactly as the next request plays it`() {
+        val chunks = listOf("Chapter 1, paragraph 1.", "The signal lights lined the shore. The crew watched.", "Short")
+        val split = nextNeuralPrefetch(chunks, uncoveredOffset = 0)
+        assertEquals(chunks[1] to "The signal lights lined the shore.", split)
+        assertEquals(split!!.second, splitFirstSentence(chunks[1])!!.first)
+        assertEquals(chunks[2] to "Short", nextNeuralPrefetch(chunks, uncoveredOffset = 1))
+        assertEquals(null, nextNeuralPrefetch(chunks, uncoveredOffset = 2))
+    }
 }

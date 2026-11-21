@@ -22,12 +22,15 @@ import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import eu.kanade.tachiyomi.tsuzuki.tts.playNeuralChunks
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -48,6 +51,13 @@ class KokoroTtsService : Service() {
     private var playback: Job? = null
     private var client: Messenger? = null
     private var request = 0
+
+    /**
+     * Audio being prepared for the next request's first piece while the phone voice speaks a chunk Kokoro can't
+     * say (keyed by speed and text). Removes the ~2.6 s silence before every Kokoro chunk after a phone-voice
+     * chunk on the Tab S11 (2026-11-21). Main thread only.
+     */
+    private var prefetch: Pair<String, Deferred<GeneratedAudio?>>? = null
     private val incoming = Messenger(
         Handler(Looper.getMainLooper()) { message ->
             when (message.what) {
@@ -105,7 +115,7 @@ class KokoroTtsService : Service() {
                 playNeuralChunks(
                     chunks = chunks,
                     firstIndex = first,
-                    synthesize = { synthesize(it, speed) },
+                    synthesize = { synthesizeOrPrefetched(it, speed) },
                     covered = ::isCovered,
                     play = ::playAudio,
                     onStart = {
@@ -122,6 +132,7 @@ class KokoroTtsService : Service() {
                     onUncovered = {
                         logcat(LogPriority.INFO) { "Kokoro: chunk $it is not covered; the phone voice speaks it" }
                         notify(receiver, Protocol.UNCOVERED, id, it)
+                        prepareAfterUncovered(chunks, it - first, speed)
                     },
                     onFailure = { index, error ->
                         logcat(LogPriority.WARN, error) { "Kokoro listening test failed at chunk $index" }
@@ -189,6 +200,42 @@ class KokoroTtsService : Service() {
             result
         }
     }
+
+    private suspend fun synthesizeOrPrefetched(text: String, speed: Float): GeneratedAudio {
+        val key = prefetchKey(text, speed)
+        val pending = prefetch
+        prefetch = null
+        if (pending != null) {
+            if (pending.first == key) {
+                val audio = try {
+                    pending.second.await()
+                } catch (error: CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                    null
+                } catch (error: Exception) {
+                    logcat(LogPriority.WARN, error) { "Kokoro prefetch failed; synthesizing again" }
+                    null
+                }
+                if (audio != null) {
+                    logcat(LogPriority.INFO) { "KokoroTiming prefetch hit chars=${text.length}" }
+                    return audio
+                }
+            } else {
+                pending.second.cancel()
+            }
+        }
+        return synthesize(text, speed)
+    }
+
+    private fun prepareAfterUncovered(chunks: List<String>, uncoveredOffset: Int, speed: Float) {
+        val (chunk, text) = eu.kanade.tachiyomi.tsuzuki.tts.nextNeuralPrefetch(chunks, uncoveredOffset) ?: return
+        prefetch?.second?.cancel()
+        prefetch = prefetchKey(text, speed) to scope.async {
+            if (isCovered(chunk)) synthesize(text, speed) else null
+        }
+    }
+
+    private fun prefetchKey(text: String, speed: Float) = "$speed|$text"
 
     private suspend fun createKokoro(): OfflineTts {
         val loadStarted = SystemClock.elapsedRealtime()
