@@ -1937,7 +1937,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         textView.typeface = when {
             // Tsuzuki: bundled Literata (res/font/lnr_literata.ttf).
             fontFamily == "literata" ->
-                androidx.core.content.res.ResourcesCompat.getFont(activity, eu.kanade.tachiyomi.R.font.lnr_literata)
+                eu.kanade.presentation.tsuzuki.reader.readingTypeface(activity.resources)
+                    ?: androidx.core.content.res.ResourcesCompat.getFont(
+                        activity,
+                        eu.kanade.tachiyomi.R.font.lnr_literata,
+                    )
                     ?: android.graphics.Typeface.SERIF
             fontFamily.startsWith("file://") || fontFamily.startsWith("content://") -> {
                 if (fontFamily == cachedFontUri && cachedTypeface != null) {

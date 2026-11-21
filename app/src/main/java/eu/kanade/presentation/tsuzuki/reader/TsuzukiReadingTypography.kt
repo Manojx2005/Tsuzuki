@@ -24,29 +24,33 @@ private object ReadingFont {
     private var cached: FontFamily? = null
 
     fun get(resources: Resources): FontFamily = cached ?: synchronized(this) {
-        cached ?: run {
-            val paired = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                runCatching { pairedFamily(resources) }.getOrNull()
-            } else {
-                null
-            }
-            (paired ?: literata).also { cached = it }
-        }
+        cached ?: (readingTypeface(resources)?.let { FontFamily(Typeface(it)) } ?: literata).also { cached = it }
     }
+}
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun pairedFamily(resources: Resources): FontFamily {
-        val latin = AndroidFont.Builder(resources, R.font.lnr_literata).build()
-        val japanese = AndroidFont.Builder(resources, R.font.lnr_jp_notoserif).build()
-        return FontFamily(
-            Typeface(
-                AndroidTypeface.CustomFallbackBuilder(AndroidFontFamily.Builder(latin).build())
-                    .addCustomFallback(AndroidFontFamily.Builder(japanese).build())
-                    .setSystemFallback("serif")
-                    .build(),
-            ),
-        )
+@Volatile
+private var cachedReadingTypeface: AndroidTypeface? = null
+
+/**
+ * Literata with the bundled Noto Serif JP behind it (Android 10+), so Japanese text keeps a serif reading face.
+ * Shared by the Compose reading excerpts and the TextView novel reader; null where the pairing can't be built.
+ */
+internal fun readingTypeface(resources: Resources): AndroidTypeface? {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+    return cachedReadingTypeface ?: synchronized(ReadingFont) {
+        cachedReadingTypeface
+            ?: runCatching { pairedTypeface(resources) }.getOrNull()?.also { cachedReadingTypeface = it }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.Q)
+private fun pairedTypeface(resources: Resources): AndroidTypeface {
+    val latin = AndroidFont.Builder(resources, R.font.lnr_literata).build()
+    val japanese = AndroidFont.Builder(resources, R.font.lnr_jp_notoserif).build()
+    return AndroidTypeface.CustomFallbackBuilder(AndroidFontFamily.Builder(latin).build())
+        .addCustomFallback(AndroidFontFamily.Builder(japanese).build())
+        .setSystemFallback("serif")
+        .build()
 }
 
 /** Reading excerpts use the bundled reader face while surrounding controls keep the app typography. */
