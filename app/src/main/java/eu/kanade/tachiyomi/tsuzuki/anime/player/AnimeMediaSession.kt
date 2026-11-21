@@ -58,6 +58,13 @@ internal fun animeKeyAction(keyCode: Int): AnimeKeyAction? = when (keyCode) {
     else -> null
 }
 
+/**
+ * Whether a key-down for [this] action runs again while the key is held ([repeatCount] > 0). Only seeking
+ * repeats; a toggle, play/pause or episode change happens once per physical press (AY4-F).
+ */
+internal fun AnimeKeyAction.runsOnDown(repeatCount: Int): Boolean =
+    repeatCount == 0 || this == AnimeKeyAction.BACK_10 || this == AnimeKeyAction.FORWARD_10
+
 internal fun AnimePlayerModel.perform(action: AnimeKeyAction) {
     when (action) {
         AnimeKeyAction.TOGGLE -> setPlaying(!state.value.playing)
