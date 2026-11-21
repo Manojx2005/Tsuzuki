@@ -236,7 +236,7 @@ fun TsuzukiStartupOverlay(
                 }
             }
             Text(
-                text = if (dot) "続き · READ WHAT HAPPENS NEXT" else "続き · read what happens next",
+                text = stringResource(MR.strings.tsz_startup_tagline).let { if (dot) it.uppercase() else it },
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = if (dot) 12.sp else 14.sp,
                     letterSpacing = if (dot) 1.2.sp else 0.sp,

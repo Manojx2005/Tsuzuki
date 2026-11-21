@@ -38,14 +38,14 @@ class TsuzukiHomeLogicTest {
 
     @Test
     fun `chapter label is null for an unknown number`() {
-        homeChapterLabel(-1.0) shouldBe null
+        homeChapterLabel(-1.0) { "Ch. $it" } shouldBe null
     }
 
     @Test
     fun `chapter label formats whole and fractional numbers`() {
-        homeChapterLabel(336.0) shouldBe "Ch. 336"
-        homeChapterLabel(0.0) shouldBe "Ch. 0"
-        homeChapterLabel(7.5) shouldBe "Ch. 7.5"
+        homeChapterLabel(336.0) { "Ch. $it" } shouldBe "Ch. 336"
+        homeChapterLabel(0.0) { "Ch. $it" } shouldBe "Ch. 0"
+        homeChapterLabel(7.5) { "Ch. $it" } shouldBe "Ch. 7.5"
     }
 
     @Test

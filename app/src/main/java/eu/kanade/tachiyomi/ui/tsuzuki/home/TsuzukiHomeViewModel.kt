@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.tsuzuki.home
 
+import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.tsuzuki.novel.novelChapterHeading
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import mihon.core.viewmodel.StateViewModel
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
 import tachiyomi.domain.chapter.model.Chapter
@@ -20,6 +22,7 @@ import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.model.asMangaCover
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
@@ -75,11 +78,14 @@ data class HomeState(
 internal fun homeChapterNumber(number: Double): String =
     if (number >= 0 && number % 1.0 == 0.0) number.toLong().toString() else number.toString()
 
-/** "Ch. 12" label for a chapter without a name; null when the number is unknown (negative). */
-internal fun homeChapterLabel(number: Double): String? = when {
+/**
+ * "Ch. 12" label for a chapter without a name (the wording comes from [format], a translated string); null when the
+ * number is unknown (negative).
+ */
+internal fun homeChapterLabel(number: Double, format: (String) -> String): String? = when {
     number < 0 -> null
-    number % 1.0 == 0.0 -> "Ch. ${number.toLong()}"
-    else -> "Ch. $number"
+    number % 1.0 == 0.0 -> format(number.toLong().toString())
+    else -> format(number.toString())
 }
 
 /** Status pill for a chapter row: read, started, fetched since the book was last read, or plain unread. */
@@ -98,6 +104,7 @@ class TsuzukiHomeViewModel(
     private val getNextChapters: GetNextChapters = Injekt.get(),
     private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get(),
     private val sourceManager: tachiyomi.domain.source.service.SourceManager = Injekt.get(),
+    private val context: Application = Injekt.get(),
 ) : StateViewModel<HomeState>(HomeState()) {
 
     init {
@@ -144,13 +151,17 @@ class TsuzukiHomeViewModel(
                     chapterId = h.chapterId,
                     title = h.title,
                     cover = h.coverData,
-                    chapterLabel = current?.name?.takeIf { it.isNotBlank() } ?: homeChapterLabel(h.chapterNumber),
+                    chapterLabel =
+                    current?.name?.takeIf { it.isNotBlank() }
+                        ?: homeChapterLabel(h.chapterNumber) {
+                            context.stringResource(MR.strings.tsz_home_chapter_label, it)
+                        },
                     progress = lib?.progress(),
                     unread = chapters.count { !it.read && it.dateFetch > lastRead },
                     isNovel = h.isNovel,
                     recentChapters = chapters.toRecent(lastRead, h.isNovel),
                     meta = listOfNotNull(
-                        "${chapters.size} ch".takeIf {
+                        context.stringResource(MR.strings.tsz_home_chapter_count, chapters.size).takeIf {
                             chapters.isNotEmpty()
                         },
                         sourceName,
@@ -180,7 +191,8 @@ class TsuzukiHomeViewModel(
                         isNovel = lib.manga.isNovel,
                         recentChapters = chapters.toRecent(Long.MAX_VALUE, lib.manga.isNovel),
                         meta = listOfNotNull(
-                            "${chapters.size} ch".takeIf { chapters.isNotEmpty() },
+                            context.stringResource(MR.strings.tsz_home_chapter_count, chapters.size)
+                                .takeIf { chapters.isNotEmpty() },
                             sourceManager.getOrStub(lib.manga.source).name,
                         ).joinToString(" · "),
                     )

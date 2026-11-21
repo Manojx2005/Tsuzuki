@@ -1446,4 +1446,13 @@
     <string name="tsz_error_other">Die Anfrage konnte nicht abgeschlossen werden</string>
     <string name="tsz_error_open">Wird geöffnet</string>
     <string name="tsz_export_choose_columns">Spalten zum Exportieren auswählen</string>
+    <!-- STR2: strings that were hardcoded in Kotlin -->
+    <string name="tsz_app_update_channel">App-Updates</string>
+    <string name="tsz_app_update_available">Tsuzuki %1$s ist verfügbar</string>
+    <string name="tsz_app_update_tap">Tippen, um Neuerungen zu sehen und zu aktualisieren</string>
+    <string name="tsz_home_chapter_label">Kap. %1$s</string>
+    <string name="tsz_home_chapter_count">%1$d Kap.</string>
+    <string name="tsz_duration_hours_minutes">%1$d Std. %2$d Min.</string>
+    <string name="tsz_duration_minutes">%1$d Min.</string>
+    <string name="tsz_startup_tagline">続き · lies, was als Nächstes passiert</string>
 </resources>
