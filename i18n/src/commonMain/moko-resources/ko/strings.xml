@@ -1445,4 +1445,5 @@
     <string name="tsz_error_other">요청을 완료하지 못했습니다</string>
     <string name="tsz_error_open">여는 중</string>
     <string name="tsz_export_choose_columns">내보낼 열 선택</string>
+    <string name="tsz_history_clear_includes_anime">애니메이션 시청 기록도 삭제됩니다.</string>
 </resources>

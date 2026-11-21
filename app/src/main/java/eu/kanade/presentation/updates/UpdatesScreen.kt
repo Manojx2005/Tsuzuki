@@ -38,6 +38,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdateGroups
 import eu.kanade.presentation.tsuzuki.updates.tsuzukiUpdatesLoading
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
@@ -249,7 +250,9 @@ internal fun UpdateScreen(
                         anime?.airingStrip?.let { strip -> item(key = "airing_today") { strip() } }
 
                         // Tsuzuki themes: stat tiles above the list (board "Updates").
-                        if (state.items.isNotEmpty()) {
+                        if (state.items.isNotEmpty() ||
+                            eu.kanade.presentation.tsuzuki.updates.hasAnimeInAll(anime, state.filter, state.groupByNovel)
+                        ) {
                             item(key = "tsuzuki_update_tiles") {
                                 if (eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme.tokens.style !=
                                     eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle.NONE
@@ -259,10 +262,20 @@ internal fun UpdateScreen(
                                         it.downloadStateProvider() ==
                                             eu.kanade.tachiyomi.data.download.model.Download.State.NOT_DOWNLOADED
                                     }
+                                    // Tsuzuki (AY-INT): All also counts and saves new episodes.
+                                    val (newCount, saveCount) = eu.kanade.presentation.tsuzuki.updates.updatesTileCounts(
+                                        unread.size,
+                                        toSave.size,
+                                        anime,
+                                        state.filter,
+                                    )
                                     eu.kanade.presentation.tsuzuki.updates.TsuzukiUpdatesTiles(
-                                        newCount = unread.size,
-                                        toSave = toSave.size,
-                                        onSaveAll = { onDownloadChapter(toSave, ChapterDownloadAction.START) },
+                                        newCount = newCount,
+                                        toSave = saveCount,
+                                        onSaveAll = {
+                                            onDownloadChapter(toSave, ChapterDownloadAction.START)
+                                            if (state.filter == UpdatesFilter.ALL) anime?.saveEpisodes?.invoke()
+                                        },
                                     )
                                 }
                             }
@@ -272,7 +285,13 @@ internal fun UpdateScreen(
 
                         if (state.isLoading) {
                             tsuzukiUpdatesLoading()
-                        } else if (state.items.isEmpty()) {
+                        } else if (state.items.isEmpty() &&
+                            !eu.kanade.presentation.tsuzuki.updates.hasAnimeInAll(
+                                anime,
+                                state.filter,
+                                state.groupByNovel,
+                            )
+                        ) {
                             item(key = "empty_state") {
                                 // Use Box without verticalScroll for LazyColumn compatibility
                                 androidx.compose.foundation.layout.Box(
@@ -290,14 +309,22 @@ internal fun UpdateScreen(
                             }
                         } else if (state.groupByNovel) {
                             // Show updates grouped by novel
-                            updatesNovelGroups(
+                            // Tsuzuki (AY-INT): All also lists anime with new episodes as groups.
+                            tsuzukiUpdateGroups(
                                 groups = state.getNovelGroups(),
+                                anime = anime,
+                                filter = state.filter,
                                 onClickGroup = onClickNovelGroup,
                             )
                         } else {
                             // Show individual chapter updates
                             updatesUiItems(
-                                uiModels = state.getUiModel(),
+                                // Tsuzuki (AY-INT): All also lists new episodes, by time.
+                                uiModels = eu.kanade.presentation.tsuzuki.updates.withAnimeUpdates(
+                                    state.getUiModel(),
+                                    anime,
+                                    state.filter,
+                                ),
                                 selectionMode = state.selectionMode,
                                 onUpdateSelected = onUpdateSelected,
                                 onClickCover = onClickCover,
@@ -417,4 +444,9 @@ private fun UpdatesBottomBar(
 sealed interface UpdatesUiModel {
     data class Header(val date: LocalDate) : UpdatesUiModel
     data class Item(val item: UpdatesItem) : UpdatesUiModel
+
+    /** Tsuzuki (AY-INT): a new episode shown in Updates › All. */
+    data class Anime internal constructor(
+        internal val item: eu.kanade.tachiyomi.tsuzuki.anime.AnimeUpdateEpisode,
+    ) : UpdatesUiModel
 }

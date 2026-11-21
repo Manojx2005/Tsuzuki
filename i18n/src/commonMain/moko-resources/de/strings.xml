@@ -1446,4 +1446,5 @@
     <string name="tsz_error_other">Die Anfrage konnte nicht abgeschlossen werden</string>
     <string name="tsz_error_open">Wird geöffnet</string>
     <string name="tsz_export_choose_columns">Spalten zum Exportieren auswählen</string>
+    <string name="tsz_history_clear_includes_anime">Der Anime-Verlauf wird ebenfalls gelöscht.</string>
 </resources>

@@ -125,7 +125,11 @@ data object HistoryTab : Tab {
             is HistoryViewModel.Dialog.DeleteAll -> {
                 HistoryDeleteAllDialog(
                     onDismissRequest = onDismissRequest,
-                    onDelete = viewModel::removeAllHistory,
+                    onDelete = {
+                        viewModel.removeAllHistory()
+                        eu.kanade.presentation.tsuzuki.history.clearAllAnimeHistory()
+                    },
+                    note = eu.kanade.presentation.tsuzuki.history.animeClearHistoryNote(),
                 )
             }
             is HistoryViewModel.Dialog.DuplicateManga -> {

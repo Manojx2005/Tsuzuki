@@ -16,5 +16,8 @@ interface AnimeHistoryRepository {
     fun subscribeWatchStats(today: LocalDate): Flow<AnimeWatchStats>
     suspend fun recordWatchDay(episodeId: Long, day: LocalDate, watchSeconds: Long)
     suspend fun removeHistory(animeId: Long, episodeId: Long? = null)
+
+    /** Clears every watched-episode entry (watch time for the stats is kept), as History's "clear all" does. */
+    suspend fun removeAllHistory()
     suspend fun upsert(episodeId: Long, lastSeen: Date?, watchSeconds: Long)
 }

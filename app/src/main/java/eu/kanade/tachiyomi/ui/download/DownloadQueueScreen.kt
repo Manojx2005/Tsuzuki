@@ -552,6 +552,9 @@ class DownloadQueueScreen(private val initialTab: Int = 0) : Screen() {
                         labels = labels,
                         counts = counts,
                         showSharedSummary = !animeSelected,
+                        animeQueued = animeQueue?.entries?.count {
+                            it.status == eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus.Queued
+                        } ?: 0,
                         selected = selectedTab,
                         onSelect = { requestedTab = it },
                     )

@@ -1433,4 +1433,5 @@
     <string name="tsz_error_other">No se pudo completar la solicitud</string>
     <string name="tsz_error_open">Abriendo</string>
     <string name="tsz_export_choose_columns">Seleccionar columnas para exportar</string>
+    <string name="tsz_history_clear_includes_anime">También se borra el historial de anime.</string>
 </resources>

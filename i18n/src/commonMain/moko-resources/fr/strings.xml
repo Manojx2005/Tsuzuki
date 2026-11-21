@@ -1439,4 +1439,5 @@
     <string name="tsz_error_other">La requête n’a pas pu aboutir</string>
     <string name="tsz_error_open">Ouverture en cours</string>
     <string name="tsz_export_choose_columns">Choisir les colonnes à exporter</string>
+    <string name="tsz_history_clear_includes_anime">L’historique des animes est aussi effacé.</string>
 </resources>

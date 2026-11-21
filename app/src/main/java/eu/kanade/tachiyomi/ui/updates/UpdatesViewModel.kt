@@ -308,6 +308,8 @@ class UpdatesViewModel(
 
     fun updateLibrary(): Boolean {
         val started = LibraryUpdateJob.startNow(Injekt.get<Application>())
+        // Tsuzuki (AY-INT item 2): one "Update library" also refreshes anime; a no-op while anime is off.
+        eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob.start(Injekt.get<Application>())
         viewModelScope.launch {
             _events.send(Event.LibraryUpdateTriggered(started))
         }

@@ -46,6 +46,7 @@ fun CategoryScreen(
             AppBar(
                 title = stringResource(MR.strings.action_edit_categories),
                 navigateUp = navigateUp,
+                actions = { eu.kanade.presentation.tsuzuki.category.TsuzukiAnimeShelvesAction() },
                 scrollBehavior = scrollBehavior,
             )
         },

@@ -178,6 +178,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 title = "Minimum chapters before tracking (Novels)",
                 subtitle = "Number of chapters that must be read before auto-tracking starts for novels (0 = always track)",
             ),
+            *eu.kanade.presentation.tsuzuki.settings.animeTrackingPreferences().toTypedArray(),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
                 preferenceItems = listOf(

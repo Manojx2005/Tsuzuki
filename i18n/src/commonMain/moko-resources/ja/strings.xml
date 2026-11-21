@@ -1665,4 +1665,5 @@
     <string name="tsz_error_other">リクエストを完了できませんでした</string>
     <string name="tsz_error_open">開いています</string>
     <string name="tsz_export_choose_columns">エクスポートする項目を選択</string>
+    <string name="tsz_history_clear_includes_anime">アニメの視聴履歴も削除されます。</string>
 </resources>
