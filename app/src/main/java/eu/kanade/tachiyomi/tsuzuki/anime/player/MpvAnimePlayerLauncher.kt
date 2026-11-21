@@ -39,9 +39,13 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var loadStartedAt = 0L
     private var listener: AnimePlayerBackend.Listener? = null
 
+    /** AY3: where inline `data:` subtitles are written so mpv can open them as files. */
+    private var subtitlesDir: File? = null
+
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
+        subtitlesDir = File(context.cacheDir, "anime-subs")
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
         context.assets.open("cacert.pem").use { input ->
@@ -257,10 +261,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         externalTracks?.let { video ->
             externalTracks = null
             video.subtitleTracks.forEach { track ->
-                track.url.toHttpUrlOrNull()?.let {
-                    MpvPlayer.command("sub-add", *externalTrackArgs(it.toString(), track.lang))
+                val target = track.url.toHttpUrlOrNull()?.toString()
+                    ?: decodeAnimeDataSubtitle(track.url)?.let { sub ->
+                        subtitlesDir?.let { dir -> writeAnimeDataSubtitle(dir, sub).path }
+                    }
+                if (target != null) {
+                    MpvPlayer.command("sub-add", *externalTrackArgs(target, track.lang))
+                } else {
+                    AnimeLog.w("skipped a subtitle track that is neither an http(s) nor a data: address")
                 }
-                    ?: AnimeLog.w("skipped a subtitle track that is not an http(s) address")
             }
             video.audioTracks.forEach { track ->
                 track.url.toHttpUrlOrNull()?.let {
