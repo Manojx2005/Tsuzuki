@@ -1444,4 +1444,26 @@
     <string name="tsz_startup_tagline">続き · lee lo que pasa después</string>
     <string name="tsz_download_done">Completada</string>
     <string name="tsz_download_pending">Pendiente</string>
+    <string name="tsz_track_min_chapters_manga">Capítulos mínimos antes de seguir (manga)</string>
+    <string name="tsz_track_min_chapters_manga_summary">Capítulos que hay que leer antes de que empiece el seguimiento automático del manga (0 = siempre)</string>
+    <string name="tsz_track_min_chapters_novels">Capítulos mínimos antes de seguir (novelas)</string>
+    <string name="tsz_track_min_chapters_novels_summary">Capítulos que hay que leer antes de que empiece el seguimiento automático de las novelas (0 = siempre)</string>
+    <string name="tsz_track_mark_read_on">Marcar capítulos como leídos en %1$s</string>
+    <string name="tsz_track_mark_read_summary">Marca automáticamente como leídos los capítulos que lees en la app</string>
+    <string name="tsz_track_mark_read_volumes_summary">Marca automáticamente como leídos los capítulos/volúmenes que lees en la app</string>
+    <string name="tsz_track_sync_list">Sincronizar lista de lectura</string>
+    <string name="tsz_track_sync_list_summary">Mantiene el estado de la lista de lectura sincronizado con %1$s</string>
+    <string name="tsz_track_custom_mapping">Asignación de listas personalizadas</string>
+    <string name="tsz_track_custom_mapping_summary">Asigna estados a listas personalizadas de %1$s</string>
+    <string name="tsz_track_configure_mapping">Configurar asignación de listas</string>
+    <string name="tsz_track_configure_mapping_summary">Elige a qué lista corresponde cada estado</string>
+    <string name="tsz_track_source_trackers">Rastreadores definidos por la fuente</string>
+    <string name="tsz_track_source_on_migration">Ejecutar rastreadores de la fuente al migrar</string>
+    <string name="tsz_track_source_on_migration_summary">Lanza los eventos de rastreo de la fuente al migrar o migrar rápidamente una entrada</string>
+    <string name="tsz_track_webview_login_info">Inicia sesión mediante WebView. Las cookies se obtienen automáticamente al iniciar sesión.</string>
+    <string name="tsz_track_source_trackers_info">Algunas fuentes tienen su propio seguimiento. Se les avisa cuando marcas capítulos como leídos, añades o quitas favoritos o migras. Los fallos no bloquean la lectura ni afectan a los rastreadores de arriba.</string>
+    <string name="tsz_track_token_novellist_steps">1. Inicia sesión en novellist.co en un navegador\n2. Abre DevTools (F12) → Application → Cookies\n3. Busca la cookie \'novellist\'\n4. Si empieza por \'base64-\', decodifícala y toma \'access_token\'\n5. Pega el token abajo</string>
+    <string name="tsz_track_token_novelupdates_steps">1. Inicia sesión en novelupdates.com en un navegador\n2. Abre DevTools (F12) → Application → Cookies\n3. Copia todos los valores de las cookies\n4. Pégalos abajo como: cookie_name=value; cookie_name2=value2</string>
+    <string name="tsz_track_token_prompt">Introduce tu token de autenticación</string>
+    <string name="tsz_track_lists_failed">No se pudieron obtener las listas</string>
 </resources>

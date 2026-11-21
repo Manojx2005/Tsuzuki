@@ -1456,4 +1456,26 @@
     <string name="tsz_startup_tagline">続き · 다음 이야기를 읽어 보세요</string>
     <string name="tsz_download_done">완료</string>
     <string name="tsz_download_pending">대기 중</string>
+    <string name="tsz_track_min_chapters_manga">트래킹 시작 전 최소 챕터 (만화)</string>
+    <string name="tsz_track_min_chapters_manga_summary">만화 자동 트래킹을 시작하기 전에 읽어야 하는 챕터 수 (0 = 항상 트래킹)</string>
+    <string name="tsz_track_min_chapters_novels">트래킹 시작 전 최소 챕터 (소설)</string>
+    <string name="tsz_track_min_chapters_novels_summary">소설 자동 트래킹을 시작하기 전에 읽어야 하는 챕터 수 (0 = 항상 트래킹)</string>
+    <string name="tsz_track_mark_read_on">%1$s에서 챕터를 읽음으로 표시</string>
+    <string name="tsz_track_mark_read_summary">앱에서 읽은 챕터를 자동으로 읽음으로 표시합니다</string>
+    <string name="tsz_track_mark_read_volumes_summary">앱에서 읽은 챕터/권을 자동으로 읽음으로 표시합니다</string>
+    <string name="tsz_track_sync_list">읽기 목록 동기화</string>
+    <string name="tsz_track_sync_list_summary">읽기 목록 상태를 %1$s와 동기화합니다</string>
+    <string name="tsz_track_custom_mapping">사용자 목록 매핑</string>
+    <string name="tsz_track_custom_mapping_summary">상태를 %1$s 사용자 목록에 매핑합니다</string>
+    <string name="tsz_track_configure_mapping">목록 매핑 설정</string>
+    <string name="tsz_track_configure_mapping_summary">각 상태가 연결될 목록을 선택합니다</string>
+    <string name="tsz_track_source_trackers">소스 정의 트래커</string>
+    <string name="tsz_track_source_on_migration">이전 시 소스 트래커 실행</string>
+    <string name="tsz_track_source_on_migration_summary">항목을 이전하거나 빠르게 이전할 때 소스 정의 트래커 이벤트를 실행합니다</string>
+    <string name="tsz_track_webview_login_info">WebView로 로그인합니다. 로그인에 성공하면 쿠키를 자동으로 가져옵니다.</string>
+    <string name="tsz_track_source_trackers_info">일부 소스는 자체 트래킹을 제공합니다. 챕터를 읽음으로 표시하거나, 즐겨찾기를 추가·해제하거나, 이전할 때 알림을 받습니다. 실패해도 읽기가 막히지 않으며 위의 트래커에는 영향이 없습니다.</string>
+    <string name="tsz_track_token_novellist_steps">1. 브라우저에서 novellist.co에 로그인\n2. DevTools(F12) → Application → Cookies 열기\n3. \'novellist\' 쿠키 찾기\n4. \'base64-\'로 시작하면 디코딩하여 \'access_token\' 추출\n5. 아래에 토큰 붙여넣기</string>
+    <string name="tsz_track_token_novelupdates_steps">1. 브라우저에서 novelupdates.com에 로그인\n2. DevTools(F12) → Application → Cookies 열기\n3. 모든 쿠키 값 복사\n4. 아래에 cookie_name=value; cookie_name2=value2 형식으로 붙여넣기</string>
+    <string name="tsz_track_token_prompt">인증 토큰을 입력하세요</string>
+    <string name="tsz_track_lists_failed">목록을 가져오지 못했습니다</string>
 </resources>

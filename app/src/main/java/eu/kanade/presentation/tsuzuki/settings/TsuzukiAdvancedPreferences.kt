@@ -79,8 +79,8 @@ internal fun tsuzukiAdvancedPreferences(items: List<Preference>, settingsTitle: 
         )
         // Upstream hardcodes these two titles in English (SettingsTrackingScreen), so the literal matches.
         MR.strings.pref_category_tracking -> setOf(
-            "Minimum chapters before tracking (Manga)",
-            "Minimum chapters before tracking (Novels)",
+            stringResource(MR.strings.tsz_track_min_chapters_manga),
+            stringResource(MR.strings.tsz_track_min_chapters_novels),
         )
         else -> emptySet()
     }

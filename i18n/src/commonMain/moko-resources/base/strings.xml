@@ -1833,4 +1833,26 @@
     <string name="tsz_startup_tagline">続き · read what happens next</string>
     <string name="tsz_download_done">Completed</string>
     <string name="tsz_download_pending">Pending</string>
+    <string name="tsz_track_min_chapters_manga">Minimum chapters before tracking (Manga)</string>
+    <string name="tsz_track_min_chapters_manga_summary">Number of chapters that must be read before auto-tracking starts for manga (0 = always track)</string>
+    <string name="tsz_track_min_chapters_novels">Minimum chapters before tracking (Novels)</string>
+    <string name="tsz_track_min_chapters_novels_summary">Number of chapters that must be read before auto-tracking starts for novels (0 = always track)</string>
+    <string name="tsz_track_mark_read_on">Mark chapters as read on %1$s</string>
+    <string name="tsz_track_mark_read_summary">Automatically mark chapters as read when you read them in the app</string>
+    <string name="tsz_track_mark_read_volumes_summary">Automatically mark chapters/volumes as read when you read them in the app</string>
+    <string name="tsz_track_sync_list">Sync reading list</string>
+    <string name="tsz_track_sync_list_summary">Keep reading list status in sync with %1$s</string>
+    <string name="tsz_track_custom_mapping">Custom list mapping</string>
+    <string name="tsz_track_custom_mapping_summary">Map statuses to custom %1$s lists</string>
+    <string name="tsz_track_configure_mapping">Configure list mapping</string>
+    <string name="tsz_track_configure_mapping_summary">Choose which list each status maps to</string>
+    <string name="tsz_track_source_trackers">Source-defined trackers</string>
+    <string name="tsz_track_source_on_migration">Run source trackers on migration</string>
+    <string name="tsz_track_source_on_migration_summary">Fire source-defined tracker events when migrating or quick-migrating an entry</string>
+    <string name="tsz_track_webview_login_info">Log in through WebView. Cookies are taken automatically after you sign in.</string>
+    <string name="tsz_track_source_trackers_info">Some sources implement their own tracking. They are notified when you mark chapters read, favorite or unfavorite, or migrate. Failures don\'t block reading and don\'t affect the trackers above.</string>
+    <string name="tsz_track_token_novellist_steps">1. Log in to novellist.co in a browser\n2. Open DevTools (F12) → Application → Cookies\n3. Find the \'novellist\' cookie\n4. If it starts with \'base64-\', decode it and take \'access_token\'\n5. Paste the token below</string>
+    <string name="tsz_track_token_novelupdates_steps">1. Log in to novelupdates.com in a browser\n2. Open DevTools (F12) → Application → Cookies\n3. Copy all cookie values\n4. Paste them below as: cookie_name=value; cookie_name2=value2</string>
+    <string name="tsz_track_token_prompt">Enter your authentication token</string>
+    <string name="tsz_track_lists_failed">Failed to fetch lists</string>
 </resources>

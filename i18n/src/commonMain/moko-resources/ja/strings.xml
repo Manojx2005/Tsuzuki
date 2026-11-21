@@ -1673,4 +1673,26 @@
     <string name="tsz_startup_tagline">続き · 次の展開を読もう</string>
     <string name="tsz_download_done">完了</string>
     <string name="tsz_download_pending">準備中</string>
+    <string name="tsz_track_min_chapters_manga">トラッキング開始までの章数（マンガ）</string>
+    <string name="tsz_track_min_chapters_manga_summary">自動トラッキングを始める前に読む必要がある章の数（0 = 常にトラッキング）</string>
+    <string name="tsz_track_min_chapters_novels">トラッキング開始までの章数（小説）</string>
+    <string name="tsz_track_min_chapters_novels_summary">自動トラッキングを始める前に読む必要がある章の数（0 = 常にトラッキング）</string>
+    <string name="tsz_track_mark_read_on">%1$s で章を既読にする</string>
+    <string name="tsz_track_mark_read_summary">アプリで読んだ章を自動的に既読にします</string>
+    <string name="tsz_track_mark_read_volumes_summary">アプリで読んだ章・巻を自動的に既読にします</string>
+    <string name="tsz_track_sync_list">読書リストを同期</string>
+    <string name="tsz_track_sync_list_summary">読書リストの状態を %1$s と同期します</string>
+    <string name="tsz_track_custom_mapping">カスタムリストの割り当て</string>
+    <string name="tsz_track_custom_mapping_summary">ステータスを %1$s のカスタムリストに割り当てます</string>
+    <string name="tsz_track_configure_mapping">リストの割り当てを設定</string>
+    <string name="tsz_track_configure_mapping_summary">各ステータスをどのリストに割り当てるかを選びます</string>
+    <string name="tsz_track_source_trackers">ソース定義のトラッカー</string>
+    <string name="tsz_track_source_on_migration">移行時にソースのトラッカーを実行</string>
+    <string name="tsz_track_source_on_migration_summary">作品の移行・クイック移行時にソース定義のトラッカーイベントを実行します</string>
+    <string name="tsz_track_webview_login_info">WebView でログインします。ログインに成功すると Cookie が自動的に取得されます。</string>
+    <string name="tsz_track_source_trackers_info">一部のソースは独自のトラッキングを持っています。章を既読にしたとき、お気に入りの追加・解除時、移行時に通知されます。失敗しても読書は止まらず、上のトラッカーにも影響しません。</string>
+    <string name="tsz_track_token_novellist_steps">1. ブラウザで novellist.co にログイン\n2. DevTools（F12）→ Application → Cookies を開く\n3. \'novellist\' Cookie を探す\n4. \'base64-\' で始まる場合はデコードして \'access_token\' を取り出す\n5. 下にトークンを貼り付ける</string>
+    <string name="tsz_track_token_novelupdates_steps">1. ブラウザで novelupdates.com にログイン\n2. DevTools（F12）→ Application → Cookies を開く\n3. Cookie の値をすべてコピー\n4. 下に cookie_name=value; cookie_name2=value2 の形で貼り付ける</string>
+    <string name="tsz_track_token_prompt">認証トークンを入力してください</string>
+    <string name="tsz_track_lists_failed">リストを取得できませんでした</string>
 </resources>
