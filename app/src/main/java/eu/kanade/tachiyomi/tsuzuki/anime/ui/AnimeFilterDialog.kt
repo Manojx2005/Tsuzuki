@@ -169,18 +169,47 @@ private fun AnimeFilterChoice(name: String, options: List<String>, selected: Int
     }
 }
 
-/** Drafts come from the source and are independent of the filters an active request is using. */
+/**
+ * Copies the values of [previous] onto [draft], the fresh filters of a source. Drafts come from the source and are
+ * independent of the filters an active request is using.
+ *
+ * AY2-F: [previous] may come from an older instance of the source, loaded by another class loader after its
+ * settings changed, so filters are matched by class name and title, never by class identity, and only values of
+ * the shared source-api types (Int, Boolean, String, [AnimeFilter.Sort.Selection]) are copied. A value that no
+ * longer fits (a select index past the new options, a different value type) keeps the source's default.
+ */
 internal fun restoreAnimeFilterStates(previous: List<AnimeFilter<*>>, draft: List<AnimeFilter<*>>) {
     previous.zip(draft).forEach { (old, new) ->
-        if (old.name != new.name || old.javaClass != new.javaClass) return@forEach
+        if (old.name != new.name || old.javaClass.name != new.javaClass.name) return@forEach
         if (old is AnimeFilter.Group<*> && new is AnimeFilter.Group<*>) {
             restoreAnimeFilterStates(
                 old.state.filterIsInstance<AnimeFilter<*>>(),
                 new.state.filterIsInstance<AnimeFilter<*>>(),
             )
-        } else {
-            @Suppress("UNCHECKED_CAST")
-            (new as AnimeFilter<Any?>).state = old.state
+            return@forEach
         }
+        val value = old.state
+        val fits = when (new) {
+            is AnimeFilter.Select<*> -> value is Int && value in new.values.indices
+            is AnimeFilter.Sort ->
+                value == null ||
+                    (value is AnimeFilter.Sort.Selection && value.index in new.values.indices)
+            is AnimeFilter.Text -> value is String
+            is AnimeFilter.CheckBox -> value is Boolean
+            is AnimeFilter.TriState -> value is Int
+            else -> false // Header, Separator: nothing to carry
+        }
+        @Suppress("UNCHECKED_CAST")
+        if (fits) (new as AnimeFilter<Any?>).state = value
     }
+}
+
+/**
+ * The filters to use with [freshFilters] (the new source instance's list) after the source was reloaded (AY2-F):
+ * no filters stay no filters, otherwise the new instance's own filter objects with the compatible values of
+ * [applied]. Extension-owned filter objects from the old instance are never handed to the new one.
+ */
+internal fun carryAnimeFilters(applied: AnimeFilterList, freshFilters: () -> AnimeFilterList): AnimeFilterList {
+    if (applied.isEmpty()) return applied
+    return freshFilters().also { restoreAnimeFilterStates(applied, it) }
 }

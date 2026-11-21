@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -141,7 +142,14 @@ class AnimeCatalogueActivity : BaseActivity() {
                     )
                     is AnimeCatalogueLocation.Ready -> {
                         val catalogueState = rememberSaveableStateHolder()
-                        var appliedFilters by remember { mutableStateOf(AnimeFilterList()) }
+                        // AY2-F: a settings change brings a new source instance (and class loader); rebuild the
+                        // filters from it, keeping the compatible values, instead of reusing the old objects.
+                        val source = result.entry.source
+                        val lastApplied = remember { arrayOf(AnimeFilterList()) }
+                        var appliedFilters by remember(source) {
+                            mutableStateOf(carryAnimeFilters(lastApplied[0]) { source.getFilterList() })
+                        }
+                        SideEffect { lastApplied[0] = appliedFilters }
                         var selected by remember { mutableStateOf(result.saved) }
                         val anime = selected
                         if (anime == null) {
