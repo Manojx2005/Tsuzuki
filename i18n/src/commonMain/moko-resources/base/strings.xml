@@ -1825,4 +1825,6 @@
     <string name="tsz_error_other">The request could not be completed</string>
     <string name="tsz_error_open">Opening</string>
     <string name="tsz_export_choose_columns">Select columns to export</string>
+    <string name="tsz_download_done">Completed</string>
+    <string name="tsz_download_pending">Pending</string>
 </resources>

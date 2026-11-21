@@ -1665,4 +1665,6 @@
     <string name="tsz_error_other">リクエストを完了できませんでした</string>
     <string name="tsz_error_open">開いています</string>
     <string name="tsz_export_choose_columns">エクスポートする項目を選択</string>
+    <string name="tsz_download_done">完了</string>
+    <string name="tsz_download_pending">準備中</string>
 </resources>

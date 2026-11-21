@@ -767,7 +767,11 @@ private fun NovelDownloadCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = "${item.downloadedChapters}/${item.totalChapters} chapters",
+                        text = stringResource(
+                            TDMR.strings.novel_downloads_chapters_format,
+                            item.downloadedChapters,
+                            item.totalChapters,
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -780,7 +784,7 @@ private fun NovelDownloadCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
+                            contentDescription = stringResource(TDMR.strings.novel_downloads_more_options),
                         )
                     }
 
@@ -887,7 +891,7 @@ private fun NovelDownloadCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = if (isPaused) stringResource(MR.strings.paused) else item.statusText,
+                    text = if (isPaused) stringResource(MR.strings.paused) else stringResource(item.status),
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
                         item.hasError -> MaterialTheme.colorScheme.error
@@ -900,7 +904,7 @@ private fun NovelDownloadCard(
                 val currentDownload = item.currentDownload
                 if (currentDownload != null) {
                     Text(
-                        text = "Chapter: ${currentDownload.chapterName}",
+                        text = stringResource(TDMR.strings.novel_downloads_chapter_format, currentDownload.chapterName),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

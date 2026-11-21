@@ -1446,4 +1446,6 @@
     <string name="tsz_error_other">无法完成请求</string>
     <string name="tsz_error_open">正在打开</string>
     <string name="tsz_export_choose_columns">选择要导出的列</string>
+    <string name="tsz_download_done">已完成</string>
+    <string name="tsz_download_pending">等待中</string>
 </resources>
