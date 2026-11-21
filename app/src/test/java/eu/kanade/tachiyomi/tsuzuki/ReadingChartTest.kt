@@ -52,7 +52,7 @@ class ReadingChartTest {
 
     @Test
     fun `total formatting`() {
-        assertEquals("45 m", ReadingChart.formatTotal(45))
-        assertEquals("5 h 22 m", ReadingChart.formatTotal(322))
+        assertEquals("45 m", ReadingChart.formatTotal(45, { h, m -> "$h h $m m" }, { m -> "$m m" }))
+        assertEquals("5 h 22 m", ReadingChart.formatTotal(322, { h, m -> "$h h $m m" }, { m -> "$m m" }))
     }
 }

@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import eu.kanade.tachiyomi.tsuzuki.ReadingChart
 import eu.kanade.tachiyomi.tsuzuki.ReadingDays
 import eu.kanade.tachiyomi.tsuzuki.ReadingPeriod
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -79,6 +81,7 @@ class TsuzukiStatsScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val appContext = LocalContext.current
         val readingDays = remember { Injekt.get<ReadingDays>() }
         val raw by readingDays.changes().collectAsState(initial = "")
         val days = remember(raw) { readingDays.days() }
@@ -208,7 +211,13 @@ class TsuzukiStatsScreen : Screen() {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            ReadingChart.formatTotal(bars.sumOf { it.minutes }),
+                            ReadingChart.formatTotal(
+                                bars.sumOf { it.minutes },
+                                hoursMinutes = { h, m ->
+                                    appContext.stringResource(MR.strings.tsz_duration_hours_minutes, h, m)
+                                },
+                                minutesOnly = { m -> appContext.stringResource(MR.strings.tsz_duration_minutes, m) },
+                            ),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

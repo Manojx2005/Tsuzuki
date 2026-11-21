@@ -1445,4 +1445,13 @@
     <string name="tsz_error_other">요청을 완료하지 못했습니다</string>
     <string name="tsz_error_open">여는 중</string>
     <string name="tsz_export_choose_columns">내보낼 열 선택</string>
+    <!-- STR2: strings that were hardcoded in Kotlin -->
+    <string name="tsz_app_update_channel">앱 업데이트</string>
+    <string name="tsz_app_update_available">Tsuzuki %1$s 업데이트가 있습니다</string>
+    <string name="tsz_app_update_tap">탭하여 새로운 기능을 확인하고 업데이트</string>
+    <string name="tsz_home_chapter_label">%1$s화</string>
+    <string name="tsz_home_chapter_count">%1$d화</string>
+    <string name="tsz_duration_hours_minutes">%1$d시간 %2$d분</string>
+    <string name="tsz_duration_minutes">%1$d분</string>
+    <string name="tsz_startup_tagline">続き · 다음 이야기를 읽어 보세요</string>
 </resources>

@@ -59,8 +59,9 @@ internal fun tsuzukiAdvancedPreferences(items: List<Preference>, settingsTitle: 
             "Per-Extension Overrides",
         )
         TDMR.strings.pref_category_novel -> setOf(
-            "Formatting",
-            "Content",
+            // Match the translated group titles the screen renders, not English text.
+            stringResource(TDMR.strings.pref_novel_formatting_group),
+            stringResource(TDMR.strings.pref_novel_content_group),
             stringResource(TDMR.strings.pref_novel_auto_scroll),
         )
         MR.strings.label_data_storage -> setOf(stringResource(MR.strings.tsz_data_cleanup))
@@ -71,7 +72,12 @@ internal fun tsuzukiAdvancedPreferences(items: List<Preference>, settingsTitle: 
             stringResource(MR.strings.pref_library_update_refresh_metadata),
             stringResource(TDMR.strings.skip_recently_updated_title),
         )
-        MR.strings.browse -> setOf("Page load delay", "Skip cover loading", "Confirm back after pages")
+        MR.strings.browse -> setOf(
+            stringResource(MR.strings.pref_source_page_load_delay),
+            stringResource(MR.strings.pref_source_skip_cover_loading),
+            stringResource(MR.strings.pref_source_confirm_back_after_pages),
+        )
+        // Upstream hardcodes these two titles in English (SettingsTrackingScreen), so the literal matches.
         MR.strings.pref_category_tracking -> setOf(
             "Minimum chapters before tracking (Manga)",
             "Minimum chapters before tracking (Novels)",

@@ -47,6 +47,10 @@ object ReadingChart {
         }
     }
 
-    /** "5 h 22 m" style total for the chart header. */
-    fun formatTotal(minutes: Long): String = if (minutes >= 60) "${minutes / 60} h ${minutes % 60} m" else "$minutes m"
+    /**
+     * "5 h 22 m" style total for the chart header. The unit wording comes from the translated formats:
+     * [hoursMinutes] gets (hours, minutes) from one hour up, [minutesOnly] gets the minutes below that.
+     */
+    fun formatTotal(minutes: Long, hoursMinutes: (Long, Long) -> String, minutesOnly: (Long) -> String): String =
+        if (minutes >= 60) hoursMinutes(minutes / 60, minutes % 60) else minutesOnly(minutes)
 }

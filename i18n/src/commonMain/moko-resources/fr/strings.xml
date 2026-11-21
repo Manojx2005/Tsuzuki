@@ -1439,4 +1439,13 @@
     <string name="tsz_error_other">La requête n’a pas pu aboutir</string>
     <string name="tsz_error_open">Ouverture en cours</string>
     <string name="tsz_export_choose_columns">Choisir les colonnes à exporter</string>
+    <!-- STR2: strings that were hardcoded in Kotlin -->
+    <string name="tsz_app_update_channel">Mises à jour de l'application</string>
+    <string name="tsz_app_update_available">Tsuzuki %1$s est disponible</string>
+    <string name="tsz_app_update_tap">Appuyez pour voir les nouveautés et mettre à jour</string>
+    <string name="tsz_home_chapter_label">Chap. %1$s</string>
+    <string name="tsz_home_chapter_count">%1$d chap.</string>
+    <string name="tsz_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="tsz_duration_minutes">%1$d min</string>
+    <string name="tsz_startup_tagline">続き · lisez la suite</string>
 </resources>

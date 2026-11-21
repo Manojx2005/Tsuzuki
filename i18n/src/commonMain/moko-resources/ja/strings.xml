@@ -1665,4 +1665,10 @@
     <string name="tsz_error_other">リクエストを完了できませんでした</string>
     <string name="tsz_error_open">開いています</string>
     <string name="tsz_export_choose_columns">エクスポートする項目を選択</string>
+    <!-- STR2: strings that were hardcoded in Kotlin -->
+    <string name="tsz_home_chapter_label">第%1$s話</string>
+    <string name="tsz_home_chapter_count">%1$d話</string>
+    <string name="tsz_duration_hours_minutes">%1$d時間%2$d分</string>
+    <string name="tsz_duration_minutes">%1$d分</string>
+    <string name="tsz_startup_tagline">続き · 次の展開を読もう</string>
 </resources>
