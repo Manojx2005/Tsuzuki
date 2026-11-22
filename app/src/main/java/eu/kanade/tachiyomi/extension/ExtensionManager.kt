@@ -69,6 +69,11 @@ class ExtensionManager(
     private val installedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Installed>())
     val installedExtensionsFlow = installedExtensionMapFlow.mapExtensions(scope)
 
+    /** Tsuzuki (PERF-START-2-F2): the installed extensions once the first scan has finished, else null. */
+    val installedExtensionsAfterScan = eu.kanade.tachiyomi.tsuzuki.update
+        .afterScan(installedExtensionMapFlow, _isInitialized)
+        .map { it?.values?.toList() }
+
     private val availableExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Available>())
     val availableExtensionsFlow = availableExtensionMapFlow.mapExtensions(scope)
 

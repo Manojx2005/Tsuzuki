@@ -92,6 +92,9 @@ class JsPluginManager(
     private val _jsSources = MutableStateFlow<List<CatalogueSource>>(emptyList())
     val jsSources: StateFlow<List<CatalogueSource>> = _jsSources.asStateFlow()
 
+    /** Tsuzuki (PERF-START-2-F2): the JS sources once the first plugin scan has finished, else null. */
+    val jsSourcesAfterScan = eu.kanade.tachiyomi.tsuzuki.update.afterScan(_jsSources, _isInitialized)
+
     init {
         cacheDir.mkdirs()
         loadRepositoriesFromPrefs()

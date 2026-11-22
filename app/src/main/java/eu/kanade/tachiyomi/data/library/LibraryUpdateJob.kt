@@ -127,6 +127,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         setForegroundSafely()
 
+        // Tsuzuki (PERF-START-2-F): a cold process must not look sources up while they are still loading.
+        eu.kanade.tachiyomi.tsuzuki.update.awaitSourcesReady(sourceManager.isInitialized)
+
         libraryPreferences.lastUpdatedTimestamp.set(Clock.System.now().toEpochMilliseconds())
 
         val mangaIds = loadMangaIds()

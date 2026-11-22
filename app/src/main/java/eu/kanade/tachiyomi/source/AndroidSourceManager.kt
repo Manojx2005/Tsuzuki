@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -58,11 +57,15 @@ class AndroidSourceManager(
 
     init {
         scope.launch {
+            // Tsuzuki (PERF-START-2-F2): null until each manager's first scan is done, read from the same state
+            // as its flag, so "initialized" below is set only with a map that holds the scanned sources.
             combine(
-                extensionManager.installedExtensionsFlow,
+                extensionManager.installedExtensionsAfterScan,
                 customSourceManager.customSources,
-                jsPluginManager.jsSources,
-            ) { extensions, customSources, jsSources ->
+                jsPluginManager.jsSourcesAfterScan,
+            ) { scannedExtensions, customSources, scannedJsSources ->
+                val extensions = scannedExtensions.orEmpty()
+                val jsSources = scannedJsSources.orEmpty()
                 val mutableMap = ConcurrentHashMap<Long, Source>(
                     mapOf(
                         LocalSource.ID to LocalSource(
@@ -91,8 +94,8 @@ class AndroidSourceManager(
                     registerStubSource(StubSource.from(jsSource))
                 }
 
-                mutableMap
-            }.collectLatest { sources ->
+                mutableMap to (scannedExtensions != null && scannedJsSources != null)
+            }.collectLatest { (sources, scanned) ->
                 sourcesMapFlow.value = sources
                 // Keeps PerHostDynamicRateLimitInterceptor's per-host state bounded by "hosts
                 // with a currently installed source" instead of growing for the app's whole
@@ -101,11 +104,7 @@ class AndroidSourceManager(
                 networkHelper.rateLimitInterceptor.pruneToHosts(
                     sources.values.mapNotNullTo(mutableSetOf()) { it.rateLimitHost() },
                 )
-                if (!_isInitialized.value) {
-                    extensionManager.isInitialized.first { it }
-                    jsPluginManager.isInitialized.first { it }
-                }
-                _isInitialized.value = true
+                if (scanned) _isInitialized.value = true
             }
         }
 
