@@ -237,7 +237,7 @@ class TsuzukiStatsScreen : Screen() {
                 }
                 if (listening != null) ListeningTile(listening)
 
-                TsuzukiWatchStats(today)
+                TsuzukiWatchStats(today, ReadingPeriod.entries[period])
 
                 TextButton(onClick = { navigator.push(StatsScreen()) }, modifier = Modifier.align(Alignment.End)) {
                     Icon(Icons.Outlined.QueryStats, null, Modifier.padding(end = 8.dp).size(18.dp))
@@ -314,7 +314,7 @@ private fun RoundButton(
 
 /** Bars of dots (Dot) or rounded bars (Colour); the current bar is in the accent. */
 @Composable
-private fun Chart(bars: List<ReadingBar>) {
+internal fun Chart(bars: List<ReadingBar>) {
     val t = TsuzukiTheme.tokens
     val max = (bars.maxOfOrNull { it.minutes } ?: 0L).coerceAtLeast(1L)
     val showLabels = bars.size <= 12

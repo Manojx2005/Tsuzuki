@@ -22,3 +22,10 @@ SELECT
     (SELECT count(*) FROM episodes WHERE seen = 1) AS episodes_seen,
     (SELECT count(*) FROM animes
         WHERE status = :completedStatus AND total_count > 0 AND total_count = seen_count) AS completed_anime;
+
+-- AP-21: watch seconds per day from :start on, for the Stats chart.
+getWatchDays:
+SELECT epoch_day, sum(seconds) AS seconds
+FROM anime_watch_days
+WHERE epoch_day >= :start
+GROUP BY epoch_day;
