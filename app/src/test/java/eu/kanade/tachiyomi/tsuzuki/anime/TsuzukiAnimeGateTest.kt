@@ -3,6 +3,8 @@ package eu.kanade.tachiyomi.tsuzuki.anime
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
 import eu.kanade.presentation.tsuzuki.browse.BrowseMedia
 import eu.kanade.presentation.tsuzuki.browse.browsePages
+import eu.kanade.presentation.tsuzuki.home.HomeMediaSelection
+import eu.kanade.presentation.tsuzuki.home.homeMediaSelection
 import eu.kanade.presentation.tsuzuki.home.showAnimeWatch
 import eu.kanade.tachiyomi.ui.tsuzuki.navigation.isAnimeLibraryKey
 import kotlinx.coroutines.CoroutineScope
@@ -18,11 +20,19 @@ import tachiyomi.core.common.preference.Preference
 
 class TsuzukiAnimeGateTest {
     @Test
-    fun disabledHidesBrowseWatchAndLibraryDestinations() {
+    fun disabledGatesAnimeContentAndDestinations() {
         val browse = browsePages(hideManga = false, animeEnabled = false, hasAnimeRepos = true)
         assertFalse(browse.any { it.media == BrowseMedia.ANIME })
         assertFalse(showAnimeWatch(watching = true, animeEnabled = false))
         assertFalse(isAnimeLibraryKey(AnimeLibraryTab.key, animeEnabled = false))
+    }
+
+    @Test
+    fun watchRequestsOptInUntilAnimeIsEnabled() {
+        assertEquals(HomeMediaSelection.ENABLE_ANIME, homeMediaSelection(watch = true, animeEnabled = false))
+        assertEquals(HomeMediaSelection.WATCH, homeMediaSelection(watch = true, animeEnabled = true))
+        assertEquals(HomeMediaSelection.READ, homeMediaSelection(watch = false, animeEnabled = false))
+        assertEquals(HomeMediaSelection.READ, homeMediaSelection(watch = false, animeEnabled = true))
     }
 
     @Test

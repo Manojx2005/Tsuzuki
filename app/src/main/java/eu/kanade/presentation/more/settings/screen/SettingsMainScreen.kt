@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -45,8 +46,11 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.more.settings.PreferenceItem
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.tsuzuki.settings.SettingsAnimeScreen
+import eu.kanade.presentation.tsuzuki.settings.animeBetaPreference
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -101,10 +105,12 @@ object SettingsMainScreen : Screen() {
             topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
             topBar = topBar@{ scrollBehavior ->
                 if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
-                    eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTitle(
-                        title = stringResource(MR.strings.label_settings),
-                        onBack = if (twoPane) null else backPress::invoke,
-                    )
+                    Box(Modifier.background(containerColor)) {
+                        eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTitle(
+                            title = stringResource(MR.strings.label_settings),
+                            onBack = if (twoPane) null else backPress::invoke,
+                        )
+                    }
                     return@topBar
                 }
                 AppBar(
@@ -177,14 +183,22 @@ object SettingsMainScreen : Screen() {
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         val selected = indexSelected == index
+                        val animeSetting = if (item.screen == SettingsAnimeScreen) animeBetaPreference() else null
                         if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
+                            val checked = animeSetting?.preference?.collectAsState()?.value
                             eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsSectionRow(
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
+                                title = animeSetting?.title ?: stringResource(item.titleRes),
+                                subtitle = animeSetting?.subtitle ?: item.formatSubtitle(),
                                 icon = item.icon,
                                 twoPane = twoPane,
                                 selected = selected,
-                                onClick = { navigator.navigate(item.screen, twoPane) },
+                                onClick = {
+                                    if (animeSetting != null && checked != null) {
+                                        animeSetting.preference.set(!checked)
+                                    } else {
+                                        navigator.navigate(item.screen, twoPane)
+                                    }
+                                },
                                 modifier = if (twoPane) {
                                     Modifier
                                 } else {
@@ -193,7 +207,12 @@ object SettingsMainScreen : Screen() {
                                         last = index == visibleItems.lastIndex,
                                     )
                                 },
+                                checked = checked,
                             )
+                            return@itemsIndexed
+                        }
+                        if (animeSetting != null) {
+                            PreferenceItem(animeSetting, highlightKey = null)
                             return@itemsIndexed
                         }
                         var modifier: Modifier = if (tsuzuki) {
@@ -317,6 +336,15 @@ object SettingsMainScreen : Screen() {
             icon = Icons.Outlined.Explore,
             screen = SettingsBrowseScreen,
         ),
+        if (TsuzukiAnime.supported) {
+            Item(
+                titleRes = MR.strings.tsz_anime_media,
+                icon = Icons.Outlined.PlayCircle,
+                screen = SettingsAnimeScreen,
+            )
+        } else {
+            null
+        },
         Item(
             titleRes = MR.strings.label_data_storage,
             subtitleRes = MR.strings.pref_backup_summary,

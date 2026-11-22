@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
@@ -116,11 +118,17 @@ fun TsuzukiSettingsSectionRow(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    checked: Boolean? = null,
 ) {
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
     val press = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(16.dp)
+    val interaction = if (checked == null) {
+        Modifier.clickable(interactionSource = press, indication = ripple(), role = Role.Button, onClick = onClick)
+    } else {
+        Modifier.toggleable(checked, interactionSource = press, indication = ripple(), role = Role.Switch) { onClick() }
+    }
     Row(
         Modifier
             .tsuzukiPress(press)
@@ -137,7 +145,7 @@ fun TsuzukiSettingsSectionRow(
                     Modifier
                 },
             )
-            .clickable(interactionSource = press, indication = ripple(), role = Role.Button, onClick = onClick)
+            .then(interaction)
             .fillMaxWidth()
             .heightIn(min = if (twoPane) 52.dp else 64.dp)
             .padding(horizontal = if (twoPane) 18.dp else 20.dp, vertical = 10.dp),
@@ -152,7 +160,7 @@ fun TsuzukiSettingsSectionRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (!twoPane && !subtitle.isNullOrBlank()) {
+            if ((!twoPane || checked != null) && !subtitle.isNullOrBlank()) {
                 Text(
                     if (t.isDot) subtitle.uppercase() else subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
@@ -162,7 +170,9 @@ fun TsuzukiSettingsSectionRow(
                 )
             }
         }
-        if (!twoPane) {
+        if (checked != null) {
+            Switch(checked = checked, onCheckedChange = null)
+        } else if (!twoPane) {
             Icon(
                 Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
