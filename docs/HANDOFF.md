@@ -95,7 +95,7 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 | AP-16 | Continue Watching widget activity at larger sizes | Codex | after AP11 |
 | AP-17 | Preserve anime in backups while the feature is hidden | Claude (took over) | `review` `1dec69b2c` on `tsuzuki/ap-17` |
 | AP-18 | Keep Anime Extensions reachable with zero repositories | Claude (took over) | `review` `7903f9dd5` on `tsuzuki/ap-18` |
-| AP-19 | Anime counts and download bytes in Data and storage | Codex | after AP11 |
+| AP-19 | Anime counts and download bytes in Data and storage | Claude (took over) | `review` `3fbe28a8b` on `tsuzuki/ap-19` |
 | AP-20 | Count anime records in the restore preview | Claude (took over) | `review` on `tsuzuki/ap-17` (second commit) |
 | AP-21 | Watch activity chart in Stats | Codex | after AP11 |
 | RV-AP | Review + 0.2.2 release | Codex review lane (a thread that did not implement the card) | last |
@@ -131,6 +131,8 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 **AP-20 Result (Claude, 2026-11-22, second commit on `tsuzuki/ap-17`):** `BackupFileValidator.Contents` gains `anime: AnimeContents(entries, shelves, historyEntries)`, counted per anime backup format and reported for the format `AnimeBackupSummary` picked; `TsuzukiRestorePreview` adds a second row (Anime / Anime shelves / history entries) only when the backup contains anime. Book counts, missing-source and tracker checks unchanged. Full gate passed. The anime branch only runs when `TsuzukiAnime.inBackups`, which JVM tests can't enable, so it is not unit-tested; re-run AP0's export/restore probe on a device.
 
 **AP-18 Result (Claude, 2026-11-22, `7903f9dd5` on `tsuzuki/ap-18`):** `animeBrowseSectionAvailable` always offers Extensions while Anime is on; with no repository the empty list adds a button to the anime repository screen. Tests updated (`BrowseHeaderSectionsTest`); full gate passed. Tablet (fresh `.dev`, zero repos, Dot): Browse › Anime shows Sources + Extensions; Extensions lists the shared installed extensions (AniDB 16.13, Anikage 14.10, …) with Trust (not tapped). The empty-state button was not seen on device because installed rows existed. `.dev` uninstalled, crash buffer clean.
+
+**AP-19 Result (Claude, 2026-11-22, `3fbe28a8b` on `tsuzuki/ap-19`):** `StorageBreakdown` gains `anime` / `episodes`; while Anime is on, Settings › Data and storage shows Anime and Episodes tiles (library size and the sum of `totalCount`) under the book tiles, and Downloads adds the bytes of saved episodes from the anime queue (anime saves outside the book downloads folder). Full gate passed. Tablet (fresh `.dev`, Dot): the second row shows ANIME 0 / EPISODES 0 beside the book tiles; real counts and bytes not seen on device (empty library). `.dev` uninstalled, crash buffer clean.
 
 **Owner 2026-11-22: Codex does all remaining AP cards** (Claude handed off; the Kokoro 0.2.1 session may hold the Device lock until it releases it). **Prompt for the owner to paste into Codex (when it has usage):** `Read AGENTS.md, docs/HANDOFF.md ("Batch AP")
 and docs/ANIME_PARITY_PLAN.md. Take the first AP card marked ready that is in the Codex lane and not claimed;
