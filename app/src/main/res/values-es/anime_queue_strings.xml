@@ -2,4 +2,5 @@
 <resources>
     <string name="tsz_anime_retry_failed">Reintentar fallidas</string>
     <string name="tsz_anime_clear_failed">Quitar fallidas</string>
+    <string name="tsz_anime_delete_after_watched">Borrar episodios de anime tras verlos</string>
 </resources>
