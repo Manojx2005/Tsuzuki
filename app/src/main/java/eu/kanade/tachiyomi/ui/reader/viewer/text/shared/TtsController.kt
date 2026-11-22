@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.tsuzuki.tts.ChunkPlan
 import eu.kanade.tachiyomi.tsuzuki.tts.ListeningSession
 import eu.kanade.tachiyomi.tsuzuki.tts.NeuralPlayer
@@ -33,9 +32,9 @@ class TtsController internal constructor(
     private val listening: ListeningSession,
     private val callbacks: Callbacks,
     private val elapsedMs: () -> Long = SystemClock::elapsedRealtime,
-    /** Whether the debug Kokoro voice is switched on and usable on this device. */
+    /** Whether the Kokoro voice is switched on and usable on this device. */
     private val neuralGate: () -> Boolean = {
-        BuildConfig.BUILD_TYPE == "debug" && android.os.Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a" &&
+        eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsSupported() &&
             eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference().get()
     },
     private val newNeuralPlayer: () -> NeuralPlayer? = { NeuralTtsClient.createIfEnabled(context, scope) },

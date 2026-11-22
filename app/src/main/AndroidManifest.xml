@@ -406,6 +406,12 @@
             android:name="android.webkit.WebView.MetricsOptOut"
             android:value="true" />
 
+        <!-- Tsuzuki: Kokoro neural voice in a private process, so a native crash never takes the reader down. -->
+        <service
+            android:name="eu.kanade.tachiyomi.tsuzuki.tts.KokoroTtsService"
+            android:exported="false"
+            android:process=":neural_tts" />
+
     </application>
 
 </manifest>

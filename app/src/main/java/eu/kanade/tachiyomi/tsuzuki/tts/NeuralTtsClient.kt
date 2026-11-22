@@ -16,7 +16,6 @@ import android.os.Messenger
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.os.RemoteException
-import eu.kanade.tachiyomi.BuildConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -38,11 +37,15 @@ import java.io.DataOutputStream
 import java.io.File
 import java.io.IOException
 
+/** The Kokoro switch (key kept from the debug listening test, so testers keep their choice). Off by default. */
 internal fun neuralTtsDebugPreference() = Injekt.get<PreferenceStore>()
     .getBoolean(Preference.appStateKey("tsz_neural_tts_debug"), false)
 
+/** The Kokoro runtime ships for arm64-v8a only; other devices keep the phone voice. */
+internal fun neuralTtsSupported(): Boolean = Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a"
+
 internal fun isNeuralTtsWorker(context: Context): Boolean {
-    if (BuildConfig.BUILD_TYPE != "debug") return false
+    if (!neuralTtsSupported()) return false
     val processName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         Application.getProcessName()
     } else {
@@ -63,7 +66,7 @@ internal object NeuralTtsProtocol {
     const val CHUNKS = "chunks"
     const val SPEED = "speed"
     const val CHUNK_LENGTH = 180
-    const val SERVICE = "eu.kanade.tachiyomi.tsuzuki.tts.debug.KokoroTtsService"
+    const val SERVICE = "eu.kanade.tachiyomi.tsuzuki.tts.KokoroTtsService"
 }
 
 private const val BIND_TIMEOUT_MS = 30_000L
@@ -306,8 +309,7 @@ internal class NeuralTtsClient private constructor(
 
     companion object {
         fun createIfEnabled(context: Context, scope: CoroutineScope): NeuralTtsClient? =
-            if (BuildConfig.BUILD_TYPE == "debug" && Build.SUPPORTED_ABIS.firstOrNull() == "arm64-v8a" &&
-                neuralTtsDebugPreference().get()
+            if (neuralTtsSupported() && neuralTtsDebugPreference().get()
             ) {
                 NeuralTtsClient(context, scope)
             } else {

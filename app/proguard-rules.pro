@@ -117,3 +117,7 @@
     public <init>();
     public void destroy();
 }
+
+# Kokoro (sherpa-onnx): native code reads the config classes' fields and calls back by exact name and descriptor.
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+-keep class eu.kanade.tachiyomi.tsuzuki.tts.KokoroProgressCallback { *; }

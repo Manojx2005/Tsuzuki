@@ -26,7 +26,7 @@ if (Config.includeTelemetry) {
     }
 }
 
-// Debug listening-test runtime only. Release/preview/FOSS remain on the phone engine until NT2 passes.
+// Kokoro neural voice runtime (arm64-v8a .so only; other ABIs keep the phone voice). Owner 2026-11-22: ships in 0.2.1.
 val kokoroRuntime = layout.projectDirectory.file("libs/sherpa-onnx-2.0.1-tsuzuki-kokoro-arm64.aar")
 val verifyKokoroRuntime = tasks.register("verifyKokoroRuntime") {
     inputs.file(kokoroRuntime)
@@ -37,7 +37,9 @@ val verifyKokoroRuntime = tasks.register("verifyKokoroRuntime") {
         }
     }
 }
-tasks.matching { it.name == "preDebugBuild" }.configureEach { dependsOn(verifyKokoroRuntime) }
+tasks.matching { it.name.startsWith("pre") && it.name.endsWith("Build") }.configureEach {
+    dependsOn(verifyKokoroRuntime)
+}
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 
@@ -255,7 +257,7 @@ aboutLibraries {
 }
 
 dependencies {
-    debugImplementation(files(kokoroRuntime))
+    implementation(files(kokoroRuntime))
     baselineProfile(projects.baselineProfile)
 
     implementation(projects.i18n)

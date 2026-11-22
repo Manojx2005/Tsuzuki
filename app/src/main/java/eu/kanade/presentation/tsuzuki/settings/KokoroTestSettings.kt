@@ -1,6 +1,5 @@
 package eu.kanade.presentation.tsuzuki.settings
 
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -13,10 +12,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.tsuzuki.tts.KokoroPack
 import eu.kanade.tachiyomi.tsuzuki.tts.KokoroPackImporter
 import eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsDebugPreference
+import eu.kanade.tachiyomi.tsuzuki.tts.neuralTtsSupported
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -31,12 +30,12 @@ import uy.kohesive.injekt.api.get
 import tachiyomi.core.common.preference.Preference as CorePreference
 
 /**
- * Debug-only Kokoro listening test: the switch, and import/remove of the voice pack zip. Import and remove need an
+ * Kokoro natural voice (arm64 only): the switch, and import/remove of the voice pack zip. Import and remove need an
  * Activity (document picker), so they are offered only when [interactive]; settings search lists just the switch.
  */
 @Composable
 internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
-    if (BuildConfig.BUILD_TYPE != "debug" || Build.SUPPORTED_ABIS.firstOrNull() != "arm64-v8a") return emptyList()
+    if (!neuralTtsSupported()) return emptyList()
     val context = LocalContext.current
     val switch = remember { neuralTtsDebugPreference() }
     val switchOn by switch.collectAsState()
@@ -138,7 +137,7 @@ internal fun kokoroTestPreferences(interactive: Boolean): List<Preference> {
 }
 
 /**
- * Where the debug build downloads the test pack. Default: the release asset NT4 will publish (404 until then).
+ * Where the voice pack downloads from: the `voices-v1` release asset.
  * A tester can point it at a local server: `adb reverse` + editing this preference with `run-as`.
  */
 internal fun kokoroPackUrlPreference() = Injekt.get<PreferenceStore>().getString(

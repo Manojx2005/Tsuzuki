@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.tsuzuki.tts.debug
+package eu.kanade.tachiyomi.tsuzuki.tts
 
 import android.app.Service
 import android.content.Intent
