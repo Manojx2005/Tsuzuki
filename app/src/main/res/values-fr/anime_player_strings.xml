@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">Épisode précédent</string>
     <string name="tsz_anime_player_quality">Qualité vidéo</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">Meilleure disponible</string>
+    <string name="tsz_anime_player_auto_quality">Automatique</string>
     <string name="tsz_anime_player_orientation_lock">Verrouiller l’orientation</string>
     <string name="tsz_anime_player_orientation_unlock">Déverrouiller l’orientation</string>
     <string name="tsz_anime_player_autoplay_on">Activer la lecture automatique</string>
@@ -46,4 +46,26 @@
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Image dans l’image</string>
     <string name="tsz_anime_player_preferred_languages">Langues préférées</string>
+    <string name="tsz_anime_episode_previews">Aperçus des épisodes</string>
+    <string name="tsz_anime_previews_on">Activés</string>
+    <string name="tsz_anime_previews_wifi">Wi-Fi uniquement</string>
+    <string name="tsz_anime_preview_remaining">Ép. %1$s · %2$s restantes</string>
+    <string name="tsz_anime_player_server_load">Touchez pour charger</string>
+    <string name="tsz_anime_player_server_loading">Chargement…</string>
+    <string name="tsz_anime_player_server_failed">Échec du chargement — touchez pour réessayer</string>
+    <string name="tsz_anime_player_sub_font_size">Taille du texte</string>
+    <string name="tsz_anime_player_sub_bold">Gras</string>
+    <string name="tsz_anime_player_sub_color">Couleur du texte</string>
+    <string name="tsz_anime_player_sub_border">Contour</string>
+    <string name="tsz_anime_player_sub_border_size">Épaisseur du contour</string>
+    <string name="tsz_anime_player_sub_background">Fond</string>
+    <string name="tsz_anime_player_sub_position">Position</string>
+    <string name="tsz_anime_player_sub_override_ass">Restyler les sous-titres stylés (ASS)</string>
+    <string name="tsz_anime_player_sub_white">Blanc</string>
+    <string name="tsz_anime_player_sub_yellow">Jaune</string>
+    <string name="tsz_anime_player_sub_cyan">Cyan</string>
+    <string name="tsz_anime_player_sub_green">Vert</string>
+    <string name="tsz_anime_player_sub_black">Noir</string>
+    <string name="tsz_anime_player_sub_grey">Gris</string>
+    <string name="tsz_anime_player_sub_none">Aucun</string>
 </resources>

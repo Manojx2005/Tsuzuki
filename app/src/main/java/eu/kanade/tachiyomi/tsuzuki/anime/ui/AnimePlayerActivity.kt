@@ -1,13 +1,17 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.app.PictureInPictureUiState
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
@@ -20,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -29,10 +34,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeMediaSession
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerContent
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerModel
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
+import eu.kanade.tachiyomi.tsuzuki.anime.player.animeKeyAction
+import eu.kanade.tachiyomi.tsuzuki.anime.player.perform
+import eu.kanade.tachiyomi.tsuzuki.anime.player.runsOnDown
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -50,6 +60,15 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     private var orientationLocked by mutableStateOf(false)
     private var gestureStartLevel = 0f
     private val audio by lazy { getSystemService(AudioManager::class.java) }
+    private var session: AnimeMediaSession? = null
+    private var started = false
+
+    /** AY4: headphones unplugged or a Bluetooth headset dropped: pause, as every player does. */
+    private val noisy = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) model?.setPlaying(false)
+        }
+    }
 
     private val systemBars by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
@@ -60,6 +79,12 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
             return
         }
 
+        val restartedProcess = savedInstanceState != null && !processSeen
+        processSeen = true
+        AnimeLog.i(
+            "player restore: state=${savedInstanceState != null} newProcess=$restartedProcess " +
+                "position=${savedInstanceState?.takeIf { it.containsKey(POSITION) }?.getDouble(POSITION)}",
+        )
         val player = try {
             val factory = viewModelFactory {
                 initializer {
@@ -79,7 +104,8 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                         aniSkip = Injekt.get(),
                         processScope = Injekt.get(),
                         restoredPosition = savedInstanceState?.takeIf { it.containsKey(POSITION) }?.getDouble(POSITION),
-                        restoredPaused = savedInstanceState?.getBoolean(PAUSED) == true,
+                        // AY4: back from process death the episode comes back paused where it was.
+                        restoredPaused = savedInstanceState?.getBoolean(PAUSED) == true || restartedProcess,
                     )
                 }
             }
@@ -92,6 +118,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         }
         model = player
         inPip = isInPictureInPictureMode
+        session = AnimeMediaSession(this) { model }
         if (supportsAnimePictureInPicture()) {
             pip = AnimePictureInPicture(this, ::handlePipAction)
             window.decorView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
@@ -111,6 +138,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                 val preferPip by pipPreference.collectAsState()
                 val pipControls = state.pipControls(animeEnabled && preferPip, animeEnabled && inPip)
                 LaunchedEffect(pipControls) { pip?.update(pipControls) }
+                LaunchedEffect(state) { session?.update(state) }
                 LaunchedEffect(animeEnabled) { if (!animeEnabled) finish() }
                 LaunchedEffect(state.playing, inPip) {
                     if (state.playing && !inPip) {
@@ -152,7 +180,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         // Reuse the Android task, but release the previous video and its ViewModel
         // before creating one for the new playback request.
         model?.setForeground(false)
-        model?.detach()
+        model?.detach(closing = true)
         model = null
         viewModelStore.clear()
         setIntent(intent)
@@ -185,6 +213,21 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         inPip = isInPictureInPictureMode
         enteringPip = false
+        updateSessionActive()
+    }
+
+    private fun updateSessionActive() {
+        session?.active = started || inPip
+    }
+
+    /** AY4: keyboard and remote keys. Media keys reach here only when no session took them, so never twice. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val player = model
+        val action = animeKeyAction(keyCode)
+        if (player == null || action == null || !hasWindowFocus()) return super.onKeyDown(keyCode, event)
+        // Held keys: consume every repeat so the system never sees them, but only seeking acts on them.
+        if (action.runsOnDown(event.repeatCount)) player.perform(action)
+        return true
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -243,12 +286,20 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        model?.detach()
+        model?.detach(closing = isFinishing)
     }
 
     override fun onStart() {
         super.onStart()
         model?.setForeground(true)
+        started = true
+        updateSessionActive()
+        ContextCompat.registerReceiver(
+            this,
+            noisy,
+            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     override fun onResume() {
@@ -257,6 +308,9 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     }
 
     override fun onStop() {
+        runCatching { unregisterReceiver(noisy) }
+        started = false
+        updateSessionActive()
         model?.setForeground(false)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onStop()
@@ -274,14 +328,18 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     }
 
     override fun onDestroy() {
+        session?.release()
+        session = null
         pip?.close()
         pip = null
-        model?.detach()
+        model?.detach(closing = isFinishing)
         model = null
         super.onDestroy()
     }
 
     private companion object {
+        /** False until a player opens in this process: saved state while still false means the process died. */
+        var processSeen = false
         const val EPISODE = "anime_episode"
         const val POSITION = "anime_position"
         const val PAUSED = "anime_paused"

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.getEnum
 import java.util.Locale
 
 internal enum class AnimeTrackKind(val mpvType: String) {
@@ -35,9 +36,11 @@ internal data class AnimePlayerSettings(
     val volumeGesture: Boolean = true,
     val aniSkipMode: AniSkipMode = AniSkipMode.OFF,
     val aniSkipIntroDelay: Int = 3,
+    val subtitleStyle: AnimeSubtitleStyle = AnimeSubtitleStyle(),
 )
 
 internal class AnimePlayerPreferences(private val store: PreferenceStore) {
+    val episodePreviews = store.getEnum("tsuzuki_anime_episode_previews", eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON)
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
     val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)
@@ -63,6 +66,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
     private val volumeGesture = store.getBoolean("tsuzuki_anime_player_volume_gesture", true)
     private val aniSkipMode = store.getString("tsuzuki_anime_player_aniskip", AniSkipMode.OFF.name)
     private val aniSkipIntroDelay = store.getInt("tsuzuki_anime_player_aniskip_intro_delay", 3)
+    private val subtitleStyle = AnimeSubtitleStylePreferences(store)
 
     fun get() = AnimePlayerSettings(
         speed = speed.get().bounded(0.25f, 3f, 1f),
@@ -74,6 +78,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
         volumeGesture = volumeGesture.get(),
         aniSkipMode = AniSkipMode.entries.firstOrNull { it.name == aniSkipMode.get() } ?: AniSkipMode.OFF,
         aniSkipIntroDelay = aniSkipIntroDelay.get().coerceIn(0, 30),
+        subtitleStyle = subtitleStyle.get(),
     )
 
     fun set(settings: AnimePlayerSettings) {
@@ -86,6 +91,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
         volumeGesture.set(settings.volumeGesture)
         aniSkipMode.set(settings.aniSkipMode.name)
         aniSkipIntroDelay.set(settings.aniSkipIntroDelay.coerceIn(0, 30))
+        subtitleStyle.set(settings.subtitleStyle)
     }
 
     companion object {

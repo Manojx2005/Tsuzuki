@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.preferenceKey
 import eu.kanade.tachiyomi.source.sourcePreferences
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.animeSourcePreferencesForBackup
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.source.service.SourceManager
@@ -38,6 +39,12 @@ class PreferenceBackupCreator(
                 )
             }
             .filter { it.prefs.isNotEmpty() }
+            .plus(
+                animeSourcePreferencesForBackup {
+                    it.toBackupPreferences().withPrivatePreferences(includePrivatePreferences)
+                },
+            )
+            .distinctBy { it.sourceKey }
     }
 
     @Suppress("UNCHECKED_CAST")

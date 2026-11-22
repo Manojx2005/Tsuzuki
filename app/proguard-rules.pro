@@ -32,7 +32,14 @@
 -keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
 -keep class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
+# AY6: extensions construct JavaScriptEngine(context); R8 dropped the constructor (scripts/anime-abi/check_apk.py).
+-keep,allowoptimization class eu.kanade.tachiyomi.network.JavaScriptEngine { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
+# AY6-F: extensions call these by exact descriptor across class loaders. Plain -keep (no allowoptimization): R8
+# removed the blocking helpers and parseAs and rewrote parallelMap's descriptor under the eu.kanade.** class keep.
+-keep class eu.kanade.tachiyomi.network.HttpException { public int getCode(); }
+-keep class eu.kanade.tachiyomi.util.CoroutinesExtensionsKt { public static *; }
+-keep class eu.kanade.tachiyomi.util.JsonExtensionsKt { public static *; }
 
 -keepclassmembers class * implements java.io.Serializable {
     java.lang.Object writeReplace();

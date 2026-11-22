@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">Episodio anterior</string>
     <string name="tsz_anime_player_quality">Calidad de vídeo</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">Mejor disponible</string>
+    <string name="tsz_anime_player_auto_quality">Automática</string>
     <string name="tsz_anime_player_orientation_lock">Bloquear orientación</string>
     <string name="tsz_anime_player_orientation_unlock">Desbloquear orientación</string>
     <string name="tsz_anime_player_autoplay_on">Activar reproducción automática</string>
@@ -46,4 +46,26 @@
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Imagen en imagen</string>
     <string name="tsz_anime_player_preferred_languages">Idiomas preferidos</string>
+    <string name="tsz_anime_episode_previews">Vistas previas de episodios</string>
+    <string name="tsz_anime_previews_on">Activadas</string>
+    <string name="tsz_anime_previews_wifi">Solo Wi-Fi</string>
+    <string name="tsz_anime_preview_remaining">Ep. %1$s · Quedan %2$s</string>
+    <string name="tsz_anime_player_server_load">Toca para cargar</string>
+    <string name="tsz_anime_player_server_loading">Cargando…</string>
+    <string name="tsz_anime_player_server_failed">No se pudo cargar: toca para reintentar</string>
+    <string name="tsz_anime_player_sub_font_size">Tamaño de letra</string>
+    <string name="tsz_anime_player_sub_bold">Negrita</string>
+    <string name="tsz_anime_player_sub_color">Color del texto</string>
+    <string name="tsz_anime_player_sub_border">Contorno</string>
+    <string name="tsz_anime_player_sub_border_size">Grosor del contorno</string>
+    <string name="tsz_anime_player_sub_background">Caja de fondo</string>
+    <string name="tsz_anime_player_sub_position">Posición</string>
+    <string name="tsz_anime_player_sub_override_ass">Cambiar estilo de subtítulos con estilo (ASS)</string>
+    <string name="tsz_anime_player_sub_white">Blanco</string>
+    <string name="tsz_anime_player_sub_yellow">Amarillo</string>
+    <string name="tsz_anime_player_sub_cyan">Cian</string>
+    <string name="tsz_anime_player_sub_green">Verde</string>
+    <string name="tsz_anime_player_sub_black">Negro</string>
+    <string name="tsz_anime_player_sub_grey">Gris</string>
+    <string name="tsz_anime_player_sub_none">Ninguno</string>
 </resources>

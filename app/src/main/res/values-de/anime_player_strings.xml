@@ -8,7 +8,7 @@
     <string name="tsz_anime_player_previous">Vorherige Folge</string>
     <string name="tsz_anime_player_quality">Videoqualität</string>
     <string name="tsz_anime_player_quality_value">%dp</string>
-    <string name="tsz_anime_player_best">Beste verfügbare Qualität</string>
+    <string name="tsz_anime_player_auto_quality">Automatisch</string>
     <string name="tsz_anime_player_orientation_lock">Ausrichtung sperren</string>
     <string name="tsz_anime_player_orientation_unlock">Ausrichtung entsperren</string>
     <string name="tsz_anime_player_autoplay_on">Automatische Wiedergabe aktivieren</string>
@@ -46,4 +46,26 @@
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Bild im Bild</string>
     <string name="tsz_anime_player_preferred_languages">Bevorzugte Sprachen</string>
+    <string name="tsz_anime_episode_previews">Episodenvorschau</string>
+    <string name="tsz_anime_previews_on">An</string>
+    <string name="tsz_anime_previews_wifi">Nur WLAN</string>
+    <string name="tsz_anime_preview_remaining">Ep. %1$s · %2$s übrig</string>
+    <string name="tsz_anime_player_server_load">Zum Laden tippen</string>
+    <string name="tsz_anime_player_server_loading">Wird geladen…</string>
+    <string name="tsz_anime_player_server_failed">Laden fehlgeschlagen – zum Wiederholen tippen</string>
+    <string name="tsz_anime_player_sub_font_size">Schriftgröße</string>
+    <string name="tsz_anime_player_sub_bold">Fett</string>
+    <string name="tsz_anime_player_sub_color">Textfarbe</string>
+    <string name="tsz_anime_player_sub_border">Umrandung</string>
+    <string name="tsz_anime_player_sub_border_size">Umrandungsbreite</string>
+    <string name="tsz_anime_player_sub_background">Hintergrundkasten</string>
+    <string name="tsz_anime_player_sub_position">Position</string>
+    <string name="tsz_anime_player_sub_override_ass">Formatierte (ASS-)Untertitel umgestalten</string>
+    <string name="tsz_anime_player_sub_white">Weiß</string>
+    <string name="tsz_anime_player_sub_yellow">Gelb</string>
+    <string name="tsz_anime_player_sub_cyan">Cyan</string>
+    <string name="tsz_anime_player_sub_green">Grün</string>
+    <string name="tsz_anime_player_sub_black">Schwarz</string>
+    <string name="tsz_anime_player_sub_grey">Grau</string>
+    <string name="tsz_anime_player_sub_none">Keine</string>
 </resources>

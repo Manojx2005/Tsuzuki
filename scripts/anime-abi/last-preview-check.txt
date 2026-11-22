@@ -1,0 +1,2 @@
+controls OK: public getter accepted; private field and nonexistent method rejected
+OK: every expected API line is in app-arm64-v8a-preview.apk (27487 classes, 185581 visible members)

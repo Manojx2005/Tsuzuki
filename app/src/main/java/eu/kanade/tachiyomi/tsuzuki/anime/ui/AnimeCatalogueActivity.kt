@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -19,19 +20,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -78,6 +84,7 @@ import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
@@ -101,7 +108,9 @@ class AnimeCatalogueActivity : BaseActivity() {
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
-                val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading) {
+                // AY2: after the source's settings change, load the fresh instance (and its first page) again.
+                val sourceVersion by AnimeSourceManager.extensionChanges.collectAsState()
+                val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading, sourceVersion) {
                     value = try {
                         sources.ensureLoaded()
                         val saved = if (savedId >= 0) library.getAnime(savedId) else null
@@ -137,20 +146,52 @@ class AnimeCatalogueActivity : BaseActivity() {
                     )
                     is AnimeCatalogueLocation.Ready -> {
                         val catalogueState = rememberSaveableStateHolder()
-                        var appliedFilters by remember { mutableStateOf(AnimeFilterList()) }
+                        // AY2-F: a settings change brings a new source instance (and class loader); rebuild the
+                        // filters from it, keeping the compatible values, instead of reusing the old objects.
+                        val source = result.entry.source
+                        var lastApplied by remember { mutableStateOf(AnimeFilterList()) }
                         var selected by remember { mutableStateOf(result.saved) }
                         val anime = selected
                         if (anime == null) {
-                            catalogueState.SaveableStateProvider(sourceId) {
-                                AnimeCatalogueScreen(
-                                    source = result.entry.source,
-                                    openLatest = openLatest,
-                                    initialQuery = initialQuery,
-                                    appliedFilters = appliedFilters,
-                                    onApplyFilters = { appliedFilters = it },
+                            var attempt by remember(source) { mutableStateOf(0) }
+                            var rebound by remember(source, attempt) {
+                                mutableStateOf<Result<AnimeFilterList>?>(null)
+                            }
+                            LaunchedEffect(source, attempt) {
+                                val previous = lastApplied
+                                val filters = loadCatalogueFilters {
+                                    carryAnimeFilters(previous) { source.getFilterList() }
+                                }
+                                filters.getOrNull()?.let { lastApplied = it }
+                                rebound = filters
+                            }
+                            val filters = rebound
+                            if (filters == null || filters.isFailure) {
+                                val context = LocalContext.current
+                                val message = filters?.exceptionOrNull()?.let {
+                                    context.errorHeading(errorCopyForUi(it))
+                                }
+                                AnimeCatalogueNotice(
+                                    title = source.name,
+                                    message = message,
                                     onBack = ::finish,
-                                    onOpen = { selected = it },
+                                    onRetry = { attempt++ },
                                 )
+                            } else {
+                                catalogueState.SaveableStateProvider(sourceId) {
+                                    AnimeCatalogueScreen(
+                                        source = source,
+                                        openLatest = openLatest,
+                                        initialQuery = initialQuery,
+                                        appliedFilters = lastApplied,
+                                        onApplyFilters = { lastApplied = it },
+                                        onBack = ::finish,
+                                        onOpen = { selected = it },
+                                        onSettings = {
+                                            startActivity(AnimeSourcePreferencesActivity.intent(this, source.id))
+                                        }.takeIf { hasAnimeSourceSettings(source) },
+                                    )
+                                }
                             }
                         } else {
                             val back = { if (result.saved != null) finish() else selected = null }
@@ -193,6 +234,7 @@ private fun AnimeCatalogueScreen(
     onApplyFilters: (AnimeFilterList) -> Unit,
     onBack: () -> Unit,
     onOpen: (SAnime) -> Unit,
+    onSettings: (() -> Unit)? = null,
 ) {
     val modes = remember(source) {
         AnimeCatalogueMode.entries.filter { it != AnimeCatalogueMode.LATEST || source.supportsLatest }
@@ -209,6 +251,29 @@ private fun AnimeCatalogueScreen(
     var query by rememberSaveable { mutableStateOf(initialQuery) }
     var appliedQuery by rememberSaveable { mutableStateOf(initialQuery) }
     var editingFilters by remember { mutableStateOf<AnimeFilterList?>(null) }
+    var loadingFilters by remember { mutableStateOf(false) }
+    val filterScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    fun editFilters(reset: Boolean = false) {
+        if (loadingFilters) return
+        val previousDraft = editingFilters
+        loadingFilters = true
+        filterScope.launch {
+            try {
+                loadCatalogueFilters {
+                    source.getFilterList().also {
+                        if (!reset) restoreAnimeFilterStates(appliedFilters, it)
+                    }
+                }.onSuccess {
+                    if (!reset || editingFilters === previousDraft) editingFilters = it
+                }.onFailure {
+                    Toast.makeText(context, context.errorHeading(errorCopyForUi(it)), Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                loadingFilters = false
+            }
+        }
+    }
     val keyboard = LocalSoftwareKeyboardController.current
     val submitSearch = {
         appliedQuery = query.trim()
@@ -226,7 +291,19 @@ private fun AnimeCatalogueScreen(
     Scaffold(
         modifier = Modifier.tsuzukiBackground(tokens),
         containerColor = Color.Transparent,
-        topBar = { AppBar(title = tsuzukiMenuLabel(source.name), navigateUp = onBack) },
+        topBar = {
+            AppBar(
+                title = tsuzukiMenuLabel(source.name),
+                navigateUp = onBack,
+                actions = {
+                    if (onSettings != null) {
+                        IconButton(onClick = onSettings) {
+                            Icon(Icons.Outlined.Settings, stringResource(MR.strings.source_settings))
+                        }
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             TsuzukiSegments(
@@ -262,10 +339,12 @@ private fun AnimeCatalogueScreen(
                         },
                     )
                     IconButton(
-                        onClick = {
-                            editingFilters =
-                                source.getFilterList().also { restoreAnimeFilterStates(appliedFilters, it) }
-                        },
+                        enabled = !loadingFilters,
+                        onClick = { editFilters() },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = tokens.dotOn,
+                            disabledContentColor = tokens.mutedText,
+                        ),
                     ) {
                         Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
                     }
@@ -325,7 +404,7 @@ private fun AnimeCatalogueScreen(
         AnimeFilterDialog(
             filters = filters,
             onDismiss = { editingFilters = null },
-            onReset = { editingFilters = source.getFilterList() },
+            onReset = { editFilters(reset = true) },
             onApply = {
                 onApplyFilters(filters)
                 submitSearch()
@@ -333,6 +412,15 @@ private fun AnimeCatalogueScreen(
             },
         )
     }
+}
+
+private suspend fun loadCatalogueFilters(load: () -> AnimeFilterList): Result<AnimeFilterList> = try {
+    Result.success(withContext(Dispatchers.IO) { callAnimeSource(load) })
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    AnimeLog.w("Could not load anime catalogue filters", e)
+    Result.failure(e)
 }
 
 private class AnimeCataloguePagingSource(
@@ -375,6 +463,7 @@ private fun AnimeCatalogueNotice(
     message: String?,
     onBack: () -> Unit,
     cached: SAnime? = null,
+    onRetry: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = Modifier.tsuzukiBackground(TsuzukiTheme.tokens),
@@ -382,7 +471,7 @@ private fun AnimeCatalogueNotice(
         topBar = { AppBar(title = title?.let { tsuzukiMenuLabel(it) }, navigateUp = onBack) },
     ) { padding ->
         if (cached == null) {
-            Column(Modifier.fillMaxSize().padding(padding)) { AnimeCatalogueStatus(message) }
+            Column(Modifier.fillMaxSize().padding(padding)) { AnimeCatalogueStatus(message, onRetry) }
         } else {
             LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item { AnimeDetailsHeader(source = null, anime = cached) }

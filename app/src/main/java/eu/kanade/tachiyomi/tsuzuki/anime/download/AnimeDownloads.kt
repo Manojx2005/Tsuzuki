@@ -11,8 +11,9 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeHosterLoader
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
-import eu.kanade.tachiyomi.tsuzuki.anime.player.rankAnimeVideos
+import eu.kanade.tachiyomi.tsuzuki.anime.player.animePlaybackOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -263,15 +264,20 @@ internal class AnimeDownloads(
             val source = checkNotNull(sources.get(entry.sourceId))
             val client = (source.source as? AnimeHttpSource)?.client ?: network.client
             val preferred = prefs.quality.get()
-            val candidates = rankAnimeVideos(
-                AnimeStreamResolver.videos(source.source, source.libVersion, episode.toSourceEpisode()),
-                preferred,
-            )
+            // AY1: the same hosters, order and Auto rule as the player, so a download gets the video playback would.
+            val hosters = AnimeStreamResolver.hosters(source.source, source.libVersion, episode.toSourceEpisode())
+            val loader = AnimeHosterLoader(hosters, { AnimeStreamResolver.hosterVideos(source.source, it) })
+            loader.loadAll()
+            val candidates = animePlaybackOrder(loader.videos(), preferred)
             var saved = false
             for (candidate in candidates) {
                 coroutineContext.ensureActive()
                 val video = try {
-                    AnimeStreamResolver.resolve(source.source, source.libVersion, candidate)
+                    // Downloads used to go out without the source's Referer/User-Agent (seen with the AY0 fixture).
+                    AnimeStreamResolver.withSourceHeaders(
+                        source.source,
+                        AnimeStreamResolver.resolve(source.source, source.libVersion, candidate),
+                    )
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

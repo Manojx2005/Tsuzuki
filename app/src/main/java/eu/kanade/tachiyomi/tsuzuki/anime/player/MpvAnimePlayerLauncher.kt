@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.describeAnimeVideo
@@ -30,10 +31,11 @@ internal object MpvAnimePlayerLauncher : AnimePlayerLauncher {
 
 private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var created = false
+    private var previewCache: File? = null
     private var defaultUserAgent: String? = null
     private var originalVolume: Double? = null
     private var appliedSettings: AnimePlayerSettings? = null
-    private var externalTracks: Video? = null
+    private var externalTracks: Pair<List<Track>, List<Track>>? = null
     private var eventObserver: MPVLib.EventObserver? = null
     private var logObserver: MPVLib.LogObserver? = null
     private var loadStartedAt = 0L
@@ -41,6 +43,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
+        previewCache = context.cacheDir
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
@@ -50,6 +53,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
             }
         }
         File(configDir, "mpv.conf").apply { if (!exists()) createNewFile() }
+        val fontsDir = AnimeSubtitleFonts.install(context, configDir)
 
         this.listener = listener
         val events = newEventObserver(listener)
@@ -76,6 +80,7 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         setOpt("ytdl", "no")
         setOpt("tls-verify", "yes")
         setOpt("tls-ca-file", caFile.path)
+        AnimeSubtitleFonts.options(fontsDir).forEach { (name, value) -> setOpt(name, value) }
         setOpt("demuxer-max-bytes", "${64 * 1024 * 1024}")
         setOpt("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
         setOpt("input-default-bindings", "yes")
@@ -91,6 +96,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         MpvPlayer.observeProperty("duration", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("demuxer-cache-time", MPVLib.mpvFormat.MPV_FORMAT_DOUBLE)
         MpvPlayer.observeProperty("eof-reached", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
+        MpvPlayer.observeProperty("paused-for-cache", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
+        MpvPlayer.observeProperty("seeking", MPVLib.mpvFormat.MPV_FORMAT_FLAG)
         MpvPlayer.observeProperty("track-list/count", MPVLib.mpvFormat.MPV_FORMAT_INT64)
         MpvPlayer.observeProperty("sid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
         MpvPlayer.observeProperty("aid", MPVLib.mpvFormat.MPV_FORMAT_STRING)
@@ -98,6 +105,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     private fun setOpt(name: String, value: String) {
         if (!MpvPlayer.optionOrFalse(name, value)) AnimeLog.w("mpv rejected option $name=$value")
+    }
+
+    private var pausedForCache = false
+    private var seeking = false
+
+    private fun reportBuffering(listener: AnimePlayerBackend.Listener) = listener.onBuffering(pausedForCache || seeking)
+
+    override fun setMediaTitle(title: String) {
+        MpvPlayer.property("force-media-title", title)
     }
 
     private fun newEventObserver(listener: AnimePlayerBackend.Listener) = object : MPVLib.EventObserver {
@@ -114,7 +130,17 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
 
         override fun eventProperty(property: String, value: Boolean) {
-            if (property == "eof-reached" && value) listener.onEnded()
+            when (property) {
+                "eof-reached" -> if (value) listener.onEnded()
+                "paused-for-cache" -> {
+                    pausedForCache = value
+                    reportBuffering(listener)
+                }
+                "seeking" -> {
+                    seeking = value
+                    reportBuffering(listener)
+                }
+            }
         }
 
         override fun eventProperty(property: String, value: Double) {
@@ -149,8 +175,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
 
     private fun sinceLoad() = "+${SystemClock.elapsedRealtime() - loadStartedAt} ms since loadfile"
 
-    override fun load(video: Video, resumePosition: Double) {
-        externalTracks = video
+    override fun load(video: Video, resumePosition: Double, subtitles: List<Track>) {
+        externalTracks = subtitles to video.audioTracks
         loadStartedAt = SystemClock.elapsedRealtime()
         AnimeLog.i("mpv loadfile start=${"%.1f".format(resumePosition)}s ${describeAnimeVideo(video)}")
         val command = try {
@@ -220,6 +246,10 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         if (settings.subtitleDelay != previous?.subtitleDelay) {
             MPVLib.setPropertyDouble("sub-delay", settings.subtitleDelay.toDouble())
         }
+        // mpv logs a rejected value itself (e.g. sub-border-style on an older libmpv).
+        changedSubtitleStyleOptions(previous?.subtitleStyle, settings.subtitleStyle).forEach { (name, value) ->
+            MpvPlayer.property(name, value)
+        }
         if (settings.hardwareDecoding != previous?.hardwareDecoding) {
             MpvPlayer.property("hwdec", if (settings.hardwareDecoding) "auto" else "no")
         }
@@ -227,15 +257,16 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     override fun tracks(): List<AnimePlayerTrack> {
-        externalTracks?.let { video ->
+        externalTracks?.let { (subtitles, audio) ->
             externalTracks = null
-            video.subtitleTracks.forEach { track ->
-                track.url.toHttpUrlOrNull()?.let { MpvPlayer.command("sub-add", it.toString(), "auto", "", track.lang) }
+            subtitles.forEach { track ->
+                MpvPlayer.command("sub-add", *externalTrackArgs(track.url, track.lang))
             }
-            video.audioTracks.forEach { track ->
+            audio.forEach { track ->
                 track.url.toHttpUrlOrNull()?.let {
-                    MpvPlayer.command("audio-add", it.toString(), "auto", "", track.lang)
+                    MpvPlayer.command("audio-add", *externalTrackArgs(it.toString(), track.lang))
                 }
+                    ?: AnimeLog.w("skipped an audio track that is not an http(s) address")
             }
         }
         val count = MPVLib.getPropertyInt("track-list/count") ?: 0
@@ -259,6 +290,15 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     override fun selectTrack(kind: AnimeTrackKind, id: Int?) {
         val property = if (kind == AnimeTrackKind.SUBTITLE) "sid" else "aid"
         MpvPlayer.property(property, id?.toString() ?: "no")
+    }
+
+    override fun capturePreview(): File? {
+        if (!created) return null
+        val target = File(previewCache ?: return null, "anime-preview-${java.util.UUID.randomUUID()}.png")
+        // libmpv's async command prefix moves screenshot encoding/writing off the caller thread.
+        // Request while the video is still attached; the frame store waits for a complete PNG on IO.
+        MpvPlayer.command("async", "screenshot-to-file", target.path, "video")
+        return target
     }
 
     override fun close() {

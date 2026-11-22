@@ -25,8 +25,10 @@ internal fun rankAnimeVideos(videos: List<Video>, preferred: Int): List<Video> =
     }.thenByDescending { it.preferred }.thenByDescending { it.bitrate ?: 0 },
 )
 
-internal class AnimeStreamQueue(videos: List<Video>, preferred: Int) {
-    private val candidates = rankAnimeVideos(videos, preferred).iterator()
+internal class AnimeStreamQueue(videos: List<Video>, preferred: Int, first: Pair<Video, Video>? = null) {
+    private val candidates = animePlaybackOrder(videos, preferred).let { ordered ->
+        if (first == null) ordered else listOf(first.second) + ordered.filterNot { it === first.first }
+    }.iterator()
 
     suspend fun next(resolve: suspend (Video) -> Video): Video? {
         while (candidates.hasNext()) {
@@ -69,8 +71,16 @@ internal fun animeStartIsAtEnd(start: Double, duration: Double): Boolean =
  * Where to start an episode. A seen episode starts over; a saved position at the end of the known duration
  * ([knownDuration] is 0 when it was never stored) starts over too instead of opening on the last frame.
  */
-internal fun animeResumeStart(saved: Double, seen: Boolean, knownDuration: Double): Double = when {
+internal fun animeResumeStart(
+    saved: Double,
+    seen: Boolean,
+    knownDuration: Double,
+    restored: Boolean = false,
+): Double = when {
     !saved.isFinite() || saved <= 0 || seen -> 0.0
+    // AY4: a position restored after process death is where the viewer was, not "almost finished": keep it
+    // unless it is the very end.
+    restored -> if (knownDuration > 0 && saved >= knownDuration - 1) 0.0 else saved
     animeStartIsAtEnd(saved, knownDuration) -> 0.0
     else -> saved
 }
@@ -80,3 +90,6 @@ internal enum class AnimePlayAfterEnd { SEEK_TO_START, RELOAD }
 /** Play on a finished file: seek back when the duration is known, otherwise load the stream again from 0. */
 internal fun animePlayAfterEnd(duration: Double): AnimePlayAfterEnd =
     if (duration.isFinite() && duration > 0) AnimePlayAfterEnd.SEEK_TO_START else AnimePlayAfterEnd.RELOAD
+
+/** AY1: how long a load may go without mpv's FILE_LOADED or an error before it counts as failed. */
+internal const val ANIME_FILE_LOADED_WATCHDOG_MS = 30_000L

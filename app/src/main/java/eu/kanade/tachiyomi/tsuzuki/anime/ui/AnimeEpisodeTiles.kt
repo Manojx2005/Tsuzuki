@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -129,6 +130,7 @@ internal fun AnimeResumeTile(episode: Episode, enabled: Boolean, onPlay: () -> U
 internal fun AnimeEpisodeTile(
     source: AnimeSource,
     episode: Episode,
+    coverUrl: String?,
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -164,15 +166,12 @@ internal fun AnimeEpisodeTile(
             if (selected) {
                 Icon(Icons.Outlined.Check, contentDescription = null, tint = tokens.accent)
             }
-            episode.previewUrl?.takeIf(String::isNotBlank)?.let { preview ->
-                AsyncImage(
-                    model = rememberAnimeImage(source, preview),
-                    contentDescription = null,
-                    modifier = Modifier.size(104.dp, 58.dp).clip(RoundedCornerShape(10.dp)),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = DotCoverFilter.takeIf { tokens.isDot },
-                )
-            }
+            eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
+                sourceId = source.id,
+                episode = episode,
+                coverUrl = coverUrl,
+                modifier = Modifier.size(104.dp, 58.dp),
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     tsuzukiMenuLabel(title),
@@ -205,6 +204,10 @@ internal fun AnimeEpisodeTile(
             IconButton(
                 onClick = onDownload,
                 enabled = enabled && (downloadStatus == null || downloadStatus == AnimeDownloadStatus.Failed),
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = tokens.dotOn,
+                    disabledContentColor = tokens.mutedText,
+                ),
             ) {
                 Icon(downloadIcon, mokoStringResource(downloadLabel))
             }

@@ -9,6 +9,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0]
+
+### Added
+- **Anime (beta).** Turn on Settings > Browse > Anime (beta) to watch anime alongside your books. It is off by
+  default, so nothing changes until you switch it on, and it needs a 64-bit ARM phone (most phones from the last
+  few years).
+  - Install anime extension repositories and sources (Aniyomi extensions), browse and search them, and add
+    anime to your library on their own shelves. Seasons of the same show are grouped.
+  - A full-screen player with picture-in-picture, subtitle and audio track choice, preferred subtitle and audio
+    languages, playback speed, and skipping of openings and endings for anime linked to AniList or MyAnimeList.
+  - Streams load the way Aniyomi loads them: the source's own headers and order, its servers grouped in the quality
+    sheet, and a server that fails doesn't stop the others from loading.
+  - Subtitles always render, including subtitles embedded in the video or given inline by a source, and their
+    size, boldness, colour, outline, background and position can be changed.
+  - Headphone and Bluetooth buttons, the lock-screen media controls and the picture-in-picture buttons control
+    playback, and the player remembers where you were if Android closes it in the background.
+  - Episode rows and the Watch home show a picture from where you stopped watching.
+  - Download episodes to watch offline, track anime on AniList, MyAnimeList or Kitsu, see new episodes and airing
+    dates in Updates, keep a watch history, and see watch time in Stats.
+  - Each source's own settings page, included in backups.
+  - Migrate anime between sources, check for duplicates before adding, and filter releases by subtitle group.
+  - Back up your anime with the rest of the library, and import an Aniyomi backup.
+  - A Continue Watching home-screen widget.
+- When anime is on, it also appears in the places that show books: Library > All (in its own section), History,
+  Updates, global search, the download queue, shelves and tracking settings.
+- Library selection > More > **Mark until last read** marks the unread chapters before the furthest chapter you
+  have read. Undo is offered first, and if some chapters can't be saved the message says so.
+
+### Changed
+- More of the app is translated: Home labels, tracking settings and the remaining English-only settings now follow
+  the app language in all eight languages.
+- The novel download queue shows its rows and statuses in the app language.
+- Japanese text in the TextView novel reader uses the reading font's Japanese partner (Noto Serif JP with Literata).
+- Library search keeps the All, Novels and Manga pills visible and hides the library totals while searching.
+- Migration offers sources of the same kind (novel sources for a novel, manga sources for manga) and keeps your
+  chosen order. Migration rows show the cover, title and selection more clearly.
+- About: the licences entry shows its full label, and credits are spaced out.
+
+### Fixed
+- Manga: the loading indicator stays visible, and Next no longer skips two chapters.
+- A library update that starts while the app is closed waits for your sources to load instead of skipping books.
+
 ## [0.1.1]
 
 ### Added

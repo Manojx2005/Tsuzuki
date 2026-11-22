@@ -53,4 +53,11 @@ class AnimeResumeStartTest {
         animePlayAfterEnd(0.0) shouldBe AnimePlayAfterEnd.RELOAD
         animePlayAfterEnd(Double.NaN) shouldBe AnimePlayAfterEnd.RELOAD
     }
+
+    @Test
+    fun `a position restored after process death is kept near the end`() {
+        animeResumeStart(saved = 50.6, seen = false, knownDuration = 60.0, restored = true) shouldBe 50.6
+        animeResumeStart(saved = 59.5, seen = false, knownDuration = 60.0, restored = true) shouldBe 0.0
+        animeResumeStart(saved = 50.6, seen = true, knownDuration = 60.0, restored = true) shouldBe 0.0
+    }
 }

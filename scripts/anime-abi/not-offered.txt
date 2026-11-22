@@ -1,0 +1,13 @@
+# Expected extensions-lib API that Tsuzuki deliberately doesn't offer (prefix match). Keep in step with
+# NOT_OFFERED in app/src/test/.../AnimeExtensionAbiTest.kt.
+eu.kanade.tachiyomi.torrentutils	lib 17 torrent API; no torrent support in v0.2
+androidx.preference.DialogPreference#<init> ()V	stub-only constructor
+androidx.preference.Preference#<init> ()V	stub-only constructor
+androidx.preference.PreferenceScreen#<init> ()V	stub-only constructor
+eu.kanade.tachiyomi.network.NetworkHelper#<init> (Landroid/content/Context;)V	the app constructs NetworkHelper
+eu.kanade.tachiyomi.animesource.model.Video#component3 ()Ljava/lang/String;	lib 14 Video data-class member
+eu.kanade.tachiyomi.animesource.model.Video#component4 ()Lokhttp3/Headers;	lib 14 Video data-class member
+eu.kanade.tachiyomi.animesource.model.Video#component5 ()Ljava/util/List;	lib 14 Video data-class member
+eu.kanade.tachiyomi.animesource.model.Video#component6 ()Ljava/util/List;	lib 14 Video data-class member
+eu.kanade.tachiyomi.animesource.model.Video#copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lokhttp3/Headers;Ljava/util/List;Ljava/util/List;)Leu/kanade/tachiyomi/animesource/model/Video;	lib 14 Video data-class member
+eu.kanade.tachiyomi.animesource.model.Video#copy$default (Leu/kanade/tachiyomi/animesource/model/Video;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lokhttp3/Headers;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Leu/kanade/tachiyomi/animesource/model/Video;	lib 14 Video data-class member
