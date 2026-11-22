@@ -101,7 +101,12 @@ class DictionaryPacksTest {
             every { SQLiteDatabase.openDatabase(any<String>(), any(), any<Int>()) } answers {
                 database(DriverManager.getConnection("jdbc:sqlite:${firstArg<String>()}"))
             }
-            val context = mockk<Context> { every { filesDir } returns root }
+            val context = mockk<Context> {
+                every { filesDir } returns root
+                every { assets } returns mockk {
+                    every { open(any()) } throws java.io.FileNotFoundException()
+                }
+            }
             block(DictionaryPacks(context, client))
         } finally {
             unmockkStatic(SQLiteDatabase::class)

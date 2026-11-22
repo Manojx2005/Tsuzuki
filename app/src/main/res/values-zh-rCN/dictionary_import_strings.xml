@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_dictionary_import_file">导入词典文件</string>
+    <string name="tsz_dictionary_import_matching_files">请同时选中词典包及其对应的 JSON 清单。</string>
+    <string name="tsz_dictionary_import_invalid">无法导入词典。请检查两个文件是否属于同一个词典包。</string>
+    <string name="tsz_dictionary_bundled">内置</string>
+</resources>

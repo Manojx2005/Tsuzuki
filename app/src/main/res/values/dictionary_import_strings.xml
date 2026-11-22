@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_dictionary_import_file">Import dictionary file</string>
+    <string name="tsz_dictionary_import_matching_files">Select a dictionary pack and its matching JSON manifest together.</string>
+    <string name="tsz_dictionary_import_invalid">Could not import this dictionary. Check that both files belong to the same pack.</string>
+    <string name="tsz_dictionary_bundled">Built in</string>
+</resources>
