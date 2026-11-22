@@ -45,16 +45,16 @@ class BrowseHeaderSectionsTest {
     }
 
     @Test
-    fun `installed anime sources remain accessible when there are no repos`() {
+    fun `anime sources and extensions are reachable when there are no repos`() {
         val pages = browsePages(hideManga = true, animeEnabled = true)
-        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe listOf(BrowsePage.ANIME_SOURCES)
+        browsePagesFor(pages, BrowseMedia.ANIME) shouldBe listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_EXTENSIONS)
     }
 
     @Test
     fun `anime migration requires the beta gate and at least one library anime`() {
         val pages = browsePages(hideManga = true, animeEnabled = true, hasAnimeLibrary = true)
         browsePagesFor(pages, BrowseMedia.ANIME) shouldBe
-            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_MIGRATION)
+            listOf(BrowsePage.ANIME_SOURCES, BrowsePage.ANIME_EXTENSIONS, BrowsePage.ANIME_MIGRATION)
         browsePages(hideManga = false, animeEnabled = false, hasAnimeLibrary = true)
             .pageIndex(BrowseMedia.ANIME, BrowseSection.MIGRATION) shouldBe -1
     }

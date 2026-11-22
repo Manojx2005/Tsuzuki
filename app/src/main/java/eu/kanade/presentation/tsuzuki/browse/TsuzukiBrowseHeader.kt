@@ -53,7 +53,8 @@ private fun animeBrowseSectionAvailable(
     hasLibrary: Boolean,
 ) = when (section) {
     BrowseSection.SOURCES -> true
-    BrowseSection.EXTENSIONS -> hasRepos
+    // AP-18: reachable before any repository is added (private installs, and a way to add one).
+    BrowseSection.EXTENSIONS -> true
     BrowseSection.MIGRATION -> hasLibrary
 }
 

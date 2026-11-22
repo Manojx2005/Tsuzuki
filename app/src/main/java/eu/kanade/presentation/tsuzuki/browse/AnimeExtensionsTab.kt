@@ -4,38 +4,30 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.outlined.Layers
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.core.graphics.drawable.toBitmap
-import coil3.compose.AsyncImage
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
-import eu.kanade.tachiyomi.util.system.LocaleHelper
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,15 +41,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
 import eu.kanade.presentation.browse.ExtensionTrustDialog
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
@@ -75,6 +74,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeStoreRow
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.animeStoreRows
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeSourcePreferencesActivity
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.hasAnimeSourceSettings
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -260,12 +260,20 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
             }
             if (catalogue != null && shown.isEmpty()) {
                 item(key = "empty") {
-                    Text(
-                        tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
-                        color = tokens.mutedText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
+                    Column {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
+                            color = tokens.mutedText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                        // AP-18: with no repository yet, point straight at adding one.
+                        if (repos.isEmpty()) {
+                            TextButton(onClick = { navigator.push(AnimeExtensionReposScreen) }) {
+                                Text(tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_extension_repos)))
+                            }
+                        }
+                    }
                 }
             }
             listOf(
@@ -349,7 +357,6 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
             )
         }
     }
-
 }
 
 @Composable
