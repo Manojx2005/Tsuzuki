@@ -66,6 +66,37 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Batch AP — anime parity for 0.2.2 (owner 2026-11-22) — start here
+
+Owner: every feature the novel and manga tabs have must exist for anime, with the same design; plus the bugs he
+listed (switch hard to find, no Read/Watch on Home, Aniyomi links, downloaded episodes don't play, notification
+progress, no Library selection actions, no offline dictionary). **Full plan, file lists and acceptance:
+`docs/ANIME_PARITY_PLAN.md`.** 0.2.1 (Kokoro + the Browse redesign) is being released by its own session; AP
+cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under the owner waiver until it returns.
+
+| Card | What | Lane | Status |
+|---|---|---|---|
+| AP0 | Parity audit, anime vs manga on every surface → `docs/ANIME_PARITY_AUDIT.md` | Claude (devices) | `claude-working` |
+| AP1 | Anime switch at Settings top level + More; Read/Watch always on Home with a turn-on sheet | Codex or Claude | `ready` `parallel-ok` |
+| AP2 | Aniyomi repo links: `aniyomi://add-repo`, folder/tree/blob URLs, visible parse error | Codex or Claude | `ready` `parallel-ok` |
+| AP3 | Downloaded episodes play offline (mp4 + HLS), all entry points | Claude (devices) | `ready` |
+| AP4 | Download notification: real progress, n of m, pause/cancel, errors | Claude or Codex | `ready` `parallel-ok` |
+| AP5 | Library selection for anime + bottom action bar (shelves, watched, download, delete, remove, migrate) | Codex | `ready` (before AP8) |
+| AP6 | Episode list = chapter list (selection bar, swipe, filter/sort/display sheet) | Codex | `ready` |
+| AP7 | Details header/actions = manga details | Codex | after AP6 (same files) |
+| AP8 | Library display modes, sort/filter sheet, badges, shelf tabs | Codex | after AP5 |
+| AP9 | Updates + History rows/selection/actions = books | Codex | `ready` `parallel-ok` |
+| AP10 | Catalogue grid/list, long-press add, global search | Codex | `ready` `parallel-ok` |
+| AP11 | Download queue + anime download/player settings design | Codex | `ready` |
+| AP12 | "Import dictionary file" + ask owner about bundling (+29 MB) | Claude | `ready` `parallel-ok` |
+| AP13 | Every further gap from AP0 (one card each) | — | after AP0 |
+| RV-AP | Review + 0.2.2 release | review lane / Claude | last |
+
+**Prompt for the owner to paste into Codex (when it has usage):** `Read AGENTS.md, docs/HANDOFF.md ("Batch AP")
+and docs/ANIME_PARITY_PLAN.md. Take the first AP card marked ready that is in the Codex lane and not claimed;
+claim it here first (codex-working + worktree), follow the card, commit on tsuzuki/<card>, set review. Use the
+tablet/S22 only under the Device lock.`
+
 ## Codex next steps (Claude, 2026-11-21) — start here
 
 Goal: ship **v0.2** (first anime release). Two Codex threads can run at once: the **anime lane** (implements, may use the tablet/S22 under the Device lock) and the **review lane** (reviews and merges into `main` locally, Batch T rules; never reviews its own work). Claude implemented most of the waiting branches, so Claude must not review them.
