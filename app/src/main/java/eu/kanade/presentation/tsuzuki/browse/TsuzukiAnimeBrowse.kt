@@ -2,6 +2,14 @@ package eu.kanade.presentation.tsuzuki.browse
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.drawable.toBitmap
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
+import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,13 +105,27 @@ internal fun rememberAnimeSourcePins(): Pair<Preference<Set<String>>, Set<String
     return preference to pins
 }
 
+/** Anime sources (board "BrowseAnime"): pinned first, each row with its extension's icon; [query] filters by name. */
 internal fun animeSourcesTab(
     sources: List<RegisteredAnimeSource>,
-) = TabContent(MR.strings.label_sources) { padding, _ ->
+    query: String? = null,
+) = TabContent(MR.strings.label_sources, searchEnabled = true) { padding, _ ->
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
     val (pinPreference, pins) = rememberAnimeSourcePins()
-    val ordered = remember(sources, pins) { sources.sortedBy { it.source.id.toString() !in pins } }
+    val icons by produceState(emptyMap<String, ImageBitmap>(), sources) {
+        value = withContext(Dispatchers.IO) {
+            AnimeExtensionInstaller(context.applicationContext).installed().mapNotNull { (pkg, result) ->
+                val icon = (result as? AnimeLoadResult.Success)?.extension?.icon ?: return@mapNotNull null
+                runCatching { pkg to icon.toBitmap(96, 96).asImageBitmap() }.getOrNull()
+            }.toMap()
+        }
+    }
+    val needle = query?.trim().orEmpty()
+    val ordered = remember(sources, pins, needle) {
+        sources.filter { needle.isEmpty() || it.source.name.contains(needle, ignoreCase = true) }
+            .sortedWith(compareBy({ it.source.id.toString() !in pins }, { it.source.name.lowercase() }))
+    }
     val pinnedCount = ordered.count { it.source.id.toString() in pins }
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (sources.isEmpty()) {
@@ -147,13 +169,21 @@ internal fun animeSourcesTab(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Surface(
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(44.dp),
                         shape = RoundedCornerShape(12.dp),
                         color = tokens.track,
                         contentColor = tokens.dotOn,
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(source.name.trim().take(1).uppercase(), style = MaterialTheme.typography.titleSmall)
+                            val icon = icons[entry.extensionPackage]
+                            if (icon != null) {
+                                Image(icon, contentDescription = null, modifier = Modifier.matchParentSize())
+                            } else {
+                                Text(
+                                    source.name.trim().take(1).uppercase(),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                            }
                         }
                     }
                     Column {
@@ -166,7 +196,7 @@ internal fun animeSourcesTab(
                         )
                         if (source.lang.isNotBlank()) {
                             Text(
-                                tsuzukiMenuLabel(source.lang),
+                                tsuzukiMenuLabel(LocaleHelper.getSourceDisplayName(source.lang, context)),
                                 color = tokens.mutedText,
                                 style = MaterialTheme.typography.labelSmall,
                             )
