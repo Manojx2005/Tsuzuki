@@ -192,7 +192,8 @@ class AnimeDownloadTest {
         transfer.download(folder) {}
         assertEquals(listOf("episode", "a.ts", "b.ts", "episode", "b.ts"), requests)
         assertTrue(File(folder, AnimeVideoTransfer.PLAYLIST).isFile)
-        assertEquals(3, folder.listFiles()?.size)
+        // Playlist, two segments and the AP3 marker saying the segments are already clean.
+        assertEquals(setOf(AnimeVideoTransfer.PLAYLIST, "a.ts", "b.ts", ".segments-clean"), folder.list()?.toSet())
     }
 
     private fun client(block: (Request) -> Response): OkHttpClient = OkHttpClient.Builder()
