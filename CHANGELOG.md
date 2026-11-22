@@ -9,6 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.1]
+
+### Added
+- **Natural English voice (Kokoro).** Settings > Text-to-speech > Natural voice: download the voice pack once
+  (about 124 MB; every file is checked before it is installed) and novels in English are read aloud by an offline
+  natural voice. Text it cannot read, and books in other languages, keep the phone voice. Needs a 64-bit ARM phone.
+  Off by default; the phone voice stays the default.
+- Settings > Text-to-speech: choose the phone voice by language, play a sample, open Android's speech settings, and
+  set playback and read-along in one place (also reachable from the Listen panel).
+
+### Fixed
+- Pausing Listen at the very end of a chapter no longer replays the last sentence.
+
 ## [0.2.0]
 
 ### Added
