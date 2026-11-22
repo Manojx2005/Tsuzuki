@@ -237,6 +237,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
                 }
             }
             airing?.let { entry -> item(key = "airing_today") { AnimeAiringStrip(entry) } }
+            if (library.isNotEmpty()) item(key = "watch_activity") { WatchActivityTiles(store) }
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(

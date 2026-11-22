@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_tile_new_episodes">Episódios novos</string>
+    <string name="tsz_anime_tile_watched_today">Assistido hoje</string>
+    <string name="tsz_anime_tile_min">min</string>
+    <plurals name="tsz_anime_tile_in_shows">
+        <item quantity="one">em %d série</item>
+        <item quantity="other">em %d séries</item>
+    </plurals>
+</resources>
