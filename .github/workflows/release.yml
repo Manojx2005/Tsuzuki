@@ -8,7 +8,8 @@ name: Release
 on:
   push:
     tags:
-      - v*
+      # App versions only (v0.2.1). A bare v* also matched the voice-pack tag voices-v1.
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   # Release candidate: run by hand from the Actions tab (or `gh workflow run release.yml`). Builds and signs the same
   # APKs, attaches them to the run as an artifact, and publishes nothing (no tag, no GitHub release).
   workflow_dispatch:
