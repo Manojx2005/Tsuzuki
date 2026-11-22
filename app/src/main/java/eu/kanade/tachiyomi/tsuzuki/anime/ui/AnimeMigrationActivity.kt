@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
@@ -147,7 +148,13 @@ class AnimeMigrationActivity : BaseActivity() {
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     AnimeCover(source, anime.toSourceAnime(), Modifier.width(44.dp))
-                                    Text(tsuzukiMenuLabel(anime.title), style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        tsuzukiMenuLabel(anime.title),
+                                        color = TsuzukiTheme.tokens.dotOn,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
                                 }
                             }
                         }
@@ -295,6 +302,7 @@ private fun MigrationComparison(
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
                 tsuzukiMenuLabel(stringResource(MR.strings.label_migration)),
+                color = TsuzukiTheme.tokens.dotOn,
                 style = MaterialTheme.typography.displaySmall,
             )
             Column(
@@ -335,6 +343,7 @@ private fun MigrationComparison(
                             tsuzukiMenuLabel(
                                 androidStringResource(R.string.tsz_anime_migration_matches, match.matchedCount),
                             ),
+                            color = TsuzukiTheme.tokens.dotOn,
                             style = MaterialTheme.typography.titleSmall,
                         )
                         Text(

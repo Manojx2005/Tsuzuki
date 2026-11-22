@@ -215,9 +215,11 @@ fun TsuzukiExtensionLanguagePills(
     selected: String?,
     onSelect: (String?) -> Unit,
     modifier: Modifier = Modifier,
+    labelFor: (String) -> String = { it },
 ) {
     if (languages.size < 2) return
-    val labels = listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.all)) + languages
+    val labels = listOf(tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.all)) +
+        languages.map(labelFor)
     eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow(
         labels = labels,
         selected = selected?.let { languages.indexOf(it) + 1 }?.takeIf { it > 0 } ?: 0,

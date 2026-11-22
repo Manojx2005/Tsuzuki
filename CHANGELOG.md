@@ -19,8 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Settings > Text-to-speech: choose the phone voice by language, play a sample, open Android's speech settings, and
   set playback and read-along in one place (also reachable from the Listen panel).
 
+### Changed
+- Browse > Anime: the extensions and sources pages are redesigned, with extension icons, names without the
+  "Aniyomi:" prefix, search, Update all and language pills.
+- Anime migration shows readable titles.
+
 ### Fixed
 - Pausing Listen at the very end of a chapter no longer replays the last sentence.
+- The anime details page no longer shows a second loading spinner while it refreshes.
+- Opening the reader menu no longer pushes the page down.
 
 ## [0.2.0]
 

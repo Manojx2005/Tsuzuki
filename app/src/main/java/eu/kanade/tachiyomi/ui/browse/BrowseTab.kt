@@ -100,6 +100,8 @@ data object BrowseTab : Tab {
 
         var mangaQuery by rememberSaveable { mutableStateOf(extensionsState.searchQuery) }
         var novelQuery by rememberSaveable { mutableStateOf(novelExtensionsState.searchQuery) }
+        var animeQuery by rememberSaveable { mutableStateOf<String?>(null) }
+        var animeSourceQuery by rememberSaveable { mutableStateOf<String?>(null) }
         LaunchedEffect(extensionsViewModel, novelExtensionsViewModel) {
             extensionsViewModel.search(mangaQuery)
             novelExtensionsViewModel.search(novelQuery)
@@ -131,13 +133,15 @@ data object BrowseTab : Tab {
                 BrowsePage.MANGA_EXTENSIONS -> extensionsTab(extensionsViewModel)
                 BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()
                 BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
-                BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources)
-                BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeRepos)
+                BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources, animeSourceQuery)
+                BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeRepos, animeQuery)
                 BrowsePage.ANIME_MIGRATION -> animeMigrateSourceTab(animeSources)
             }
         }
         val novelExtensionsTabIndex = pages.indexOf(BrowsePage.NOVEL_EXTENSIONS)
         val mangaExtensionsTabIndex = pages.indexOf(BrowsePage.MANGA_EXTENSIONS)
+        val animeExtensionsTabIndex = pages.indexOf(BrowsePage.ANIME_EXTENSIONS)
+        val animeSourcesTabIndex = pages.indexOf(BrowsePage.ANIME_SOURCES)
 
         TabbedScreen(
             titleRes = MR.strings.browse,
@@ -168,6 +172,8 @@ data object BrowseTab : Tab {
             searchQuery = when (state.currentPage) {
                 novelExtensionsTabIndex -> novelExtensionsState.searchQuery
                 mangaExtensionsTabIndex -> extensionsState.searchQuery
+                animeExtensionsTabIndex -> animeQuery
+                animeSourcesTabIndex -> animeSourceQuery
                 else -> null
             },
             onChangeSearchQuery = { query ->
@@ -180,6 +186,8 @@ data object BrowseTab : Tab {
                         mangaQuery = query
                         extensionsViewModel.search(query)
                     }
+                    animeExtensionsTabIndex -> animeQuery = query
+                    animeSourcesTabIndex -> animeSourceQuery = query
                 }
             },
         )
