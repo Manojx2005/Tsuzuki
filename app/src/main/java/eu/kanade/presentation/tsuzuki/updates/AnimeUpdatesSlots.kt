@@ -261,6 +261,9 @@ private fun AnimeUpdatesScreen(
         selectedIds = ids.toLongArray()
     }
     BackHandler(enabled = selected.isNotEmpty()) { select(emptySet()) }
+    // As in book Updates: the phone's bottom nav makes room for the selection bar.
+    val selecting = selected.isNotEmpty()
+    LaunchedEffect(selecting) { eu.kanade.tachiyomi.ui.home.HomeScreen.showBottomNav(!selecting) }
     fun runOnSelection(block: suspend (List<AnimeUpdateEpisode>) -> Unit) {
         val items = selected
         select(emptySet())
