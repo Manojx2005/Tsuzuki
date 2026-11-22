@@ -1898,7 +1898,15 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             (contentContainer.height + scrollView.paddingTop + scrollView.paddingBottom - scrollView.height)
                 .coerceAtLeast(0)
         val atEnd = !isRestoringScroll && oldMax > 0 && scrollView.scrollY >= oldMax - 2
+        val topDelta = top - scrollView.paddingTop
+        val keepPlace = !atEnd && !isRestoringScroll && topDelta != 0 && scrollView.scrollY > 0
         scrollView.setPadding(scrollView.paddingLeft, top, scrollView.paddingRight, extra)
+        if (keepPlace) {
+            // Tsuzuki (owner 2026-11-22): showing the menu must not push the page down by the bar's height; only at
+            // the very top of a chapter does the first line move clear of the bar.
+            // The scroll range already uses the new padding, so this lands in the same frame (no visible jump).
+            scrollView.scrollBy(0, topDelta)
+        }
         if (atEnd) {
             val generation = renderGeneration
             scrollView.post {

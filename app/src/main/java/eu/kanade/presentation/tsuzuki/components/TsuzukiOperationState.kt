@@ -77,13 +77,9 @@ internal fun storageAction(): (() -> Unit)? {
 @Composable
 fun TsuzukiDetailsSourceStatus(state: MangaViewModel.State.Success, onRetry: () -> Unit, onWebView: (() -> Unit)?) {
     val error = state.sourceError ?: if (state.source is StubSource) MissingSourceException() else null
+    // Owner 2026-11-22: no second spinner under the cover; the pull-to-refresh indicator already shows the refresh.
     when {
-        state.isRefreshingData -> TsuzukiLoadingStages(
-            state.manga.title,
-            listOf(stringResource(MR.strings.tsz_error_fetch)),
-            0,
-            operationKey = state.manga.id,
-        )
+        state.isRefreshingData -> Unit
         error != null -> TsuzukiErrorState(
             error,
             state.manga.title,
