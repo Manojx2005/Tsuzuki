@@ -1,9 +1,13 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.preview
 
-import org.junit.jupiter.api.Assertions.*
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
-import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 
 class AnimePreviewPolicyTest {
     @Test
@@ -48,10 +52,40 @@ class AnimePreviewPolicyTest {
         assertNotEquals(model.cacheKey, model.copy(frameVersion = 11).cacheKey)
         assertNotEquals(model.cacheKey, model.copy(networkAllowed = false).cacheKey)
         assertNotEquals(model.cacheKey, model.copy(sourceId = 4).cacheKey)
+        // Captured frames stay per episode; shared artwork (no frame) is one cache entry for all its episodes.
+        assertNotEquals(model.cacheKey, model.copy(episodeId = 99).cacheKey)
+        val shared = model.copy(frameVersion = 0)
+        assertEquals(shared.cacheKey, shared.copy(episodeId = 99, animeId = 7).cacheKey)
+        assertNotEquals(shared.cacheKey, shared.copy(previewUrl = "other").cacheKey)
+        assertNotEquals(shared.cacheKey, shared.copy(coverUrl = "other").cacheKey)
+        assertNotEquals(shared.cacheKey, shared.copy(networkAllowed = false).cacheKey)
+        assertNotEquals(shared.cacheKey, model.cacheKey)
         assertNull(previewRemaining(5, 0))
         assertNull(previewRemaining(5, -1))
         assertEquals(15L, previewRemaining(5, 20))
         assertEquals(0L, previewRemaining(25, 20))
+    }
+
+    @Test
+    fun cacheKeysDistinguishUrlBoundariesAndMissingUrls() {
+        for (frameVersion in listOf(0L, 10L)) {
+            val model = AnimeEpisodePreview(
+                animeId = 1,
+                episodeId = 2,
+                previewUrl = "https://example.org/preview;https://example.org/other",
+                coverUrl = "https://example.org/cover",
+                frameVersion = frameVersion,
+                sourceId = 3,
+                networkAllowed = true,
+            )
+            val differentUrls = model.copy(
+                previewUrl = "https://example.org/preview",
+                coverUrl = "https://example.org/other;https://example.org/cover",
+            )
+            assertNotEquals(model.cacheKey, differentUrls.cacheKey)
+            assertNotEquals(model.copy(previewUrl = null).cacheKey, model.copy(previewUrl = "null").cacheKey)
+            assertNotEquals(model.copy(coverUrl = null).cacheKey, model.copy(coverUrl = "").cacheKey)
+        }
     }
 
     @Test

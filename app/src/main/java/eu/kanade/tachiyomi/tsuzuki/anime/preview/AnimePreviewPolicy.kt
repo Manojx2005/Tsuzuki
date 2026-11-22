@@ -11,9 +11,28 @@ internal data class AnimeEpisodePreview(
     val sourceId: Long,
     val networkAllowed: Boolean,
 ) {
+    /**
+     * A captured frame belongs to one episode. Without one, the artwork is the source's preview or the show's
+     * cover, often shared by hundreds of episodes, so it is keyed without the episode and decoded once.
+     */
     val cacheKey: String
-        get() = listOf("anime-preview", animeId, episodeId, frameVersion, sourceId, previewUrl, coverUrl, networkAllowed)
-            .joinToString(";")
+        get() = buildString {
+            if (frameVersion > 0) {
+                append("anime-preview:$animeId:$episodeId:$frameVersion:")
+            } else {
+                append("anime-artwork:")
+            }
+            append("$sourceId:$networkAllowed:")
+            appendCacheUrl(previewUrl)
+            appendCacheUrl(coverUrl)
+        }
+}
+
+// URL contents can contain separators. A length prefix also distinguishes null from an empty URL.
+private fun StringBuilder.appendCacheUrl(url: String?) {
+    append(url?.length ?: -1)
+    append(':')
+    append(url.orEmpty())
 }
 
 internal fun previewNetworkAllowed(mode: EpisodePreviewMode, wifi: Boolean): Boolean = when (mode) {
@@ -23,8 +42,11 @@ internal fun previewNetworkAllowed(mode: EpisodePreviewMode, wifi: Boolean): Boo
 }
 
 internal fun previewUrls(preview: String?, cover: String?, allowed: Boolean): List<String> =
-    if (allowed) listOfNotNull(preview?.takeIf(String::isNotBlank), cover?.takeIf(String::isNotBlank)).distinct()
-    else emptyList()
+    if (allowed) {
+        listOfNotNull(preview?.takeIf(String::isNotBlank), cover?.takeIf(String::isNotBlank)).distinct()
+    } else {
+        emptyList()
+    }
 
 internal fun previewRemaining(position: Long, duration: Long): Long? =
     if (duration > 0) (duration - position.coerceAtLeast(0)).coerceAtLeast(0) else null
