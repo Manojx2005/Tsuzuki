@@ -92,7 +92,7 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 | AP13 | Follow-up cards AP-14 through AP-21 from the AP0 audit | Codex | after AP11 |
 | AP-14 | Watch Home activity tiles | Claude (took over) | `review` `62eff9e63` on `tsuzuki/ap-14` (based on `tsuzuki/ap-21`) |
 | AP-15 | Anime extension details | Claude (took over) | `review` `39d7d9ab9` on `tsuzuki/ap-15` |
-| AP-16 | Continue Watching widget activity at larger sizes | Codex | after AP11 |
+| AP-16 | Continue Watching widget activity at larger sizes | Claude (took over) | `claude-working` on `tsuzuki/ap-16`: compiles only; needs spotless, full gate, device check |
 | AP-17 | Preserve anime in backups while the feature is hidden | Claude (took over) | `review` `1dec69b2c` on `tsuzuki/ap-17` |
 | AP-18 | Keep Anime Extensions reachable with zero repositories | Claude (took over) | `review` `7903f9dd5` on `tsuzuki/ap-18` |
 | AP-19 | Anime counts and download bytes in Data and storage | Claude (took over) | `review` `3fbe28a8b` on `tsuzuki/ap-19` |
