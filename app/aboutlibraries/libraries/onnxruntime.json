@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.neural-tts:onnxruntime",
+  "name": "ONNX Runtime",
+  "artifactVersion": "1.28.2",
+  "description": "Included in arm64 builds inside the natural-voice runtime. Third-party notices are in the linked folder.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/main/docs/licenses/neural-tts/onnxruntime-MIT.txt",
+  "licenses": [
+    "MIT"
+  ]
+}

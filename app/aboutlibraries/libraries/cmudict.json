@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.neural-tts:cmudict",
+  "name": "CMU Pronouncing Dictionary (converted, downloaded pack)",
+  "artifactVersion": "74790861f652",
+  "description": "English pronunciations for the natural voice, converted to Kokoro symbols by Tsuzuki; shipped in the downloaded voice pack.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/main/docs/licenses/neural-tts/cmudict-NOTICE.txt",
+  "licenses": [
+    "BSD-2-Clause"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.neural-tts:kokoro-82m",
+  "name": "Kokoro-82M voice (downloaded pack)",
+  "artifactVersion": "kokoro-cmu-v1",
+  "description": "Model weights and voices of the optional natural voice, downloaded on request, not part of the app. hexgrad/Kokoro-82M-v1.1-zh, ONNX conversion by k2-fsa/sherpa-onnx.",
+  "website": "https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh",
+  "licenses": [
+    "Apache-2.0"
+  ]
+}

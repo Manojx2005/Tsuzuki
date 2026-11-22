@@ -120,3 +120,23 @@ If the OOV behaviour below proves unacceptable on real novel text, the answer fo
 - v2.0.0 changed Kokoro/ZipVoice/Matcha config semantics (`--kokoro-lang` ignored, lexicon required). The owner's draft was Flutter/Dart and does not apply (already noted in WORKPLAN).
 - Not done: synthesis run, real-time factor on the S22 / Tab S11, alignment audit of non-arm64 ABIs.
 - Upstream could reintroduce espeak or other GPL dependencies in later releases; re-verify on each upgrade.
+
+## Release licence check for `kokoro-cmu-v1` (Claude, 2026-11-22, owner: "research it first")
+
+What the public `voices-v1` pack contains, read from `scripts/package-kokoro-cmu-test.py` (it copies an allowlist,
+nothing else) and the built manifest:
+
+| File | From | Licence |
+|---|---|---|
+| `model.int8.onnx`, `voices.bin`, `tokens.txt`, `LICENSE` | official `kokoro-int8-multi-lang-v1_1.tar.bz2` (SHA-256 `259c9c8b…3e9c`, refused on mismatch); weights `hexgrad/Kokoro-82M-v1.1-zh`, ONNX conversion by k2-fsa | Apache-2.0 (the tarball's own `LICENSE` ships inside the pack) |
+| `lexicon-us-en.txt` | **our** conversion of CMUdict commit `74790861f652` (NT-LEX1, independently reviewed; output SHA-256 `3f9d0234…fb50`, refused on mismatch) | CMU Pronouncing Dictionary licence (BSD-2-Clause style); `CMUDICT-LICENSE.txt` + `CMUDICT-NOTICE.txt` ship inside the pack |
+| `NOTICE.txt` | written by the script | — |
+
+Not in the pack: the upstream `lexicon-us-en.txt` / `lexicon-gb-en.txt` / `lexicon-zh.txt` (the unverified files),
+`espeak-ng-data/`, any phonemizer data. **Verdict: every file has a redistribution licence; the pack may be
+published.** The runtime in the APK (source-built sherpa-onnx 2.0.1, ONNX Runtime 1.28.2, KISS FFT) is credited in
+About through `app/aboutlibraries/` with texts in `docs/licenses/neural-tts/`.
+
+Built 2026-11-22: `kokoro-cmu-v1.zip`, 129,833,251 bytes, SHA-256
+`9fc12e010ebe1deadcbb4c10c351cd7aac7aed3270dc8e2ba17e89485bbf0e93` (only `NOTICE.txt` changed from the listening-test
+pack: release wording).

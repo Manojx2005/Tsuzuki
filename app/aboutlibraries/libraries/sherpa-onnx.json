@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.neural-tts:sherpa-onnx",
+  "name": "sherpa-onnx",
+  "artifactVersion": "2.0.1 (Kokoro-only build)",
+  "description": "Included in arm64 builds for the optional natural voice (Kokoro). Built from source without espeak-ng; build scripts in scripts/neural-tts.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/main/docs/licenses/neural-tts/sherpa-onnx-LICENSE.txt",
+  "licenses": [
+    "Apache-2.0"
+  ]
+}

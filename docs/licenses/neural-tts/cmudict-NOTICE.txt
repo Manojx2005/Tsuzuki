@@ -1,0 +1,5 @@
+This product's English pronunciation lexicon was converted from the CMU Pronouncing Dictionary
+(cmudict.dict, github.com/cmusphinx/cmudict, commit 74790861f652b15e4ac49015a90074ad62a27690).
+The ARPAbet pronunciations were mapped to Kokoro phoneme symbols by scripts/neural-tts/build-lexicon-cmudict.py;
+the data was modified by that conversion. The full CMU licence text is in cmudict-LICENSE.txt and must be
+kept with any copy of the converted lexicon.

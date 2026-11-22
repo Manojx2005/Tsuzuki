@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the NT2 listening pack from pinned Kokoro weights and our reviewed CMUdict conversion."""
+"""Build the Kokoro voice pack (kokoro-cmu-v1) from pinned Kokoro weights and our reviewed CMUdict conversion."""
 import argparse
 import hashlib
 import importlib.util
@@ -52,7 +52,7 @@ def package(source, output, manifest_output):
             "Kokoro weights: hexgrad/Kokoro-82M-v1.1-zh, Apache-2.0; ONNX conversion by k2-fsa/sherpa-onnx.\n"
             "US English lexicon converted independently from pinned CMUdict, under its included licence.\n"
             "No upstream pronunciation dictionary, legacy phonemizer data or Chinese lexicon included.\n"
-            "Debug listening test only. Voice 0, US lexicon; quality and speed have not passed device review.\n",
+            "Tsuzuki natural voice pack: voice 0, US English lexicon. Optional download for the Tsuzuki app.\n",
             encoding="utf-8", newline="",
         )
         files = {p.name: {"size": p.stat().st_size, "sha256": digest(p)} for p in sorted(stage.iterdir())}

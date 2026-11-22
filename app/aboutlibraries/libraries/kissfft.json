@@ -1,0 +1,10 @@
+{
+  "uniqueId": "tsuzuki.neural-tts:kissfft",
+  "name": "KISS FFT",
+  "artifactVersion": "sherpa-onnx 2.0.1 dependency",
+  "description": "Included in arm64 builds inside the natural-voice runtime.",
+  "website": "https://github.com/Manojx2005/Tsuzuki/blob/main/docs/licenses/neural-tts/kissfft-BSD-3-Clause.txt",
+  "licenses": [
+    "BSD-3-Clause"
+  ]
+}
