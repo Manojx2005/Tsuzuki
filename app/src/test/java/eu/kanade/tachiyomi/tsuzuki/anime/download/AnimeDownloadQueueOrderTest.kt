@@ -30,4 +30,16 @@ class AnimeDownloadQueueOrderTest {
             queue.retryFailed().entries.map { it.status },
         )
     }
+
+    @Test
+    fun onlyEpisodesThatTurnWatchedAreDeleted() {
+        // An anime's first look is its baseline: already-watched episodes are never deleted.
+        assertEquals(emptySet<Long>(), newlyWatchedDownloads(emptyMap(), mapOf(7L to setOf(1L, 2L))))
+        assertEquals(setOf(3L), newlyWatchedDownloads(mapOf(7L to setOf(1L, 2L)), mapOf(7L to setOf(1L, 2L, 3L))))
+        // Unmarking is not a deletion, and a second anime joining starts with its own baseline.
+        assertEquals(
+            emptySet<Long>(),
+            newlyWatchedDownloads(mapOf(7L to setOf(1L, 2L)), mapOf(7L to setOf(1L), 8L to setOf(9L))),
+        )
+    }
 }
