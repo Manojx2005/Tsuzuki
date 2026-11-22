@@ -133,7 +133,9 @@ data object BrowseTab : Tab {
                 BrowsePage.MANGA_EXTENSIONS -> extensionsTab(extensionsViewModel)
                 BrowsePage.NOVEL_MIGRATION -> novelMigrateSourceTab()
                 BrowsePage.MANGA_MIGRATION -> migrateSourceTab()
-                BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources, animeSourceQuery)
+                BrowsePage.ANIME_SOURCES -> animeSourcesTab(animeSources, animeSourceQuery) {
+                    if (hideMangaUi) NovelGlobalSearchScreen() else GlobalSearchScreen()
+                }
                 BrowsePage.ANIME_EXTENSIONS -> animeExtensionsTab(animeRepos, animeQuery)
                 BrowsePage.ANIME_MIGRATION -> animeMigrateSourceTab(animeSources)
             }

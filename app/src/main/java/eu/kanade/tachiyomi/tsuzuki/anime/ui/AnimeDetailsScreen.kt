@@ -522,7 +522,7 @@ internal fun AnimeDetailsScreen(
 private data class AnimeDuplicateMatch(val existing: Anime, val adding: Anime)
 
 @Composable
-private fun AnimeShelfPicker(
+internal fun AnimeShelfPicker(
     shelves: List<AnimeCategory>,
     initial: Set<Long>,
     onDismiss: () -> Unit,

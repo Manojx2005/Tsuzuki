@@ -107,6 +107,17 @@ internal class AnimeGlobalSearch {
         revision++
     }
 
+    companion object {
+        @Volatile private var animeFirst = false
+
+        /** The next global search opens on the Anime pill (Browse › Anime toolbar, AP10). */
+        fun openAnimeFirst() {
+            animeFirst = true
+        }
+
+        internal fun consumeAnimeFirst(): Boolean = animeFirst.also { animeFirst = false }
+    }
+
     suspend fun search(sources: List<RegisteredAnimeSource>, submitted: String) = coroutineScope {
         if (submitted.isBlank()) {
             results = emptyList()
@@ -148,7 +159,9 @@ internal fun rememberAnimeGlobalSearch(allowed: Boolean): AnimeGlobalSearch? {
     if (!allowed || !TsuzukiAnime.enabled || TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) return null
     val available by rememberAnimeBrowseSources()
     val (_, pins) = rememberAnimeSourcePins()
-    val model = remember { AnimeGlobalSearch() }
+    val model = remember {
+        AnimeGlobalSearch().also { if (AnimeGlobalSearch.consumeAnimeFirst()) it.select(true, null) }
+    }
     val selected = model.selected
     val submitted = model.query
     val sources = remember(available, pins, model.pinnedOnly) {
