@@ -53,6 +53,9 @@ data class StorageBreakdown(
     val novels: Long? = null,
     val manga: Long? = null,
     val chapters: Long? = null,
+    /** Favourite anime and their episodes (AP-19); null while Anime is off or not counted yet. */
+    val anime: Long? = null,
+    val episodes: Long? = null,
 ) {
     val sizes: List<Long?> get() = listOf(downloads, covers, database, cache)
 

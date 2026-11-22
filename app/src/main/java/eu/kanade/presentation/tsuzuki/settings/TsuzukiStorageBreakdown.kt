@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,6 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hippo.unifile.UniFile
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import logcat.LogPriority
@@ -78,6 +83,14 @@ fun TsuzukiStorageBreakdown(modifier: Modifier = Modifier) {
             StatTile(breakdown.manga, stringResource(MR.strings.tsz_storage_manga), Modifier.weight(1f))
             StatTile(breakdown.chapters, stringResource(MR.strings.tsz_storage_chapters), Modifier.weight(1f))
         }
+        // AP-19: anime counts next to the book ones while Anime is on.
+        if (TsuzukiAnime.enabled) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatTile(breakdown.anime, stringResource(MR.strings.tsz_anime_media), Modifier.weight(1f))
+                StatTile(breakdown.episodes, stringResource(MR.strings.tsz_anime_debug_episodes), Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
+            }
+        }
     }
 }
 
@@ -115,6 +128,20 @@ private suspend fun measureStorage(context: Context, update: ((StorageBreakdown)
         val chapters = Injekt.get<ChapterRepository>().getFavoriteChaptersCount()
         update { it.copy(novels = novels, manga = manga, chapters = chapters) }
     }.onFailure { StorageLog.logcat(LogPriority.WARN, it) { "Storage: library counts failed" } }
+    // AP-19: anime library counts and saved-episode bytes (anime saves outside the book downloads folder; the queue
+    // records each saved episode's size).
+    var animeBytes = 0L
+    if (TsuzukiAnime.enabled) {
+        runCatching {
+            val library = Injekt.get<AnimeLibraryStore>().getLibrary()
+            update { it.copy(anime = library.size.toLong(), episodes = library.sumOf { show -> show.totalCount }) }
+        }.onFailure { StorageLog.logcat(LogPriority.WARN, it) { "Storage: anime counts failed" } }
+        runCatching {
+            animeBytes = Injekt.get<AnimeDownloads>().readyQueue().entries
+                .filter { it.status == AnimeDownloadStatus.Saved }
+                .sumOf { it.bytes }
+        }.onFailure { StorageLog.logcat(LogPriority.WARN, it) { "Storage: anime download size failed" } }
+    }
     // Last, because it can be slow on a SAF folder.
     runCatching {
         val root: UniFile? = Injekt.get<StorageManager>().getDownloadsDirectory()
@@ -130,10 +157,10 @@ private suspend fun measureStorage(context: Context, update: ((StorageBreakdown)
                 keepGoing = keepGoing,
             )
         }
-        update { it.copy(downloads = measured.bytes, downloadsPartial = measured.partial) }
+        update { it.copy(downloads = measured.bytes + animeBytes, downloadsPartial = measured.partial) }
     }.onFailure {
         StorageLog.logcat(LogPriority.WARN, it) { "Storage: downloads size failed" }
-        update { it.copy(downloads = 0L) }
+        update { it.copy(downloads = animeBytes) }
     }
 }
 
