@@ -60,6 +60,7 @@ import androidx.paging.PagingState
 import androidx.paging.compose.collectAsLazyPagingItems
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.library.components.CommonMangaItemDefaults
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
@@ -322,19 +323,31 @@ private fun AnimeCatalogueScreen(
                             onSelect = displayPreference::set,
                         )
                     }
+                    // WebView and source settings go to the overflow menu, as in the book catalogue, so the
+                    // title keeps its room on phones.
                     val baseUrl = (source as? AnimeHttpSource)?.baseUrl
-                    if (!baseUrl.isNullOrBlank()) {
-                        IconButton(onClick = {
-                            context.startActivity(WebViewActivity.newIntent(context, baseUrl, title = source.name))
-                        }) {
-                            Icon(Icons.Outlined.Public, stringResource(MR.strings.action_open_in_web_view))
-                        }
-                    }
-                    if (onSettings != null) {
-                        IconButton(onClick = onSettings) {
-                            Icon(Icons.Outlined.Settings, stringResource(MR.strings.source_settings))
-                        }
-                    }
+                    AppBarActions(
+                        listOfNotNull(
+                            baseUrl?.takeIf(String::isNotBlank)?.let { url ->
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_open_in_web_view),
+                                    icon = Icons.Outlined.Public,
+                                    onClick = {
+                                        context.startActivity(
+                                            WebViewActivity.newIntent(context, url, title = source.name),
+                                        )
+                                    },
+                                )
+                            },
+                            onSettings?.let {
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.source_settings),
+                                    icon = Icons.Outlined.Settings,
+                                    onClick = it,
+                                )
+                            },
+                        ),
+                    )
                 },
             )
         },
