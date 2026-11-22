@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_ep">ep.</string>
+    <string name="tsz_anime_history_clear_confirm">¿Quitar todo el historial de anime? El progreso y las marcas de visto se conservan.</string>
+</resources>

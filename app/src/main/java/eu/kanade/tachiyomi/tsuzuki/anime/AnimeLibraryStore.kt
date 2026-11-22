@@ -73,10 +73,29 @@ internal class AnimeLibraryStore(
             memo,
             scanlator,
             animeMemo,
+            seen,
+            bookmark,
+            lastSecondSeen,
+            totalSeconds,
+            source,
+            cover,
         ->
         val visible = memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) &&
             !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
-        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to visible
+        AnimeUpdateEpisode(
+            animeId = animeId,
+            title = title,
+            episodeId = episodeId,
+            name = name,
+            previewUrl = previewUrl,
+            timestamp = dateFetch,
+            seen = seen,
+            bookmark = bookmark,
+            lastSecondSeen = lastSecondSeen,
+            totalSeconds = totalSeconds,
+            sourceId = source,
+            coverUrl = cover,
+        ) to visible
     }.subscribeToList().map { rows ->
         rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
     }
@@ -457,6 +476,12 @@ internal data class AnimeUpdateEpisode(
     val name: String,
     val previewUrl: String?,
     val timestamp: Long,
+    val seen: Boolean = false,
+    val bookmark: Boolean = false,
+    val lastSecondSeen: Long = 0,
+    val totalSeconds: Long = 0,
+    val sourceId: Long = 0,
+    val coverUrl: String? = null,
 )
 
 private const val UPDATE_MEMO_KEY = "tsuzuki:library-update"

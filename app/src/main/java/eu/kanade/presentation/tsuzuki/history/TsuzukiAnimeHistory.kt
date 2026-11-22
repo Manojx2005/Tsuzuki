@@ -2,17 +2,22 @@ package eu.kanade.presentation.tsuzuki.history
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -35,10 +40,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
@@ -238,6 +247,7 @@ private fun AnimeHistoryRow(
     onRemove: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
+    val shape = RoundedCornerShape(18.dp)
     val episode = if (item.episodeNumber.isFinite() && item.episodeNumber >= 0) {
         val number = NumberFormat.getNumberInstance().apply { isGroupingUsed = false }.format(item.episodeNumber)
         androidStringResource(R.string.tsz_anime_history_episode, number)
@@ -253,56 +263,107 @@ private fun AnimeHistoryRow(
         else -> null
     }
     val time = timeFormatter.format(item.lastSeen.toInstant().atZone(ZoneId.systemDefault()))
-    TsuzukiTile(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp)
-            .tsuzukiClickable(role = Role.Button, onClick = onResume),
-        padding = 8.dp,
+    val progress = when {
+        item.seen -> 1f
+        item.duration > 0 -> (item.position.toFloat() / item.duration).coerceIn(0f, 1f)
+        else -> null
+    }
+    // Same tile as a book history row (design board "History"): cover, title, "episode · time", progress, remove.
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 3.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(tokens.tile)
+            .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
+            .tsuzukiClickable(role = Role.Button, onClick = onResume)
+            .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(
-                Modifier.size(84.dp, 48.dp).clip(RoundedCornerShape(8.dp)).background(tokens.track),
-                contentAlignment = Alignment.Center,
-            ) {
-                val cover = item.previewUrl ?: item.thumbnailUrl
-                if (cover == null) {
-                    Icon(Icons.Outlined.PlayArrow, contentDescription = null, tint = tokens.mutedText)
-                } else {
-                    AsyncImage(
-                        model = cover,
-                        contentDescription = null,
-                        modifier = Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop,
-                        colorFilter = tsuzukiCoverFilter(),
-                    )
-                }
-                if (item.duration > 0) {
-                    TsuzukiProgressBar(
-                        progress = (item.position.toFloat() / item.duration).coerceIn(0f, 1f),
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        thickness = 3.dp,
-                        showDots = false,
-                    )
-                }
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    tsuzukiMenuLabel(item.title),
-                    color = tokens.dotOn,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        Box(
+            Modifier.width(44.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(6.dp)).background(tokens.track),
+            contentAlignment = Alignment.Center,
+        ) {
+            val cover = item.thumbnailUrl ?: item.previewUrl
+            if (cover == null) {
+                Icon(Icons.Outlined.PlayArrow, contentDescription = null, tint = tokens.mutedText)
+            } else {
+                AsyncImage(
+                    model = cover,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.Crop,
+                    colorFilter = tsuzukiCoverFilter(),
                 )
-                Text(
-                    tsuzukiMenuLabel(listOfNotNull(episode, remaining, time).joinToString(" · ")),
-                    color = tokens.mutedText,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Outlined.Delete, stringResource(MR.strings.action_remove), tint = tokens.mutedText)
             }
         }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                tsuzukiMenuLabel(item.title),
+                color = tokens.dotOn,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                tsuzukiMenuLabel(listOfNotNull(episode, remaining, time).joinToString(" · ")),
+                color = tokens.mutedText,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            progress?.let { TsuzukiProgressBar(it, dots = 16, thickness = 4.dp) }
+        }
+        IconButton(onClick = onRemove) {
+            Icon(
+                Icons.Outlined.Close,
+                contentDescription = stringResource(MR.strings.action_remove),
+                tint = tokens.mutedText,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+/** History toolbar actions while the Anime pill is selected: clear the whole watch history, after a confirmation. */
+@Composable
+internal fun TsuzukiAnimeHistoryActions() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var confirming by remember { mutableStateOf(false) }
+    AppBarActions(
+        listOf(
+            AppBar.Action(
+                title = stringResource(MR.strings.pref_clear_history),
+                icon = Icons.Outlined.DeleteSweep,
+                onClick = { confirming = true },
+            ),
+        ),
+    )
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text(stringResource(MR.strings.action_remove_everything)) },
+            text = { Text(androidStringResource(R.string.tsz_anime_history_clear_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirming = false
+                    scope.launch {
+                        try {
+                            Injekt.get<AnimeHistoryRepository>().removeAllHistory()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            logcat(LogPriority.WARN, e) { "Could not clear anime history" }
+                            context.toast(MR.strings.unknown_error)
+                        }
+                    }
+                }) { Text(stringResource(MR.strings.action_ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirming = false }) { Text(stringResource(MR.strings.action_cancel)) }
+            },
+        )
     }
 }

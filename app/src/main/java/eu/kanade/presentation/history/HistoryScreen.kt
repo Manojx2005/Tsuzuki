@@ -123,7 +123,10 @@ fun HistoryScreen(
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
                 actions = historyActions@{
-                    if (showingAnime) return@historyActions
+                    if (showingAnime) {
+                        eu.kanade.presentation.tsuzuki.history.TsuzukiAnimeHistoryActions()
+                        return@historyActions
+                    }
                     AppBarActions(
                         listOf(
                             AppBar.Action(

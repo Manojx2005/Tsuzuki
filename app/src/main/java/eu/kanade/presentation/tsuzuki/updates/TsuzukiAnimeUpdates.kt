@@ -23,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +50,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeUpdateEpisode
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.delay
@@ -56,6 +59,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toKotlinLocalDate
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.presentation.core.components.material.PullRefresh
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -120,33 +124,36 @@ internal fun AnimeAiringStrip(entry: AnimeUpdateEpisode, modifier: Modifier = Mo
 
 @Composable
 internal fun TsuzukiAnimeUpdates(
-    store: AnimeLibraryStore,
+    entries: List<AnimeUpdateEpisode>,
     padding: PaddingValues,
     pills: @Composable () -> Unit,
     airing: AnimeUpdateEpisode?,
+    selected: Set<Long>,
+    downloadStatus: Map<Long, AnimeDownloadStatus>,
+    toSave: Int,
+    onSaveAll: () -> Unit,
+    onToggleSelection: (AnimeUpdateEpisode) -> Unit,
+    onDownload: (AnimeUpdateEpisode) -> Unit,
 ) {
     val context = LocalContext.current
     val jobs by remember(context) {
         context.workManager.getWorkInfosForUniqueWorkFlow(AnimeLibraryUpdateJob.MANUAL)
     }.collectAsState(emptyList())
     val isRefreshing = jobs.any { it.state == WorkInfo.State.RUNNING }
-    val since = remember {
-        Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()).toEpochMilliseconds()
-    }
-    val entries by remember(store, since) { store.observeNewEpisodes(since) }.collectAsState(emptyList())
     val zone = ZoneId.systemDefault()
     val groups = remember(entries, zone) {
         entries.groupBy { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate().toKotlinLocalDate() }
     }
+    val selectionMode = selected.isNotEmpty()
 
     PullRefresh(
         refreshing = isRefreshing,
-        enabled = !isRefreshing,
+        enabled = !isRefreshing && !selectionMode,
         onRefresh = { AnimeLibraryUpdateJob.start(context) },
         indicatorPadding = padding,
     ) {
         LazyColumn(contentPadding = padding) {
-            item(key = "media_pills") { pills() }
+            if (!selectionMode) item(key = "media_pills") { pills() }
             airing?.let { entry ->
                 item(key = "airing_today") { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) }
             }
@@ -160,18 +167,42 @@ internal fun TsuzukiAnimeUpdates(
                     )
                 }
             } else {
-                item(key = "new_episode_count") {
-                    TsuzukiSectionLabel(
-                        pluralStringResource(R.plurals.tsz_anime_new_episodes, entries.size, entries.size),
+                item(key = "new_episode_tiles") {
+                    TsuzukiUpdatesTiles(
+                        newCount = entries.count { !it.seen },
+                        toSave = toSave,
+                        onSaveAll = onSaveAll,
+                        unit = stringResource(R.string.tsz_anime_ep),
                     )
                 }
             }
             for ((day, rows) in groups) {
                 item(key = "anime_updates_day_" + day) { TsuzukiSectionLabel(relativeDateText(day)) }
-                items(rows, key = { it.episodeId }) { entry -> TsuzukiAnimeUpdateEntry(entry) }
+                items(rows, key = { it.episodeId }) { entry ->
+                    AnimeUpdateTile(
+                        entry = entry,
+                        selected = entry.episodeId in selected,
+                        downloadStatus = downloadStatus[entry.episodeId],
+                        onClick = {
+                            if (selectionMode) {
+                                onToggleSelection(entry)
+                            } else {
+                                playAnimeEpisode(context, entry)
+                            }
+                        },
+                        onLongClick = { onToggleSelection(entry) },
+                        onDownload = { onDownload(entry) }.takeUnless { selectionMode },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
             }
         }
     }
+}
+
+private fun playAnimeEpisode(context: android.content.Context, entry: AnimeUpdateEpisode) {
+    val track = !Injekt.get<BasePreferences>().incognitoMode.get()
+    AnimePlayback.launchEpisode(context, entry.episodeId, track)
 }
 
 /** One anime's new episodes as a group (grouped Updates › All); tapping opens the anime. */
@@ -193,16 +224,29 @@ internal fun TsuzukiAnimeUpdateGroupEntry(group: AnimeUpdateGroup, modifier: Mod
     }
 }
 
-/** One new episode; tapping plays it (also used in Updates › All). */
+/** One new episode in Updates › All, drawn like a book update row; tapping plays it. */
 @Composable
 internal fun TsuzukiAnimeUpdateEntry(entry: AnimeUpdateEpisode, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    Box(modifier) {
-        AnimeUpdateRow(entry) {
-            val track = !Injekt.get<BasePreferences>().incognitoMode.get()
-            AnimePlayback.launchEpisode(context, entry.episodeId, track)
-        }
-    }
+    val downloads = remember { Injekt.get<AnimeDownloads>() }
+    val queue by downloads.state.collectAsState()
+    val status = queue.entries.firstOrNull { it.episodeId == entry.episodeId }?.status
+    val scope = rememberCoroutineScope()
+    AnimeUpdateTile(
+        entry = entry,
+        selected = false,
+        downloadStatus = status,
+        onClick = { playAnimeEpisode(context, entry) },
+        onLongClick = null,
+        onDownload = {
+            if (status == AnimeDownloadStatus.Failed) {
+                downloads.retry(entry.episodeId)
+            } else {
+                scope.launchIO { queueAnimeUpdates(Injekt.get(), downloads, listOf(entry)) }
+            }
+        },
+        modifier = modifier,
+    )
 }
 
 @Composable
