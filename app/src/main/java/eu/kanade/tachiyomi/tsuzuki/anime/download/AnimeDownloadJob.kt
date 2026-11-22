@@ -13,42 +13,70 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.util.system.NetworkState
 import eu.kanade.tachiyomi.util.system.activeNetworkState
 import eu.kanade.tachiyomi.util.system.networkStateFlow
-import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import eu.kanade.tachiyomi.util.system.workManager
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.sample
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 internal class AnimeDownloadJob(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
+    private val notifier = AnimeDownloadNotifier(context)
+
+    @OptIn(FlowPreview::class)
     override suspend fun doWork(): Result {
         if (!TsuzukiAnime.enabled) return Result.success()
         val wifiOnly = inputData.getBoolean(WIFI_ONLY, true)
         if (!applicationContext.activeNetworkState().allowsAnimeDownloads(wifiOnly)) return Result.retry()
+        val downloads = Injekt.get<AnimeDownloads>()
+        val queue = downloads.readyQueue()
+        if (queue.paused || !queue.hasQueuedEpisodes) return Result.success()
+        val batch = AnimeDownloadNotificationBatch(queue)
         setForegroundSafely()
         return coroutineScope {
+            var shownFailure: Long? = null
+            val notifications = launch {
+                combine(downloads.state, downloads.progress) { currentQueue, progress ->
+                    batch.progress(currentQueue, progress) to batch.result(currentQueue).failed.lastOrNull()
+                }.distinctUntilChanged().sample(500).collect { (progress, error) ->
+                    progress?.let(notifier::showProgress)
+                    if (error != null && error.episodeId != shownFailure) {
+                        shownFailure = error.episodeId
+                        notifier.showError(error)
+                    }
+                }
+            }
             val lostNetwork = async {
                 applicationContext.networkStateFlow()
                     .onStart { emit(applicationContext.activeNetworkState()) }
                     .first { !it.allowsAnimeDownloads(wifiOnly) }
             }
-            val download = async { Injekt.get<AnimeDownloads>().drain(wifiOnly) }
+            val download = async { downloads.drain(wifiOnly) }
             try {
-                select {
-                    lostNetwork.onAwait { Result.retry() }
-                    download.onAwait { Result.success() }
+                val completed = select {
+                    lostNetwork.onAwait { false }
+                    download.onAwait { true }
                 }
+                notifications.cancelAndJoin()
+                val result = batch.result(downloads.state.value)
+                result.failed.lastOrNull()?.takeUnless { it.episodeId == shownFailure }?.let(notifier::showError)
+                if (completed) notifier.showComplete(result)
+                if (completed) Result.success() else Result.retry()
             } finally {
+                notifications.cancel()
                 lostNetwork.cancel()
                 download.cancel()
             }
@@ -56,14 +84,11 @@ internal class AnimeDownloadJob(context: Context, parameters: WorkerParameters) 
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        val notification = applicationContext.notificationBuilder(Notifications.CHANNEL_DOWNLOADER_PROGRESS) {
-            setContentTitle(applicationContext.getString(R.string.tsz_anime_downloading))
-            setSmallIcon(android.R.drawable.stat_sys_download)
-            setOngoing(true)
-        }.build()
+        val queue = Injekt.get<AnimeDownloads>().readyQueue()
+        val progress = AnimeDownloadNotificationBatch(queue).progress(queue, null)
         return ForegroundInfo(
-            -204,
-            notification,
+            AnimeDownloadNotifier.ACTIVE_ID,
+            notifier.ongoing(progress),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
         )
     }

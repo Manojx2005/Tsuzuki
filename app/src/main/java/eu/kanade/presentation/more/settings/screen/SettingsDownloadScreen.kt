@@ -56,6 +56,7 @@ object SettingsDownloadScreen : SearchableSettings {
                 title = stringResource(MR.strings.connected_to_wifi),
             ),
             *listOfNotNull(
+                eu.kanade.presentation.tsuzuki.settings.animeDownloadWifiPreference(),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadPreferences.saveChaptersAsCBZ,
                     title = stringResource(MR.strings.save_chapter_as_cbz),
