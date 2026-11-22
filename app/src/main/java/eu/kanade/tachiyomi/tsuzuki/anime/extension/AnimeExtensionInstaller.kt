@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -53,7 +54,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
         require(current == null || entry.versionCode > PackageInfoCompat.getLongVersionCode(current))
         val apk = File.createTempFile("anime-extension-", ".apk", context.cacheDir)
         try {
-            val url = checkNotNull(index.resolve("apk/${entry.apk}"))
+            val url = entry.downloadUrl?.toHttpUrl() ?: checkNotNull(index.resolve("apk/${entry.apk}"))
             client.newCall(Request.Builder().url(url).build()).awaitSuccess().use { response ->
                 val source = checkNotNull(response.body).source()
                 apk.outputStream().use { output ->

@@ -54,7 +54,7 @@ class AnimeRepoIndexParserTest {
         assertNull(AnimeRepoIndexParser.indexUrl("http://example.org/index.min.json"))
         assertNull(AnimeRepoIndexParser.indexUrl("https://secret@example.org/index.min.json"))
         assertNull(AnimeRepoIndexParser.indexUrl("https://example.org/index.min.json#fragment"))
-        assertNull(AnimeRepoIndexParser.indexUrl("https://github.com/org/repo/tree/repo"))
+        assertNull(AnimeRepoIndexParser.indexUrl("https://github.com/org/repo/issues"))
     }
 
     @Test

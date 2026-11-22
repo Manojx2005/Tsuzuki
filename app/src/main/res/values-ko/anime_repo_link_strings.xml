@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_repo_invalid_link">Aniyomi 저장소 링크가 아닙니다. HTTPS 저장소 URL을 입력하세요.</string>
+    <string name="tsz_anime_repo_load_error">Aniyomi 저장소를 불러오거나 읽을 수 없습니다.</string>
+</resources>
