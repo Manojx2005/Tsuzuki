@@ -76,23 +76,43 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 
 | Card | What | Lane | Status |
 |---|---|---|---|
-| AP0 | Parity audit, anime vs manga on every surface → `docs/ANIME_PARITY_AUDIT.md` | Codex (devices, lock) | `ready` — do first |
-| AP1 | Anime switch at Settings top level + More; Read/Watch always on Home with a turn-on sheet | Codex | `ready` `parallel-ok` |
-| AP2 | Aniyomi repo links: `aniyomi://add-repo`, folder/tree/blob URLs, visible parse error | Codex | `ready` `parallel-ok` |
+| AP0 | Parity audit, anime vs manga on every surface → `docs/ANIME_PARITY_AUDIT.md` | Codex (devices, lock) | **`done`** (Claude review, merged `bb5015414`) |
+| AP1 | Anime switch at Settings top level + More; Read/Watch always on Home with a turn-on sheet | Codex | **`done`** (Claude review, merged `9a6319829`) |
+| AP2 | Aniyomi repo links: `aniyomi://add-repo`, folder/tree/blob URLs, visible parse error | Codex | **`done`** (Claude review, merged `7d18475ba`) |
 | AP3 | Downloaded episodes play offline (mp4 + HLS), all entry points | Claude (devices) | **`done`** (`61c5b8b71`..`538d8fe71`, on `main`) |
-| AP4 | Download notification: real progress, n of m, pause/cancel, errors; "Waiting for Wi-Fi" + setting (see AP3 result) | Codex | `ready` `parallel-ok` |
-| AP5 | Library selection for anime + bottom action bar (shelves, watched, download, delete, remove, migrate) | Codex | `ready` (before AP8) |
+| AP4 | Download notification: real progress, n of m, pause/cancel, errors; "Waiting for Wi-Fi" + setting (see AP3 result) | Codex | **`done`** (Claude review, merged `11940cf3c`) |
+| AP5 | Library selection for anime + bottom action bar (shelves, watched, download, delete, remove, migrate) | Codex | `codex-working` 2026-11-22, `.worktrees/ap5` (before AP8) |
 | AP6 | Episode list = chapter list (selection bar, swipe, filter/sort/display sheet) | Codex | `ready` |
 | AP7 | Details header/actions = manga details | Codex | after AP6 (same files) |
 | AP8 | Library display modes, sort/filter sheet, badges, shelf tabs | Codex | after AP5 |
-| AP9 | Updates + History rows/selection/actions = books | Codex | `ready` `parallel-ok` |
+| AP9 | Updates + History rows/selection/actions = books | Claude (took over) | `claude-working` 2026-11-22, on `main` checkout |
 | AP10 | Catalogue grid/list, long-press add, global search | Codex | `ready` `parallel-ok` |
 | AP11 | Download queue + anime download/player settings design | Codex | `ready` |
-| AP12 | "Import dictionary file" + ask owner about bundling (+29 MB) | Codex | `ready` `parallel-ok` |
-| AP13 | Every further gap from AP0 (one card each) | — | after AP0 |
+| AP12 | Import dictionary files and bundle English and Japanese offline packs (owner approved +29 MB) | Codex | **`done`** (Claude review, merged `66057b59f`) |
+| AP13 | Follow-up cards AP-14 through AP-21 from the AP0 audit | Codex | after AP11 |
+| AP-14 | Watch Home activity tiles | Codex | after AP11 |
+| AP-15 | Anime extension details | Codex | after AP11 |
+| AP-16 | Continue Watching widget activity at larger sizes | Codex | after AP11 |
+| AP-17 | Preserve anime in backups while the feature is hidden | Codex | after AP11 |
+| AP-18 | Keep Anime Extensions reachable with zero repositories | Codex | after AP11 |
+| AP-19 | Anime counts and download bytes in Data and storage | Codex | after AP11 |
+| AP-20 | Count anime records in the restore preview | Codex | after AP11 |
+| AP-21 | Watch activity chart in Stats | Codex | after AP11 |
 | RV-AP | Review + 0.2.2 release | Codex review lane (a thread that did not implement the card) | last |
 
+**AP0 Result (Codex, 2026-11-22, `4e7d60608`):** `docs/ANIME_PARITY_AUDIT.md` maps 67 differences to existing cards or AP-14 through AP-21. The adjacent evidence directory contains 185 screenshots. Baseline `5226188d3` built as `…ap0scratch`; 1,560 all-module and 9 AY0 tests passed. Tablet and wireless S22 in Dot and Colour with three manga and three anime titles, private AnimeKai 16.13 (1,180 One Piece episodes), rendered widgets, and an export/restore probe. Both devices reproduced hidden anime data in export and missing anime counts in the restore preview. Reviewer: confirm the evidence and follow-up assignments. Local manga was excluded from the paired remote migration check, and tracking was signed out. Raw evidence and temporary probes live in `.worktrees/ap0/app/build/review-evidence/ap0/`. Both scratch packages and fixture mappings removed from both devices, no scratch crash entries, device lock released.
+
+**AP1 Result (Codex, 2026-11-22, `ad83a64d6`):** Home always shows Read/Watch. Settings has an Anime switch using the shared row beside Browse, the More tile links to the Anime setting when off, and onboarding has an optional toggle. The Watch sheet uses the current adaptive sheet and theme buttons. Scoped Spotless and 1,561 all-module unit tests passed. Galaxy Tab S11 and wireless S22 passed in Dot then Colour, including screenshots of the final Settings header. Follow-up `073b9477b` adds a themed translucency fade to pinned Settings titles, preference pages and the phone Upcoming overlay. Scroll checks in both themes on both devices, scoped Spotless and all-module suite passed. Scratch apps removed. Evidence: `.worktrees/ap1/app/build/review-evidence/ap1/`.
+
+**AP2 Result (Codex, 2026-11-22, `75679d3ce`):** Aniyomi and Animetail add-repo intents, and the Tsuzuki/Tachiyomi anime-repo hosts, open a prefilled confirmation even with Anime off. Repository folders and GitHub tree/blob/raw URLs resolve to their canonical HTTPS endpoints. Compact and expanded indexes work and bad links show inline errors. Scoped Spotless and 1,565 all-module tests passed. Tablet and wireless S22 checked in Dot then Colour with live Yuzono compact and Secozzi expanded indexes, cancel and bad-link validation. Scratch packages removed. Evidence: `.worktrees/ap2/app/build/review-evidence/ap2/`.
+
 **AP3 result (Claude, 2026-11-22):** fixture mp4 and HLS downloads played offline fine; a **live AnimeKai** download (Frieren ep 1, 377 MB HLS, 341 segments) loaded and then failed with `error reading packet: Invalid argument`. Every saved segment began with a 1×1 PNG (`89 50 4E 47…`) in front of the MPEG-TS stream: an anti-hotlinking trick that the online stream survives through the source's mpv demuxer options, which a download does not keep. Fix: `tsuzuki/anime/download/HlsSegmentPrefix.kt` strips a PNG/JPEG/GIF prefix up to the first TS sync pattern (0x47 at three 188-byte steps) when each segment is saved, and `AnimeDownloads.offlineVideo` cleans episodes saved earlier once (marker `.segments-clean`). Tablet: the same 377 MB download now plays (PLAYING, position 13→15 s, no read errors). Tests: `HlsSegmentPrefixTest` (3) + `AnimeDownloadTest` updated; all-module suite passed otherwise. **Also found for AP4:** anime downloads default to **Wi-Fi only** (`AnimeDownloadQueue.wifiOnly = true`), so on mobile data they stay queued forever while the notification just says "Downloading" — AP4 must show "Waiting for Wi-Fi" and offer the setting. Evidence/probe `.worktrees/ap3/app/build/review-evidence/ap3/`.
+
+**AP4 Result (Codex, 2026-11-22, `037e1f077`):** Anime notification reports MP4 bytes or HLS segments, position in the batch, Pause/Resume, Cancel, failure with Retry, and completion counts. Settings › Downloads adds the Anime Wi-Fi-only switch. Scoped Spotless and 1,562 all-module tests passed. AY0 fixture on the tablet and wireless S22, Dot then Colour, verified determinate progress, pause/resume, failure/retry, completion, and cancel preserving saved episodes. Both devices verified the switch next to the existing book option and retained its value across theme changes. Waiting for Wi-Fi covered in unit tests on synthetic network states. Notification permission granted only for AP4 scratch; both scratch packages and fixture mappings removed. Evidence: `.worktrees/ap4/app/build/review-evidence/ap4/`.
+
+**AP12 Result (Codex, 2026-11-22, `382821c96`):** Settings › Novel Reader › Dictionary Packs accepts a pack and JSON manifest. Size, SHA-256, SQLite schema and version pass before replacing the installed dictionary. English WordNet and Japanese JMdict ship locally with the owner-approved +29 MB (28,963,435 compressed data bytes) and their notices. Both packs verified in the APK and in Git. Scoped Spotless and 1,562 all-module tests passed. Tablet and wireless S22 in Dot then Colour checked the Settings layout and device probes for English/Japanese lookup, valid import, bad checksum preserving the old pack, and deleting an override returning to the bundled pack. Android document selection was not tapped. Scratch apps removed. Evidence: `.worktrees/ap12/app/build/review-evidence/ap12/`.
+
+**Claude review 2026-11-22 (AP0, AP1, AP2, AP4, AP12):** code read in full; all five merged into `main` (`bb5015414`..`66057b59f`, README row conflicts kept both rows). Checked: AP2 link screen opens with Anime off only through a link, expanded-index APK URLs must be HTTPS; AP4 PendingIntents differ by action, deferred notification follows `TsuzukiAnime.enabled` via `snapshotFlow`; AP1 Settings row toggles in place, More tile only while off; AP12 manifest size/SHA/schema/version checks before rename, gzip detected by magic bytes. Codex's device evidence accepted (devices held by AP5 during this review). Merged main: `assembleDebug` and all-module `testDebugUnitTest` passed (`build-review-ap.log`). Device recheck of the merged build waits for the AP5 Device lock.
 
 **Owner 2026-11-22: Codex does all remaining AP cards** (Claude handed off; the Kokoro 0.2.1 session may hold the Device lock until it releases it). **Prompt for the owner to paste into Codex (when it has usage):** `Read AGENTS.md, docs/HANDOFF.md ("Batch AP")
 and docs/ANIME_PARITY_PLAN.md. Take the first AP card marked ready that is in the Codex lane and not claimed;
@@ -1222,7 +1242,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (Claude KOKORO-RELEASE handback 2026-11-22 16:00; scratch kokoroqa uninstalled on both)` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: held by Codex anime lane AP5 (2026-11-22, .worktrees/ap5, ap5scratch only)` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
