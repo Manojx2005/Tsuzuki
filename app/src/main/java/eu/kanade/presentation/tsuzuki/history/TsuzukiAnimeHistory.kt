@@ -2,6 +2,8 @@ package eu.kanade.presentation.tsuzuki.history
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.automirrored.outlined.ViewList
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,12 +114,16 @@ internal fun groupAnimeHistory(
     rows: List<AnimeHistoryDisplay>,
     query: String?,
     timeZone: TimeZone,
+    lastOnly: Boolean = false,
 ): Map<LocalDate, List<AnimeHistoryDisplay>> {
     val search = query.orEmpty().trim()
     return rows.filter {
         search.isEmpty() || it.title.contains(search, ignoreCase = true) ||
             it.episodeName.contains(search, ignoreCase = true)
-    }.sortedByDescending { it.lastSeen }.groupBy {
+    }.sortedByDescending { it.lastSeen }
+        // "Last only", as in book History: the newest episode of each anime.
+        .let { sorted -> if (lastOnly) sorted.distinctBy { it.animeId } else sorted }
+        .groupBy {
         Instant.fromEpochMilliseconds(it.lastSeen.time).toLocalDateTime(timeZone).date
     }
 }
@@ -141,9 +147,11 @@ internal fun rememberAnimeHistory(): List<AnimeHistoryDisplay> {
 }
 
 @Composable
-internal fun TsuzukiAnimeHistory(rows: List<AnimeHistoryDisplay>, searchQuery: String?) {
+internal fun TsuzukiAnimeHistory(rows: List<AnimeHistoryDisplay>, searchQuery: String?, lastOnly: Boolean = false) {
     val timeZone = TimeZone.currentSystemDefault()
-    val groups = remember(rows, searchQuery, timeZone) { groupAnimeHistory(rows, searchQuery, timeZone) }
+    val groups = remember(rows, searchQuery, timeZone, lastOnly) {
+        groupAnimeHistory(rows, searchQuery, timeZone, lastOnly)
+    }
     val timeFormatter = rememberTimestampFormatter()
 
     if (groups.isEmpty()) {
@@ -328,12 +336,18 @@ private fun AnimeHistoryRow(
 
 /** History toolbar actions while the Anime pill is selected: clear the whole watch history, after a confirmation. */
 @Composable
-internal fun TsuzukiAnimeHistoryActions() {
+internal fun TsuzukiAnimeHistoryActions(lastOnly: Boolean, onLastOnlyChanged: (Boolean) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var confirming by remember { mutableStateOf(false) }
     AppBarActions(
         listOf(
+            // Same toggle and labels as the book History toolbar, sharing its setting.
+            AppBar.Action(
+                title = if (lastOnly) "List View" else "Last only",
+                icon = if (lastOnly) Icons.AutoMirrored.Outlined.ViewList else Icons.Outlined.GridView,
+                onClick = { onLastOnlyChanged(!lastOnly) },
+            ),
             AppBar.Action(
                 title = stringResource(MR.strings.pref_clear_history),
                 icon = Icons.Outlined.DeleteSweep,
