@@ -1,6 +1,12 @@
 package eu.kanade.presentation.tsuzuki.download
 
 import android.text.format.Formatter
+import eu.kanade.presentation.components.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +54,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.ui.res.stringResource as androidStringResource
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TsuzukiAnimeDownloadQueue(downloads: AnimeDownloads, contentPadding: PaddingValues) {
     val queue by downloads.state.collectAsState()
@@ -56,6 +63,7 @@ internal fun TsuzukiAnimeDownloadQueue(downloads: AnimeDownloads, contentPadding
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
     var delete by remember { mutableStateOf<AnimeDownloadEntry?>(null) }
+    val queuedCount = queue.entries.count { it.status == AnimeDownloadStatus.Queued }
     val savedBytes = remember(queue.entries) {
         queue.entries.filter { it.status == AnimeDownloadStatus.Saved }.sumOf(AnimeDownloadEntry::bytes)
     }
@@ -102,13 +110,40 @@ internal fun TsuzukiAnimeDownloadQueue(downloads: AnimeDownloads, contentPadding
             }
         }
         item {
-            TsuzukiPill(
-                text = stringResource(MR.strings.tsz_download_wifi),
-                selected = queue.wifiOnly,
-                modifier = Modifier.padding(start = 12.dp, top = 8.dp),
-                onClick = { downloads.setWifiOnly(!queue.wifiOnly) },
-                role = Role.Switch,
-            )
+            // Queue-wide controls, as in the book queue (AP11): pause or resume all, retry or clear failed.
+            val hasQueued = queue.hasQueuedEpisodes
+            val hasFailed = queue.entries.any { it.status == AnimeDownloadStatus.Failed }
+            FlowRow(
+                Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                TsuzukiPill(
+                    text = stringResource(MR.strings.tsz_download_wifi),
+                    selected = queue.wifiOnly,
+                    onClick = { downloads.setWifiOnly(!queue.wifiOnly) },
+                    role = Role.Switch,
+                )
+                if (hasQueued) {
+                    TsuzukiPill(
+                        text = stringResource(if (queue.paused) MR.strings.action_resume else MR.strings.action_pause),
+                        selected = false,
+                        onClick = { downloads.setPaused(!queue.paused) },
+                    )
+                }
+                if (hasFailed) {
+                    TsuzukiPill(
+                        text = androidStringResource(R.string.tsz_anime_retry_failed),
+                        selected = false,
+                        onClick = downloads::retryFailed,
+                    )
+                    TsuzukiPill(
+                        text = androidStringResource(R.string.tsz_anime_clear_failed),
+                        selected = false,
+                        onClick = downloads::clearFailed,
+                    )
+                }
+            }
         }
         if (groups.isEmpty()) {
             item {
@@ -139,6 +174,8 @@ internal fun TsuzukiAnimeDownloadQueue(downloads: AnimeDownloads, contentPadding
                     paused = queue.paused,
                     modifier = tsuzukiGroupedTile(first = index == 0, last = index == entries.lastIndex),
                     onRetry = { downloads.retry(entry.episodeId) },
+                    onMove = { top: Boolean -> downloads.move(entry.episodeId, top) }
+                        .takeIf { entry.status == AnimeDownloadStatus.Queued && queuedCount > 1 },
                     onRemove = {
                         if (entry.status == AnimeDownloadStatus.Saved) {
                             delete = entry
@@ -180,6 +217,7 @@ private fun AnimeDownloadRow(
     paused: Boolean,
     modifier: Modifier,
     onRetry: () -> Unit,
+    onMove: ((top: Boolean) -> Unit)?,
     onRemove: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -212,6 +250,30 @@ private fun AnimeDownloadRow(
             )
             TsuzukiProgressBar(progress = fraction, dots = 14, thickness = 4.dp)
             Text(tsuzukiMenuLabel(label), color = tokens.mutedText, style = MaterialTheme.typography.labelSmall)
+        }
+        if (onMove != null) {
+            var menu by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { menu = true }) {
+                    Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.action_menu), tint = tokens.dotOn)
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_move_to_top))) },
+                        onClick = {
+                            menu = false
+                            onMove(true)
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_move_to_bottom))) },
+                        onClick = {
+                            menu = false
+                            onMove(false)
+                        },
+                    )
+                }
+            }
         }
         if (entry.status == AnimeDownloadStatus.Failed) {
             IconButton(onClick = onRetry) {

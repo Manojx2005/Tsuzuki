@@ -92,6 +92,21 @@ internal data class AnimeDownloadQueue(
 
     fun change(id: Long, transform: (AnimeDownloadEntry) -> AnimeDownloadEntry?): AnimeDownloadQueue =
         copy(entries = entries.mapNotNull { if (it.episodeId == id) transform(it) else it })
+
+    /** Moves a queued episode before every other queued one, or after them; downloads run in list order (AP11). */
+    fun move(id: Long, top: Boolean): AnimeDownloadQueue {
+        val entry = entries.firstOrNull { it.episodeId == id && it.status == AnimeDownloadStatus.Queued } ?: return this
+        val rest = entries - entry
+        val queued = rest.indices.filter { rest[it].status == AnimeDownloadStatus.Queued }
+        val at = if (top) queued.firstOrNull() ?: rest.size else (queued.lastOrNull()?.plus(1)) ?: rest.size
+        return copy(entries = rest.toMutableList().apply { add(at, entry) })
+    }
+
+    fun retryFailed(): AnimeDownloadQueue = copy(
+        entries = entries.map {
+            if (it.status == AnimeDownloadStatus.Failed) it.copy(status = AnimeDownloadStatus.Queued) else it
+        },
+    )
 }
 
 internal class AnimeDownloads(
@@ -193,6 +208,19 @@ internal class AnimeDownloads(
         ) {
             AnimeDownloadJob.schedule(context, state.value.wifiOnly, ExistingWorkPolicy.APPEND_OR_REPLACE)
         }
+    }
+
+    fun move(id: Long, top: Boolean) = command { edit { it.move(id, top) } }
+
+    fun retryFailed() = command {
+        if (edit(AnimeDownloadQueue::retryFailed) && !state.value.paused) {
+            AnimeDownloadJob.schedule(context, state.value.wifiOnly, ExistingWorkPolicy.APPEND_OR_REPLACE)
+        }
+    }
+
+    /** Removes every failed episode and its partial files, as Remove does for one. */
+    fun clearFailed() {
+        state.value.entries.filter { it.status == AnimeDownloadStatus.Failed }.forEach { remove(it.episodeId) }
     }
 
     fun setPaused(paused: Boolean) = command {
