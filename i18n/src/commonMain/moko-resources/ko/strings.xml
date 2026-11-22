@@ -1482,4 +1482,5 @@
     <string name="tsz_pending_mark_until_last_read">마지막으로 읽은 챕터 이전을 읽음으로 표시합니다</string>
     <string name="tsz_nothing_before_last_read">마지막으로 읽은 챕터 이전에 안 읽은 챕터가 없습니다</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
+    <string name="tsz_history_clear_includes_anime">애니메이션 시청 기록도 삭제됩니다.</string>
 </resources>

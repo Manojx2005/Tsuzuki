@@ -279,7 +279,18 @@ private fun getIndex(hideMangaUi: Boolean) = settingScreens
             route = screen,
             contents = screen.getPreferences(),
         )
-    }
+    } + listOfNotNull(
+    // Tsuzuki (AY-INT): anime player settings are searchable while anime is on.
+    if (eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime.enabled) {
+        SettingsData(
+            title = stringResource(tachiyomi.i18n.MR.strings.tsz_anime_player_settings),
+            route = eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerSettingsScreen,
+            contents = eu.kanade.presentation.tsuzuki.settings.animePlayerSearchPreferences(),
+        )
+    } else {
+        null
+    },
+)
 
 private fun getLocalizedBreadcrumb(path: String, node: String?, isLtr: Boolean): String {
     return if (node == null) {

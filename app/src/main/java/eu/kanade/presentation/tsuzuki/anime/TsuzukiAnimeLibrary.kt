@@ -61,7 +61,6 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.components.MangaCover
-import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
@@ -70,6 +69,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
 import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
@@ -79,6 +79,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.groupAnimeSeasons
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import eu.kanade.tachiyomi.ui.library.LibraryTab
@@ -123,9 +124,14 @@ internal data object AnimeLibraryTab : Tab {
         val activeShelf = shelves.indexOfFirst { it.id == selectedShelf }.coerceAtLeast(0)
         val shelfId = shelves.getOrNull(activeShelf)?.id ?: 0L
         val search = query.orEmpty().trim()
-        val filtered = remember(library, shelfId, search, groupSeasons) {
+        // AY-INT item 5: More › Downloaded only also narrows the anime library to downloaded anime.
+        val downloadedOnly by remember { Injekt.get<BasePreferences>().downloadedOnly }.collectAsState()
+        val downloads by remember { Injekt.get<AnimeDownloads>().state }.collectAsState()
+        val savedAnime = remember(downloads) { downloads.savedAnimeIds() }
+        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime) {
             val matches = library.filter {
-                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true)
+                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
+                    (!downloadedOnly || it.anime.id in savedAnime)
             }
             if (groupSeasons && search.isEmpty()) groupAnimeSeasons(matches) else matches
         }
@@ -297,7 +303,7 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    colorFilter = DotCoverFilter.takeIf { tokens.isDot },
+                    colorFilter = tsuzukiCoverFilter(),
                 )
                 if (position in 1L until duration) {
                     val left = DateUtils.formatElapsedTime(duration - position)
@@ -364,7 +370,7 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+internal fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     Column(
         modifier.tsuzukiClickable(role = Role.Button, onClick = onOpen),

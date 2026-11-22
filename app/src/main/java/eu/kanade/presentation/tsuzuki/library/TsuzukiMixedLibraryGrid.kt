@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,8 +42,11 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.anime.allPageAnimeSection
+import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
+import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
@@ -67,7 +71,11 @@ fun TsuzukiMixedLibraryGrid(
     onLoadMore: (() -> Unit)?,
     loadMoreKey: Long,
     titleMaxLines: Int,
+    // AY-INT item 1: the anime section, on the first shelf page of All only (see [rememberAllPageAnime]).
+    anime: List<Anime> = emptyList(),
 ) {
+    val context = LocalContext.current
+    val animeTitle = stringResource(MR.strings.tsz_anime_media)
     FastScrollLazyVerticalGrid(
         columns = if (columns == 0) GridCells.Adaptive(100.dp) else GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
@@ -178,6 +186,7 @@ fun TsuzukiMixedLibraryGrid(
                 }
             }
         }
+        allPageAnimeSection(anime, animeTitle) { openAnime(context, it) }
         loadMoreSentinel(loadMoreKey, onLoadMore)
     }
 }

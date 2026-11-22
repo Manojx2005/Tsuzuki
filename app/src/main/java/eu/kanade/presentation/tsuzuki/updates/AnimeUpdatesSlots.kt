@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.SnackbarHostState
@@ -15,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -23,26 +25,105 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
+import eu.kanade.presentation.tsuzuki.anime.MixedTimelineRow
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
+import eu.kanade.presentation.updates.UpdatesUiModel
+import eu.kanade.presentation.updates.updatesNovelGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeUpdateEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Clock
 
 internal class AnimeUpdatesSlots(
     val mediaPills: (@Composable (twoPane: Boolean) -> Unit)?,
     val airingStrip: (@Composable () -> Unit)?,
     val screen: (@Composable (SnackbarHostState) -> Unit)?,
+    /** New episodes of favourite anime (last 3 months), for Updates › All (AY-INT item 2). */
+    val newEpisodes: List<AnimeUpdateEpisode> = emptyList(),
+    /** New episodes not in the download queue yet; what "Save all" adds in All. */
+    val episodesToSave: List<AnimeUpdateEpisode> = emptyList(),
+    val saveEpisodes: () -> Unit = {},
 )
+
+/** True when Updates › All will list new episodes (per-chapter list only; grouped mode has no anime rows yet). */
+@Suppress("UNUSED_PARAMETER") // Both list modes show anime now; kept so the call sites read the same.
+internal fun hasAnimeInAll(anime: AnimeUpdatesSlots?, filter: UpdatesFilter, groupByBook: Boolean): Boolean =
+    filter == UpdatesFilter.ALL && !anime?.newEpisodes.isNullOrEmpty()
+
+/** Anime groups for grouped Updates › All, or none on the other filters. */
+internal fun animeGroupsForAll(anime: AnimeUpdatesSlots?, filter: UpdatesFilter): List<AnimeUpdateGroup> =
+    if (anime == null || filter != UpdatesFilter.ALL) emptyList() else animeUpdateGroups(anime.newEpisodes)
+
+/** "2 new episodes · Episode 3". */
+@Composable
+internal fun animeGroupSubtitle(group: AnimeUpdateGroup): String = listOf(
+    androidx.compose.ui.res.pluralStringResource(
+        eu.kanade.tachiyomi.R.plurals.tsz_anime_new_episodes,
+        group.count,
+        group.count,
+    ),
+    group.latestName,
+).joinToString(" · ")
+
+/** Grouped Updates on the phone: book groups, plus anime groups in All, newest first. */
+internal fun androidx.compose.foundation.lazy.LazyListScope.tsuzukiUpdateGroups(
+    groups: List<eu.kanade.tachiyomi.ui.updates.UpdatesNovelGroup>,
+    anime: AnimeUpdatesSlots?,
+    filter: UpdatesFilter,
+    onClickGroup: (Long) -> Unit,
+) {
+    val animeGroups = animeGroupsForAll(anime, filter)
+    if (animeGroups.isEmpty()) {
+        updatesNovelGroups(groups, onClickGroup)
+        return
+    }
+    val rows = mergeUpdateGroups(groups, { it.latestChapterDate }, animeGroups)
+    items(
+        rows,
+        key = {
+            when (it) {
+                is MixedTimelineRow.Book -> "novel-group-${it.item.mangaId}"
+                is MixedTimelineRow.Anime -> "anime-group-${it.item.animeId}"
+            }
+        },
+    ) { row ->
+        when (row) {
+            is MixedTimelineRow.Book ->
+                eu.kanade.presentation.tsuzuki.novel.TsuzukiUpdatesGroupTile(row.item, {
+                    onClickGroup(row.item.mangaId)
+                })
+            is MixedTimelineRow.Anime -> TsuzukiAnimeUpdateGroupEntry(row.item)
+        }
+    }
+}
+
+/** The chapter list for Updates, with new episodes folded in when All is selected and anime is on. */
+internal fun withAnimeUpdates(
+    chapters: List<UpdatesUiModel>,
+    anime: AnimeUpdatesSlots?,
+    filter: UpdatesFilter,
+): List<UpdatesUiModel> = if (anime == null || filter != UpdatesFilter.ALL) {
+    chapters
+} else {
+    mergeAnimeIntoUpdates(chapters, anime.newEpisodes, TimeZone.currentSystemDefault())
+}
 
 @Composable
 internal fun rememberAnimeUpdatesSlots(
@@ -62,6 +143,16 @@ internal fun rememberAnimeUpdatesSlots(
     if (hasAnime != true) return null
 
     val airing = rememberAnimeAiringToday(store)
+    val since = remember {
+        Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    }
+    val newEpisodes by remember(store, since) { store.observeNewEpisodes(since) }.collectAsState(emptyList())
+    val downloads = remember { Injekt.get<AnimeDownloads>() }
+    val queue by downloads.state.collectAsState()
+    val toSave = remember(newEpisodes, queue) {
+        episodesToSave(newEpisodes, queue.entries.mapTo(hashSetOf()) { it.episodeId })
+    }
+    val scope = rememberCoroutineScope()
     val pills: @Composable (Boolean) -> Unit = { twoPane ->
         AnimeUpdatesPills(
             filter = state.filter,
@@ -83,7 +174,45 @@ internal fun rememberAnimeUpdatesSlots(
         } else {
             null
         },
+        newEpisodes = newEpisodes,
+        episodesToSave = toSave,
+        saveEpisodes = { scope.launchIO { saveNewEpisodes(store, downloads, toSave) } },
     )
+}
+
+/** Queues [episodes] for download, one call per anime with its source and title (as the details screen does). */
+private suspend fun saveNewEpisodes(
+    store: AnimeLibraryStore,
+    downloads: AnimeDownloads,
+    episodes: List<AnimeUpdateEpisode>,
+) {
+    val sources = Injekt.get<AnimeSourceManager>()
+    for ((animeId, items) in episodes.groupBy { it.animeId }) {
+        try {
+            val anime = store.getAnime(animeId) ?: continue
+            val ids = items.mapTo(hashSetOf()) { it.episodeId }
+            val list = store.getEpisodes(animeId).filter { it.id in ids }
+            if (list.isEmpty()) continue
+            val sourceName = sources.get(anime.source)?.source?.name ?: sources.stub(anime.source)?.name ?: ""
+            downloads.enqueue(anime.source, sourceName, anime.title, list)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog.w("Could not queue new episodes of anime $animeId", e)
+        }
+    }
+}
+
+/** "New" and "to save" counts plus Save all for the Updates tiles, with episodes added in All. */
+internal fun updatesTileCounts(
+    unread: Int,
+    chaptersToSave: Int,
+    anime: AnimeUpdatesSlots?,
+    filter: UpdatesFilter,
+): Pair<Int, Int> = if (anime == null || filter != UpdatesFilter.ALL) {
+    unread to chaptersToSave
+} else {
+    (unread + anime.newEpisodes.size) to (chaptersToSave + anime.episodesToSave.size)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

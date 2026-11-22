@@ -1699,4 +1699,5 @@
     <string name="tsz_pending_mark_until_last_read">最後に読んだチャプターより前を既読にします</string>
     <string name="tsz_nothing_before_last_read">最後に読んだチャプターより前に未読はありません</string>
     <string name="tsz_mark_until_last_read_partial">%1$s・%2$s</string>
+    <string name="tsz_history_clear_includes_anime">アニメの視聴履歴も削除されます。</string>
 </resources>

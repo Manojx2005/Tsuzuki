@@ -78,6 +78,11 @@ class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryR
         queries.refreshAnimeLastSeen(animeId)
     }
 
+    override suspend fun removeAllHistory() = database.transaction {
+        queries.clearAllHistory()
+        queries.refreshAllAnimeLastSeen()
+    }
+
     override suspend fun upsert(episodeId: Long, lastSeen: Date?, watchSeconds: Long) {
         require(watchSeconds >= 0)
         queries.upsert(episodeId, lastSeen, watchSeconds)

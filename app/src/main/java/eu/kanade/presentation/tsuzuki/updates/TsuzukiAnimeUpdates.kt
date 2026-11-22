@@ -37,11 +37,11 @@ import androidx.work.WorkInfo
 import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.relativeDateText
-import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.util.rememberTimestampFormatter
@@ -168,19 +168,45 @@ internal fun TsuzukiAnimeUpdates(
             }
             for ((day, rows) in groups) {
                 item(key = "anime_updates_day_" + day) { TsuzukiSectionLabel(relativeDateText(day)) }
-                items(rows, key = { it.episodeId }) { entry ->
-                    AnimeUpdateRow(entry) {
-                        val track = !Injekt.get<BasePreferences>().incognitoMode.get()
-                        AnimePlayback.launchEpisode(context, entry.episodeId, track)
-                    }
-                }
+                items(rows, key = { it.episodeId }) { entry -> TsuzukiAnimeUpdateEntry(entry) }
             }
         }
     }
 }
 
+/** One anime's new episodes as a group (grouped Updates › All); tapping opens the anime. */
 @Composable
-private fun AnimeUpdateRow(entry: AnimeUpdateEpisode, onPlay: () -> Unit) {
+internal fun TsuzukiAnimeUpdateGroupEntry(group: AnimeUpdateGroup, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val summary = AnimeUpdateEpisode(
+        animeId = group.animeId,
+        title = group.title,
+        episodeId = -group.animeId,
+        name = animeGroupSubtitle(group),
+        previewUrl = group.cover,
+        timestamp = group.latest,
+    )
+    Box(modifier) {
+        AnimeUpdateRow(summary, showPlay = false) {
+            eu.kanade.presentation.tsuzuki.anime.openAnime(context, group.animeId)
+        }
+    }
+}
+
+/** One new episode; tapping plays it (also used in Updates › All). */
+@Composable
+internal fun TsuzukiAnimeUpdateEntry(entry: AnimeUpdateEpisode, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Box(modifier) {
+        AnimeUpdateRow(entry) {
+            val track = !Injekt.get<BasePreferences>().incognitoMode.get()
+            AnimePlayback.launchEpisode(context, entry.episodeId, track)
+        }
+    }
+}
+
+@Composable
+private fun AnimeUpdateRow(entry: AnimeUpdateEpisode, showPlay: Boolean = true, onPlay: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     TsuzukiTile(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp)
@@ -203,7 +229,7 @@ private fun AnimeUpdateRow(entry: AnimeUpdateEpisode, onPlay: () -> Unit) {
                         contentDescription = null,
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop,
-                        colorFilter = DotCoverFilter.takeIf { tokens.isDot },
+                        colorFilter = tsuzukiCoverFilter(),
                     )
                 }
             }
@@ -223,7 +249,7 @@ private fun AnimeUpdateRow(entry: AnimeUpdateEpisode, onPlay: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Icon(Icons.Outlined.PlayArrow, contentDescription = null, tint = tokens.accent)
+            if (showPlay) Icon(Icons.Outlined.PlayArrow, contentDescription = null, tint = tokens.accent)
         }
     }
 }

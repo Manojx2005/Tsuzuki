@@ -92,12 +92,14 @@ internal fun LazyListScope.updatesUiItems(
             when (it) {
                 is UpdatesUiModel.Header -> "header"
                 is UpdatesUiModel.Item -> "item"
+                is UpdatesUiModel.Anime -> "anime"
             }
         },
         key = {
             when (it) {
                 is UpdatesUiModel.Header -> "updatesHeader-${it.hashCode()}"
                 is UpdatesUiModel.Item -> "updates-${it.item.update.mangaId}-${it.item.update.chapterId}-${it.item.update.dateFetch}"
+                is UpdatesUiModel.Anime -> "updates-anime-${it.item.episodeId}"
             }
         },
     ) { item ->
@@ -117,6 +119,10 @@ internal fun LazyListScope.updatesUiItems(
                     )
                 }
             }
+            is UpdatesUiModel.Anime -> eu.kanade.presentation.tsuzuki.updates.TsuzukiAnimeUpdateEntry(
+                item.item,
+                Modifier.animateItem(),
+            )
             is UpdatesUiModel.Item -> {
                 val updatesItem = item.item
                 UpdatesUiItem(
