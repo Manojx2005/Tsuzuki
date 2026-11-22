@@ -69,6 +69,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.onboarding.PermissionStep
 import eu.kanade.presentation.more.onboarding.StorageStep
+import eu.kanade.presentation.more.settings.PreferenceItem
 import eu.kanade.presentation.theme.tsuzuki.LocalTsuzukiTokens
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
@@ -79,6 +80,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTween
 import eu.kanade.presentation.tsuzuki.settings.TsuzukiThemeCards
+import eu.kanade.presentation.tsuzuki.settings.animeBetaPreference
 import eu.kanade.presentation.tsuzuki.settings.tsuzukiCase
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -87,6 +89,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
 fun TsuzukiOnboardingScreen(
@@ -203,6 +206,13 @@ fun TsuzukiOnboardingScreen(
                         OnboardingPage.IMPORT -> {
                             Heading(stringResource(MR.strings.tsz_onboarding_import))
                             Muted(stringResource(MR.strings.tsz_onboarding_import_body))
+                            animeBetaPreference(
+                                androidStringResource(R.string.tsz_onboarding_watch_anime),
+                            )?.let { preference ->
+                                TsuzukiTile(Modifier.fillMaxWidth(), padding = 0.dp) {
+                                    PreferenceItem(preference, highlightKey = null)
+                                }
+                            }
                             ImportTile(
                                 stringResource(MR.strings.tsz_onboarding_lnreader),
                                 Icons.Outlined.FileUpload,

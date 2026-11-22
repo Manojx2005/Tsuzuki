@@ -46,4 +46,6 @@
     <string name="tsz_anime_migration_matches">일치하는 에피소드: %1$d</string>
     <string name="tsz_anime_migration_carry">일치한 에피소드의 진행 상황, 선반, 트래커 연결 및 숨긴 그룹을 이어받습니다. 교체하면 원래 작품이 라이브러리에서 제거됩니다.</string>
     <string name="tsz_anime_migration_replace">교체</string>
+    <string name="tsz_anime_turn_on">켜기</string>
+    <string name="tsz_onboarding_watch_anime">애니메이션도 시청하시겠어요?</string>
 </resources>

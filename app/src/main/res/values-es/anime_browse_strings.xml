@@ -47,4 +47,6 @@
     <string name="tsz_anime_migration_matches">Episodios coincidentes: %1$d</string>
     <string name="tsz_anime_migration_carry">Se conservan el progreso coincidente, los estantes, los vínculos de seguimiento y los grupos ocultos. Reemplazar quita el original de la biblioteca.</string>
     <string name="tsz_anime_migration_replace">Reemplazar</string>
+    <string name="tsz_anime_turn_on">Activar</string>
+    <string name="tsz_onboarding_watch_anime">¿También quieres ver anime?</string>
 </resources>

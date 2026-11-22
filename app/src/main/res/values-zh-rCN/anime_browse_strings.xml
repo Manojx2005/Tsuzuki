@@ -46,4 +46,6 @@
     <string name="tsz_anime_migration_matches">匹配的剧集：%1$d</string>
     <string name="tsz_anime_migration_carry">保留匹配剧集的进度、书架、追踪关联和隐藏字幕组。替换后会从资料库移除原条目。</string>
     <string name="tsz_anime_migration_replace">替换</string>
+    <string name="tsz_anime_turn_on">开启</string>
+    <string name="tsz_onboarding_watch_anime">也想看动画吗？</string>
 </resources>

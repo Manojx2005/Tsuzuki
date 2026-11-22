@@ -13,6 +13,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.tsuzuki.browse.AnimeExtensionReposScreen
+import eu.kanade.presentation.tsuzuki.settings.animeBetaPreference
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.browse.extension.NovelExtensionReposScreen
@@ -91,15 +92,7 @@ object SettingsBrowseScreen : SearchableSettings {
                             navigator.push(NovelExtensionReposScreen())
                         },
                     ),
-                    if (TsuzukiAnime.supported) {
-                        Preference.PreferenceItem.SwitchPreference(
-                            preference = remember { TsuzukiAnime.preference(Injekt.get()) },
-                            title = androidStringResource(R.string.tsz_anime_beta),
-                            subtitle = androidStringResource(R.string.tsz_anime_beta_summary),
-                        )
-                    } else {
-                        null
-                    },
+                    animeBetaPreference(),
                     if (TsuzukiAnime.enabled) {
                         Preference.PreferenceItem.TextPreference(
                             title = androidStringResource(R.string.tsz_anime_extension_repos),
