@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_download_position">%1$d de %2$d</string>
+    <string name="tsz_anime_download_waiting_wifi">Aguardando Wi-Fi</string>
+    <string name="tsz_anime_download_complete">Downloads de episódios concluídos</string>
+    <string name="tsz_anime_download_counts">%1$d salvos · %2$d com falha</string>
+    <string name="tsz_anime_download_wifi_only">Baixar animes apenas por Wi-Fi</string>
+</resources>

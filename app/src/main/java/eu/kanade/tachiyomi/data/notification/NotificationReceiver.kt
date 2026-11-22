@@ -51,6 +51,7 @@ class NotificationReceiver : BroadcastReceiver() {
     private val downloadManager: DownloadManager by injectLazy()
 
     override fun onReceive(context: Context, intent: Intent) {
+        if (eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadNotifier.handleAction(context, intent)) return
         when (intent.action) {
             // Dismiss notification
             ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))

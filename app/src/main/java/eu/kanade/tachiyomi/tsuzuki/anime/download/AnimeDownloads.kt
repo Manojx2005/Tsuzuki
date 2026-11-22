@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime.download
 import android.content.Context
 import android.os.Environment
 import android.util.AtomicFile
+import androidx.compose.runtime.snapshotFlow
 import androidx.work.ExistingWorkPolicy
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -16,6 +17,8 @@ import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeHosterLoader
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 import eu.kanade.tachiyomi.tsuzuki.anime.player.animePlaybackOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
+import eu.kanade.tachiyomi.util.system.activeNetworkState
+import eu.kanade.tachiyomi.util.system.networkStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +27,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
@@ -119,6 +125,17 @@ internal class AnimeDownloads(
     init {
         scope.launch(Dispatchers.IO) {
             initialized.await()
+            val notifier = AnimeDownloadNotifier(context)
+            combine(
+                state,
+                context.networkStateFlow().onStart { emit(context.activeNetworkState()) },
+                snapshotFlow { TsuzukiAnime.enabled },
+            ) { queue, network, enabled ->
+                if (enabled) queue.deferredDownloadNotification(network) else null
+            }.distinctUntilChanged().collect(notifier::showDeferred)
+        }
+        scope.launch(Dispatchers.IO) {
+            initialized.await()
             for (action in commands) {
                 try {
                     action()
@@ -129,6 +146,11 @@ internal class AnimeDownloads(
                 }
             }
         }
+    }
+
+    suspend fun readyQueue(): AnimeDownloadQueue {
+        initialized.await()
+        return state.value
     }
 
     suspend fun protectedEpisodeIds(animeId: Long): Set<Long> {
@@ -186,6 +208,31 @@ internal class AnimeDownloads(
     fun setWifiOnly(wifiOnly: Boolean) = command {
         if (edit { it.copy(wifiOnly = wifiOnly) } && !state.value.paused && state.value.hasQueuedEpisodes) {
             AnimeDownloadJob.schedule(context, state.value.wifiOnly, ExistingWorkPolicy.REPLACE)
+        }
+    }
+
+    fun cancelQueued() = command {
+        var cancelled = emptyList<AnimeDownloadEntry>()
+        if (edit { queue ->
+                cancelled = queue.entries.filter { it.status == AnimeDownloadStatus.Queued }
+                if (cancelled.isEmpty()) {
+                    queue
+                } else {
+                    queue.copy(
+                        paused = false,
+                        entries = queue.entries.map { entry ->
+                            if (entry.status == AnimeDownloadStatus.Queued) {
+                                entry.copy(status = AnimeDownloadStatus.Removing)
+                            } else {
+                                entry
+                            }
+                        },
+                    )
+                }
+            }
+        ) {
+            AnimeDownloadJob.cancel(context)
+            cancelled.forEach(::deleteAsync)
         }
     }
 
