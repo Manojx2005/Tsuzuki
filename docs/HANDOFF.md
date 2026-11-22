@@ -76,11 +76,11 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 
 | Card | What | Lane | Status |
 |---|---|---|---|
-| AP0 | Parity audit, anime vs manga on every surface → `docs/ANIME_PARITY_AUDIT.md` | Claude (devices) | `ready` (not started) |
-| AP1 | Anime switch at Settings top level + More; Read/Watch always on Home with a turn-on sheet | Codex or Claude | `ready` `parallel-ok` |
-| AP2 | Aniyomi repo links: `aniyomi://add-repo`, folder/tree/blob URLs, visible parse error | Codex or Claude | `ready` `parallel-ok` |
+| AP0 | Parity audit, anime vs manga on every surface → `docs/ANIME_PARITY_AUDIT.md` | Codex (devices, lock) | `ready` — do first |
+| AP1 | Anime switch at Settings top level + More; Read/Watch always on Home with a turn-on sheet | Codex | `ready` `parallel-ok` |
+| AP2 | Aniyomi repo links: `aniyomi://add-repo`, folder/tree/blob URLs, visible parse error | Codex | `ready` `parallel-ok` |
 | AP3 | Downloaded episodes play offline (mp4 + HLS), all entry points | Claude (devices) | **`done`** (`61c5b8b71`..`538d8fe71`, on `main`) |
-| AP4 | Download notification: real progress, n of m, pause/cancel, errors | Claude or Codex | `ready` `parallel-ok` |
+| AP4 | Download notification: real progress, n of m, pause/cancel, errors; "Waiting for Wi-Fi" + setting (see AP3 result) | Codex | `ready` `parallel-ok` |
 | AP5 | Library selection for anime + bottom action bar (shelves, watched, download, delete, remove, migrate) | Codex | `ready` (before AP8) |
 | AP6 | Episode list = chapter list (selection bar, swipe, filter/sort/display sheet) | Codex | `ready` |
 | AP7 | Details header/actions = manga details | Codex | after AP6 (same files) |
@@ -88,13 +88,13 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 | AP9 | Updates + History rows/selection/actions = books | Codex | `ready` `parallel-ok` |
 | AP10 | Catalogue grid/list, long-press add, global search | Codex | `ready` `parallel-ok` |
 | AP11 | Download queue + anime download/player settings design | Codex | `ready` |
-| AP12 | "Import dictionary file" + ask owner about bundling (+29 MB) | Claude | `ready` `parallel-ok` |
+| AP12 | "Import dictionary file" + ask owner about bundling (+29 MB) | Codex | `ready` `parallel-ok` |
 | AP13 | Every further gap from AP0 (one card each) | — | after AP0 |
-| RV-AP | Review + 0.2.2 release | review lane / Claude | last |
+| RV-AP | Review + 0.2.2 release | Codex review lane (a thread that did not implement the card) | last |
 
 **AP3 result (Claude, 2026-11-22):** fixture mp4 and HLS downloads played offline fine; a **live AnimeKai** download (Frieren ep 1, 377 MB HLS, 341 segments) loaded and then failed with `error reading packet: Invalid argument`. Every saved segment began with a 1×1 PNG (`89 50 4E 47…`) in front of the MPEG-TS stream: an anti-hotlinking trick that the online stream survives through the source's mpv demuxer options, which a download does not keep. Fix: `tsuzuki/anime/download/HlsSegmentPrefix.kt` strips a PNG/JPEG/GIF prefix up to the first TS sync pattern (0x47 at three 188-byte steps) when each segment is saved, and `AnimeDownloads.offlineVideo` cleans episodes saved earlier once (marker `.segments-clean`). Tablet: the same 377 MB download now plays (PLAYING, position 13→15 s, no read errors). Tests: `HlsSegmentPrefixTest` (3) + `AnimeDownloadTest` updated; all-module suite passed otherwise. **Also found for AP4:** anime downloads default to **Wi-Fi only** (`AnimeDownloadQueue.wifiOnly = true`), so on mobile data they stay queued forever while the notification just says "Downloading" — AP4 must show "Waiting for Wi-Fi" and offer the setting. Evidence/probe `.worktrees/ap3/app/build/review-evidence/ap3/`.
 
-**Prompt for the owner to paste into Codex (when it has usage):** `Read AGENTS.md, docs/HANDOFF.md ("Batch AP")
+**Owner 2026-11-22: Codex does all remaining AP cards** (Claude handed off; the Kokoro 0.2.1 session may hold the Device lock until it releases it). **Prompt for the owner to paste into Codex (when it has usage):** `Read AGENTS.md, docs/HANDOFF.md ("Batch AP")
 and docs/ANIME_PARITY_PLAN.md. Take the first AP card marked ready that is in the Codex lane and not claimed;
 claim it here first (codex-working + worktree), follow the card, commit on tsuzuki/<card>, set review. Use the
 tablet/S22 only under the Device lock.`
@@ -1203,7 +1203,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (Claude handback 2026-11-22 15:55; scratch uninstalled, fixture server stopped)` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: held by Claude KOKORO-RELEASE (2026-11-22) — tablet + S22, scratch io.github.manojx2005.tsuzuki.kokoroqa` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 
