@@ -71,7 +71,7 @@ class BackupFileValidator(
                 104 -> parser.decodeFromByteArray(BackupPreference.serializer(), data)
                 105 -> parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data)
                 106 -> parser.decodeFromByteArray(BackupExtensionStore.serializer(), data)
-                else -> if (TsuzukiAnime.enabled) {
+                else -> if (TsuzukiAnime.inBackups) {
                     anime.record(fieldNumber, data, parser)
                     AnimeBackupFormat.entries.firstOrNull { it.entries == fieldNumber }?.let { format ->
                         recognised = true
