@@ -1,9 +1,13 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.preview
 
-import org.junit.jupiter.api.Assertions.*
+import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
-import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 
 class AnimePreviewPolicyTest {
     @Test
@@ -60,6 +64,28 @@ class AnimePreviewPolicyTest {
         assertNull(previewRemaining(5, -1))
         assertEquals(15L, previewRemaining(5, 20))
         assertEquals(0L, previewRemaining(25, 20))
+    }
+
+    @Test
+    fun cacheKeysDistinguishUrlBoundariesAndMissingUrls() {
+        for (frameVersion in listOf(0L, 10L)) {
+            val model = AnimeEpisodePreview(
+                animeId = 1,
+                episodeId = 2,
+                previewUrl = "https://example.org/preview;https://example.org/other",
+                coverUrl = "https://example.org/cover",
+                frameVersion = frameVersion,
+                sourceId = 3,
+                networkAllowed = true,
+            )
+            val differentUrls = model.copy(
+                previewUrl = "https://example.org/preview",
+                coverUrl = "https://example.org/other;https://example.org/cover",
+            )
+            assertNotEquals(model.cacheKey, differentUrls.cacheKey)
+            assertNotEquals(model.copy(previewUrl = null).cacheKey, model.copy(previewUrl = "null").cacheKey)
+            assertNotEquals(model.copy(coverUrl = null).cacheKey, model.copy(coverUrl = "").cacheKey)
+        }
     }
 
     @Test
