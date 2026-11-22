@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_dictionary_import_file">辞書ファイルをインポート</string>
+    <string name="tsz_dictionary_import_matching_files">辞書パックと対応するJSONマニフェストを一緒に選択してください。</string>
+    <string name="tsz_dictionary_import_invalid">辞書をインポートできませんでした。同じパックのファイルを選択してください。</string>
+    <string name="tsz_dictionary_bundled">内蔵</string>
+</resources>

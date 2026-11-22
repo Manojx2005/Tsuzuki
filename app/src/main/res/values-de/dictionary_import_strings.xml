@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_dictionary_import_file">Wörterbuchdatei importieren</string>
+    <string name="tsz_dictionary_import_matching_files">Wähle ein Wörterbuchpaket und das zugehörige JSON-Manifest zusammen aus.</string>
+    <string name="tsz_dictionary_import_invalid">Das Wörterbuch konnte nicht importiert werden. Prüfe, ob beide Dateien zum selben Paket gehören.</string>
+    <string name="tsz_dictionary_bundled">Integriert</string>
+</resources>

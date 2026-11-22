@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_dictionary_import_file">Importar arquivo de dicionário</string>
+    <string name="tsz_dictionary_import_matching_files">Selecione o pacote de dicionário e o manifesto JSON correspondente juntos.</string>
+    <string name="tsz_dictionary_import_invalid">Não foi possível importar o dicionário. Confira se os dois arquivos são do mesmo pacote.</string>
+    <string name="tsz_dictionary_bundled">Integrado</string>
+</resources>
