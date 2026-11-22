@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -222,46 +223,51 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     val library by remember { store.observeLibrary() }.collectAsState(emptyList())
     val airing = rememberAnimeAiringToday(store)
     val tokens = TsuzukiTheme.tokens
-    LazyColumn(
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = bottomPad),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        next?.let { resume ->
-            item(key = "continue_watching") {
-                AnimeWatchHero(resume) { openAnime(context, resume.anime.id, resume.episode.id) }
-            }
-        }
-        airing?.let { entry -> item(key = "airing_today") { AnimeAiringStrip(entry) } }
-        item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    tsuzukiMenuLabel(stringResource(MR.strings.label_library)),
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = tokens.dotOn,
-                )
-                TextButton(onClick = { tabNavigator.current = AnimeLibraryTab }) {
-                    Text(tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_media)))
+    BoxWithConstraints {
+        // Tablets (600 dp and wider) put the preview beside the title so the rest of Watch stays above the fold.
+        val wide = maxWidth >= 600.dp
+        val side = if (wide) 28.dp else 16.dp
+        LazyColumn(
+            contentPadding = PaddingValues(start = side, end = side, top = 12.dp, bottom = bottomPad),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            next?.let { resume ->
+                item(key = "continue_watching") {
+                    AnimeWatchHero(resume, wide) { openAnime(context, resume.anime.id, resume.episode.id) }
                 }
             }
-        }
-        if (library.isEmpty()) {
+            airing?.let { entry -> item(key = "airing_today") { AnimeAiringStrip(entry) } }
             item {
-                TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_library_empty)),
-                        color = tokens.mutedText,
-                        style = MaterialTheme.typography.bodyMedium,
+                        tsuzukiMenuLabel(stringResource(MR.strings.label_library)),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = tokens.dotOn,
                     )
-                    TextButton(onClick = onBrowse) { Text(tsuzukiMenuLabel(stringResource(MR.strings.browse))) }
+                    TextButton(onClick = { tabNavigator.current = AnimeLibraryTab }) {
+                        Text(tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_media)))
+                    }
                 }
             }
-        } else {
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(library, key = { it.anime.id }) { item ->
-                        AnimeLibraryCover(item.anime, Modifier.width(108.dp)) {
-                            openAnime(context, item.anime.id)
+            if (library.isEmpty()) {
+                item {
+                    TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_library_empty)),
+                            color = tokens.mutedText,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        TextButton(onClick = onBrowse) { Text(tsuzukiMenuLabel(stringResource(MR.strings.browse))) }
+                    }
+                }
+            } else {
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(library, key = { it.anime.id }) { item ->
+                            AnimeLibraryCover(item.anime, Modifier.width(108.dp)) {
+                                openAnime(context, item.anime.id)
+                            }
                         }
                     }
                 }
@@ -271,64 +277,78 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
 }
 
 @Composable
-private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
+private fun AnimeWatchHero(resume: ContinueAnime, wide: Boolean, onOpen: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     val foreground = if (tokens.isDot) tokens.dotOn else tokens.onAccent
     val muted = if (tokens.isDot) tokens.mutedText else foreground.copy(alpha = 0.75f)
+    val thumbnail = @Composable { modifier: Modifier ->
+        eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
+            sourceId = resume.anime.source,
+            episode = resume.episode,
+            coverUrl = resume.anime.thumbnailUrl,
+            modifier = modifier.aspectRatio(16f / 9f),
+            hero = true,
+        )
+    }
+    val details = @Composable { modifier: Modifier ->
+        Row(
+            modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_continue_watching)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = muted,
+                )
+                Text(
+                    tsuzukiMenuLabel(resume.anime.title),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = foreground,
+                    maxLines = if (wide) 3 else 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    tsuzukiMenuLabel(resume.episode.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = muted,
+                    maxLines = if (wide) 2 else 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Box(
+                Modifier.size(48.dp).clip(CircleShape).background(
+                    if (tokens.isDot) tokens.accent else tokens.onAccent,
+                ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Outlined.PlayArrow,
+                    contentDescription = null,
+                    tint = if (tokens.isDot) tokens.onAccent else tokens.accent,
+                )
+            }
+        }
+    }
     TsuzukiTile(
         modifier = Modifier.fillMaxWidth().tsuzukiClickable(role = Role.Button, onClick = onOpen),
         padding = 0.dp,
     ) {
-        Column(
-            Modifier.fillMaxWidth().background(if (tokens.isDot) Color.Transparent else tokens.accent)
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
-                sourceId = resume.anime.source,
-                episode = resume.episode,
-                coverUrl = resume.anime.thumbnailUrl,
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-                hero = true,
-            )
+        val background = Modifier.fillMaxWidth().background(if (tokens.isDot) Color.Transparent else tokens.accent)
+        if (wide) {
             Row(
-                Modifier.fillMaxWidth(),
+                background.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_continue_watching)),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = muted,
-                    )
-                    Text(
-                        tsuzukiMenuLabel(resume.anime.title),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = foreground,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        tsuzukiMenuLabel(resume.episode.name),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = muted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Box(
-                    Modifier.size(48.dp).clip(CircleShape).background(
-                        if (tokens.isDot) tokens.accent else tokens.onAccent,
-                    ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Outlined.PlayArrow,
-                        contentDescription = null,
-                        tint = if (tokens.isDot) tokens.onAccent else tokens.accent,
-                    )
-                }
+                thumbnail(Modifier.weight(0.55f))
+                details(Modifier.weight(0.45f))
+            }
+        } else {
+            Column(background.padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                thumbnail(Modifier.fillMaxWidth())
+                details(Modifier.fillMaxWidth())
             }
         }
     }
