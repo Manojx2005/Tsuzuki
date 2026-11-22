@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
@@ -56,18 +57,32 @@ import androidx.compose.ui.res.stringResource as androidStringResource
 internal object AnimeExtensionReposScreen : Screen() {
     @Composable
     override fun Content() {
-        if (!TsuzukiAnime.enabled) return
+        AnimeExtensionReposContent()
+    }
+
+    operator fun invoke(initialRepoUrl: String): Screen = LinkedAnimeExtensionReposScreen(initialRepoUrl)
+
+    @Composable
+    private fun AnimeExtensionReposContent(initialRepoUrl: String? = null) {
+        if (!TsuzukiAnime.enabled && initialRepoUrl == null) return
         val context = LocalContext.current.applicationContext
         val repository = remember(context) { AnimeExtensionRepos(Injekt.get(), AnimeExtensionInstaller(context)) }
         val repos by remember(repository) { repository.observe() }.collectAsState(emptyList())
         val scope = rememberCoroutineScope()
         val navigator = LocalNavigator.currentOrThrow
         val tokens = TsuzukiTheme.tokens
-        var input by rememberSaveable { mutableStateOf("") }
+        var input by rememberSaveable(initialRepoUrl) { mutableStateOf(initialRepoUrl.orEmpty()) }
+        var showMissingLinkError by rememberSaveable(initialRepoUrl) {
+            mutableStateOf(initialRepoUrl?.isBlank() == true)
+        }
         var busy by remember { mutableStateOf(false) }
         var error by remember { mutableStateOf(false) }
+        var pendingAdd by rememberSaveable(initialRepoUrl) {
+            mutableStateOf(initialRepoUrl?.let(AnimeRepoIndexParser::indexUrl)?.toString())
+        }
         var pendingRemoval by remember { mutableStateOf<AnimeExtensionRepo?>(null) }
-        val invalid = input.isNotBlank() && AnimeRepoIndexParser.indexUrl(input) == null
+        val index = AnimeRepoIndexParser.indexUrl(input)
+        val invalid = showMissingLinkError || (input.isNotBlank() && index == null)
 
         fun mutate(operation: suspend () -> Unit) {
             if (busy) return
@@ -86,6 +101,11 @@ internal object AnimeExtensionReposScreen : Screen() {
             }
         }
 
+        fun add(url: String) = mutate {
+            repository.add(url)
+            input = ""
+        }
+
         Scaffold(
             modifier = Modifier.tsuzukiBackground(tokens),
             containerColor = Color.Transparent,
@@ -100,41 +120,41 @@ internal object AnimeExtensionReposScreen : Screen() {
                 item {
                     TsuzukiTile(Modifier.fillMaxWidth().padding(horizontal = 12.dp), padding = 14.dp) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                tsuzukiMenuLabel(stringResource(MR.strings.action_add_repo)),
-                                color = tokens.mutedText,
-                                style = MaterialTheme.typography.labelLarge,
-                            )
+                            TsuzukiSectionLabel(stringResource(MR.strings.action_add_repo))
                             OutlinedTextField(
                                 value = input,
-                                onValueChange = { input = it },
+                                onValueChange = {
+                                    input = it
+                                    error = false
+                                    showMissingLinkError = false
+                                },
                                 label = { Text(stringResource(MR.strings.action_add_repo)) },
                                 placeholder = { Text("https://…/index.min.json") },
-                                supportingText = if (invalid) {
-                                    { Text(stringResource(MR.strings.invalid_repo_name)) }
-                                } else {
-                                    null
+                                supportingText = when {
+                                    invalid -> {
+                                        { Text(androidStringResource(R.string.tsz_anime_repo_invalid_link)) }
+                                    }
+                                    error -> {
+                                        { Text(androidStringResource(R.string.tsz_anime_repo_load_error)) }
+                                    }
+                                    else -> null
                                 },
-                                isError = invalid,
+                                isError = invalid || error,
                                 enabled = !busy,
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Button(
                                 onClick = {
-                                    mutate {
-                                        repository.add(input)
-                                        input = ""
+                                    index?.toString()?.let { url ->
+                                        if (initialRepoUrl == null) add(url) else pendingAdd = url
                                     }
                                 },
-                                enabled = input.isNotBlank() && !invalid && !busy,
+                                enabled = index != null && !busy,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 val label = if (busy) MR.strings.ext_pending else MR.strings.action_add_repo
                                 Text(tsuzukiMenuLabel(stringResource(label)))
-                            }
-                            if (error) {
-                                Text(stringResource(MR.strings.unknown_error), color = tokens.dotOn)
                             }
                         }
                     }
@@ -170,6 +190,22 @@ internal object AnimeExtensionReposScreen : Screen() {
                 }
             }
         }
+        pendingAdd?.let { url ->
+            AlertDialog(
+                onDismissRequest = { pendingAdd = null },
+                title = { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_add_repo))) },
+                text = { Text(url) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pendingAdd = null
+                        add(url)
+                    }) { Text(stringResource(MR.strings.action_add_repo)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingAdd = null }) { Text(stringResource(MR.strings.action_cancel)) }
+                },
+            )
+        }
         pendingRemoval?.let { repo ->
             AlertDialog(
                 onDismissRequest = { pendingRemoval = null },
@@ -185,6 +221,13 @@ internal object AnimeExtensionReposScreen : Screen() {
                     TextButton(onClick = { pendingRemoval = null }) { Text(stringResource(MR.strings.action_cancel)) }
                 },
             )
+        }
+    }
+
+    private data class LinkedAnimeExtensionReposScreen(val initialRepoUrl: String) : Screen() {
+        @Composable
+        override fun Content() {
+            AnimeExtensionReposContent(initialRepoUrl)
         }
     }
 }

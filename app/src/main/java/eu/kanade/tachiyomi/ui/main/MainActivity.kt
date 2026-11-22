@@ -560,6 +560,13 @@ class MainActivity : BaseActivity() {
             )
         }
 
+        eu.kanade.presentation.tsuzuki.browse.animeRepoLinkScreen(intent)?.let {
+            navigator.popUntilRoot()
+            navigator.push(it)
+            ready = true
+            return true
+        }
+
         // Open / share-target EPUB files from outside the app. Detected by
         // intent action + MIME (or filename extension) before the regular
         // action dispatch so an EPUB ACTION_VIEW doesn't fall through to the

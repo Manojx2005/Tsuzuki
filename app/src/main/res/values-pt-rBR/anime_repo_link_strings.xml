@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_repo_invalid_link">Este link não é de um repositório Aniyomi. Digite uma URL HTTPS.</string>
+    <string name="tsz_anime_repo_load_error">Não foi possível carregar ou ler o repositório Aniyomi.</string>
+</resources>
