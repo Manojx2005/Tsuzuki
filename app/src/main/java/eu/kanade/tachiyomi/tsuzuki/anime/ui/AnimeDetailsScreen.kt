@@ -49,6 +49,10 @@ import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.components.AppBarActions
+import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.FlipToBack
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
@@ -144,7 +148,6 @@ internal fun AnimeDetailsScreen(
     var showTracking by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-    var showSelectionMenu by remember { mutableStateOf(false) }
     var externalUrl by remember(display.url) { mutableStateOf<String?>(null) }
 
     LaunchedEffect(model) { model.refresh() }
@@ -279,55 +282,62 @@ internal fun AnimeDetailsScreen(
                 actionModeCounter = selected.size,
                 onCancelActionMode = { selection = longArrayOf() },
                 actionModeActions = {
-                    Box {
-                        IconButton(onClick = { showSelectionMenu = true }, enabled = !saving) {
-                            Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.label_more))
-                        }
-                        DropdownMenu(expanded = showSelectionMenu, onDismissRequest = { showSelectionMenu = false }) {
-                            val ids = selected.mapTo(mutableSetOf(), Episode::id)
-                            val single = selected.singleOrNull()
-                            AnimeEpisodeActions(
-                                seen = selected.all(Episode::seen),
-                                bookmarked = selected.all(Episode::bookmark),
-                                onMarkSeen = { seen ->
-                                    showSelectionMenu = false
-                                    mutate {
-                                        markSeen(ids, seen)
-                                        selection = longArrayOf()
-                                    }
-                                },
-                                onBookmark = { bookmarked ->
-                                    showSelectionMenu = false
-                                    mutate {
-                                        library.setEpisodesBookmarked(ids, bookmarked)
-                                        selection = longArrayOf()
-                                    }
-                                },
-                                onMarkPrevious = single?.let { episode ->
-                                    {
-                                        showSelectionMenu = false
-                                        markPrevious(episode)
-                                    }
-                                },
-                            )
-                            TsuzukiMenuItem(
-                                text = stringResource(MR.strings.action_save),
+                    // AP6: as in the book chapter list, the top bar only selects; the actions are in the bottom bar.
+                    AppBarActions(
+                        listOf(
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_all),
+                                icon = Icons.Outlined.SelectAll,
+                                onClick = { selection = filtered.map(Episode::id).toLongArray() },
+                            ),
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_inverse),
+                                icon = Icons.Outlined.FlipToBack,
                                 onClick = {
-                                    showSelectionMenu = false
-                                    enqueue(ordered.filter { it.id in ids })
-                                    selection = longArrayOf()
+                                    val chosen = selection.toSet()
+                                    selection = filtered.map(Episode::id).filterNot { it in chosen }.toLongArray()
                                 },
-                            )
-                            TsuzukiMenuItem(
-                                text = stringResource(MR.strings.action_select_all),
-                                onClick = {
-                                    showSelectionMenu = false
-                                    selection = filtered.map(Episode::id).toLongArray()
-                                },
-                            )
-                        }
+                            ),
+                        ),
+                    )
+                },
+            )
+        },
+        bottomBar = {
+            // AP6: the shared selection bar of the book chapter list.
+            val ids = selected.mapTo(mutableSetOf(), Episode::id)
+            fun act(block: suspend () -> Unit) = mutate {
+                block()
+                selection = longArrayOf()
+            }
+            MangaBottomActionMenu(
+                visible = selected.isNotEmpty() && !saving,
+                modifier = Modifier.fillMaxWidth(),
+                onBookmarkClicked = { act { library.setEpisodesBookmarked(ids, true) } }
+                    .takeIf { selected.any { !it.bookmark } },
+                onRemoveBookmarkClicked = { act { library.setEpisodesBookmarked(ids, false) } }
+                    .takeIf { selected.isNotEmpty() && selected.all(Episode::bookmark) },
+                onMarkAsReadClicked = { act { markSeen(ids, true) } }
+                    .takeIf { selected.any { !it.seen } },
+                onMarkAsUnreadClicked = { act { markSeen(ids, false) } }
+                    .takeIf { selected.any { it.seen || it.lastSecondSeen > 0 } },
+                onMarkPreviousAsReadClicked = selected.singleOrNull()?.let { episode -> { markPrevious(episode) } },
+                onDownloadClicked = {
+                    val chosen = ordered.filter { it.id in ids }
+                    chosen.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Failed }
+                        .forEach { downloads.retry(it.id) }
+                    enqueue(chosen.filter { downloadStatuses[it.id] == null })
+                    selection = longArrayOf()
+                }.takeIf {
+                    selected.any {
+                        downloadStatuses[it.id] == null || downloadStatuses[it.id] == AnimeDownloadStatus.Failed
                     }
                 },
+                onDeleteClicked = {
+                    selected.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Saved }
+                        .forEach { downloads.remove(it.id) }
+                    selection = longArrayOf()
+                }.takeIf { selected.any { downloadStatuses[it.id] == AnimeDownloadStatus.Saved } },
             )
         },
     ) { padding ->
@@ -386,7 +396,6 @@ internal fun AnimeDetailsScreen(
                         onSave = if (eligible.isNotEmpty()) {
                             {
                                 selection = eligible.map(Episode::id).toLongArray()
-                                showSelectionMenu = true
                             }
                         } else {
                             null
