@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -340,6 +341,10 @@ private fun AnimeCatalogueScreen(
                     IconButton(
                         enabled = !loadingFilters,
                         onClick = { editFilters() },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = tokens.dotOn,
+                            disabledContentColor = tokens.mutedText,
+                        ),
                     ) {
                         Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
                     }
