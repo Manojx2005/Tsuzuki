@@ -1,8 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -49,6 +47,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.PreferenceItem
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiTopBarFade
 import eu.kanade.presentation.tsuzuki.settings.SettingsAnimeScreen
 import eu.kanade.presentation.tsuzuki.settings.animeBetaPreference
 import eu.kanade.presentation.util.LocalBackPress
@@ -105,12 +104,11 @@ object SettingsMainScreen : Screen() {
             topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
             topBar = topBar@{ scrollBehavior ->
                 if (eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()) {
-                    Box(Modifier.background(containerColor)) {
-                        eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTitle(
-                            title = stringResource(MR.strings.label_settings),
-                            onBack = if (twoPane) null else backPress::invoke,
-                        )
-                    }
+                    eu.kanade.presentation.tsuzuki.settings.TsuzukiSettingsTitle(
+                        title = stringResource(MR.strings.label_settings),
+                        onBack = if (twoPane) null else backPress::invoke,
+                        modifier = Modifier.tsuzukiTopBarFade(containerColor),
+                    )
                     return@topBar
                 }
                 AppBar(

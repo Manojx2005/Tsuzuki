@@ -63,10 +63,10 @@ import tachiyomi.presentation.core.i18n.stringResource
  * face, large, with a round back button on phones. On tablets the rail sits beside it, so there's no back button.
  */
 @Composable
-fun TsuzukiSettingsTitle(title: String, onBack: (() -> Unit)?) {
+fun TsuzukiSettingsTitle(title: String, onBack: (() -> Unit)?, modifier: Modifier = Modifier) {
     val t = TsuzukiTheme.tokens
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(start = 16.dp, end = 16.dp, top = if (onBack != null) 20.dp else 16.dp, bottom = 12.dp),
