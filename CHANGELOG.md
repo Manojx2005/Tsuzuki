@@ -28,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Pausing Listen at the very end of a chapter no longer replays the last sentence.
 - The anime details page no longer shows a second loading spinner while it refreshes.
 - Opening the reader menu no longer pushes the page down.
+- Downloaded episodes from sources such as AnimeKai play offline (older downloads are repaired the first time
+  you play them).
 
 ## [0.2.0]
 
