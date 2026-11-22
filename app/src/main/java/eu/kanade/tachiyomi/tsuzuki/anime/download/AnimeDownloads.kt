@@ -70,6 +70,10 @@ internal data class AnimeDownloadQueue(
 
     val hasQueuedEpisodes: Boolean get() = entries.any { it.status == AnimeDownloadStatus.Queued }
 
+    /** Anime with at least one finished download, for the library's "Downloaded only" filter (AY-INT item 5). */
+    fun savedAnimeIds(): Set<Long> =
+        entries.filter { it.status == AnimeDownloadStatus.Saved }.mapTo(hashSetOf()) { it.animeId }
+
     fun enqueue(entry: AnimeDownloadEntry): AnimeDownloadQueue {
         val existing = entries.firstOrNull { it.episodeId == entry.episodeId }
         return when (existing?.status) {

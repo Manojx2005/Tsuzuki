@@ -1483,4 +1483,5 @@
     <string name="tsz_pending_mark_until_last_read">Kapitel vor dem zuletzt gelesenen werden als gelesen markiert</string>
     <string name="tsz_nothing_before_last_read">Keine ungelesenen Kapitel vor dem zuletzt gelesenen</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
+    <string name="tsz_history_clear_includes_anime">Der Anime-Verlauf wird ebenfalls gelöscht.</string>
 </resources>

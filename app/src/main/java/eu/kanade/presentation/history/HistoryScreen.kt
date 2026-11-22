@@ -239,10 +239,24 @@ fun HistoryScreen(
                 TsuzukiAnimeHistory(animeHistory, state.searchQuery)
                 return@Scaffold
             }
-            state.list.let {
-                if (it == null) {
+            val history = state.list?.let { books ->
+                if (hasAnimeHistory && state.filter == HistoryFilter.ALL) {
+                    eu.kanade.presentation.tsuzuki.history.mergeAnimeIntoHistory(
+                        books = books,
+                        anime = animeHistory,
+                        searchQuery = state.searchQuery,
+                        allBooksLoaded = rows.size < state.limit,
+                        timeZone = kotlinx.datetime.TimeZone.currentSystemDefault(),
+                    )
+                } else {
+                    books
+                }
+            }
+            when {
+                history == null -> {
                     LoadingScreen()
-                } else if (it.isEmpty()) {
+                }
+                history.isEmpty() -> {
                     val msg = if (!state.searchQuery.isNullOrEmpty()) {
                         MR.strings.no_results_found
                     } else {
@@ -251,9 +265,10 @@ fun HistoryScreen(
                     EmptyScreen(
                         stringRes = msg,
                     )
-                } else {
+                }
+                else -> {
                     HistoryScreenContent(
-                        history = it,
+                        history = history,
                         onClickCover = { history -> onClickCover(history.mangaId) },
                         onClickResume = { history -> onClickResume(history.mangaId, history.chapterId) },
                         onClickDelete = { item -> onDialogChange(HistoryViewModel.Dialog.Delete(item)) },
@@ -300,12 +315,14 @@ private fun HistoryScreenContent(
                 when (it) {
                     is HistoryUiModel.Header -> "history-date-${it.date}"
                     is HistoryUiModel.Item -> "history-item-${it.item.id}"
+                    is HistoryUiModel.Anime -> "history-anime-${it.item.episodeId}"
                 }
             },
             contentType = {
                 when (it) {
                     is HistoryUiModel.Header -> "header"
                     is HistoryUiModel.Item -> "item"
+                    is HistoryUiModel.Anime -> "anime"
                 }
             },
         ) { item ->
@@ -340,6 +357,11 @@ private fun HistoryScreenContent(
                         onLongClick = onLongPress?.let { press -> { press(value) } },
                     )
                 }
+                is HistoryUiModel.Anime -> eu.kanade.presentation.tsuzuki.history.TsuzukiAnimeHistoryEntry(
+                    item = item.item,
+                    timeFormatter = timeFormatter,
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
         item(key = "history-load-more") {
@@ -353,6 +375,9 @@ private fun HistoryScreenContent(
 sealed interface HistoryUiModel {
     data class Header(val date: LocalDate) : HistoryUiModel
     data class Item(val item: HistoryWithRelations) : HistoryUiModel
+
+    /** Tsuzuki (AY-INT): a watched episode shown in History › All. */
+    data class Anime(val item: tachiyomi.domain.history.anime.model.AnimeHistoryDisplay) : HistoryUiModel
 }
 
 @PreviewLightDark

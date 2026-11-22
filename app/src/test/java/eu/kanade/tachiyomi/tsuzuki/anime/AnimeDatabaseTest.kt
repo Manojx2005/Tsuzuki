@@ -341,6 +341,28 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun clearingAllHistoryEmptiesTheListButKeepsWatchTime() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val first = anime.insert(Anime(source = 8, url = "/a", title = "A", favorite = true))
+            val second = anime.insert(Anime(source = 8, url = "/b", title = "B", favorite = true))
+            val (one, two) = episodes.insertAll(listOf(Episode(first, "/a1", "A1"), Episode(second, "/b1", "B1")))
+            history.upsert(one, Date(100), 10)
+            history.upsert(two, Date(200), 20)
+            assertEquals(2, history.subscribeHistory().first().size)
+
+            history.removeAllHistory()
+
+            assertEquals(0, history.subscribeHistory().first().size)
+            assertEquals(10L, history.awaitByEpisodeId(one)?.timeWatched)
+            assertEquals(20L, history.awaitByEpisodeId(two)?.timeWatched)
+            assertEquals(null, history.awaitByEpisodeId(one)?.lastSeen)
+        }
+    }
+
+    @Test
     fun episodeSyncUpdatesSourceFieldsAndKeepsLocalStateAndOfflineEpisodes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

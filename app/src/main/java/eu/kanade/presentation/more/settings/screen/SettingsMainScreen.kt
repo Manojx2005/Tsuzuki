@@ -90,8 +90,10 @@ object SettingsMainScreen : Screen() {
         val hideMangaUi by basePreferences.hideMangaUi.collectAsState()
         val containerColor = if (twoPane) getPalerSurface() else MaterialTheme.colorScheme.surface
         val topBarState = rememberTopAppBarState()
-        val visibleItems = remember(hideMangaUi) {
-            items.filterNot { hideMangaUi && it.isMangaOnly }
+        // Tsuzuki (AY-INT): the anime gate is snapshot state, so its rows appear as soon as anime is switched on.
+        val animeEnabled = TsuzukiAnime.enabled
+        val visibleItems = remember(hideMangaUi, animeEnabled) {
+            items.filterNot { (hideMangaUi && it.isMangaOnly) || (it.isAnimeOnly && !animeEnabled) }
         }
 
         Scaffold(
@@ -243,6 +245,7 @@ object SettingsMainScreen : Screen() {
         val icon: ImageVector,
         val screen: VoyagerScreen,
         val isMangaOnly: Boolean = false,
+        val isAnimeOnly: Boolean = false,
     )
 
     private val items = listOfNotNull(
@@ -271,15 +274,12 @@ object SettingsMainScreen : Screen() {
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsNovelReaderScreen,
         ),
-        if (TsuzukiAnime.enabled) {
-            Item(
-                titleRes = MR.strings.tsz_anime_player_settings,
-                icon = Icons.Outlined.PlayCircle,
-                screen = AnimePlayerSettingsScreen,
-            )
-        } else {
-            null
-        },
+        Item(
+            titleRes = MR.strings.tsz_anime_player_settings,
+            icon = Icons.Outlined.PlayCircle,
+            screen = AnimePlayerSettingsScreen,
+            isAnimeOnly = true,
+        ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
             subtitleRes = MR.strings.pref_downloads_summary,

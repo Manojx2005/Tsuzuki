@@ -40,12 +40,12 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.relativeDateText
-import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.R
@@ -53,11 +53,15 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimePlayback
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import logcat.LogPriority
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.history.anime.model.AnimeHistoryDisplay
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.items.episode.model.Episode
@@ -72,6 +76,25 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 import androidx.compose.ui.res.stringResource as androidStringResource
+
+/** History's "clear all" also clears anime watch history while anime is on (AY-INT item 3). */
+internal fun clearAllAnimeHistory(animeEnabled: Boolean = TsuzukiAnime.enabled) {
+    if (!animeEnabled) return
+    Injekt.get<kotlinx.coroutines.CoroutineScope>().launchIO {
+        try {
+            Injekt.get<AnimeHistoryRepository>().removeAllHistory()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Could not clear anime history" }
+        }
+    }
+}
+
+/** The extra line for the "clear all" confirmation, or null while anime is off. */
+@Composable
+internal fun animeClearHistoryNote(): String? =
+    if (TsuzukiAnime.enabled) stringResource(MR.strings.tsz_history_clear_includes_anime) else null
 
 internal fun showAnimeHistory(hasHistory: Boolean, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
     animeEnabled && hasHistory
@@ -110,74 +133,79 @@ internal fun rememberAnimeHistory(): List<AnimeHistoryDisplay> {
 
 @Composable
 internal fun TsuzukiAnimeHistory(rows: List<AnimeHistoryDisplay>, searchQuery: String?) {
+    val timeZone = TimeZone.currentSystemDefault()
+    val groups = remember(rows, searchQuery, timeZone) { groupAnimeHistory(rows, searchQuery, timeZone) }
+    val timeFormatter = rememberTimestampFormatter()
+
+    if (groups.isEmpty()) {
+        EmptyScreen(stringRes = MR.strings.no_results_found)
+    } else {
+        FastScrollLazyColumn {
+            for ((day, episodes) in groups) {
+                item(key = "anime-history-$day") {
+                    TsuzukiSectionLabel(relativeDateText(day))
+                }
+                items(episodes, key = { "anime-history-${it.episodeId}" }) { item ->
+                    TsuzukiAnimeHistoryEntry(item, timeFormatter)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One watched episode: tap resumes (the next unwatched episode when this one is finished), the remove button asks
+ * whether to drop this episode or the whole anime from history. Used by the Anime pill and by History › All.
+ */
+@Composable
+internal fun TsuzukiAnimeHistoryEntry(
+    item: AnimeHistoryDisplay,
+    timeFormatter: DateTimeFormatter,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val library = remember { Injekt.get<AnimeLibraryStore>() }
     val repository = remember { Injekt.get<AnimeHistoryRepository>() }
-    val timeZone = TimeZone.currentSystemDefault()
-    val groups = remember(rows, searchQuery, timeZone) { groupAnimeHistory(rows, searchQuery, timeZone) }
-    val timeFormatter = rememberTimestampFormatter()
-    var selected by remember { mutableStateOf<AnimeHistoryDisplay?>(null) }
+    var confirming by remember { mutableStateOf(false) }
     var removeAll by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf(false) }
 
     fun perform(operation: suspend () -> Unit) {
-        error = false
         scope.launch {
             try {
                 operation()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                error = true
+                context.toast(MR.strings.unknown_error)
             }
         }
     }
 
-    if (groups.isEmpty() && !error) {
-        EmptyScreen(stringRes = MR.strings.no_results_found)
-    } else {
-        FastScrollLazyColumn {
-            if (error) {
-                item {
-                    Text(
-                        stringResource(MR.strings.unknown_error),
-                        color = TsuzukiTheme.tokens.dotOn,
-                        modifier = Modifier.padding(16.dp),
-                    )
+    Box(modifier) {
+        AnimeHistoryRow(
+            item = item,
+            timeFormatter = timeFormatter,
+            onResume = {
+                perform {
+                    val target = if (item.seen) {
+                        animeHistoryResumeTarget(item, library.getEpisodes(item.animeId))
+                    } else {
+                        item.episodeId
+                    }
+                    val track = !Injekt.get<BasePreferences>().incognitoMode.get()
+                    AnimePlayback.launchEpisode(context, target, track)
                 }
-            }
-            for ((day, episodes) in groups) {
-                item(key = "anime-history-$day") {
-                    TsuzukiSectionLabel(relativeDateText(day))
-                }
-                items(episodes, key = { "anime-history-${it.episodeId}" }) { item ->
-                    AnimeHistoryRow(
-                        item = item,
-                        timeFormatter = timeFormatter,
-                        onResume = {
-                            perform {
-                                val target = if (item.seen) {
-                                    animeHistoryResumeTarget(item, library.getEpisodes(item.animeId))
-                                } else {
-                                    item.episodeId
-                                }
-                                val track = !Injekt.get<BasePreferences>().incognitoMode.get()
-                                AnimePlayback.launchEpisode(context, target, track)
-                            }
-                        },
-                        onRemove = {
-                            selected = item
-                            removeAll = false
-                        },
-                    )
-                }
-            }
-        }
+            },
+            onRemove = {
+                confirming = true
+                removeAll = false
+            },
+        )
     }
-    selected?.let { item ->
+    if (confirming) {
         AlertDialog(
-            onDismissRequest = { selected = null },
+            onDismissRequest = { confirming = false },
             title = { Text(stringResource(MR.strings.action_remove)) },
             text = {
                 Column {
@@ -191,12 +219,12 @@ internal fun TsuzukiAnimeHistory(rows: List<AnimeHistoryDisplay>, searchQuery: S
             confirmButton = {
                 TextButton(onClick = {
                     val episodeId = if (removeAll) null else item.episodeId
-                    selected = null
+                    confirming = false
                     perform { repository.removeHistory(item.animeId, episodeId) }
                 }) { Text(stringResource(MR.strings.action_remove)) }
             },
             dismissButton = {
-                TextButton(onClick = { selected = null }) { Text(stringResource(MR.strings.action_cancel)) }
+                TextButton(onClick = { confirming = false }) { Text(stringResource(MR.strings.action_cancel)) }
             },
         )
     }
@@ -244,7 +272,7 @@ private fun AnimeHistoryRow(
                         contentDescription = null,
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop,
-                        colorFilter = DotCoverFilter.takeIf { tokens.isDot },
+                        colorFilter = tsuzukiCoverFilter(),
                     )
                 }
                 if (item.duration > 0) {

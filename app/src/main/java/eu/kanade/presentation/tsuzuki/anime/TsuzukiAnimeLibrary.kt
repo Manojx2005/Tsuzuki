@@ -2,7 +2,6 @@ package eu.kanade.presentation.tsuzuki.anime
 
 import android.content.Context
 import android.content.Intent
-import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -56,12 +53,10 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.components.MangaCover
-import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
@@ -74,11 +69,11 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
 import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
 import eu.kanade.presentation.util.Tab
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.groupAnimeSeasons
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import eu.kanade.tachiyomi.ui.library.LibraryTab
@@ -93,7 +88,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import androidx.compose.ui.res.stringResource as androidStringResource
 
 internal const val SAVED_ANIME_ID = "saved_anime_id"
 internal const val RESUME_ANIME_EPISODE_ID = "resume_anime_episode_id"
@@ -123,9 +117,14 @@ internal data object AnimeLibraryTab : Tab {
         val activeShelf = shelves.indexOfFirst { it.id == selectedShelf }.coerceAtLeast(0)
         val shelfId = shelves.getOrNull(activeShelf)?.id ?: 0L
         val search = query.orEmpty().trim()
-        val filtered = remember(library, shelfId, search, groupSeasons) {
+        // AY-INT item 5: More › Downloaded only also narrows the anime library to downloaded anime.
+        val downloadedOnly by remember { Injekt.get<BasePreferences>().downloadedOnly }.collectAsState()
+        val downloads by remember { Injekt.get<AnimeDownloads>().state }.collectAsState()
+        val savedAnime = remember(downloads) { downloads.savedAnimeIds() }
+        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime) {
             val matches = library.filter {
-                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true)
+                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
+                    (!downloadedOnly || it.anime.id in savedAnime)
             }
             if (groupSeasons && search.isEmpty()) groupAnimeSeasons(matches) else matches
         }
@@ -336,7 +335,7 @@ private fun AnimeWatchHero(resume: ContinueAnime, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+internal fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
     val tokens = TsuzukiTheme.tokens
     Column(
         modifier.tsuzukiClickable(role = Role.Button, onClick = onOpen),

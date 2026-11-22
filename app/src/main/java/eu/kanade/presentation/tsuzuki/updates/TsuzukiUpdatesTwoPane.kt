@@ -60,6 +60,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
+import eu.kanade.presentation.tsuzuki.anime.MixedTimelineRow
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.relativeTimeSpanString
@@ -120,8 +121,9 @@ internal fun TsuzukiUpdatesTwoPane(
     val groups = remember(state.items, state.groupByNovel) {
         if (state.groupByNovel) state.getNovelGroups() else emptyList()
     }
-    val uiModels = remember(state.items, state.groupByNovel) {
-        if (state.groupByNovel) emptyList() else state.getUiModel()
+    val animeEpisodes = anime?.newEpisodes.orEmpty()
+    val uiModels = remember(state.items, state.groupByNovel, state.filter, animeEpisodes) {
+        if (state.groupByNovel) emptyList() else withAnimeUpdates(state.getUiModel(), anime, state.filter)
     }
     val selectedItem = if (state.groupByNovel) {
         null
@@ -186,21 +188,52 @@ internal fun TsuzukiUpdatesTwoPane(
                 }
             }
             anime?.airingStrip?.let { strip -> item(key = "airing_today") { strip() } }
-            if (state.items.isNotEmpty()) {
+            if (state.items.isNotEmpty() || hasAnimeInAll(anime, state.filter, state.groupByNovel)) {
                 item(key = "tiles") {
                     val unread = state.items.filter { !it.update.read }
                     val toSave = unread.filter { it.downloadStateProvider() == Download.State.NOT_DOWNLOADED }
+                    val (newCount, saveCount) = updatesTileCounts(unread.size, toSave.size, anime, state.filter)
                     TsuzukiUpdatesTiles(
-                        newCount = unread.size,
-                        toSave = toSave.size,
-                        onSaveAll = { onDownloadChapter(toSave, ChapterDownloadAction.START) },
+                        newCount = newCount,
+                        toSave = saveCount,
+                        onSaveAll = {
+                            onDownloadChapter(toSave, ChapterDownloadAction.START)
+                            if (state.filter == UpdatesFilter.ALL) anime?.saveEpisodes?.invoke()
+                        },
                     )
                 }
             }
-            if (state.items.isEmpty()) {
+            if (state.items.isEmpty() && !hasAnimeInAll(anime, state.filter, state.groupByNovel)) {
                 item(key = "empty") { EmptyUpdates(Modifier.fillMaxWidth().padding(vertical = 64.dp)) }
             } else if (state.groupByNovel) {
-                items(groups, key = { "group-${it.mangaId}" }, contentType = { "novel_group" }) { group ->
+                val groupRows =
+                    mergeUpdateGroups(groups, { it.latestChapterDate }, animeGroupsForAll(anime, state.filter))
+                items(
+                    groupRows,
+                    key = {
+                        when (it) {
+                            is MixedTimelineRow.Book -> "group-${it.item.mangaId}"
+                            is MixedTimelineRow.Anime -> "anime-group-${it.item.animeId}"
+                        }
+                    },
+                    contentType = { if (it is MixedTimelineRow.Anime) "anime_group" else "novel_group" },
+                ) { row ->
+                    if (row is MixedTimelineRow.Anime) {
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        UpdateRow(
+                            title = row.item.title,
+                            subtitle = animeGroupSubtitle(row.item),
+                            cover = row.item.cover,
+                            read = false,
+                            saved = false,
+                            highlighted = false,
+                            selectedForAction = false,
+                            onClick = { eu.kanade.presentation.tsuzuki.anime.openAnime(context, row.item.animeId) },
+                            onLongClick = null,
+                        )
+                        return@items
+                    }
+                    val group = (row as MixedTimelineRow.Book).item
                     UpdateRow(
                         title = group.mangaTitle,
                         subtitle = listOfNotNull(
@@ -223,12 +256,14 @@ internal fun TsuzukiUpdatesTwoPane(
                         when (it) {
                             is UpdatesUiModel.Header -> "header-${it.date}"
                             is UpdatesUiModel.Item -> "update-${it.item.update.chapterId}-${it.item.update.dateFetch}"
+                            is UpdatesUiModel.Anime -> "update-anime-${it.item.episodeId}"
                         }
                     },
                     contentType = {
                         when (it) {
                             is UpdatesUiModel.Header -> "header"
                             is UpdatesUiModel.Item -> "update"
+                            is UpdatesUiModel.Anime -> "anime"
                         }
                     },
                 ) { model ->
@@ -237,6 +272,7 @@ internal fun TsuzukiUpdatesTwoPane(
                             text = relativeDateText(model.date),
                             contentPadding = PaddingValues(start = 4.dp, end = 4.dp, top = 14.dp, bottom = 6.dp),
                         )
+                        is UpdatesUiModel.Anime -> TsuzukiAnimeUpdateEntry(model.item)
                         is UpdatesUiModel.Item -> {
                             val item = model.item
                             UpdateRow(

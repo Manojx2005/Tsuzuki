@@ -43,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -65,7 +64,8 @@ internal object AnimePlayerSettingsScreen : Screen() {
     @Composable
     override fun Content() {
         if (!TsuzukiAnime.enabled) return
-        val back = LocalBackPress.currentOrThrow
+        // Nullable like SearchableSettings: settings search opens this page without a back handler.
+        val back = LocalBackPress.current
         val preferences = remember { AnimePlayerPreferences(Injekt.get()) }
         var settings by remember { mutableStateOf(preferences.get()) }
         val autoplay by preferences.autoplay.collectAsState()
@@ -89,7 +89,7 @@ internal object AnimePlayerSettingsScreen : Screen() {
             topBar = {
                 AppBar(
                     title = mokoStringResource(MR.strings.tsz_anime_player_settings),
-                    navigateUp = back::invoke,
+                    navigateUp = back?.let { handler -> { handler() } },
                 )
             },
         ) { padding ->

@@ -34,13 +34,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
-import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -299,7 +299,7 @@ internal fun AnimeGlobalSearchResults(
                                     modifier = Modifier.fillMaxWidth().size(height = 132.dp, width = 96.dp)
                                         .clip(RoundedCornerShape(6.dp)).background(tokens.track),
                                     contentScale = ContentScale.Crop,
-                                    colorFilter = DotCoverFilter.takeIf { tokens.isDot },
+                                    colorFilter = tsuzukiCoverFilter(),
                                 )
                                 Text(
                                     tsuzukiMenuLabel(title.title),

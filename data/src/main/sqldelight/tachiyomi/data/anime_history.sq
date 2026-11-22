@@ -67,6 +67,16 @@ UPDATE anime_history SET last_seen = NULL
 WHERE episode_id IN (SELECT _id FROM episodes WHERE anime_id = :animeId)
     AND (:episodeId IS NULL OR episode_id = :episodeId);
 
+clearAllHistory:
+UPDATE anime_history SET last_seen = NULL;
+
+refreshAllAnimeLastSeen:
+UPDATE animes SET last_seen = coalesce((
+    SELECT max(CAST(anime_history.last_seen AS INTEGER)) FROM anime_history
+    JOIN episodes ON episodes._id = anime_history.episode_id
+    WHERE episodes.anime_id = animes._id
+), 0);
+
 refreshAnimeLastSeen:
 UPDATE animes SET last_seen = coalesce((
     SELECT max(CAST(anime_history.last_seen AS INTEGER)) FROM anime_history

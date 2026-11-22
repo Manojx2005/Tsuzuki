@@ -63,13 +63,15 @@ fun HistoryDeleteDialog(
 fun HistoryDeleteAllDialog(
     onDismissRequest: () -> Unit,
     onDelete: () -> Unit,
+    // Tsuzuki (AY-INT): says that anime watch history is cleared too.
+    note: String? = null,
 ) {
     AlertDialog(
         title = {
             Text(text = stringResource(MR.strings.action_remove_everything))
         },
         text = {
-            Text(text = stringResource(MR.strings.clear_history_confirmation))
+            Text(text = listOfNotNull(stringResource(MR.strings.clear_history_confirmation), note).joinToString(" "))
         },
         onDismissRequest = onDismissRequest,
         confirmButton = {

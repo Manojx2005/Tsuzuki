@@ -61,6 +61,8 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
             shouldUpdateAnime(it, restrictions, skipDays, now.toEpochMilliseconds(), windowEnd)
         }
         if (entries.isEmpty()) return Result.success()
+        // Like the book job, a real run stamps the shared "last library update" line shown in Updates.
+        preferences.lastUpdatedTimestamp.set(now.toEpochMilliseconds())
         val sources = Injekt.get<AnimeSourceManager>().refresh().associateBy { it.source.id }
         var requested = false
         entries.forEach { show ->

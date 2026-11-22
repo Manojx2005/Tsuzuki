@@ -1476,4 +1476,5 @@
     <string name="tsz_pending_mark_until_last_read">Les chapitres avant le dernier lu seront marqués comme lus</string>
     <string name="tsz_nothing_before_last_read">Aucun chapitre non lu avant le dernier lu</string>
     <string name="tsz_mark_until_last_read_partial">%1$s · %2$s</string>
+    <string name="tsz_history_clear_includes_anime">L’historique des animes est aussi effacé.</string>
 </resources>

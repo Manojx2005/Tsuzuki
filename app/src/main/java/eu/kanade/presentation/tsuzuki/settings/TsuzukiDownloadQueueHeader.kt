@@ -33,8 +33,8 @@ import uy.kohesive.injekt.api.get
 
 /**
  * Download queue header in the Tsuzuki themes (board 07-system "Downloads"): a Queued tile with the chapter count
- * across novels and manga, a Wi-Fi only chip when that setting is on, then the Novels / Manga / Translations tabs as
- * pills with their counts. Left out (not measured): storage size, download speed.
+ * across novels and manga plus queued anime episodes, a Wi-Fi only chip when that setting is on, then the Novels /
+ * Manga / Translations tabs as pills with their counts. Left out (not measured): storage size, download speed.
  */
 @Composable
 fun TsuzukiDownloadQueueHeader(
@@ -43,6 +43,8 @@ fun TsuzukiDownloadQueueHeader(
     selected: Int,
     onSelect: (Int) -> Unit,
     showSharedSummary: Boolean = true,
+    // AY-INT item 5: anime episodes still waiting, added to the Queued tile (saved episodes are not queued).
+    animeQueued: Int = 0,
 ) {
     val t = TsuzukiTheme.tokens
     val muted = if (t.isDot) Color(0xFF8A8A8A) else Color.White.copy(alpha = 0.72f)
@@ -69,7 +71,7 @@ fun TsuzukiDownloadQueueHeader(
                         color = muted,
                     )
                     Text(
-                        "${counts.take(2).sum()}",
+                        "${counts.take(2).sum() + animeQueued}",
                         style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 44.sp),
                         color = Color.White,
                     )
