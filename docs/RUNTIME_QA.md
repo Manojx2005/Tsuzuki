@@ -57,3 +57,33 @@ Evidence: `app/build/review-evidence/rv5/` (including the inherited c-* and STR1
 - ERR1 controlled offline catalogue, delayed stages, timeout, synthetic 403 → WebView, missing source → Extensions, WebView HTTP 500 and Native missing local chapter → Retry recovery. Failed download cause/Copy/Retry checked. Manga paged offline error/Retry and webtoon render/recycling smoke checked; initial CDN DNS failures later recovered.
 - Coverage limits: separate forced webtoon error, live external browser challenge, inline-append error and full landscape/large-font matrix not established by this sample. Page-progress restoration is code-reviewed and built; no slow percentage capture was obtained. These do not mark the entire runtime sweep complete.
 - Synthetic S22 file and tablet Wi-Fi restored; localhost server stopped. Automatic approval review rejected opening daily apps, so handback uses disposable Dot Home.
+
+## Claude V7 tablet checks — 2026-11-19
+
+Optimized **preview** of the app chain (`tsuzuki/tts-polish` `d4878ac49`) installed as the disposable
+`io.github.manojx2005.tsuzuki.rv5debugscratch` on the tablet only (Japanese, Colour); data snapshot restored
+byte-equal afterwards and the debug chain build reinstalled. Evidence `app/build/review-evidence/v7-claude/`.
+
+- **Reader process death:** novel TextView reader on chapter 2 with the Listen dock open → Home → `am kill`
+  (process gone) → launcher: reopens on the same chapter with the Listen dock, no crash. The chapter fits one
+  screen, so scroll-position restore is not proven here; the recap card does not return (once per opening).
+- **Queued work:** `am kill` does **not** kill while a novel download runs (the foreground service keeps the process),
+  so that case is not a process-death test. **Force-stop mid-download** → relaunch: the queue keeps the chapter as
+  Queued (not auto-restarted), no crash; Cancel all clears it. Status text is English on this build (fixed by V8.1).
+- Not done: rotation (needs a system rotation setting change on the tablet), S22, manga reader and sheets.
+
+## Anime and Mark until last read — 2026-11-21
+
+- **AY9** passed scratch playback, pause and direct-close frame capture, the missing-source cover fallback, and the Watch screenshots in both themes on the Galaxy Tab S11 and S22. The final Colour rerun shows the white progress line against the gold tile. The 1,000-episode fixture measured 2.55–2.98% janky frames on the tablet and 14.42–15.35% on the S22. The S22 percentages came from an input probe whose injected moves were 35 ms apart. Claude's follow-up using regular swipes on optimized Preview counted 10 janky frames out of 1,197 (0.84%) on the synthetic list. The live One Piece scroll and the tablet landscape first-viewport layout remain open. Evidence in `.worktrees/ay9-fixture-qa/app/build/review-evidence/ay9-fixture/`.
+- **MARK-UNTIL-LAST-READ-F** passed an independent real-database probe on both devices. Undo left all three manga chapters unchanged. Applying the action marked only the chapter earlier in source order and preserved the anchor's saved page. Debug, optimized Preview and 1,412 unit tests passed. Merged locally at `7e333ca2a`. Evidence in `.worktrees/review-v02-mark-f/app/build/review-evidence/mark-f/`.
+- **AY-INT-F2** showed the watched episode when History › All had no book rows. An anime-only title search returned the row and an unmatched query cleared it in Dot and Colour, on both devices. The anime-off check hid the underlying watch history. Evidence in `.worktrees/ay-int-history/app/build/review-evidence/ay-int-f2/`.
+
+## Anime integration trial - 2026-11-22
+
+- Trial `012d6714f` passed Debug, optimized Preview and all 1,473 unit tests. All five Preview APKs passed 16 KB ZIP alignment, included baseline profiles and used identical DEX. All 25 distinct 64-bit native libraries passed ELF alignment. The ARM64 ABI audit passed lib 14, 16 and 17 with the expected checker controls. Evidence `.worktrees/v02-anime-chain/app/build/review-evidence/ay9-art-integrated/`.
+- The approved Galaxy Tab S11 scratch package displayed artwork on every visible episode row of the 1,000-episode fixture in Dot and Colour. The app and probe were removed and the tablet returned to the launcher with an empty crash buffer. The S22 was unavailable over adb. Live-source playback and tablet landscape acceptance are still open.
+- Trial `652cfd65e` also passed the tablet's download-icon screenshot checks in Dot and Colour. Mixed subtitle playback loaded the exact inline SRT bytes and the HTTP track together; blocking the cache directory still left the HTTP track usable. Scratch packages were removed in both tests.
+- Trial `df1d501d8` added AY-INT-F2 and passed Debug, optimized Preview and 1,503 unit tests. The five Preview APKs passed the same ZIP, ELF and baseline profile checks and the common DEX passed lib 14/16/17 ABI. The tablet showed the anime-only History entry and the title match in Dot and Colour, cleared the row for an unrelated query and hid it when anime was off. Scratch packages removed and crash buffer empty. Evidence `.worktrees/v02-anime-chain/app/build/review-evidence/ay-int-trial/`.
+
+- Trial `260a9e1cd` passed the tablet catalogue contrast and filtered-search smoke test in Dot and Colour. A local Debug build from the exact v0.1.1 tag upgraded directly from version code 25 to the trial's scratch code 26. The database advanced from schema 37 to 40 and kept every synthetic book, chapter, history and shelf row. Eight user preferences matched and anime remained off. The tablet showed the 500-book Colour Home. The scratch app was removed and the crash buffer was empty. This check used locally signed Debug APKs.
+- Trial `260a9e1cd` built Debug, Preview and Release. Each of the 15 APKs passed 16 KB ZIP and applicable ELF checks. Preview and Release passed the pinned anime ABI and baseline profile checks. The fresh Dot tablet probe confirmed Watch hidden by default and visible only while anime was enabled, without restarting Home. The test wrote the same setting as the Browse page, using disposable Debug apps.

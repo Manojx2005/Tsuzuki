@@ -380,3 +380,21 @@ Strings: 11 new keys in base, ja, zh-rCN, ko, es, pt-rBR, fr, de. The old `pref_
 | `6d4ed6cb2` | Already covered by `ExtensionLoader` using `ChildFirstPathClassLoader` on all supported Android versions. |
 | `b19c8abeb` | Applied as `2c7bac0b2`. Shared `TabText` measures the badge first and ellipsizes the label into the remaining width. |
 | `0864ce0f4` | Already applied by N2. Verbose network logging redacts Auth and Authorization by default. |
+
+## Mihon picks, 2026-11-21 (Claude; branch `tsuzuki/upstream-2026-11-21`, not merged)
+
+`scripts/upstream-report.sh` on 2026-11-21: Tsundoku 0 new commits; Mihon 368 not in Tsuzuki, 12 flagged as touching
+neither Tsuzuki's nor Tsundoku's files. Five of those were already disposed of in the V2b table above. The other seven:
+
+| Mihon commit | Disposition |
+|---|---|
+| `0de91a9c5` | Applied as `c3c9602be` (removes an unused `dimens.xml` from `:app`). |
+| `864281af7` | Applied as `441e8c31b` (extension language filter collects only while the screen is subscribed). |
+| `2b9cb4ca5` | Applied as `fa1283ddb`, plus a follow-up so `i18n-novel` (Tsuzuki's second string module) gets the same locale input files; without it the novel module's generated locale list would be empty. Checked: `i18n` 68 locales, `i18n-novel` 8. |
+| `38e93086c`, `61cd786e7` | Deferred until after v0.2. Room-style connections (busy timeout, multiple readers) and WAL on every device. Mihon's code needs the upstream `eygraber` androidx driver (Mihon `f7da5c856`); Tsuzuki still pins Mihon's fork `0637a964a1`, which lacks `AndroidxSqliteConnectionFactory` and `concurrencyModel`. Port with the driver switch, in `di/AppModule.kt` (Tsuzuki has no `DatabaseBindings.kt`). |
+| `e562a9b4f` | Deferred: replaces the chapter download indicator with a wavy progress ring. Visible on Tsuzuki's manga chapter rows and Updates, so it needs a board check first. |
+| `002a5fba2` | Deferred: 700-line rework of the fast scroller and scrollbars; visible behaviour change, review separately after v0.2. |
+
+The branch passes the full app suite (1,245 tests, 0 failures).
+
+Independent check (Codex, 2026-11-22): both locale tasks generated parseable XML from the card branch. The lists contain 68 i18n and 8 i18n-novel locale codes, each sorted and unique. Both tasks were up-to-date on repeated unchanged runs.

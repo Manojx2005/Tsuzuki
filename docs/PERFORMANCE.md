@@ -374,3 +374,33 @@ out-of-order events) are retained with the raw traces. No third optimization sel
 
 Owner delegated the budget decision to the reviewer: retain the **500 ms** engineering target and
 record a follow-up; do not relax the budget to make this candidate pass.
+
+
+## PERF-START-2-F independent review (2026-11-21)
+
+Galaxy S22, Japanese Dot, portrait, same optimized scratch package and restored 500-book synthetic library.
+Baseline code `2bca7b48d` (the AY0 code now on main). Candidate `1d4a93c23` applies `2c772793d` and
+`45cf42deb`. Both APKs contained the embedded baseline profile. Macrobenchmark COLD with
+Partial/Require, in two ten-launch blocks per variant ordered baseline, candidate, candidate, baseline.
+All 40 launches had exactly one nonzero `TsuzukiHomeObserved` section. No block recorded thermal sleep.
+
+| Metric | Baseline median / range (ms) | Candidate median / range (ms) | Median improvement (ms) |
+|---|---:|---:|---:|
+| Initial display | 554.074 / 534.273–651.583 | 433.157 / 391.218–594.523 | 120.917 |
+| Home observed | 3133.637 / 2998.512–3265.396 | 3077.355 / 2855.503–3169.162 | 56.282 |
+
+**Gate failed.** The candidate median met the 500 ms initial-display target and Home-observed median
+improved. The 120.917 ms initial-display improvement was smaller than the candidate's 203.305 ms run span.
+The Home observer includes instrumentation/accessibility overhead. Keep the synchronous warm-up on main.
+
+The exact `awaitSourcesReady` returned true before the installed source reached the lookup map in a controlled
+coroutine run. The cold worker constructor also resolves the source graph before `doWork` awaits the proposed
+startup gate. The warm-up uses Home data readiness or an OnDraw callback without confirming that the frame
+was presented. Both builds and 1,415 candidate Android unit tests passed. A first cold Browse search with the
+tablet Debug candidate found the synthetic local novel and logged the expected request.
+
+The actual cold worker completed on the tablet Debug candidate. The app process was absent after PID 15372 was stopped. JobScheduler started PID 15787, the fixture logged a 200 response for the novel, WorkManager returned SUCCESS, and the follow-up checked that Chapter 3 was persisted. The first attempt finished during handback after the fixture became unavailable and was discarded. Notification launch and a live extension constructor remain unverified.
+
+Evidence `.worktrees/review-v02-main/app/build/review-evidence/v02-perf/` (40 raw metric samples,
+hashes, tablet Browse and S22 Home). Candidate build and source proof in
+`.worktrees/review-v02-perf/app/build/review-evidence/v02-perf/`.
