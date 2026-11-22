@@ -146,6 +146,8 @@ internal class AnimeVideoTransfer(
                     if (bytes <= 0 || (expected >= 0 && bytes != expected)) throw IOException("Incomplete HLS asset")
                     if (name.endsWith(".key.ts") && bytes != 16L) throw UnsupportedAnimeDownload()
                 }
+                // AP3: keep only the transport stream when the host hides it behind an image.
+                if (!name.endsWith(".key.ts")) HlsSegmentPrefix.strip(temporary)
                 publish(temporary, asset)
             }
             completed += asset.length()
@@ -158,8 +160,9 @@ internal class AnimeVideoTransfer(
             it.writeText(hls.playlist)
             publish(it, File(folder, PLAYLIST))
         }
+        File(folder, ".segments-clean").writeText("1")
         folder.listFiles()?.forEach { file ->
-            if (file.name != PLAYLIST && file.name !in hls.resources) file.delete()
+            if (file.name != PLAYLIST && file.name != ".segments-clean" && file.name !in hls.resources) file.delete()
         }
     }
 

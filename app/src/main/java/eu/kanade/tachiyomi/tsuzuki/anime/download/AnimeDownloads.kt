@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeStreamResolver
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -201,8 +202,17 @@ internal class AnimeDownloads(
             it.sourceId == sourceId && it.animeId == animeId && it.episodeId == episodeId &&
                 it.status == AnimeDownloadStatus.Saved
         } ?: return@withContext null
-        val file = episodeFolder(entry)?.let(::playableFile)
+        val folder = episodeFolder(entry)
+        val file = folder?.let(::playableFile)
         if (file != null) {
+            // AP3: episodes saved before segments were cleaned on download are cleaned once here.
+            if (file.name == AnimeVideoTransfer.PLAYLIST) {
+                try {
+                    HlsSegmentPrefix.repairFolder(folder, file)
+                } catch (e: IOException) {
+                    AnimeLog.w("could not clean the saved segments of episode ${entry.episodeId}", e)
+                }
+            }
             Video(videoUrl = file.absolutePath)
         } else {
             null
