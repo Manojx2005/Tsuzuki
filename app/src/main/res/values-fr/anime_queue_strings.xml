@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_retry_failed">Relancer les échecs</string>
+    <string name="tsz_anime_clear_failed">Effacer les échecs</string>
+    <string name="tsz_anime_delete_after_watched">Supprimer les épisodes d\'animé après visionnage</string>
+</resources>

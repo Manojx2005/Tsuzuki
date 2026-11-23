@@ -13,6 +13,16 @@ import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
+/** Settings › Downloads: delete a saved episode once it is watched (anime counterpart of the book option, AP11). */
+@Composable
+internal fun animeDeleteAfterWatchedPreference(): Preference.PreferenceItem.SwitchPreference? {
+    if (!TsuzukiAnime.enabled) return null
+    return Preference.PreferenceItem.SwitchPreference(
+        preference = remember { eu.kanade.tachiyomi.tsuzuki.anime.download.animeDeleteAfterWatched(Injekt.get()) },
+        title = stringResource(R.string.tsz_anime_delete_after_watched),
+    )
+}
+
 @Composable
 internal fun animeDownloadWifiPreference(): Preference? {
     if (!TsuzukiAnime.enabled) return null
