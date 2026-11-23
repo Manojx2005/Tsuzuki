@@ -219,7 +219,7 @@ internal fun TsuzukiUpdatesTwoPane(
                     contentType = { if (it is MixedTimelineRow.Anime) "anime_group" else "novel_group" },
                 ) { row ->
                     if (row is MixedTimelineRow.Anime) {
-                        val context = androidx.compose.ui.platform.LocalContext.current
+                        val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
                         UpdateRow(
                             title = row.item.title,
                             subtitle = animeGroupSubtitle(row.item),
@@ -228,7 +228,7 @@ internal fun TsuzukiUpdatesTwoPane(
                             saved = false,
                             highlighted = false,
                             selectedForAction = false,
-                            onClick = { eu.kanade.presentation.tsuzuki.anime.openAnime(context, row.item.animeId) },
+                            onClick = { openDetails(row.item.animeId) },
                             onLongClick = null,
                         )
                         return@items

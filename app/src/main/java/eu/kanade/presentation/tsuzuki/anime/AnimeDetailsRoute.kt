@@ -88,3 +88,16 @@ internal fun animeSharedCoverKey(animeId: Long) = "tsuzuki-anime-cover-$animeId"
 
 private fun AnimeSourceManager.readyDetails(anime: Anime): Pair<RegisteredAnimeSource, SAnime>? =
     get(anime.source)?.let { it to anime.toSourceAnime() }
+
+/**
+ * Opens an anime's details from a screen in the main navigator (Updates, Library, History) in place, like book details;
+ * falls back to the details Activity where there is no navigator.
+ */
+@Composable
+internal fun rememberAnimeDetailsOpener(): (Long) -> Unit {
+    val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    return remember(navigator, context) {
+        { id -> navigator?.push(AnimeDetailsRoute(id)) ?: openAnime(context, id) }
+    }
+}

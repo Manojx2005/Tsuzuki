@@ -91,11 +91,11 @@ internal fun rememberAnimeAiringToday(store: AnimeLibraryStore): AnimeUpdateEpis
 
 @Composable
 internal fun AnimeAiringStrip(entry: AnimeUpdateEpisode, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val tokens = TsuzukiTheme.tokens
     val time = rememberTimestampFormatter().format(Instant.ofEpochMilli(entry.timestamp).atZone(ZoneId.systemDefault()))
     TsuzukiTile(
-        modifier.fillMaxWidth().tsuzukiClickable(role = Role.Button) { openAnime(context, entry.animeId) },
+        modifier.fillMaxWidth().tsuzukiClickable(role = Role.Button) { openDetails(entry.animeId) },
         padding = 12.dp,
     ) {
         Row(
@@ -209,6 +209,7 @@ private fun playAnimeEpisode(context: android.content.Context, entry: AnimeUpdat
 @Composable
 internal fun TsuzukiAnimeUpdateGroupEntry(group: AnimeUpdateGroup, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val summary = AnimeUpdateEpisode(
         animeId = group.animeId,
         title = group.title,
@@ -219,7 +220,7 @@ internal fun TsuzukiAnimeUpdateGroupEntry(group: AnimeUpdateGroup, modifier: Mod
     )
     Box(modifier) {
         AnimeUpdateRow(summary, showPlay = false) {
-            eu.kanade.presentation.tsuzuki.anime.openAnime(context, group.animeId)
+            openDetails(group.animeId)
         }
     }
 }

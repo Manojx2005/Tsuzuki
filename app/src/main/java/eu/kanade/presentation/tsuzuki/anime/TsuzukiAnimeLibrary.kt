@@ -261,7 +261,7 @@ internal data object AnimeLibraryTab : Tab {
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.action_open_random_manga),
                                     onClick = {
-                                        filtered.randomOrNull()?.let { openAnime(context, it.anime.id) }
+                                        filtered.randomOrNull()?.let { openAnimeInPlace(it.anime, navigator::push) }
                                     },
                                 ),
                             ),

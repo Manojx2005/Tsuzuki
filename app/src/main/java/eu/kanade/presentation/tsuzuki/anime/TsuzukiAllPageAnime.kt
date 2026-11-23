@@ -151,10 +151,10 @@ private fun AllPageAnimeItemActions(
     selecting: Boolean,
     content: @Composable (() -> Unit, (() -> Unit)?) -> Unit,
 ) {
-    val context = LocalContext.current
+    val openDetails = rememberAnimeDetailsOpener()
     val haptic = LocalHapticFeedback.current
     content(
-        { if (selecting && selection != null) selection.toggle(id) else openAnime(context, id) },
+        { if (selecting && selection != null) selection.toggle(id) else openDetails(id) },
         selection?.let {
             {
                 it.range(id, visible)
