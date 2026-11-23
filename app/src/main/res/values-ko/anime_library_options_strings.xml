@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_sort_last_watched">마지막 시청</string>
+    <string name="tsz_anime_sort_latest_episode">최신 에피소드</string>
+    <string name="tsz_anime_sort_unwatched_count">안 본 에피소드 수</string>
+    <string name="tsz_anime_sort_total_episodes">전체 에피소드</string>
+    <string name="tsz_anime_display_grid">그리드</string>
+    <string name="tsz_anime_display_list">목록</string>
+</resources>

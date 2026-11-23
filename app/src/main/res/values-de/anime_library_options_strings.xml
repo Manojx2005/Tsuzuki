@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_sort_last_watched">Zuletzt geschaut</string>
+    <string name="tsz_anime_sort_latest_episode">Neueste Folge</string>
+    <string name="tsz_anime_sort_unwatched_count">Ungesehene Folgen</string>
+    <string name="tsz_anime_sort_total_episodes">Folgen gesamt</string>
+    <string name="tsz_anime_display_grid">Raster</string>
+    <string name="tsz_anime_display_list">Liste</string>
+</resources>

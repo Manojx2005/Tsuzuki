@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_sort_last_watched">Assistido por último</string>
+    <string name="tsz_anime_sort_latest_episode">Episódio mais recente</string>
+    <string name="tsz_anime_sort_unwatched_count">Episódios não assistidos</string>
+    <string name="tsz_anime_sort_total_episodes">Total de episódios</string>
+    <string name="tsz_anime_display_grid">Grade</string>
+    <string name="tsz_anime_display_list">Lista</string>
+</resources>

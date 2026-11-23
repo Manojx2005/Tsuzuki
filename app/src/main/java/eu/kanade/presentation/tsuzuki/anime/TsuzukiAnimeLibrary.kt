@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -83,11 +84,15 @@ import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
 import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryEntry
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryOptionPreferences
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryOptions
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
+import eu.kanade.tachiyomi.tsuzuki.anime.applyAnimeLibraryOptions
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.groupAnimeSeasons
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
@@ -137,12 +142,27 @@ internal data object AnimeLibraryTab : Tab {
         val downloadedOnly by remember { Injekt.get<BasePreferences>().downloadedOnly }.collectAsState()
         val downloads by remember { Injekt.get<AnimeDownloads>().state }.collectAsState()
         val savedAnime = remember(downloads) { downloads.savedAnimeIds() }
-        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime) {
+        // AP8: Filter / Sort / Display options, in the book library's sheet.
+        val optionPrefs = remember { AnimeLibraryOptionPreferences(Injekt.get()) }
+        val options = AnimeLibraryOptions(
+            sort = optionPrefs.sort.collectAsState().value,
+            descending = optionPrefs.descending.collectAsState().value,
+            downloaded = optionPrefs.downloaded.collectAsState().value,
+            unwatched = optionPrefs.unwatched.collectAsState().value,
+            started = optionPrefs.started.collectAsState().value,
+            completed = optionPrefs.completed.collectAsState().value,
+            display = optionPrefs.display.collectAsState().value,
+        )
+        var showOptions by rememberSaveable { mutableStateOf(false) }
+        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options) {
             val matches = library.filter {
                 shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
                     (!downloadedOnly || it.anime.id in savedAnime)
             }
-            if (groupSeasons && search.isEmpty()) groupAnimeSeasons(matches) else matches
+            val order = applyAnimeLibraryOptions(matches.map { it.anime }, options, savedAnime)
+                .withIndex().associate { (index, anime) -> anime.id to index }
+            val sorted = matches.filter { it.anime.id in order }.sortedBy { order.getValue(it.anime.id) }
+            if (groupSeasons && search.isEmpty()) groupAnimeSeasons(sorted) else sorted
         }
         val selection = remember { AnimeLibrarySelection() }
         val actions = remember { AnimeLibraryActions() }
@@ -155,6 +175,16 @@ internal data object AnimeLibraryTab : Tab {
         BackHandler(enabled = tsuzukiBackEnabled(selecting, HomeScreen), onBack = selection::clear)
         LaunchedEffect(selecting) { HomeScreen.showBottomNav(!selecting) }
         AnimeLibraryActionDialogs(actions)
+        if (showOptions) {
+            AnimeLibraryOptionsSheet(
+                preferences = optionPrefs,
+                onDismiss = { showOptions = false },
+                onEditShelves = {
+                    showOptions = false
+                    navigator.push(AnimeShelvesScreen())
+                },
+            )
+        }
         val tokens = TsuzukiTheme.tokens
         val compact = LocalConfiguration.current.screenWidthDp < 600
         val bottomPad = when {
@@ -180,8 +210,12 @@ internal data object AnimeLibraryTab : Tab {
                     onChangeSearchQuery = { query = it },
                     titleContent = { AppBarTitle(stringResource(MR.strings.label_library)) },
                     actions = {
-                        IconButton(onClick = { navigator.push(AnimeShelvesScreen()) }) {
-                            Icon(Icons.Outlined.FilterList, stringResource(MR.strings.tsz_anime_shelves))
+                        IconButton(onClick = { showOptions = true }) {
+                            Icon(
+                                Icons.Outlined.FilterList,
+                                stringResource(MR.strings.action_filter),
+                                tint = if (options.hasFilters) tokens.accent else LocalContentColor.current,
+                            )
                         }
                     },
                 )
@@ -218,23 +252,33 @@ internal data object AnimeLibraryTab : Tab {
                     )
                 }
                 LazyVerticalGrid(
-                    columns = if (compact) GridCells.Fixed(3) else GridCells.Adaptive(126.dp),
+                    columns = when {
+                        options.display == AnimeLibraryDisplay.LIST -> GridCells.Fixed(1)
+                        compact -> GridCells.Fixed(3)
+                        else -> GridCells.Adaptive(126.dp)
+                    },
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = bottomPad),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     items(filtered, key = { it.anime.id }) { item ->
                         val id = item.anime.id
-                        AnimeLibraryCover(
-                            item.anime,
-                            selected = id in selection.ids,
-                            selectionMode = selecting,
-                            onLongClick = {
-                                selection.range(id, visibleIds)
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            },
-                            onOpen = { if (selecting) selection.toggle(id) else openAnime(context, id) },
-                        )
+                        val onLongClick = {
+                            selection.range(id, visibleIds)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        val onOpen = { if (selecting) selection.toggle(id) else openAnime(context, id) }
+                        if (options.display == AnimeLibraryDisplay.LIST) {
+                            AnimeLibraryListRow(item.anime, id in selection.ids, selecting, onLongClick, onOpen)
+                        } else {
+                            AnimeLibraryCover(
+                                item.anime,
+                                selected = id in selection.ids,
+                                selectionMode = selecting,
+                                onLongClick = onLongClick,
+                                onOpen = onOpen,
+                            )
+                        }
                     }
                 }
             }
@@ -448,6 +492,49 @@ internal fun AnimeLibraryCover(
                 style = MaterialTheme.typography.labelSmall,
             )
             TsuzukiProgressBar(anime.seenCount.toFloat() / anime.totalCount)
+        }
+    }
+}
+
+/** AP8: the library's List display, a book-library list row: cover, title, episode progress. */
+@Composable
+internal fun AnimeLibraryListRow(
+    anime: Anime,
+    selected: Boolean,
+    selectionMode: Boolean,
+    onLongClick: () -> Unit,
+    onOpen: () -> Unit,
+) {
+    val tokens = TsuzukiTheme.tokens
+    Row(
+        Modifier.fillMaxWidth()
+            .alpha(if (selectionMode && !selected) 0.55f else 1f)
+            .then(if (selectionMode) Modifier.semantics { this.selected = selected } else Modifier)
+            .tsuzukiClickable(role = Role.Button, onClick = onOpen, onLongClick = onLongClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.width(48.dp)) {
+            MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+            if (selected) TsuzukiSelectedCover()
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                tsuzukiMenuLabel(anime.title),
+                style = MaterialTheme.typography.titleSmall,
+                color = tokens.dotOn,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (anime.totalCount > 0) {
+                Text(
+                    tsuzukiMenuLabel(
+                        stringResource(MR.strings.tsz_anime_episode_progress, anime.seenCount, anime.totalCount),
+                    ),
+                    color = tokens.mutedText,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 }
