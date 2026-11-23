@@ -8,7 +8,8 @@ import tachiyomi.domain.entries.anime.model.Anime
 /** AP8: the anime library's sort fields, as the book library's sort tab. */
 internal enum class AnimeLibrarySort { TITLE, LAST_WATCHED, LATEST_EPISODE, UNWATCHED, DATE_ADDED, TOTAL_EPISODES }
 
-internal enum class AnimeLibraryDisplay { GRID, LIST }
+/** The book library's display modes: comfortable grid, compact grid (title on the cover), cover only, list. */
+internal enum class AnimeLibraryDisplay { GRID, COMPACT, COVER_ONLY, LIST }
 
 internal data class AnimeLibraryOptions(
     val sort: AnimeLibrarySort = AnimeLibrarySort.TITLE,

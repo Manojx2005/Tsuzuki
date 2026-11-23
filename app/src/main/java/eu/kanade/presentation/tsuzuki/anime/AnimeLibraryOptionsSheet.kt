@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.anime
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -8,7 +9,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.TabTitle
@@ -18,11 +21,15 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryOptionPreferences
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibrarySort
 import tachiyomi.core.common.preference.TriState
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.RadioItem
+import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TriStateItem
 import tachiyomi.presentation.core.util.collectAsState
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import tachiyomi.presentation.core.i18n.stringResource as mokoString
 
 /**
@@ -102,10 +109,28 @@ private fun SortPage(preferences: AnimeLibraryOptionPreferences) {
 private fun DisplayPage(preferences: AnimeLibraryOptionPreferences) {
     val display by preferences.display.collectAsState()
     listOf(
-        AnimeLibraryDisplay.GRID to stringResource(R.string.tsz_anime_display_grid),
-        AnimeLibraryDisplay.LIST to stringResource(R.string.tsz_anime_display_list),
+        AnimeLibraryDisplay.COMPACT to mokoString(MR.strings.action_display_grid),
+        AnimeLibraryDisplay.GRID to mokoString(MR.strings.action_display_comfortable_grid),
+        AnimeLibraryDisplay.COVER_ONLY to mokoString(MR.strings.action_display_cover_only_grid),
+        AnimeLibraryDisplay.LIST to mokoString(MR.strings.action_display_list),
     ).forEach { (mode, label) ->
         RadioItem(label = label, selected = display == mode) { preferences.display.set(mode) }
+    }
+    // The book library's column setting (per orientation), shared so both libraries line up.
+    if (display != AnimeLibraryDisplay.LIST) {
+        val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val columnPreference = remember(landscape) {
+            if (landscape) libraryPreferences.landscapeColumns else libraryPreferences.portraitColumns
+        }
+        val columns by columnPreference.collectAsState()
+        SliderItem(
+            value = columns,
+            valueRange = 0..15,
+            label = mokoString(MR.strings.pref_library_columns),
+            valueString = if (columns > 0) columns.toString() else mokoString(MR.strings.label_auto),
+            onChange = columnPreference::set,
+        )
     }
 }
 

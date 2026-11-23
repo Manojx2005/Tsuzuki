@@ -36,6 +36,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
+import android.content.res.Configuration
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBar
@@ -163,6 +165,9 @@ internal data object AnimeLibraryTab : Tab {
         var showOptions by rememberSaveable { mutableStateOf(false) }
         val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
         val unwatchedBadges by libraryPrefs.unreadBadge.collectAsState()
+        val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val columnCount by (if (landscape) libraryPrefs.landscapeColumns else libraryPrefs.portraitColumns)
+            .collectAsState()
         val downloadBadges by libraryPrefs.downloadBadge.collectAsState()
         val savedCounts = remember(downloads) {
             downloads.entries.filter { it.status == AnimeDownloadStatus.Saved }.groupingBy { it.animeId }.eachCount()
@@ -282,6 +287,7 @@ internal data object AnimeLibraryTab : Tab {
                 LazyVerticalGrid(
                     columns = when {
                         options.display == AnimeLibraryDisplay.LIST -> GridCells.Fixed(1)
+                        columnCount > 0 -> GridCells.Fixed(columnCount)
                         compact -> GridCells.Fixed(3)
                         else -> GridCells.Adaptive(126.dp)
                     },
@@ -306,6 +312,7 @@ internal data object AnimeLibraryTab : Tab {
                                 onLongClick = onLongClick,
                                 unwatchedBadge = if (unwatchedBadges) item.anime.totalCount - item.anime.seenCount else 0,
                                 downloadedBadge = if (downloadBadges) savedCounts[id] ?: 0 else 0,
+                                display = options.display,
                                 onOpen = onOpen,
                             )
                         }
@@ -494,6 +501,7 @@ internal fun AnimeLibraryCover(
     onLongClick: (() -> Unit)? = null,
     unwatchedBadge: Long = 0,
     downloadedBadge: Int = 0,
+    display: AnimeLibraryDisplay = AnimeLibraryDisplay.GRID,
     onOpen: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -513,8 +521,25 @@ internal fun AnimeLibraryCover(
                     UnreadBadge(unwatchedBadge)
                 }
             }
+            if (display == AnimeLibraryDisplay.COMPACT) {
+                // AP8: compact grid, the title over the cover's lower edge as in the book library.
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(0.6f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.8f)),
+                    ),
+                )
+                Text(
+                    tsuzukiMenuLabel(anime.title),
+                    modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (selected) TsuzukiSelectedCover()
         }
+        if (display != AnimeLibraryDisplay.GRID) return@Column
         Text(
             tsuzukiMenuLabel(anime.title),
             style = MaterialTheme.typography.titleSmall,
