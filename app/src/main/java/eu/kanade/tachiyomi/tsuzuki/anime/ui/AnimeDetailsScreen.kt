@@ -124,6 +124,7 @@ internal fun AnimeDetailsScreen(
     // AP7: notes, kept here so a save shows at once (the details state is loaded, not observed).
     var notes by remember(saved?.id) { mutableStateOf(saved?.notes.orEmpty()) }
     var editingNotes by rememberSaveable { mutableStateOf(false) }
+    var showCover by rememberSaveable { mutableStateOf(false) }
     val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
     val seasons by remember(saved?.id) {
         saved?.let { library.observeSeasons(it.id) } ?: flowOf(emptyList<Anime>())
@@ -359,7 +360,12 @@ internal fun AnimeDetailsScreen(
         ) {
             fun LazyListScope.overview(expanded: Boolean) {
                 item(key = "anime-overview") {
-                    AnimeDetailsHeader(entry.source, display, coverWidth = if (expanded) 156.dp else 104.dp)
+                    AnimeDetailsHeader(
+                        entry.source,
+                        display,
+                        coverWidth = if (expanded) 156.dp else 104.dp,
+                        onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
+                    )
                 }
                 if (notes.isNotBlank()) {
                     item(key = "anime-notes") { AnimeNotesTile(notes) { editingNotes = true } }
@@ -545,6 +551,9 @@ internal fun AnimeDetailsScreen(
             shelfSelection = null
             mutate { model.setFavorite(true, selectedShelves) }
         }
+    }
+    display.thumbnail_url?.takeIf { showCover && it.isNotBlank() }?.let { url ->
+        AnimeCoverDialog(entry.source, display.title, url) { showCover = false }
     }
     if (editingNotes && saved != null) {
         AnimeNotesDialog(notes, onDismiss = { editingNotes = false }) { text ->

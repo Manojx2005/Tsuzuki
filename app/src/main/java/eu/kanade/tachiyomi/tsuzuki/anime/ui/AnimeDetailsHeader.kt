@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -49,7 +50,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth: Dp = 104.dp) {
+internal fun AnimeDetailsHeader(
+    source: AnimeSource?,
+    anime: SAnime,
+    coverWidth: Dp = 104.dp,
+    onCoverClick: (() -> Unit)? = null,
+) {
     val tokens = TsuzukiTheme.tokens
     val status = when (anime.status) {
         SAnime.ONGOING -> stringResource(MR.strings.ongoing)
@@ -72,7 +78,12 @@ internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth:
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            AnimeCover(source, anime, Modifier.width(coverWidth))
+            AnimeCover(
+                source,
+                anime,
+                Modifier.width(coverWidth)
+                    .then(if (onCoverClick != null) Modifier.clickable(onClick = onCoverClick) else Modifier),
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     tsuzukiMenuLabel(anime.title),
