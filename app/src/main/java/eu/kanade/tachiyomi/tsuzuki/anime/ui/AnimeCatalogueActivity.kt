@@ -64,8 +64,10 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.AnimeScreenEnter
 import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
 import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
+import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SEARCH_QUERY
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
@@ -93,8 +95,14 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class AnimeCatalogueActivity : BaseActivity() {
+    override fun finish() {
+        super.finish()
+        applyAnimeScreenTransition(opening = false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyAnimeScreenTransition(opening = true)
         if (!TsuzukiAnime.enabled || (!intent.hasExtra(ANIME_SOURCE_ID) && !intent.hasExtra(SAVED_ANIME_ID))) {
             finish()
             return
@@ -151,6 +159,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                         val source = result.entry.source
                         var lastApplied by remember { mutableStateOf(AnimeFilterList()) }
                         var selected by remember { mutableStateOf(result.saved) }
+                        var backFromDetails by remember { mutableStateOf(false) }
                         val anime = selected
                         if (anime == null) {
                             var attempt by remember(source) { mutableStateOf(0) }
@@ -179,31 +188,42 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 )
                             } else {
                                 catalogueState.SaveableStateProvider(sourceId) {
-                                    AnimeCatalogueScreen(
-                                        source = source,
-                                        openLatest = openLatest,
-                                        initialQuery = initialQuery,
-                                        appliedFilters = lastApplied,
-                                        onApplyFilters = { lastApplied = it },
-                                        onBack = ::finish,
-                                        onOpen = { selected = it },
-                                        onSettings = {
-                                            startActivity(AnimeSourcePreferencesActivity.intent(this, source.id))
-                                        }.takeIf { hasAnimeSourceSettings(source) },
-                                    )
+                                    AnimeScreenEnter(animate = backFromDetails) {
+                                        AnimeCatalogueScreen(
+                                            source = source,
+                                            openLatest = openLatest,
+                                            initialQuery = initialQuery,
+                                            appliedFilters = lastApplied,
+                                            onApplyFilters = { lastApplied = it },
+                                            onBack = ::finish,
+                                            onOpen = { selected = it },
+                                            onSettings = {
+                                                startActivity(AnimeSourcePreferencesActivity.intent(this, source.id))
+                                            }.takeIf { hasAnimeSourceSettings(source) },
+                                        )
+                                    }
                                 }
                             }
                         } else {
-                            val back = { if (result.saved != null) finish() else selected = null }
+                            val back = {
+                                if (result.saved != null) {
+                                    finish()
+                                } else {
+                                    backFromDetails = true
+                                    selected = null
+                                }
+                            }
                             BackHandler(onBack = back)
-                            AnimeDetailsScreen(
-                                result.entry,
-                                anime,
-                                library,
-                                result.resumeUrl,
-                                back,
-                            ) { episode, track ->
-                                AnimePlayback.launchEpisode(this, episode.id, track)
+                            AnimeScreenEnter(animate = result.saved == null) {
+                                AnimeDetailsScreen(
+                                    result.entry,
+                                    anime,
+                                    library,
+                                    result.resumeUrl,
+                                    back,
+                                ) { episode, track ->
+                                    AnimePlayback.launchEpisode(this, episode.id, track)
+                                }
                             }
                         }
                     }

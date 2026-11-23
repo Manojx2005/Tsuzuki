@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Anime screens open in their own Activity; this window crossfade matches the book screens' Compose fade
+     (TsuzukiMotion.SHARED_MS on the Standard curve). -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="450" android:fromAlpha="1" android:toAlpha="0"
+    android:interpolator="@interpolator/tsuzuki_standard" />
