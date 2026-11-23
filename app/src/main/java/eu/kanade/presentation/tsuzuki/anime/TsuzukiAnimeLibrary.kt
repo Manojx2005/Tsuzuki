@@ -36,6 +36,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
+import tachiyomi.presentation.core.components.BadgeGroup
+import eu.kanade.presentation.library.components.UnreadBadge
+import eu.kanade.presentation.library.components.DownloadsBadge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -154,6 +158,12 @@ internal data object AnimeLibraryTab : Tab {
             display = optionPrefs.display.collectAsState().value,
         )
         var showOptions by rememberSaveable { mutableStateOf(false) }
+        val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
+        val unwatchedBadges by libraryPrefs.unreadBadge.collectAsState()
+        val downloadBadges by libraryPrefs.downloadBadge.collectAsState()
+        val savedCounts = remember(downloads) {
+            downloads.entries.filter { it.status == AnimeDownloadStatus.Saved }.groupingBy { it.animeId }.eachCount()
+        }
         val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options) {
             val matches = library.filter {
                 shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
@@ -276,6 +286,8 @@ internal data object AnimeLibraryTab : Tab {
                                 selected = id in selection.ids,
                                 selectionMode = selecting,
                                 onLongClick = onLongClick,
+                                unwatchedBadge = if (unwatchedBadges) item.anime.totalCount - item.anime.seenCount else 0,
+                                downloadedBadge = if (downloadBadges) savedCounts[id] ?: 0 else 0,
                                 onOpen = onOpen,
                             )
                         }
@@ -462,6 +474,8 @@ internal fun AnimeLibraryCover(
     selected: Boolean = false,
     selectionMode: Boolean = false,
     onLongClick: (() -> Unit)? = null,
+    unwatchedBadge: Long = 0,
+    downloadedBadge: Int = 0,
     onOpen: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -474,6 +488,13 @@ internal fun AnimeLibraryCover(
     ) {
         Box(Modifier.fillMaxWidth()) {
             MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+            // AP8: the book covers' badges, following Library settings' download / unread badge switches.
+            if (unwatchedBadge > 0 || downloadedBadge > 0) {
+                BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopStart)) {
+                    DownloadsBadge(downloadedBadge)
+                    UnreadBadge(unwatchedBadge)
+                }
+            }
             if (selected) TsuzukiSelectedCover()
         }
         Text(
