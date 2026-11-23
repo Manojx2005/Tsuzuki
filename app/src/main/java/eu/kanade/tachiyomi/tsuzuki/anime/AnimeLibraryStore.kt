@@ -365,6 +365,14 @@ internal class AnimeLibraryStore(
         newlySeen
     }
 
+    /** The episodes as stored now, for [restoreEpisodeProgress] if a combined action fails part way. */
+    suspend fun episodeProgress(ids: Set<Long>): List<Episode> = ids.mapNotNull { episodes.awaitById(it) }
+
+    /** Puts watched state and resume position back exactly as [episodeProgress] read them. */
+    suspend fun restoreEpisodeProgress(saved: List<Episode>) = database.transaction {
+        saved.forEach { episodes.updateProgress(it.id, it.seen, it.lastSecondSeen, it.totalSeconds) }
+    }
+
     suspend fun setEpisodesBookmarked(ids: Set<Long>, bookmarked: Boolean) = database.transaction {
         ids.forEach { episodes.setBookmark(it, bookmarked) }
     }
