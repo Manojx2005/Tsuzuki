@@ -291,13 +291,13 @@ internal fun AnimeEpisodeFilterSheet(
             if (page == 0) {
                 // "Watched", the mirror of the stored unwatched filter (only watched = hide unwatched).
                 TriStateItem(stringResource(R.string.tsz_anime_watched), display.unseen.mirrored()) {
-                    onSave(display.copy(unseen = it.next().mirrored()), excludedGroups)
+                    onSave(display.copy(unseen = it.mirrored()), excludedGroups)
                 }
                 TriStateItem(mokoStringResource(MR.strings.label_downloaded), display.downloaded) {
-                    onSave(display.copy(downloaded = it.next()), excludedGroups)
+                    onSave(display.copy(downloaded = it), excludedGroups)
                 }
                 TriStateItem(mokoStringResource(MR.strings.action_filter_bookmarked), display.bookmarked) {
-                    onSave(display.copy(bookmarked = it.next()), excludedGroups)
+                    onSave(display.copy(bookmarked = it), excludedGroups)
                 }
                 if (groups.isNotEmpty()) {
                     Text(
