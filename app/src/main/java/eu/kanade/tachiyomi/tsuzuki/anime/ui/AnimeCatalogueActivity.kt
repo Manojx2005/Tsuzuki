@@ -403,7 +403,7 @@ private fun AnimeCatalogueScreen(
                         mode = displayMode,
                         inLibrary = inLibrary,
                         onClick = { onOpen(anime) },
-                        onLongClick = { onLongPress(anime, inLibrary) },
+                        onLongClick = { onLongPress(anime) },
                     )
                 }
                 val refresh = shows.loadState.refresh

@@ -334,6 +334,92 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun savingAnimeNotesDoesNotWriteFavoriteState() = runBlocking {
+        withDatabase { driver, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/anime", title = "Anime", favorite = true))
+            driver.sql(
+                """
+                CREATE TRIGGER reject_notes_favorite_write
+                BEFORE UPDATE OF favorite ON animes
+                BEGIN
+                    SELECT raise(ABORT, 'Notes must not write favorite');
+                END
+                """.trimIndent(),
+            )
+
+            store.setNotes(id, "A note")
+            assertEquals("A note", store.observeNotes(id).first())
+            assertTrue(checkNotNull(anime.awaitById(id)).favorite)
+            store.setNotes(id, "")
+            assertEquals("", store.observeNotes(id).first())
+        }
+    }
+
+    @Test
+    fun cachedCatalogueFavoriteKeepsInitializedAnimeDetails() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val categories = AnimeCategoryRepositoryImpl(db)
+            val pruned = mutableListOf<Long>()
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                categories,
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+                prunePreviewFrames = { id, _ -> pruned += id },
+            )
+            val original = Anime(
+                source = 8,
+                url = "/anime",
+                title = "Full title",
+                description = "Full description",
+                initialized = true,
+                fetchType = FetchType.Seasons,
+                episodeFlags = 99,
+                notes = "Keep these notes",
+            )
+            val id = anime.insert(original)
+            val thinResult = SAnime.create().apply {
+                url = original.url
+                title = "Short title"
+                description = "Short description"
+            }
+            val cachedId = store.cacheSearchResult(original.source, thinResult)
+            assertEquals(id, cachedId)
+            val before = checkNotNull(anime.awaitById(id))
+            store.saveShelf(null, "Watching")
+            val shelfId = categories.awaitAll().single { !it.isSystem }.id
+
+            store.setCachedFavorite(cachedId, favorite = true, shelfIds = setOf(shelfId))
+            val added = checkNotNull(anime.awaitById(id))
+            assertTrue(added.favorite)
+            assertTrue(added.dateAdded > 0L)
+            assertEquals(setOf(shelfId), store.shelfIds(id))
+
+            store.setCachedFavorite(cachedId, favorite = false)
+            val removed = checkNotNull(anime.awaitById(id))
+            assertFalse(removed.favorite)
+            assertEquals(added.dateAdded, removed.dateAdded)
+            assertEquals(listOf(id), pruned)
+            assertEquals(before.title, removed.title)
+            assertEquals(before.description, removed.description)
+            assertEquals(before.initialized, removed.initialized)
+            assertEquals(before.fetchType, removed.fetchType)
+            assertEquals(before.episodeFlags, removed.episodeFlags)
+            assertEquals(before.notes, removed.notes)
+        }
+    }
+
+    @Test
     fun continueWatchingUsesTheMostRecentFavoriteAndAdvancesWhenItsEpisodeIsSeen() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

@@ -194,33 +194,33 @@ internal fun AnimeCatalogueDisplayMenu(
  * picker, or, when it is already saved, asks before removing it. Same steps as the details screen's button.
  */
 internal class AnimeCatalogueLongPress {
-    var duplicate by mutableStateOf<Triple<Anime, Anime, SAnime>?>(null)
-    var shelves by mutableStateOf<Pair<SAnime, Set<Long>>?>(null)
-    var removing by mutableStateOf<SAnime?>(null)
+    var duplicate by mutableStateOf<Pair<Anime, Anime>?>(null)
+    var shelves by mutableStateOf<Pair<Long, Set<Long>>?>(null)
+    var removing by mutableStateOf<Anime?>(null)
 }
 
 @Composable
 internal fun rememberAnimeCatalogueLongPress(
     source: AnimeSource,
     store: AnimeLibraryStore,
-): Pair<AnimeCatalogueLongPress, (SAnime, Boolean) -> Unit> {
+): Pair<AnimeCatalogueLongPress, (SAnime) -> Unit> {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state = remember { AnimeCatalogueLongPress() }
-    val onLongPress: (SAnime, Boolean) -> Unit = { anime, inLibrary ->
-        if (inLibrary) {
-            state.removing = anime
-        } else {
-            scope.launch {
-                runCatalogueAction(context) {
-                    val id = store.cacheSearchResult(source.id, anime)
-                    val adding = checkNotNull(store.getAnime(id))
-                    val existing = store.findDuplicate(adding)
-                    if (existing == null) {
-                        state.shelves = anime to store.shelfIds(id)
-                    } else {
-                        state.duplicate = Triple(existing, adding, anime)
-                    }
+    val onLongPress: (SAnime) -> Unit = { anime ->
+        scope.launch {
+            runCatalogueAction(context) {
+                val id = store.cacheSearchResult(source.id, anime)
+                val adding = checkNotNull(store.getAnime(id))
+                if (adding.favorite) {
+                    state.removing = adding
+                    return@runCatalogueAction
+                }
+                val existing = store.findDuplicate(adding)
+                if (existing == null) {
+                    state.shelves = id to store.shelfIds(id)
+                } else {
+                    state.duplicate = existing to adding
                 }
             }
         }
@@ -237,7 +237,7 @@ internal fun AnimeCatalogueLongPressDialogs(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val shelves by remember(store) { store.observeShelves() }.collectAsState(emptyList())
-    state.duplicate?.let { (existing, adding, show) ->
+    state.duplicate?.let { (existing, adding) ->
         AnimeDuplicateDialog(
             existing = existing,
             adding = adding,
@@ -246,7 +246,7 @@ internal fun AnimeCatalogueLongPressDialogs(
             onAdd = {
                 state.duplicate = null
                 scope.launch {
-                    runCatalogueAction(context) { state.shelves = show to store.shelfIds(adding.id) }
+                    runCatalogueAction(context) { state.shelves = adding.id to store.shelfIds(adding.id) }
                 }
             },
             onOpen = {
@@ -259,10 +259,12 @@ internal fun AnimeCatalogueLongPressDialogs(
             },
         )
     }
-    state.shelves?.let { (anime, initial) ->
+    state.shelves?.let { (id, initial) ->
         AnimeShelfPicker(shelves, initial, onDismiss = { state.shelves = null }) { selected ->
             state.shelves = null
-            scope.launch { runCatalogueAction(context) { store.setFavorite(source.id, anime, true, selected) } }
+            scope.launch {
+                runCatalogueAction(context) { store.setCachedFavorite(id, favorite = true, shelfIds = selected) }
+            }
         }
     }
     state.removing?.let { anime ->
@@ -274,7 +276,7 @@ internal fun AnimeCatalogueLongPressDialogs(
                 TextButton(onClick = {
                     state.removing = null
                     scope.launch {
-                        runCatalogueAction(context) { store.setFavorite(source.id, anime, false, emptySet()) }
+                        runCatalogueAction(context) { store.setCachedFavorite(anime.id, favorite = false) }
                     }
                 }) { Text(stringResource(MR.strings.action_remove)) }
             },

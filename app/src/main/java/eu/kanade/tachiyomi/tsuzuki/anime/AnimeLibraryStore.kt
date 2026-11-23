@@ -146,11 +146,10 @@ internal class AnimeLibraryStore(
         (anime.awaitBySourceAndUrl(source, result.url) ?: saveAnime(source, result)).id
     }
 
-    /** AP7: the title's notes (the anime's own `notes` column). */
-    suspend fun setNotes(id: Long, notes: String) {
-        val stored = anime.awaitById(id) ?: return
-        if (stored.notes != notes) anime.update(stored.copy(notes = notes))
-    }
+    fun observeNotes(id: Long) = database.animesQueries.getNotes(id)
+        .subscribeToOneOrNull(Dispatchers.IO).distinctUntilChanged()
+
+    suspend fun setNotes(id: Long, notes: String) = database.animesQueries.setNotes(notes = notes, id = id)
 
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
@@ -186,6 +185,16 @@ internal class AnimeLibraryStore(
             if (favorite) shelves.setForAnime(entry.id, shelfIds)
             entry.id
         }.also { if (!favorite) prunePreviewFrames(it, null) }
+
+    /** Catalogue actions change membership without saving partial source metadata over the cached entry. */
+    suspend fun setCachedFavorite(id: Long, favorite: Boolean, shelfIds: Set<Long> = emptySet()) {
+        database.transaction {
+            checkNotNull(anime.awaitById(id))
+            anime.setFavorite(id, favorite, System.currentTimeMillis())
+            if (favorite) shelves.setForAnime(id, shelfIds)
+        }
+        if (!favorite) prunePreviewFrames(id, null)
+    }
 
     suspend fun setLibraryFavorites(ids: Set<Long>, favorite: Boolean) {
         database.transaction {

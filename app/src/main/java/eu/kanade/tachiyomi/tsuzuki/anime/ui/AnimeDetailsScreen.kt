@@ -123,9 +123,12 @@ internal fun AnimeDetailsScreen(
         downloadQueue.entries.associate { it.episodeId to it.status }
     }
     val saved = details.saved
-    // AP7: notes, kept here so a save shows at once (the details state is loaded, not observed).
-    var notes by remember(saved?.id) { mutableStateOf(saved?.notes.orEmpty()) }
+    val storedNotes by remember(library, saved?.id) {
+        saved?.let { library.observeNotes(it.id) } ?: flowOf(null)
+    }.collectAsState(null)
+    val notes = storedNotes ?: saved?.notes.orEmpty()
     var editingNotes by rememberSaveable { mutableStateOf(false) }
+    var notesSaveError by remember { mutableStateOf(false) }
     var showCover by rememberSaveable { mutableStateOf(false) }
     val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
     val seasons by remember(saved?.id) {
@@ -169,7 +172,7 @@ internal fun AnimeDetailsScreen(
         }
     }
 
-    fun mutate(block: suspend () -> Unit) {
+    fun mutate(onError: () -> Unit = { saveError = true }, block: suspend () -> Unit) {
         if (saving) return
         saving = true
         saveError = false
@@ -180,7 +183,7 @@ internal fun AnimeDetailsScreen(
                 throw e
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) { "Could not save anime details" }
-                saveError = true
+                onError()
             } finally {
                 saving = false
             }
@@ -564,10 +567,20 @@ internal fun AnimeDetailsScreen(
         AnimeCoverDialog(entry.source, display.title, url) { showCover = false }
     }
     if (editingNotes && saved != null) {
-        AnimeNotesDialog(notes, onDismiss = { editingNotes = false }) { text ->
-            editingNotes = false
-            notes = text
-            scope.launch { library.setNotes(saved.id, text) }
+        AnimeNotesDialog(
+            initial = notes,
+            saving = saving,
+            saveError = notesSaveError,
+            onDismiss = {
+                notesSaveError = false
+                editingNotes = false
+            },
+        ) { text ->
+            notesSaveError = false
+            mutate(onError = { notesSaveError = true }) {
+                library.setNotes(saved.id, text)
+                editingNotes = false
+            }
         }
     }
     if (showFilter) {

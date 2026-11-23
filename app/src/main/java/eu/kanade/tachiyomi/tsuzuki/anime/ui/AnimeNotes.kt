@@ -26,23 +26,38 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /** AP7: the title's notes, edited like book notes (stored in the anime's own `notes` column). */
 @Composable
-internal fun AnimeNotesDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+internal fun AnimeNotesDialog(
+    initial: String,
+    saving: Boolean,
+    saveError: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
     var text by rememberSaveable { mutableStateOf(initial) }
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!saving) onDismiss() },
         title = { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_edit_notes))) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
+                enabled = !saving,
+                isError = saveError,
+                supportingText = if (saveError) {
+                    { Text(stringResource(MR.strings.unknown_error)) }
+                } else {
+                    null
+                },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp),
             )
         },
         confirmButton = {
-            TextButton(onClick = { onSave(text.trim()) }) { Text(stringResource(MR.strings.action_save)) }
+            TextButton(enabled = !saving, onClick = { onSave(text.trim()) }) {
+                Text(stringResource(MR.strings.action_save))
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(MR.strings.action_cancel)) }
+            TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(MR.strings.action_cancel)) }
         },
     )
 }
