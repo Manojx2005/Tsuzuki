@@ -47,4 +47,6 @@
     <string name="tsz_anime_migration_matches">Épisodes correspondants : %1$d</string>
     <string name="tsz_anime_migration_carry">La progression correspondante, les étagères, les liens de suivi et les groupes masqués sont conservés. Le remplacement retire l’entrée d’origine de la bibliothèque.</string>
     <string name="tsz_anime_migration_replace">Remplacer</string>
+    <string name="tsz_anime_turn_on">Activer</string>
+    <string name="tsz_onboarding_watch_anime">Regarder aussi des animés ?</string>
 </resources>

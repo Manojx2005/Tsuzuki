@@ -47,4 +47,6 @@
     <string name="tsz_anime_migration_matches">Matched episodes: %1$d</string>
     <string name="tsz_anime_migration_carry">Matched progress, shelves, tracker links and excluded groups carry over. Replacing removes the original from the library.</string>
     <string name="tsz_anime_migration_replace">Replace</string>
+    <string name="tsz_anime_turn_on">Turn on</string>
+    <string name="tsz_onboarding_watch_anime">Also watch anime?</string>
 </resources>

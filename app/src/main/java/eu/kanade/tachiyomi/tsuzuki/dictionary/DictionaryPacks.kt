@@ -2,10 +2,13 @@ package eu.kanade.tachiyomi.tsuzuki.dictionary
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.system.Os
 import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.awaitSuccess
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -14,82 +17,151 @@ import logcat.LogPriority
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Buffer
+import okio.BufferedSource
+import okio.GzipSource
 import okio.HashingSink
+import okio.buffer
 import okio.sink
-import org.json.JSONObject
+import okio.source
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException
 
 internal data class DictionarySense(val partOfSpeech: String, val gloss: String)
 internal data class DictionaryEntry(val headword: String, val reading: String, val senses: List<DictionarySense>)
-internal data class InstalledDictionary(val version: String, val sizeBytes: Long, val license: String)
+internal data class InstalledDictionary(
+    val version: String,
+    val sizeBytes: Long,
+    val license: String,
+    val isBundled: Boolean = false,
+)
 internal data class DictionaryPackManifest(val version: String, val sizeBytes: Long, val sha256: String)
 
-internal class DictionaryPacks(context: Context, private val client: OkHttpClient) {
+internal class DictionaryPacks(private val context: Context, private val client: OkHttpClient) {
     private val directory = File(context.filesDir, "dictionaries")
     private val mutations = Mutex()
 
     suspend fun installed(language: DictionaryLanguage): InstalledDictionary? = withContext(Dispatchers.IO) {
         inspect(packFile(language), language)
+            ?: bundled(language)?.let { inspect(it, language)?.copy(isBundled = true) }
     }
 
     suspend fun available(language: DictionaryLanguage): DictionaryPackManifest? = withContext(Dispatchers.IO) {
         client.newCall(request(language, "json")).await().use { response ->
             if (response.code == 404) return@withContext null
             if (!response.isSuccessful) throw IOException("Dictionary manifest HTTP ${response.code}")
-            val body = response.body.source()
-            if (body.request(MAX_MANIFEST_BYTES + 1)) throw IOException("Dictionary manifest is too large")
-            val json = JSONObject(body.readUtf8())
-            val version = json.getString("version")
-            val size = json.getLong("sizeBytes")
-            val sha256 = json.getString("sha256").lowercase()
-            if (json.getInt("schema") != SCHEMA || json.getString("language") != language.code ||
-                version.isBlank() || version.length > 80 || size !in 1..MAX_PACK_BYTES || !shaPattern.matches(sha256)
-            ) {
-                throw IOException("Invalid dictionary manifest")
-            }
-            DictionaryPackManifest(version, size, sha256)
+            val (packLanguage, manifest) = readManifest(response.body.source())
+            if (packLanguage != language) throw IOException("Dictionary language mismatch")
+            manifest
         }
     }
 
     suspend fun install(language: DictionaryLanguage, manifest: DictionaryPackManifest): InstalledDictionary =
         mutations.withLock {
             withContext(Dispatchers.IO) {
-                directory.mkdirs()
-                directory.listFiles { file -> file.name.startsWith("dictionary-") && file.extension == "tmp" }
-                    ?.forEach { it.delete() }
-                val staged = File.createTempFile("dictionary-", ".tmp", directory)
-                try {
-                    client.newCall(request(language, "sqlite3")).awaitSuccess().use { response ->
-                        val source = response.body.source()
-                        val target = HashingSink.sha256(staged.sink())
-                        val hash = target.use { sink ->
-                            var copied = 0L
-                            val buffer = Buffer()
-                            while (true) {
-                                ensureActive()
-                                val count = source.read(buffer, 64 * 1024L)
-                                if (count == -1L) break
-                                copied += count
-                                if (copied > manifest.sizeBytes) throw IOException("Dictionary size changed")
-                                sink.write(buffer, count)
-                            }
-                            if (copied != manifest.sizeBytes) throw IOException("Dictionary download is incomplete")
-                            sink.hash.hex()
-                        }
-                        if (hash != manifest.sha256) throw IOException("Dictionary checksum mismatch")
-                    }
-                    val installed = inspect(staged, language) ?: throw IOException("Invalid dictionary database")
-                    if (installed.version != manifest.version) throw IOException("Dictionary version mismatch")
-                    ensureActive()
-                    Os.rename(staged.absolutePath, packFile(language).absolutePath)
-                    installed
-                } finally {
-                    staged.delete()
+                client.newCall(request(language, "sqlite3")).awaitSuccess().use { response ->
+                    installPack(language, manifest, response.body.source(), packFile(language))
                 }
             }
         }
+
+    suspend fun importFiles(files: List<Uri>): InstalledDictionary = mutations.withLock {
+        withContext(Dispatchers.IO) {
+            if (files.size != 2) throw IOException("Select a pack and its manifest")
+            val documents = files.associateWith(::displayName)
+            val manifestUri = documents.entries.singleOrNull { it.value.endsWith(".json", ignoreCase = true) }?.key
+                ?: throw IOException("Select one dictionary manifest")
+            val packUri = documents.keys.singleOrNull { it != manifestUri }
+                ?: throw IOException("Select one dictionary pack")
+            val (language, manifest) = openDocument(manifestUri).use(::readManifest)
+            openDocument(packUri).use { source ->
+                installPack(language, manifest, source, packFile(language))
+            }
+        }
+    }
+
+    private fun displayName(uri: Uri): String {
+        if (uri.scheme != "content") return uri.lastPathSegment.orEmpty()
+        return context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        } ?: uri.lastPathSegment.orEmpty()
+    }
+
+    private fun openDocument(uri: Uri): BufferedSource =
+        context.contentResolver.openInputStream(uri)?.source()?.buffer()
+            ?: throw IOException("Cannot open dictionary document")
+
+    private suspend fun bundled(language: DictionaryLanguage): File? = mutations.withLock {
+        val prefix = "dictionaries/dictionary-${language.code}"
+        try {
+            val (packLanguage, manifest) = context.assets.open("$prefix.json").source().buffer().use(::readManifest)
+            if (packLanguage != language) throw IOException("Bundled dictionary language mismatch")
+            val target = File(directory, "bundled/dictionary-${language.code}.sqlite3")
+            if (target.length() == manifest.sizeBytes && inspect(target, language)?.version == manifest.version) {
+                return@withLock target
+            }
+            context.assets.open("$prefix.pack").source().buffer().use { source ->
+                installPack(language, manifest, source, target)
+            }
+            target
+        } catch (error: android.system.ErrnoException) {
+            logcat(LogPriority.WARN, error) { "Could not initialize bundled dictionary ${language.code}" }
+            null
+        } catch (error: IOException) {
+            logcat(LogPriority.WARN, error) { "Could not extract bundled dictionary ${language.code}" }
+            null
+        }
+    }
+
+    private suspend fun installPack(
+        language: DictionaryLanguage,
+        manifest: DictionaryPackManifest,
+        source: BufferedSource,
+        destination: File,
+    ): InstalledDictionary {
+        val parent = checkNotNull(destination.parentFile)
+        parent.mkdirs()
+        parent.listFiles { file -> file.name.startsWith("dictionary-") && file.extension == "tmp" }
+            ?.forEach(File::delete)
+        val staged = File.createTempFile("dictionary-", ".tmp", parent)
+        try {
+            val input = if (source.request(2) && source.peek().readShort().toInt() == 0x1f8b) {
+                GzipSource(source).buffer()
+            } else {
+                source
+            }
+            input.use {
+                HashingSink.sha256(staged.sink()).use { sink ->
+                    val buffer = Buffer()
+                    var copied = 0L
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val count = input.read(buffer, 64 * 1024L)
+                        if (count == -1L) break
+                        copied += count
+                        if (copied > manifest.sizeBytes) throw IOException("Dictionary size changed")
+                        sink.write(buffer, count)
+                    }
+                    if (copied != manifest.sizeBytes || sink.hash.hex() != manifest.sha256) {
+                        throw IOException("Dictionary bytes do not match the manifest")
+                    }
+                }
+            }
+            val installed = inspect(staged, language) ?: throw IOException("Invalid dictionary database")
+            if (installed.version != manifest.version) throw IOException("Dictionary version mismatch")
+            currentCoroutineContext().ensureActive()
+            Os.rename(staged.absolutePath, destination.absolutePath)
+            return installed
+        } finally {
+            staged.delete()
+        }
+    }
 
     suspend fun delete(language: DictionaryLanguage) = mutations.withLock {
         withContext(Dispatchers.IO) {
@@ -99,8 +171,8 @@ internal class DictionaryPacks(context: Context, private val client: OkHttpClien
     }
 
     suspend fun lookup(term: DictionaryTerm): List<DictionaryEntry> = withContext(Dispatchers.IO) {
-        val file = packFile(term.language)
-        if (!file.isFile) return@withContext emptyList()
+        val file = packFile(term.language).takeIf(File::isFile) ?: bundled(term.language)
+            ?: return@withContext emptyList()
         readPack(file) { db ->
             val candidates = when (term.language) {
                 DictionaryLanguage.English -> englishCandidates(db, term.value)
@@ -191,9 +263,6 @@ internal class DictionaryPacks(context: Context, private val client: OkHttpClien
             "SELECT t.form, e.id, e.headword, e.reading, s.part, s.gloss, s.ordinal " +
                 "FROM term t JOIN entry e ON e.id = t.entry JOIN sense s ON s.entry = e.id LIMIT 1"
         const val PACK_EXCEPTION_CHECK = "SELECT form, lemma FROM exception LIMIT 0"
-        const val MAX_MANIFEST_BYTES = 16_384L
-        const val MAX_PACK_BYTES = 256 * 1024 * 1024L
         const val RELEASE = "https://github.com/Manojx2005/Tsuzuki/releases/download/dictionaries-v1"
-        val shaPattern = Regex("[0-9a-f]{64}")
     }
 }

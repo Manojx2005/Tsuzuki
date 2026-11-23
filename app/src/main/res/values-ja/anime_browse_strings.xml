@@ -46,4 +46,6 @@
     <string name="tsz_anime_migration_matches">一致したエピソード: %1$d</string>
     <string name="tsz_anime_migration_carry">一致したエピソードの進捗、棚、トラッカーの連携、除外グループを引き継ぎます。置き換えると元の作品はライブラリから外れます。</string>
     <string name="tsz_anime_migration_replace">置き換える</string>
+    <string name="tsz_anime_turn_on">有効にする</string>
+    <string name="tsz_onboarding_watch_anime">アニメも観ますか？</string>
 </resources>

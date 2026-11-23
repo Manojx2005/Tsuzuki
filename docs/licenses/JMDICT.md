@@ -1,7 +1,7 @@
 # EDRDG JMdict
 
-The optional Japanese dictionary pack uses the Electronic Dictionary Research and Development
-Group’s JMdict dictionary. The converted data retains CC BY-SA 4.0 and is distributed separately.
+The bundled Japanese dictionary pack uses the Electronic Dictionary Research and Development
+Group’s JMdict dictionary. The converted data retains CC BY-SA 4.0 as an independently licensed app asset.
 Keep the pack current with upstream JMdict releases. The converter embeds the supplied licence text
 and the app credits EDRDG in About and Dictionaries.
 

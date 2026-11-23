@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -145,11 +146,15 @@ internal fun TsuzukiUpcomingScreen(
     Scaffold(
         modifier = modifier.tsuzukiBackground(tokens),
         containerColor = Color.Transparent,
-        topBar = {
+        topBar = { scrollBehavior ->
+            val scrolled by remember(scrollBehavior) {
+                derivedStateOf { scrollBehavior.state.contentOffset < 0f }
+            }
             AppBar(
                 title = stringResource(MR.strings.label_upcoming),
                 subtitle = tsuzukiCase(stringResource(MR.strings.tsz_upcoming_subtitle)),
                 backgroundColor = Color.Transparent,
+                backgroundFadeColor = tokens.background.takeIf { scrolled && !isTabletUi() },
                 navigateUp = navigator::pop,
                 actions = {
                     AppBarActions(

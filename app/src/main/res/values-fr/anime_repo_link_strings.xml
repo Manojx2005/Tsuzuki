@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_repo_invalid_link">Ce lien ne correspond pas à un dépôt Aniyomi. Saisissez une URL HTTPS.</string>
+    <string name="tsz_anime_repo_load_error">Impossible de charger ou de lire ce dépôt Aniyomi.</string>
+</resources>

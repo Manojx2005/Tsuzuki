@@ -81,6 +81,8 @@ import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeBook
 import eu.kanade.tachiyomi.ui.tsuzuki.home.HomeState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -115,6 +117,19 @@ fun TsuzukiHomeScreen(
     val t = TsuzukiTheme.tokens
     val animeEnabled = TsuzukiAnime.enabled
     var watching by rememberSaveable { mutableStateOf(false) }
+    var showAnimeOptIn by rememberSaveable { mutableStateOf(false) }
+    if (showAnimeOptIn) {
+        val animePreference = remember { TsuzukiAnime.preference(Injekt.get()) }
+        AnimeOptInSheet(
+            supported = TsuzukiAnime.supported,
+            onEnable = {
+                animePreference.set(true)
+                watching = true
+                showAnimeOptIn = false
+            },
+            onDismiss = { showAnimeOptIn = false },
+        )
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -122,13 +137,17 @@ fun TsuzukiHomeScreen(
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().statusBarsPadding()) {
             val side = if (maxWidth < 600.dp) 16.dp else 28.dp
-            if (animeEnabled) {
-                MediaSwitch(
-                    watching = watching,
-                    onChange = { watching = it },
-                    modifier = Modifier.padding(start = side, end = side, top = 10.dp),
-                )
-            }
+            MediaSwitch(
+                watching = showAnimeWatch(watching, animeEnabled),
+                onChange = { watch ->
+                    when (homeMediaSelection(watch, animeEnabled)) {
+                        HomeMediaSelection.READ -> watching = false
+                        HomeMediaSelection.WATCH -> watching = true
+                        HomeMediaSelection.ENABLE_ANIME -> showAnimeOptIn = true
+                    }
+                },
+                modifier = Modifier.padding(start = side, end = side, top = 10.dp),
+            )
         }
         BoxWithConstraints(
             Modifier
@@ -153,6 +172,18 @@ fun TsuzukiHomeScreen(
 
 internal fun showAnimeWatch(watching: Boolean, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
     watching && animeEnabled
+
+internal enum class HomeMediaSelection {
+    READ,
+    WATCH,
+    ENABLE_ANIME,
+}
+
+internal fun homeMediaSelection(watch: Boolean, animeEnabled: Boolean): HomeMediaSelection = when {
+    !watch -> HomeMediaSelection.READ
+    animeEnabled -> HomeMediaSelection.WATCH
+    else -> HomeMediaSelection.ENABLE_ANIME
+}
 
 @Composable
 private fun MediaSwitch(watching: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
@@ -54,12 +55,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.theme.tsuzuki.NAV_LABEL_MIN_SCALE
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTokens
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiPress
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -194,6 +199,18 @@ fun TsuzukiMoreScreen(
                     null,
                     Modifier.weight(1f),
                     onClickHelp,
+                )
+            }
+            if (TsuzukiAnime.supported && !TsuzukiAnime.enabled) {
+                val navigator = LocalNavigator.currentOrThrow
+                NavTile(
+                    Icons.Outlined.PlayCircle,
+                    stringResource(MR.strings.tsz_anime_media),
+                    null,
+                    null,
+                    Modifier.fillMaxWidth(),
+                    { navigator.push(SettingsScreen(SettingsScreen.Destination.Anime)) },
+                    height = 96.dp,
                 )
             }
             NavTile(
