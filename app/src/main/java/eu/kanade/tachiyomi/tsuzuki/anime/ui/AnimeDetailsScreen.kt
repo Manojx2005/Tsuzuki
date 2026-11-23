@@ -121,6 +121,9 @@ internal fun AnimeDetailsScreen(
         downloadQueue.entries.associate { it.episodeId to it.status }
     }
     val saved = details.saved
+    // AP7: notes, kept here so a save shows at once (the details state is loaded, not observed).
+    var notes by remember(saved?.id) { mutableStateOf(saved?.notes.orEmpty()) }
+    var editingNotes by rememberSaveable { mutableStateOf(false) }
     val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
     val seasons by remember(saved?.id) {
         saved?.let { library.observeSeasons(it.id) } ?: flowOf(emptyList<Anime>())
@@ -244,6 +247,13 @@ internal fun AnimeDetailsScreen(
                                     },
                                 )
                                 TsuzukiMenuItem(
+                                    text = stringResource(MR.strings.action_edit_notes),
+                                    onClick = {
+                                        showMenu = false
+                                        editingNotes = true
+                                    },
+                                )
+                                TsuzukiMenuItem(
                                     text = stringResource(MR.strings.tsz_anime_shelves),
                                     onClick = {
                                         showMenu = false
@@ -350,6 +360,9 @@ internal fun AnimeDetailsScreen(
             fun LazyListScope.overview(expanded: Boolean) {
                 item(key = "anime-overview") {
                     AnimeDetailsHeader(entry.source, display, coverWidth = if (expanded) 156.dp else 104.dp)
+                }
+                if (notes.isNotBlank()) {
+                    item(key = "anime-notes") { AnimeNotesTile(notes) { editingNotes = true } }
                 }
                 if (seasonChoices.isNotEmpty()) {
                     item(key = "anime-seasons") {
@@ -531,6 +544,13 @@ internal fun AnimeDetailsScreen(
         AnimeShelfPicker(shelves, initial, onDismiss = { shelfSelection = null }) { selectedShelves ->
             shelfSelection = null
             mutate { model.setFavorite(true, selectedShelves) }
+        }
+    }
+    if (editingNotes && saved != null) {
+        AnimeNotesDialog(notes, onDismiss = { editingNotes = false }) { text ->
+            editingNotes = false
+            notes = text
+            scope.launch { library.setNotes(saved.id, text) }
         }
     }
     if (showFilter) {
