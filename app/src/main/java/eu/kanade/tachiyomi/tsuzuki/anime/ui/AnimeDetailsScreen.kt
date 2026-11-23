@@ -126,9 +126,12 @@ internal fun AnimeDetailsScreen(
     }.collectAsState(emptyList())
     val seasonChoices = seasons.ifEmpty { siblings.takeIf { it.size > 1 }.orEmpty() }
     val emptyEpisodes = remember { AnimeEpisodes(emptyList(), null) }
-    val episodeState by remember(saved?.id) {
-        saved?.let { library.observeEpisodes(it.id) } ?: flowOf(emptyEpisodes)
-    }.collectAsState(emptyEpisodes)
+    // Null until the database has answered for this anime, so the "no episodes" line never shows while the episodes
+    // are still loading (it flashed for a frame or two when an anime opened).
+    val loadedEpisodes by remember(saved?.id) {
+        saved?.let { library.observeEpisodes(it.id) } ?: flowOf(null)
+    }.collectAsState(null)
+    val episodeState = loadedEpisodes ?: emptyEpisodes
     val display = details.display
     val filtered = remember(episodeState, details.episodeDisplay) {
         details.episodeDisplay.apply(episodeState.items)
@@ -433,7 +436,9 @@ internal fun AnimeDetailsScreen(
                         }
                     }
                 }
-                if (filtered.isEmpty() && seasons.isEmpty() && !details.refreshing && !details.refreshFailed) {
+                if (loadedEpisodes != null && filtered.isEmpty() && seasons.isEmpty() && !details.refreshing &&
+                    !details.refreshFailed
+                ) {
                     item { AnimeCatalogueStatus(androidStringResource(R.string.tsz_anime_no_episodes)) }
                 }
                 items(filtered, key = Episode::id, contentType = { "anime_episode" }) { episode ->
