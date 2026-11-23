@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.toSourceEpisode
 import eu.kanade.tachiyomi.util.system.activeNetworkState
 import eu.kanade.tachiyomi.util.system.networkStateFlow
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -227,7 +228,13 @@ internal class AnimeDownloads(
         }
     }
 
-    fun enqueue(sourceId: Long, sourceName: String, animeTitle: String, episodes: List<Episode>) = command {
+    fun enqueue(sourceId: Long, sourceName: String, animeTitle: String, episodes: List<Episode>) =
+        command { enqueueEpisodes(sourceId, sourceName, animeTitle, episodes) }
+
+    suspend fun enqueueAndAwait(sourceId: Long, sourceName: String, animeTitle: String, episodes: List<Episode>) =
+        awaitCommand { enqueueEpisodes(sourceId, sourceName, animeTitle, episodes) }
+
+    private suspend fun enqueueEpisodes(sourceId: Long, sourceName: String, animeTitle: String, episodes: List<Episode>) {
         val changed = edit { queue ->
             episodes.fold(queue) { acc, episode ->
                 acc.enqueue(
@@ -242,7 +249,11 @@ internal class AnimeDownloads(
         }
     }
 
-    fun retry(id: Long) = command {
+    fun retry(id: Long) = command { retryEpisode(id) }
+
+    suspend fun retryAndAwait(id: Long) = awaitCommand { retryEpisode(id) }
+
+    private suspend fun retryEpisode(id: Long) {
         val changed = edit { queue ->
             queue.change(id) {
                 if (it.status == AnimeDownloadStatus.Failed) it.copy(status = AnimeDownloadStatus.Queued) else it
@@ -309,8 +320,12 @@ internal class AnimeDownloads(
         }
     }
 
-    fun remove(id: Long) = command {
-        val entry = state.value.entries.firstOrNull { it.episodeId == id } ?: return@command
+    fun remove(id: Long) = command { removeEpisode(id) }
+
+    suspend fun removeAndAwait(id: Long) = awaitCommand { removeEpisode(id) }
+
+    private suspend fun removeEpisode(id: Long) {
+        val entry = state.value.entries.firstOrNull { it.episodeId == id } ?: return
         if (edit { queue -> queue.change(id) { it.copy(status = AnimeDownloadStatus.Removing) } }) {
             deleteAsync(entry)
         }
@@ -468,6 +483,26 @@ internal class AnimeDownloads(
 
     private fun command(action: suspend () -> Unit) {
         if (TsuzukiAnime.enabled) commands.trySend(action)
+    }
+
+    /** Waits for the queue edit and propagates its failure to the calling screen. */
+    private suspend fun awaitCommand(action: suspend () -> Unit) {
+        check(TsuzukiAnime.enabled)
+        initialized.await()
+        coroutineContext.ensureActive()
+        val result = CompletableDeferred<Unit>()
+        commands.send {
+            try {
+                action()
+                result.complete(Unit)
+            } catch (e: CancellationException) {
+                result.cancel(e)
+                throw e
+            } catch (e: Exception) {
+                result.completeExceptionally(e)
+            }
+        }
+        result.await()
     }
 
     private suspend fun edit(transform: (AnimeDownloadQueue) -> AnimeDownloadQueue): Boolean = edits.withLock {

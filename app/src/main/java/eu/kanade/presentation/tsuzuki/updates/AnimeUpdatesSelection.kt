@@ -105,22 +105,30 @@ internal suspend fun queueAnimeUpdates(
     store: AnimeLibraryStore,
     downloads: AnimeDownloads,
     episodes: List<AnimeUpdateEpisode>,
-) {
+    unwatchedOnly: Boolean = false,
+): Boolean {
+    if (episodes.isEmpty()) return true
     val sources = Injekt.get<AnimeSourceManager>()
+    var savedAll = true
     for ((animeId, items) in episodes.groupBy { it.animeId }) {
         try {
-            val anime = store.getAnime(animeId) ?: continue
+            val anime = checkNotNull(store.getAnime(animeId))
             val ids = items.mapTo(hashSetOf()) { it.episodeId }
             val list = store.getEpisodes(animeId).filter { it.id in ids }
-            if (list.isEmpty()) continue
-            val sourceName = sources.get(anime.source)?.source?.name ?: sources.stub(anime.source)?.name ?: ""
-            downloads.enqueue(anime.source, sourceName, anime.title, list)
+            val eligible = if (unwatchedOnly) list.filterNot { it.seen } else list
+            if (eligible.isNotEmpty()) {
+                val sourceName = sources.get(anime.source)?.source?.name ?: sources.stub(anime.source)?.name ?: ""
+                downloads.enqueueAndAwait(anime.source, sourceName, anime.title, eligible)
+            }
+            if (list.size != ids.size) savedAll = false
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            savedAll = false
             eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog.w("Could not queue new episodes of anime $animeId", e)
         }
     }
+    return savedAll
 }
 
 /**

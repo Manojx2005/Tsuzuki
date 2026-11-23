@@ -62,6 +62,6 @@ internal fun <B> mergeUpdateGroups(
     anime: List<AnimeUpdateGroup>,
 ): List<MixedTimelineRow<B, AnimeUpdateGroup>> = mergeNewestFirst(books, bookLatest, anime, { it.latest })
 
-/** New episodes that "Save all" would queue: not already in the download queue (queued, saved, failed…). */
+/** Unwatched episodes that "Save all" would queue, excluding entries already in the download queue. */
 internal fun episodesToSave(episodes: List<AnimeUpdateEpisode>, inQueue: Set<Long>): List<AnimeUpdateEpisode> =
-    episodes.filter { it.episodeId !in inQueue }.distinctBy { it.episodeId }
+    episodes.filter { !it.seen && it.episodeId !in inQueue }.distinctBy { it.episodeId }
