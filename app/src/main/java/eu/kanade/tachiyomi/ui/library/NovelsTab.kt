@@ -39,6 +39,7 @@ import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActionBar
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActionDialogs
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActionModel
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActions
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
@@ -279,9 +280,9 @@ data object NovelsTab : Tab {
                     AnimeLibraryActionBar(
                         selected = selectedAnime,
                         actions = animeActions,
+                        actionModel = viewModel<AnimeLibraryActionModel>(),
                         snackbar = snackbarHostState,
                         clear = clearSelection,
-                        scope = scope,
                         books = selectedBooks,
                     )
                     return@bottomBar

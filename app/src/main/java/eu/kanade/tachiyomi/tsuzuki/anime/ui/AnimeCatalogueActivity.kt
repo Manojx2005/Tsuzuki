@@ -130,7 +130,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                 val sourceVersion by AnimeSourceManager.extensionChanges.collectAsState()
                 val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading, sourceVersion) {
                     value = try {
-                        sources.ensureLoaded()
+                        val availableSources = sources.ensureLoaded()
                         val saved = if (savedId >= 0) library.getAnime(savedId) else null
                         val actualSource = saved?.source ?: sourceId
                         val entry = sources.get(actualSource)
@@ -140,6 +140,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 entry,
                                 saved?.toSourceAnime(),
                                 resume?.takeIf { it.animeId == savedId }?.url,
+                                availableSources.mapTo(hashSetOf()) { it.source.id },
                             )
                         } else {
                             AnimeCatalogueLocation.Missing(sources.stub(actualSource)?.name, saved)
@@ -207,6 +208,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                         catalogueState.SaveableStateProvider(sourceId) {
                                             AnimeCatalogueScreen(
                                                 source = source,
+                                                availableSourceIds = result.availableSourceIds,
                                                 openLatest = openLatest,
                                                 initialQuery = initialQuery,
                                                 appliedFilters = lastApplied,
@@ -260,6 +262,7 @@ private sealed interface AnimeCatalogueLocation {
         val entry: RegisteredAnimeSource,
         val saved: SAnime?,
         val resumeUrl: String?,
+        val availableSourceIds: Set<Long>,
     ) : AnimeCatalogueLocation
     data class Missing(val name: String?, val anime: Anime? = null) : AnimeCatalogueLocation
 }
@@ -269,6 +272,7 @@ private enum class AnimeCatalogueMode { POPULAR, LATEST, SEARCH }
 @Composable
 private fun AnimeCatalogueScreen(
     source: AnimeSource,
+    availableSourceIds: Set<Long>,
     openLatest: Boolean,
     initialQuery: String,
     appliedFilters: AnimeFilterList,
@@ -336,7 +340,7 @@ private fun AnimeCatalogueScreen(
     val displayPreference = remember { Injekt.get<SourcePreferences>().sourceDisplayMode }
     val displayMode by displayPreference.collectAsState()
     var displayMenu by remember { mutableStateOf(false) }
-    val libraryUrls by rememberAnimeLibraryUrls(library, source.id)
+    val savedByUrl by rememberAnimeCatalogueLibrary(library, source.id)
     val (longPress, onLongPress) = rememberAnimeCatalogueLongPress(source, library)
     Scaffold(
         modifier = Modifier.tsuzukiBackground(tokens),
@@ -433,7 +437,7 @@ private fun AnimeCatalogueScreen(
             ) {
                 items(shows.itemCount) { index ->
                     val anime = shows[index] ?: return@items
-                    val inLibrary = anime.url in libraryUrls
+                    val inLibrary = anime.url in savedByUrl
                     AnimeCatalogueItem(
                         source = source,
                         anime = anime,
@@ -469,7 +473,7 @@ private fun AnimeCatalogueScreen(
             }
         }
     }
-    AnimeCatalogueLongPressDialogs(longPress, source, library)
+    AnimeCatalogueLongPressDialogs(longPress, source, library, savedByUrl, availableSourceIds)
     editingFilters?.let { filters ->
         AnimeFilterDialog(
             filters = filters,

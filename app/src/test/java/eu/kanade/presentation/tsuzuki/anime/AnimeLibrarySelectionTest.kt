@@ -1,5 +1,8 @@
 package eu.kanade.presentation.tsuzuki.anime
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.items.episode.model.Episode
@@ -39,6 +42,50 @@ class AnimeLibrarySelectionTest {
             listOf(1L, 2L, 4L),
             episodesToDownload(episodes, AnimeLibraryDownload.All, setOf(3)).map(Episode::id),
         )
+    }
+
+    @Test
+    fun mixedRemoveFinishesBothWritesAfterParentCancellation() = runTest {
+        val booksWritten = CompletableDeferred<Unit>()
+        val writeAnime = CompletableDeferred<Unit>()
+        val changes = mutableListOf<Pair<String, Boolean>>()
+        val removal = launch {
+            changeLibraryFavorites(
+                favorite = false,
+                setBooks = { favorite ->
+                    changes += "books" to favorite
+                    booksWritten.complete(Unit)
+                    writeAnime.await()
+                    true
+                },
+                setAnime = { favorite -> changes += "anime" to favorite },
+            )
+        }
+        booksWritten.await()
+        removal.cancel()
+        writeAnime.complete(Unit)
+        removal.join()
+
+        assertEquals(listOf("books" to false, "anime" to false), changes)
+    }
+
+    @Test
+    fun failedAnimeUndoRollsBookFavoritesBack() = runTest {
+        val failure = IllegalStateException("Anime write failed")
+        val bookChanges = mutableListOf<Boolean>()
+        val result = runCatching {
+            changeLibraryFavorites(
+                favorite = true,
+                setBooks = { favorite ->
+                    bookChanges += favorite
+                    true
+                },
+                setAnime = { throw failure },
+            )
+        }
+
+        assertEquals(failure.message, result.exceptionOrNull()?.message)
+        assertEquals(listOf(true, false), bookChanges)
     }
 
     private fun episode(number: Long) =

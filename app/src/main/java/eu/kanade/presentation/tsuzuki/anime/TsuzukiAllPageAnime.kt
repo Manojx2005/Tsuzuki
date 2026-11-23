@@ -14,6 +14,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.library.components.DownloadsBadge
+import eu.kanade.presentation.library.components.LanguageBadge
 import eu.kanade.presentation.library.components.MangaListItem
 import eu.kanade.presentation.library.components.UnreadBadge
 import eu.kanade.presentation.manga.components.MangaCover
@@ -92,6 +94,7 @@ internal fun LazyGridScope.allPageAnimeSection(
     title: String,
     selection: AnimeLibrarySelection?,
     selecting: Boolean,
+    badges: AnimeLibraryBadges,
 ) {
     if (anime.isEmpty()) return
     item(
@@ -109,6 +112,7 @@ internal fun LazyGridScope.allPageAnimeSection(
                 selected = selection?.ids?.contains(item.id) == true,
                 selectionMode = selecting,
                 onLongClick = longClick,
+                badges = badges.forAnime(item),
                 onOpen = open,
             )
         }
@@ -119,6 +123,7 @@ internal fun LazyListScope.allPageAnimeRows(
     anime: List<Anime>,
     selection: AnimeLibrarySelection?,
     booksSelected: Boolean,
+    badges: AnimeLibraryBadges,
 ) {
     if (anime.isEmpty()) return
     item(key = "tsuzuki_all_anime_header") {
@@ -128,12 +133,17 @@ internal fun LazyListScope.allPageAnimeRows(
     items(anime, key = { "tsuzuki_all_anime_" + it.id }, contentType = { "tsuzuki_all_anime" }) { item ->
         val selecting = booksSelected || selection?.ids?.isNotEmpty() == true
         val selected = selection?.ids?.contains(item.id) == true
+        val itemBadges = badges.forAnime(item)
         AllPageAnimeItemActions(item.id, ids, selection, selecting) { open, longClick ->
             MangaListItem(
                 title = tsuzukiMenuLabel(item.title),
                 onClick = open,
                 onLongClick = longClick ?: {},
-                badge = { UnreadBadge(item.totalCount - item.seenCount) },
+                badge = {
+                    DownloadsBadge(itemBadges.downloaded)
+                    UnreadBadge(itemBadges.unwatched)
+                    LanguageBadge(isLocal = false, sourceLanguage = itemBadges.language)
+                },
                 isSelected = selected,
                 coverAlpha = if (selecting && !selected) 0.55f else 1f,
                 cover = { MangaCover.Square(item.thumbnailUrl, modifier = it, generatedTitle = item.title) },

@@ -205,8 +205,8 @@ internal fun AnimeDetailsScreen(
         downloads.enqueue(entry.source.id, entry.source.name, display.title, episodes)
     }
 
-    fun toggleSelection(id: Long) {
-        selection = if (id in selection) selection.filterNot { it == id }.toLongArray() else selection + id
+    fun toggleSelection(id: Long, fromLongPress: Boolean = false) {
+        selection = toggleAnimeEpisodeSelection(filtered, selection, id, fromLongPress)
     }
 
     suspend fun syncWatchedProgress(changed: List<Episode>) {
@@ -511,7 +511,7 @@ internal fun AnimeDetailsScreen(
                             selected = episode.id in selection,
                             enabled = !saving,
                             onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
-                            onSelect = { toggleSelection(episode.id) },
+                            onSelect = { toggleSelection(episode.id, fromLongPress = true) },
                             onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
                             onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
                             onMarkPrevious = { markPrevious(episode) },

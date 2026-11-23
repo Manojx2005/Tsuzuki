@@ -43,6 +43,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.anime.allPageAnimeSection
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeLibraryBadges
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.entries.anime.model.Anime
@@ -76,6 +77,7 @@ internal fun TsuzukiMixedLibraryGrid(
 ) {
     val selecting = selection.isNotEmpty() || animeSelection?.ids?.isNotEmpty() == true
     val animeTitle = stringResource(MR.strings.tsz_anime_media)
+    val animeBadges = if (anime.isNotEmpty()) rememberAnimeLibraryBadges() else null
     FastScrollLazyVerticalGrid(
         columns = if (columns == 0) GridCells.Adaptive(100.dp) else GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
@@ -186,7 +188,7 @@ internal fun TsuzukiMixedLibraryGrid(
                 }
             }
         }
-        allPageAnimeSection(anime, animeTitle, animeSelection, selecting)
+        if (animeBadges != null) allPageAnimeSection(anime, animeTitle, animeSelection, selecting, animeBadges)
         loadMoreSentinel(loadMoreKey, onLoadMore)
     }
 }
