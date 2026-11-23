@@ -16,26 +16,29 @@ internal fun chooseAnimeEpisode(episodes: List<Episode>, recentInProgressId: Lon
         ?: unseen.minWithOrNull(animeEpisodeNumberOrder)
 }
 
+internal enum class AnimeEpisodeSort { SOURCE, NUMBER, UPLOAD_DATE }
+
 /**
- * The episode list's sort and filters, in the book chapter dialog's shape: three-state Unwatched, Downloaded and
- * Bookmarked filters (show only / hide / off). Stored in the anime's episode flags; the original "only" bits keep their
- * meaning, so settings saved before the tri-state filters (and backups) read the same.
+ * The episode list's sort, filters and display mode. Older episode flags keep their meaning so saved preferences and
+ * backups decode the same way.
  */
 internal data class AnimeEpisodeDisplay(
-    val sortByDate: Boolean = false,
+    val sort: AnimeEpisodeSort = AnimeEpisodeSort.NUMBER,
     val ascending: Boolean = false,
     val unseen: TriState = TriState.DISABLED,
     val bookmarked: TriState = TriState.DISABLED,
     val downloaded: TriState = TriState.DISABLED,
+    val showNumberOnly: Boolean = false,
 ) {
     val hasFilters: Boolean get() = listOf(unseen, bookmarked, downloaded).any { it != TriState.DISABLED }
 
     /** [saved] holds the ids of downloaded episodes, for the Downloaded filter. */
     fun apply(episodes: List<Episode>, saved: Set<Long> = emptySet()): List<Episode> {
-        val order = if (sortByDate) {
-            compareBy(Episode::dateUpload).then(animeEpisodeNumberOrder)
-        } else {
-            animeEpisodeNumberOrder
+        val order = when (sort) {
+            // Like manga, descending by source follows the source's supplied list order.
+            AnimeEpisodeSort.SOURCE -> compareByDescending(Episode::sourceOrder).thenByDescending(Episode::id)
+            AnimeEpisodeSort.NUMBER -> animeEpisodeNumberOrder
+            AnimeEpisodeSort.UPLOAD_DATE -> compareBy(Episode::dateUpload).then(animeEpisodeNumberOrder)
         }
         return episodes.filter {
             unseen.accepts(!it.seen) && bookmarked.accepts(it.bookmark) && downloaded.accepts(it.id in saved)
@@ -43,10 +46,16 @@ internal data class AnimeEpisodeDisplay(
     }
 
     // Keep Aniyomi's low flag bits intact for backup compatibility.
-    fun toFlags(previous: Long): Long = (previous and MASK.inv()) or
-        (if (sortByDate) DATE else 0L) or (if (ascending) ASCENDING else 0L) or
-        unseen.bits(UNSEEN, UNSEEN_NOT) or bookmarked.bits(BOOKMARKED, BOOKMARKED_NOT) or
-        downloaded.bits(DOWNLOADED, DOWNLOADED_NOT)
+    fun toFlags(previous: Long): Long {
+        val sortFlag = when (sort) {
+            AnimeEpisodeSort.SOURCE -> SOURCE
+            AnimeEpisodeSort.NUMBER -> 0L
+            AnimeEpisodeSort.UPLOAD_DATE -> DATE
+        }
+        return (previous and MASK.inv()) or sortFlag or (if (ascending) ASCENDING else 0L) or
+            unseen.bits(UNSEEN, UNSEEN_NOT) or bookmarked.bits(BOOKMARKED, BOOKMARKED_NOT) or
+            downloaded.bits(DOWNLOADED, DOWNLOADED_NOT) or (if (showNumberOnly) NUMBER_ONLY else 0L)
+    }
 
     companion object {
         private const val DATE = 1L shl 32
@@ -57,8 +66,10 @@ internal data class AnimeEpisodeDisplay(
         private const val BOOKMARKED_NOT = 1L shl 37
         private const val DOWNLOADED = 1L shl 38
         private const val DOWNLOADED_NOT = 1L shl 39
+        private const val SOURCE = 1L shl 40
+        private const val NUMBER_ONLY = 1L shl 41
         private const val MASK = DATE or ASCENDING or UNSEEN or BOOKMARKED or UNSEEN_NOT or BOOKMARKED_NOT or
-            DOWNLOADED or DOWNLOADED_NOT
+            DOWNLOADED or DOWNLOADED_NOT or SOURCE or NUMBER_ONLY
 
         private fun TriState.bits(only: Long, not: Long): Long = when (this) {
             TriState.DISABLED -> 0L
@@ -73,11 +84,16 @@ internal data class AnimeEpisodeDisplay(
         }
 
         fun fromFlags(flags: Long) = AnimeEpisodeDisplay(
-            sortByDate = flags and DATE != 0L,
+            sort = when {
+                flags and SOURCE != 0L -> AnimeEpisodeSort.SOURCE
+                flags and DATE != 0L -> AnimeEpisodeSort.UPLOAD_DATE
+                else -> AnimeEpisodeSort.NUMBER
+            },
             ascending = flags and ASCENDING != 0L,
             unseen = triState(flags, UNSEEN, UNSEEN_NOT),
             bookmarked = triState(flags, BOOKMARKED, BOOKMARKED_NOT),
             downloaded = triState(flags, DOWNLOADED, DOWNLOADED_NOT),
+            showNumberOnly = flags and NUMBER_ONLY != 0L,
         )
     }
 }

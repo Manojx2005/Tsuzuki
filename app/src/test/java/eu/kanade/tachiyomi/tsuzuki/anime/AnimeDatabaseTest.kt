@@ -813,7 +813,12 @@ class AnimeDatabaseTest {
             )
             val id = anime.insert(Anime(source = 8, url = "/show", title = "Show", episodeFlags = 0x123))
             val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
-            val display = AnimeEpisodeDisplay(true, true, TriState.ENABLED_IS, TriState.ENABLED_IS)
+            val display = AnimeEpisodeDisplay(
+                sort = AnimeEpisodeSort.UPLOAD_DATE,
+                ascending = true,
+                unseen = TriState.ENABLED_IS,
+                bookmarked = TriState.ENABLED_IS,
+            )
             store.setEpisodeDisplay(id, display)
             val flags = checkNotNull(store.getAnime(id)).episodeFlags
             assertEquals(0x123L, flags and 0xffffL)
