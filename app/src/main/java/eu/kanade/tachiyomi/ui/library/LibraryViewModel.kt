@@ -991,7 +991,7 @@ class LibraryViewModel(
         }
     }
 
-    private suspend fun applyReadSelection(selection: List<Manga>, read: Boolean) =
+    internal suspend fun applyReadSelection(selection: List<Manga>, read: Boolean) =
         tachiyomi.core.common.util.lang.withNonCancellableContext {
             selection.forEach { manga ->
                 setReadStatus.await(
@@ -1526,13 +1526,16 @@ class LibraryViewModel(
         }
     }
 
+    internal suspend fun setLibraryFavorites(entries: List<Manga>, favorite: Boolean): Boolean =
+        updateManga.awaitAll(entries.map { MangaUpdate(id = it.id, favorite = favorite) })
+
     fun removeSelectionFromLibraryWithUndo() {
         val selection = state.value.selectedManga.filter { it.favorite }
         if (selection.isEmpty()) return
         clearSelection()
         viewModelScope.launchIO {
             val application = Injekt.get<android.app.Application>()
-            if (!updateManga.awaitAll(selection.map { MangaUpdate(id = it.id, favorite = false) })) {
+            if (!setLibraryFavorites(selection, false)) {
                 snackbarHostState.showSnackbar(application.stringResource(MR.strings.internal_error))
                 return@launchIO
             }
@@ -1541,7 +1544,7 @@ class LibraryViewModel(
                     application.stringResource(MR.strings.manga_removed_library),
                 )
             ) {
-                if (!updateManga.awaitAll(selection.map { MangaUpdate(id = it.id, favorite = true) })) {
+                if (!setLibraryFavorites(selection, true)) {
                     snackbarHostState.showSnackbar(application.stringResource(MR.strings.internal_error))
                 }
             }

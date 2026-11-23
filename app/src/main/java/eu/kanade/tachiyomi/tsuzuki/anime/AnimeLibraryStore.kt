@@ -162,6 +162,21 @@ internal class AnimeLibraryStore(
             entry.id
         }.also { if (!favorite) prunePreviewFrames(it, null) }
 
+    suspend fun setLibraryFavorites(ids: Set<Long>, favorite: Boolean) {
+        database.transaction {
+            for (id in ids) {
+                val entry = anime.awaitById(id) ?: continue
+                anime.setFavorite(id, favorite, entry.dateAdded)
+            }
+        }
+    }
+
+    suspend fun moveLibraryAnime(ids: Set<Long>, shelfIds: Set<Long>) = database.transaction {
+        for (id in ids) {
+            if (anime.awaitById(id)?.favorite == true) shelves.setForAnime(id, shelfIds)
+        }
+    }
+
     suspend fun migrateFavorite(
         originalId: Long,
         targetId: Long,

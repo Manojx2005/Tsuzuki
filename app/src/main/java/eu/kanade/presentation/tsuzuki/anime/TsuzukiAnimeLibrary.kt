@@ -2,6 +2,7 @@ package eu.kanade.presentation.tsuzuki.anime
 
 import android.content.Context
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,23 +31,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -57,6 +66,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
+import eu.kanade.presentation.library.components.LibrarySelectionToolbar
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
@@ -64,12 +74,16 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
+import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
 import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryEntry
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -77,6 +91,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.groupAnimeSeasons
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.library.NovelsTab
 import tachiyomi.core.common.preference.TriState
@@ -129,13 +144,37 @@ internal data object AnimeLibraryTab : Tab {
             }
             if (groupSeasons && search.isEmpty()) groupAnimeSeasons(matches) else matches
         }
+        val selection = remember { AnimeLibrarySelection() }
+        val actions = remember { AnimeLibraryActions() }
+        val snackbar = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+        val haptic = LocalHapticFeedback.current
+        val visibleIds = remember(filtered) { filtered.map { it.anime.id } }
+        val selected = library.map(AnimeLibraryEntry::anime).filter { it.id in selection.ids }
+        val selecting = selected.isNotEmpty()
+        BackHandler(enabled = tsuzukiBackEnabled(selecting, HomeScreen), onBack = selection::clear)
+        LaunchedEffect(selecting) { HomeScreen.showBottomNav(!selecting) }
+        AnimeLibraryActionDialogs(actions)
         val tokens = TsuzukiTheme.tokens
         val compact = LocalConfiguration.current.screenWidthDp < 600
-        val bottomPad = if (compact) 108.dp else 24.dp
+        val bottomPad = when {
+            selecting -> 12.dp
+            compact -> 108.dp
+            else -> 24.dp
+        }
         Scaffold(
             modifier = Modifier.tsuzukiBackground(tokens),
             containerColor = Color.Transparent,
-            topBar = {
+            topBar = topBar@{
+                if (selecting) {
+                    LibrarySelectionToolbar(
+                        selectedCount = selected.size,
+                        onClickUnselectAll = selection::clear,
+                        onClickSelectAll = { selection.selectAll(visibleIds) },
+                        onClickInvertSelection = { selection.invert(visibleIds) },
+                    )
+                    return@topBar
+                }
                 SearchToolbar(
                     searchQuery = query,
                     onChangeSearchQuery = { query = it },
@@ -147,16 +186,23 @@ internal data object AnimeLibraryTab : Tab {
                     },
                 )
             },
+            bottomBar = {
+                if (selecting) AnimeLibraryActionBar(selected, actions, snackbar, selection::clear, scope)
+            },
+            snackbarHost = { TsuzukiUndoSnackbarHost(snackbar) },
         ) { padding ->
             Column(Modifier.fillMaxSize().padding(padding)) {
-                AnimeLibraryMedia()
+                AnimeLibraryMedia(onMediaChange = selection::clear)
                 if (shelves.size > 1) {
                     TsuzukiPillRow(
                         labels = shelves.map { shelf ->
                             "${shelf.displayName()} ${library.count { shelf.id in it.shelfIds }}"
                         },
                         selected = activeShelf,
-                        onClick = { selectedShelf = shelves[it].id },
+                        onClick = {
+                            selection.clear()
+                            selectedShelf = shelves[it].id
+                        },
                     )
                 }
                 if (filtered.isEmpty()) {
@@ -178,7 +224,17 @@ internal data object AnimeLibraryTab : Tab {
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     items(filtered, key = { it.anime.id }) { item ->
-                        AnimeLibraryCover(item.anime, onOpen = { openAnime(context, item.anime.id) })
+                        val id = item.anime.id
+                        AnimeLibraryCover(
+                            item.anime,
+                            selected = id in selection.ids,
+                            selectionMode = selecting,
+                            onLongClick = {
+                                selection.range(id, visibleIds)
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            onOpen = { if (selecting) selection.toggle(id) else openAnime(context, id) },
+                        )
                     }
                 }
             }
@@ -187,7 +243,7 @@ internal data object AnimeLibraryTab : Tab {
 }
 
 @Composable
-private fun AnimeLibraryMedia() {
+private fun AnimeLibraryMedia(onMediaChange: () -> Unit) {
     val tabNavigator = LocalTabNavigator.current
     val preferences = remember { Injekt.get<LibraryPreferences>() }
     val joined by preferences.joinedLibrary.collectAsState()
@@ -200,6 +256,7 @@ private fun AnimeLibraryMedia() {
     }
     TsuzukiSegments(labels, selected = labels.lastIndex, onClick = { selected ->
         if (selected != labels.lastIndex) {
+            onMediaChange()
             if (joined) {
                 val filter = when (selected) {
                     0 -> TriState.DISABLED
@@ -355,13 +412,26 @@ private fun AnimeWatchHero(resume: ContinueAnime, wide: Boolean, onOpen: () -> U
 }
 
 @Composable
-internal fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+internal fun AnimeLibraryCover(
+    anime: Anime,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    selectionMode: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
+    onOpen: () -> Unit,
+) {
     val tokens = TsuzukiTheme.tokens
     Column(
-        modifier.tsuzukiClickable(role = Role.Button, onClick = onOpen),
+        modifier
+            .alpha(if (selectionMode && !selected) 0.55f else 1f)
+            .then(if (selectionMode) Modifier.semantics { this.selected = selected } else Modifier)
+            .tsuzukiClickable(role = Role.Button, onClick = onOpen, onLongClick = onLongClick),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+        Box(Modifier.fillMaxWidth()) {
+            MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+            if (selected) TsuzukiSelectedCover()
+        }
         Text(
             tsuzukiMenuLabel(anime.title),
             style = MaterialTheme.typography.titleSmall,

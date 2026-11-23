@@ -351,7 +351,7 @@ private fun Modifier.selectedOutline(
  */
 @Composable
 fun MangaListItem(
-    coverData: MangaCoverModel,
+    coverData: MangaCoverModel? = null,
     title: String,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -363,6 +363,7 @@ fun MangaListItem(
     url: String? = null,
     showUrl: Boolean = false,
     urlMaxLines: Int = 3,
+    cover: @Composable ((Modifier) -> Unit)? = null,
 ) {
     // Fixed height for list items
     val height = if (showUrl && !url.isNullOrEmpty()) {
@@ -382,12 +383,12 @@ fun MangaListItem(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MangaCover.Square(
-            modifier = Modifier
-                .height(40.dp)
-                .alpha(coverAlpha),
-            data = coverData,
-        )
+        val coverModifier = Modifier.height(40.dp).alpha(coverAlpha)
+        if (cover == null) {
+            MangaCover.Square(modifier = coverModifier, data = coverData)
+        } else {
+            cover(coverModifier)
+        }
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
