@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -49,11 +51,9 @@ import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.components.AppBarActions
-import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material.icons.outlined.FlipToBack
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
@@ -446,20 +446,38 @@ internal fun AnimeDetailsScreen(
                     item { AnimeCatalogueStatus(androidStringResource(R.string.tsz_anime_no_episodes)) }
                 }
                 items(filtered, key = Episode::id, contentType = { "anime_episode" }) { episode ->
-                    AnimeEpisodeTile(
-                        source = entry.source,
+                    val status = downloadStatuses[episode.id]
+                    AnimeEpisodeSwipe(
                         episode = episode,
-                        coverUrl = display.thumbnail_url,
-                        selected = episode.id in selection,
-                        enabled = !saving,
-                        onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
-                        onSelect = { toggleSelection(episode.id) },
-                        onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
-                        onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
-                        onMarkPrevious = { markPrevious(episode) },
-                        downloadStatus = downloadStatuses[episode.id],
-                        onDownload = { enqueue(listOf(episode)) },
-                    )
+                        downloadStatus = status,
+                        enabled = !saving && selected.isEmpty(),
+                        onToggleSeen = { mutate { markSeen(setOf(episode.id), !episode.seen) } },
+                        onToggleBookmark = {
+                            mutate { library.setEpisodesBookmarked(setOf(episode.id), !episode.bookmark) }
+                        },
+                        onDownload = {
+                            when (status) {
+                                null -> enqueue(listOf(episode))
+                                AnimeDownloadStatus.Failed -> downloads.retry(episode.id)
+                                else -> downloads.remove(episode.id)
+                            }
+                        },
+                    ) {
+                        AnimeEpisodeTile(
+                            source = entry.source,
+                            episode = episode,
+                            coverUrl = display.thumbnail_url,
+                            selected = episode.id in selection,
+                            enabled = !saving,
+                            onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
+                            onSelect = { toggleSelection(episode.id) },
+                            onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
+                            onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
+                            onMarkPrevious = { markPrevious(episode) },
+                            downloadStatus = downloadStatuses[episode.id],
+                            onDownload = { enqueue(listOf(episode)) },
+                        )
+                    }
                 }
             }
 
