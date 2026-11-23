@@ -262,12 +262,20 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
             }
             if (catalogue != null && shown.isEmpty()) {
                 item(key = "empty") {
-                    Text(
-                        tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
-                        color = tokens.mutedText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
+                    Column {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
+                            color = tokens.mutedText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                        // AP-18: with no repository yet, point straight at adding one.
+                        if (repos.isEmpty()) {
+                            TextButton(onClick = { navigator.push(AnimeExtensionReposScreen) }) {
+                                Text(tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_extension_repos)))
+                            }
+                        }
+                    }
                 }
             }
             listOf(
