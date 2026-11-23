@@ -2,9 +2,8 @@ package eu.kanade.presentation.tsuzuki.history
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
-import androidx.compose.material.icons.automirrored.outlined.ViewList
-import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
@@ -58,6 +60,8 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.AnimeDetailsRoute
+import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
@@ -124,8 +128,8 @@ internal fun groupAnimeHistory(
         // "Last only", as in book History: the newest episode of each anime.
         .let { sorted -> if (lastOnly) sorted.distinctBy { it.animeId } else sorted }
         .groupBy {
-        Instant.fromEpochMilliseconds(it.lastSeen.time).toLocalDateTime(timeZone).date
-    }
+            Instant.fromEpochMilliseconds(it.lastSeen.time).toLocalDateTime(timeZone).date
+        }
 }
 
 internal fun animeHistoryResumeTarget(history: AnimeHistoryDisplay, episodes: List<Episode>): Long {
@@ -181,6 +185,8 @@ internal fun TsuzukiAnimeHistoryEntry(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    // History is a Home tab inside the main navigator; null only in previews.
+    val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     val library = remember { Injekt.get<AnimeLibraryStore>() }
     val repository = remember { Injekt.get<AnimeHistoryRepository>() }
@@ -218,6 +224,7 @@ internal fun TsuzukiAnimeHistoryEntry(
                 confirming = true
                 removeAll = false
             },
+            onOpenDetails = { navigator?.push(AnimeDetailsRoute(item.animeId)) ?: openAnime(context, item.animeId) },
         )
     }
     if (confirming) {
@@ -253,6 +260,7 @@ private fun AnimeHistoryRow(
     timeFormatter: DateTimeFormatter,
     onResume: () -> Unit,
     onRemove: () -> Unit,
+    onOpenDetails: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
@@ -289,8 +297,10 @@ private fun AnimeHistoryRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // As in book History, the cover opens the details; the rest of the row resumes.
         Box(
-            Modifier.width(44.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(6.dp)).background(tokens.track),
+            Modifier.width(44.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(6.dp)).background(tokens.track)
+                .clickable(role = Role.Button, onClick = onOpenDetails),
             contentAlignment = Alignment.Center,
         ) {
             val cover = item.thumbnailUrl ?: item.previewUrl
