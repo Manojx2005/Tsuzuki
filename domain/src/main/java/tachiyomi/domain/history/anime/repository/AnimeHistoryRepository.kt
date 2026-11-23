@@ -1,6 +1,7 @@
 package tachiyomi.domain.history.anime.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import tachiyomi.domain.history.anime.model.AnimeHistory
 import tachiyomi.domain.history.anime.model.AnimeHistoryDisplay
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
@@ -14,6 +15,9 @@ interface AnimeHistoryRepository {
     fun subscribeContinueWatching(): Flow<List<AnimeHistoryWithRelations>>
     fun subscribeHistory(): Flow<List<AnimeHistoryDisplay>>
     fun subscribeWatchStats(today: LocalDate): Flow<AnimeWatchStats>
+
+    /** Watch seconds per day from [start] on (AP-21, the Stats chart). */
+    fun subscribeWatchDays(start: LocalDate): Flow<Map<LocalDate, Long>> = flowOf(emptyMap())
     suspend fun recordWatchDay(episodeId: Long, day: LocalDate, watchSeconds: Long)
     suspend fun removeHistory(animeId: Long, episodeId: Long? = null)
 
