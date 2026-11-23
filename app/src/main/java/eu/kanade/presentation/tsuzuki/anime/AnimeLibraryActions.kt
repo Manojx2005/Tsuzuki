@@ -86,6 +86,31 @@ internal class AnimeLibraryActionModel : ViewModel() {
     val snackbar = SnackbarHostState()
 }
 
+/**
+ * Mark watched / unwatched for a mixed selection. Anime first, from a snapshot: if the book write then fails,
+ * [revertAnime] puts the episodes back exactly (watched state and position) and nothing is left half applied. (Undoing
+ * the books instead would mark every chapter unread and lose their earlier progress.)
+ */
+internal suspend fun <T> markLibrarySeen(
+    seen: Boolean,
+    setAnime: suspend (Boolean) -> List<T>,
+    revertAnime: suspend () -> Unit,
+    setBooks: (suspend (Boolean) -> Unit)?,
+): List<T> = withNonCancellableContext {
+    val changed = setAnime(seen)
+    try {
+        setBooks?.invoke(seen)
+    } catch (error: Exception) {
+        try {
+            revertAnime()
+        } catch (rollbackError: Exception) {
+            if (rollbackError !== error) error.addSuppressed(rollbackError)
+        }
+        throw error
+    }
+    changed
+}
+
 internal suspend fun changeLibraryFavorites(
     favorite: Boolean,
     setBooks: (suspend (Boolean) -> Boolean)?,
@@ -184,10 +209,13 @@ internal fun AnimeLibraryActionBar(
                         .mapTo(this, Episode::id)
                 }
             }
-            val changed = withNonCancellableContext {
-                books?.model?.applyReadSelection(books.entries, seen)
-                library.setEpisodesSeen(episodeIds, seen)
-            }
+            val before = library.episodeProgress(episodeIds)
+            val changed = markLibrarySeen(
+                seen = seen,
+                setAnime = { library.setEpisodesSeen(episodeIds, it) },
+                revertAnime = { library.restoreEpisodeProgress(before) },
+                setBooks = books?.let { { value: Boolean -> it.model.applyReadSelection(it.entries, value) } },
+            )
             if (seen && !Injekt.get<BasePreferences>().incognitoMode.get()) {
                 changed.filter { it.episodeNumber.isFinite() }.groupBy(Episode::animeId).values.forEach { episodes ->
                     episodes.maxByOrNull(Episode::episodeNumber)?.let { AnimeTrackProgressJob.enqueue(application, it) }
@@ -288,8 +316,12 @@ internal fun AnimeLibraryActionBar(
         SelectionAction(stringResource(MR.strings.action_remove), Icons.Outlined.Delete, onClick = {
             clear()
             launchAction {
-                val setBooks: (suspend (Boolean) -> Boolean)? = if (books == null) null else { favorite ->
-                    books.model.setLibraryFavorites(books.entries, favorite)
+                val setBooks: (suspend (Boolean) -> Boolean)? = if (books == null) {
+                    null
+                } else {
+                    { favorite ->
+                        books.model.setLibraryFavorites(books.entries, favorite)
+                    }
                 }
                 changeLibraryFavorites(false, setBooks) { library.setLibraryFavorites(ids, it) }
                 val message = application.contextStringResource(MR.strings.manga_removed_library)

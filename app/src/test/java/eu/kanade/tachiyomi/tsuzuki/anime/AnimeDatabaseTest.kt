@@ -468,6 +468,43 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun restoringEpisodeProgressPutsBackWatchedStateAndPosition() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val store =
+                AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, AnimeHistoryRepositoryImpl(db))
+            val show = SAnime.create().apply {
+                url = "/show"
+                title = "Show"
+            }
+            val sourceEpisodes = listOf("started", "seen", "fresh").mapIndexed { i, url ->
+                SEpisode.create().apply {
+                    this.url = url
+                    name = url
+                    episode_number = (i + 1).toFloat()
+                }
+            }
+            val id = store.syncEpisodes(8, show, sourceEpisodes).id
+            val byUrl = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            episodes.updateProgress(byUrl.getValue("started").id, seen = false, lastSecondSeen = 40, totalSeconds = 100)
+            store.setEpisodesSeen(setOf(byUrl.getValue("seen").id), true)
+            val ids = byUrl.values.mapTo(hashSetOf(), Episode::id)
+            val before = store.episodeProgress(ids)
+
+            // Unwatching resets positions; the restore must bring the 40 s resume point back too.
+            store.setEpisodesSeen(ids, false)
+            store.restoreEpisodeProgress(before)
+
+            val after = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            assertEquals(40L, after.getValue("started").lastSecondSeen)
+            assertFalse(after.getValue("started").seen)
+            assertTrue(after.getValue("seen").seen)
+            assertFalse(after.getValue("fresh").seen)
+        }
+    }
+
+    @Test
     fun episodeSyncUpdatesSourceFieldsAndKeepsLocalStateAndOfflineEpisodes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)
