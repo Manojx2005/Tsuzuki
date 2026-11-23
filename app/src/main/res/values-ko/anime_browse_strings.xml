@@ -13,6 +13,7 @@
     <string name="tsz_anime_mark_seen">시청 완료로 표시</string>
     <string name="tsz_anime_mark_unseen">미시청으로 표시</string>
     <string name="tsz_anime_mark_previous">이전 회차를 시청 완료로 표시</string>
+    <string name="tsz_anime_mark_until_last_watched">마지막 시청 회차 전까지 시청 완료로 표시</string>
     <string name="tsz_anime_bookmark">북마크 추가</string>
     <string name="tsz_anime_unbookmark">북마크 삭제</string>
     <string name="tsz_anime_unseen_only">미시청만</string>

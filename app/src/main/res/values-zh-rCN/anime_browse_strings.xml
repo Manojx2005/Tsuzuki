@@ -13,6 +13,7 @@
     <string name="tsz_anime_mark_seen">标记为已观看</string>
     <string name="tsz_anime_mark_unseen">标记为未观看</string>
     <string name="tsz_anime_mark_previous">将之前的剧集标记为已观看</string>
+    <string name="tsz_anime_mark_until_last_watched">将上次观看之前的剧集标记为已观看</string>
     <string name="tsz_anime_bookmark">添加书签</string>
     <string name="tsz_anime_unbookmark">移除书签</string>
     <string name="tsz_anime_unseen_only">仅未观看</string>

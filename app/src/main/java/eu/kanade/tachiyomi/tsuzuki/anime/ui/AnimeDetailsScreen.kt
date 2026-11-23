@@ -77,7 +77,9 @@ import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import eu.kanade.tachiyomi.tsuzuki.anime.episodesBeforeLastWatched
 import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
+import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
@@ -202,14 +204,15 @@ internal fun AnimeDetailsScreen(
         selection = if (id in selection) selection.filterNot { it == id }.toLongArray() else selection + id
     }
 
-    suspend fun markSeen(ids: Set<Long>, seen: Boolean) {
-        val changed = library.setEpisodesSeen(ids, seen)
+    suspend fun syncWatchedProgress(changed: List<Episode>) {
         if (!Injekt.get<BasePreferences>().incognitoMode.get()) {
             changed.filter { it.episodeNumber.isFinite() }
                 .maxByOrNull(Episode::episodeNumber)
                 ?.let { AnimeTrackProgressJob.enqueue(context, it) }
         }
     }
+
+    suspend fun markSeen(ids: Set<Long>, seen: Boolean) = syncWatchedProgress(library.setEpisodesSeen(ids, seen))
 
     fun markPrevious(episode: Episode) {
         val preceding = ordered.takeWhile { it.id != episode.id }.mapTo(mutableSetOf(), Episode::id)
@@ -589,6 +592,18 @@ internal fun AnimeDetailsScreen(
             groups = episodeState.groups,
             excludedGroups = excludedGroups,
             onDismiss = { showFilter = false },
+            // Same episodes the store marks: excluded subtitle groups are skipped.
+            canMarkUntilLastWatched = saved != null && !saving &&
+                episodesBeforeLastWatched(ordered.filterAnimeGroups(excludedGroups)).isNotEmpty(),
+            onMarkUntilLastWatched = {
+                if (saved != null) {
+                    showFilter = false
+                    mutate {
+                        val changed = withContext(Dispatchers.IO) { library.markUntilLastWatched(saved.id) }
+                        syncWatchedProgress(changed)
+                    }
+                }
+            },
         ) { displayOptions, groups ->
             // Applies at once and stays open, as the book chapter dialog does.
             mutate { model.setEpisodeDisplay(displayOptions, groups) }

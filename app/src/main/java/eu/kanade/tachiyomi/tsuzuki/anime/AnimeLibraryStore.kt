@@ -361,6 +361,14 @@ internal class AnimeLibraryStore(
             )
         }
 
+    suspend fun markUntilLastWatched(animeId: Long): List<Episode> = database.transactionWithResult {
+        val show = checkNotNull(anime.awaitById(animeId))
+        val ordered = episodes.awaitByAnimeId(animeId).filterAnimeGroups(show.memo.excludedAnimeGroups())
+            .sortedWith(animeEpisodeNumberOrder)
+        val ids = episodesBeforeLastWatched(ordered).mapTo(mutableSetOf(), Episode::id)
+        setEpisodesSeen(ids, seen = true)
+    }
+
     suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean): List<Episode> = database.transactionWithResult {
         val newlySeen = mutableListOf<Episode>()
         ids.forEach { id ->
