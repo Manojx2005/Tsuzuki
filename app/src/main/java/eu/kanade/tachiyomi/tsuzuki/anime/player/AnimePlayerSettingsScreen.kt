@@ -1,224 +1,61 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Headphones
-import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.SkipNext
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.TextFields
-import androidx.compose.material.icons.outlined.TouchApp
-import androidx.compose.material.icons.outlined.Videocam
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
-import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
-import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
-import eu.kanade.presentation.util.LocalBackPress
-import eu.kanade.presentation.util.Screen
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.supportsAnimePictureInPicture
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.Locale
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
 
-internal object AnimePlayerSettingsScreen : Screen() {
+/**
+ * AP11 (owner 2026-11-23: "standard Settings layout"): the anime player settings as ordinary preference groups, like
+ * every other Settings page, instead of the A4.1 card grid. Values that live in [AnimePlayerSettings] go through
+ * [AnimePlayerPreferences.set] so its bounds still apply; the rest bind their stored preference directly.
+ */
+internal object AnimePlayerSettingsScreen : SearchableSettings {
+    @ReadOnlyComposable
+    @Composable
+    override fun getTitleRes(): StringResource = MR.strings.tsz_anime_player_settings
+
     @Composable
     override fun Content() {
         if (!TsuzukiAnime.enabled) return
-        // Nullable like SearchableSettings: settings search opens this page without a back handler.
-        val back = LocalBackPress.current
+        super.Content()
+    }
+
+    @Composable
+    override fun getPreferences(): List<Preference> {
         val preferences = remember { AnimePlayerPreferences(Injekt.get()) }
         var settings by remember { mutableStateOf(preferences.get()) }
-        val autoplay by preferences.autoplay.collectAsState()
-        val pictureInPicture by preferences.pictureInPicture.collectAsState()
-        val supportsPip = LocalContext.current.supportsAnimePictureInPicture()
-        val previewMode by preferences.episodePreviews.collectAsState()
-        var showPreviews by remember { mutableStateOf(false) }
-        var showSpeed by remember { mutableStateOf(false) }
-        var showAniSkip by remember { mutableStateOf(false) }
         var languageKind by remember { mutableStateOf<AnimeTrackKind?>(null) }
-        val tokens = TsuzukiTheme.tokens
+        val supportsPip = LocalContext.current.supportsAnimePictureInPicture()
+        val subtitleLanguages by preferences.languages(AnimeTrackKind.SUBTITLE).collectAsState()
+        val audioLanguages by preferences.languages(AnimeTrackKind.AUDIO).collectAsState()
 
-        fun update(settingsUpdate: AnimePlayerSettings) {
-            preferences.set(settingsUpdate)
+        // Read the stored values again before writing: the switch rows below write their preference directly, so
+        // the remembered copy can be behind them.
+        fun update(change: (AnimePlayerSettings) -> AnimePlayerSettings) {
+            preferences.set(change(preferences.get()))
             settings = preferences.get()
         }
+        fun updateStyle(change: (AnimeSubtitleStyle) -> AnimeSubtitleStyle) =
+            update { it.copy(subtitleStyle = change(it.subtitleStyle).bounded()) }
 
-        Scaffold(
-            modifier = Modifier.tsuzukiBackground(tokens),
-            containerColor = Color.Transparent,
-            topBar = {
-                AppBar(
-                    title = mokoStringResource(MR.strings.tsz_anime_player_settings),
-                    navigateUp = back?.let { handler -> { handler() } },
-                )
-            },
-        ) { padding ->
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(if (LocalDensity.current.fontScale >= 1.5f) 220.dp else 158.dp),
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                item {
-                    PlayerSettingCard(
-                        stringResource(R.string.tsz_anime_episode_previews),
-                        Icons.Outlined.Videocam,
-                        active = previewMode != eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.OFF,
-                    ) { color ->
-                        TextButton(
-                            onClick = { showPreviews = true },
-                            colors = ButtonDefaults.textButtonColors(contentColor = color),
-                        ) { Text(tsuzukiMenuLabel(previewModeLabel(previewMode))) }
-                    }
-                }
-                item {
-                    PlayerSettingCard(
-                        stringResource(R.string.tsz_anime_aniskip),
-                        Icons.Outlined.SkipNext,
-                        active = settings.aniSkipMode != AniSkipMode.OFF,
-                    ) { color ->
-                        TextButton(
-                            onClick = { showAniSkip = true },
-                            colors = ButtonDefaults.textButtonColors(contentColor = color),
-                        ) {
-                            Text(tsuzukiMenuLabel(aniSkipModeLabel(settings.aniSkipMode)))
-                        }
-                        if (settings.aniSkipMode == AniSkipMode.AUTO) {
-                            AnimePlayerStepper(
-                                label = stringResource(R.string.tsz_anime_skip_intro_delay),
-                                value = stringResource(R.string.tsz_anime_skip_seconds, settings.aniSkipIntroDelay),
-                                contentColor = color,
-                                decrease = {
-                                    update(settings.copy(aniSkipIntroDelay = settings.aniSkipIntroDelay - 1))
-                                },
-                                increase = {
-                                    update(settings.copy(aniSkipIntroDelay = settings.aniSkipIntroDelay + 1))
-                                },
-                            )
-                        }
-                    }
-                }
-                item {
-                    PlayerSettingCard(
-                        stringResource(R.string.tsz_anime_player_autoplay),
-                        Icons.Outlined.PlayArrow,
-                        active = autoplay,
-                    ) {
-                        Switch(
-                            checked = autoplay,
-                            onCheckedChange = preferences.autoplay::set,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = tokens.onAccent,
-                                checkedTrackColor = tokens.onAccent.copy(alpha = 0.24f),
-                            ),
-                        )
-                    }
-                }
-                item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_speed), Icons.Outlined.Speed) {
-                        TextButton(onClick = { showSpeed = true }) { Text(formatAnimeSpeed(settings.speed)) }
-                    }
-                }
-                // Full width: the subtitle look rows (AY3) are too many for one grid column.
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    PlayerSettingCard(
-                        stringResource(R.string.tsz_anime_player_subtitles),
-                        Icons.Outlined.TextFields,
-                    ) {
-                        AnimePlayerStepper(
-                            label = stringResource(R.string.tsz_anime_player_subtitle_size),
-                            value = formatAnimePercent(settings.subtitleScale),
-                            decrease = { update(settings.copy(subtitleScale = settings.subtitleScale - 0.1f)) },
-                            increase = { update(settings.copy(subtitleScale = settings.subtitleScale + 0.1f)) },
-                        )
-                        TextButton(onClick = { languageKind = AnimeTrackKind.SUBTITLE }) {
-                            Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_preferred_languages)))
-                        }
-                        SubtitleStyleRows(settings.subtitleStyle) { update(settings.copy(subtitleStyle = it)) }
-                    }
-                }
-                item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_audio), Icons.Outlined.Headphones) {
-                        TextButton(onClick = { languageKind = AnimeTrackKind.AUDIO }) {
-                            Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_player_preferred_languages)))
-                        }
-                    }
-                }
-                item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_video), Icons.Outlined.Videocam) {
-                        if (supportsPip) {
-                            PlayerSettingSwitch(
-                                label = stringResource(R.string.tsz_anime_player_picture_in_picture),
-                                checked = pictureInPicture,
-                                onChange = preferences.pictureInPicture::set,
-                            )
-                        }
-                        PlayerSettingSwitch(
-                            label = stringResource(R.string.tsz_anime_player_decoder_hardware),
-                            checked = settings.hardwareDecoding,
-                            onChange = { update(settings.copy(hardwareDecoding = it)) },
-                        )
-                    }
-                }
-                item {
-                    PlayerSettingCard(stringResource(R.string.tsz_anime_player_gestures), Icons.Outlined.TouchApp) {
-                        PlayerSettingSwitch(
-                            stringResource(R.string.tsz_anime_player_seek_gesture),
-                            settings.seekGesture,
-                        ) { update(settings.copy(seekGesture = it)) }
-                        PlayerSettingSwitch(
-                            stringResource(R.string.tsz_anime_player_brightness),
-                            settings.brightnessGesture,
-                        ) { update(settings.copy(brightnessGesture = it)) }
-                        PlayerSettingSwitch(
-                            stringResource(R.string.tsz_anime_player_volume),
-                            settings.volumeGesture,
-                        ) { update(settings.copy(volumeGesture = it)) }
-                    }
-                }
-            }
-        }
         languageKind?.let { kind ->
             val preference = preferences.languages(kind)
             AnimeLanguageOrderDialog(
@@ -231,181 +68,207 @@ internal object AnimePlayerSettingsScreen : Screen() {
                 },
             )
         }
-        if (showPreviews) {
-            AlertDialog(
-                onDismissRequest = { showPreviews = false },
-                title = { Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_episode_previews))) },
-                text = {
-                    Column {
-                        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.entries.forEach { mode ->
-                            TextButton(onClick = {
-                                preferences.episodePreviews.set(mode)
-                                showPreviews = false
-                            }) { Text(tsuzukiMenuLabel(previewModeLabel(mode))) }
-                        }
-                    }
-                },
-                confirmButton = {},
-            )
-        }
-        if (showSpeed) {
-            AlertDialog(
-                onDismissRequest = { showSpeed = false },
-                title = { Text(stringResource(R.string.tsz_anime_player_speed)) },
-                text = {
-                    LazyColumn(Modifier.heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        items(animePlaybackSpeeds) { speed ->
-                            AnimePlayerOption(formatAnimeSpeed(speed), selected = speed == settings.speed) {
-                                update(settings.copy(speed = speed))
-                                showSpeed = false
+
+        val style = settings.subtitleStyle
+        val off = stringResource(R.string.tsz_anime_player_track_off)
+        return listOf(
+            Preference.PreferenceGroup(
+                title = mokoStringResource(MR.strings.tsz_tts_playback_settings),
+                preferenceItems = listOfNotNull(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.autoplay,
+                        title = stringResource(R.string.tsz_anime_player_autoplay),
+                    ),
+                    Preference.PreferenceItem.BasicListPreference(
+                        value = settings.speed.toString(),
+                        entries = animePlaybackSpeeds.associate { it.toString() to formatAnimeSpeed(it) },
+                        title = stringResource(R.string.tsz_anime_player_speed),
+                        onValueChanged = { value ->
+                            value.toFloatOrNull()?.let { speed -> update { it.copy(speed = speed) } }
+                        },
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = preferences.episodePreviews,
+                        entries = EpisodePreviewMode.entries.associateWith { mode ->
+                            when (mode) {
+                                EpisodePreviewMode.ON -> stringResource(R.string.tsz_anime_previews_on)
+                                EpisodePreviewMode.WIFI_ONLY -> stringResource(R.string.tsz_anime_previews_wifi)
+                                EpisodePreviewMode.OFF -> off
                             }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showSpeed = false }) {
-                        Text(mokoStringResource(MR.strings.action_cancel))
-                    }
-                },
-            )
-        }
-        if (showAniSkip) {
-            AlertDialog(
-                onDismissRequest = { showAniSkip = false },
-                title = { Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_aniskip))) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        AniSkipMode.entries.forEach { mode ->
-                            AnimePlayerOption(aniSkipModeLabel(mode), selected = settings.aniSkipMode == mode) {
-                                update(settings.copy(aniSkipMode = mode))
-                                showAniSkip = false
+                        },
+                        title = stringResource(R.string.tsz_anime_episode_previews),
+                    ),
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_aniskip),
+                preferenceItems = listOfNotNull(
+                    Preference.PreferenceItem.BasicListPreference(
+                        value = settings.aniSkipMode.name,
+                        entries = AniSkipMode.entries.associate { mode ->
+                            mode.name to when (mode) {
+                                AniSkipMode.OFF -> off
+                                AniSkipMode.BUTTON -> stringResource(R.string.tsz_anime_skip_button)
+                                AniSkipMode.AUTO -> stringResource(R.string.tsz_anime_skip_auto)
                             }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showAniSkip = false }) {
-                        Text(mokoStringResource(MR.strings.action_cancel))
-                    }
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun aniSkipModeLabel(mode: AniSkipMode): String = stringResource(
-    when (mode) {
-        AniSkipMode.OFF -> R.string.tsz_anime_player_track_off
-        AniSkipMode.BUTTON -> R.string.tsz_anime_skip_button
-        AniSkipMode.AUTO -> R.string.tsz_anime_skip_auto
-    },
-)
-
-@Composable
-private fun PlayerSettingCard(
-    title: String,
-    icon: ImageVector,
-    active: Boolean = false,
-    content: @Composable (Color) -> Unit,
-) {
-    val tokens = TsuzukiTheme.tokens
-    val ink = if (active) tokens.onAccent else tokens.dotOn
-    TsuzukiTile(Modifier.fillMaxWidth(), padding = 0.dp) {
-        Column(
-            Modifier.fillMaxWidth().heightIn(min = 108.dp)
-                .background(if (active) tokens.accent else Color.Transparent).padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Icon(icon, contentDescription = null, tint = ink)
-            Text(tsuzukiMenuLabel(title), color = ink, style = MaterialTheme.typography.titleSmall)
-            content(ink)
-        }
-    }
-}
-
-@Composable
-private fun PlayerSettingSwitch(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            tsuzukiMenuLabel(label),
-            modifier = Modifier.weight(1f),
-            color = TsuzukiTheme.tokens.mutedText,
-            style = MaterialTheme.typography.labelSmall,
+                        },
+                        title = stringResource(R.string.tsz_anime_aniskip),
+                        onValueChanged = { value ->
+                            AniSkipMode.entries.firstOrNull { it.name == value }
+                                ?.let { mode -> update { it.copy(aniSkipMode = mode) } }
+                        },
+                    ),
+                    if (settings.aniSkipMode == AniSkipMode.AUTO) {
+                        Preference.PreferenceItem.SliderPreference(
+                            value = settings.aniSkipIntroDelay,
+                            title = stringResource(R.string.tsz_anime_skip_intro_delay),
+                            valueString = stringResource(R.string.tsz_anime_skip_seconds, settings.aniSkipIntroDelay),
+                            valueRange = 0..30,
+                            onValueChanged = { delay -> update { it.copy(aniSkipIntroDelay = delay) } },
+                        )
+                    } else {
+                        null
+                    },
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_player_subtitles),
+                preferenceItems = listOfNotNull(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(R.string.tsz_anime_player_preferred_languages),
+                        subtitle = languageSummary(subtitleLanguages, AnimeTrackKind.SUBTITLE, off),
+                        onClick = { languageKind = AnimeTrackKind.SUBTITLE },
+                    ),
+                    // Stored as a scale in tenths (0.5–2.0); the slider works in whole steps.
+                    Preference.PreferenceItem.SliderPreference(
+                        value = Math.round(settings.subtitleScale * 10),
+                        title = stringResource(R.string.tsz_anime_player_subtitle_size),
+                        valueString = formatAnimePercent(settings.subtitleScale),
+                        valueRange = 5..20,
+                        onValueChanged = { tenths -> update { it.copy(subtitleScale = tenths / 10f) } },
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        value = style.fontSize / AnimeSubtitleStyle.FONT_SIZE_STEP,
+                        title = stringResource(R.string.tsz_anime_player_sub_font_size),
+                        valueString = style.fontSize.toString(),
+                        valueRange = AnimeSubtitleStyle.FONT_SIZES.first / AnimeSubtitleStyle.FONT_SIZE_STEP..
+                            AnimeSubtitleStyle.FONT_SIZES.last / AnimeSubtitleStyle.FONT_SIZE_STEP,
+                        onValueChanged = { step ->
+                            updateStyle { it.copy(fontSize = step * AnimeSubtitleStyle.FONT_SIZE_STEP) }
+                        },
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.subtitleStyle.bold,
+                        title = stringResource(R.string.tsz_anime_player_sub_bold),
+                    ),
+                    Preference.PreferenceItem.BasicListPreference(
+                        value = style.color.name,
+                        entries = AnimeSubtitleColor.entries.associate { it.name to stringResource(it.label) },
+                        title = stringResource(R.string.tsz_anime_player_sub_color),
+                        onValueChanged = { value ->
+                            AnimeSubtitleColor.entries.firstOrNull { it.name == value }
+                                ?.let { color -> updateStyle { it.copy(color = color) } }
+                        },
+                    ),
+                    Preference.PreferenceItem.BasicListPreference(
+                        value = style.border.name,
+                        entries = AnimeSubtitleBorder.entries.associate { it.name to stringResource(it.label) },
+                        title = stringResource(R.string.tsz_anime_player_sub_border),
+                        onValueChanged = { value ->
+                            AnimeSubtitleBorder.entries.firstOrNull { it.name == value }
+                                ?.let { border -> updateStyle { it.copy(border = border) } }
+                        },
+                    ),
+                    if (style.border != AnimeSubtitleBorder.NONE) {
+                        Preference.PreferenceItem.SliderPreference(
+                            value = style.borderSize,
+                            title = stringResource(R.string.tsz_anime_player_sub_border_size),
+                            valueRange = AnimeSubtitleStyle.BORDER_SIZES,
+                            onValueChanged = { size -> updateStyle { it.copy(borderSize = size) } },
+                        )
+                    } else {
+                        null
+                    },
+                    Preference.PreferenceItem.SliderPreference(
+                        value = style.position / AnimeSubtitleStyle.POSITION_STEP,
+                        title = stringResource(R.string.tsz_anime_player_sub_position),
+                        valueString = "${style.position}%",
+                        valueRange = AnimeSubtitleStyle.POSITIONS.first / AnimeSubtitleStyle.POSITION_STEP..
+                            AnimeSubtitleStyle.POSITIONS.last / AnimeSubtitleStyle.POSITION_STEP,
+                        onValueChanged = { step ->
+                            updateStyle { it.copy(position = step * AnimeSubtitleStyle.POSITION_STEP) }
+                        },
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.subtitleStyle.background,
+                        title = stringResource(R.string.tsz_anime_player_sub_background),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.subtitleStyle.overrideAss,
+                        title = stringResource(R.string.tsz_anime_player_sub_override_ass),
+                    ),
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_player_audio),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(R.string.tsz_anime_player_preferred_languages),
+                        subtitle = languageSummary(audioLanguages, AnimeTrackKind.AUDIO, off),
+                        onClick = { languageKind = AnimeTrackKind.AUDIO },
+                    ),
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_player_video),
+                preferenceItems = listOfNotNull(
+                    if (supportsPip) {
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = preferences.pictureInPicture,
+                            title = stringResource(R.string.tsz_anime_player_picture_in_picture),
+                        )
+                    } else {
+                        null
+                    },
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.hardwareDecoding,
+                        title = stringResource(R.string.tsz_anime_player_decoder_hardware),
+                    ),
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_player_gestures),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.seekGesture,
+                        title = stringResource(R.string.tsz_anime_player_seek_gesture),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.brightnessGesture,
+                        title = stringResource(R.string.tsz_anime_player_brightness),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = preferences.volumeGesture,
+                        title = stringResource(R.string.tsz_anime_player_volume),
+                    ),
+                ),
+            ),
         )
-        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 
-@Composable
-private fun previewModeLabel(mode: eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode): String = stringResource(
-    when (mode) {
-        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON -> R.string.tsz_anime_previews_on
-        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.WIFI_ONLY -> R.string.tsz_anime_previews_wifi
-        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.OFF -> R.string.tsz_anime_player_track_off
-    },
-)
-
-/** The subtitle look (AY3): rows inside the Subtitles card; the player applies changes live. */
-@Composable
-private fun SubtitleStyleRows(style: AnimeSubtitleStyle, onChange: (AnimeSubtitleStyle) -> Unit) {
-    fun set(next: AnimeSubtitleStyle) = onChange(next.bounded())
-    AnimePlayerStepper(
-        label = stringResource(R.string.tsz_anime_player_sub_font_size),
-        value = style.fontSize.toString(),
-        decrease = { set(style.copy(fontSize = style.fontSize - AnimeSubtitleStyle.FONT_SIZE_STEP)) },
-        increase = { set(style.copy(fontSize = style.fontSize + AnimeSubtitleStyle.FONT_SIZE_STEP)) },
-    )
-    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_bold), style.bold) {
-        set(style.copy(bold = it))
-    }
-    PlayerSettingLabel(stringResource(R.string.tsz_anime_player_sub_color))
-    TsuzukiPillRow(
-        labels = AnimeSubtitleColor.entries.map { stringResource(it.label) },
-        selected = style.color.ordinal,
-        onClick = { set(style.copy(color = AnimeSubtitleColor.entries[it])) },
-    )
-    PlayerSettingLabel(stringResource(R.string.tsz_anime_player_sub_border))
-    TsuzukiPillRow(
-        labels = AnimeSubtitleBorder.entries.map { stringResource(it.label) },
-        selected = style.border.ordinal,
-        onClick = { set(style.copy(border = AnimeSubtitleBorder.entries[it])) },
-    )
-    if (style.border != AnimeSubtitleBorder.NONE) {
-        AnimePlayerStepper(
-            label = stringResource(R.string.tsz_anime_player_sub_border_size),
-            value = style.borderSize.toString(),
-            decrease = { set(style.copy(borderSize = style.borderSize - 1)) },
-            increase = { set(style.copy(borderSize = style.borderSize + 1)) },
-        )
-    }
-    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_background), style.background) {
-        set(style.copy(background = it))
-    }
-    AnimePlayerStepper(
-        label = stringResource(R.string.tsz_anime_player_sub_position),
-        value = "${style.position}%",
-        decrease = { set(style.copy(position = style.position - AnimeSubtitleStyle.POSITION_STEP)) },
-        increase = { set(style.copy(position = style.position + AnimeSubtitleStyle.POSITION_STEP)) },
-    )
-    PlayerSettingSwitch(stringResource(R.string.tsz_anime_player_sub_override_ass), style.overrideAss) {
-        set(style.copy(overrideAss = it))
-    }
-}
-
-@Composable
-private fun PlayerSettingLabel(text: String) {
-    Text(
-        tsuzukiMenuLabel(text),
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-        color = TsuzukiTheme.tokens.mutedText,
-        style = MaterialTheme.typography.labelMedium,
-    )
-}
+/** "English, Japanese" for a stored language order; null (no subtitle line) when none is set. */
+private fun languageSummary(value: String, kind: AnimeTrackKind, off: String): String? =
+    animeLanguageOrder(value, kind)
+        .map { code ->
+            if (code == AnimePlayerPreferences.SUBTITLES_OFF) {
+                off
+            } else {
+                Locale.forLanguageTag(code).getDisplayName(Locale.getDefault()).ifBlank { code }
+            }
+        }
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString()
 
 private val AnimeSubtitleColor.label: Int
     get() = when (this) {

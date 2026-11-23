@@ -79,14 +79,14 @@ internal fun changedSubtitleStyleOptions(
 
 internal class AnimeSubtitleStylePreferences(store: PreferenceStore) {
     private val fontSize = store.getInt("tsuzuki_anime_player_sub_font_size", AnimeSubtitleStyle.DEFAULT_FONT_SIZE)
-    private val bold = store.getBoolean("tsuzuki_anime_player_sub_bold", false)
+    val bold = store.getBoolean("tsuzuki_anime_player_sub_bold", false)
     private val color = store.getString("tsuzuki_anime_player_sub_color", AnimeSubtitleColor.WHITE.name)
     private val border = store.getString("tsuzuki_anime_player_sub_border", AnimeSubtitleBorder.BLACK.name)
     private val borderSize =
         store.getInt("tsuzuki_anime_player_sub_border_size", AnimeSubtitleStyle.DEFAULT_BORDER_SIZE)
-    private val background = store.getBoolean("tsuzuki_anime_player_sub_background", false)
+    val background = store.getBoolean("tsuzuki_anime_player_sub_background", false)
     private val position = store.getInt("tsuzuki_anime_player_sub_position", AnimeSubtitleStyle.DEFAULT_POSITION)
-    private val overrideAss = store.getBoolean("tsuzuki_anime_player_sub_override_ass", false)
+    val overrideAss = store.getBoolean("tsuzuki_anime_player_sub_override_ass", false)
 
     fun get() = AnimeSubtitleStyle(
         fontSize = fontSize.get(),
