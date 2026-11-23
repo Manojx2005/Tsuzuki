@@ -2,14 +2,19 @@ package eu.kanade.presentation.tsuzuki.anime
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -50,24 +55,27 @@ private fun animeScreenAnimations(activity: Activity, opening: Boolean): Pair<In
 }
 
 /**
- * Switching between a catalogue and an anime's details happens inside one Activity: crossfade them with the book
- * screens' timing (TsuzukiNavigatorTransition). Legacy themes keep the instant switch they had.
+ * Anime details shown over its catalogue inside one Activity: fade in and out on the book screens' timing
+ * (TsuzukiNavigatorTransition), instantly in the legacy themes. Starts shown without animating when [visible] is
+ * already true. The layer takes every touch so nothing reaches the catalogue underneath.
  */
 @Composable
-internal fun <T> AnimeScreenCrossfade(target: T, key: (T) -> Any?, content: @Composable (T) -> Unit) {
+internal fun AnimeScreenOverlay(visible: Boolean, content: @Composable () -> Unit) {
     val tsuzuki = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
     val duration = if (rememberReduceMotion()) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHARED_MS
-    AnimatedContent(
-        targetState = target,
-        contentKey = key,
-        transitionSpec = {
-            if (tsuzuki) {
-                val fade = tween<Float>(duration, easing = TsuzukiMotion.Standard)
-                fadeIn(fade) togetherWith fadeOut(fade)
-            } else {
-                EnterTransition.None togetherWith ExitTransition.None
-            }
-        },
-        label = "animeScreen",
-    ) { content(it) }
+    val fade = tween<Float>(duration, easing = TsuzukiMotion.Standard)
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (tsuzuki) fadeIn(fade) else EnterTransition.None,
+        exit = if (tsuzuki) fadeOut(fade) else ExitTransition.None,
+    ) {
+        Box(
+            // Opaque in every theme: the legacy themes' details background is transparent.
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                }
+            },
+        ) { content() }
+    }
 }
