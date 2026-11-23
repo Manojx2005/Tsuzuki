@@ -101,6 +101,7 @@ internal fun AnimeDetailsScreen(
     library: AnimeLibraryStore,
     resumeUrl: String?,
     onBack: () -> Unit,
+    sharedCoverKey: String? = null,
     launchPlayer: (Episode, Boolean) -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -342,7 +343,12 @@ internal fun AnimeDetailsScreen(
         ) {
             fun LazyListScope.overview(expanded: Boolean) {
                 item(key = "anime-overview") {
-                    AnimeDetailsHeader(entry.source, display, coverWidth = if (expanded) 156.dp else 104.dp)
+                    AnimeDetailsHeader(
+                        entry.source,
+                        display,
+                        coverWidth = if (expanded) 156.dp else 104.dp,
+                        sharedCoverKey = sharedCoverKey,
+                    )
                 }
                 if (seasonChoices.isNotEmpty()) {
                     item(key = "anime-seasons") {

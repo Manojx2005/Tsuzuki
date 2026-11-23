@@ -41,6 +41,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.presentation.tsuzuki.anime.animeDetailsCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -50,7 +51,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth: Dp = 104.dp) {
+internal fun AnimeDetailsHeader(
+    source: AnimeSource?,
+    anime: SAnime,
+    coverWidth: Dp = 104.dp,
+    sharedCoverKey: String? = null,
+) {
     val tokens = TsuzukiTheme.tokens
     val status = when (anime.status) {
         SAnime.ONGOING -> stringResource(MR.strings.ongoing)
@@ -73,7 +79,12 @@ internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth:
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            AnimeCover(source, anime, Modifier.width(coverWidth).animeDetailsCover(anime.url))
+            AnimeCover(
+                source,
+                anime,
+                Modifier.width(coverWidth).animeDetailsCover(anime.url)
+                    .then(if (sharedCoverKey != null) Modifier.tsuzukiSharedCover(sharedCoverKey) else Modifier),
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     tsuzukiMenuLabel(anime.title),

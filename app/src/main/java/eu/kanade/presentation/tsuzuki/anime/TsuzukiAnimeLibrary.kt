@@ -67,6 +67,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
 import eu.kanade.presentation.tsuzuki.updates.rememberAnimeAiringToday
 import eu.kanade.presentation.util.Tab
@@ -178,7 +179,7 @@ internal data object AnimeLibraryTab : Tab {
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     items(filtered, key = { it.anime.id }) { item ->
-                        AnimeLibraryCover(item.anime, onOpen = { openAnime(context, item.anime.id) })
+                        AnimeLibraryCover(item.anime, onOpen = { openAnimeInPlace(item.anime, navigator::push) })
                     }
                 }
             }
@@ -217,6 +218,7 @@ private fun AnimeLibraryMedia() {
 internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     if (!TsuzukiAnime.enabled) return
     val context = LocalContext.current
+    val navigator = LocalNavigator.currentOrThrow
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }
     val next by remember { store.observeContinueWatching() }.collectAsState(null)
@@ -266,7 +268,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(library, key = { it.anime.id }) { item ->
                             AnimeLibraryCover(item.anime, Modifier.width(108.dp)) {
-                                openAnime(context, item.anime.id)
+                                openAnimeInPlace(item.anime, navigator::push)
                             }
                         }
                     }
@@ -361,7 +363,11 @@ internal fun AnimeLibraryCover(anime: Anime, modifier: Modifier = Modifier, onOp
         modifier.tsuzukiClickable(role = Role.Button, onClick = onOpen),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+        MangaCover.Book(
+            anime.thumbnailUrl,
+            modifier = Modifier.fillMaxWidth().tsuzukiSharedCover(animeSharedCoverKey(anime.id)),
+            generatedTitle = anime.title,
+        )
         Text(
             tsuzukiMenuLabel(anime.title),
             style = MaterialTheme.typography.titleSmall,
