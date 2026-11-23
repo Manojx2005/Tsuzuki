@@ -786,6 +786,58 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun markUntilLastWatchedLeavesResumeAndExcludedReleasesUntouched() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/anime", title = "Anime"))
+            store.setEpisodeDisplay(id, AnimeEpisodeDisplay(), setOf("Hidden Team"))
+            val ids = episodes.insertAll(
+                listOf(
+                    Episode(id, "/later", "Later", episodeNumber = 5.0, sourceOrder = 0),
+                    Episode(
+                        id,
+                        "/anchor",
+                        "Resume here",
+                        bookmark = true,
+                        lastSecondSeen = 35,
+                        totalSeconds = 100,
+                        episodeNumber = 4.0,
+                        sourceOrder = 1,
+                    ),
+                    Episode(id, "/already", "Already watched", seen = true, episodeNumber = 3.0, sourceOrder = 2),
+                    Episode(id, "/hidden-early", "Hidden early", scanlator = "Hidden Team", episodeNumber = 2.0),
+                    Episode(id, "/first", "First", bookmark = true, episodeNumber = 1.0, sourceOrder = 3),
+                    Episode(
+                        id,
+                        "/hidden-late",
+                        "Hidden late",
+                        seen = true,
+                        scanlator = "Hidden Team",
+                        episodeNumber = 6.0,
+                    ),
+                ),
+            )
+            val before = store.getEpisodes(id).associateBy(Episode::id)
+
+            assertEquals(listOf(ids[4]), store.markUntilLastWatched(id).map(Episode::id))
+            val after = store.getEpisodes(id).associateBy(Episode::id)
+            assertTrue(after.getValue(ids[4]).seen)
+            assertTrue(after.getValue(ids[4]).bookmark)
+            assertEquals(before - ids[4], after - ids[4])
+            assertEquals(ids[1], store.observeEpisodes(id).first().resume?.id)
+            assertTrue(store.markUntilLastWatched(id).isEmpty())
+        }
+    }
+
+    @Test
     fun updatesExcludeInitialImportsAndRetainAnEpisodeAcrossRefreshes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)

@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -278,6 +279,8 @@ internal fun AnimeEpisodeFilterSheet(
     groups: List<String>,
     excludedGroups: Set<String>,
     onDismiss: () -> Unit,
+    canMarkUntilLastWatched: Boolean,
+    onMarkUntilLastWatched: () -> Unit,
     onSave: (AnimeEpisodeDisplay, Set<String>) -> Unit,
 ) {
     TabbedDialog(
@@ -319,6 +322,15 @@ internal fun AnimeEpisodeFilterSheet(
                             )
                         }
                     }
+                }
+                OutlinedButton(
+                    onClick = onMarkUntilLastWatched,
+                    enabled = canMarkUntilLastWatched,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
+                        .heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(28.dp),
+                ) {
+                    Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_mark_until_last_watched)))
                 }
             } else {
                 listOf(

@@ -13,6 +13,7 @@
     <string name="tsz_anime_mark_seen">視聴済みにする</string>
     <string name="tsz_anime_mark_unseen">未視聴に戻す</string>
     <string name="tsz_anime_mark_previous">前の話を視聴済みにする</string>
+    <string name="tsz_anime_mark_until_last_watched">最後に視聴した話の前まで視聴済みにする</string>
     <string name="tsz_anime_bookmark">ブックマークに追加</string>
     <string name="tsz_anime_unbookmark">ブックマークを削除</string>
     <string name="tsz_anime_unseen_only">未視聴のみ</string>

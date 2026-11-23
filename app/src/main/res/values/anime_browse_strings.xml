@@ -13,6 +13,7 @@
     <string name="tsz_anime_mark_seen">Mark as watched</string>
     <string name="tsz_anime_mark_unseen">Mark as unwatched</string>
     <string name="tsz_anime_mark_previous">Mark previous as watched</string>
+    <string name="tsz_anime_mark_until_last_watched">Mark until last watched</string>
     <string name="tsz_anime_bookmark">Bookmark</string>
     <string name="tsz_anime_unbookmark">Remove bookmark</string>
     <string name="tsz_anime_unseen_only">Unwatched only</string>
