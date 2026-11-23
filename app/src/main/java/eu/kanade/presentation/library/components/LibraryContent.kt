@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.library.rememberPaginatedShelfCounts
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
@@ -31,7 +32,7 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun LibraryContent(
+internal fun LibraryContent(
     categories: List<Category>,
     searchQuery: String?,
     selection: Set<Long>,
@@ -59,7 +60,9 @@ fun LibraryContent(
     getLoadMoreKey: (Category) -> Long = { 0 },
     isCategoryLoading: (Category) -> Boolean = { false },
     mixedLibrary: Boolean = false,
+    animeSelection: AnimeLibrarySelection? = null,
 ) {
+    val selecting = selection.isNotEmpty() || animeSelection?.ids?.isNotEmpty() == true
     Column(
         modifier = Modifier.padding(
             top = contentPadding.calculateTopPadding(),
@@ -102,7 +105,7 @@ fun LibraryContent(
 
         PullRefresh(
             refreshing = isRefreshing,
-            enabled = selection.isEmpty(),
+            enabled = !selecting,
             onRefresh = {
                 val started = onRefresh()
                 if (!started) return@PullRefresh
@@ -117,6 +120,7 @@ fun LibraryContent(
             LibraryPager(
                 state = pagerState,
                 mixedLibrary = mixedLibrary,
+                animeSelection = animeSelection,
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,
@@ -127,7 +131,7 @@ fun LibraryContent(
                 getColumnsForOrientation = getColumnsForOrientation,
                 getItemsForCategory = getItemsForCategory,
                 onClickManga = { category, manga ->
-                    if (selection.isNotEmpty()) {
+                    if (selecting) {
                         onToggleSelection(category, manga)
                     } else {
                         onClickManga(manga.manga.id)
@@ -145,7 +149,7 @@ fun LibraryContent(
             )
         }
 
-        if (isQueryRunning && selection.isEmpty()) {
+        if (isQueryRunning && !selecting) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
             )

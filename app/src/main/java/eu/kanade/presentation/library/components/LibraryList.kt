@@ -3,6 +3,7 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ internal fun LibraryList(
     showUrl: Boolean = false,
     onLoadMore: (() -> Unit)? = null,
     loadMoreKey: Long = 0,
+    append: LazyListScope.() -> Unit = {},
 ) {
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -78,6 +80,7 @@ internal fun LibraryList(
             )
         }
 
+        append()
         loadMoreSentinel(loadMoreKey, onLoadMore)
     }
 }

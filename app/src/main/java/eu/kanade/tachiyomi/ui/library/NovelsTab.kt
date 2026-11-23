@@ -37,7 +37,13 @@ import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActionBar
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActionDialogs
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryActions
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibraryTab
+import eu.kanade.presentation.tsuzuki.anime.BookLibrarySelection
+import eu.kanade.presentation.tsuzuki.anime.rememberAllPageAnime
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.selection.tsuzukiScreenExtras
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
@@ -139,6 +145,26 @@ data object NovelsTab : Tab {
         )
 
         val snackbarHostState = viewModel.snackbarHostState
+        val animeSelection = remember { AnimeLibrarySelection() }
+        val animeActions = remember { AnimeLibraryActions() }
+        val allPageAnime = if (mixedLibrary) rememberAllPageAnime() else emptyList()
+        val visibleAnime = if (state.coercedActiveCategoryIndex == 0) {
+            eu.kanade.presentation.tsuzuki.anime.allPageAnime(
+                allPageAnime,
+                downloadedOnly = false,
+                savedAnimeIds = emptySet(),
+                searchQuery = state.searchQuery,
+            ).map { it.id }
+        } else {
+            emptyList()
+        }
+        val selectedAnime = allPageAnime.filter { it.id in animeSelection.ids }
+        val selecting = state.selectionMode || selectedAnime.isNotEmpty()
+        val clearSelection = {
+            animeSelection.clear()
+            viewModel.clearSelection()
+        }
+        AnimeLibraryActionDialogs(animeActions)
 
         // Local reload from database - doesn't fetch from sources
         val onLocalRefresh: () -> Unit = {
@@ -172,7 +198,7 @@ data object NovelsTab : Tab {
                 LibraryToolbar(
                     below = {
                         // Tsuzuki: keep the All/Novels/Manga/Anime pills while searching (V8.5).
-                        if (mixedLibrary && !state.selectionMode) {
+                        if (mixedLibrary && !selecting) {
                             val animeTabs = cafe.adriel.voyager.navigator.tab.LocalTabNavigator.current
                             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
                                 novelCount = state.libraryData.novelCount,
@@ -180,7 +206,7 @@ data object NovelsTab : Tab {
                                 // Library totals, so hidden while a search narrows the grid (V8.5).
                                 showCounts = !viewModel.paginationEnabled && !state.isLoading &&
                                     state.searchQuery.isNullOrBlank(),
-                                onFilterChanged = viewModel::clearSelection,
+                                onFilterChanged = clearSelection,
                                 onOpenAnime = if (TsuzukiAnime.enabled) {
                                     { animeTabs.current = AnimeLibraryTab }
                                 } else {
@@ -192,7 +218,7 @@ data object NovelsTab : Tab {
                         }
                     },
                     hasActiveFilters = state.hasActiveFilters,
-                    selectedCount = state.selection.size,
+                    selectedCount = state.selection.size + selectedAnime.size,
                     title = if (mixedLibrary) {
                         eu.kanade.presentation.library.components.LibraryToolbarTitle(
                             stringResource(MR.strings.label_library),
@@ -200,9 +226,15 @@ data object NovelsTab : Tab {
                     } else {
                         title
                     },
-                    onClickUnselectAll = viewModel::clearSelection,
-                    onClickSelectAll = viewModel::selectAll,
-                    onClickInvertSelection = viewModel::invertSelection,
+                    onClickUnselectAll = clearSelection,
+                    onClickSelectAll = {
+                        viewModel.selectAll()
+                        animeSelection.selectAll(visibleAnime)
+                    },
+                    onClickInvertSelection = {
+                        viewModel.invertSelection()
+                        animeSelection.invert(visibleAnime)
+                    },
                     onClickFilter = viewModel::showSettingsDialog,
                     onClickRefresh = onLocalRefresh,
                     onClickGlobalUpdate = { onGlobalUpdate(null) },
@@ -239,7 +271,21 @@ data object NovelsTab : Tab {
                     },
                 )
             },
-            bottomBar = {
+            bottomBar = bottomBar@{
+                if (selectedAnime.isNotEmpty()) {
+                    val selectedBooks = state.selectedManga.takeIf { it.isNotEmpty() }?.let {
+                        BookLibrarySelection(viewModel, it, it.none(Manga::isLocal))
+                    }
+                    AnimeLibraryActionBar(
+                        selected = selectedAnime,
+                        actions = animeActions,
+                        snackbar = snackbarHostState,
+                        clear = clearSelection,
+                        scope = scope,
+                        books = selectedBooks,
+                    )
+                    return@bottomBar
+                }
                 LibraryBottomActionMenu(
                     visible = state.selectionMode,
                     onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
@@ -278,11 +324,6 @@ data object NovelsTab : Tab {
             },
         ) { contentPadding ->
             // AY-INT: an anime-only library still opens on All with its anime section.
-            val allPageAnime = if (mixedLibrary) {
-                eu.kanade.presentation.tsuzuki.anime.rememberAllPageAnime()
-            } else {
-                emptyList()
-            }
             when {
                 state.isLoading -> {
                     LoadingScreen(Modifier.padding(contentPadding))
@@ -305,6 +346,7 @@ data object NovelsTab : Tab {
                 else -> {
                     LibraryContent(
                         mixedLibrary = mixedLibrary,
+                        animeSelection = animeSelection.takeIf { mixedLibrary },
                         categories = eu.kanade.presentation.tsuzuki.anime.allPageShelves(
                             state.displayedCategories,
                             state.libraryData.categories,
@@ -483,18 +525,18 @@ data object NovelsTab : Tab {
 
         BackHandler(
             enabled = eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled(
-                state.selectionMode || state.toolbarQuery != null,
+                selecting || state.toolbarQuery != null,
                 eu.kanade.tachiyomi.ui.home.HomeScreen,
             ),
         ) {
             when {
-                state.selectionMode -> viewModel.clearSelection()
+                selecting -> clearSelection()
                 state.toolbarQuery != null -> viewModel.clearSearch()
             }
         }
 
-        LaunchedEffect(state.selectionMode, state.dialog) {
-            HomeScreen.showBottomNav(!state.selectionMode)
+        LaunchedEffect(selecting, state.dialog) {
+            HomeScreen.showBottomNav(!selecting)
         }
 
         LaunchedEffect(state.isLoading) {

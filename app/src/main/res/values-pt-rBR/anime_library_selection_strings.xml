@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_mark_watched_short">Marcar visto</string>
+    <string name="tsz_anime_unwatched">Não assistidos</string>
+    <string name="tsz_library_mark_finished">Marcar como concluído</string>
+    <string name="tsz_library_mark_unfinished">Marcar como pendente</string>
+    <string name="tsz_selection_download_next">Próximos %1$d</string>
+    <string name="tsz_selection_download_incomplete">Não concluídos</string>
+</resources>
