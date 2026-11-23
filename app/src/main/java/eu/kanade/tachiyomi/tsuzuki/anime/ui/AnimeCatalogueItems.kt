@@ -68,14 +68,17 @@ internal fun animeCatalogueColumns(mode: LibraryDisplayMode): GridCells = when (
     LibraryDisplayMode.ComfortableGrid -> GridCells.Adaptive(112.dp)
 }
 
-/** URLs of this source's titles that are in the anime library, for the "in library" badge. */
+/** Saved title IDs by URL, for the library badge and migration entry. */
 @Composable
-internal fun rememberAnimeLibraryUrls(store: AnimeLibraryStore, sourceId: Long): State<Set<String>> =
+internal fun rememberAnimeCatalogueLibrary(store: AnimeLibraryStore, sourceId: Long): State<Map<String, Long>> =
     remember(store, sourceId) {
         store.observeLibrary().map { entries ->
-            entries.mapNotNullTo(hashSetOf()) { it.anime.url.takeIf { _ -> it.anime.source == sourceId } }
+            entries.asSequence().map { it.anime }.filter { it.source == sourceId }.associate { it.url to it.id }
         }
-    }.collectAsState(emptySet())
+    }.collectAsState(emptyMap())
+
+internal fun catalogueMigrationId(savedId: Long?, sourceId: Long, availableSourceIds: Set<Long>): Long? =
+    savedId?.takeIf { availableSourceIds.any { target -> target != sourceId } }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -233,6 +236,8 @@ internal fun AnimeCatalogueLongPressDialogs(
     state: AnimeCatalogueLongPress,
     source: AnimeSource,
     store: AnimeLibraryStore,
+    savedByUrl: Map<String, Long>,
+    availableSourceIds: Set<Long>,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -266,10 +271,27 @@ internal fun AnimeCatalogueLongPressDialogs(
         }
     }
     state.removing?.let { anime ->
+        val migrationId = catalogueMigrationId(savedByUrl[anime.url], source.id, availableSourceIds)
         AlertDialog(
             onDismissRequest = { state.removing = null },
             title = { Text(tsuzukiMenuLabel(anime.title)) },
-            text = { Text(stringResource(MR.strings.remove_manga, anime.title)) },
+            text = {
+                Column {
+                    Text(stringResource(MR.strings.remove_manga, anime.title))
+                    if (migrationId != null) {
+                        TextButton(onClick = {
+                            state.removing = null
+                            scope.launch {
+                                runCatalogueAction(context) {
+                                    if (store.getAnime(migrationId)?.favorite == true) {
+                                        context.startActivity(AnimeMigrationActivity.fromAnime(context, migrationId))
+                                    }
+                                }
+                            }
+                        }) { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_migrate))) }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     state.removing = null
