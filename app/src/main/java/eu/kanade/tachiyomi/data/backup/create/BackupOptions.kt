@@ -58,7 +58,7 @@ data class BackupOptions(
                 setter = { options, enabled -> options.copy(includeNovels = enabled) },
                 enabled = { it.libraryEntries },
             ),
-            if (TsuzukiAnime.enabled) {
+            if (TsuzukiAnime.inBackups) {
                 Entry(
                     label = MR.strings.tsz_anime_media,
                     getter = BackupOptions::includeAnime,

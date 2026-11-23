@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.data.AlternativeTitlesColumnAdapter
 import tachiyomi.data.Chapters
 import tachiyomi.data.Database
@@ -257,16 +258,34 @@ class AnimeDatabaseTest {
             val episodes = EpisodeRepositoryImpl(db)
             val prunes = mutableListOf<Pair<Long, Set<Long>?>>()
             val store = AnimeLibraryStore(
-                db, anime, AnimeCategoryRepositoryImpl(db), episodes, AnimeHistoryRepositoryImpl(db),
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
                 prunePreviewFrames = { id, retained ->
                     // The callback must run after commit: files must never disappear for a rolled-back deletion.
-                    assertEquals(retained, retained?.let { episodes.awaitByAnimeId(id).mapTo(hashSetOf(), Episode::id) })
+                    assertEquals(
+                        retained,
+                        retained?.let {
+                            episodes.awaitByAnimeId(id).mapTo(hashSetOf(), Episode::id)
+                        },
+                    )
                     prunes += id to retained
                 },
             )
-            val show = SAnime.create().apply { url = "/previews"; title = "Preview cleanup" }
-            val first = SEpisode.create().apply { url = "/first"; name = "First" }
-            val second = SEpisode.create().apply { url = "/second"; name = "Second" }
+            val show = SAnime.create().apply {
+                url = "/previews"
+                title = "Preview cleanup"
+            }
+            val first = SEpisode.create().apply {
+                url = "/first"
+                name = "First"
+            }
+            val second = SEpisode.create().apply {
+                url = "/second"
+                name = "Second"
+            }
             val id = store.setFavorite(8, show, true, emptySet())
             assertTrue(prunes.isEmpty())
             store.syncEpisodes(8, show, listOf(first, second))
@@ -311,6 +330,92 @@ class AnimeDatabaseTest {
             assertEquals(default, categories.awaitAll().single { it.isSystem })
             store.deleteShelf(shelf.id)
             assertEquals(setOf(0L), store.observeLibrary().first().single().shelfIds)
+        }
+    }
+
+    @Test
+    fun savingAnimeNotesDoesNotWriteFavoriteState() = runBlocking {
+        withDatabase { driver, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/anime", title = "Anime", favorite = true))
+            driver.sql(
+                """
+                CREATE TRIGGER reject_notes_favorite_write
+                BEFORE UPDATE OF favorite ON animes
+                BEGIN
+                    SELECT raise(ABORT, 'Notes must not write favorite');
+                END
+                """.trimIndent(),
+            )
+
+            store.setNotes(id, "A note")
+            assertEquals("A note", store.observeNotes(id).first())
+            assertTrue(checkNotNull(anime.awaitById(id)).favorite)
+            store.setNotes(id, "")
+            assertEquals("", store.observeNotes(id).first())
+        }
+    }
+
+    @Test
+    fun cachedCatalogueFavoriteKeepsInitializedAnimeDetails() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val categories = AnimeCategoryRepositoryImpl(db)
+            val pruned = mutableListOf<Long>()
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                categories,
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+                prunePreviewFrames = { id, _ -> pruned += id },
+            )
+            val original = Anime(
+                source = 8,
+                url = "/anime",
+                title = "Full title",
+                description = "Full description",
+                initialized = true,
+                fetchType = FetchType.Seasons,
+                episodeFlags = 99,
+                notes = "Keep these notes",
+            )
+            val id = anime.insert(original)
+            val thinResult = SAnime.create().apply {
+                url = original.url
+                title = "Short title"
+                description = "Short description"
+            }
+            val cachedId = store.cacheSearchResult(original.source, thinResult)
+            assertEquals(id, cachedId)
+            val before = checkNotNull(anime.awaitById(id))
+            store.saveShelf(null, "Watching")
+            val shelfId = categories.awaitAll().single { !it.isSystem }.id
+
+            store.setCachedFavorite(cachedId, favorite = true, shelfIds = setOf(shelfId))
+            val added = checkNotNull(anime.awaitById(id))
+            assertTrue(added.favorite)
+            assertTrue(added.dateAdded > 0L)
+            assertEquals(setOf(shelfId), store.shelfIds(id))
+
+            store.setCachedFavorite(cachedId, favorite = false)
+            val removed = checkNotNull(anime.awaitById(id))
+            assertFalse(removed.favorite)
+            assertEquals(added.dateAdded, removed.dateAdded)
+            assertEquals(listOf(id), pruned)
+            assertEquals(before.title, removed.title)
+            assertEquals(before.description, removed.description)
+            assertEquals(before.initialized, removed.initialized)
+            assertEquals(before.fetchType, removed.fetchType)
+            assertEquals(before.episodeFlags, removed.episodeFlags)
+            assertEquals(before.notes, removed.notes)
         }
     }
 
@@ -794,7 +899,7 @@ class AnimeDatabaseTest {
             )
             val id = anime.insert(Anime(source = 8, url = "/show", title = "Show", episodeFlags = 0x123))
             val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
-            val display = AnimeEpisodeDisplay(true, true, true, true)
+            val display = AnimeEpisodeDisplay(true, true, TriState.ENABLED_IS, TriState.ENABLED_IS)
             store.setEpisodeDisplay(id, display)
             val flags = checkNotNull(store.getAnime(id)).episodeFlags
             assertEquals(0x123L, flags and 0xffffL)

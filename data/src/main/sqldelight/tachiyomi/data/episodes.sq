@@ -129,7 +129,8 @@ lastInsertedId:
 SELECT last_insert_rowid();
 
 getLibraryUpdates:
-SELECT a._id, a.title, e._id, e.name, coalesce(e.preview_url, a.thumbnail_url), e.date_fetch, e.memo, e.scanlator, a.memo AS anime_memo
+SELECT a._id, a.title, e._id, e.name, coalesce(e.preview_url, a.thumbnail_url), e.date_fetch, e.memo, e.scanlator, a.memo AS anime_memo,
+    e.seen, e.bookmark, e.last_second_seen, e.total_seconds, a.source, a.thumbnail_url
 FROM episodes AS e JOIN animes AS a ON a._id = e.anime_id
 WHERE a.favorite = 1 AND e.date_fetch >= :since AND e.date_fetch >= a.date_added
 ORDER BY e.date_fetch DESC, e.source_order, e._id DESC;

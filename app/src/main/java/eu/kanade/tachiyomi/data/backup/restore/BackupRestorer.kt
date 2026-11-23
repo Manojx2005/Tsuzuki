@@ -160,7 +160,7 @@ class BackupRestorer(
             if (options.libraryEntries) {
                 restoreMangaStream(uri, if (options.categories) summary.backupCategories else emptyList(), options)
             }
-            if (TsuzukiAnime.enabled && options.includeAnime && summary.anime.format != null) {
+            if (TsuzukiAnime.inBackups && options.includeAnime && summary.anime.format != null) {
                 restoreAnimeStream(uri, summary.anime, options)
             }
             if (options.extensionStores) {
@@ -192,8 +192,8 @@ class BackupRestorer(
                     parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data),
                 )
                 106 -> extensionStoreFields.add(data)
-                108 -> if (TsuzukiAnime.enabled) legacyStoreFields.add(data)
-                else -> if (TsuzukiAnime.enabled) anime.record(fieldNumber, data, parser)
+                108 -> if (TsuzukiAnime.inBackups) legacyStoreFields.add(data)
+                else -> if (TsuzukiAnime.inBackups) anime.record(fieldNumber, data, parser)
             }
         }
         val stores = if (anime.format == AnimeBackupFormat.LEGACY_ANIYOMI) legacyStoreFields else extensionStoreFields

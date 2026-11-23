@@ -14,6 +14,9 @@ class AnimeTrackRepositoryImpl(database: Database) : AnimeTrackRepository {
     override suspend fun awaitByAnimeId(animeId: Long): List<AnimeTrack> =
         queries.getByAnimeId(animeId).awaitAsList().map(Anime_sync::toDomain)
 
+    override fun subscribeTrackedAnimeIds() =
+        queries.getTrackedAnimeIds().subscribeToList().map { it.toSet() }
+
     override fun subscribeByAnimeId(animeId: Long) =
         queries.getByAnimeId(animeId).subscribeToList().map { rows -> rows.map(Anime_sync::toDomain) }
 

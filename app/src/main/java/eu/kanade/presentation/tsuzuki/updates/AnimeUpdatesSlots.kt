@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,27 +25,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
 import eu.kanade.presentation.tsuzuki.anime.MixedTimelineRow
+import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.updatesNovelGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeUpdateEpisode
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -57,7 +66,7 @@ internal class AnimeUpdatesSlots(
     val screen: (@Composable (SnackbarHostState) -> Unit)?,
     /** New episodes of favourite anime (last 3 months), for Updates › All (AY-INT item 2). */
     val newEpisodes: List<AnimeUpdateEpisode> = emptyList(),
-    /** New episodes not in the download queue yet; what "Save all" adds in All. */
+    /** Unwatched episodes not in the download queue yet; what "Save all" adds in All. */
     val episodesToSave: List<AnimeUpdateEpisode> = emptyList(),
     val saveEpisodes: () -> Unit = {},
 )
@@ -170,37 +179,14 @@ internal fun rememberAnimeUpdatesSlots(
         mediaPills = pills.takeUnless { state.selectionMode },
         airingStrip = airing?.let { entry -> { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) } },
         screen = if (animeSelected) {
-            { snackbar -> AnimeUpdatesScreen(store, snackbar, { pills(false) }, airing) }
+            { snackbar -> AnimeUpdatesScreen(store, newEpisodes, toSave, snackbar, { pills(false) }, airing) }
         } else {
             null
         },
         newEpisodes = newEpisodes,
         episodesToSave = toSave,
-        saveEpisodes = { scope.launchIO { saveNewEpisodes(store, downloads, toSave) } },
+        saveEpisodes = { scope.launchIO { queueAnimeUpdates(store, downloads, toSave, unwatchedOnly = true) } },
     )
-}
-
-/** Queues [episodes] for download, one call per anime with its source and title (as the details screen does). */
-private suspend fun saveNewEpisodes(
-    store: AnimeLibraryStore,
-    downloads: AnimeDownloads,
-    episodes: List<AnimeUpdateEpisode>,
-) {
-    val sources = Injekt.get<AnimeSourceManager>()
-    for ((animeId, items) in episodes.groupBy { it.animeId }) {
-        try {
-            val anime = store.getAnime(animeId) ?: continue
-            val ids = items.mapTo(hashSetOf()) { it.episodeId }
-            val list = store.getEpisodes(animeId).filter { it.id in ids }
-            if (list.isEmpty()) continue
-            val sourceName = sources.get(anime.source)?.source?.name ?: sources.stub(anime.source)?.name ?: ""
-            downloads.enqueue(anime.source, sourceName, anime.title, list)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog.w("Could not queue new episodes of anime $animeId", e)
-        }
-    }
 }
 
 /** "New" and "to save" counts plus Save all for the Updates tiles, with episodes added in All. */
@@ -212,7 +198,7 @@ internal fun updatesTileCounts(
 ): Pair<Int, Int> = if (anime == null || filter != UpdatesFilter.ALL) {
     unread to chaptersToSave
 } else {
-    (unread + anime.newEpisodes.size) to (chaptersToSave + anime.episodesToSave.size)
+    (unread + anime.newEpisodes.count { !it.seen }) to (chaptersToSave + anime.episodesToSave.size)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -258,11 +244,52 @@ private fun AnimeUpdatesPills(
 @Composable
 private fun AnimeUpdatesScreen(
     store: AnimeLibraryStore,
+    entries: List<AnimeUpdateEpisode>,
+    toSave: List<AnimeUpdateEpisode>,
     snackbar: SnackbarHostState,
     pills: @Composable () -> Unit,
     airing: AnimeUpdateEpisode?,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val downloads = remember { Injekt.get<AnimeDownloads>() }
+    val queue by downloads.state.collectAsState()
+    val status = remember(queue) { queue.entries.associate { it.episodeId to it.status } }
+    var selectedIds by rememberSaveable { mutableStateOf(longArrayOf()) }
+    var applyingSelection by remember { mutableStateOf(false) }
+    val selected = remember(entries, selectedIds) {
+        val ids = selectedIds.toSet()
+        entries.filter { it.episodeId in ids }
+    }
+    val selectedSet = remember(selected) { selected.ids() }
+    fun select(ids: Set<Long>) {
+        if (!applyingSelection) selectedIds = ids.toLongArray()
+    }
+    BackHandler(enabled = selected.isNotEmpty()) { select(emptySet()) }
+    // As in book Updates: the phone's bottom nav makes room for the selection bar.
+    val selecting = selected.isNotEmpty()
+    LaunchedEffect(selecting) { eu.kanade.tachiyomi.ui.home.HomeScreen.showBottomNav(!selecting) }
+    val failureMessage = stringResource(MR.strings.internal_error)
+    fun runOnSelection(block: suspend (List<AnimeUpdateEpisode>) -> Unit) {
+        if (applyingSelection) return
+        val items = selected
+        applyingSelection = true
+        scope.launch {
+            try {
+                withIOContext { block(items) }
+                selectedIds = longArrayOf()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AnimeLog.w("Could not update selected anime episodes", e)
+                scope.launch { snackbar.showSnackbar(failureMessage) }
+            } finally {
+                applyingSelection = false
+            }
+        }
+    }
+    val actions = animeUpdateSelectionActions(selected, status)
+    val track = !Injekt.get<BasePreferences>().incognitoMode.get()
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
@@ -279,10 +306,95 @@ private fun AnimeUpdatesScreen(
                         ),
                     )
                 },
+                actionModeCounter = selected.size,
+                onCancelActionMode = { select(emptySet()) },
+                actionModeActions = {
+                    AppBarActions(
+                        listOf(
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_all),
+                                icon = Icons.Outlined.SelectAll,
+                                onClick = { select(animeUpdatesSelectAll(entries)) },
+                                enabled = !applyingSelection,
+                            ),
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_inverse),
+                                icon = Icons.Outlined.FlipToBack,
+                                onClick = { select(animeUpdatesInvert(entries, selectedSet)) },
+                                enabled = !applyingSelection,
+                            ),
+                        ),
+                    )
+                },
             )
+        },
+        bottomBar = {
+            CompositionLocalProvider(LocalSelectionEpisodes provides true) {
+                MangaBottomActionMenu(
+                    visible = selected.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth(),
+                    onBookmarkClicked = {
+                        runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), true) }
+                    }.takeIf { actions.bookmark },
+                    onRemoveBookmarkClicked = {
+                        runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), false) }
+                    }.takeIf { actions.removeBookmark },
+                    onMarkAsReadClicked = {
+                        runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), true, track) }
+                    }.takeIf { actions.markSeen },
+                    onMarkAsUnreadClicked = {
+                        runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), false, track) }
+                    }.takeIf { actions.markUnseen },
+                    onDownloadClicked = {
+                        runOnSelection { items ->
+                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Failed }
+                                .forEach { downloads.retryAndAwait(it.episodeId) }
+                            val toQueue = items.filter { status[it.episodeId] == null }
+                            check(queueAnimeUpdates(store, downloads, toQueue)) {
+                                "Some selected anime episodes could not be queued"
+                            }
+                        }
+                    }.takeIf { actions.download },
+                    onDeleteClicked = {
+                        runOnSelection { items ->
+                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Saved }
+                                .forEach { downloads.removeAndAwait(it.episodeId) }
+                        }
+                    }.takeIf { actions.delete },
+                )
+            }
         },
         snackbarHost = { TsuzukiUndoSnackbarHost(snackbar) },
     ) { padding ->
-        TsuzukiAnimeUpdates(store, padding, pills, airing)
+        TsuzukiAnimeUpdates(
+            entries = entries,
+            padding = padding,
+            pills = pills,
+            airing = airing,
+            selected = selectedSet,
+            downloadStatus = status,
+            toSave = toSave.size,
+            onSaveAll = { scope.launchIO { queueAnimeUpdates(store, downloads, toSave, unwatchedOnly = true) } },
+            onToggleSelection = { entry ->
+                select(
+                    if (entry.episodeId in
+                        selectedSet
+                    ) {
+                        selectedSet - entry.episodeId
+                    } else {
+                        selectedSet + entry.episodeId
+                    },
+                )
+            },
+            onDownload = { entry ->
+                if (status[entry.episodeId] == AnimeDownloadStatus.Failed) {
+                    downloads.retry(entry.episodeId)
+                } else {
+                    scope.launchIO { queueAnimeUpdates(store, downloads, listOf(entry)) }
+                }
+            },
+        )
     }
 }
+
+private fun List<AnimeUpdateEpisode>.ids(): Set<Long> = mapTo(hashSetOf()) { it.episodeId }

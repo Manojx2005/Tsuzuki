@@ -48,6 +48,7 @@ class BackupFileValidator(
         var historyEntries = 0L
         val anime = AnimeBackupSummary()
         val animeTrackers = mutableMapOf<AnimeBackupFormat, MutableSet<Long>>()
+        val animeCounts = mutableMapOf<AnimeBackupFormat, AnimeContents>()
         val reader = BackupProtoReader(context)
         var recognised = false
         reader.read(uri) { fieldNumber, data ->
@@ -71,12 +72,21 @@ class BackupFileValidator(
                 104 -> parser.decodeFromByteArray(BackupPreference.serializer(), data)
                 105 -> parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data)
                 106 -> parser.decodeFromByteArray(BackupExtensionStore.serializer(), data)
-                else -> if (TsuzukiAnime.enabled) {
+                else -> if (TsuzukiAnime.inBackups) {
                     anime.record(fieldNumber, data, parser)
                     AnimeBackupFormat.entries.firstOrNull { it.entries == fieldNumber }?.let { format ->
                         recognised = true
                         val entry = parser.decodeFromByteArray(AnimeBackupEntry.serializer(), data)
                         entry.tracks.mapTo(animeTrackers.getOrPut(format, ::mutableSetOf)) { it.service }
+                        val counts = animeCounts[format] ?: AnimeContents()
+                        animeCounts[format] = counts.copy(
+                            entries = counts.entries + 1,
+                            historyEntries = counts.historyEntries + entry.history.size,
+                        )
+                    }
+                    AnimeBackupFormat.entries.firstOrNull { it.categories == fieldNumber }?.let { format ->
+                        val counts = animeCounts[format] ?: AnimeContents()
+                        animeCounts[format] = counts.copy(shelves = counts.shelves + 1)
                     }
                 }
             }
@@ -111,7 +121,9 @@ class BackupFileValidator(
             .sorted()
 
         val missingSources = (missingBookSources + missingAnimeSources).distinct().sorted()
-        return Results(missingSources, missingTrackers, Contents(books, shelves, historyEntries))
+        // AP-20: the anime the restore will actually use (the format AnimeBackupSummary picked).
+        val animeContents = animeCounts[anime.format] ?: AnimeContents()
+        return Results(missingSources, missingTrackers, Contents(books, shelves, historyEntries, animeContents))
     }
 
     data class Results(
@@ -120,5 +132,12 @@ class BackupFileValidator(
         val contents: Contents,
     )
 
-    data class Contents(val books: Int, val shelves: Int, val historyEntries: Long)
+    data class Contents(
+        val books: Int,
+        val shelves: Int,
+        val historyEntries: Long,
+        val anime: AnimeContents = AnimeContents(),
+    )
+
+    data class AnimeContents(val entries: Int = 0, val shelves: Int = 0, val historyEntries: Long = 0)
 }

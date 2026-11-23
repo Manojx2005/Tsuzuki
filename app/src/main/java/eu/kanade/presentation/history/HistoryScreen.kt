@@ -123,7 +123,10 @@ fun HistoryScreen(
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
                 actions = historyActions@{
-                    if (showingAnime) return@historyActions
+                    if (showingAnime) {
+                        eu.kanade.presentation.tsuzuki.history.TsuzukiAnimeHistoryActions(state.groupByNovel, onGroupByNovelChanged)
+                        return@historyActions
+                    }
                     AppBarActions(
                         listOf(
                             AppBar.Action(
@@ -236,7 +239,7 @@ fun HistoryScreen(
             }
 
             if (showingAnime) {
-                TsuzukiAnimeHistory(animeHistory, state.searchQuery)
+                TsuzukiAnimeHistory(animeHistory, state.searchQuery, state.groupByNovel)
                 return@Scaffold
             }
             val history = state.list?.let { books ->

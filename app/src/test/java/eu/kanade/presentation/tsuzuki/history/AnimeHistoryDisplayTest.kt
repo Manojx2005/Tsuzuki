@@ -35,6 +35,20 @@ class AnimeHistoryDisplayTest {
     }
 
     @Test
+    fun lastOnlyKeepsTheNewestEpisodeOfEachAnime() {
+        val older = row(1, "Sparrow", "One", "2026-11-07T10:00:00Z")
+        val newer = row(2, "Sparrow", "Two", "2026-11-07T12:00:00Z")
+        val other = row(3, "Heron", "One", "2026-11-07T11:00:00Z").copy(animeId = 9)
+        val utc = TimeZone.UTC
+
+        assertEquals(
+            listOf(newer, other),
+            groupAnimeHistory(listOf(older, newer, other), null, utc, lastOnly = true).values.flatten(),
+        )
+        assertEquals(3, groupAnimeHistory(listOf(older, newer, other), null, utc).values.flatten().size)
+    }
+
+    @Test
     fun partialHistoryResumesExactEpisodeAndFinishedHistoryAdvancesPastSeenEpisodes() {
         val row = row(1, "Sparrow", "Night", "2026-11-07T14:59:00Z")
         val first = Episode(8, "/1", "One", id = 1, episodeNumber = 1.0)

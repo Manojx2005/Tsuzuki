@@ -12,6 +12,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -19,6 +20,7 @@ import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
@@ -57,7 +59,14 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
         val zone = TimeZone.currentSystemDefault()
         val now = Clock.System.now()
         val (_, windowEnd) = Injekt.get<FetchInterval>().getWindow(now.toLocalDateTime(zone).date, zone)
-        val entries = library.getLibrary().filter {
+        // AP8: "Update shelf" passes one shelf; otherwise the whole anime library.
+        val shelf = inputData.getLong(SHELF, -1L)
+        val shows = if (shelf >= 0) {
+            library.observeLibrary().first().filter { shelf in it.shelfIds }.map { it.anime }
+        } else {
+            library.getLibrary()
+        }
+        val entries = shows.filter {
             shouldUpdateAnime(it, restrictions, skipDays, now.toEpochMilliseconds(), windowEnd)
         }
         if (entries.isEmpty()) return Result.success()
@@ -110,10 +119,13 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
             context.workManager.cancelUniqueWork(MANUAL)
         }
 
-        fun start(context: Context): Boolean {
+        private const val SHELF = "shelf"
+
+        fun start(context: Context, shelfId: Long? = null): Boolean {
             if (!TsuzukiAnime.enabled) return false
             val restrictions = Injekt.get<LibraryPreferences>().autoUpdateDeviceRestrictions.get()
             val request = OneTimeWorkRequestBuilder<AnimeLibraryUpdateJob>()
+                .setInputData(workDataOf(SHELF to (shelfId ?: -1L)))
                 .setConstraints(libraryUpdateConstraints(restrictions))
                 .setBackoffCriteria(BackoffPolicy.LINEAR, 10, TimeUnit.MINUTES)
                 .build()

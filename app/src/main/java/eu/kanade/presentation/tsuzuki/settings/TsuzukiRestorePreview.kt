@@ -28,6 +28,17 @@ internal fun TsuzukiRestorePreview(contents: BackupFileValidator.Contents) {
         contents.shelves.toLong() to stringResource(MR.strings.tsz_backup_shelves),
         contents.historyEntries to stringResource(MR.strings.tsz_backup_history_entries),
     )
+    // AP-20: anime stored in the backup, also for an anime-only backup.
+    val anime = contents.anime
+    val animeCounts = if (anime.entries == 0 && anime.shelves == 0 && anime.historyEntries == 0L) {
+        emptyList()
+    } else {
+        listOf(
+            anime.entries.toLong() to stringResource(MR.strings.tsz_anime_media),
+            anime.shelves.toLong() to stringResource(MR.strings.tsz_anime_shelves),
+            anime.historyEntries to stringResource(MR.strings.tsz_backup_history_entries),
+        )
+    }
     TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
         Text(
             text = if (tokens.isDot) heading.uppercase() else heading,
@@ -35,19 +46,27 @@ internal fun TsuzukiRestorePreview(contents: BackupFileValidator.Contents) {
             fontWeight = FontWeight.Bold,
             color = tokens.dotOn,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            counts.forEach { (count, label) ->
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(format.format(count), style = MaterialTheme.typography.titleLarge, color = tokens.dotOn)
-                    Text(
-                        text = if (tokens.isDot) label.uppercase() else label,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = tokens.mutedText,
-                    )
-                }
+        listOf(counts, animeCounts).filter { it.isNotEmpty() }.forEach { row ->
+            CountRow(row, format)
+        }
+    }
+}
+
+@Composable
+private fun CountRow(counts: List<Pair<Long, String>>, format: NumberFormat) {
+    val tokens = TsuzukiTheme.tokens
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        counts.forEach { (count, label) ->
+            Column(modifier = Modifier.weight(1f)) {
+                Text(format.format(count), style = MaterialTheme.typography.titleLarge, color = tokens.dotOn)
+                Text(
+                    text = if (tokens.isDot) label.uppercase() else label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = tokens.mutedText,
+                )
             }
         }
     }

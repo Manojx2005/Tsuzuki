@@ -84,6 +84,9 @@ END;
 getById:
 SELECT * FROM animes WHERE _id = :id;
 
+getNotes:
+SELECT notes FROM animes WHERE _id = :id;
+
 getBySourceAndUrl:
 SELECT * FROM animes WHERE source = :source AND url = :url ORDER BY _id LIMIT 1;
 
@@ -123,6 +126,9 @@ UPDATE animes SET
     calculate_interval = :calculateInterval, fetch_type = :fetchType, parent_id = :parentId, season_flags = :seasonFlags,
     season_number = :seasonNumber, season_source_order = :seasonSourceOrder, notes = :notes, memo = :memo
 WHERE _id = :id;
+
+setNotes:
+UPDATE animes SET notes = :notes WHERE _id = :id;
 
 setFavorite:
 UPDATE animes SET favorite = :favorite, date_added = CASE WHEN :favorite = 1 THEN :dateAdded ELSE date_added END

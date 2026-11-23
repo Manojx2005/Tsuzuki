@@ -2,6 +2,7 @@ package eu.kanade.presentation.tsuzuki.browse
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -121,6 +122,7 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
         var operationFailed by remember { mutableStateOf(false) }
         var trust by remember { mutableStateOf<AnimeExtension.Untrusted?>(null) }
         var remove by remember { mutableStateOf<AnimeStoreRow?>(null) }
+        var details by remember { mutableStateOf<AnimeStoreRow?>(null) }
         val catalogue by produceState<AnimeExtensionCatalogue?>(null, store, repos, reload) {
             value = null
             value = store.catalogue(repos)
@@ -294,9 +296,30 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
                         onAction = { onAction(row) },
                         onRemove = { remove = row },
                         onSettings = configurable[row.pkgName]?.let { sources -> { openSettings(sources) } },
+                        onClick = { details = row }.takeIf { row.extension != null },
                     )
                 }
             }
+        }
+        details?.let { row ->
+            AnimeExtensionDetailsSheet(
+                row = row,
+                configurable = configurable[row.pkgName].orEmpty(),
+                enabled = busy == null,
+                onDismiss = { details = null },
+                onAction = {
+                    details = null
+                    onAction(row)
+                },
+                onRemove = {
+                    details = null
+                    remove = row
+                },
+                onSourceSettings = { source ->
+                    details = null
+                    activityContext.startActivity(AnimeSourcePreferencesActivity.intent(activityContext, source.id))
+                },
+            )
         }
         pickSettings?.let { sources ->
             AlertDialog(
@@ -459,11 +482,14 @@ private fun AnimeStoreExtensionRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     onSettings: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
     Row(
-        modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier.fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
+            .heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
