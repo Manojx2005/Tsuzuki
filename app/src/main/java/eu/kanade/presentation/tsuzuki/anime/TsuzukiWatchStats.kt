@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -100,8 +101,10 @@ private fun WatchChart(today: LocalDate, period: ReadingPeriod, duration: Measur
         ReadingPeriod.MONTH -> today.minusDays(29)
         ReadingPeriod.YEAR -> today.withDayOfMonth(1).minusMonths(11)
     }
-    val flow = remember(start) { Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(start) }
-    val seconds by flow.collectAsState(initial = emptyMap())
+    val seconds by key(start, today) {
+        val flow = remember { Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(start, today) }
+        flow.collectAsState(initial = emptyMap())
+    }
     val locale = LocalConfiguration.current.locales[0]
     val bars = remember(seconds, today, period, locale) {
         ReadingChart.bars(

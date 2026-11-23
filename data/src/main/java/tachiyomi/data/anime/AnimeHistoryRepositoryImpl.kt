@@ -2,8 +2,8 @@ package tachiyomi.data.anime
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import tachiyomi.data.Database
 import kotlinx.coroutines.flow.map
+import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.data.subscribeToOne
 import tachiyomi.domain.history.anime.model.AnimeHistory
@@ -68,8 +68,10 @@ class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryR
         mapper = ::AnimeWatchStats,
     ).subscribeToOne()
 
-    override fun subscribeWatchDays(start: LocalDate) =
-        database.anime_watch_daysQueries.getWatchDays(start.toEpochDay()) { day, seconds -> day to (seconds ?: 0L) }
+    override fun subscribeWatchDays(start: LocalDate, end: LocalDate) =
+        database.anime_watch_daysQueries.getWatchDays(start.toEpochDay(), end.toEpochDay()) { day, seconds ->
+            day to (seconds ?: 0L)
+        }
             .subscribeToList()
             .map { rows -> rows.associate { (day, seconds) -> LocalDate.ofEpochDay(day) to seconds } }
 

@@ -1144,6 +1144,11 @@ class AnimeDatabaseTest {
             val before = history.subscribeWatchStats(today).first()
             assertEquals(AnimeWatchStats(391, 210, 7_891, 2, 0), before)
             assertTrue(before.hasWatchData)
+            assertEquals(
+                mapOf(today.minusDays(1) to 120L, today to 210L),
+                history.subscribeWatchDays(today.minusDays(1), today).first(),
+            )
+            assertEquals(mapOf(today to 210L), history.subscribeWatchDays(today, today).first())
 
             episodes.updateProgress(last, seen = true, lastSecondSeen = 0, totalSeconds = 600)
             history.removeHistory(ended)

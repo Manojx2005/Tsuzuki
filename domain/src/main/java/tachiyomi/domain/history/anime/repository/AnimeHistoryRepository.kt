@@ -16,8 +16,8 @@ interface AnimeHistoryRepository {
     fun subscribeHistory(): Flow<List<AnimeHistoryDisplay>>
     fun subscribeWatchStats(today: LocalDate): Flow<AnimeWatchStats>
 
-    /** Watch seconds per day from [start] on (AP-21, the Stats chart). */
-    fun subscribeWatchDays(start: LocalDate): Flow<Map<LocalDate, Long>> = flowOf(emptyMap())
+    /** Watch seconds per day from [start] through [end], inclusive. */
+    fun subscribeWatchDays(start: LocalDate, end: LocalDate): Flow<Map<LocalDate, Long>> = flowOf(emptyMap())
     suspend fun recordWatchDay(episodeId: Long, day: LocalDate, watchSeconds: Long)
     suspend fun removeHistory(animeId: Long, episodeId: Long? = null)
 
