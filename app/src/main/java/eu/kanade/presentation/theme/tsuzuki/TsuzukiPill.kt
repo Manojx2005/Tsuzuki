@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +54,10 @@ fun TsuzukiPill(
     val press = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
         Modifier.tsuzukiPress(press).then(modifier)
+            // A pill inside a horizontally scrolling row gets an unbounded width, and Row then gives the weighted
+            // label none (empty pills in anime global search, owner 2026-11-23). Bound it to its natural width;
+            // a narrower parent still caps it, so the label keeps its ellipsis.
+            .width(IntrinsicSize.Max)
             .heightIn(min = 48.dp)
             .clip(shape)
             .then(

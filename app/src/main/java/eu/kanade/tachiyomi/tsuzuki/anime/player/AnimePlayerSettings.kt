@@ -40,7 +40,10 @@ internal data class AnimePlayerSettings(
 )
 
 internal class AnimePlayerPreferences(private val store: PreferenceStore) {
-    val episodePreviews = store.getEnum("tsuzuki_anime_episode_previews", eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON)
+    val episodePreviews = store.getEnum(
+        "tsuzuki_anime_episode_previews",
+        eu.kanade.tachiyomi.tsuzuki.anime.preview.EpisodePreviewMode.ON,
+    )
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
     val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)
@@ -60,13 +63,13 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
     private val speed = store.getFloat("tsuzuki_anime_player_speed", 1f)
     private val subtitleScale = store.getFloat("tsuzuki_anime_player_subtitle_scale", 1f)
     private val subtitleDelay = store.getFloat("tsuzuki_anime_player_subtitle_delay", 0f)
-    private val hardwareDecoding = store.getBoolean("tsuzuki_anime_player_hardware_decode", true)
-    private val seekGesture = store.getBoolean("tsuzuki_anime_player_seek_gesture", true)
-    private val brightnessGesture = store.getBoolean("tsuzuki_anime_player_brightness_gesture", true)
-    private val volumeGesture = store.getBoolean("tsuzuki_anime_player_volume_gesture", true)
+    val hardwareDecoding = store.getBoolean("tsuzuki_anime_player_hardware_decode", true)
+    val seekGesture = store.getBoolean("tsuzuki_anime_player_seek_gesture", true)
+    val brightnessGesture = store.getBoolean("tsuzuki_anime_player_brightness_gesture", true)
+    val volumeGesture = store.getBoolean("tsuzuki_anime_player_volume_gesture", true)
     private val aniSkipMode = store.getString("tsuzuki_anime_player_aniskip", AniSkipMode.OFF.name)
     private val aniSkipIntroDelay = store.getInt("tsuzuki_anime_player_aniskip_intro_delay", 3)
-    private val subtitleStyle = AnimeSubtitleStylePreferences(store)
+    val subtitleStyle = AnimeSubtitleStylePreferences(store)
 
     fun get() = AnimePlayerSettings(
         speed = speed.get().bounded(0.25f, 3f, 1f),

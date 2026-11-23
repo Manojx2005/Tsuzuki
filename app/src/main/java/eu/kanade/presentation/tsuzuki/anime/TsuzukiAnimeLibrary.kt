@@ -92,6 +92,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackEnabled
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.updates.AnimeAiringStrip
@@ -316,7 +317,7 @@ internal data object AnimeLibraryTab : Tab {
                             selection.range(id, visibleIds)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
-                        val onOpen = { if (selecting) selection.toggle(id) else openAnime(context, id) }
+                        val onOpen = { if (selecting) selection.toggle(id) else openAnimeInPlace(item.anime, navigator::push) }
                         if (options.display == AnimeLibraryDisplay.LIST) {
                             AnimeLibraryListRow(item.anime, id in selection.ids, selecting, onLongClick, onOpen)
                         } else {
@@ -371,6 +372,7 @@ private fun AnimeLibraryMedia(onMediaChange: () -> Unit) {
 internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     if (!TsuzukiAnime.enabled) return
     val context = LocalContext.current
+    val navigator = LocalNavigator.currentOrThrow
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }
     val next by remember { store.observeContinueWatching() }.collectAsState(null)
@@ -421,7 +423,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(library, key = { it.anime.id }) { item ->
                             AnimeLibraryCover(item.anime, Modifier.width(108.dp)) {
-                                openAnime(context, item.anime.id)
+                                openAnimeInPlace(item.anime, navigator::push)
                             }
                         }
                     }
@@ -531,7 +533,11 @@ internal fun AnimeLibraryCover(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(Modifier.fillMaxWidth()) {
-            MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
+            MangaCover.Book(
+                anime.thumbnailUrl,
+                modifier = Modifier.fillMaxWidth().tsuzukiSharedCover(animeSharedCoverKey(anime.id)),
+                generatedTitle = anime.title,
+            )
             // AP8: the book covers' badges, following Library settings' download / unread badge switches.
             if (unwatchedBadge > 0 || downloadedBadge > 0) {
                 BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopStart)) {

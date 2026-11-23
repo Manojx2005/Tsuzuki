@@ -43,6 +43,8 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.anime.animeDetailsCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -57,6 +59,7 @@ internal fun AnimeDetailsHeader(
     anime: SAnime,
     coverWidth: Dp = 104.dp,
     onCoverClick: (() -> Unit)? = null,
+    sharedCoverKey: String? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val status = when (anime.status) {
@@ -83,7 +86,8 @@ internal fun AnimeDetailsHeader(
             AnimeCover(
                 source,
                 anime,
-                Modifier.width(coverWidth)
+                Modifier.width(coverWidth).animeDetailsCover(anime.url)
+                    .then(if (sharedCoverKey != null) Modifier.tsuzukiSharedCover(sharedCoverKey) else Modifier)
                     .then(if (onCoverClick != null) Modifier.clickable(onClick = onCoverClick) else Modifier),
             )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {

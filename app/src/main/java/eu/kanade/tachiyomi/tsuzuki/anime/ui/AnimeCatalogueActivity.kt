@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,8 +69,12 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.AnimeScreenOverlay
+import eu.kanade.presentation.tsuzuki.anime.AnimeSharedCovers
 import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
 import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
+import eu.kanade.presentation.tsuzuki.anime.animeCatalogueCover
+import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SEARCH_QUERY
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
@@ -100,8 +105,14 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class AnimeCatalogueActivity : BaseActivity() {
+    override fun finish() {
+        super.finish()
+        applyAnimeScreenTransition(opening = false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyAnimeScreenTransition(opening = true)
         if (!TsuzukiAnime.enabled || (!intent.hasExtra(ANIME_SOURCE_ID) && !intent.hasExtra(SAVED_ANIME_ID))) {
             finish()
             return
@@ -158,59 +169,82 @@ class AnimeCatalogueActivity : BaseActivity() {
                         val source = result.entry.source
                         var lastApplied by remember { mutableStateOf(AnimeFilterList()) }
                         var selected by remember { mutableStateOf(result.saved) }
-                        val anime = selected
-                        if (anime == null) {
-                            var attempt by remember(source) { mutableStateOf(0) }
-                            var rebound by remember(source, attempt) {
-                                mutableStateOf<Result<AnimeFilterList>?>(null)
-                            }
-                            LaunchedEffect(source, attempt) {
-                                val previous = lastApplied
-                                val filters = loadCatalogueFilters {
-                                    carryAnimeFilters(previous) { source.getFilterList() }
+                        var detailsOpen by remember { mutableStateOf(result.saved != null) }
+                        // Owner 2026-11-23: catalogue and details move like book screens. The catalogue stays
+                        // composed under the details (its pages and scroll survive, as in book Browse) and the
+                        // details fade over it on the book screens' timing.
+                        AnimeSharedCovers(Modifier.fillMaxSize()) {
+                            if (result.saved == null) {
+                                Box(
+                                    Modifier.fillMaxSize()
+                                        .then(if (detailsOpen) Modifier.clearAndSetSemantics {} else Modifier),
+                                ) {
+                                    var attempt by remember(source) { mutableStateOf(0) }
+                                    var rebound by remember(source, attempt) {
+                                        mutableStateOf<Result<AnimeFilterList>?>(null)
+                                    }
+                                    LaunchedEffect(source, attempt) {
+                                        val previous = lastApplied
+                                        val filters = loadCatalogueFilters {
+                                            carryAnimeFilters(previous) { source.getFilterList() }
+                                        }
+                                        filters.getOrNull()?.let { lastApplied = it }
+                                        rebound = filters
+                                    }
+                                    val filters = rebound
+                                    if (filters == null || filters.isFailure) {
+                                        val context = LocalContext.current
+                                        val message = filters?.exceptionOrNull()?.let {
+                                            context.errorHeading(errorCopyForUi(it))
+                                        }
+                                        AnimeCatalogueNotice(
+                                            title = source.name,
+                                            message = message,
+                                            onBack = ::finish,
+                                            onRetry = { attempt++ },
+                                        )
+                                    } else {
+                                        catalogueState.SaveableStateProvider(sourceId) {
+                                            AnimeCatalogueScreen(
+                                                source = source,
+                                                openLatest = openLatest,
+                                                initialQuery = initialQuery,
+                                                appliedFilters = lastApplied,
+                                                onApplyFilters = { lastApplied = it },
+                                                onBack = ::finish,
+                                                onOpen = {
+                                                    selected = it
+                                                    detailsOpen = true
+                                                },
+                                                openUrl = selected?.url?.takeIf { detailsOpen },
+                                                onSettings = {
+                                                    startActivity(
+                                                        AnimeSourcePreferencesActivity.intent(
+                                                            this@AnimeCatalogueActivity,
+                                                            source.id,
+                                                        ),
+                                                    )
+                                                }.takeIf { hasAnimeSourceSettings(source) },
+                                            )
+                                        }
+                                    }
                                 }
-                                filters.getOrNull()?.let { lastApplied = it }
-                                rebound = filters
                             }
-                            val filters = rebound
-                            if (filters == null || filters.isFailure) {
-                                val context = LocalContext.current
-                                val message = filters?.exceptionOrNull()?.let {
-                                    context.errorHeading(errorCopyForUi(it))
+                            AnimeScreenOverlay(visible = detailsOpen) {
+                                val anime = selected ?: return@AnimeScreenOverlay
+                                val back = {
+                                    if (result.saved != null) finish() else detailsOpen = false
                                 }
-                                AnimeCatalogueNotice(
-                                    title = source.name,
-                                    message = message,
-                                    onBack = ::finish,
-                                    onRetry = { attempt++ },
-                                )
-                            } else {
-                                catalogueState.SaveableStateProvider(sourceId) {
-                                    AnimeCatalogueScreen(
-                                        source = source,
-                                        openLatest = openLatest,
-                                        initialQuery = initialQuery,
-                                        appliedFilters = lastApplied,
-                                        onApplyFilters = { lastApplied = it },
-                                        onBack = ::finish,
-                                        onOpen = { selected = it },
-                                        onSettings = {
-                                            startActivity(AnimeSourcePreferencesActivity.intent(this, source.id))
-                                        }.takeIf { hasAnimeSourceSettings(source) },
-                                    )
+                                BackHandler(enabled = detailsOpen, onBack = back)
+                                AnimeDetailsScreen(
+                                    result.entry,
+                                    anime,
+                                    library,
+                                    result.resumeUrl,
+                                    back,
+                                ) { episode, track ->
+                                    AnimePlayback.launchEpisode(this@AnimeCatalogueActivity, episode.id, track)
                                 }
-                            }
-                        } else {
-                            val back = { if (result.saved != null) finish() else selected = null }
-                            BackHandler(onBack = back)
-                            AnimeDetailsScreen(
-                                result.entry,
-                                anime,
-                                library,
-                                result.resumeUrl,
-                                back,
-                            ) { episode, track ->
-                                AnimePlayback.launchEpisode(this, episode.id, track)
                             }
                         }
                     }
@@ -242,6 +276,7 @@ private fun AnimeCatalogueScreen(
     onBack: () -> Unit,
     onOpen: (SAnime) -> Unit,
     onSettings: (() -> Unit)? = null,
+    openUrl: String? = null,
 ) {
     val modes = remember(source) {
         AnimeCatalogueMode.entries.filter { it != AnimeCatalogueMode.LATEST || source.supportsLatest }
@@ -288,7 +323,9 @@ private fun AnimeCatalogueScreen(
         keyboard?.hide()
         Unit
     }
-    val pagingFlow = remember(source, mode, appliedQuery, appliedFilters) {
+    // AnimeFilterList.equals is always false (as Mihon's FilterList), so keying on it rebuilt the pager, and reloaded
+    // the grid, on every recomposition, such as opening an anime. Applying filters stores a new list, so key on identity.
+    val pagingFlow = remember(source, mode, appliedQuery, IdentityKey(appliedFilters)) {
         Pager(PagingConfig(pageSize = 24, enablePlaceholders = false)) {
             AnimeCataloguePagingSource(source, mode, appliedQuery, appliedFilters)
         }.flow
@@ -404,6 +441,7 @@ private fun AnimeCatalogueScreen(
                         inLibrary = inLibrary,
                         onClick = { onOpen(anime) },
                         onLongClick = { onLongPress(anime) },
+                        coverModifier = Modifier.animeCatalogueCover(anime.url, detailsShown = anime.url == openUrl),
                     )
                 }
                 val refresh = shows.loadState.refresh
@@ -529,4 +567,10 @@ internal fun AnimeCatalogueStatus(message: String?, onRetry: (() -> Unit)? = nul
             TextButton(onClick = onRetry) { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_retry))) }
         }
     }
+}
+
+/** A remember key that compares by reference, for objects whose equals never matches. */
+private class IdentityKey(private val value: Any) {
+    override fun equals(other: Any?): Boolean = other is IdentityKey && other.value === value
+    override fun hashCode(): Int = System.identityHashCode(value)
 }

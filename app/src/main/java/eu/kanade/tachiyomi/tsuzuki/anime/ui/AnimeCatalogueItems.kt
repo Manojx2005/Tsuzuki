@@ -86,6 +86,8 @@ internal fun AnimeCatalogueItem(
     inLibrary: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    // ANIME-MOTION: the catalogue cover hands over to the details cover (animeCatalogueCover).
+    coverModifier: Modifier = Modifier,
 ) {
     val tokens = TsuzukiTheme.tokens
     val haptic = LocalHapticFeedback.current
@@ -106,7 +108,7 @@ internal fun AnimeCatalogueItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(Modifier.padding(vertical = 4.dp).fillMaxHeight().aspectRatio(2f / 3f).clip(RoundedCornerShape(4.dp))) {
-                AnimeCover(source, anime, Modifier.fillMaxWidth().graphicsAlpha(coverAlpha))
+                AnimeCover(source, anime, Modifier.fillMaxWidth().then(coverModifier).graphicsAlpha(coverAlpha))
             }
             Text(
                 text = tsuzukiMenuLabel(anime.title),
@@ -119,7 +121,7 @@ internal fun AnimeCatalogueItem(
             if (inLibrary) TsuzukiInLibraryBadge()
         }
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> Box(clickable) {
-            AnimeCover(source, anime, Modifier.fillMaxWidth().graphicsAlpha(coverAlpha))
+            AnimeCover(source, anime, Modifier.fillMaxWidth().then(coverModifier).graphicsAlpha(coverAlpha))
             if (mode == LibraryDisplayMode.CompactGrid) {
                 Box(
                     Modifier.matchParentSize().clip(RoundedCornerShape(6.dp)).background(
@@ -139,7 +141,7 @@ internal fun AnimeCatalogueItem(
         }
         LibraryDisplayMode.ComfortableGrid -> Column(clickable, horizontalAlignment = Alignment.CenterHorizontally) {
             Box {
-                AnimeCover(source, anime, Modifier.fillMaxWidth().graphicsAlpha(coverAlpha))
+                AnimeCover(source, anime, Modifier.fillMaxWidth().then(coverModifier).graphicsAlpha(coverAlpha))
                 if (inLibrary) Box(Modifier.align(Alignment.TopStart).padding(4.dp)) { TsuzukiInLibraryBadge() }
             }
             Text(

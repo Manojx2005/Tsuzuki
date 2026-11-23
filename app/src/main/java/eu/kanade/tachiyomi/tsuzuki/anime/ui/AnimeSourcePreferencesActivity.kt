@@ -33,6 +33,7 @@ import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SOURCE_ID
 import eu.kanade.presentation.tsuzuki.components.TsuzukiErrorState
 import eu.kanade.tachiyomi.R
@@ -65,8 +66,14 @@ class AnimeSourcePreferencesActivity : BaseActivity() {
     private var setupError by mutableStateOf<Throwable?>(null)
     internal var changed = false
 
+    override fun finish() {
+        super.finish()
+        applyAnimeScreenTransition(opening = false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyAnimeScreenTransition(opening = true)
         val sourceId = intent.getLongExtra(ANIME_SOURCE_ID, -1L)
         if (!TsuzukiAnime.enabled || sourceId < 0) {
             finish()

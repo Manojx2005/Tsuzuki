@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.ui.manga.MangaScreen
 @OptIn(ExperimentalSharedTransitionApi::class)
 private val LocalSharedCoverScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 private val LocalCoverVisibilityScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
+
 // Dynamic on purpose: a static local would recompose both screens unskipped when the duration changes.
 private val LocalCoverDuration = compositionLocalOf { TsuzukiMotion.SHARED_MS }
 
@@ -59,8 +60,14 @@ fun TsuzukiAnimatedScreen(scope: AnimatedVisibilityScope, content: @Composable (
 /** Apply only to a source cover and its details cover, never repeated decorative/stack thumbnails. */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.tsuzukiSharedCover(mangaId: Long): Modifier {
-    if (mangaId <= 0 || TsuzukiTheme.tokens.style == TsuzukiStyle.NONE || rememberReduceMotion()) return this
+fun Modifier.tsuzukiSharedCover(mangaId: Long): Modifier =
+    if (mangaId <= 0) this else tsuzukiSharedCover("tsuzuki-cover-$mangaId")
+
+/** Same motion for a cover with its own key (anime: animeSharedCoverKey), so ids from other tables never collide. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.tsuzukiSharedCover(key: String): Modifier {
+    if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE || rememberReduceMotion()) return this
     val shared = LocalSharedCoverScope.current ?: return this
     val visibility = LocalCoverVisibilityScope.current ?: return this
     val duration = LocalCoverDuration.current
@@ -68,7 +75,7 @@ fun Modifier.tsuzukiSharedCover(mangaId: Long): Modifier {
     val easing = TsuzukiMotion.Standard
     return with(shared) {
         this@tsuzukiSharedCover.sharedElement(
-            sharedContentState = rememberSharedContentState("tsuzuki-cover-$mangaId"),
+            sharedContentState = rememberSharedContentState(key),
             animatedVisibilityScope = visibility,
             boundsTransform = { _, _ -> tween<Rect>(duration, easing = easing) },
         )
