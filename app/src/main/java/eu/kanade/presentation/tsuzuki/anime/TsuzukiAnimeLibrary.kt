@@ -36,6 +36,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
+import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import tachiyomi.presentation.core.components.BadgeGroup
 import eu.kanade.presentation.library.components.UnreadBadge
@@ -227,6 +230,21 @@ internal data object AnimeLibraryTab : Tab {
                                 tint = if (options.hasFilters) tokens.accent else LocalContentColor.current,
                             )
                         }
+                        // AP8: the book library toolbar's overflow: update this shelf, open a random title.
+                        AppBarActions(
+                            listOf(
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_update_category),
+                                    onClick = { AnimeLibraryUpdateJob.start(context, shelfId) },
+                                ),
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_open_random_manga),
+                                    onClick = {
+                                        filtered.randomOrNull()?.let { openAnime(context, it.anime.id) }
+                                    },
+                                ),
+                            ),
+                        )
                     },
                 )
             },
