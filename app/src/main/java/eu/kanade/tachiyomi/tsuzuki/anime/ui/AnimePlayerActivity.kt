@@ -33,6 +33,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.presentation.tsuzuki.reader.applyTsuzukiReaderTransition
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
@@ -72,8 +73,15 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
 
     private val systemBars by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
+    override fun finish() {
+        super.finish()
+        applyTsuzukiReaderTransition(opening = false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Opens and closes like the book reader (owner 2026-11-23: anime motion matched to books).
+        applyTsuzukiReaderTransition(opening = true)
         if (!TsuzukiAnime.enabled) {
             finish()
             return

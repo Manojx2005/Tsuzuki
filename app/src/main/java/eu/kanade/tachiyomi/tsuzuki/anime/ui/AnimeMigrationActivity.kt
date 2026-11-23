@@ -49,6 +49,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
 import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearch
 import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearchResults
@@ -80,8 +81,14 @@ import uy.kohesive.injekt.api.get
 import androidx.compose.ui.res.stringResource as androidStringResource
 
 class AnimeMigrationActivity : BaseActivity() {
+    override fun finish() {
+        super.finish()
+        applyAnimeScreenTransition(opening = false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyAnimeScreenTransition(opening = true)
         if (!TsuzukiAnime.enabled) {
             finish()
             return
