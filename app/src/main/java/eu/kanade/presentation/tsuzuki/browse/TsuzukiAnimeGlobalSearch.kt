@@ -42,7 +42,6 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
-import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
@@ -218,6 +217,8 @@ internal fun AnimeGlobalSearchResults(
 ) {
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
+    // In place from the main Global search, like book results; the details Activity elsewhere.
+    val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val scope = rememberCoroutineScope()
     val library = remember { Injekt.get<AnimeLibraryStore>() }
     val openError = stringResource(MR.strings.unknown_error)
@@ -292,7 +293,7 @@ internal fun AnimeGlobalSearchResults(
                                             opening = true
                                             scope.launch {
                                                 try {
-                                                    openAnime(context, library.cacheSearchResult(source.id, title))
+                                                    openDetails(library.cacheSearchResult(source.id, title))
                                                 } catch (e: CancellationException) {
                                                     throw e
                                                 } catch (e: Exception) {

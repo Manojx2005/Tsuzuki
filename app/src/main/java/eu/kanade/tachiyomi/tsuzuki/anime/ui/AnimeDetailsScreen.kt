@@ -65,7 +65,6 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
-import eu.kanade.presentation.tsuzuki.anime.openAnime
 import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -113,6 +112,8 @@ internal fun AnimeDetailsScreen(
     val tokens = TsuzukiTheme.tokens
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    // Seasons and duplicates open in place when these details are in place (AnimeDetailsRoute), else the Activity.
+    val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
     val migrate = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) scope.launch { model.reloadSaved() }
@@ -397,7 +398,7 @@ internal fun AnimeDetailsScreen(
                             selected = seasonChoices.indexOfFirst { it.id == saved?.id },
                             onClick = { index ->
                                 val season = seasonChoices[index]
-                                if (season.id != saved?.id) openAnime(context, season.id)
+                                if (season.id != saved?.id) openDetails(season.id)
                             },
                         )
                     }
@@ -557,7 +558,7 @@ internal fun AnimeDetailsScreen(
             onAdd = { mutate { shelfSelection = library.shelfIds(match.adding.id) } },
             onOpen = {
                 duplicate = null
-                openAnime(context, match.existing.id)
+                openDetails(match.existing.id)
             },
             onMigrate = {
                 migrate.launch(AnimeMigrationActivity.fromAnime(context, match.existing.id, match.adding.id))
