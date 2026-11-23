@@ -67,8 +67,10 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeScreenOverlay
+import eu.kanade.presentation.tsuzuki.anime.AnimeSharedCovers
 import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
 import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
+import eu.kanade.presentation.tsuzuki.anime.animeCatalogueCover
 import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
 import eu.kanade.presentation.tsuzuki.browse.ANIME_OPEN_LATEST
 import eu.kanade.presentation.tsuzuki.browse.ANIME_SEARCH_QUERY
@@ -165,7 +167,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                         // Owner 2026-11-23: catalogue and details move like book screens. The catalogue stays
                         // composed under the details (its pages and scroll survive, as in book Browse) and the
                         // details fade over it on the book screens' timing.
-                        Box(Modifier.fillMaxSize()) {
+                        AnimeSharedCovers(Modifier.fillMaxSize()) {
                             if (result.saved == null) {
                                 Box(
                                     Modifier.fillMaxSize()
@@ -208,6 +210,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                                     selected = it
                                                     detailsOpen = true
                                                 },
+                                                openUrl = selected?.url?.takeIf { detailsOpen },
                                                 onSettings = {
                                                     startActivity(
                                                         AnimeSourcePreferencesActivity.intent(
@@ -267,6 +270,7 @@ private fun AnimeCatalogueScreen(
     onBack: () -> Unit,
     onOpen: (SAnime) -> Unit,
     onSettings: (() -> Unit)? = null,
+    openUrl: String? = null,
 ) {
     val modes = remember(source) {
         AnimeCatalogueMode.entries.filter { it != AnimeCatalogueMode.LATEST || source.supportsLatest }
@@ -397,7 +401,11 @@ private fun AnimeCatalogueScreen(
                         Modifier.tsuzukiClickable(role = Role.Button) { onOpen(anime) },
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        AnimeCover(source, anime, Modifier.fillMaxWidth())
+                        AnimeCover(
+                            source,
+                            anime,
+                            Modifier.fillMaxWidth().animeCatalogueCover(anime.url, detailsShown = anime.url == openUrl),
+                        )
                         Text(
                             text = tsuzukiMenuLabel(anime.title),
                             modifier = Modifier.padding(4.dp),

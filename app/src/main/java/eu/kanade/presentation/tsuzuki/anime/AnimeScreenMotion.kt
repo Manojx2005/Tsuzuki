@@ -3,8 +3,12 @@ package eu.kanade.presentation.tsuzuki.anime
 import android.app.Activity
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,7 +17,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
@@ -76,6 +83,59 @@ internal fun AnimeScreenOverlay(visible: Boolean, content: @Composable () -> Uni
                     while (true) awaitPointerEvent().changes.forEach { it.consume() }
                 }
             },
-        ) { content() }
+        ) { CompositionLocalProvider(LocalAnimeDetailsScope provides this@AnimatedVisibility, content = content) }
     }
 }
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+private val LocalAnimeSharedCovers = staticCompositionLocalOf<SharedTransitionScope?> { null }
+private val LocalAnimeDetailsScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
+
+/**
+ * Hosts a catalogue and the details over it so the tapped cover moves into the details cover, as book Browse covers
+ * do (TsuzukiSharedCover). Off in the legacy themes and with reduced motion, like the book version.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun AnimeSharedCovers(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE || rememberReduceMotion()) {
+        Box(modifier) { content() }
+        return
+    }
+    SharedTransitionLayout(modifier) {
+        CompositionLocalProvider(LocalAnimeSharedCovers provides this, content = content)
+    }
+}
+
+/** A catalogue cover; it hands over to the details cover while its details are shown. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun Modifier.animeCatalogueCover(url: String, detailsShown: Boolean): Modifier {
+    val shared = LocalAnimeSharedCovers.current ?: return this
+    return with(shared) {
+        this@animeCatalogueCover.sharedElementWithCallerManagedVisibility(
+            sharedContentState = rememberSharedContentState(animeCoverKey(url)),
+            visible = !detailsShown,
+            boundsTransform = { _, _ -> coverBounds() },
+        )
+    }
+}
+
+/** The details cover, matched with the catalogue cover it was opened from. No-op outside [AnimeSharedCovers]. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun Modifier.animeDetailsCover(url: String): Modifier {
+    val shared = LocalAnimeSharedCovers.current ?: return this
+    val visibility = LocalAnimeDetailsScope.current ?: return this
+    return with(shared) {
+        this@animeDetailsCover.sharedElement(
+            sharedContentState = rememberSharedContentState(animeCoverKey(url)),
+            animatedVisibilityScope = visibility,
+            boundsTransform = { _, _ -> coverBounds() },
+        )
+    }
+}
+
+private fun animeCoverKey(url: String) = "tsuzuki-anime-cover-$url"
+
+private fun coverBounds() = tween<Rect>(TsuzukiMotion.SHARED_MS, easing = TsuzukiMotion.Standard)

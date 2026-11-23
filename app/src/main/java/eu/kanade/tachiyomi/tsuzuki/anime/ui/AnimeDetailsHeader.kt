@@ -41,6 +41,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
+import eu.kanade.presentation.tsuzuki.anime.animeDetailsCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -72,7 +73,7 @@ internal fun AnimeDetailsHeader(source: AnimeSource?, anime: SAnime, coverWidth:
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            AnimeCover(source, anime, Modifier.width(coverWidth))
+            AnimeCover(source, anime, Modifier.width(coverWidth).animeDetailsCover(anime.url))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     tsuzukiMenuLabel(anime.title),
