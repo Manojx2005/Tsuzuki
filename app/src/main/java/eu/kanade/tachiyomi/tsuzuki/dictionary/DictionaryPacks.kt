@@ -26,6 +26,7 @@ import okio.source
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 
 internal data class DictionarySense(val partOfSpeech: String, val gloss: String)
 internal data class DictionaryEntry(val headword: String, val reading: String, val senses: List<DictionarySense>)
@@ -97,14 +98,22 @@ internal class DictionaryPacks(private val context: Context, private val client:
         context.contentResolver.openInputStream(uri)?.source()?.buffer()
             ?: throw IOException("Cannot open dictionary document")
 
-    private suspend fun bundled(language: DictionaryLanguage): File? = mutations.withLock {
+    // Bundled packs verified (or extracted) in this process; a lookup then skips the manifest read and schema check.
+    private val verifiedBundles = ConcurrentHashMap<DictionaryLanguage, File>()
+
+    private suspend fun bundled(language: DictionaryLanguage): File? {
+        verifiedBundles[language]?.takeIf(File::isFile)?.let { return it }
+        return mutations.withLock { verifyBundled(language) }?.also { verifiedBundles[language] = it }
+    }
+
+    private suspend fun verifyBundled(language: DictionaryLanguage): File? {
         val prefix = "dictionaries/dictionary-${language.code}"
-        try {
+        return try {
             val (packLanguage, manifest) = context.assets.open("$prefix.json").source().buffer().use(::readManifest)
             if (packLanguage != language) throw IOException("Bundled dictionary language mismatch")
             val target = File(directory, "bundled/dictionary-${language.code}.sqlite3")
             if (target.length() == manifest.sizeBytes && inspect(target, language)?.version == manifest.version) {
-                return@withLock target
+                return target
             }
             context.assets.open("$prefix.pack").source().buffer().use { source ->
                 installPack(language, manifest, source, target)
