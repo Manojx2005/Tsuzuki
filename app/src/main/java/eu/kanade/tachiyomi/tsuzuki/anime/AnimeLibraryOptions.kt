@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
+import eu.kanade.tachiyomi.animesource.model.SAnime
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
@@ -33,7 +34,7 @@ private fun TriState.accepts(value: Boolean): Boolean = when (this) {
 
 /**
  * Filters then sorts [anime] like the book library: [saved] holds anime with at least one saved episode.
- * Completed means every episode watched (and at least one episode); started means some, but not all, watched.
+ * Completed uses the source's series status. Started means at least one episode watched.
  */
 internal fun applyAnimeLibraryOptions(
     anime: List<Anime>,
@@ -45,8 +46,8 @@ internal fun applyAnimeLibraryOptions(
         val unwatched = it.totalCount - it.seenCount
         options.downloaded.accepts(it.id in saved) &&
             options.unwatched.accepts(unwatched > 0) &&
-            options.started.accepts(it.seenCount > 0 && unwatched > 0) &&
-            options.completed.accepts(it.totalCount > 0 && unwatched <= 0) &&
+            options.started.accepts(it.seenCount > 0) &&
+            options.completed.accepts(it.status == SAnime.COMPLETED.toLong()) &&
             options.tracked.accepts(it.id in tracked)
     }
     val byTitle = compareBy<Anime, String>(String.CASE_INSENSITIVE_ORDER) { it.title }

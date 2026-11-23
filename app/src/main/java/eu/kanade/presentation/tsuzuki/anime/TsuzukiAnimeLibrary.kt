@@ -2,6 +2,7 @@ package eu.kanade.presentation.tsuzuki.anime
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,36 +33,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
-import androidx.compose.runtime.produceState
-import eu.kanade.presentation.library.components.LanguageBadge
-import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
-import androidx.compose.ui.graphics.Brush
-import android.content.res.Configuration
-import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
-import tachiyomi.presentation.core.components.BadgeGroup
-import eu.kanade.presentation.library.components.UnreadBadge
-import eu.kanade.presentation.library.components.DownloadsBadge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
@@ -73,14 +60,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
+import eu.kanade.presentation.library.components.DownloadsBadge
+import eu.kanade.presentation.library.components.LanguageBadge
 import eu.kanade.presentation.library.components.LibrarySelectionToolbar
+import eu.kanade.presentation.library.components.UnreadBadge
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
@@ -102,6 +95,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryEntry
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryOptionPreferences
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryOptions
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.tsuzuki.anime.ContinueAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.animeSeasonGrouping
@@ -116,8 +110,10 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
+import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -171,22 +167,10 @@ internal data object AnimeLibraryTab : Tab {
         val trackedIds by remember { Injekt.get<AnimeTrackRepository>().subscribeTrackedAnimeIds() }
             .collectAsState(emptySet())
         val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
-        val unwatchedBadges by libraryPrefs.unreadBadge.collectAsState()
-        val languageBadges by libraryPrefs.languageBadge.collectAsState()
-        // AP8: source languages for the language badge, from the loaded anime sources.
-        val sourceLanguages by produceState(emptyMap<Long, String>(), languageBadges) {
-            if (languageBadges) {
-                value = runCatching { Injekt.get<AnimeSourceManager>().ensureLoaded() }.getOrDefault(emptyList())
-                    .associate { it.source.id to it.source.lang }
-            }
-        }
+        val badges = rememberAnimeLibraryBadges(downloads)
         val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         val columnCount by (if (landscape) libraryPrefs.landscapeColumns else libraryPrefs.portraitColumns)
             .collectAsState()
-        val downloadBadges by libraryPrefs.downloadBadge.collectAsState()
-        val savedCounts = remember(downloads) {
-            downloads.entries.filter { it.status == AnimeDownloadStatus.Saved }.groupingBy { it.animeId }.eachCount()
-        }
         val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options, trackedIds) {
             val matches = library.filter {
                 shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
@@ -199,8 +183,7 @@ internal data object AnimeLibraryTab : Tab {
         }
         val selection = remember { AnimeLibrarySelection() }
         val actions = remember { AnimeLibraryActions() }
-        val snackbar = remember { SnackbarHostState() }
-        val scope = rememberCoroutineScope()
+        val actionModel = viewModel<AnimeLibraryActionModel>()
         val haptic = LocalHapticFeedback.current
         val visibleIds = remember(filtered) { filtered.map { it.anime.id } }
         val selected = library.map(AnimeLibraryEntry::anime).filter { it.id in selection.ids }
@@ -269,9 +252,11 @@ internal data object AnimeLibraryTab : Tab {
                 )
             },
             bottomBar = {
-                if (selecting) AnimeLibraryActionBar(selected, actions, snackbar, selection::clear, scope)
+                if (selecting) {
+                    AnimeLibraryActionBar(selected, actions, actionModel, actionModel.snackbar, selection::clear)
+                }
             },
-            snackbarHost = { TsuzukiUndoSnackbarHost(snackbar) },
+            snackbarHost = { TsuzukiUndoSnackbarHost(actionModel.snackbar) },
         ) { padding ->
             Column(Modifier.fillMaxSize().padding(padding)) {
                 AnimeLibraryMedia(onMediaChange = selection::clear)
@@ -317,17 +302,16 @@ internal data object AnimeLibraryTab : Tab {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
                         val onOpen = { if (selecting) selection.toggle(id) else openAnime(context, id) }
+                        val itemBadges = badges.forAnime(item.anime)
                         if (options.display == AnimeLibraryDisplay.LIST) {
-                            AnimeLibraryListRow(item.anime, id in selection.ids, selecting, onLongClick, onOpen)
+                            AnimeLibraryListRow(item.anime, id in selection.ids, selecting, itemBadges, onLongClick, onOpen)
                         } else {
                             AnimeLibraryCover(
                                 item.anime,
                                 selected = id in selection.ids,
                                 selectionMode = selecting,
                                 onLongClick = onLongClick,
-                                unwatchedBadge = if (unwatchedBadges) item.anime.totalCount - item.anime.seenCount else 0,
-                                downloadedBadge = if (downloadBadges) savedCounts[id] ?: 0 else 0,
-                                languageBadge = if (languageBadges) sourceLanguages[item.anime.source].orEmpty() else "",
+                                badges = itemBadges,
                                 display = options.display,
                                 onOpen = onOpen,
                             )
@@ -516,9 +500,7 @@ internal fun AnimeLibraryCover(
     selected: Boolean = false,
     selectionMode: Boolean = false,
     onLongClick: (() -> Unit)? = null,
-    unwatchedBadge: Long = 0,
-    downloadedBadge: Int = 0,
-    languageBadge: String = "",
+    badges: AnimeCoverBadges = AnimeCoverBadges(),
     display: AnimeLibraryDisplay = AnimeLibraryDisplay.GRID,
     onOpen: () -> Unit,
 ) {
@@ -533,15 +515,15 @@ internal fun AnimeLibraryCover(
         Box(Modifier.fillMaxWidth()) {
             MangaCover.Book(anime.thumbnailUrl, modifier = Modifier.fillMaxWidth(), generatedTitle = anime.title)
             // AP8: the book covers' badges, following Library settings' download / unread badge switches.
-            if (unwatchedBadge > 0 || downloadedBadge > 0) {
+            if (badges.unwatched > 0 || badges.downloaded > 0) {
                 BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopStart)) {
-                    DownloadsBadge(downloadedBadge)
-                    UnreadBadge(unwatchedBadge)
+                    DownloadsBadge(badges.downloaded)
+                    UnreadBadge(badges.unwatched)
                 }
             }
-            if (languageBadge.isNotEmpty()) {
+            if (badges.language.isNotEmpty()) {
                 BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopEnd)) {
-                    LanguageBadge(isLocal = false, sourceLanguage = languageBadge)
+                    LanguageBadge(isLocal = false, sourceLanguage = badges.language)
                 }
             }
             if (display == AnimeLibraryDisplay.COMPACT) {
@@ -589,6 +571,7 @@ internal fun AnimeLibraryListRow(
     anime: Anime,
     selected: Boolean,
     selectionMode: Boolean,
+    badges: AnimeCoverBadges,
     onLongClick: () -> Unit,
     onOpen: () -> Unit,
 ) {
@@ -622,6 +605,11 @@ internal fun AnimeLibraryListRow(
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
+        }
+        BadgeGroup {
+            DownloadsBadge(badges.downloaded)
+            UnreadBadge(badges.unwatched)
+            LanguageBadge(isLocal = false, sourceLanguage = badges.language)
         }
     }
 }

@@ -16,8 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
@@ -41,6 +44,7 @@ import eu.kanade.tachiyomi.ui.library.LibraryViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
@@ -76,6 +80,29 @@ internal data class BookLibrarySelection(
     val entries: List<Manga>,
     val downloadable: Boolean,
 )
+
+/** Library actions and the Undo prompt survive switches between Home tabs. */
+internal class AnimeLibraryActionModel : ViewModel() {
+    val snackbar = SnackbarHostState()
+}
+
+internal suspend fun changeLibraryFavorites(
+    favorite: Boolean,
+    setBooks: (suspend (Boolean) -> Boolean)?,
+    setAnime: suspend (Boolean) -> Unit,
+) = withNonCancellableContext {
+    check(setBooks?.invoke(favorite) != false)
+    try {
+        setAnime(favorite)
+    } catch (error: Exception) {
+        try {
+            check(setBooks?.invoke(!favorite) != false)
+        } catch (rollbackError: Exception) {
+            if (rollbackError !== error) error.addSuppressed(rollbackError)
+        }
+        throw error
+    }
+}
 
 internal class AnimeLibraryActions {
     var picker by mutableStateOf<ShelfSelection?>(null)
@@ -119,19 +146,21 @@ internal fun AnimeLibraryActionDialogs(actions: AnimeLibraryActions) {
 internal fun AnimeLibraryActionBar(
     selected: List<Anime>,
     actions: AnimeLibraryActions,
+    actionModel: AnimeLibraryActionModel,
     snackbar: SnackbarHostState,
     clear: () -> Unit,
-    scope: CoroutineScope,
     books: BookLibrarySelection? = null,
 ) {
     val context = LocalContext.current
+    val application = context.applicationContext
+    val dialogScope = rememberCoroutineScope()
     val library = remember { Injekt.get<AnimeLibraryStore>() }
     val downloads = remember { Injekt.get<AnimeDownloads>() }
     val ids = selected.mapTo(linkedSetOf(), Anime::id)
     val markLabel = if (books == null) R.string.tsz_anime_mark_seen else R.string.tsz_library_mark_finished
     val unmarkLabel = if (books == null) R.string.tsz_anime_mark_unseen else R.string.tsz_library_mark_unfinished
 
-    fun launchAction(action: suspend () -> Unit) {
+    fun launchAction(scope: CoroutineScope = actionModel.viewModelScope, action: suspend () -> Unit) {
         scope.launch {
             try {
                 action()
@@ -139,7 +168,7 @@ internal fun AnimeLibraryActionBar(
                 throw error
             } catch (error: Exception) {
                 AnimeLog.w("Anime library selection action failed", error)
-                snackbar.showSnackbar(context.contextStringResource(MR.strings.internal_error))
+                snackbar.showSnackbar(application.contextStringResource(MR.strings.internal_error))
             }
         }
     }
@@ -148,14 +177,20 @@ internal fun AnimeLibraryActionBar(
         clear()
         launchAction {
             val pending = if (seen) markLabel else unmarkLabel
-            if (snackbar.awaitTsuzukiUndo(context, context.getString(pending))) return@launchAction
-            books?.model?.applyReadSelection(books.entries, seen)
-            for (entry in selected) {
-                val episodes = library.getEpisodes(entry.id).filterAnimeGroups(entry.memo.excludedAnimeGroups())
-                val changed = library.setEpisodesSeen(episodes.mapTo(hashSetOf(), Episode::id), seen)
-                if (seen && !Injekt.get<BasePreferences>().incognitoMode.get()) {
-                    changed.filter { it.episodeNumber.isFinite() }.maxByOrNull(Episode::episodeNumber)
-                        ?.let { AnimeTrackProgressJob.enqueue(context, it) }
+            if (snackbar.awaitTsuzukiUndo(application, application.getString(pending))) return@launchAction
+            val episodeIds = buildSet {
+                for (entry in selected) {
+                    library.getEpisodes(entry.id).filterAnimeGroups(entry.memo.excludedAnimeGroups())
+                        .mapTo(this, Episode::id)
+                }
+            }
+            val changed = withNonCancellableContext {
+                books?.model?.applyReadSelection(books.entries, seen)
+                library.setEpisodesSeen(episodeIds, seen)
+            }
+            if (seen && !Injekt.get<BasePreferences>().incognitoMode.get()) {
+                changed.filter { it.episodeNumber.isFinite() }.groupBy(Episode::animeId).values.forEach { episodes ->
+                    episodes.maxByOrNull(Episode::episodeNumber)?.let { AnimeTrackProgressJob.enqueue(application, it) }
                 }
             }
         }
@@ -178,7 +213,7 @@ internal fun AnimeLibraryActionBar(
             }
             selected.firstOrNull { it.source !in sources }?.let {
                 val name = manager.stub(it.source)?.name ?: it.source.toString()
-                snackbar.showSnackbar(context.contextStringResource(MR.strings.source_not_installed, name))
+                snackbar.showSnackbar(application.contextStringResource(MR.strings.source_not_installed, name))
             }
         }
     }
@@ -190,7 +225,7 @@ internal fun AnimeLibraryActionBar(
                 icon = Icons.AutoMirrored.Outlined.Label,
                 shortTitle = stringResource(MR.strings.tsz_q9_shelf),
                 onClick = {
-                    launchAction {
+                    launchAction(dialogScope) {
                         val shared = selected.map<Anime, Set<Long>> { library.shelfIds(it.id) }.reduce { left, right ->
                             left intersect
                                 right
@@ -253,17 +288,13 @@ internal fun AnimeLibraryActionBar(
         SelectionAction(stringResource(MR.strings.action_remove), Icons.Outlined.Delete, onClick = {
             clear()
             launchAction {
-                check(books?.model?.setLibraryFavorites(books.entries, false) != false)
-                try {
-                    library.setLibraryFavorites(ids, false)
-                } catch (error: Exception) {
-                    books?.model?.setLibraryFavorites(books.entries, true)
-                    throw error
+                val setBooks: (suspend (Boolean) -> Boolean)? = if (books == null) null else { favorite ->
+                    books.model.setLibraryFavorites(books.entries, favorite)
                 }
-                val message = context.contextStringResource(MR.strings.manga_removed_library)
-                if (snackbar.awaitTsuzukiUndo(context, message)) {
-                    library.setLibraryFavorites(ids, true)
-                    check(books?.model?.setLibraryFavorites(books.entries, true) != false)
+                changeLibraryFavorites(false, setBooks) { library.setLibraryFavorites(ids, it) }
+                val message = application.contextStringResource(MR.strings.manga_removed_library)
+                if (snackbar.awaitTsuzukiUndo(application, message)) {
+                    changeLibraryFavorites(true, setBooks) { library.setLibraryFavorites(ids, it) }
                 }
             }
         }),

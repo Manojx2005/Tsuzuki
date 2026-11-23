@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.anime.allPageAnimeRows
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeLibraryBadges
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -144,6 +145,7 @@ internal fun LibraryPager(
 
         when (displayMode) {
             LibraryDisplayMode.List -> {
+                val animeBadges = if (allPageAnime.isNotEmpty()) rememberAnimeLibraryBadges() else null
                 LibraryList(
                     items = items,
                     contentPadding = contentPadding,
@@ -156,7 +158,11 @@ internal fun LibraryPager(
                     showUrl = showUrlInList,
                     onLoadMore = onLoadMoreForCategory,
                     loadMoreKey = loadMoreKey,
-                    append = { allPageAnimeRows(allPageAnime, animeSelection, selection.isNotEmpty()) },
+                    append = {
+                        if (animeBadges != null) {
+                            allPageAnimeRows(allPageAnime, animeSelection, selection.isNotEmpty(), animeBadges)
+                        }
+                    },
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {

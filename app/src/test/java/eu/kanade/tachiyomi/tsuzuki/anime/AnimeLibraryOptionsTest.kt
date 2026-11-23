@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.tsuzuki.anime
 
+import eu.kanade.tachiyomi.animesource.model.SAnime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -11,9 +12,9 @@ class AnimeLibraryOptionsTest {
     private fun anime(id: Long, title: String, total: Long, seen: Long, added: Long = id) =
         Anime(source = 1, url = "/$id", title = title, id = id, totalCount = total, seenCount = seen, dateAdded = added)
 
-    private val fresh = anime(1, "beta", total = 3, seen = 0)
+    private val fresh = anime(1, "beta", total = 3, seen = 0).copy(status = SAnime.COMPLETED.toLong())
     private val started = anime(2, "Alpha", total = 4, seen = 2)
-    private val done = anime(3, "gamma", total = 2, seen = 2)
+    private val done = anime(3, "gamma", total = 2, seen = 2).copy(status = SAnime.ONGOING.toLong())
     private val empty = anime(4, "delta", total = 0, seen = 0)
     private val all = listOf(fresh, started, done, empty)
 
@@ -35,9 +36,10 @@ class AnimeLibraryOptionsTest {
     @Test
     fun triStateFilters() {
         assertEquals(listOf(2L, 1L), ids(AnimeLibraryOptions(unwatched = TriState.ENABLED_IS)))
-        assertEquals(listOf(2L), ids(AnimeLibraryOptions(started = TriState.ENABLED_IS)))
-        assertEquals(listOf(3L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_IS)))
-        assertEquals(listOf(2L, 1L, 4L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_NOT)))
+        assertEquals(listOf(2L, 3L), ids(AnimeLibraryOptions(started = TriState.ENABLED_IS)))
+        assertEquals(listOf(1L, 4L), ids(AnimeLibraryOptions(started = TriState.ENABLED_NOT)))
+        assertEquals(listOf(1L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_IS)))
+        assertEquals(listOf(2L, 4L, 3L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_NOT)))
         assertEquals(listOf(3L), ids(AnimeLibraryOptions(downloaded = TriState.ENABLED_IS), saved = setOf(3L)))
         val tracked =
             applyAnimeLibraryOptions(all, AnimeLibraryOptions(tracked = TriState.ENABLED_NOT), emptySet(), setOf(1L))
