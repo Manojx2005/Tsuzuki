@@ -69,6 +69,12 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
+import java.time.LocalDate
+import kotlinx.coroutines.flow.flowOf
+import androidx.glance.layout.fillMaxHeight
+import android.icu.util.MeasureUnit
+import android.icu.util.Measure
+import android.icu.text.MeasureFormat
 import androidx.glance.appwidget.action.actionStartActivity as actionStartActivityIntent
 
 class TsuzukiWatchingWidget : GlanceAppWidget() {
@@ -88,8 +94,27 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
             isGroupingUsed = false
         }
 
+        val weekLabel = context.getString(R.string.tsz_anime_watch_stats_week)
+        val monthLabel = context.getString(R.string.tsz_anime_watch_stats_month)
+        val duration = MeasureFormat.getInstance(
+            context.resources.configuration.locales[0],
+            MeasureFormat.FormatWidth.SHORT,
+        )
+
         provideContent {
-            val limit = watchingWidgetSlots(LocalSize.current.height.value)
+            // AP-16: a tall widget keeps room at the bottom for watch time, like Continue Reading's stats row.
+            val height = LocalSize.current.height.value
+            val tall = height >= WATCHING_WIDGET_TALL_DP
+            val limit = watchingWidgetSlots(if (tall) height - WATCHING_STATS_ROW_DP else height)
+            val stats by remember(history, tall) {
+                if (tall) {
+                    history.subscribeWatchStats(LocalDate.now()).catch { error ->
+                        logcat(LogPriority.WARN, error) { "Could not load watch time for the widget" }
+                    }
+                } else {
+                    flowOf(null)
+                }
+            }.collectAsState(initial = null)
             val items by remember(history, limit) {
                 history.subscribeHistory()
                     .map { selectWatchingWidgetItems(it, limit) }
@@ -128,6 +153,14 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
                         first = index == 0,
                     )
                 }
+                stats?.takeIf { tall && it.hasWatchData }?.let { watch ->
+                    Spacer(GlanceModifier.defaultWeight())
+                    Row(GlanceModifier.fillMaxWidth().height(WATCHING_STATS_ROW_DP.dp - 8.dp)) {
+                        WatchTimeTile(tokens, weekLabel, duration.watchTime(watch.weekSeconds), GlanceModifier.defaultWeight())
+                        Spacer(GlanceModifier.width(6.dp))
+                        WatchTimeTile(tokens, monthLabel, duration.watchTime(watch.monthSeconds), GlanceModifier.defaultWeight())
+                    }
+                }
             }
         }
     }
@@ -149,6 +182,30 @@ internal fun setWatchingWidgetAvailable(context: Context, available: Boolean) {
 
 class TsuzukiWatchingWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TsuzukiWatchingWidget()
+}
+
+private const val WATCHING_WIDGET_TALL_DP = 244f
+private const val WATCHING_STATS_ROW_DP = 84f
+
+/** "3 h 20 min" style watch time, as Stats shows it. */
+internal fun MeasureFormat.watchTime(seconds: Long): String {
+    val minutes = seconds / 60
+    return when {
+        minutes < 60 -> formatMeasures(Measure(minutes, MeasureUnit.MINUTE))
+        minutes % 60 == 0L -> formatMeasures(Measure(minutes / 60, MeasureUnit.HOUR))
+        else -> formatMeasures(Measure(minutes / 60, MeasureUnit.HOUR), Measure(minutes % 60, MeasureUnit.MINUTE))
+    }
+}
+
+@Composable
+private fun WatchTimeTile(tokens: TsuzukiTokens, label: String, value: String, modifier: GlanceModifier) {
+    Column(
+        modifier.fillMaxHeight().cornerRadius(18.dp).background(tokens.tile).padding(12.dp)
+            .clickable(actionStartActivity<MainActivity>()),
+    ) {
+        Text(tokens.widgetCase(label), style = tokens.watchingText(tokens.mutedText, 11, bold = true))
+        Text(tokens.widgetCase(value), maxLines = 1, style = tokens.watchingText(tokens.dotOn, 18, bold = true))
+    }
 }
 
 internal fun watchingWidgetSlots(heightDp: Float): Int = ((heightDp - 10) / 76).toInt().coerceIn(1, 4)
