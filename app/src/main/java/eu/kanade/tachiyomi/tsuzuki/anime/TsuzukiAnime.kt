@@ -26,6 +26,13 @@ internal object TsuzukiAnime {
 
     val enabled: Boolean get() = gate?.enabled == true
 
+    /**
+     * Anime data travels with backups whenever this device can run anime, also while the feature is switched off, so a
+     * backup made with Anime hidden doesn't drop the anime library (AP-17). The backup options still let the owner
+     * leave it out.
+     */
+    val inBackups: Boolean get() = enabled || runCatching { supported }.getOrDefault(false)
+
     fun preference(store: PreferenceStore): Preference<Boolean> = store.getBoolean("tsuzuki_anime_enabled", false)
 
     fun initialize(context: Context, scope: CoroutineScope) {

@@ -187,7 +187,7 @@ class BackupCreator(
                     val bytes = parser.encodeToByteArray(BackupExtensionStore.serializer(), er)
                     writeProtoField(gzipOut.outputStream(), 106, bytes)
                 }
-                if (TsuzukiAnime.enabled && options.includeAnime) {
+                if (TsuzukiAnime.inBackups && options.includeAnime) {
                     val stream = gzipOut.outputStream()
                     AnimeBackupStore(Injekt.get()).export(options, parser) { field, bytes ->
                         writeProtoField(stream, field, bytes)

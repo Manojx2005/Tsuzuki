@@ -22,7 +22,7 @@ import uy.kohesive.injekt.api.get
 internal fun animeSourcePreferencesForBackup(
     convert: (Map<String, *>) -> List<BackupPreference>,
 ): List<BackupSourcePreferences> {
-    if (!TsuzukiAnime.enabled) return emptyList()
+    if (!TsuzukiAnime.inBackups) return emptyList()
     val ids = try {
         // The creator's source-settings step isn't suspending; this is one small database read on its IO thread.
         runBlocking { Injekt.get<AnimeSourceRepository>().awaitAll().map { it.id } }
