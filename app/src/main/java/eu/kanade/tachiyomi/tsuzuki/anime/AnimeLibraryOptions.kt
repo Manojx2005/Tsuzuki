@@ -18,10 +18,11 @@ internal data class AnimeLibraryOptions(
     val unwatched: TriState = TriState.DISABLED,
     val started: TriState = TriState.DISABLED,
     val completed: TriState = TriState.DISABLED,
+    val tracked: TriState = TriState.DISABLED,
     val display: AnimeLibraryDisplay = AnimeLibraryDisplay.GRID,
 ) {
     val hasFilters: Boolean
-        get() = listOf(downloaded, unwatched, started, completed).any { it != TriState.DISABLED }
+        get() = listOf(downloaded, unwatched, started, completed, tracked).any { it != TriState.DISABLED }
 }
 
 private fun TriState.accepts(value: Boolean): Boolean = when (this) {
@@ -34,13 +35,19 @@ private fun TriState.accepts(value: Boolean): Boolean = when (this) {
  * Filters then sorts [anime] like the book library: [saved] holds anime with at least one saved episode.
  * Completed means every episode watched (and at least one episode); started means some, but not all, watched.
  */
-internal fun applyAnimeLibraryOptions(anime: List<Anime>, options: AnimeLibraryOptions, saved: Set<Long>): List<Anime> {
+internal fun applyAnimeLibraryOptions(
+    anime: List<Anime>,
+    options: AnimeLibraryOptions,
+    saved: Set<Long>,
+    tracked: Set<Long> = emptySet(),
+): List<Anime> {
     val filtered = anime.filter {
         val unwatched = it.totalCount - it.seenCount
         options.downloaded.accepts(it.id in saved) &&
             options.unwatched.accepts(unwatched > 0) &&
             options.started.accepts(it.seenCount > 0 && unwatched > 0) &&
-            options.completed.accepts(it.totalCount > 0 && unwatched <= 0)
+            options.completed.accepts(it.totalCount > 0 && unwatched <= 0) &&
+            options.tracked.accepts(it.id in tracked)
     }
     val byTitle = compareBy<Anime, String>(String.CASE_INSENSITIVE_ORDER) { it.title }
     val primary: Comparator<Anime> = when (options.sort) {
@@ -63,5 +70,6 @@ internal class AnimeLibraryOptionPreferences(store: PreferenceStore) {
     val unwatched = store.getEnum("tsuzuki_anime_library_filter_unwatched", TriState.DISABLED)
     val started = store.getEnum("tsuzuki_anime_library_filter_started", TriState.DISABLED)
     val completed = store.getEnum("tsuzuki_anime_library_filter_completed", TriState.DISABLED)
+    val tracked = store.getEnum("tsuzuki_anime_library_filter_tracked", TriState.DISABLED)
     val display = store.getEnum("tsuzuki_anime_library_display", AnimeLibraryDisplay.GRID)
 }

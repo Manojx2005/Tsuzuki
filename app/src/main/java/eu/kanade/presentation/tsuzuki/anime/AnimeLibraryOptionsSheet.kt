@@ -76,6 +76,7 @@ private fun FilterPage(preferences: AnimeLibraryOptionPreferences) {
         stringResource(R.string.tsz_anime_unwatched) to preferences.unwatched,
         mokoString(MR.strings.label_started) to preferences.started,
         mokoString(MR.strings.completed) to preferences.completed,
+        mokoString(MR.strings.action_filter_tracked) to preferences.tracked,
     ).forEach { (label, preference) ->
         val state by preference.collectAsState()
         TriStateItem(label = label, state = state, onClick = { preference.set(state.next()) })
@@ -137,6 +138,6 @@ private fun DisplayPage(preferences: AnimeLibraryOptionPreferences) {
 /** True while any filter is set, for tinting the library's filter icon. */
 @Composable
 internal fun AnimeLibraryOptionPreferences.anyFilter(): Boolean {
-    val values = listOf(downloaded, unwatched, started, completed).map { it.collectAsState().value }
+    val values = listOf(downloaded, unwatched, started, completed, tracked).map { it.collectAsState().value }
     return values.any { it != TriState.DISABLED }
 }

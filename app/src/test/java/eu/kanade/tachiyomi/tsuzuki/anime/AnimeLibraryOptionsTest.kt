@@ -39,6 +39,9 @@ class AnimeLibraryOptionsTest {
         assertEquals(listOf(3L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_IS)))
         assertEquals(listOf(2L, 1L, 4L), ids(AnimeLibraryOptions(completed = TriState.ENABLED_NOT)))
         assertEquals(listOf(3L), ids(AnimeLibraryOptions(downloaded = TriState.ENABLED_IS), saved = setOf(3L)))
+        val tracked =
+            applyAnimeLibraryOptions(all, AnimeLibraryOptions(tracked = TriState.ENABLED_NOT), emptySet(), setOf(1L))
+        assertEquals(listOf(2L, 4L, 3L), tracked.map { it.id })
     }
 
     @Test

@@ -36,6 +36,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import androidx.compose.ui.graphics.Brush
 import android.content.res.Configuration
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryUpdateJob
@@ -160,9 +161,12 @@ internal data object AnimeLibraryTab : Tab {
             unwatched = optionPrefs.unwatched.collectAsState().value,
             started = optionPrefs.started.collectAsState().value,
             completed = optionPrefs.completed.collectAsState().value,
+            tracked = optionPrefs.tracked.collectAsState().value,
             display = optionPrefs.display.collectAsState().value,
         )
         var showOptions by rememberSaveable { mutableStateOf(false) }
+        val trackedIds by remember { Injekt.get<AnimeTrackRepository>().subscribeTrackedAnimeIds() }
+            .collectAsState(emptySet())
         val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
         val unwatchedBadges by libraryPrefs.unreadBadge.collectAsState()
         val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -172,12 +176,12 @@ internal data object AnimeLibraryTab : Tab {
         val savedCounts = remember(downloads) {
             downloads.entries.filter { it.status == AnimeDownloadStatus.Saved }.groupingBy { it.animeId }.eachCount()
         }
-        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options) {
+        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options, trackedIds) {
             val matches = library.filter {
                 shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
                     (!downloadedOnly || it.anime.id in savedAnime)
             }
-            val order = applyAnimeLibraryOptions(matches.map { it.anime }, options, savedAnime)
+            val order = applyAnimeLibraryOptions(matches.map { it.anime }, options, savedAnime, trackedIds)
                 .withIndex().associate { (index, anime) -> anime.id to index }
             val sorted = matches.filter { it.anime.id in order }.sortedBy { order.getValue(it.anime.id) }
             if (groupSeasons && search.isEmpty()) groupAnimeSeasons(sorted) else sorted
