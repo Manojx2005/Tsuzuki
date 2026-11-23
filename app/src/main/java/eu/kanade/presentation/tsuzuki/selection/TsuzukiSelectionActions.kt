@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material.icons.outlined.SwapCalls
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -23,6 +24,10 @@ import eu.kanade.tachiyomi.R
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
+import androidx.compose.ui.res.stringResource as androidStringResource
+
+/** True inside anime screens, so the chapter selection bar uses episode wording. */
+internal val LocalSelectionEpisodes = staticCompositionLocalOf { false }
 
 @Composable
 internal fun TsuzukiChapterSelectionBar(
@@ -40,13 +45,25 @@ internal fun TsuzukiChapterSelectionBar(
     onTranslateClicked: (() -> Unit)?,
     onRetranslateClicked: (() -> Unit)?,
 ) {
+    // Anime screens set LocalSelectionEpisodes so the same bar speaks of episodes (watched, not read).
+    val episodes = LocalSelectionEpisodes.current
     val actions = listOfNotNull(
         onMarkAsReadClicked?.let {
             SelectionAction(
-                stringResource(MR.strings.action_mark_as_read),
+                if (episodes) {
+                    androidStringResource(
+                        R.string.tsz_anime_mark_seen,
+                    )
+                } else {
+                    stringResource(MR.strings.action_mark_as_read)
+                },
                 Icons.Outlined.DoneAll,
                 it,
-                shortTitle = stringResource(MR.strings.tsz_q9_mark_read),
+                shortTitle = if (episodes) {
+                    androidStringResource(R.string.tsz_anime_mark_watched_short)
+                } else {
+                    stringResource(MR.strings.tsz_q9_mark_read)
+                },
             )
         },
         onDownloadClicked?.let {
@@ -56,19 +73,53 @@ internal fun TsuzukiChapterSelectionBar(
             SelectionAction(stringResource(MR.strings.action_delete), Icons.Outlined.Delete, it)
         },
         onBookmarkClicked?.let {
-            SelectionAction(stringResource(MR.strings.action_bookmark), Icons.Outlined.BookmarkAdd, it)
+            SelectionAction(
+                if (episodes) {
+                    androidStringResource(
+                        R.string.tsz_anime_bookmark,
+                    )
+                } else {
+                    stringResource(MR.strings.action_bookmark)
+                },
+                Icons.Outlined.BookmarkAdd,
+                it,
+            )
         },
         onMarkAsUnreadClicked?.let {
-            SelectionAction(stringResource(MR.strings.action_mark_as_unread), Icons.Outlined.RemoveDone, it)
+            SelectionAction(
+                if (episodes) {
+                    androidStringResource(
+                        R.string.tsz_anime_mark_unseen,
+                    )
+                } else {
+                    stringResource(MR.strings.action_mark_as_unread)
+                },
+                Icons.Outlined.RemoveDone,
+                it,
+            )
         },
         onRemoveBookmarkClicked?.let {
-            SelectionAction(stringResource(MR.strings.action_remove_bookmark), Icons.Outlined.BookmarkRemove, it)
+            SelectionAction(
+                if (episodes) {
+                    androidStringResource(
+                        R.string.tsz_anime_unbookmark,
+                    )
+                } else {
+                    stringResource(MR.strings.action_remove_bookmark)
+                },
+                Icons.Outlined.BookmarkRemove,
+                it,
+            )
         },
     )
     val more = listOfNotNull(
         onMarkPreviousAsReadClicked?.let {
             SelectionAction(
-                stringResource(MR.strings.action_mark_previous_as_read),
+                if (episodes) {
+                    androidStringResource(R.string.tsz_anime_mark_previous)
+                } else {
+                    stringResource(MR.strings.action_mark_previous_as_read)
+                },
                 ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
                 it,
             )

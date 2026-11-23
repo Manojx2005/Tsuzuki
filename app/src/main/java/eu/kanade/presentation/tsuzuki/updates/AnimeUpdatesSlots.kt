@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,6 +31,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
 import eu.kanade.presentation.tsuzuki.anime.MixedTimelineRow
+import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiUndoSnackbarHost
 import eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle
 import eu.kanade.presentation.updates.UpdatesUiModel
@@ -308,35 +310,37 @@ private fun AnimeUpdatesScreen(
             )
         },
         bottomBar = {
-            MangaBottomActionMenu(
-                visible = selected.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(),
-                onBookmarkClicked = {
-                    runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), true) }
-                }.takeIf { actions.bookmark },
-                onRemoveBookmarkClicked = {
-                    runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), false) }
-                }.takeIf { actions.removeBookmark },
-                onMarkAsReadClicked = {
-                    runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), true, track) }
-                }.takeIf { actions.markSeen },
-                onMarkAsUnreadClicked = {
-                    runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), false, track) }
-                }.takeIf { actions.markUnseen },
-                onDownloadClicked = {
-                    runOnSelection { items ->
-                        items.filter { status[it.episodeId] == AnimeDownloadStatus.Failed }
-                            .forEach { downloads.retry(it.episodeId) }
-                        queueAnimeUpdates(store, downloads, items.filter { status[it.episodeId] == null })
-                    }
-                }.takeIf { actions.download },
-                onDeleteClicked = {
-                    runOnSelection { items ->
-                        items.filter { status[it.episodeId] == AnimeDownloadStatus.Saved }
-                            .forEach { downloads.remove(it.episodeId) }
-                    }
-                }.takeIf { actions.delete },
-            )
+            CompositionLocalProvider(LocalSelectionEpisodes provides true) {
+                MangaBottomActionMenu(
+                    visible = selected.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth(),
+                    onBookmarkClicked = {
+                        runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), true) }
+                    }.takeIf { actions.bookmark },
+                    onRemoveBookmarkClicked = {
+                        runOnSelection { items -> store.setEpisodesBookmarked(items.ids(), false) }
+                    }.takeIf { actions.removeBookmark },
+                    onMarkAsReadClicked = {
+                        runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), true, track) }
+                    }.takeIf { actions.markSeen },
+                    onMarkAsUnreadClicked = {
+                        runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), false, track) }
+                    }.takeIf { actions.markUnseen },
+                    onDownloadClicked = {
+                        runOnSelection { items ->
+                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Failed }
+                                .forEach { downloads.retry(it.episodeId) }
+                            queueAnimeUpdates(store, downloads, items.filter { status[it.episodeId] == null })
+                        }
+                    }.takeIf { actions.download },
+                    onDeleteClicked = {
+                        runOnSelection { items ->
+                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Saved }
+                                .forEach { downloads.remove(it.episodeId) }
+                        }
+                    }.takeIf { actions.delete },
+                )
+            }
         },
         snackbarHost = { TsuzukiUndoSnackbarHost(snackbar) },
     ) { padding ->

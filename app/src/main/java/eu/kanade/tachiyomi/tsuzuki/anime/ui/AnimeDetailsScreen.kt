@@ -31,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,6 +66,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
 import eu.kanade.presentation.tsuzuki.anime.openAnime
+import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -321,35 +323,37 @@ internal fun AnimeDetailsScreen(
                 block()
                 selection = longArrayOf()
             }
-            MangaBottomActionMenu(
-                visible = selected.isNotEmpty() && !saving,
-                modifier = Modifier.fillMaxWidth(),
-                onBookmarkClicked = { act { library.setEpisodesBookmarked(ids, true) } }
-                    .takeIf { selected.any { !it.bookmark } },
-                onRemoveBookmarkClicked = { act { library.setEpisodesBookmarked(ids, false) } }
-                    .takeIf { selected.isNotEmpty() && selected.all(Episode::bookmark) },
-                onMarkAsReadClicked = { act { markSeen(ids, true) } }
-                    .takeIf { selected.any { !it.seen } },
-                onMarkAsUnreadClicked = { act { markSeen(ids, false) } }
-                    .takeIf { selected.any { it.seen || it.lastSecondSeen > 0 } },
-                onMarkPreviousAsReadClicked = selected.singleOrNull()?.let { episode -> { markPrevious(episode) } },
-                onDownloadClicked = {
-                    val chosen = ordered.filter { it.id in ids }
-                    chosen.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Failed }
-                        .forEach { downloads.retry(it.id) }
-                    enqueue(chosen.filter { downloadStatuses[it.id] == null })
-                    selection = longArrayOf()
-                }.takeIf {
-                    selected.any {
-                        downloadStatuses[it.id] == null || downloadStatuses[it.id] == AnimeDownloadStatus.Failed
-                    }
-                },
-                onDeleteClicked = {
-                    selected.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Saved }
-                        .forEach { downloads.remove(it.id) }
-                    selection = longArrayOf()
-                }.takeIf { selected.any { downloadStatuses[it.id] == AnimeDownloadStatus.Saved } },
-            )
+            CompositionLocalProvider(LocalSelectionEpisodes provides true) {
+                MangaBottomActionMenu(
+                    visible = selected.isNotEmpty() && !saving,
+                    modifier = Modifier.fillMaxWidth(),
+                    onBookmarkClicked = { act { library.setEpisodesBookmarked(ids, true) } }
+                        .takeIf { selected.any { !it.bookmark } },
+                    onRemoveBookmarkClicked = { act { library.setEpisodesBookmarked(ids, false) } }
+                        .takeIf { selected.isNotEmpty() && selected.all(Episode::bookmark) },
+                    onMarkAsReadClicked = { act { markSeen(ids, true) } }
+                        .takeIf { selected.any { !it.seen } },
+                    onMarkAsUnreadClicked = { act { markSeen(ids, false) } }
+                        .takeIf { selected.any { it.seen || it.lastSecondSeen > 0 } },
+                    onMarkPreviousAsReadClicked = selected.singleOrNull()?.let { episode -> { markPrevious(episode) } },
+                    onDownloadClicked = {
+                        val chosen = ordered.filter { it.id in ids }
+                        chosen.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Failed }
+                            .forEach { downloads.retry(it.id) }
+                        enqueue(chosen.filter { downloadStatuses[it.id] == null })
+                        selection = longArrayOf()
+                    }.takeIf {
+                        selected.any {
+                            downloadStatuses[it.id] == null || downloadStatuses[it.id] == AnimeDownloadStatus.Failed
+                        }
+                    },
+                    onDeleteClicked = {
+                        selected.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Saved }
+                            .forEach { downloads.remove(it.id) }
+                        selection = longArrayOf()
+                    }.takeIf { selected.any { downloadStatuses[it.id] == AnimeDownloadStatus.Saved } },
+                )
+            }
         },
     ) { padding ->
         PullRefresh(
