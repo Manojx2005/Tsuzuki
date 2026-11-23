@@ -138,8 +138,11 @@ internal fun AnimeDetailsScreen(
         saved?.let { library.observeEpisodes(it.id) } ?: flowOf(emptyEpisodes)
     }.collectAsState(emptyEpisodes)
     val display = details.display
-    val filtered = remember(episodeState, details.episodeDisplay) {
-        details.episodeDisplay.apply(episodeState.items)
+    val filtered = remember(episodeState, details.episodeDisplay, downloadStatuses) {
+        details.episodeDisplay.apply(
+            episodeState.items,
+            downloadStatuses.filterValues { it == AnimeDownloadStatus.Saved }.keys,
+        )
     }
     val ordered = remember(episodeState.items) { episodeState.items.sortedWith(animeEpisodeNumberOrder) }
     val shelves by remember { library.observeShelves() }.collectAsState(emptyList())
@@ -570,7 +573,7 @@ internal fun AnimeDetailsScreen(
             excludedGroups = excludedGroups,
             onDismiss = { showFilter = false },
         ) { displayOptions, groups ->
-            showFilter = false
+            // Applies at once and stays open, as the book chapter dialog does.
             mutate { model.setEpisodeDisplay(displayOptions, groups) }
         }
     }
