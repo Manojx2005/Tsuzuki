@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,13 +19,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -56,7 +58,9 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.paging.compose.collectAsLazyPagingItems
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.library.components.CommonMangaItemDefaults
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSegments
@@ -73,6 +77,7 @@ import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
@@ -82,6 +87,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.callAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.toSourceAnime
 import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -89,6 +95,7 @@ import kotlinx.coroutines.withContext
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -288,6 +295,12 @@ private fun AnimeCatalogueScreen(
     }
     val shows = pagingFlow.collectAsLazyPagingItems()
     val tokens = TsuzukiTheme.tokens
+    val library = remember { Injekt.get<AnimeLibraryStore>() }
+    val displayPreference = remember { Injekt.get<SourcePreferences>().sourceDisplayMode }
+    val displayMode by displayPreference.collectAsState()
+    var displayMenu by remember { mutableStateOf(false) }
+    val libraryUrls by rememberAnimeLibraryUrls(library, source.id)
+    val (longPress, onLongPress) = rememberAnimeCatalogueLongPress(source, library)
     Scaffold(
         modifier = Modifier.tsuzukiBackground(tokens),
         containerColor = Color.Transparent,
@@ -296,11 +309,45 @@ private fun AnimeCatalogueScreen(
                 title = tsuzukiMenuLabel(source.name),
                 navigateUp = onBack,
                 actions = {
-                    if (onSettings != null) {
-                        IconButton(onClick = onSettings) {
-                            Icon(Icons.Outlined.Settings, stringResource(MR.strings.source_settings))
-                        }
+                    IconButton(enabled = !loadingFilters, onClick = { editFilters() }) {
+                        Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
                     }
+                    Box {
+                        IconButton(onClick = { displayMenu = true }) {
+                            Icon(Icons.AutoMirrored.Outlined.ViewList, stringResource(MR.strings.action_display_mode))
+                        }
+                        AnimeCatalogueDisplayMenu(
+                            expanded = displayMenu,
+                            current = displayMode,
+                            onDismiss = { displayMenu = false },
+                            onSelect = displayPreference::set,
+                        )
+                    }
+                    // WebView and source settings go to the overflow menu, as in the book catalogue, so the
+                    // title keeps its room on phones.
+                    val baseUrl = (source as? AnimeHttpSource)?.baseUrl
+                    AppBarActions(
+                        listOfNotNull(
+                            baseUrl?.takeIf(String::isNotBlank)?.let { url ->
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_open_in_web_view),
+                                    icon = Icons.Outlined.Public,
+                                    onClick = {
+                                        context.startActivity(
+                                            WebViewActivity.newIntent(context, url, title = source.name),
+                                        )
+                                    },
+                                )
+                            },
+                            onSettings?.let {
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.source_settings),
+                                    icon = Icons.Outlined.Settings,
+                                    onClick = it,
+                                )
+                            },
+                        ),
+                    )
                 },
             )
         },
@@ -338,20 +385,10 @@ private fun AnimeCatalogueScreen(
                             }
                         },
                     )
-                    IconButton(
-                        enabled = !loadingFilters,
-                        onClick = { editFilters() },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = tokens.dotOn,
-                            disabledContentColor = tokens.mutedText,
-                        ),
-                    ) {
-                        Icon(Icons.Outlined.FilterList, stringResource(MR.strings.action_filter))
-                    }
                 }
             }
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(112.dp),
+                columns = animeCatalogueColumns(displayMode),
                 contentPadding = PaddingValues(12.dp),
                 verticalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridVerticalSpacer),
                 horizontalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridHorizontalSpacer),
@@ -359,21 +396,15 @@ private fun AnimeCatalogueScreen(
             ) {
                 items(shows.itemCount) { index ->
                     val anime = shows[index] ?: return@items
-                    Column(
-                        Modifier.tsuzukiClickable(role = Role.Button) { onOpen(anime) },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        AnimeCover(source, anime, Modifier.fillMaxWidth())
-                        Text(
-                            text = tsuzukiMenuLabel(anime.title),
-                            modifier = Modifier.padding(4.dp),
-                            color = tokens.dotOn,
-                            style = MaterialTheme.typography.titleSmall,
-                            minLines = 2,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                    val inLibrary = anime.url in libraryUrls
+                    AnimeCatalogueItem(
+                        source = source,
+                        anime = anime,
+                        mode = displayMode,
+                        inLibrary = inLibrary,
+                        onClick = { onOpen(anime) },
+                        onLongClick = { onLongPress(anime, inLibrary) },
+                    )
                 }
                 val refresh = shows.loadState.refresh
                 val append = shows.loadState.append
@@ -400,6 +431,7 @@ private fun AnimeCatalogueScreen(
             }
         }
     }
+    AnimeCatalogueLongPressDialogs(longPress, source, library)
     editingFilters?.let { filters ->
         AnimeFilterDialog(
             filters = filters,

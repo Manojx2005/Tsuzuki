@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_tile_new_episodes">새 에피소드</string>
+    <string name="tsz_anime_tile_watched_today">오늘 시청</string>
+    <string name="tsz_anime_tile_min">분</string>
+    <plurals name="tsz_anime_tile_in_shows">
+        <item quantity="one">%d개 작품</item>
+        <item quantity="other">%d개 작품</item>
+    </plurals>
+</resources>

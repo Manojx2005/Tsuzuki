@@ -2,40 +2,33 @@ package eu.kanade.presentation.tsuzuki.browse
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.outlined.Layers
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.core.graphics.drawable.toBitmap
-import coil3.compose.AsyncImage
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
-import eu.kanade.tachiyomi.util.system.LocaleHelper
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,15 +42,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
 import eu.kanade.presentation.browse.ExtensionTrustDialog
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
@@ -75,6 +75,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeStoreRow
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.animeStoreRows
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeSourcePreferencesActivity
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.hasAnimeSourceSettings
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -121,6 +122,7 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
         var operationFailed by remember { mutableStateOf(false) }
         var trust by remember { mutableStateOf<AnimeExtension.Untrusted?>(null) }
         var remove by remember { mutableStateOf<AnimeStoreRow?>(null) }
+        var details by remember { mutableStateOf<AnimeStoreRow?>(null) }
         val catalogue by produceState<AnimeExtensionCatalogue?>(null, store, repos, reload) {
             value = null
             value = store.catalogue(repos)
@@ -260,12 +262,20 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
             }
             if (catalogue != null && shown.isEmpty()) {
                 item(key = "empty") {
-                    Text(
-                        tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
-                        color = tokens.mutedText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
+                    Column {
+                        Text(
+                            tsuzukiMenuLabel(stringResource(MR.strings.no_results_found)),
+                            color = tokens.mutedText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                        // AP-18: with no repository yet, point straight at adding one.
+                        if (repos.isEmpty()) {
+                            TextButton(onClick = { navigator.push(AnimeExtensionReposScreen) }) {
+                                Text(tsuzukiMenuLabel(androidStringResource(R.string.tsz_anime_extension_repos)))
+                            }
+                        }
+                    }
                 }
             }
             listOf(
@@ -286,9 +296,30 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
                         onAction = { onAction(row) },
                         onRemove = { remove = row },
                         onSettings = configurable[row.pkgName]?.let { sources -> { openSettings(sources) } },
+                        onClick = { details = row }.takeIf { row.extension != null },
                     )
                 }
             }
+        }
+        details?.let { row ->
+            AnimeExtensionDetailsSheet(
+                row = row,
+                configurable = configurable[row.pkgName].orEmpty(),
+                enabled = busy == null,
+                onDismiss = { details = null },
+                onAction = {
+                    details = null
+                    onAction(row)
+                },
+                onRemove = {
+                    details = null
+                    remove = row
+                },
+                onSourceSettings = { source ->
+                    details = null
+                    activityContext.startActivity(AnimeSourcePreferencesActivity.intent(activityContext, source.id))
+                },
+            )
         }
         pickSettings?.let { sources ->
             AlertDialog(
@@ -349,7 +380,6 @@ internal fun animeExtensionsTab(repos: List<AnimeExtensionRepo>, query: String?)
             )
         }
     }
-
 }
 
 @Composable
@@ -452,11 +482,14 @@ private fun AnimeStoreExtensionRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     onSettings: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val context = LocalContext.current
     Row(
-        modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier.fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
+            .heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

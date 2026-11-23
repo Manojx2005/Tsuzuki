@@ -9,6 +9,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- **Anime works like your books.** Anime now has the same tools as manga and novels:
+  - Library: long-press to select anime, then move them to shelves, mark them watched or unwatched, download the
+    next 1, 5 or 10 episodes (or every unwatched one), delete downloads, remove them (with Undo) or migrate them.
+  - Library: the filter button opens the same Filter, Sort and Display sheet as books: filter by downloaded,
+    unwatched, started, completed or tracked; sort by title, last watched, latest episode, unwatched count, date
+    added or total episodes; show a comfortable, compact or cover-only grid or a list, with the book library's
+    column setting. Covers show unwatched, downloaded and language badges when those are switched on in Library
+    settings. The menu offers Update shelf and Open random entry.
+  - Episode lists: long-press to select episodes and act on them from the bar at the bottom, and swipe an episode
+    to mark it watched, bookmark it or download it, using your Library swipe settings.
+  - Anime details: notes, a full-size cover you can save or share, and when the source lists an upcoming episode,
+    how many days until it airs.
+  - Updates: new episodes look like new chapters, can be selected, downloaded, marked watched or bookmarked, and
+    the New and Save all tiles count them. History shows anime like books and can clear anime history.
+  - Browse: anime catalogues can show a grid or a list, add or remove a title with a long-press, mark titles
+    already in your library, open the source in WebView and search every anime source at once. Anime extensions
+    have a details page and are visible before you add a repository.
+  - Watch on Home shows New episodes and Watched today. Stats shows a watch-time chart for the week, month or year.
+    A tall Continue Watching widget also shows this week's and this month's watch time.
+  - Downloads: the anime queue can pause or resume everything, retry or clear failed episodes and move an episode
+    to the top or bottom. A new setting deletes anime episodes after you watch them (off by default).
+- Anime is easier to find: Home always shows Read and Watch, and Settings, More and the first-run setup can turn
+  anime on. Links from Aniyomi and Animetail that add an extension repository open in Tsuzuki.
+- Novels: look up words offline in English and Japanese right away (the dictionaries are now built in), or import
+  another dictionary file.
+
+### Changed
+- Backups keep your anime even while Anime is switched off, and the restore preview counts anime titles, shelves
+  and history.
+- Settings > Data and storage counts anime and episodes and includes downloaded episodes in the storage total.
+- The anime download notification shows real progress, which episode of how many, Pause, Cancel and Retry, and
+  says when it is waiting for Wi-Fi.
+
 ## [0.2.1]
 
 ### Added

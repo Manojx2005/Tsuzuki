@@ -73,10 +73,29 @@ internal class AnimeLibraryStore(
             memo,
             scanlator,
             animeMemo,
+            seen,
+            bookmark,
+            lastSecondSeen,
+            totalSeconds,
+            source,
+            cover,
         ->
         val visible = memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) &&
             !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
-        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to visible
+        AnimeUpdateEpisode(
+            animeId = animeId,
+            title = title,
+            episodeId = episodeId,
+            name = name,
+            previewUrl = previewUrl,
+            timestamp = dateFetch,
+            seen = seen,
+            bookmark = bookmark,
+            lastSecondSeen = lastSecondSeen,
+            totalSeconds = totalSeconds,
+            sourceId = source,
+            coverUrl = cover,
+        ) to visible
     }.subscribeToList().map { rows ->
         rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
     }
@@ -127,6 +146,12 @@ internal class AnimeLibraryStore(
         (anime.awaitBySourceAndUrl(source, result.url) ?: saveAnime(source, result)).id
     }
 
+    /** AP7: the title's notes (the anime's own `notes` column). */
+    suspend fun setNotes(id: Long, notes: String) {
+        val stored = anime.awaitById(id) ?: return
+        if (stored.notes != notes) anime.update(stored.copy(notes = notes))
+    }
+
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
@@ -161,6 +186,21 @@ internal class AnimeLibraryStore(
             if (favorite) shelves.setForAnime(entry.id, shelfIds)
             entry.id
         }.also { if (!favorite) prunePreviewFrames(it, null) }
+
+    suspend fun setLibraryFavorites(ids: Set<Long>, favorite: Boolean) {
+        database.transaction {
+            for (id in ids) {
+                val entry = anime.awaitById(id) ?: continue
+                anime.setFavorite(id, favorite, entry.dateAdded)
+            }
+        }
+    }
+
+    suspend fun moveLibraryAnime(ids: Set<Long>, shelfIds: Set<Long>) = database.transaction {
+        for (id in ids) {
+            if (anime.awaitById(id)?.favorite == true) shelves.setForAnime(id, shelfIds)
+        }
+    }
 
     suspend fun migrateFavorite(
         originalId: Long,
@@ -457,6 +497,12 @@ internal data class AnimeUpdateEpisode(
     val name: String,
     val previewUrl: String?,
     val timestamp: Long,
+    val seen: Boolean = false,
+    val bookmark: Boolean = false,
+    val lastSecondSeen: Long = 0,
+    val totalSeconds: Long = 0,
+    val sourceId: Long = 0,
+    val coverUrl: String? = null,
 )
 
 private const val UPDATE_MEMO_KEY = "tsuzuki:library-update"

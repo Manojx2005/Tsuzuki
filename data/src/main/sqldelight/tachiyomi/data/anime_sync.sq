@@ -46,3 +46,7 @@ ON CONFLICT(anime_id, sync_id) DO UPDATE SET
 
 delete:
 DELETE FROM anime_sync WHERE anime_id = :animeId AND sync_id = :syncId;
+
+-- AP8: anime with at least one tracker, for the library's Tracked filter.
+getTrackedAnimeIds:
+SELECT DISTINCT anime_id FROM anime_sync;

@@ -279,7 +279,7 @@ private fun LibraryRegularToolbar(
 }
 
 @Composable
-private fun LibrarySelectionToolbar(
+internal fun LibrarySelectionToolbar(
     selectedCount: Int,
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,

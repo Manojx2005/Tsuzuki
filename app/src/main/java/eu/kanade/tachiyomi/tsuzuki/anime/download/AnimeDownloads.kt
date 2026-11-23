@@ -30,6 +30,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -78,6 +81,8 @@ internal data class AnimeDownloadQueue(
     val hasQueuedEpisodes: Boolean get() = entries.any { it.status == AnimeDownloadStatus.Queued }
 
     /** Anime with at least one finished download, for the library's "Downloaded only" filter (AY-INT item 5). */
+    fun isSaved(id: Long): Boolean = entries.any { it.episodeId == id && it.status == AnimeDownloadStatus.Saved }
+
     fun savedAnimeIds(): Set<Long> =
         entries.filter { it.status == AnimeDownloadStatus.Saved }.mapTo(hashSetOf()) { it.animeId }
 
@@ -92,7 +97,32 @@ internal data class AnimeDownloadQueue(
 
     fun change(id: Long, transform: (AnimeDownloadEntry) -> AnimeDownloadEntry?): AnimeDownloadQueue =
         copy(entries = entries.mapNotNull { if (it.episodeId == id) transform(it) else it })
+
+    /** Moves a queued episode before every other queued one, or after them; downloads run in list order (AP11). */
+    fun move(id: Long, top: Boolean): AnimeDownloadQueue {
+        val entry = entries.firstOrNull { it.episodeId == id && it.status == AnimeDownloadStatus.Queued } ?: return this
+        val rest = entries - entry
+        val queued = rest.indices.filter { rest[it].status == AnimeDownloadStatus.Queued }
+        val at = if (top) queued.firstOrNull() ?: rest.size else (queued.lastOrNull()?.plus(1)) ?: rest.size
+        return copy(entries = rest.toMutableList().apply { add(at, entry) })
+    }
+
+    fun retryFailed(): AnimeDownloadQueue = copy(
+        entries = entries.map {
+            if (it.status == AnimeDownloadStatus.Failed) it.copy(status = AnimeDownloadStatus.Queued) else it
+        },
+    )
 }
+
+/**
+ * Episodes that turned watched since the last look, per anime (AP11). An anime's first look only sets its baseline,
+ * so episodes that were already watched (including ones downloaded later) are never counted.
+ */
+internal fun newlyWatchedDownloads(previous: Map<Long, Set<Long>>, current: Map<Long, Set<Long>>): Set<Long> =
+    current.flatMapTo(hashSetOf()) { (animeId, seen) -> previous[animeId]?.let { seen - it }.orEmpty() }
+
+internal fun animeDeleteAfterWatched(preferences: PreferenceStore) =
+    preferences.getBoolean("tsuzuki_anime_delete_after_watched", false)
 
 internal class AnimeDownloads(
     private val context: Context,
@@ -122,7 +152,37 @@ internal class AnimeDownloads(
         }
     }
 
+    private val deleteAfterWatched = animeDeleteAfterWatched(preferences)
+
     init {
+        // AP11: with "Delete after watched" on, a saved episode is deleted once it becomes watched. Episodes that were
+        // already watched when they were saved are left alone, as is everything while the setting is off.
+        scope.launch(Dispatchers.IO) {
+            initialized.await()
+            var previous = emptyMap<Long, Set<Long>>()
+            state.map { queue -> queue.savedAnimeIds() }
+                .distinctUntilChanged()
+                .flatMapLatest { animeIds ->
+                    if (animeIds.isEmpty()) {
+                        flowOf(emptyMap())
+                    } else {
+                        val ids = animeIds.toList()
+                        combine(ids.map { id -> library.observeEpisodes(id) }) { lists ->
+                            ids.indices.associate { i ->
+                                ids[i] to lists[i].items.filter { it.seen }.mapTo(hashSetOf()) { it.id }
+                            }
+                        }
+                    }
+                }
+                .distinctUntilChanged()
+                .collect { watched ->
+                    val newly = newlyWatchedDownloads(previous, watched)
+                    previous = watched
+                    if (newly.isNotEmpty() && deleteAfterWatched.get() && TsuzukiAnime.enabled) {
+                        newly.filter(state.value::isSaved).forEach(::remove)
+                    }
+                }
+        }
         scope.launch(Dispatchers.IO) {
             initialized.await()
             val notifier = AnimeDownloadNotifier(context)
@@ -193,6 +253,19 @@ internal class AnimeDownloads(
         ) {
             AnimeDownloadJob.schedule(context, state.value.wifiOnly, ExistingWorkPolicy.APPEND_OR_REPLACE)
         }
+    }
+
+    fun move(id: Long, top: Boolean) = command { edit { it.move(id, top) } }
+
+    fun retryFailed() = command {
+        if (edit(AnimeDownloadQueue::retryFailed) && !state.value.paused) {
+            AnimeDownloadJob.schedule(context, state.value.wifiOnly, ExistingWorkPolicy.APPEND_OR_REPLACE)
+        }
+    }
+
+    /** Removes every failed episode and its partial files, as Remove does for one. */
+    fun clearFailed() {
+        state.value.entries.filter { it.status == AnimeDownloadStatus.Failed }.forEach { remove(it.episodeId) }
     }
 
     fun setPaused(paused: Boolean) = command {
