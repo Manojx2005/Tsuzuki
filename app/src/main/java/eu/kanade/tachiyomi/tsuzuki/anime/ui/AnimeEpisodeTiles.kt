@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Bookmark
@@ -47,6 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.TabTitle
+import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
@@ -61,8 +65,12 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.isExcludedAnimeGroup
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.CheckboxItem
+import tachiyomi.presentation.core.components.SortItem
+import tachiyomi.presentation.core.components.TriStateItem
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
@@ -259,6 +267,11 @@ internal fun AnimeEpisodeActions(
     }
 }
 
+/**
+ * AP6 (owner 2026-11-23: "convert to the book design"): the episode list's Filter / Sort dialog in the book chapter
+ * dialog's shape. Three-state Unwatched, Downloaded and Bookmarked filters and subtitle-group exclusion on Filter,
+ * episode number or upload date on Sort (tap the chosen one again to reverse). Changes apply at once, as for books.
+ */
 @Composable
 internal fun AnimeEpisodeFilterSheet(
     display: AnimeEpisodeDisplay,
@@ -267,68 +280,60 @@ internal fun AnimeEpisodeFilterSheet(
     onDismiss: () -> Unit,
     onSave: (AnimeEpisodeDisplay, Set<String>) -> Unit,
 ) {
-    var draft by remember(display) { mutableStateOf(display) }
-    var groupDraft by remember(excludedGroups) { mutableStateOf(excludedGroups) }
-    TsuzukiAdaptiveSheet(onDismissRequest = onDismiss) { close ->
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Text(
-                tsuzukiMenuLabel(mokoStringResource(MR.strings.action_filter)),
-                style = MaterialTheme.typography.displaySmall,
-            )
-            LazyColumn(Modifier.weight(1f, fill = false)) {
-                item {
-                    TsuzukiPillRow(
-                        labels = listOf(
-                            stringResource(R.string.tsz_anime_episode_number),
-                            mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
-                        ),
-                        selected = if (draft.sortByDate) 1 else 0,
-                        onClick = { draft = draft.copy(sortByDate = it == 1) },
-                    )
-                    TsuzukiPillRow(
-                        labels = listOf(
-                            mokoStringResource(MR.strings.action_asc),
-                            mokoStringResource(MR.strings.action_desc),
-                        ),
-                        selected = if (draft.ascending) 0 else 1,
-                        onClick = { draft = draft.copy(ascending = it == 0) },
-                    )
-                    AnimeEpisodeFilterOption(
-                        stringResource(R.string.tsz_anime_unseen_only),
-                        draft.unseenOnly,
-                    ) { draft = draft.copy(unseenOnly = !draft.unseenOnly) }
-                    AnimeEpisodeFilterOption(
-                        stringResource(R.string.tsz_anime_bookmarked_only),
-                        draft.bookmarkedOnly,
-                    ) { draft = draft.copy(bookmarkedOnly = !draft.bookmarkedOnly) }
+    TabbedDialog(
+        onDismissRequest = onDismiss,
+        tabTitles = listOf(
+            TabTitle.Text(mokoStringResource(MR.strings.action_filter)),
+            TabTitle.Text(mokoStringResource(MR.strings.action_sort)),
+        ),
+    ) { page ->
+        Column(Modifier.padding(vertical = 8.dp).verticalScroll(rememberScrollState())) {
+            if (page == 0) {
+                // "Watched", the mirror of the stored unwatched filter (only watched = hide unwatched).
+                TriStateItem(stringResource(R.string.tsz_anime_watched), display.unseen.mirrored()) {
+                    onSave(display.copy(unseen = it.next().mirrored()), excludedGroups)
+                }
+                TriStateItem(mokoStringResource(MR.strings.label_downloaded), display.downloaded) {
+                    onSave(display.copy(downloaded = it.next()), excludedGroups)
+                }
+                TriStateItem(mokoStringResource(MR.strings.action_filter_bookmarked), display.bookmarked) {
+                    onSave(display.copy(bookmarked = it.next()), excludedGroups)
                 }
                 if (groups.isNotEmpty()) {
-                    item {
-                        Text(
-                            tsuzukiMenuLabel(stringResource(R.string.tsz_anime_exclude_groups)),
-                            color = TsuzukiTheme.tokens.mutedText,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                    items(groups, key = { it }) { group ->
-                        val excluded = group.isExcludedAnimeGroup(groupDraft)
-                        AnimeEpisodeFilterOption(group, excluded) {
-                            groupDraft = if (excluded) {
-                                groupDraft.filterNot { it.equals(group, ignoreCase = true) }.toSet()
-                            } else {
-                                groupDraft + group
-                            }
+                    Text(
+                        tsuzukiMenuLabel(stringResource(R.string.tsz_anime_exclude_groups)),
+                        color = TsuzukiTheme.tokens.mutedText,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    groups.forEach { group ->
+                        val excluded = group.isExcludedAnimeGroup(excludedGroups)
+                        CheckboxItem(group, excluded) {
+                            onSave(
+                                display,
+                                if (excluded) {
+                                    excludedGroups.filterNot { it.equals(group, ignoreCase = true) }.toSet()
+                                } else {
+                                    excludedGroups + group
+                                },
+                            )
                         }
                     }
                 }
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = { close(onDismiss) }) {
-                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_cancel)))
-                }
-                TextButton(onClick = { close { onSave(draft, groupDraft) } }) {
-                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_apply)))
+            } else {
+                listOf(
+                    false to stringResource(R.string.tsz_anime_episode_number),
+                    true to mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
+                ).forEach { (byDate, label) ->
+                    // The book dialog's arrow: up for ascending, down for descending, on the chosen field only.
+                    SortItem(label, sortDescending = (!display.ascending).takeIf { display.sortByDate == byDate }) {
+                        val next = if (display.sortByDate == byDate) {
+                            display.copy(ascending = !display.ascending)
+                        } else {
+                            display.copy(sortByDate = byDate)
+                        }
+                        onSave(next, excludedGroups)
+                    }
                 }
             }
         }
@@ -352,4 +357,10 @@ private val Episode.playFraction: Float
 
 private fun Episode.displayNumber(): String? = episodeNumber.takeIf { it.isFinite() && it >= 0 }?.let {
     NumberFormat.getNumberInstance().apply { isGroupingUsed = false }.format(it)
+}
+
+private fun TriState.mirrored(): TriState = when (this) {
+    TriState.DISABLED -> TriState.DISABLED
+    TriState.ENABLED_IS -> TriState.ENABLED_NOT
+    TriState.ENABLED_NOT -> TriState.ENABLED_IS
 }
