@@ -36,6 +36,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
+import androidx.compose.runtime.produceState
+import eu.kanade.presentation.library.components.LanguageBadge
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import androidx.compose.ui.graphics.Brush
 import android.content.res.Configuration
@@ -169,6 +172,14 @@ internal data object AnimeLibraryTab : Tab {
             .collectAsState(emptySet())
         val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
         val unwatchedBadges by libraryPrefs.unreadBadge.collectAsState()
+        val languageBadges by libraryPrefs.languageBadge.collectAsState()
+        // AP8: source languages for the language badge, from the loaded anime sources.
+        val sourceLanguages by produceState(emptyMap<Long, String>(), languageBadges) {
+            if (languageBadges) {
+                value = runCatching { Injekt.get<AnimeSourceManager>().ensureLoaded() }.getOrDefault(emptyList())
+                    .associate { it.source.id to it.source.lang }
+            }
+        }
         val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         val columnCount by (if (landscape) libraryPrefs.landscapeColumns else libraryPrefs.portraitColumns)
             .collectAsState()
@@ -316,6 +327,7 @@ internal data object AnimeLibraryTab : Tab {
                                 onLongClick = onLongClick,
                                 unwatchedBadge = if (unwatchedBadges) item.anime.totalCount - item.anime.seenCount else 0,
                                 downloadedBadge = if (downloadBadges) savedCounts[id] ?: 0 else 0,
+                                languageBadge = if (languageBadges) sourceLanguages[item.anime.source].orEmpty() else "",
                                 display = options.display,
                                 onOpen = onOpen,
                             )
@@ -505,6 +517,7 @@ internal fun AnimeLibraryCover(
     onLongClick: (() -> Unit)? = null,
     unwatchedBadge: Long = 0,
     downloadedBadge: Int = 0,
+    languageBadge: String = "",
     display: AnimeLibraryDisplay = AnimeLibraryDisplay.GRID,
     onOpen: () -> Unit,
 ) {
@@ -523,6 +536,11 @@ internal fun AnimeLibraryCover(
                 BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopStart)) {
                     DownloadsBadge(downloadedBadge)
                     UnreadBadge(unwatchedBadge)
+                }
+            }
+            if (languageBadge.isNotEmpty()) {
+                BadgeGroup(Modifier.padding(4.dp).align(Alignment.TopEnd)) {
+                    LanguageBadge(isLocal = false, sourceLanguage = languageBadge)
                 }
             }
             if (display == AnimeLibraryDisplay.COMPACT) {
