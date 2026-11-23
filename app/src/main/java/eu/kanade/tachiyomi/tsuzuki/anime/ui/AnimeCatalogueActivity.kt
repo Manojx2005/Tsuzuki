@@ -313,7 +313,9 @@ private fun AnimeCatalogueScreen(
         keyboard?.hide()
         Unit
     }
-    val pagingFlow = remember(source, mode, appliedQuery, appliedFilters) {
+    // AnimeFilterList.equals is always false (as Mihon's FilterList), so keying on it rebuilt the pager, and reloaded
+    // the grid, on every recomposition, such as opening an anime. Applying filters stores a new list, so key on identity.
+    val pagingFlow = remember(source, mode, appliedQuery, IdentityKey(appliedFilters)) {
         Pager(PagingConfig(pageSize = 24, enablePlaceholders = false)) {
             AnimeCataloguePagingSource(source, mode, appliedQuery, appliedFilters)
         }.flow
@@ -529,4 +531,10 @@ internal fun AnimeCatalogueStatus(message: String?, onRetry: (() -> Unit)? = nul
             TextButton(onClick = onRetry) { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_retry))) }
         }
     }
+}
+
+/** A remember key that compares by reference, for objects whose equals never matches. */
+private class IdentityKey(private val value: Any) {
+    override fun equals(other: Any?): Boolean = other is IdentityKey && other.value === value
+    override fun hashCode(): Int = System.identityHashCode(value)
 }
