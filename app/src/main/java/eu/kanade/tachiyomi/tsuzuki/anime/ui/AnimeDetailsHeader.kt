@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -46,6 +47,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -141,6 +143,7 @@ internal fun AnimeLibraryActions(
     onTrack: (() -> Unit)?,
     onSave: (() -> Unit)?,
     onExternal: (() -> Unit)?,
+    nextAiringDays: Int? = null,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(horizontal = 12.dp),
@@ -154,6 +157,20 @@ internal fun AnimeLibraryActions(
             active = favorite,
             onClick = onFavorite,
         )
+        // AP7: like book details' next-update tile, from the earliest episode the source dates in the future.
+        if (nextAiringDays != null) {
+            AnimeDetailAction(
+                label = if (nextAiringDays == 0) {
+                    stringResource(MR.strings.manga_interval_expected_update_soon)
+                } else {
+                    pluralStringResource(MR.plurals.day, nextAiringDays, nextAiringDays)
+                },
+                icon = Icons.Default.HourglassEmpty,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                enabled = enabled,
+                onClick = {},
+            )
+        }
         if (onTrack != null) {
             AnimeDetailAction(
                 label = stringResource(MR.strings.action_track),

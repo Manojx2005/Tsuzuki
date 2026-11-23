@@ -393,6 +393,7 @@ internal fun AnimeDetailsScreen(
                         status == null || status == AnimeDownloadStatus.Failed
                     }
                     AnimeLibraryActions(
+                        nextAiringDays = nextAiringDays(episodeState.items, System.currentTimeMillis()),
                         favorite = saved?.favorite == true,
                         enabled = !saving && selected.isEmpty(),
                         onFavorite = {
@@ -639,3 +640,8 @@ internal fun rememberAnimeImage(source: AnimeSource?, url: String?): ImageReques
         }.build()
     }
 }
+
+/** Days until the earliest episode the source dates in the future (0 = within a day), or null when none is. */
+internal fun nextAiringDays(episodes: List<Episode>, now: Long): Int? =
+    episodes.asSequence().map { it.dateUpload }.filter { it > now }.minOrNull()
+        ?.let { ((it - now) / java.util.concurrent.TimeUnit.DAYS.toMillis(1)).toInt() }
