@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.details
 
+import eu.kanade.presentation.tsuzuki.selection.visibleSelectionRange
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 
@@ -67,16 +68,8 @@ internal fun parseDownloadChapterNumber(text: String): Double? {
 }
 
 /** Select beyond the nearest visible boundary. Hidden rows never take part in a long-press range. */
-internal fun chapterSelectionRange(chapters: List<ChapterList.Item>, index: Int): IntRange {
-    val first = chapters.indexOfFirst { it.selected }
-    val last = chapters.indexOfLast { it.selected }
-    return when {
-        first == -1 -> index..index
-        index < first -> index..first
-        index > last -> last..index
-        else -> index..index
-    }
-}
+internal fun chapterSelectionRange(chapters: List<ChapterList.Item>, index: Int): IntRange =
+    visibleSelectionRange(chapters, index) { it.selected }
 
 /**
  * "Mark previous read" in the chapter filter sheet: the unread chapters before the furthest chapter the reader has
