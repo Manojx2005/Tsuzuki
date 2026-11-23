@@ -127,6 +127,12 @@ internal class AnimeLibraryStore(
         (anime.awaitBySourceAndUrl(source, result.url) ?: saveAnime(source, result)).id
     }
 
+    /** AP7: the title's notes (the anime's own `notes` column). */
+    suspend fun setNotes(id: Long, notes: String) {
+        val stored = anime.awaitById(id) ?: return
+        if (stored.notes != notes) anime.update(stored.copy(notes = notes))
+    }
+
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
