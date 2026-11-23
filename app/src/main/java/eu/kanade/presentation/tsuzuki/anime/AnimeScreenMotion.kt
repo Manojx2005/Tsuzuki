@@ -2,12 +2,14 @@ package eu.kanade.presentation.tsuzuki.anime
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -48,14 +50,24 @@ private fun animeScreenAnimations(activity: Activity, opening: Boolean): Pair<In
 }
 
 /**
- * Switching between a catalogue and an anime's details happens inside one Activity; fade the incoming page in with
- * the book screens' timing. [animate] is false for the page the Activity opens on, which the window fade covers.
+ * Switching between a catalogue and an anime's details happens inside one Activity: crossfade them with the book
+ * screens' timing (TsuzukiNavigatorTransition). Legacy themes keep the instant switch they had.
  */
 @Composable
-internal fun AnimeScreenEnter(animate: Boolean, content: @Composable () -> Unit) {
+internal fun <T> AnimeScreenCrossfade(target: T, key: (T) -> Any?, content: @Composable (T) -> Unit) {
     val tsuzuki = TsuzukiTheme.tokens.style != TsuzukiStyle.NONE
-    val reduced = rememberReduceMotion()
-    val state = remember { MutableTransitionState(!animate || !tsuzuki).apply { targetState = true } }
-    val duration = if (reduced) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHARED_MS
-    AnimatedVisibility(state, enter = fadeIn(tween(duration, easing = TsuzukiMotion.Standard))) { content() }
+    val duration = if (rememberReduceMotion()) TsuzukiMotion.REDUCED_MS else TsuzukiMotion.SHARED_MS
+    AnimatedContent(
+        targetState = target,
+        contentKey = key,
+        transitionSpec = {
+            if (tsuzuki) {
+                val fade = tween<Float>(duration, easing = TsuzukiMotion.Standard)
+                fadeIn(fade) togetherWith fadeOut(fade)
+            } else {
+                EnterTransition.None togetherWith ExitTransition.None
+            }
+        },
+        label = "animeScreen",
+    ) { content(it) }
 }

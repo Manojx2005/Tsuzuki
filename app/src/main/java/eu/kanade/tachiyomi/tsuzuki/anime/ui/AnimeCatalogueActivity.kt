@@ -64,7 +64,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
-import eu.kanade.presentation.tsuzuki.anime.AnimeScreenEnter
+import eu.kanade.presentation.tsuzuki.anime.AnimeScreenCrossfade
 import eu.kanade.presentation.tsuzuki.anime.RESUME_ANIME_EPISODE_ID
 import eu.kanade.presentation.tsuzuki.anime.SAVED_ANIME_ID
 import eu.kanade.presentation.tsuzuki.anime.applyAnimeScreenTransition
@@ -159,36 +159,35 @@ class AnimeCatalogueActivity : BaseActivity() {
                         val source = result.entry.source
                         var lastApplied by remember { mutableStateOf(AnimeFilterList()) }
                         var selected by remember { mutableStateOf(result.saved) }
-                        var backFromDetails by remember { mutableStateOf(false) }
-                        val anime = selected
-                        if (anime == null) {
-                            var attempt by remember(source) { mutableStateOf(0) }
-                            var rebound by remember(source, attempt) {
-                                mutableStateOf<Result<AnimeFilterList>?>(null)
-                            }
-                            LaunchedEffect(source, attempt) {
-                                val previous = lastApplied
-                                val filters = loadCatalogueFilters {
-                                    carryAnimeFilters(previous) { source.getFilterList() }
+                        // Owner 2026-11-23: catalogue and details crossfade like book screens.
+                        AnimeScreenCrossfade(selected, key = { it?.url }) { anime ->
+                            if (anime == null) {
+                                var attempt by remember(source) { mutableStateOf(0) }
+                                var rebound by remember(source, attempt) {
+                                    mutableStateOf<Result<AnimeFilterList>?>(null)
                                 }
-                                filters.getOrNull()?.let { lastApplied = it }
-                                rebound = filters
-                            }
-                            val filters = rebound
-                            if (filters == null || filters.isFailure) {
-                                val context = LocalContext.current
-                                val message = filters?.exceptionOrNull()?.let {
-                                    context.errorHeading(errorCopyForUi(it))
+                                LaunchedEffect(source, attempt) {
+                                    val previous = lastApplied
+                                    val filters = loadCatalogueFilters {
+                                        carryAnimeFilters(previous) { source.getFilterList() }
+                                    }
+                                    filters.getOrNull()?.let { lastApplied = it }
+                                    rebound = filters
                                 }
-                                AnimeCatalogueNotice(
-                                    title = source.name,
-                                    message = message,
-                                    onBack = ::finish,
-                                    onRetry = { attempt++ },
-                                )
-                            } else {
-                                catalogueState.SaveableStateProvider(sourceId) {
-                                    AnimeScreenEnter(animate = backFromDetails) {
+                                val filters = rebound
+                                if (filters == null || filters.isFailure) {
+                                    val context = LocalContext.current
+                                    val message = filters?.exceptionOrNull()?.let {
+                                        context.errorHeading(errorCopyForUi(it))
+                                    }
+                                    AnimeCatalogueNotice(
+                                        title = source.name,
+                                        message = message,
+                                        onBack = ::finish,
+                                        onRetry = { attempt++ },
+                                    )
+                                } else {
+                                    catalogueState.SaveableStateProvider(sourceId) {
                                         AnimeCatalogueScreen(
                                             source = source,
                                             openLatest = openLatest,
@@ -203,18 +202,15 @@ class AnimeCatalogueActivity : BaseActivity() {
                                         )
                                     }
                                 }
-                            }
-                        } else {
-                            val back = {
-                                if (result.saved != null) {
-                                    finish()
-                                } else {
-                                    backFromDetails = true
-                                    selected = null
+                            } else {
+                                val back = {
+                                    if (result.saved != null) {
+                                        finish()
+                                    } else {
+                                        selected = null
+                                    }
                                 }
-                            }
-                            BackHandler(onBack = back)
-                            AnimeScreenEnter(animate = result.saved == null) {
+                                BackHandler(onBack = back)
                                 AnimeDetailsScreen(
                                     result.entry,
                                     anime,
