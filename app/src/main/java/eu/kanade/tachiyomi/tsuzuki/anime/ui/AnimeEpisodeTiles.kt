@@ -52,6 +52,7 @@ import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.TabTitle
 import eu.kanade.presentation.components.TabbedDialog
+import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
@@ -64,12 +65,14 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeSort
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.isExcludedAnimeGroup
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
+import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TriStateItem
 import java.text.DateFormat
@@ -148,6 +151,7 @@ internal fun AnimeEpisodeTile(
     onBookmark: (Boolean) -> Unit,
     onMarkPrevious: () -> Unit,
     downloadStatus: AnimeDownloadStatus?,
+    showNumberOnly: Boolean = false,
     onDownload: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -158,8 +162,12 @@ internal fun AnimeEpisodeTile(
         stringResource(R.string.tsz_anime_filler).takeIf { episode.fillermark },
         stringResource(R.string.tsz_anime_watched).takeIf { episode.seen },
     )
-    val title = episode.displayNumber()?.let { stringResource(R.string.tsz_anime_episode_title, it, episode.name) }
-        ?: episode.name
+    val number = episode.displayNumber()
+    val title = when {
+        number == null -> episode.name
+        showNumberOnly -> stringResource(R.string.tsz_anime_history_episode, number)
+        else -> stringResource(R.string.tsz_anime_episode_title, number, episode.name)
+    }
     TsuzukiTile(
         modifier = Modifier
             .fillMaxWidth()
@@ -269,9 +277,7 @@ internal fun AnimeEpisodeActions(
 }
 
 /**
- * AP6 (owner 2026-11-23: "convert to the book design"): the episode list's Filter / Sort dialog in the book chapter
- * dialog's shape. Three-state Unwatched, Downloaded and Bookmarked filters and subtitle-group exclusion on Filter,
- * episode number or upload date on Sort (tap the chosen one again to reverse). Changes apply at once, as for books.
+ * Episode list settings use the chapter dialog's Filter, Sort and Display tabs. Changes apply immediately.
  */
 @Composable
 internal fun AnimeEpisodeFilterSheet(
@@ -288,9 +294,10 @@ internal fun AnimeEpisodeFilterSheet(
         tabTitles = listOf(
             TabTitle.Text(mokoStringResource(MR.strings.action_filter)),
             TabTitle.Text(mokoStringResource(MR.strings.action_sort)),
+            TabTitle.Text(mokoStringResource(MR.strings.action_display)),
         ),
     ) { page ->
-        Column(Modifier.padding(vertical = 8.dp).verticalScroll(rememberScrollState())) {
+        Column(Modifier.padding(vertical = TabbedDialogPaddings.Vertical).verticalScroll(rememberScrollState())) {
             if (page == 0) {
                 // "Watched", the mirror of the stored unwatched filter (only watched = hide unwatched).
                 TriStateItem(stringResource(R.string.tsz_anime_watched), display.unseen.mirrored()) {
@@ -332,20 +339,36 @@ internal fun AnimeEpisodeFilterSheet(
                 ) {
                     Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_mark_until_last_watched)))
                 }
-            } else {
+            } else if (page == 1) {
                 listOf(
-                    false to stringResource(R.string.tsz_anime_episode_number),
-                    true to mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
-                ).forEach { (byDate, label) ->
-                    // The book dialog's arrow: up for ascending, down for descending, on the chosen field only.
-                    SortItem(label, sortDescending = (!display.ascending).takeIf { display.sortByDate == byDate }) {
-                        val next = if (display.sortByDate == byDate) {
+                    AnimeEpisodeSort.SOURCE to mokoStringResource(MR.strings.sort_by_source),
+                    AnimeEpisodeSort.NUMBER to stringResource(R.string.tsz_anime_episode_number),
+                    AnimeEpisodeSort.UPLOAD_DATE to mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
+                ).forEach { (sort, label) ->
+                    SortItem(
+                        label = tsuzukiMenuLabel(label),
+                        sortDescending = (!display.ascending).takeIf { display.sort == sort },
+                    ) {
+                        val next = if (display.sort == sort) {
                             display.copy(ascending = !display.ascending)
                         } else {
-                            display.copy(sortByDate = byDate)
+                            display.copy(sort = sort)
                         }
                         onSave(next, excludedGroups)
                     }
+                }
+            } else {
+                RadioItem(
+                    label = tsuzukiMenuLabel(mokoStringResource(MR.strings.show_title)),
+                    selected = !display.showNumberOnly,
+                ) {
+                    onSave(display.copy(showNumberOnly = false), excludedGroups)
+                }
+                RadioItem(
+                    label = tsuzukiMenuLabel(stringResource(R.string.tsz_anime_episode_number)),
+                    selected = display.showNumberOnly,
+                ) {
+                    onSave(display.copy(showNumberOnly = true), excludedGroups)
                 }
             }
         }

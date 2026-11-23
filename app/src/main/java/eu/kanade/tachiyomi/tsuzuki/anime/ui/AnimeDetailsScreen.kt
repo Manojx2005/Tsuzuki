@@ -508,6 +508,7 @@ internal fun AnimeDetailsScreen(
                             source = entry.source,
                             episode = episode,
                             coverUrl = display.thumbnail_url,
+                            showNumberOnly = details.episodeDisplay.showNumberOnly,
                             selected = episode.id in selection,
                             enabled = !saving,
                             onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },

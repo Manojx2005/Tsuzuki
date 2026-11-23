@@ -6,12 +6,18 @@ import android.net.Uri
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
+import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.tsuzuki.anime.backup.AnimeBackupCategory
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.protobuf.ProtoNumber
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -48,6 +54,27 @@ class BackupFileValidatorTest {
         val bytes = gzip(ProtoBuf.encodeToByteArray(Backup.serializer(), backup))
         assertEquals(BackupFileValidator.Contents(0, 0, 0), validator(bytes).validate(uri).contents)
     }
+
+    @Test
+    fun acceptsAndCountsAnimeShelvesWithoutOtherRecords() = runTest {
+        val backup = AnimeShelvesOnlyBackup(listOf(AnimeBackupCategory("Watch later", id = 1)))
+        val bytes = gzip(ProtoBuf.encodeToByteArray(AnimeShelvesOnlyBackup.serializer(), backup))
+        mockkObject(TsuzukiAnime)
+        try {
+            every { TsuzukiAnime.inBackups } returns true
+            assertEquals(
+                BackupFileValidator.Contents(0, 0, 0, BackupFileValidator.AnimeContents(shelves = 1)),
+                validator(bytes).validate(uri).contents,
+            )
+        } finally {
+            unmockkObject(TsuzukiAnime)
+        }
+    }
+
+    @Serializable
+    private data class AnimeShelvesOnlyBackup(
+        @ProtoNumber(8001) val shelves: List<AnimeBackupCategory>,
+    )
 
     private fun validator(bytes: ByteArray): BackupFileValidator {
         val resolver = mockk<ContentResolver> {

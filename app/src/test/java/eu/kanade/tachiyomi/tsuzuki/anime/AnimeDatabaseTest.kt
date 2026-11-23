@@ -988,7 +988,12 @@ class AnimeDatabaseTest {
             )
             val id = anime.insert(Anime(source = 8, url = "/show", title = "Show", episodeFlags = 0x123))
             val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
-            val display = AnimeEpisodeDisplay(true, true, TriState.ENABLED_IS, TriState.ENABLED_IS)
+            val display = AnimeEpisodeDisplay(
+                sort = AnimeEpisodeSort.UPLOAD_DATE,
+                ascending = true,
+                unseen = TriState.ENABLED_IS,
+                bookmarked = TriState.ENABLED_IS,
+            )
             store.setEpisodeDisplay(id, display)
             val flags = checkNotNull(store.getAnime(id)).episodeFlags
             assertEquals(0x123L, flags and 0xffffL)
@@ -1319,6 +1324,11 @@ class AnimeDatabaseTest {
             val before = history.subscribeWatchStats(today).first()
             assertEquals(AnimeWatchStats(391, 210, 7_891, 2, 0), before)
             assertTrue(before.hasWatchData)
+            assertEquals(
+                mapOf(today.minusDays(1) to 120L, today to 210L),
+                history.subscribeWatchDays(today.minusDays(1), today).first(),
+            )
+            assertEquals(mapOf(today to 210L), history.subscribeWatchDays(today, today).first())
 
             episodes.updateProgress(last, seen = true, lastSecondSeen = 0, totalSeconds = 600)
             history.removeHistory(ended)

@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.icu.text.MeasureFormat
+import android.icu.util.Measure
+import android.icu.util.MeasureUnit
 import android.text.format.DateUtils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,6 +40,7 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -58,6 +62,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
@@ -70,11 +75,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
 import java.time.LocalDate
-import kotlinx.coroutines.flow.flowOf
-import androidx.glance.layout.fillMaxHeight
-import android.icu.util.MeasureUnit
-import android.icu.util.Measure
-import android.icu.text.MeasureFormat
 import androidx.glance.appwidget.action.actionStartActivity as actionStartActivityIntent
 
 class TsuzukiWatchingWidget : GlanceAppWidget() {
@@ -105,7 +105,6 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
             // AP-16: a tall widget keeps room at the bottom for watch time, like Continue Reading's stats row.
             val height = LocalSize.current.height.value
             val tall = height >= WATCHING_WIDGET_TALL_DP
-            val limit = watchingWidgetSlots(if (tall) height - WATCHING_STATS_ROW_DP else height)
             val stats by remember(history, tall) {
                 if (tall) {
                     history.subscribeWatchStats(LocalDate.now()).catch { error ->
@@ -115,14 +114,17 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
                     flowOf(null)
                 }
             }.collectAsState(initial = null)
-            val items by remember(history, limit) {
+            val watch = stats?.takeIf { tall && it.hasWatchData }
+            val resumeHeight = if (watch != null) height - WATCHING_STATS_ROW_DP else height
+            val candidates by remember(history) {
                 history.subscribeHistory()
-                    .map { selectWatchingWidgetItems(it, limit) }
+                    .map { selectWatchingWidgetItems(it, MAX_WATCHING_ROWS) }
                     .catch { error ->
                         logcat(LogPriority.WARN, error) { "Could not load the Continue Watching widget" }
                         emit(emptyList())
                     }
             }.collectAsState(initial = emptyList())
+            val items = candidates.take(watchingWidgetSlots(resumeHeight))
             val imageUrls = items.associate { it.episodeId to (it.previewUrl ?: it.thumbnailUrl) }
             val covers by produceState<Map<Long, Bitmap?>>(emptyMap(), imageUrls) {
                 value = withContext(Dispatchers.IO) {
@@ -153,12 +155,22 @@ class TsuzukiWatchingWidget : GlanceAppWidget() {
                         first = index == 0,
                     )
                 }
-                stats?.takeIf { tall && it.hasWatchData }?.let { watch ->
+                if (watch != null) {
                     Spacer(GlanceModifier.defaultWeight())
                     Row(GlanceModifier.fillMaxWidth().height(WATCHING_STATS_ROW_DP.dp - 8.dp)) {
-                        WatchTimeTile(tokens, weekLabel, duration.watchTime(watch.weekSeconds), GlanceModifier.defaultWeight())
+                        WatchTimeTile(
+                            tokens,
+                            weekLabel,
+                            duration.watchTime(watch.weekSeconds),
+                            GlanceModifier.defaultWeight(),
+                        )
                         Spacer(GlanceModifier.width(6.dp))
-                        WatchTimeTile(tokens, monthLabel, duration.watchTime(watch.monthSeconds), GlanceModifier.defaultWeight())
+                        WatchTimeTile(
+                            tokens,
+                            monthLabel,
+                            duration.watchTime(watch.monthSeconds),
+                            GlanceModifier.defaultWeight(),
+                        )
                     }
                 }
             }
@@ -186,6 +198,7 @@ class TsuzukiWatchingWidgetReceiver : GlanceAppWidgetReceiver() {
 
 private const val WATCHING_WIDGET_TALL_DP = 244f
 private const val WATCHING_STATS_ROW_DP = 84f
+private const val MAX_WATCHING_ROWS = 4
 
 /** "3 h 20 min" style watch time, as Stats shows it. */
 internal fun MeasureFormat.watchTime(seconds: Long): String {
@@ -208,14 +221,14 @@ private fun WatchTimeTile(tokens: TsuzukiTokens, label: String, value: String, m
     }
 }
 
-internal fun watchingWidgetSlots(heightDp: Float): Int = ((heightDp - 10) / 76).toInt().coerceIn(1, 4)
+internal fun watchingWidgetSlots(heightDp: Float): Int = ((heightDp - 10) / 76).toInt().coerceIn(1, MAX_WATCHING_ROWS)
 
 internal fun selectWatchingWidgetItems(history: List<AnimeHistoryDisplay>, limit: Int): List<AnimeHistoryDisplay> =
     history.asSequence()
         .filter { !it.seen && it.position > 0 && (it.duration <= 0 || it.position < it.duration) }
         .sortedByDescending { it.lastSeen.time }
         .distinctBy { it.animeId }
-        .take(limit.coerceIn(1, 4))
+        .take(limit.coerceIn(1, MAX_WATCHING_ROWS))
         .toList()
 
 internal suspend fun refreshWatchingWidget(context: Context) {

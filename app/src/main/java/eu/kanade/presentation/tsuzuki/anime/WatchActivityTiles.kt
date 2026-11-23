@@ -52,8 +52,8 @@ internal fun WatchActivityTiles(store: AnimeLibraryStore, modifier: Modifier = M
         Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()).toEpochMilliseconds()
     }
     val updates by remember(store, since) { store.observeNewEpisodes(since) }.collectAsState(emptyList())
-    val today = remember { LocalDate.now() }
-    val watchDays by remember(today) { Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(today) }
+    val today = LocalDate.now()
+    val watchDays by remember(today) { Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(today, today) }
         .collectAsState(emptyMap())
     val (newEpisodes, shows) = newEpisodeSummary(updates)
     val minutes = (watchDays[today] ?: 0L) / 60

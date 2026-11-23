@@ -85,6 +85,7 @@ class BackupFileValidator(
                         )
                     }
                     AnimeBackupFormat.entries.firstOrNull { it.categories == fieldNumber }?.let { format ->
+                        recognised = true
                         val counts = animeCounts[format] ?: AnimeContents()
                         animeCounts[format] = counts.copy(shelves = counts.shelves + 1)
                     }
