@@ -646,7 +646,7 @@ private fun GroupPreview(
 }
 
 @Composable
-private fun PreviewLabel(text: String) {
+internal fun PreviewLabel(text: String) {
     Text(
         text,
         fontSize = 11.sp,
@@ -685,7 +685,7 @@ private fun OtherChapterRow(item: UpdatesItem, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ActionPill(
+internal fun ActionPill(
     text: String,
     onClick: () -> Unit,
     primary: Boolean = false,
