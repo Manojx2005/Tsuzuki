@@ -928,6 +928,7 @@
     <string name="tsz_anime_shelves_hint">アニメ専用の本棚です。小説とマンガにはそれぞれ専用の本棚があります。</string>
     <string name="tsz_anime_new_shelf">アニメの本棚を追加</string>
     <string name="tsz_anime_continue_watching">視聴を再開</string>
+    <string name="tsz_anime_start_watching">視聴を始める</string>
     <string name="tsz_anime_library_empty">アニメのライブラリは空です</string>
     <string name="tsz_anime_shelf_count">アニメ %1$d 件</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d 話</string>

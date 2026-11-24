@@ -935,6 +935,7 @@
     <string name="tsz_anime_shelves_hint">애니메이션 전용 책장입니다. 소설과 만화는 별도 책장을 사용합니다.</string>
     <string name="tsz_anime_new_shelf">새 애니메이션 책장</string>
     <string name="tsz_anime_continue_watching">이어서 보기</string>
+    <string name="tsz_anime_start_watching">시청 시작</string>
     <string name="tsz_anime_library_empty">애니메이션 라이브러리가 비어 있습니다</string>
     <string name="tsz_anime_shelf_count">애니메이션 %1$d개</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d화</string>
