@@ -103,7 +103,10 @@ internal class DictionaryPacks(private val context: Context, private val client:
 
     private suspend fun bundled(language: DictionaryLanguage): File? {
         verifiedBundles[language]?.takeIf(File::isFile)?.let { return it }
-        return mutations.withLock { verifyBundled(language) }?.also { verifiedBundles[language] = it }
+        return mutations.withLock {
+            verifiedBundles[language]?.takeIf(File::isFile)
+                ?: verifyBundled(language)?.also { verifiedBundles[language] = it }
+        }
     }
 
     private suspend fun verifyBundled(language: DictionaryLanguage): File? {
