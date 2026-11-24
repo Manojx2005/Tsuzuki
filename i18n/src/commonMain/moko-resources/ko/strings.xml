@@ -1062,6 +1062,10 @@
     <string name="tsz_follow_book_sub">읽는 책에 따라 색상이 바뀝니다</string>
     <string name="tsz_chapter_filter_mark_previous">이전 챕터 읽음으로 표시 (%1$d)</string>
     <string name="tsz_streak">연속 독서</string>
+    <string name="tsz_action_list_view">목록 보기</string>
+    <string name="tsz_action_last_only">최신만</string>
+    <string name="tsz_action_group_by_book">작품별로 묶기</string>
+    <string name="tsz_custom_sources">사용자 지정 소스</string>
     <string name="tsz_days">일</string>
     <string name="tsz_stats_title">통계 및 목표</string>
     <string name="tsz_stats_today_goal">오늘의 목표</string>

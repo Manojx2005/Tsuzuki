@@ -1062,6 +1062,10 @@
     <string name="tsz_follow_book_sub">読んでいる作品に合わせて色が変わります</string>
     <string name="tsz_chapter_filter_mark_previous">前の章を既読にする（%1$d）</string>
     <string name="tsz_streak">連続</string>
+    <string name="tsz_action_list_view">リスト表示</string>
+    <string name="tsz_action_last_only">最新のみ</string>
+    <string name="tsz_action_group_by_book">作品ごとにまとめる</string>
+    <string name="tsz_custom_sources">カスタムソース</string>
     <string name="tsz_days">日</string>
     <string name="tsz_stats_title">統計と目標</string>
     <string name="tsz_stats_today_goal">今日の目標</string>

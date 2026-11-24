@@ -358,7 +358,7 @@ internal fun TsuzukiAnimeHistoryActions(lastOnly: Boolean, onLastOnlyChanged: (B
         listOf(
             // Same toggle and labels as the book History toolbar, sharing its setting.
             AppBar.Action(
-                title = if (lastOnly) "List View" else "Last only",
+                title = stringResource(if (lastOnly) MR.strings.tsz_action_list_view else MR.strings.tsz_action_last_only),
                 icon = if (lastOnly) Icons.AutoMirrored.Outlined.ViewList else Icons.Outlined.GridView,
                 onClick = { onLastOnlyChanged(!lastOnly) },
             ),

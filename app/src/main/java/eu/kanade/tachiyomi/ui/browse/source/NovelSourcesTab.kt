@@ -47,7 +47,7 @@ fun Screen.novelSourcesTab(): TabContent {
                 onClick = { navigator.push(SourcesFilterScreen(isNovel = true)) },
             ),
             AppBar.Action(
-                title = "Custom Sources", // TODO: Add string resource
+                title = stringResource(MR.strings.tsz_custom_sources),
                 icon = Icons.Outlined.Edit,
                 onClick = { navigator.push(CustomSourcesScreen()) },
             ),
