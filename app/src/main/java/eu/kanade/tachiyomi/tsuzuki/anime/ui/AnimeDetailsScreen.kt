@@ -438,13 +438,15 @@ internal fun AnimeDetailsScreen(
                                 }
                             },
                             onTrack = if (saved != null) ({ showTracking = true }) else null,
-                            onSave = if (eligible.isNotEmpty()) {
+                            // AP-LIB-F1: Save stays in the row (disabled) until the episodes load, no 3-to-4 jump.
+                            onSave = if (animeSaveTile(saved != null, eligible.size) != AnimeSaveTile.Hidden) {
                                 {
                                     selection = eligible.map(Episode::id).toLongArray()
                                 }
                             } else {
                                 null
                             },
+                            saveEnabled = eligible.isNotEmpty(),
                             onExternal = externalUrl?.let { url ->
                                 {
                                     context.startActivity(
