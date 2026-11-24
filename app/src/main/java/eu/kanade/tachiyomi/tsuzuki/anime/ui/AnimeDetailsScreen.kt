@@ -97,6 +97,7 @@ import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -544,26 +545,29 @@ internal fun AnimeDetailsScreen(
             // AP7: the same tablet switch as book details (MangaScreen's isTabletUi), so both use two panes alike.
             Box(Modifier.fillMaxSize()) {
                 if (isTabletUi()) {
-                    Row(
-                        Modifier.fillMaxSize().padding(padding).padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.weight(0.43f).fillMaxHeight(),
-                            // The header brings its own 16dp top gap, as in the book pane.
-                            contentPadding = PaddingValues(bottom = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            overview(expanded = true)
-                        }
-                        LazyColumn(
-                            modifier = Modifier.weight(0.57f).fillMaxHeight(),
-                            contentPadding = PaddingValues(vertical = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            episodes()
-                        }
-                    }
+                    // The book details split: start pane half the width, at most 450dp (MangaScreen's TwoPanelBox).
+                    TwoPanelBox(
+                        modifier = Modifier.padding(padding),
+                        startContent = {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxHeight(),
+                                // The header brings its own 16dp top gap, as in the book pane.
+                                contentPadding = PaddingValues(bottom = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                overview(expanded = true)
+                            }
+                        },
+                        endContent = {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxHeight(),
+                                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                episodes()
+                            }
+                        },
+                    )
                 } else {
                     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         overview(expanded = false)
