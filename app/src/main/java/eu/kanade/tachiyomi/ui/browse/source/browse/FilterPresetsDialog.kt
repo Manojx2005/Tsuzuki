@@ -56,7 +56,7 @@ fun FilterPresetsDialog(
         ) {
             item {
                 Text(
-                    text = "Filter Presets",
+                    text = stringResource(MR.strings.tsz_catalogue_filter_presets),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
@@ -74,7 +74,7 @@ fun FilterPresetsDialog(
                         onCheckedChange = onToggleAutoApply,
                     )
                     Text(
-                        text = "Auto-apply default preset when opening source",
+                        text = stringResource(MR.strings.tsz_str6_fp_auto_apply),
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -91,7 +91,7 @@ fun FilterPresetsDialog(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                 ) {
-                    Text("Save Current Filters as Preset")
+                    Text(stringResource(MR.strings.tsz_str6_fp_save_current))
                 }
             }
 
@@ -110,7 +110,7 @@ fun FilterPresetsDialog(
             if (presets.isEmpty()) {
                 item {
                     Text(
-                        text = "No saved presets",
+                        text = stringResource(MR.strings.tsz_str6_fp_no_presets),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp),
@@ -153,7 +153,7 @@ private fun PresetItem(
             )
             if (preset.isDefault) {
                 Text(
-                    text = "Default preset",
+                    text = stringResource(MR.strings.tsz_str6_fp_default_preset),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -164,7 +164,11 @@ private fun PresetItem(
             IconButton(onClick = onSetDefault) {
                 Icon(
                     imageVector = if (preset.isDefault) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = if (preset.isDefault) "Remove default" else "Set as default",
+                    contentDescription = if (preset.isDefault) {
+                        stringResource(MR.strings.tsz_str6_fp_remove_default)
+                    } else {
+                        stringResource(MR.strings.tsz_str6_fp_set_default)
+                    },
                     tint = if (preset.isDefault) {
                         MaterialTheme.colorScheme.primary
                     } else {
@@ -175,7 +179,7 @@ private fun PresetItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete preset",
+                    contentDescription = stringResource(MR.strings.tsz_str6_fp_delete_preset),
                 )
             }
         }
@@ -192,13 +196,13 @@ private fun SavePresetDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save Filter Preset") },
+        title = { Text(stringResource(MR.strings.tsz_str6_fp_save_filter_preset)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = presetName,
                     onValueChange = { presetName = it },
-                    label = { Text("Preset Name") },
+                    label = { Text(stringResource(MR.strings.tsz_str6_fp_preset_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -214,7 +218,7 @@ private fun SavePresetDialog(
                         onCheckedChange = { setAsDefault = it },
                     )
                     Text(
-                        text = "Set as default preset",
+                        text = stringResource(MR.strings.tsz_str6_fp_set_default_preset),
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }

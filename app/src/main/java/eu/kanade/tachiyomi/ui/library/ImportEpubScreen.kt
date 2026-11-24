@@ -94,6 +94,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.UUID
 import eu.kanade.presentation.components.AnchoredDropdownMenu as DropdownMenu
+import tachiyomi.core.common.i18n.stringResource as contextStringResource
 
 private const val TOC_PREVIEW_SECTION_SIZE = 3
 private const val TOC_PREVIEW_ALL_THRESHOLD = TOC_PREVIEW_SECTION_SIZE * 3
@@ -209,10 +210,10 @@ class ImportEpubScreen(
 
             if (allFiles.isNotEmpty()) {
                 snackbarHostState.showSnackbar(
-                    "Loaded ${allFiles.size} EPUB file(s) into ${volumeGroups.size} novel group(s)",
+                    context.contextStringResource(MR.strings.tsz_str6_epub_loaded, allFiles.size, volumeGroups.size),
                 )
             } else if (parsed.errors.isEmpty()) {
-                snackbarHostState.showSnackbar("No valid EPUB files were parsed")
+                snackbarHostState.showSnackbar(context.contextStringResource(MR.strings.tsz_str6_epub_none_parsed))
             }
         }
 
@@ -349,14 +350,16 @@ class ImportEpubScreen(
                             AppBarActions(
                                 listOf(
                                     AppBar.Action(
-                                        title = "Auto rename & organize",
+                                        title = stringResource(MR.strings.tsz_str6_epub_auto_organize),
                                         icon = Icons.Outlined.Refresh,
                                         onClick = {
                                             autoOrganizeGroups(volumeGroups)
                                             expandedTocByVolume.clear()
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
-                                                    "Auto-organized groups and volume titles from EPUB metadata",
+                                                    context.contextStringResource(
+                                                        MR.strings.tsz_str6_epub_auto_organized,
+                                                    ),
                                                 )
                                             }
                                         },
@@ -387,11 +390,11 @@ class ImportEpubScreen(
                     if (showDeleteImportedConfirm) {
                         AlertDialog(
                             onDismissRequest = { showDeleteImportedConfirm = false },
-                            title = { Text("Delete imported EPUB files?") },
+                            title = { Text(stringResource(MR.strings.tsz_str6_epub_delete_imported_title)) },
                             text = {
                                 @Suppress("ktlint:standard:max-line-length")
                                 Text(
-                                    "This will permanently delete successfully imported source files from storage (if permitted).",
+                                    stringResource(MR.strings.tsz_str6_epub_delete_imported_body),
                                 )
                             },
                             confirmButton = {
@@ -414,24 +417,33 @@ class ImportEpubScreen(
                                             when {
                                                 deletedCount == 0 -> {
                                                     snackbarHostState.showSnackbar(
-                                                        "No imported EPUB files were deleted",
+                                                        context.contextStringResource(
+                                                            MR.strings.tsz_str6_epub_none_deleted,
+                                                        ),
                                                     )
                                                 }
                                                 failedCount == 0 -> {
                                                     snackbarHostState.showSnackbar(
-                                                        "Deleted $deletedCount imported EPUB file(s)",
+                                                        context.contextStringResource(
+                                                            MR.strings.tsz_str6_epub_deleted_count,
+                                                            deletedCount,
+                                                        ),
                                                     )
                                                 }
                                                 else -> {
                                                     snackbarHostState.showSnackbar(
-                                                        "Deleted $deletedCount file(s), failed to delete $failedCount",
+                                                        context.contextStringResource(
+                                                            MR.strings.tsz_str6_epub_deleted_partial,
+                                                            deletedCount,
+                                                            failedCount,
+                                                        ),
                                                     )
                                                 }
                                             }
                                         }
                                     },
                                 ) {
-                                    Text("Delete")
+                                    Text(stringResource(MR.strings.action_delete))
                                 }
                             },
                             dismissButton = {
@@ -493,7 +505,9 @@ class ImportEpubScreen(
                             scope.launch {
                                 val groupsToImport = volumeGroups.filter { it.volumes.isNotEmpty() }
                                 if (groupsToImport.isEmpty()) {
-                                    snackbarHostState.showSnackbar("Select at least one EPUB file")
+                                    snackbarHostState.showSnackbar(
+                                        context.contextStringResource(MR.strings.tsz_str6_epub_select_one),
+                                    )
                                     return@launch
                                 }
 
@@ -640,7 +654,7 @@ private fun ImportSelectionContent(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Parsing EPUB files...")
+                    Text(stringResource(MR.strings.tsz_str6_epub_parsing))
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
@@ -652,7 +666,7 @@ private fun ImportSelectionContent(
                     text = eu.kanade.presentation.tsuzuki.settings.tsuzukiEpubSummary(
                         files = volumeGroups.sumOf { it.volumes.size },
                         novels = volumeGroups.size,
-                    ) ?: "Novel groups (${volumeGroups.size})",
+                    ) ?: stringResource(MR.strings.tsz_str6_epub_novel_groups, volumeGroups.size),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -788,7 +802,7 @@ private fun VolumeGroupCard(
                     value = group.title,
                     onValueChange = { group.title = it },
                     modifier = Modifier.weight(1f),
-                    label = { Text("Novel title") },
+                    label = { Text(stringResource(MR.strings.tsz_str6_epub_novel_title)) },
                     singleLine = true,
                 )
 
@@ -798,7 +812,7 @@ private fun VolumeGroupCard(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.KeyboardArrowUp,
-                        contentDescription = "Move novel group up",
+                        contentDescription = stringResource(MR.strings.tsz_str6_epub_group_up),
                     )
                 }
                 IconButton(
@@ -807,14 +821,14 @@ private fun VolumeGroupCard(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = "Move novel group down",
+                        contentDescription = stringResource(MR.strings.tsz_str6_epub_group_down),
                     )
                 }
 
                 IconButton(onClick = onRemoveGroup) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = "Remove novel group",
+                        contentDescription = stringResource(MR.strings.tsz_str6_epub_group_remove),
                     )
                 }
             }
@@ -862,7 +876,7 @@ private fun VolumeGroupCard(
                                     value = volume.title,
                                     onValueChange = { volume.title = it },
                                     modifier = Modifier.fillMaxWidth(),
-                                    label = { Text("Volume title") },
+                                    label = { Text(stringResource(MR.strings.tsz_str6_epub_volume_title)) },
                                     singleLine = true,
                                 )
                             }
@@ -891,7 +905,7 @@ private fun VolumeGroupCard(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.KeyboardArrowUp,
-                                        contentDescription = "Move volume up",
+                                        contentDescription = stringResource(MR.strings.tsz_str6_epub_volume_up),
                                     )
                                 }
 
@@ -901,7 +915,7 @@ private fun VolumeGroupCard(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.KeyboardArrowDown,
-                                        contentDescription = "Move volume down",
+                                        contentDescription = stringResource(MR.strings.tsz_str6_epub_volume_down),
                                     )
                                 }
 
@@ -909,7 +923,9 @@ private fun VolumeGroupCard(
                                     IconButton(onClick = { moveMenuExpanded = true }) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
-                                            contentDescription = "Move to another novel group",
+                                            contentDescription = stringResource(
+                                                MR.strings.tsz_str6_epub_move_other_group,
+                                            ),
                                         )
                                     }
 
@@ -918,7 +934,7 @@ private fun VolumeGroupCard(
                                         onDismissRequest = { moveMenuExpanded = false },
                                     ) {
                                         DropdownMenuItem(
-                                            text = { Text("Move to new novel group") },
+                                            text = { Text(stringResource(MR.strings.tsz_str6_epub_move_new_group)) },
                                             onClick = {
                                                 moveMenuExpanded = false
                                                 onMoveVolumeToNewGroup(volume.id)
@@ -930,10 +946,20 @@ private fun VolumeGroupCard(
                                             .forEachIndexed { destinationIndex, destinationGroup ->
                                                 val destinationLabel = destinationGroup.title
                                                     .takeIf { it.isNotBlank() }
-                                                    ?: "Novel group ${destinationIndex + 1}"
+                                                    ?: stringResource(
+                                                        MR.strings.tsz_str6_epub_group_n,
+                                                        destinationIndex + 1,
+                                                    )
 
                                                 DropdownMenuItem(
-                                                    text = { Text("Move to $destinationLabel") },
+                                                    text = {
+                                                        Text(
+                                                            stringResource(
+                                                                MR.strings.tsz_str6_epub_move_to_dest,
+                                                                destinationLabel,
+                                                            ),
+                                                        )
+                                                    },
                                                     onClick = {
                                                         moveMenuExpanded = false
                                                         onMoveVolumeToExistingGroup(volume.id, destinationGroup.id)
@@ -947,14 +973,18 @@ private fun VolumeGroupCard(
                                     @Suppress("ktlint:standard:max-line-length")
                                     Icon(
                                         imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                                        contentDescription = if (isExpanded) "Collapse table of contents" else "Expand table of contents",
+                                        contentDescription = if (isExpanded) {
+                                            stringResource(MR.strings.tsz_str6_epub_toc_collapse)
+                                        } else {
+                                            stringResource(MR.strings.tsz_str6_epub_toc_expand)
+                                        },
                                     )
                                 }
 
                                 IconButton(onClick = { onRemoveVolume(volume.id) }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Close,
-                                        contentDescription = "Remove volume",
+                                        contentDescription = stringResource(MR.strings.tsz_str6_epub_volume_remove),
                                     )
                                 }
                             }
@@ -991,7 +1021,7 @@ private fun VolumeCoverThumbnail(
 
     MangaCover.Book(
         data = request,
-        contentDescription = "Volume cover",
+        contentDescription = stringResource(MR.strings.tsz_str6_epub_volume_cover),
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
     )
@@ -1017,7 +1047,7 @@ private fun VolumeMetadataDetails(file: EpubFileInfo) {
     ) {
         author?.let {
             Text(
-                text = "Author: $it",
+                text = stringResource(MR.strings.tsz_str6_epub_author_fmt, it),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1025,7 +1055,7 @@ private fun VolumeMetadataDetails(file: EpubFileInfo) {
 
         if (tags.isNotEmpty()) {
             Text(
-                text = "Tags: ${tags.joinToString(", ")}",
+                text = stringResource(MR.strings.tsz_str6_epub_tags_fmt, tags.joinToString(", ")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1033,7 +1063,7 @@ private fun VolumeMetadataDetails(file: EpubFileInfo) {
 
         description?.let {
             Text(
-                text = "Description: $it",
+                text = stringResource(MR.strings.tsz_str6_epub_description_fmt, it),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1045,7 +1075,7 @@ private fun VolumeMetadataDetails(file: EpubFileInfo) {
 private fun TocPreview(tableOfContents: List<String>) {
     if (tableOfContents.isEmpty()) {
         Text(
-            text = "No table of contents found",
+            text = stringResource(MR.strings.tsz_str6_epub_no_toc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
@@ -1085,11 +1115,12 @@ private fun TocPreview(tableOfContents: List<String>) {
     }
 }
 
+@Composable
 private fun buildTocPreviewSections(totalChapters: Int): List<TocSection> {
     if (totalChapters <= TOC_PREVIEW_ALL_THRESHOLD) {
         return listOf(
             TocSection(
-                title = "Chapters",
+                title = stringResource(MR.strings.chapters),
                 indices = (0 until totalChapters).toList(),
             ),
         )
@@ -1105,9 +1136,9 @@ private fun buildTocPreviewSections(totalChapters: Int): List<TocSection> {
     val endIndices = (endStart until totalChapters).toList()
 
     return listOf(
-        TocSection("Start", startIndices),
-        TocSection("Middle", middleIndices),
-        TocSection("End", endIndices),
+        TocSection(stringResource(MR.strings.tsz_str6_epub_toc_start), startIndices),
+        TocSection(stringResource(MR.strings.tsz_str6_epub_toc_middle), middleIndices),
+        TocSection(stringResource(MR.strings.tsz_str6_epub_toc_end), endIndices),
     )
 }
 
@@ -1187,7 +1218,7 @@ private fun ImportResultContent(
                 }
                 if (result.errors.size > 10) {
                     Text(
-                        text = "... and ${result.errors.size - 10} more",
+                        text = stringResource(MR.strings.tsz_str6_and_more_fmt, result.errors.size - 10),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1200,7 +1231,7 @@ private fun ImportResultContent(
                     onClick = onDeleteImportedFiles,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Delete imported EPUB files")
+                    Text(stringResource(MR.strings.tsz_str6_epub_delete_imported_btn))
                 }
             }
 
@@ -1278,12 +1309,13 @@ private fun newGroupId(): String = "group-${UUID.randomUUID()}"
 
 private fun newVolumeId(): String = "volume-${UUID.randomUUID()}"
 
+@Composable
 private fun buildVolumeOrderLabel(orderIndex: Int, collectionPosition: Int?): String {
     val orderNumber = orderIndex + 1
     return if (collectionPosition != null && collectionPosition != orderNumber) {
-        "Order $orderNumber (EPUB index $collectionPosition)"
+        stringResource(MR.strings.tsz_str6_epub_order_index_fmt, orderNumber, collectionPosition)
     } else {
-        "Order $orderNumber"
+        stringResource(MR.strings.tsz_str6_epub_order_fmt, orderNumber)
     }
 }
 

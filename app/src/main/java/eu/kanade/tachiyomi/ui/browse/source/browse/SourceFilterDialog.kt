@@ -97,7 +97,7 @@ fun SourceFilterDialog(
                     IconButton(onClick = { showSaveDialog = true }) {
                         Icon(
                             imageVector = Icons.Filled.Save,
-                            contentDescription = "Save preset",
+                            contentDescription = stringResource(MR.strings.tsz_str6_fp_save_preset),
                         )
                     }
 
@@ -105,7 +105,7 @@ fun SourceFilterDialog(
                     IconButton(onClick = onOpenPresets) {
                         Icon(
                             imageVector = Icons.Outlined.BookmarkBorder,
-                            contentDescription = "Presets",
+                            contentDescription = stringResource(MR.strings.tsz_str6_fp_presets),
                         )
                     }
 
@@ -253,13 +253,13 @@ private fun SavePresetDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save Filter Preset") },
+        title = { Text(stringResource(MR.strings.tsz_str6_fp_save_filter_preset)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = presetName,
                     onValueChange = { presetName = it },
-                    label = { Text("Preset Name") },
+                    label = { Text(stringResource(MR.strings.tsz_str6_fp_preset_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -275,7 +275,7 @@ private fun SavePresetDialog(
                         onCheckedChange = { setAsDefault = it },
                     )
                     Text(
-                        text = "Set as default preset",
+                        text = stringResource(MR.strings.tsz_str6_fp_set_default_preset),
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }

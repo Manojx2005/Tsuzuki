@@ -94,6 +94,7 @@ import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.IOException
 import eu.kanade.presentation.components.AnchoredDropdownMenu as DropdownMenu
+import tachiyomi.core.common.i18n.stringResource as contextStringResource
 
 // Clipboard crosses a binder transaction (~1MB cap); past this count a huge list would throw
 // TransactionTooLargeException, so the user is pointed at export-to-file instead.
@@ -400,7 +401,9 @@ fun MassImportDialog(
                             if (hasRunningState) {
                                 TooltipBox(
                                     positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                                    tooltip = { PlainTooltip { Text("Pause All") } },
+                                    tooltip = {
+                                        PlainTooltip { Text(stringResource(MR.strings.tsz_str6_mi_pause_all)) }
+                                    },
                                     state = rememberTooltipState(),
                                 ) {
                                     IconButton(
@@ -408,7 +411,7 @@ fun MassImportDialog(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Pause,
-                                            contentDescription = "Pause All",
+                                            contentDescription = stringResource(MR.strings.tsz_str6_mi_pause_all),
                                             tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
@@ -417,7 +420,9 @@ fun MassImportDialog(
                             if (hasPausedState) {
                                 TooltipBox(
                                     positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                                    tooltip = { PlainTooltip { Text("Resume All") } },
+                                    tooltip = {
+                                        PlainTooltip { Text(stringResource(MR.strings.tsz_str6_mi_resume_all)) }
+                                    },
                                     state = rememberTooltipState(),
                                 ) {
                                     IconButton(
@@ -425,7 +430,7 @@ fun MassImportDialog(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.PlayArrow,
-                                            contentDescription = "Resume All",
+                                            contentDescription = stringResource(MR.strings.tsz_str6_mi_resume_all),
                                             tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
@@ -921,7 +926,9 @@ fun MassImportDialog(
                                 }
                             } catch (e: IOException) {
                                 restoreInputs(staged)
-                                context.toast(e.message ?: "Failed to read import files")
+                                context.toast(
+                                    e.message ?: context.contextStringResource(MR.strings.tsz_str6_mi_read_failed),
+                                )
                                 return@launch
                             }
                             batchFiles.forEach { startFile(it) }
@@ -937,7 +944,9 @@ fun MassImportDialog(
                                 }
                             } catch (e: IOException) {
                                 restoreInputs(staged)
-                                context.toast(e.message ?: "Failed to read import files")
+                                context.toast(
+                                    e.message ?: context.contextStringResource(MR.strings.tsz_str6_mi_read_failed),
+                                )
                                 return@launch
                             }
                             startFile(joined)
@@ -1167,7 +1176,7 @@ private fun BatchItem(
                             TooltipBox(
                                 positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                                 tooltip = {
-                                    PlainTooltip { Text("Resume Batch") }
+                                    PlainTooltip { Text(stringResource(MR.strings.tsz_str6_mi_resume_batch)) }
                                 },
                                 state = rememberTooltipState(),
                             ) {
@@ -1177,7 +1186,7 @@ private fun BatchItem(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.PlayArrow,
-                                        contentDescription = "Resume",
+                                        contentDescription = stringResource(MR.strings.action_resume),
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.primary,
                                     )
@@ -1187,7 +1196,7 @@ private fun BatchItem(
                             TooltipBox(
                                 positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                                 tooltip = {
-                                    PlainTooltip { Text("Pause Batch") }
+                                    PlainTooltip { Text(stringResource(MR.strings.tsz_str6_mi_pause_batch)) }
                                 },
                                 state = rememberTooltipState(),
                             ) {
@@ -1197,7 +1206,7 @@ private fun BatchItem(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Pause,
-                                        contentDescription = "Pause",
+                                        contentDescription = stringResource(MR.strings.action_pause),
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.primary,
                                     )
@@ -1422,12 +1431,12 @@ private fun BatchItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Processed: ${batch.added}",
+                        text = stringResource(MR.strings.tsz_str6_mi_processed_fmt, batch.added),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Skipped: ${batch.skipped}",
+                        text = stringResource(MR.strings.tsz_str6_mi_skipped_fmt, batch.skipped),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1450,7 +1459,10 @@ private fun BatchItem(
                     }
                     if (batch.errored > batch.erroredUrls.size) {
                         Text(
-                            text = "... and ${batch.errored - batch.erroredUrls.size} more",
+                            text = stringResource(
+                                MR.strings.tsz_str6_and_more_fmt,
+                                batch.errored - batch.erroredUrls.size,
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
