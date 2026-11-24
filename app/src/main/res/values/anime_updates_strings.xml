@@ -2,4 +2,5 @@
 <resources>
     <string name="tsz_anime_ep">ep</string>
     <string name="tsz_anime_history_clear_confirm">Remove all anime watch history? Progress and watched marks stay.</string>
+    <string name="tsz_anime_open_anime">Open anime</string>
 </resources>

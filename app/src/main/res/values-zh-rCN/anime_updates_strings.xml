@@ -2,4 +2,5 @@
 <resources>
     <string name="tsz_anime_ep">集</string>
     <string name="tsz_anime_history_clear_confirm">清除全部动画观看记录？进度和已看标记会保留。</string>
+    <string name="tsz_anime_open_anime">打开动画</string>
 </resources>

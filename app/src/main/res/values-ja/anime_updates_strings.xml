@@ -2,4 +2,5 @@
 <resources>
     <string name="tsz_anime_ep">話</string>
     <string name="tsz_anime_history_clear_confirm">アニメの視聴履歴をすべて削除しますか？進捗と視聴済みの印は残ります。</string>
+    <string name="tsz_anime_open_anime">アニメを開く</string>
 </resources>

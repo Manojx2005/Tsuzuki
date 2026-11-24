@@ -1,11 +1,13 @@
 package eu.kanade.presentation.tsuzuki.updates
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,9 +23,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +50,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.openAnime
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener
 import eu.kanade.presentation.util.rememberTimestampFormatter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
@@ -126,7 +132,7 @@ internal fun AnimeAiringStrip(entry: AnimeUpdateEpisode, modifier: Modifier = Mo
 internal fun TsuzukiAnimeUpdates(
     entries: List<AnimeUpdateEpisode>,
     padding: PaddingValues,
-    pills: @Composable () -> Unit,
+    pills: @Composable (twoPane: Boolean) -> Unit,
     airing: AnimeUpdateEpisode?,
     selected: Set<Long>,
     downloadStatus: Map<Long, AnimeDownloadStatus>,
@@ -134,6 +140,7 @@ internal fun TsuzukiAnimeUpdates(
     onSaveAll: () -> Unit,
     onToggleSelection: (AnimeUpdateEpisode) -> Unit,
     onDownload: (AnimeUpdateEpisode) -> Unit,
+    onMarkSeen: (AnimeUpdateEpisode, Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val jobs by remember(context) {
@@ -145,15 +152,15 @@ internal fun TsuzukiAnimeUpdates(
         entries.groupBy { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate().toKotlinLocalDate() }
     }
     val selectionMode = selected.isNotEmpty()
+    // AP9: on tablets the list sits on the left and the tapped update is previewed on the right, as for books.
+    val twoPane = tsuzukiUpdatesTwoPaneEnabled()
+    var previewKey by rememberSaveable { mutableStateOf<Long?>(null) }
+    val previewed = if (twoPane) resolveUpdatesSelection(entries, previewKey) { it.episodeId } else null
 
-    PullRefresh(
-        refreshing = isRefreshing,
-        enabled = !isRefreshing && !selectionMode,
-        onRefresh = { AnimeLibraryUpdateJob.start(context) },
-        indicatorPadding = padding,
-    ) {
-        LazyColumn(contentPadding = padding) {
-            if (!selectionMode) item(key = "media_pills") { pills() }
+    @Composable
+    fun UpdatesList(modifier: Modifier, contentPadding: PaddingValues) {
+        LazyColumn(modifier, contentPadding = contentPadding) {
+            if (!selectionMode) item(key = "media_pills") { pills(twoPane) }
             airing?.let { entry ->
                 item(key = "airing_today") { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) }
             }
@@ -182,17 +189,70 @@ internal fun TsuzukiAnimeUpdates(
                     AnimeUpdateTile(
                         entry = entry,
                         selected = entry.episodeId in selected,
+                        highlighted = !selectionMode && entry.episodeId == previewed?.episodeId,
                         downloadStatus = downloadStatus[entry.episodeId],
                         onClick = {
-                            if (selectionMode) {
-                                onToggleSelection(entry)
-                            } else {
-                                playAnimeEpisode(context, entry)
+                            when {
+                                selectionMode -> onToggleSelection(entry)
+                                twoPane -> previewKey = entry.episodeId
+                                else -> playAnimeEpisode(context, entry)
                             }
                         },
                         onLongClick = { onToggleSelection(entry) },
                         onDownload = { onDownload(entry) }.takeUnless { selectionMode },
                         modifier = Modifier.animateItem(),
+                    )
+                }
+            }
+        }
+    }
+
+    PullRefresh(
+        refreshing = isRefreshing,
+        enabled = !isRefreshing && !selectionMode,
+        onRefresh = { AnimeLibraryUpdateJob.start(context) },
+        indicatorPadding = padding,
+    ) {
+        if (!twoPane) {
+            UpdatesList(Modifier, padding)
+            return@PullRefresh
+        }
+        val tokens = TsuzukiTheme.tokens
+        val openDetails = rememberAnimeDetailsOpener()
+        Row(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(end = 12.dp, bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            UpdatesList(Modifier.weight(0.46f).fillMaxSize(), PaddingValues(bottom = 8.dp))
+            val shape = RoundedCornerShape(tokens.tileRadius)
+            Box(
+                Modifier
+                    .weight(0.54f)
+                    .fillMaxSize()
+                    .clip(shape)
+                    .background(tokens.tile)
+                    .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (previewed == null) {
+                    Text(
+                        tsuzukiMenuLabel(stringResource(R.string.tsz_anime_updates_empty)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.mutedText,
+                    )
+                } else {
+                    AnimeEpisodePreview(
+                        entry = previewed,
+                        others = otherNewEpisodes(entries, previewed),
+                        downloadStatus = downloadStatus[previewed.episodeId],
+                        onSelectOther = { previewKey = it.episodeId },
+                        onPlay = { playAnimeEpisode(context, previewed) },
+                        onMarkSeen = { onMarkSeen(previewed, it) },
+                        onDownload = { onDownload(previewed) },
+                        onOpenAnime = { openDetails(previewed.animeId) },
                     )
                 }
             }

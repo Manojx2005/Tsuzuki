@@ -145,6 +145,8 @@ internal fun AnimeUpdateTile(
     onLongClick: (() -> Unit)?,
     onDownload: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /** The update shown in the tablet preview pane. */
+    highlighted: Boolean = false,
 ) {
     val tokens = TsuzukiTheme.tokens
     val haptic = LocalHapticFeedback.current
@@ -157,7 +159,13 @@ internal fun AnimeUpdateTile(
             .clip(shape)
             .background(if (selected) tokens.track else tokens.tile)
             .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-            .then(if (selected) Modifier.border(1.5.dp, tokens.accent, shape) else Modifier)
+            .then(
+                when {
+                    selected -> Modifier.border(1.5.dp, tokens.accent, shape)
+                    highlighted -> Modifier.border(2.dp, tokens.accent, shape)
+                    else -> Modifier
+                },
+            )
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick?.let {

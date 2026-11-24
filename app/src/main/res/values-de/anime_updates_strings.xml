@@ -2,4 +2,5 @@
 <resources>
     <string name="tsz_anime_ep">Ep.</string>
     <string name="tsz_anime_history_clear_confirm">Gesamten Anime-Verlauf entfernen? Fortschritt und Gesehen-Markierungen bleiben.</string>
+    <string name="tsz_anime_open_anime">Anime öffnen</string>
 </resources>

@@ -179,7 +179,7 @@ internal fun rememberAnimeUpdatesSlots(
         mediaPills = pills.takeUnless { state.selectionMode },
         airingStrip = airing?.let { entry -> { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) } },
         screen = if (animeSelected) {
-            { snackbar -> AnimeUpdatesScreen(store, newEpisodes, toSave, snackbar, { pills(false) }, airing) }
+            { snackbar -> AnimeUpdatesScreen(store, newEpisodes, toSave, snackbar, pills, airing) }
         } else {
             null
         },
@@ -247,7 +247,7 @@ private fun AnimeUpdatesScreen(
     entries: List<AnimeUpdateEpisode>,
     toSave: List<AnimeUpdateEpisode>,
     snackbar: SnackbarHostState,
-    pills: @Composable () -> Unit,
+    pills: @Composable (twoPane: Boolean) -> Unit,
     airing: AnimeUpdateEpisode?,
 ) {
     val context = LocalContext.current
@@ -391,6 +391,18 @@ private fun AnimeUpdatesScreen(
                     downloads.retry(entry.episodeId)
                 } else {
                     scope.launchIO { queueAnimeUpdates(store, downloads, listOf(entry)) }
+                }
+            },
+            onMarkSeen = { entry, seen ->
+                scope.launch {
+                    try {
+                        withIOContext { markAnimeUpdatesSeen(context, store, setOf(entry.episodeId), seen, track) }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        AnimeLog.w("Could not update the previewed anime episode", e)
+                        snackbar.showSnackbar(failureMessage)
+                    }
                 }
             },
         )
