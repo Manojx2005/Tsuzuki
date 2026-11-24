@@ -198,8 +198,9 @@ data object NovelsTab : Tab {
                 )
                 LibraryToolbar(
                     below = {
-                        // Tsuzuki: keep the All/Novels/Manga/Anime pills while searching (V8.5).
-                        if (mixedLibrary && !selecting) {
+                        // Tsuzuki: keep the All/Novels/Manga/Anime pills while searching (V8.5) and selecting
+                        // (AP-LIB-F1; the fallback switch read Novels / Anime with Novels picked).
+                        if (mixedLibrary) {
                             val animeTabs = cafe.adriel.voyager.navigator.tab.LocalTabNavigator.current
                             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryHeader(
                                 novelCount = state.libraryData.novelCount,
@@ -209,7 +210,10 @@ data object NovelsTab : Tab {
                                     state.searchQuery.isNullOrBlank(),
                                 onFilterChanged = clearSelection,
                                 onOpenAnime = if (TsuzukiAnime.enabled) {
-                                    { animeTabs.current = AnimeLibraryTab }
+                                    {
+                                        clearSelection()
+                                        animeTabs.current = AnimeLibraryTab
+                                    }
                                 } else {
                                     null
                                 },
