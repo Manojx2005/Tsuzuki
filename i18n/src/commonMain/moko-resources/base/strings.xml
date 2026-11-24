@@ -1293,6 +1293,7 @@
     <string name="tsz_anime_shelves_hint">Shelves for anime. Novels and manga have their own shelves.</string>
     <string name="tsz_anime_new_shelf">New anime shelf</string>
     <string name="tsz_anime_continue_watching">Continue watching</string>
+    <string name="tsz_anime_start_watching">Start watching</string>
     <string name="tsz_anime_library_empty">Your anime library is empty</string>
     <string name="tsz_anime_shelf_count">%1$d anime</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d episodes</string>

@@ -929,6 +929,7 @@
     <string name="tsz_anime_shelves_hint">Étagères pour les animes. Les romans et les mangas ont leurs propres étagères.</string>
     <string name="tsz_anime_new_shelf">Nouvelle étagère anime</string>
     <string name="tsz_anime_continue_watching">Reprendre le visionnage</string>
+    <string name="tsz_anime_start_watching">Commencer à regarder</string>
     <string name="tsz_anime_library_empty">Votre bibliothèque anime est vide</string>
     <string name="tsz_anime_shelf_count">%1$d animes</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d épisodes</string>

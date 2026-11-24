@@ -933,6 +933,7 @@
     <string name="tsz_anime_shelves_hint">Prateleiras para animes. Romances e mangás têm suas próprias prateleiras.</string>
     <string name="tsz_anime_new_shelf">Nova prateleira de anime</string>
     <string name="tsz_anime_continue_watching">Continuar assistindo</string>
+    <string name="tsz_anime_start_watching">Começar a assistir</string>
     <string name="tsz_anime_library_empty">Sua biblioteca de animes está vazia</string>
     <string name="tsz_anime_shelf_count">%1$d animes</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d episódios</string>

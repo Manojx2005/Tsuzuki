@@ -41,7 +41,12 @@ import java.util.Locale
 
 internal data class AnimeLibraryEntry(val anime: Anime, val shelfIds: Set<Long>)
 
-internal data class ContinueAnime(val anime: Anime, val episode: Episode)
+/** [fromHistory] is false when Watch offers a library show nobody has played yet ("Start watching"). */
+internal data class ContinueAnime(val anime: Anime, val episode: Episode, val fromHistory: Boolean = true)
+
+/** The first episode to start in playback order, skipping watched ones and excluded subtitle groups. */
+internal fun firstUnwatchedEpisode(episodes: List<Episode>, excluded: Set<String>): Episode? =
+    episodes.sortedWith(animeEpisodeNumberOrder).firstOrNull { !it.seen && !it.scanlator.isExcludedAnimeGroup(excluded) }
 
 internal data class AnimeEpisodes(
     val items: List<Episode>,
@@ -148,6 +153,18 @@ internal class AnimeLibraryStore(
             val next = ordered.dropWhile { it.id != last.id }.drop(1)
                 .firstOrNull { !it.seen && !it.scanlator.isExcludedAnimeGroup(excluded) }
             next?.let { ContinueAnime(show.withUserEdits(), it) }
+        }
+    }
+
+    /**
+     * The Watch hero: the history resume when there is one; otherwise, as book Home falls back to the library, the
+     * first unwatched episode of the most recently added show (owner 2026-11-25: Watch showed no preview card on a
+     * library that had not been played from yet).
+     */
+    fun observeWatchHero() = combine(observeContinueWatching(), anime.subscribeLibrary()) { resume, items ->
+        resume ?: items.map { it.anime }.sortedByDescending { it.dateAdded }.firstNotNullOfOrNull { show ->
+            firstUnwatchedEpisode(episodes.awaitByAnimeId(show.id), show.memo.excludedAnimeGroups())
+                ?.let { ContinueAnime(show, it, fromHistory = false) }
         }
     }
 
