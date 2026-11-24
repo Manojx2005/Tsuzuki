@@ -50,8 +50,8 @@ android {
     defaultConfig {
         applicationId = "io.github.manojx2005.tsuzuki"
 
-        versionCode = 27
-        versionName = "0.2.1"
+        versionCode = 28
+        versionName = "0.2.2"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")

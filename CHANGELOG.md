@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-24
+
 ### Added
 - **Anime works like your books.** Anime now has the same tools as manga and novels:
   - Library: long-press to select anime, then move them to shelves, mark them watched or unwatched, download the
