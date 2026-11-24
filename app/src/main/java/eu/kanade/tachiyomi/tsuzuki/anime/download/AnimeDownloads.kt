@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -67,6 +66,7 @@ internal data class AnimeDownloadEntry(
     val episodeTitle: String,
     val status: AnimeDownloadStatus = AnimeDownloadStatus.Queued,
     val bytes: Long = 0L,
+    val pendingAutoDelete: Boolean = false,
 )
 
 @Serializable
@@ -137,6 +137,8 @@ internal class AnimeDownloads(
     private val edits = Mutex()
     private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private val disk = Mutex()
+    // Guarded by edits. A player keeps its local files until the backend closes.
+    private val offlinePlaybackEpisodes = mutableMapOf<Any, MutableSet<Long>>()
     private val mutableState = MutableStateFlow(AnimeDownloadQueue())
     private val mutableProgress = MutableStateFlow<Pair<Long, AnimeDownloadProgress>?>(null)
     val state = mutableState.asStateFlow()
@@ -161,27 +163,25 @@ internal class AnimeDownloads(
         scope.launch(Dispatchers.IO) {
             initialized.await()
             var previous = emptyMap<Long, Set<Long>>()
-            state.map { queue -> queue.savedAnimeIds() }
+            combine(state, deleteAfterWatched.changes()) { queue, enabled ->
+                if (enabled) queue.savedAnimeIds() else emptySet()
+            }
                 .distinctUntilChanged()
                 .flatMapLatest { animeIds ->
                     if (animeIds.isEmpty()) {
                         flowOf(emptyMap())
                     } else {
                         val ids = animeIds.toList()
-                        combine(ids.map { id -> library.observeEpisodes(id) }) { lists ->
-                            ids.indices.associate { i ->
-                                ids[i] to lists[i].items.filter { it.seen }.mapTo(hashSetOf()) { it.id }
-                            }
+                        combine(ids.map(library::observeWatchedEpisodeIds)) { lists ->
+                            ids.zip(lists).toMap()
                         }
                     }
                 }
                 .distinctUntilChanged()
                 .collect { watched ->
-                    val newly = newlyWatchedDownloads(previous, watched)
+                    val newly = newlyWatchedDownloads(previous, watched).filterTo(hashSetOf(), state.value::isSaved)
                     previous = watched
-                    if (newly.isNotEmpty() && deleteAfterWatched.get() && TsuzukiAnime.enabled) {
-                        newly.filter(state.value::isSaved).forEach(::remove)
-                    }
+                    command { removeWatched(newly, watched) }
                 }
         }
         scope.launch(Dispatchers.IO) {
@@ -223,6 +223,7 @@ internal class AnimeDownloads(
         if (!TsuzukiAnime.enabled) return@command
         val restored = state.value
         restored.entries.filter { it.status == AnimeDownloadStatus.Removing }.forEach(::deleteAsync)
+        removeWatched(emptySet(), emptyMap())
         if (restored.hasQueuedEpisodes && !restored.paused) {
             AnimeDownloadJob.schedule(context, restored.wifiOnly, ExistingWorkPolicy.KEEP)
         }
@@ -275,8 +276,10 @@ internal class AnimeDownloads(
     }
 
     /** Removes every failed episode and its partial files, as Remove does for one. */
-    fun clearFailed() {
-        state.value.entries.filter { it.status == AnimeDownloadStatus.Failed }.forEach { remove(it.episodeId) }
+    fun clearFailed() = command {
+        editForRemoval { entry ->
+            if (entry.status == AnimeDownloadStatus.Failed) entry.removing() else entry
+        }
     }
 
     fun setPaused(paused: Boolean) = command {
@@ -325,21 +328,21 @@ internal class AnimeDownloads(
     suspend fun removeAndAwait(id: Long) = awaitCommand { removeEpisode(id) }
 
     private suspend fun removeEpisode(id: Long) {
-        val entry = state.value.entries.firstOrNull { it.episodeId == id } ?: return
-        if (edit { queue -> queue.change(id) { it.copy(status = AnimeDownloadStatus.Removing) } }) {
-            deleteAsync(entry)
-        }
+        editForRemoval { entry -> if (entry.episodeId == id) entry.removing() else entry }
     }
 
-    suspend fun offlineVideo(sourceId: Long, animeId: Long, episodeId: Long): Video? = withContext(Dispatchers.IO) {
-        initialized.await()
-        val entry = state.value.entries.firstOrNull {
-            it.sourceId == sourceId && it.animeId == animeId && it.episodeId == episodeId &&
-                it.status == AnimeDownloadStatus.Saved
-        } ?: return@withContext null
-        val folder = episodeFolder(entry)
-        val file = folder?.let(::playableFile)
-        if (file != null) {
+    suspend fun offlineVideo(sourceId: Long, animeId: Long, episodeId: Long, playbackOwner: Any): Video? =
+        withContext(Dispatchers.IO) {
+            initialized.await()
+            val entry = edits.withLock {
+                coroutineContext.ensureActive()
+                state.value.entries.firstOrNull {
+                    it.sourceId == sourceId && it.animeId == animeId && it.episodeId == episodeId &&
+                        it.status == AnimeDownloadStatus.Saved
+                }?.also { offlinePlaybackEpisodes.getOrPut(playbackOwner) { mutableSetOf() }.add(episodeId) }
+            } ?: return@withContext null
+            val folder = episodeFolder(entry) ?: return@withContext null
+            val file = playableFile(folder) ?: return@withContext null
             // AP3: episodes saved before segments were cleaned on download are cleaned once here.
             if (file.name == AnimeVideoTransfer.PLAYLIST) {
                 try {
@@ -349,8 +352,51 @@ internal class AnimeDownloads(
                 }
             }
             Video(videoUrl = file.absolutePath)
+        }
+
+    fun releaseOfflinePlayback(playbackOwner: Any) {
+        commands.trySend {
+            edits.withLock { offlinePlaybackEpisodes.remove(playbackOwner) }
+            removeWatched(emptySet(), emptyMap())
+        }
+    }
+
+    private suspend fun removeWatched(newly: Set<Long>, watched: Map<Long, Set<Long>>) {
+        val enabled = deleteAfterWatched.get() && TsuzukiAnime.enabled
+        val pending = state.value.entries.filter { it.status == AnimeDownloadStatus.Saved && it.pendingAutoDelete }
+        // An explicit Mark unwatched can beat the watch flow or player close. Recheck before removing saved files.
+        val stillWatched = if (enabled) {
+            (pending.map { it.episodeId } + newly).filterTo(hashSetOf()) { library.getEpisode(it)?.seen == true }
         } else {
-            null
+            emptySet()
+        }
+        editForRemoval { entry ->
+            val id = entry.episodeId
+            val observedUnwatched = watched[entry.animeId]?.let { id !in it } == true
+            when {
+                entry.status != AnimeDownloadStatus.Saved || (!entry.pendingAutoDelete && id !in newly) -> entry
+                !enabled || id !in stillWatched || observedUnwatched -> entry.copy(pendingAutoDelete = false)
+                offlinePlaybackEpisodes.values.any { id in it } -> entry.copy(pendingAutoDelete = true)
+                else -> entry.removing()
+            }
+        }
+    }
+
+    private fun AnimeDownloadEntry.removing() = copy(status = AnimeDownloadStatus.Removing, pendingAutoDelete = false)
+
+    private suspend fun editForRemoval(transform: (AnimeDownloadEntry) -> AnimeDownloadEntry) {
+        val marked = mutableListOf<AnimeDownloadEntry>()
+        if (edit { queue ->
+                queue.copy(entries = queue.entries.map { entry ->
+                    val changed = transform(entry)
+                    if (entry.status != AnimeDownloadStatus.Removing && changed.status == AnimeDownloadStatus.Removing) {
+                        marked.add(changed)
+                    }
+                    changed
+                })
+            }
+        ) {
+            marked.forEach(::deleteAsync)
         }
     }
 

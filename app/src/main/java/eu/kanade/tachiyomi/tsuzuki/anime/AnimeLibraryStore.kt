@@ -152,6 +152,10 @@ internal class AnimeLibraryStore(
     suspend fun setNotes(id: Long, notes: String) = database.animesQueries.setNotes(notes = notes, id = id)
 
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
+
+    fun observeWatchedEpisodeIds(animeId: Long) = episodes.subscribeByAnimeId(animeId).map { items ->
+        items.filter { it.seen }.mapTo(hashSetOf()) { it.id }
+    }.distinctUntilChanged()
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
     fun observeExcludedGroups(animeId: Long) = database.animesQueries.getById(animeId)
