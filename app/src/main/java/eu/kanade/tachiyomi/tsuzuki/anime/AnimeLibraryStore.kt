@@ -161,7 +161,8 @@ internal class AnimeLibraryStore(
      * first unwatched episode of the most recently added show (owner 2026-11-25: Watch showed no preview card on a
      * library that had not been played from yet).
      */
-    fun observeWatchHero() = combine(observeContinueWatching(), anime.subscribeLibrary()) { resume, items ->
+    // observeLibrary() applies the user's edits (AP7-EDIT), so the hero shows the edited title.
+    fun observeWatchHero() = combine(observeContinueWatching(), observeLibrary()) { resume, items ->
         resume ?: items.map { it.anime }.sortedByDescending { it.dateAdded }.firstNotNullOfOrNull { show ->
             firstUnwatchedEpisode(episodes.awaitByAnimeId(show.id), show.memo.excludedAnimeGroups())
                 ?.let { ContinueAnime(show, it, fromHistory = false) }
