@@ -8,4 +8,7 @@
     <string name="tsz_selection_download_incomplete">미완료</string>
     <string name="tsz_anime_downloaded_episodes">다운로드한 에피소드</string>
     <string name="tsz_library_downloaded_chapters_episodes">다운로드한 챕터와 에피소드</string>
+    <string name="tsz_anime_bookmark_short">북마크</string>
+    <string name="tsz_anime_unbookmark_short">북마크 해제</string>
+    <string name="tsz_anime_mark_unwatched_short">미시청으로</string>
 </resources>

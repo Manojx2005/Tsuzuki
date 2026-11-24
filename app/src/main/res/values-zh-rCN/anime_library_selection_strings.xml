@@ -8,4 +8,7 @@
     <string name="tsz_selection_download_incomplete">未完成</string>
     <string name="tsz_anime_downloaded_episodes">已下载的剧集</string>
     <string name="tsz_library_downloaded_chapters_episodes">已下载的章节和剧集</string>
+    <string name="tsz_anime_bookmark_short">书签</string>
+    <string name="tsz_anime_unbookmark_short">取消书签</string>
+    <string name="tsz_anime_mark_unwatched_short">标为未看</string>
 </resources>
