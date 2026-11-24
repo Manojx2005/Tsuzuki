@@ -303,7 +303,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = "Don't kill my app!",
+                    title = stringResource(MR.strings.tsz_str6_adv_dont_kill),
                     subtitle = stringResource(MR.strings.about_dont_kill_my_app),
                     onClick = { uriHandler.openUri("https://dontkillmyapp.com/") },
                 ),
@@ -420,10 +420,10 @@ object SettingsAdvancedScreen : SearchableSettings {
         if (showMoveToCategoryDialog && categories.isNotEmpty()) {
             AlertDialog(
                 onDismissRequest = { showMoveToCategoryDialog = false },
-                title = { Text(text = "Move Duplicates to Category") },
+                title = { Text(text = stringResource(MR.strings.tsz_str6_adv_move_dups_title)) },
                 text = {
                     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        Text(text = "Select a category to move ${duplicateUrls.size} duplicates to:")
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_move_dups_body, duplicateUrls.size))
                         Spacer(modifier = Modifier.height(8.dp))
                         categories.forEach { category ->
                             TextButton(
@@ -439,7 +439,13 @@ object SettingsAdvancedScreen : SearchableSettings {
                                             setCategories.await(mangaId, listOf(category.id))
                                         }
 
-                                        context.toast("Moved ${mangaIds.size} novels to ${category.name}")
+                                        context.toast(
+                                            context.contextStringResource(
+                                                MR.strings.tsz_str6_adv_moved_novels,
+                                                mangaIds.size,
+                                                category.name,
+                                            ),
+                                        )
                                         showMoveToCategoryDialog = false
                                     }
                                 },
@@ -461,10 +467,10 @@ object SettingsAdvancedScreen : SearchableSettings {
         if (showDuplicatesDialog && duplicateUrls.isNotEmpty()) {
             AlertDialog(
                 onDismissRequest = { showDuplicatesDialog = false },
-                title = { Text(text = "Duplicate URLs Found (${duplicateUrls.size})") },
+                title = { Text(text = stringResource(MR.strings.tsz_str6_adv_dups_found_title, duplicateUrls.size)) },
                 text = {
                     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        Text(text = "The following novels would have duplicate URLs after normalization:")
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_dups_found_body))
                         Spacer(modifier = Modifier.height(8.dp))
                         Row {
                             TextButton(
@@ -483,7 +489,12 @@ object SettingsAdvancedScreen : SearchableSettings {
                                             mangaRepo.updateAll(updates)
                                         }
 
-                                        context.toast("Deleted ${updates.size} duplicate novels")
+                                        context.toast(
+                                            context.contextStringResource(
+                                                MR.strings.tsz_str6_adv_deleted_dups,
+                                                updates.size,
+                                            ),
+                                        )
                                         isDeleting = false
                                         duplicateUrls = emptyList()
                                         showDuplicatesDialog = false
@@ -492,14 +503,14 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 enabled = !isDeleting,
                             ) {
                                 Icon(Icons.Filled.Delete, contentDescription = null)
-                                Text(text = "Delete All")
+                                Text(text = stringResource(MR.strings.tsz_str6_adv_delete_all))
                             }
                             TextButton(
                                 onClick = { showMoveToCategoryDialog = true },
                                 enabled = !isDeleting,
                             ) {
                                 Icon(Icons.Filled.DriveFileMove, contentDescription = null)
-                                Text(text = "Move to Category")
+                                Text(text = stringResource(MR.strings.duplicate_move_to_category))
                             }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -510,13 +521,13 @@ object SettingsAdvancedScreen : SearchableSettings {
                             )
                         }
                         if (duplicateUrls.size > 20) {
-                            Text(text = "... and ${duplicateUrls.size - 20} more")
+                            Text(text = stringResource(MR.strings.tsz_str6_and_more_fmt, duplicateUrls.size - 20))
                         }
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = { showDuplicatesDialog = false }) {
-                        Text(text = "OK")
+                        Text(text = stringResource(MR.strings.action_ok))
                     }
                 },
             )
@@ -525,13 +536,13 @@ object SettingsAdvancedScreen : SearchableSettings {
         if (showNormalizeUrlsDialog) {
             AlertDialog(
                 onDismissRequest = { showNormalizeUrlsDialog = false },
-                title = { Text(text = "Normalize manga URLs") },
+                title = { Text(text = stringResource(MR.strings.pref_normalize_urls)) },
                 text = {
                     Column {
-                        Text(text = "This will clean up manga URLs from JS-plugin and custom sources:")
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_normalize_body))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "• Remove trailing slashes")
-                        Text(text = "• Remove URL fragments (#...)")
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_bullet_trailing))
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_bullet_fragments))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -539,7 +550,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 checked = removeDoubleSlashes,
                                 onCheckedChange = { removeDoubleSlashes = it },
                             )
-                            Text(text = "Remove double slashes (//)")
+                            Text(text = stringResource(MR.strings.tsz_str6_adv_remove_double))
                         }
                     }
                 },
@@ -553,12 +564,14 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 if (duplicateUrls.isNotEmpty()) {
                                     showDuplicatesDialog = true
                                 }
-                                context.toast("Normalized ${result.first} manga URLs")
+                                context.toast(
+                                    context.contextStringResource(MR.strings.tsz_str6_adv_normalized_fmt, result.first),
+                                )
                                 showNormalizeUrlsDialog = false
                             }
                         },
                     ) {
-                        Text(text = "Normalize")
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_normalize_btn))
                     }
                 },
                 dismissButton = {
@@ -581,10 +594,12 @@ object SettingsAdvancedScreen : SearchableSettings {
                         showRemovedList = false
                         removedDuplicates = emptyList()
                     },
-                    title = { Text(text = "Removed ${removedDuplicates.size} duplicates") },
+                    title = {
+                        Text(text = stringResource(MR.strings.tsz_str6_adv_removed_dups_title, removedDuplicates.size))
+                    },
                     text = {
                         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                            Text(text = "The following novels were unfavorited:")
+                            Text(text = stringResource(MR.strings.tsz_str6_adv_unfavorited_body))
                             Spacer(modifier = Modifier.height(8.dp))
                             removedDuplicates.take(50).forEach { (title, oldUrl, normalizedUrl) ->
                                 Text(
@@ -593,7 +608,12 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 )
                             }
                             if (removedDuplicates.size > 50) {
-                                Text(text = "... and ${removedDuplicates.size - 50} more")
+                                Text(
+                                    text = stringResource(
+                                        MR.strings.tsz_str6_and_more_fmt,
+                                        removedDuplicates.size - 50,
+                                    ),
+                                )
                             }
                         }
                     },
@@ -603,21 +623,21 @@ object SettingsAdvancedScreen : SearchableSettings {
                             removedDuplicates = emptyList()
                             showRemoveDuplicatesDialog = false
                         }) {
-                            Text(text = "OK")
+                            Text(text = stringResource(MR.strings.action_ok))
                         }
                     },
                 )
             } else {
                 AlertDialog(
                     onDismissRequest = { if (!isRemoving) showRemoveDuplicatesDialog = false },
-                    title = { Text(text = "Remove duplicate URL entries") },
+                    title = { Text(text = stringResource(MR.strings.pref_remove_duplicate_urls)) },
                     text = {
                         Column {
                             Text(
-                                text = "This will unfavorite manga entries that would have duplicate URLs after normalization.",
+                                text = stringResource(MR.strings.tsz_str6_adv_remove_dup_body),
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "For each group of duplicates, only the first entry will be kept.")
+                            Text(text = stringResource(MR.strings.tsz_str6_adv_keep_first))
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -627,7 +647,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     onCheckedChange = { removeDupDoubleSlashes = it },
                                     enabled = !isRemoving,
                                 )
-                                Text(text = "Also check for double slashes (//)")
+                                Text(text = stringResource(MR.strings.tsz_str6_adv_also_double))
                             }
                             if (isRemoving) {
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -636,7 +656,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     CircularProgressIndicator(modifier = Modifier.size(16.dp))
-                                    Text(text = "Removing duplicates...")
+                                    Text(text = stringResource(MR.strings.tsz_str6_adv_removing_dups))
                                 }
                             }
                         }
@@ -659,13 +679,13 @@ object SettingsAdvancedScreen : SearchableSettings {
                                             showMoveToCategoryDialog = true
                                             showRemoveDuplicatesDialog = false
                                         } else {
-                                            context.toast("No duplicates found")
+                                            context.toast(MR.strings.tsz_str6_adv_no_dups)
                                         }
                                     }
                                 },
                                 enabled = !isRemoving,
                             ) {
-                                Text(text = "Move to Category")
+                                Text(text = stringResource(MR.strings.duplicate_move_to_category))
                             }
                             TextButton(
                                 onClick = {
@@ -680,16 +700,21 @@ object SettingsAdvancedScreen : SearchableSettings {
                                         if (result.first > 0) {
                                             removedDuplicates = result.second
                                             showRemovedList = true
-                                            context.toast("Removed ${result.first} duplicate entries")
+                                            context.toast(
+                                                context.contextStringResource(
+                                                    MR.strings.tsz_str6_adv_removed_entries_fmt,
+                                                    result.first,
+                                                ),
+                                            )
                                         } else {
-                                            context.toast("No duplicates found")
+                                            context.toast(MR.strings.tsz_str6_adv_no_dups)
                                             showRemoveDuplicatesDialog = false
                                         }
                                     }
                                 },
                                 enabled = !isRemoving,
                             ) {
-                                Text(text = "Remove Duplicates")
+                                Text(text = stringResource(MR.strings.tsz_str6_adv_remove_dups_btn))
                             }
                         }
                     },
@@ -760,9 +785,16 @@ object SettingsAdvancedScreen : SearchableSettings {
                         pendingUrls = if (pendingUrls.isBlank()) merged else "$pendingUrls\n$merged"
                         val newCount = merged.lines().count { it.isNotBlank() }
                         val totalCount = pendingUrls.lines().count { it.isNotBlank() }
-                        context.toast("Added $newCount URLs from $loadedFiles file(s) (Total: $totalCount)")
+                        context.toast(
+                            context.contextStringResource(
+                                MR.strings.tsz_str6_adv_added_urls_files,
+                                newCount,
+                                loadedFiles,
+                                totalCount,
+                            ),
+                        )
                     } else {
-                        context.toast("No readable URLs found in selected files")
+                        context.toast(MR.strings.tsz_str6_adv_no_readable)
                     }
                 },
             )
@@ -787,9 +819,9 @@ object SettingsAdvancedScreen : SearchableSettings {
                 title = {
                     Text(
                         text = if (moveToCategoryMode) {
-                            "Bulk Move to Category by URL"
+                            stringResource(MR.strings.tsz_str6_adv_bulk_move_title)
                         } else {
-                            "Bulk Remove by URL"
+                            stringResource(MR.strings.tsz_str6_adv_bulk_remove_title)
                         },
                     )
                 },
@@ -805,7 +837,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                             ) {
                                 Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Remove")
+                                Text(stringResource(MR.strings.action_remove))
                             }
                             TextButton(
                                 onClick = { moveToCategoryMode = true },
@@ -817,17 +849,17 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Move to Category")
+                                Text(stringResource(MR.strings.duplicate_move_to_category))
                             }
                         }
 
                         if (moveToCategoryMode) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Target category:")
+                            Text(text = stringResource(MR.strings.tsz_str6_adv_target_category))
                             Spacer(modifier = Modifier.height(4.dp))
                             if (userCategories.isEmpty()) {
                                 Text(
-                                    text = "No categories available.",
+                                    text = stringResource(MR.strings.tsz_str6_adv_no_categories),
                                     color = MaterialTheme.colorScheme.error,
                                 )
                             } else {
@@ -838,7 +870,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                         enabled = false,
                                         value = selectedCategoryName,
                                         onValueChange = {},
-                                        label = { Text("Category") },
+                                        label = { Text(stringResource(MR.strings.tsz_duplicates_category)) },
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Outlined.ArrowDropDown,
@@ -887,9 +919,9 @@ object SettingsAdvancedScreen : SearchableSettings {
 
                         Text(
                             text = if (moveToCategoryMode) {
-                                "Enter URLs to move to selected category:"
+                                stringResource(MR.strings.tsz_str6_adv_enter_move)
                             } else {
-                                "Enter URLs to remove from library:"
+                                stringResource(MR.strings.tsz_str6_adv_enter_remove)
                             },
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -915,7 +947,12 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     if (urlText.isNotBlank()) {
                                         pendingUrls = if (pendingUrls.isBlank()) urlText else "$pendingUrls\n$urlText"
                                         urlText = ""
-                                        context.toast("Added URLs to queue (Total: $pendingUrlCount)")
+                                        context.toast(
+                                            context.contextStringResource(
+                                                MR.strings.tsz_str6_adv_added_queue_fmt,
+                                                pendingUrlCount,
+                                            ),
+                                        )
                                     }
                                 },
                                 enabled = !isRemoving && urlText.isNotBlank(),
@@ -926,7 +963,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Add to Queue")
+                                Text(stringResource(MR.strings.tsz_str6_adv_add_queue))
                             }
 
                             // Load from file button
@@ -940,7 +977,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Load Files")
+                                Text(stringResource(MR.strings.tsz_str6_adv_load_files))
                             }
                         }
 
@@ -959,7 +996,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = "Queue: $pendingUrlCount URLs",
+                                        text = stringResource(MR.strings.tsz_str6_adv_queue_fmt, pendingUrlCount),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     )
@@ -973,7 +1010,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     ) {
                                         Icon(
                                             Icons.Outlined.Clear,
-                                            contentDescription = "Clear queue",
+                                            contentDescription = stringResource(MR.strings.tsz_str6_adv_clear_queue),
                                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                         )
                                     }
@@ -986,8 +1023,22 @@ object SettingsAdvancedScreen : SearchableSettings {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = buildString {
-                                    append("Removed: $removedCount")
-                                    if (errorCount > 0) append(" | Errors: $errorCount")
+                                    append(
+                                        context.contextStringResource(
+                                            MR.strings.tsz_str6_adv_removed_fmt,
+                                            removedCount,
+                                        ),
+                                    )
+                                    if (errorCount >
+                                        0
+                                    ) {
+                                        append(
+                                            " | ${context.contextStringResource(
+                                                MR.strings.tsz_str6_adv_errors_suffix_fmt,
+                                                errorCount,
+                                            )}",
+                                        )
+                                    }
                                 },
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -1003,7 +1054,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 errorCount = 0
                                 try {
                                     if (moveToCategoryMode && selectedCategoryId == null) {
-                                        context.toast("Select a target category first")
+                                        context.toast(MR.strings.tsz_str6_adv_select_target_first)
                                         isRemoving = false
                                         return@launch
                                     }
@@ -1084,7 +1135,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     }
 
                                     if (validUrlCount == 0) {
-                                        context.toast("No valid URLs to process")
+                                        context.toast(MR.strings.tsz_str6_adv_no_valid_urls)
                                         isRemoving = false
                                         return@launch
                                     }
@@ -1104,12 +1155,36 @@ object SettingsAdvancedScreen : SearchableSettings {
                                         context.toast(
                                             buildString {
                                                 if (moveToCategoryMode) {
-                                                    val categoryName = selectedCategory?.name ?: "selected category"
-                                                    append("Moved $removedCount entries to $categoryName")
+                                                    val categoryName =
+                                                        selectedCategory?.name
+                                                            ?: context.contextStringResource(
+                                                                MR.strings.tsz_str6_adv_selected_category,
+                                                            )
+                                                    append(
+                                                        context.contextStringResource(
+                                                            MR.strings.tsz_str6_adv_moved_entries_fmt,
+                                                            removedCount,
+                                                            categoryName,
+                                                        ),
+                                                    )
                                                 } else {
-                                                    append("Removed $removedCount entries")
+                                                    append(
+                                                        context.contextStringResource(
+                                                            MR.strings.tsz_str6_adv_removed_entries_bulk_fmt,
+                                                            removedCount,
+                                                        ),
+                                                    )
                                                 }
-                                                if (errorCount > 0) append(" ($errorCount errors)")
+                                                if (errorCount >
+                                                    0
+                                                ) {
+                                                    append(
+                                                        " ${context.contextStringResource(
+                                                            MR.strings.tsz_str6_adv_errors_paren_fmt,
+                                                            errorCount,
+                                                        )}",
+                                                    )
+                                                }
                                             },
                                         )
                                     }
@@ -1119,7 +1194,12 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 } catch (e: Exception) {
                                     logcat(LogPriority.ERROR, e) { "Bulk removal failed" }
                                     withUIContext {
-                                        context.toast("Error: ${e.message}")
+                                        context.toast(
+                                            context.contextStringResource(
+                                                MR.strings.tsz_str6_adv_error_fmt,
+                                                e.message.orEmpty(),
+                                            ),
+                                        )
                                     }
                                 } finally {
                                     isRemoving = false
@@ -1134,9 +1214,9 @@ object SettingsAdvancedScreen : SearchableSettings {
                         } else {
                             Text(
                                 text = if (moveToCategoryMode) {
-                                    "Move ($pendingUrlCount)"
+                                    stringResource(MR.strings.tsz_str6_adv_move_n_fmt, pendingUrlCount)
                                 } else {
-                                    "Remove ($pendingUrlCount)"
+                                    stringResource(MR.strings.tsz_str6_adv_remove_n_fmt, pendingUrlCount)
                                 },
                             )
                         }
@@ -1254,13 +1334,18 @@ object SettingsAdvancedScreen : SearchableSettings {
 
                                 withUIContext {
                                     context.copyToClipboard("Database Stats", report)
-                                    context.toast("Statistics copied to clipboard")
+                                    context.toast(MR.strings.tsz_str6_adv_stats_copied)
                                 }
                                 logcat(LogPriority.INFO) { report }
                             } catch (e: Exception) {
                                 logcat(LogPriority.ERROR, e) { "Failed to get database stats" }
                                 withUIContext {
-                                    context.toast("Error: ${e.message}")
+                                    context.toast(
+                                        context.contextStringResource(
+                                            MR.strings.tsz_str6_adv_error_fmt,
+                                            e.message.orEmpty(),
+                                        ),
+                                    )
                                 }
                             }
                         }
@@ -1416,26 +1501,27 @@ object SettingsAdvancedScreen : SearchableSettings {
                     onClick = { showBulkRemovalDialog = true },
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = "Normalize tags",
-                    subtitle = "Trims whitespace and removes duplicate tags (case-insensitive)",
+                    title = stringResource(MR.strings.tsz_str6_adv_normalize_tags),
+                    subtitle = stringResource(MR.strings.tsz_str6_adv_normalize_tags_sub),
                     onClick = {
                         scope.launch {
                             val count = Injekt.get<MangaRepository>().normalizeAllTags()
                             withUIContext {
-                                context.toast("Normalized tags for $count novels")
+                                context.toast(
+                                    context.contextStringResource(MR.strings.tsz_str6_adv_normalized_tags_fmt, count),
+                                )
                             }
                         }
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.normalizeTagsOnUpdate,
-                    title = "Normalize tags when updating entry",
-                    subtitle = "Apply the same normalization automatically when entry details are " +
-                        "fetched/updated or tags are edited",
+                    title = stringResource(MR.strings.tsz_str6_adv_normalize_tags_update),
+                    subtitle = stringResource(MR.strings.tsz_str6_adv_normalize_tags_update_sub),
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = "Reset settings to default",
-                    subtitle = "Resets all app settings to their default values (library data is preserved)",
+                    title = stringResource(MR.strings.pref_reset_settings),
+                    subtitle = stringResource(MR.strings.tsz_str6_adv_reset_sub),
                     onClick = { showResetSettingsDialog = true },
                 ),
             ),
