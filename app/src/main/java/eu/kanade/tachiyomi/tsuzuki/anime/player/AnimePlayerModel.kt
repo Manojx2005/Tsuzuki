@@ -47,6 +47,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entries.anime.model.editedAnimeTitle
 import tachiyomi.domain.items.episode.model.Episode
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -447,7 +448,7 @@ internal class AnimePlayerModel(
                 keepRestoredStart = restored != null
                 mutableState.update {
                     it.copy(
-                        title = anime.title,
+                        title = anime.memo.editedAnimeTitle(anime.title),
                         episode = episode,
                         position = start,
                     )
@@ -843,7 +844,16 @@ internal class AnimePlayerModel(
         if ((request as? AnimePlayback.Request.Episode)?.track != true) return
         val current = state.value
         val episode = current.episode ?: return
-        if (!previewGate.acquire(episode.id, current.position, SystemClock.elapsedRealtime(), closing, basePreferences.incognitoMode.get())) return
+        if (!previewGate.acquire(
+                episode.id,
+                current.position,
+                SystemClock.elapsedRealtime(),
+                closing,
+                basePreferences.incognitoMode.get(),
+            )
+        ) {
+            return
+        }
         val generation = frames.generation(episode.animeId)
         val raw = try {
             backend.capturePreview()
@@ -854,7 +864,9 @@ internal class AnimePlayerModel(
         val sequence = frames.captureSequence(episode.id)
         processScope.launch(Dispatchers.IO) {
             try {
-                frames.accept(episode.animeId, episode.id, raw, generation, sequence) { !basePreferences.incognitoMode.get() }
+                frames.accept(episode.animeId, episode.id, raw, generation, sequence) {
+                    !basePreferences.incognitoMode.get()
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

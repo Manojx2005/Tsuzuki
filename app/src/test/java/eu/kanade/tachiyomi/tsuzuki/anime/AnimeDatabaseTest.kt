@@ -58,7 +58,11 @@ import tachiyomi.data.anime.AnimeRepositoryImpl
 import tachiyomi.data.anime.AnimeSourceRepositoryImpl
 import tachiyomi.data.anime.AnimeTrackRepositoryImpl
 import tachiyomi.data.anime.EpisodeRepositoryImpl
+import tachiyomi.domain.entries.anime.model.ANIME_USER_EDITS
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.AnimeUserEdits
+import tachiyomi.domain.entries.anime.model.animeUserEdits
+import tachiyomi.domain.entries.anime.model.withAnimeUserEdits
 import tachiyomi.domain.history.anime.model.AnimeWatchStats
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.model.StubAnimeSource
@@ -1357,6 +1361,92 @@ class AnimeDatabaseTest {
             val today = LocalDate.of(2026, 11, 1)
             assertEquals(AnimeWatchStats(0, 0, 750, 1, 0), history.subscribeWatchStats(today).first())
             assertTrue(driver.rows("PRAGMA foreign_key_check", 4).isEmpty())
+        }
+    }
+
+    @Test
+    fun userEditedDetailsSurviveRefreshAndResetShowsTheSourceAgain() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val history = AnimeHistoryRepositoryImpl(db)
+            val store = AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, history)
+            val episode = SEpisode.create().apply {
+                url = "/1"
+                name = "Episode 1"
+                episode_number = 1f
+            }
+            val first = SAnime.create().apply {
+                url = "/show"
+                title = "Source title"
+                author = "Source author"
+                description = "Source description"
+            }
+            val id = store.syncEpisodes(8, first, listOf(episode)).id
+            store.setCachedFavorite(id, true)
+            store.setEpisodeDisplay(id, AnimeEpisodeDisplay.fromFlags(0), setOf("Group"))
+            store.setUserEdits(id, AnimeUserEdits(title = "My title", description = "My description"))
+
+            // A details refresh: new source values, a source memo key, and a stray edits key from the source's memo.
+            val refreshed = SAnime.create().apply {
+                url = "/show"
+                title = "Renamed by source"
+                author = "Source author"
+                description = "New source description"
+                memo = JsonObject(
+                    mapOf(
+                        "source-key" to JsonPrimitive(1),
+                        ANIME_USER_EDITS to JsonObject(mapOf("title" to JsonPrimitive("Not mine"))),
+                    ),
+                )
+            }
+            store.syncEpisodes(8, refreshed, listOf(episode))
+
+            val stored = checkNotNull(anime.awaitById(id))
+            assertEquals("Renamed by source", stored.title)
+            assertEquals("New source description", stored.description)
+            assertEquals(JsonPrimitive(1), stored.memo["source-key"])
+            assertEquals(setOf("Group"), stored.memo.excludedAnimeGroups())
+            assertEquals(
+                AnimeUserEdits(title = "My title", description = "My description"),
+                stored.memo.animeUserEdits(),
+            )
+            // The source never sees the edits.
+            assertNull(stored.toSourceAnime().memo[ANIME_USER_EDITS])
+
+            val shown = store.observeLibrary().first().single().anime
+            assertEquals("My title", shown.title)
+            assertEquals("My description", shown.description)
+            assertEquals("Source author", shown.author)
+
+            val episodeId = episodes.awaitByAnimeId(id).single().id
+            history.upsert(episodeId, Date(1_000), 60)
+            assertEquals("My title", history.subscribeHistory().first().single().title)
+
+            // A backup restored onto this row keeps the edits it already has.
+            val backup = AnimeBackupStore(db)
+            val backupEdits = JsonObject(emptyMap()).withAnimeUserEdits(AnimeUserEdits(title = "Backup title"))
+            backup.restoreEntry(
+                AnimeBackupEntry(8, "/show", "Show", memo = MemoColumnAdapter.encode(backupEdits)),
+                emptyMap(),
+                null,
+            )
+            assertEquals("My title", checkNotNull(anime.awaitById(id)).memo.animeUserEdits().title)
+
+            store.setUserEdits(id, null)
+            val reset = checkNotNull(anime.awaitById(id))
+            assertNull(reset.memo[ANIME_USER_EDITS])
+            assertEquals(JsonPrimitive(1), reset.memo["source-key"])
+            assertEquals("Renamed by source", store.observeLibrary().first().single().anime.title)
+            assertEquals("Renamed by source", history.subscribeHistory().first().single().title)
+
+            // With no edits on the device, a backup restore brings its edits in.
+            backup.restoreEntry(
+                AnimeBackupEntry(8, "/show", "Show", memo = MemoColumnAdapter.encode(backupEdits)),
+                emptyMap(),
+                null,
+            )
+            assertEquals("Backup title", store.observeLibrary().first().single().anime.title)
         }
     }
 

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.tsuzuki.anime.backup
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
+import eu.kanade.tachiyomi.tsuzuki.anime.withFallbackUserEdits
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.yield
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -194,6 +195,8 @@ internal class AnimeBackupStore(private val database: Database) {
                 seasonFlags = current.seasonFlags.takeUnless { it == 0L } ?: incoming.seasonFlags,
                 seasonNumber = current.seasonNumber.takeIf { it >= 0 } ?: incoming.seasonNumber,
                 seasonSourceOrder = current.seasonSourceOrder.takeUnless { it == 0L } ?: incoming.seasonSourceOrder,
+                // AP7-EDIT: the backup's edited details fill in when this device has none, like notes above.
+                memo = current.memo.withFallbackUserEdits(incoming.memo),
             )
             if (merged != current) animes.update(merged)
             current.id
