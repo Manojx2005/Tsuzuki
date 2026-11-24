@@ -69,6 +69,8 @@ internal class AnimeUpdatesSlots(
     /** Unwatched episodes not in the download queue yet; what "Save all" adds in All. */
     val episodesToSave: List<AnimeUpdateEpisode> = emptyList(),
     val saveEpisodes: () -> Unit = {},
+    /** AP9-ALL-SELECT: the new-episode rows selected in Updates › All, next to the book selection. */
+    val allSelection: AnimeAllSelection? = null,
 )
 
 /** True when Updates › All will list new episodes (per-chapter list only; grouped mode has no anime rows yet). */
@@ -162,6 +164,13 @@ internal fun rememberAnimeUpdatesSlots(
         episodesToSave(newEpisodes, queue.entries.mapTo(hashSetOf()) { it.episodeId })
     }
     val scope = rememberCoroutineScope()
+    val allSelection = animeAllSelection(
+        rememberAnimeAllSelectionState(),
+        state.filter,
+        state.groupByNovel,
+        if (animeSelected) emptyList() else newEpisodes,
+        state.selectionMode,
+    )
     val pills: @Composable (Boolean) -> Unit = { twoPane ->
         AnimeUpdatesPills(
             filter = state.filter,
@@ -176,7 +185,7 @@ internal fun rememberAnimeUpdatesSlots(
         )
     }
     return AnimeUpdatesSlots(
-        mediaPills = pills.takeUnless { state.selectionMode },
+        mediaPills = pills.takeUnless { allSelection.selecting },
         airingStrip = airing?.let { entry -> { AnimeAiringStrip(entry, Modifier.padding(horizontal = 16.dp)) } },
         screen = if (animeSelected) {
             { snackbar -> AnimeUpdatesScreen(store, newEpisodes, toSave, snackbar, pills, airing) }
@@ -186,6 +195,7 @@ internal fun rememberAnimeUpdatesSlots(
         newEpisodes = newEpisodes,
         episodesToSave = toSave,
         saveEpisodes = { scope.launchIO { queueAnimeUpdates(store, downloads, toSave, unwatchedOnly = true) } },
+        allSelection = allSelection,
     )
 }
 
@@ -346,20 +356,10 @@ private fun AnimeUpdatesScreen(
                         runOnSelection { items -> markAnimeUpdatesSeen(context, store, items.ids(), false, track) }
                     }.takeIf { actions.markUnseen },
                     onDownloadClicked = {
-                        runOnSelection { items ->
-                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Failed }
-                                .forEach { downloads.retryAndAwait(it.episodeId) }
-                            val toQueue = items.filter { status[it.episodeId] == null }
-                            check(queueAnimeUpdates(store, downloads, toQueue)) {
-                                "Some selected anime episodes could not be queued"
-                            }
-                        }
+                        runOnSelection { items -> downloadAnimeSelection(store, downloads, items, status) }
                     }.takeIf { actions.download },
                     onDeleteClicked = {
-                        runOnSelection { items ->
-                            items.filter { status[it.episodeId] == AnimeDownloadStatus.Saved }
-                                .forEach { downloads.removeAndAwait(it.episodeId) }
-                        }
+                        runOnSelection { items -> deleteAnimeSelection(downloads, items, status) }
                     }.takeIf { actions.delete },
                 )
             }

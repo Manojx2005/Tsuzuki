@@ -73,6 +73,7 @@ data object UpdatesTab : Tab {
         }
 
         val tsuzuki = isTsuzukiStyle()
+        val anime = rememberAnimeUpdatesSlots(state, hideMangaUi, viewModel::setFilter)
 
         UpdateScreen(
             state = state,
@@ -105,7 +106,7 @@ data object UpdatesTab : Tab {
             onToggleGroupByNovel = viewModel::toggleGroupByNovel,
             onClickNovelGroup = { mangaId -> navigator.push(MangaScreen(mangaId)) },
             onLoadMore = viewModel::loadMore,
-            anime = rememberAnimeUpdatesSlots(state, hideMangaUi, viewModel::setFilter),
+            anime = anime,
         )
 
         val onDismissDialog = { viewModel.setDialog(null) }
@@ -143,8 +144,10 @@ data object UpdatesTab : Tab {
             }
         }
 
-        LaunchedEffect(state.selectionMode) {
-            HomeScreen.showBottomNav(!state.selectionMode)
+        // Tsuzuki (AP9-ALL-SELECT): selected new-episode rows in All also hide the nav.
+        val selectionMode = eu.kanade.presentation.tsuzuki.updates.updatesSelecting(state.selectionMode, anime)
+        LaunchedEffect(selectionMode) {
+            HomeScreen.showBottomNav(!selectionMode)
         }
 
         LaunchedEffect(state.isLoading) {
