@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -438,13 +441,15 @@ internal fun AnimeDetailsScreen(
                                 }
                             },
                             onTrack = if (saved != null) ({ showTracking = true }) else null,
-                            onSave = if (eligible.isNotEmpty()) {
+                            // AP-LIB-F1: Save stays in the row (disabled) until the episodes load, no 3-to-4 jump.
+                            onSave = if (animeSaveTile(saved != null, eligible.size) != AnimeSaveTile.Hidden) {
                                 {
                                     selection = eligible.map(Episode::id).toLongArray()
                                 }
                             } else {
                                 null
                             },
+                            saveEnabled = eligible.isNotEmpty(),
                             onExternal = externalUrl?.let { url ->
                                 {
                                     context.startActivity(
@@ -529,6 +534,7 @@ internal fun AnimeDetailsScreen(
                             coverUrl = display.thumbnail_url,
                             showNumberOnly = details.episodeDisplay.showNumberOnly,
                             selected = episode.id in selection,
+                            selectionMode = selected.isNotEmpty(),
                             enabled = !saving,
                             onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
                             onSelect = { toggleSelection(episode.id, fromLongPress = true) },
@@ -569,7 +575,18 @@ internal fun AnimeDetailsScreen(
                         },
                     )
                 } else {
-                    LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // AP-PHONE-F2: the Scaffold padding already ends above the selection bar; 12dp more (as in the
+                    // tablet pane) keeps the last row clear of it at full scroll.
+                    val layoutDirection = LocalLayoutDirection.current
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            start = padding.calculateStartPadding(layoutDirection),
+                            top = padding.calculateTopPadding(),
+                            end = padding.calculateEndPadding(layoutDirection),
+                            bottom = padding.calculateBottomPadding() + 12.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                         overview(expanded = false)
                         episodes()
                     }

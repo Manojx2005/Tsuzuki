@@ -30,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -77,7 +79,8 @@ internal fun TsuzukiSelectionBar(
         modifier = modifier.fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
             .padding(horizontal = 12.dp, vertical = 6.dp),
-        color = tokens.tile,
+        // AP-PHONE-F2: opaque, so list rows scrolling behind the bar (Colour's translucent tile) never show through.
+        color = if (tokens.background.isSpecified) tokens.tile.compositeOver(tokens.background) else tokens.tile,
         shape = RoundedCornerShape(26.dp),
         border = tokens.tileBorder?.let { androidx.compose.foundation.BorderStroke(1.dp, it) },
     ) {

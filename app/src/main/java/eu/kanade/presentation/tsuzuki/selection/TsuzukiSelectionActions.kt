@@ -83,6 +83,11 @@ internal fun TsuzukiChapterSelectionBar(
                 },
                 Icons.Outlined.BookmarkAdd,
                 it,
+                shortTitle = if (episodes) {
+                    androidStringResource(R.string.tsz_anime_bookmark_short)
+                } else {
+                    stringResource(MR.strings.action_bookmark)
+                },
             )
         },
         onMarkAsUnreadClicked?.let {
@@ -96,6 +101,11 @@ internal fun TsuzukiChapterSelectionBar(
                 },
                 Icons.Outlined.RemoveDone,
                 it,
+                shortTitle = if (episodes) {
+                    androidStringResource(R.string.tsz_anime_mark_unwatched_short)
+                } else {
+                    stringResource(MR.strings.action_mark_as_unread)
+                },
             )
         },
         onRemoveBookmarkClicked?.let {
@@ -109,6 +119,11 @@ internal fun TsuzukiChapterSelectionBar(
                 },
                 Icons.Outlined.BookmarkRemove,
                 it,
+                shortTitle = if (episodes) {
+                    androidStringResource(R.string.tsz_anime_unbookmark_short)
+                } else {
+                    stringResource(MR.strings.action_remove_bookmark)
+                },
             )
         },
     )

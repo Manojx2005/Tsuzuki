@@ -8,4 +8,7 @@
     <string name="tsz_selection_download_incomplete">Non terminés</string>
     <string name="tsz_anime_downloaded_episodes">Épisodes téléchargés</string>
     <string name="tsz_library_downloaded_chapters_episodes">Chapitres et épisodes téléchargés</string>
+    <string name="tsz_anime_bookmark_short">Signet</string>
+    <string name="tsz_anime_unbookmark_short">Retirer</string>
+    <string name="tsz_anime_mark_unwatched_short">Non vu</string>
 </resources>

@@ -260,6 +260,19 @@ private fun ColumnScope.AnimeContentInfo(anime: SAnime, sourceName: String?, tex
     }
 }
 
+/** Whether the Save tile is in the row, and whether it does anything (AP-LIB-F1). */
+internal enum class AnimeSaveTile { Hidden, Disabled, Enabled }
+
+/**
+ * Save shows with Tracking (once the anime is saved) and stays in the row: disabled until the episodes have loaded
+ * and while none is left to save, so the row never grows from three tiles to four after the first frame.
+ */
+internal fun animeSaveTile(saved: Boolean, saveableEpisodes: Int): AnimeSaveTile = when {
+    !saved -> AnimeSaveTile.Hidden
+    saveableEpisodes > 0 -> AnimeSaveTile.Enabled
+    else -> AnimeSaveTile.Disabled
+}
+
 /**
  * The book's action row (MangaActionRow): In library, next airing (like the book's next-update tile), Tracking,
  * Save and WebView, with the book's tiles, sizes and paddings.
@@ -272,6 +285,7 @@ internal fun AnimeLibraryActions(
     onTrack: (() -> Unit)?,
     onSave: (() -> Unit)?,
     onExternal: (() -> Unit)?,
+    saveEnabled: Boolean = true,
     nextAiringDays: Int? = null,
     trackingCount: Int = 0,
 ) {
@@ -314,8 +328,8 @@ internal fun AnimeLibraryActions(
             MangaActionButton(
                 title = stringResource(MR.strings.action_save),
                 icon = Icons.Outlined.Download,
-                color = defaultColor,
-                onClick = onSave.whenEnabled(),
+                color = if (saveEnabled) defaultColor else defaultColor.copy(alpha = DISABLED_TILE_ALPHA),
+                onClick = { if (saveEnabled && enabled) onSave() },
             )
         }
         if (onExternal != null) {
@@ -362,3 +376,5 @@ internal fun AnimeDetailsDescription(
         )
     }
 }
+
+private const val DISABLED_TILE_ALPHA = 0.38f

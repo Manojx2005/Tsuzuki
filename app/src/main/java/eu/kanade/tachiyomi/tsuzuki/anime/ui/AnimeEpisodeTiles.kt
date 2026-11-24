@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,9 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
@@ -59,7 +65,6 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPillRow
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
@@ -152,6 +157,7 @@ internal fun AnimeEpisodeTile(
     onMarkPrevious: () -> Unit,
     downloadStatus: AnimeDownloadStatus?,
     showNumberOnly: Boolean = false,
+    selectionMode: Boolean = false,
     onDownload: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -168,31 +174,38 @@ internal fun AnimeEpisodeTile(
         showNumberOnly -> stringResource(R.string.tsz_anime_history_episode, number)
         else -> stringResource(R.string.tsz_anime_episode_title, number, episode.name)
     }
-    TsuzukiTile(
+    // AP-PHONE-F2: like the book chapter row, a selected row is marked by its tile (accent tint and outline), not by
+    // an extra check column, so the title and the one-line meta keep the width while selecting.
+    val shape = RoundedCornerShape(tokens.tileRadius)
+    val border = if (selected) tokens.accent else tokens.tileBorder
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .combinedClickable(enabled = enabled, role = Role.Button, onClick = onClick, onLongClick = onSelect),
-        padding = 10.dp,
+            .clip(shape)
+            .background(tokens.tile)
+            .then(if (selected) Modifier.background(tokens.accent.copy(alpha = SELECTED_TINT_ALPHA)) else Modifier)
+            .then(border?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
+            .combinedClickable(enabled = enabled, role = Role.Button, onClick = onClick, onLongClick = onSelect)
+            .semantics { this.selected = selected }
+            .padding(10.dp),
     ) {
+        val thumbnailWidth = animeEpisodeThumbnailWidth(maxWidth.value).dp
         Row(
             Modifier.fillMaxWidth().heightIn(min = 54.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (selected) {
-                Icon(Icons.Outlined.Check, contentDescription = null, tint = tokens.accent)
-            }
             eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail(
                 sourceId = source.id,
                 episode = episode,
                 coverUrl = coverUrl,
-                modifier = Modifier.size(104.dp, 58.dp),
+                modifier = Modifier.size(thumbnailWidth, thumbnailWidth * 9 / 16),
             )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     tsuzukiMenuLabel(title),
-                    color = if (episode.seen) tokens.mutedText else tokens.dotOn,
+                    color = if (episode.seen && !selected) tokens.mutedText else tokens.dotOn,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -200,8 +213,10 @@ internal fun AnimeEpisodeTile(
                 if (meta.isNotEmpty()) {
                     Text(
                         tsuzukiMenuLabel(meta.joinToString(" · ")),
-                        color = tokens.mutedText,
+                        color = if (selected) tokens.dotOn else tokens.mutedText,
                         style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (episode.totalSeconds > 0 && episode.lastSecondSeen > 0 && !episode.seen) {
@@ -228,27 +243,29 @@ internal fun AnimeEpisodeTile(
             ) {
                 Icon(downloadIcon, mokoStringResource(downloadLabel))
             }
-            Box {
-                IconButton(onClick = { menu = true }, enabled = enabled) {
-                    Icon(Icons.Outlined.MoreVert, mokoStringResource(MR.strings.label_more), tint = tokens.dotOn)
-                }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    AnimeEpisodeActions(
-                        seen = episode.seen,
-                        bookmarked = episode.bookmark,
-                        onMarkSeen = {
-                            menu = false
-                            onMarkSeen(it)
-                        },
-                        onBookmark = {
-                            menu = false
-                            onBookmark(it)
-                        },
-                        onMarkPrevious = {
-                            menu = false
-                            onMarkPrevious()
-                        },
-                    )
+            if (!selectionMode) {
+                Box {
+                    IconButton(onClick = { menu = true }, enabled = enabled) {
+                        Icon(Icons.Outlined.MoreVert, mokoStringResource(MR.strings.label_more), tint = tokens.dotOn)
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        AnimeEpisodeActions(
+                            seen = episode.seen,
+                            bookmarked = episode.bookmark,
+                            onMarkSeen = {
+                                menu = false
+                                onMarkSeen(it)
+                            },
+                            onBookmark = {
+                                menu = false
+                                onBookmark(it)
+                            },
+                            onMarkPrevious = {
+                                menu = false
+                                onMarkPrevious()
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -289,6 +306,10 @@ internal fun AnimeEpisodeFilterSheet(
     onMarkUntilLastWatched: () -> Unit,
     onSave: (AnimeEpisodeDisplay, Set<String>) -> Unit,
 ) {
+    // AP-PHONE-F2: the sheet keeps the height of its tallest tab seen so far (Filter, shown first), so switching tabs
+    // does not move the pill row; a tap at a tab's old position could otherwise land outside and close the sheet.
+    val density = LocalDensity.current
+    var pageMinHeight by remember { mutableStateOf(0.dp) }
     TabbedDialog(
         onDismissRequest = onDismiss,
         tabTitles = listOf(
@@ -297,7 +318,13 @@ internal fun AnimeEpisodeFilterSheet(
             TabTitle.Text(mokoStringResource(MR.strings.action_display)),
         ),
     ) { page ->
-        Column(Modifier.padding(vertical = TabbedDialogPaddings.Vertical).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .heightIn(min = pageMinHeight)
+                .onSizeChanged { pageMinHeight = stableSheetHeight(pageMinHeight, with(density) { it.height.toDp() }) }
+                .padding(vertical = TabbedDialogPaddings.Vertical)
+                .verticalScroll(rememberScrollState()),
+        ) {
             if (page == 0) {
                 // "Watched", the mirror of the stored unwatched filter (only watched = hide unwatched).
                 TriStateItem(stringResource(R.string.tsz_anime_watched), display.unseen.mirrored()) {
@@ -386,6 +413,23 @@ private fun AnimeEpisodeFilterOption(label: String, checked: Boolean, onClick: (
         Text(tsuzukiMenuLabel(label), style = MaterialTheme.typography.bodyMedium)
     }
 }
+
+private const val SELECTED_TINT_ALPHA = 0.16f
+
+/**
+ * AP-PHONE-F2: width in dp of an episode row's 16:9 preview for a row content width [rowWidthDp]: about a quarter of
+ * the row, 72 dp at the least and the old 104 dp at the most, so narrow rows (phones, the tablet's right pane) keep
+ * room for the title.
+ */
+internal fun animeEpisodeThumbnailWidth(rowWidthDp: Float): Float =
+    (rowWidthDp * THUMBNAIL_WIDTH_FRACTION).coerceIn(THUMBNAIL_MIN_WIDTH, THUMBNAIL_MAX_WIDTH)
+
+/** AP-PHONE-F2: the episode sheet's page height only grows while it is open. */
+internal fun stableSheetHeight(current: Dp, measured: Dp): Dp = maxOf(current, measured)
+
+internal const val THUMBNAIL_WIDTH_FRACTION = 0.26f
+internal const val THUMBNAIL_MIN_WIDTH = 72f
+internal const val THUMBNAIL_MAX_WIDTH = 104f
 
 private val Episode.playFraction: Float
     get() = if (totalSeconds > 0) (lastSecondSeen.toFloat() / totalSeconds).coerceIn(0f, 1f) else 0f
