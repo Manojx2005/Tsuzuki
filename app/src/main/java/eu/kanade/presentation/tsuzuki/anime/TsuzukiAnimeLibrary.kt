@@ -359,7 +359,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     val navigator = LocalNavigator.currentOrThrow
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }
-    val next by remember { store.observeContinueWatching() }.collectAsState(null)
+    val next by remember { store.observeWatchHero() }.collectAsState(null)
     val library by remember { store.observeLibrary() }.collectAsState(emptyList())
     val airing = rememberAnimeAiringToday(store)
     val tokens = TsuzukiTheme.tokens
@@ -439,7 +439,15 @@ private fun AnimeWatchHero(resume: ContinueAnime, wide: Boolean, onOpen: () -> U
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    tsuzukiMenuLabel(stringResource(MR.strings.tsz_anime_continue_watching)),
+                    tsuzukiMenuLabel(
+                        stringResource(
+                            if (resume.fromHistory) {
+                                MR.strings.tsz_anime_continue_watching
+                            } else {
+                                MR.strings.tsz_anime_start_watching
+                            },
+                        ),
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     color = muted,
                 )

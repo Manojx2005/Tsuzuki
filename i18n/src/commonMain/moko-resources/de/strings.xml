@@ -936,6 +936,7 @@
     <string name="tsz_anime_shelves_hint">Regale für Anime. Romane und Manga haben eigene Regale.</string>
     <string name="tsz_anime_new_shelf">Neues Anime-Regal</string>
     <string name="tsz_anime_continue_watching">Weiterschauen</string>
+    <string name="tsz_anime_start_watching">Jetzt ansehen</string>
     <string name="tsz_anime_library_empty">Deine Anime-Bibliothek ist leer</string>
     <string name="tsz_anime_shelf_count">%1$d Anime</string>
     <string name="tsz_anime_episode_progress">%1$d / %2$d Folgen</string>
