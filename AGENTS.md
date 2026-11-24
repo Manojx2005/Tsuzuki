@@ -131,6 +131,7 @@ done
 - **Additional upstream WebView files:** `core/common/.../network/NetworkHelper.kt`, `network/interceptor/CloudflareInterceptor.kt`, `network/interceptor/WebViewInterceptor.kt`, `util/system/WebViewUtil.kt`, `app/.../di/AppModule.kt`, `ui/webview/WebViewActivity.kt`, `ui/webview/WebViewViewModel.kt` (Mihon robustness group; existing rate limiting and Injekt retained).
 - **Additional WebView screen adapter:** `ui/webview/WebViewScreen.kt` (header readiness and a separate ViewModel key for each browser route).
 - **Restoring a file:** use `git show HEAD:<file> > <file>`.
+- **Disk space (owner 2026-11-24):** once a card branch is merged into `main`, remove its worktree and its Gradle output (`build/`, `.gradle/`, `.kotlin/`); keep only the results (move `*/build/review-evidence` to `.worktrees/_evidence/<worktree>/` first; the branch ref stays). Clean throwaway QA/gate worktrees when done. Never remove a worktree with unsaved changes or one another thread is using.
 - **Commits:** Claude only when asked; Codex on its own `tsuzuki/<card>` branch when a card is done (never `main` — except the review
   lane merging reviewed cards, Batch T —
   never another card's branch, never amend or rebase someone else's commit). The owner is the sole author: no
