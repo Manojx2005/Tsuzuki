@@ -1,5 +1,6 @@
 package eu.kanade.presentation.tsuzuki.anime
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.Delete
@@ -33,6 +34,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
+import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadEntry
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
@@ -50,6 +52,7 @@ import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -129,9 +132,35 @@ internal suspend fun changeLibraryFavorites(
     }
 }
 
+/** The saved downloads of [animeIds], the ones "delete downloaded" removes. */
+internal fun animeDownloadsToDelete(entries: List<AnimeDownloadEntry>, animeIds: Set<Long>): List<Long> =
+    entries.filter { it.animeId in animeIds && it.status == AnimeDownloadStatus.Saved }.map { it.episodeId }
+
+/**
+ * AP-PHONE-F1: what Remove does once the dialog is confirmed, as the book Library's dialog. Downloads go at once (as
+ * in the book dialog); leaving the library offers Undo, which puts the entries back in the library only.
+ */
+internal suspend fun removeLibrarySelection(
+    removeFromLibrary: Boolean,
+    deleteDownloads: Boolean,
+    setFavorites: suspend (Boolean) -> Unit,
+    deleteSavedDownloads: () -> Unit,
+    awaitUndo: suspend () -> Boolean,
+) {
+    if (removeFromLibrary) setFavorites(false)
+    if (deleteDownloads) deleteSavedDownloads()
+    if (removeFromLibrary && awaitUndo()) setFavorites(true)
+}
+
 internal class AnimeLibraryActions {
     var picker by mutableStateOf<ShelfSelection?>(null)
     var deleteConfirmation: (() -> Unit)? by mutableStateOf(null)
+    var removeConfirmation by mutableStateOf<RemoveSelection?>(null)
+
+    data class RemoveSelection(
+        val downloadsLabel: Int?,
+        val onConfirm: (removeFromLibrary: Boolean, deleteDownloads: Boolean) -> Unit,
+    )
 
     data class ShelfSelection(
         val shelves: List<AnimeCategory>,
@@ -165,6 +194,56 @@ internal fun AnimeLibraryActionDialogs(actions: AnimeLibraryActions) {
             },
         )
     }
+    actions.removeConfirmation?.let { remove ->
+        AnimeRemoveLibraryDialog(
+            downloadsLabel = remove.downloadsLabel,
+            onDismissRequest = { actions.removeConfirmation = null },
+            onConfirm = remove.onConfirm,
+        )
+    }
+}
+
+/** The book Library's remove dialog (DeleteLibraryMangaDialog) with the two choices that apply to anime. */
+@Composable
+private fun AnimeRemoveLibraryDialog(
+    downloadsLabel: Int?,
+    onDismissRequest: () -> Unit,
+    onConfirm: (removeFromLibrary: Boolean, deleteDownloads: Boolean) -> Unit,
+) {
+    var removeFromLibrary by remember { mutableStateOf(false) }
+    var deleteDownloads by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) { Text(stringResource(MR.strings.action_cancel)) }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = removeFromLibrary || deleteDownloads,
+                onClick = {
+                    onDismissRequest()
+                    onConfirm(removeFromLibrary, deleteDownloads && downloadsLabel != null)
+                },
+            ) { Text(stringResource(MR.strings.action_ok)) }
+        },
+        title = { Text(stringResource(MR.strings.action_remove)) },
+        text = {
+            Column {
+                LabeledCheckbox(
+                    label = stringResource(MR.strings.manga_from_library),
+                    checked = removeFromLibrary,
+                    onCheckedChange = { removeFromLibrary = it },
+                )
+                if (downloadsLabel != null) {
+                    LabeledCheckbox(
+                        label = androidStringResource(downloadsLabel),
+                        checked = deleteDownloads,
+                        onCheckedChange = { deleteDownloads = it },
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -246,6 +325,11 @@ internal fun AnimeLibraryActionBar(
         }
     }
 
+    fun deleteSavedDownloads() {
+        books?.model?.removeMangas(books.entries, deleteFromLibrary = false, deleteChapters = true)
+        animeDownloadsToDelete(downloads.state.value.entries, ids).forEach(downloads::remove)
+    }
+
     val primary = listOfNotNull(
         if (books == null) {
             SelectionAction(
@@ -314,19 +398,34 @@ internal fun AnimeLibraryActionBar(
             null
         },
         SelectionAction(stringResource(MR.strings.action_remove), Icons.Outlined.Delete, onClick = {
-            clear()
-            launchAction {
-                val setBooks: (suspend (Boolean) -> Boolean)? = if (books == null) {
-                    null
-                } else {
-                    { favorite ->
-                        books.model.setLibraryFavorites(books.entries, favorite)
+            // AP-PHONE-F1: ask first, as the book Library does. Cancel keeps the selection.
+            val downloadsLabel = when {
+                books == null -> R.string.tsz_anime_downloaded_episodes
+                books.downloadable -> R.string.tsz_library_downloaded_chapters_episodes
+                else -> null
+            }
+            actions.removeConfirmation = AnimeLibraryActions.RemoveSelection(downloadsLabel) { remove, delete ->
+                clear()
+                launchAction {
+                    val setBooks: (suspend (Boolean) -> Boolean)? = if (books == null) {
+                        null
+                    } else {
+                        { favorite ->
+                            books.model.setLibraryFavorites(books.entries, favorite)
+                        }
                     }
-                }
-                changeLibraryFavorites(false, setBooks) { library.setLibraryFavorites(ids, it) }
-                val message = application.contextStringResource(MR.strings.manga_removed_library)
-                if (snackbar.awaitTsuzukiUndo(application, message)) {
-                    changeLibraryFavorites(true, setBooks) { library.setLibraryFavorites(ids, it) }
+                    removeLibrarySelection(
+                        removeFromLibrary = remove,
+                        deleteDownloads = delete,
+                        setFavorites = { favorite ->
+                            changeLibraryFavorites(favorite, setBooks) { library.setLibraryFavorites(ids, it) }
+                        },
+                        deleteSavedDownloads = { deleteSavedDownloads() },
+                        awaitUndo = {
+                            val message = application.contextStringResource(MR.strings.manga_removed_library)
+                            snackbar.awaitTsuzukiUndo(application, message)
+                        },
+                    )
                 }
             }
         }),
@@ -337,11 +436,7 @@ internal fun AnimeLibraryActionBar(
             SelectionAction(stringResource(MR.strings.delete_downloaded), Icons.Outlined.Delete, onClick = {
                 actions.deleteConfirmation = {
                     clear()
-                    books?.model?.removeMangas(books.entries, deleteFromLibrary = false, deleteChapters = true)
-                    val saved = downloads.state.value.entries.filter {
-                        it.animeId in ids && it.status == AnimeDownloadStatus.Saved
-                    }
-                    saved.forEach { downloads.remove(it.episodeId) }
+                    deleteSavedDownloads()
                 }
             })
         } else {

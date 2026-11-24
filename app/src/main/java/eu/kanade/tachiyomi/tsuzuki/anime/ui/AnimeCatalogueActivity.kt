@@ -126,6 +126,12 @@ class AnimeCatalogueActivity : BaseActivity() {
         val library = Injekt.get<AnimeLibraryStore>()
         setContent {
             TachiyomiTheme {
+                // AP-PHONE-F1: the open catalogue details survive recreation (rotation, the landscape player). Saved
+                // here, above the loading state, so the restored values wait for the source to load.
+                var opened by rememberSaveable(stateSaver = AnimeOpenedDetails.Saver) {
+                    mutableStateOf<AnimeOpenedDetails?>(null)
+                }
+                var catalogueDetailsOpen by rememberSaveable { mutableStateOf(false) }
                 // AY2: after the source's settings change, load the fresh instance (and its first page) again.
                 val sourceVersion by AnimeSourceManager.extensionChanges.collectAsState()
                 val location by produceState<AnimeCatalogueLocation>(AnimeCatalogueLocation.Loading, sourceVersion) {
@@ -169,8 +175,11 @@ class AnimeCatalogueActivity : BaseActivity() {
                         // filters from it, keeping the compatible values, instead of reusing the old objects.
                         val source = result.entry.source
                         var lastApplied by remember { mutableStateOf(AnimeFilterList()) }
-                        var selected by remember { mutableStateOf(result.saved) }
-                        var detailsOpen by remember { mutableStateOf(result.saved != null) }
+                        // The tapped item itself while this Activity lives; after recreation, rebuilt from [opened].
+                        var picked by remember { mutableStateOf<SAnime?>(null) }
+                        val restored = remember(opened) { opened?.toSAnime() }
+                        val selected = result.saved ?: picked?.takeIf { it.url == opened?.url } ?: restored
+                        val detailsOpen = result.saved != null || catalogueDetailsOpen
                         // Owner 2026-11-23: catalogue and details move like book screens. The catalogue stays
                         // composed under the details (its pages and scroll survive, as in book Browse) and the
                         // details fade over it on the book screens' timing.
@@ -215,8 +224,9 @@ class AnimeCatalogueActivity : BaseActivity() {
                                                 onApplyFilters = { lastApplied = it },
                                                 onBack = ::finish,
                                                 onOpen = {
-                                                    selected = it
-                                                    detailsOpen = true
+                                                    picked = it
+                                                    opened = AnimeOpenedDetails.of(it)
+                                                    catalogueDetailsOpen = true
                                                 },
                                                 openUrl = selected?.url?.takeIf { detailsOpen },
                                                 onSettings = {
@@ -235,7 +245,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                             AnimeScreenOverlay(visible = detailsOpen) {
                                 val anime = selected ?: return@AnimeScreenOverlay
                                 val back = {
-                                    if (result.saved != null) finish() else detailsOpen = false
+                                    if (result.saved != null) finish() else catalogueDetailsOpen = false
                                 }
                                 BackHandler(enabled = detailsOpen, onBack = back)
                                 AnimeDetailsScreen(
