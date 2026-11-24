@@ -33,7 +33,8 @@ internal fun TsuzukiDetailsDescription(
     defaultExpanded: Boolean,
     hasSummary: Boolean,
     tags: List<String>,
-    onTagSearch: (String) -> Unit,
+    // Null hides the Search item of the genre menu (anime details have no tag search yet, AP7).
+    onTagSearch: ((String) -> Unit)?,
     onCopyTag: (String) -> Unit,
     modifier: Modifier = Modifier,
     summary: @Composable (expanded: Boolean) -> Unit,
@@ -66,7 +67,7 @@ private enum class GenreSlot { TAGS, MEASURE_MORE, MORE }
 @Composable
 private fun TsuzukiGenreRows(
     tags: List<String>,
-    onSearch: (String) -> Unit,
+    onSearch: ((String) -> Unit)?,
     onCopy: (String) -> Unit,
 ) {
     SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
@@ -139,7 +140,7 @@ internal fun genresFittingTwoLines(widths: List<Int>, maxWidth: Int, gap: Int, m
 }
 
 @Composable
-private fun GenreChip(tag: String, onSearch: (String) -> Unit, onCopy: (String) -> Unit) {
+private fun GenreChip(tag: String, onSearch: ((String) -> Unit)?, onCopy: (String) -> Unit) {
     var menu by remember { mutableStateOf(false) }
     Box {
         TsuzukiPill(tag, false, { menu = true }, role = Role.Button)
@@ -150,7 +151,7 @@ private fun GenreChip(tag: String, onSearch: (String) -> Unit, onCopy: (String) 
 }
 
 @Composable
-private fun MoreGenresChip(tags: List<String>, onSearch: (String) -> Unit, onCopy: (String) -> Unit) {
+private fun MoreGenresChip(tags: List<String>, onSearch: ((String) -> Unit)?, onCopy: (String) -> Unit) {
     var menu by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<String?>(null) }
     val dismiss = {
@@ -173,11 +174,18 @@ private fun MoreGenresChip(tags: List<String>, onSearch: (String) -> Unit, onCop
 }
 
 @Composable
-private fun GenreActions(tag: String, onSearch: (String) -> Unit, onCopy: (String) -> Unit, dismiss: () -> Unit) {
-    TsuzukiMenuItem(stringResource(MR.strings.action_search), onClick = {
-        dismiss()
-        onSearch(tag)
-    })
+private fun GenreActions(
+    tag: String,
+    onSearch: ((String) -> Unit)?,
+    onCopy: (String) -> Unit,
+    dismiss: () -> Unit,
+) {
+    if (onSearch != null) {
+        TsuzukiMenuItem(stringResource(MR.strings.action_search), onClick = {
+            dismiss()
+            onSearch(tag)
+        })
+    }
     TsuzukiMenuItem(stringResource(MR.strings.action_copy_to_clipboard), onClick = {
         dismiss()
         onCopy(tag)
