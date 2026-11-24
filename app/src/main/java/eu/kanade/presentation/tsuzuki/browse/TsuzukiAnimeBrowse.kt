@@ -3,13 +3,6 @@ package eu.kanade.presentation.tsuzuki.browse
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.core.graphics.drawable.toBitmap
-import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
-import eu.kanade.tachiyomi.util.system.LocaleHelper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,15 +32,19 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
@@ -59,8 +57,12 @@ import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionInstaller
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionRepo
 import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeExtensionRepos
+import eu.kanade.tachiyomi.tsuzuki.anime.extension.AnimeLoadResult
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.AnimeCatalogueActivity
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -106,10 +108,37 @@ internal fun rememberAnimeSourcePins(): Pair<Preference<Set<String>>, Set<String
 }
 
 /** Anime sources (board "BrowseAnime"): pinned first, each row with its extension's icon; [query] filters by name. */
+@Composable
 internal fun animeSourcesTab(
     sources: List<RegisteredAnimeSource>,
     query: String? = null,
-) = TabContent(MR.strings.label_sources, searchEnabled = true) { padding, _ ->
+    globalSearch: (() -> cafe.adriel.voyager.core.screen.Screen)? = null,
+): TabContent {
+    val navigator = LocalNavigator.currentOrThrow
+    return animeSourcesTabContent(sources, query, globalSearch?.let { screen -> { navigator.push(screen()) } })
+}
+
+@Composable
+private fun animeSourcesTabContent(
+    sources: List<RegisteredAnimeSource>,
+    query: String?,
+    onGlobalSearch: (() -> Unit)?,
+) = TabContent(
+    MR.strings.label_sources,
+    searchEnabled = true,
+    actions = listOfNotNull(
+        onGlobalSearch?.let {
+            AppBar.Action(
+                title = stringResource(MR.strings.action_global_search),
+                icon = Icons.Outlined.TravelExplore,
+                onClick = {
+                    AnimeGlobalSearch.openAnimeFirst()
+                    it()
+                },
+            )
+        },
+    ),
+) { padding, _ ->
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
     val (pinPreference, pins) = rememberAnimeSourcePins()

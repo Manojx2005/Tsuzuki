@@ -13,6 +13,7 @@
     <string name="tsz_anime_mark_seen">Marcar como visto</string>
     <string name="tsz_anime_mark_unseen">Marcar como no visto</string>
     <string name="tsz_anime_mark_previous">Marcar anteriores como vistos</string>
+    <string name="tsz_anime_mark_until_last_watched">Marcar hasta el último episodio visto</string>
     <string name="tsz_anime_bookmark">Añadir marcador</string>
     <string name="tsz_anime_unbookmark">Quitar marcador</string>
     <string name="tsz_anime_unseen_only">Solo no vistos</string>

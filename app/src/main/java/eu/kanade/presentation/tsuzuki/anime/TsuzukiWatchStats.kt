@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -24,17 +26,24 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.ReadingChart
+import eu.kanade.tachiyomi.tsuzuki.ReadingPeriod
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
+import eu.kanade.tachiyomi.ui.tsuzuki.stats.Chart
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.Month
+import java.time.format.TextStyle
+import java.time.temporal.TemporalAdjusters
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
 
 @Composable
-internal fun TsuzukiWatchStats(today: LocalDate) {
+internal fun TsuzukiWatchStats(today: LocalDate, period: ReadingPeriod = ReadingPeriod.WEEK) {
     if (!TsuzukiAnime.enabled) return
     val statsFlow = remember(today) { Injekt.get<AnimeHistoryRepository>().subscribeWatchStats(today) }
     val observed by statsFlow.collectAsState(initial = null)
@@ -50,6 +59,7 @@ internal fun TsuzukiWatchStats(today: LocalDate) {
             color = tokens.mutedText,
             style = MaterialTheme.typography.labelLarge,
         )
+        WatchChart(today, period, duration)
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             WatchStatTile(
                 value = duration.formatWatchTime(stats.weekSeconds),
@@ -79,6 +89,43 @@ internal fun TsuzukiWatchStats(today: LocalDate) {
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
+    }
+}
+
+/** AP-21: watch time per day or month for the period selected for reading, drawn with the reading chart. */
+@Composable
+private fun WatchChart(today: LocalDate, period: ReadingPeriod, duration: MeasureFormat) {
+    val tokens = TsuzukiTheme.tokens
+    val start = when (period) {
+        ReadingPeriod.WEEK -> today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        ReadingPeriod.MONTH -> today.minusDays(29)
+        ReadingPeriod.YEAR -> today.withDayOfMonth(1).minusMonths(11)
+    }
+    val seconds by key(start, today) {
+        val flow = remember { Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(start, today) }
+        flow.collectAsState(initial = emptyMap())
+    }
+    val locale = LocalConfiguration.current.locales[0]
+    val bars = remember(seconds, today, period, locale) {
+        ReadingChart.bars(
+            days = seconds.mapValues { (_, value) -> value * 1_000L },
+            today = today,
+            period = period,
+            weekdayLabel = { it.getDisplayName(TextStyle.NARROW, locale) },
+            monthLabel = { Month.of(it).getDisplayName(TextStyle.NARROW, locale) },
+        )
+    }
+    TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
+        Row {
+            Spacer(Modifier.weight(1f))
+            Text(
+                tsuzukiMenuLabel(duration.formatWatchTime(seconds.values.sum())),
+                color = tokens.mutedText,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        Chart(bars)
     }
 }
 

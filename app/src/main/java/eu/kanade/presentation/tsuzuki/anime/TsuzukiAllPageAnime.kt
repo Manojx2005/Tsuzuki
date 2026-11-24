@@ -1,16 +1,26 @@
 package eu.kanade.presentation.tsuzuki.anime
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.presentation.library.components.DownloadsBadge
+import eu.kanade.presentation.library.components.LanguageBadge
+import eu.kanade.presentation.library.components.MangaListItem
+import eu.kanade.presentation.library.components.UnreadBadge
+import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiSectionLabel
+import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
@@ -18,6 +28,8 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -76,15 +88,87 @@ internal fun allPageShelves(
     return listOf(default)
 }
 
-/** A full-width "Anime" heading followed by the anime tiles, inside a library grid. */
-internal fun LazyGridScope.allPageAnimeSection(anime: List<Anime>, title: String, onOpen: (Long) -> Unit) {
+/** An Anime section with the same selection as the book grid around it. */
+internal fun LazyGridScope.allPageAnimeSection(
+    anime: List<Anime>,
+    title: String,
+    selection: AnimeLibrarySelection?,
+    selecting: Boolean,
+    badges: AnimeLibraryBadges,
+) {
     if (anime.isEmpty()) return
-    item(key = "tsuzuki_all_anime_header", span = {
-        GridItemSpan(maxLineSpan)
-    }, contentType = "tsuzuki_all_anime_header") {
+    item(
+        key = "tsuzuki_all_anime_header",
+        span = { GridItemSpan(maxLineSpan) },
+        contentType = "tsuzuki_all_anime_header",
+    ) {
         TsuzukiSectionLabel(title, contentPadding = PaddingValues(top = 14.dp, bottom = 2.dp))
     }
-    items(anime, key = { "tsuzuki_all_anime_${it.id}" }, contentType = { "tsuzuki_all_anime" }) { item ->
-        AnimeLibraryCover(item, onOpen = { onOpen(item.id) })
+    val ids = anime.map(Anime::id)
+    items(anime, key = { "tsuzuki_all_anime_" + it.id }, contentType = { "tsuzuki_all_anime" }) { item ->
+        AllPageAnimeItemActions(item.id, ids, selection, selecting) { open, longClick ->
+            AnimeLibraryCover(
+                item,
+                selected = selection?.ids?.contains(item.id) == true,
+                selectionMode = selecting,
+                onLongClick = longClick,
+                badges = badges.forAnime(item),
+                onOpen = open,
+            )
+        }
     }
+}
+
+internal fun LazyListScope.allPageAnimeRows(
+    anime: List<Anime>,
+    selection: AnimeLibrarySelection?,
+    booksSelected: Boolean,
+    badges: AnimeLibraryBadges,
+) {
+    if (anime.isEmpty()) return
+    item(key = "tsuzuki_all_anime_header") {
+        TsuzukiSectionLabel(stringResource(MR.strings.tsz_anime_media))
+    }
+    val ids = anime.map(Anime::id)
+    items(anime, key = { "tsuzuki_all_anime_" + it.id }, contentType = { "tsuzuki_all_anime" }) { item ->
+        val selecting = booksSelected || selection?.ids?.isNotEmpty() == true
+        val selected = selection?.ids?.contains(item.id) == true
+        val itemBadges = badges.forAnime(item)
+        AllPageAnimeItemActions(item.id, ids, selection, selecting) { open, longClick ->
+            MangaListItem(
+                title = tsuzukiMenuLabel(item.title),
+                onClick = open,
+                onLongClick = longClick ?: {},
+                badge = {
+                    DownloadsBadge(itemBadges.downloaded)
+                    UnreadBadge(itemBadges.unwatched)
+                    LanguageBadge(isLocal = false, sourceLanguage = itemBadges.language)
+                },
+                isSelected = selected,
+                coverAlpha = if (selecting && !selected) 0.55f else 1f,
+                cover = { MangaCover.Square(item.thumbnailUrl, modifier = it, generatedTitle = item.title) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AllPageAnimeItemActions(
+    id: Long,
+    visible: List<Long>,
+    selection: AnimeLibrarySelection?,
+    selecting: Boolean,
+    content: @Composable (() -> Unit, (() -> Unit)?) -> Unit,
+) {
+    val openDetails = rememberAnimeDetailsOpener()
+    val haptic = LocalHapticFeedback.current
+    content(
+        { if (selecting && selection != null) selection.toggle(id) else openDetails(id) },
+        selection?.let {
+            {
+                it.range(id, visible)
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            }
+        },
+    )
 }

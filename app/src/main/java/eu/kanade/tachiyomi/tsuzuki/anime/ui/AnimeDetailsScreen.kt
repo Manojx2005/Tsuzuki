@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -29,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,7 +52,9 @@ import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiPill
@@ -60,7 +65,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
-import eu.kanade.presentation.tsuzuki.anime.openAnime
+import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -71,7 +76,9 @@ import eu.kanade.tachiyomi.tsuzuki.anime.RegisteredAnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import eu.kanade.tachiyomi.tsuzuki.anime.episodesBeforeLastWatched
 import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
+import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
@@ -107,6 +114,8 @@ internal fun AnimeDetailsScreen(
     val tokens = TsuzukiTheme.tokens
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    // Seasons and duplicates open in place when these details are in place (AnimeDetailsRoute), else the Activity.
+    val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
     val migrate = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) scope.launch { model.reloadSaved() }
@@ -118,6 +127,13 @@ internal fun AnimeDetailsScreen(
         downloadQueue.entries.associate { it.episodeId to it.status }
     }
     val saved = details.saved
+    val storedNotes by remember(library, saved?.id) {
+        saved?.let { library.observeNotes(it.id) } ?: flowOf(null)
+    }.collectAsState(null)
+    val notes = storedNotes ?: saved?.notes.orEmpty()
+    var editingNotes by rememberSaveable { mutableStateOf(false) }
+    var notesSaveError by remember { mutableStateOf(false) }
+    var showCover by rememberSaveable { mutableStateOf(false) }
     val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
     val seasons by remember(saved?.id) {
         saved?.let { library.observeSeasons(it.id) } ?: flowOf(emptyList<Anime>())
@@ -134,8 +150,11 @@ internal fun AnimeDetailsScreen(
     }.collectAsState(null)
     val episodeState = loadedEpisodes ?: emptyEpisodes
     val display = details.display
-    val filtered = remember(episodeState, details.episodeDisplay) {
-        details.episodeDisplay.apply(episodeState.items)
+    val filtered = remember(episodeState, details.episodeDisplay, downloadStatuses) {
+        details.episodeDisplay.apply(
+            episodeState.items,
+            downloadStatuses.filterValues { it == AnimeDownloadStatus.Saved }.keys,
+        )
     }
     val ordered = remember(episodeState.items) { episodeState.items.sortedWith(animeEpisodeNumberOrder) }
     val shelves by remember { library.observeShelves() }.collectAsState(emptyList())
@@ -148,7 +167,6 @@ internal fun AnimeDetailsScreen(
     var showTracking by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-    var showSelectionMenu by remember { mutableStateOf(false) }
     var externalUrl by remember(display.url) { mutableStateOf<String?>(null) }
 
     LaunchedEffect(model) { model.refresh() }
@@ -161,7 +179,7 @@ internal fun AnimeDetailsScreen(
         }
     }
 
-    fun mutate(block: suspend () -> Unit) {
+    fun mutate(onError: () -> Unit = { saveError = true }, block: suspend () -> Unit) {
         if (saving) return
         saving = true
         saveError = false
@@ -172,7 +190,7 @@ internal fun AnimeDetailsScreen(
                 throw e
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) { "Could not save anime details" }
-                saveError = true
+                onError()
             } finally {
                 saving = false
             }
@@ -187,18 +205,19 @@ internal fun AnimeDetailsScreen(
         downloads.enqueue(entry.source.id, entry.source.name, display.title, episodes)
     }
 
-    fun toggleSelection(id: Long) {
-        selection = if (id in selection) selection.filterNot { it == id }.toLongArray() else selection + id
+    fun toggleSelection(id: Long, fromLongPress: Boolean = false) {
+        selection = toggleAnimeEpisodeSelection(filtered, selection, id, fromLongPress)
     }
 
-    suspend fun markSeen(ids: Set<Long>, seen: Boolean) {
-        val changed = library.setEpisodesSeen(ids, seen)
+    suspend fun syncWatchedProgress(changed: List<Episode>) {
         if (!Injekt.get<BasePreferences>().incognitoMode.get()) {
             changed.filter { it.episodeNumber.isFinite() }
                 .maxByOrNull(Episode::episodeNumber)
                 ?.let { AnimeTrackProgressJob.enqueue(context, it) }
         }
     }
+
+    suspend fun markSeen(ids: Set<Long>, seen: Boolean) = syncWatchedProgress(library.setEpisodesSeen(ids, seen))
 
     fun markPrevious(episode: Episode) {
         val preceding = ordered.takeWhile { it.id != episode.id }.mapTo(mutableSetOf(), Episode::id)
@@ -245,6 +264,13 @@ internal fun AnimeDetailsScreen(
                                     },
                                 )
                                 TsuzukiMenuItem(
+                                    text = stringResource(MR.strings.action_edit_notes),
+                                    onClick = {
+                                        showMenu = false
+                                        editingNotes = true
+                                    },
+                                )
+                                TsuzukiMenuItem(
                                     text = stringResource(MR.strings.tsz_anime_shelves),
                                     onClick = {
                                         showMenu = false
@@ -283,56 +309,65 @@ internal fun AnimeDetailsScreen(
                 actionModeCounter = selected.size,
                 onCancelActionMode = { selection = longArrayOf() },
                 actionModeActions = {
-                    Box {
-                        IconButton(onClick = { showSelectionMenu = true }, enabled = !saving) {
-                            Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.label_more))
-                        }
-                        DropdownMenu(expanded = showSelectionMenu, onDismissRequest = { showSelectionMenu = false }) {
-                            val ids = selected.mapTo(mutableSetOf(), Episode::id)
-                            val single = selected.singleOrNull()
-                            AnimeEpisodeActions(
-                                seen = selected.all(Episode::seen),
-                                bookmarked = selected.all(Episode::bookmark),
-                                onMarkSeen = { seen ->
-                                    showSelectionMenu = false
-                                    mutate {
-                                        markSeen(ids, seen)
-                                        selection = longArrayOf()
-                                    }
-                                },
-                                onBookmark = { bookmarked ->
-                                    showSelectionMenu = false
-                                    mutate {
-                                        library.setEpisodesBookmarked(ids, bookmarked)
-                                        selection = longArrayOf()
-                                    }
-                                },
-                                onMarkPrevious = single?.let { episode ->
-                                    {
-                                        showSelectionMenu = false
-                                        markPrevious(episode)
-                                    }
-                                },
-                            )
-                            TsuzukiMenuItem(
-                                text = stringResource(MR.strings.action_save),
+                    // AP6: as in the book chapter list, the top bar only selects; the actions are in the bottom bar.
+                    AppBarActions(
+                        listOf(
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_all),
+                                icon = Icons.Outlined.SelectAll,
+                                onClick = { selection = filtered.map(Episode::id).toLongArray() },
+                            ),
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_select_inverse),
+                                icon = Icons.Outlined.FlipToBack,
                                 onClick = {
-                                    showSelectionMenu = false
-                                    enqueue(ordered.filter { it.id in ids })
-                                    selection = longArrayOf()
+                                    val chosen = selection.toSet()
+                                    selection = filtered.map(Episode::id).filterNot { it in chosen }.toLongArray()
                                 },
-                            )
-                            TsuzukiMenuItem(
-                                text = stringResource(MR.strings.action_select_all),
-                                onClick = {
-                                    showSelectionMenu = false
-                                    selection = filtered.map(Episode::id).toLongArray()
-                                },
-                            )
-                        }
-                    }
+                            ),
+                        ),
+                    )
                 },
             )
+        },
+        bottomBar = {
+            // AP6: the shared selection bar of the book chapter list.
+            val ids = selected.mapTo(mutableSetOf(), Episode::id)
+            fun act(block: suspend () -> Unit) = mutate {
+                block()
+                selection = longArrayOf()
+            }
+            CompositionLocalProvider(LocalSelectionEpisodes provides true) {
+                MangaBottomActionMenu(
+                    visible = selected.isNotEmpty() && !saving,
+                    modifier = Modifier.fillMaxWidth(),
+                    onBookmarkClicked = { act { library.setEpisodesBookmarked(ids, true) } }
+                        .takeIf { selected.any { !it.bookmark } },
+                    onRemoveBookmarkClicked = { act { library.setEpisodesBookmarked(ids, false) } }
+                        .takeIf { selected.isNotEmpty() && selected.all(Episode::bookmark) },
+                    onMarkAsReadClicked = { act { markSeen(ids, true) } }
+                        .takeIf { selected.any { !it.seen } },
+                    onMarkAsUnreadClicked = { act { markSeen(ids, false) } }
+                        .takeIf { selected.any { it.seen || it.lastSecondSeen > 0 } },
+                    onMarkPreviousAsReadClicked = selected.singleOrNull()?.let { episode -> { markPrevious(episode) } },
+                    onDownloadClicked = {
+                        val chosen = ordered.filter { it.id in ids }
+                        chosen.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Failed }
+                            .forEach { downloads.retry(it.id) }
+                        enqueue(chosen.filter { downloadStatuses[it.id] == null })
+                        selection = longArrayOf()
+                    }.takeIf {
+                        selected.any {
+                            downloadStatuses[it.id] == null || downloadStatuses[it.id] == AnimeDownloadStatus.Failed
+                        }
+                    },
+                    onDeleteClicked = {
+                        selected.filter { downloadStatuses[it.id] == AnimeDownloadStatus.Saved }
+                            .forEach { downloads.remove(it.id) }
+                        selection = longArrayOf()
+                    }.takeIf { selected.any { downloadStatuses[it.id] == AnimeDownloadStatus.Saved } },
+                )
+            }
         },
     ) { padding ->
         PullRefresh(
@@ -347,8 +382,12 @@ internal fun AnimeDetailsScreen(
                         entry.source,
                         display,
                         coverWidth = if (expanded) 156.dp else 104.dp,
+                        onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
                         sharedCoverKey = sharedCoverKey,
                     )
+                }
+                if (notes.isNotBlank()) {
+                    item(key = "anime-notes") { AnimeNotesTile(notes) { editingNotes = true } }
                 }
                 if (seasonChoices.isNotEmpty()) {
                     item(key = "anime-seasons") {
@@ -362,7 +401,7 @@ internal fun AnimeDetailsScreen(
                             selected = seasonChoices.indexOfFirst { it.id == saved?.id },
                             onClick = { index ->
                                 val season = seasonChoices[index]
-                                if (season.id != saved?.id) openAnime(context, season.id)
+                                if (season.id != saved?.id) openDetails(season.id)
                             },
                         )
                     }
@@ -373,6 +412,7 @@ internal fun AnimeDetailsScreen(
                         status == null || status == AnimeDownloadStatus.Failed
                     }
                     AnimeLibraryActions(
+                        nextAiringDays = nextAiringDays(episodeState.items, System.currentTimeMillis()),
                         favorite = saved?.favorite == true,
                         enabled = !saving && selected.isEmpty(),
                         onFavorite = {
@@ -395,7 +435,6 @@ internal fun AnimeDetailsScreen(
                         onSave = if (eligible.isNotEmpty()) {
                             {
                                 selection = eligible.map(Episode::id).toLongArray()
-                                showSelectionMenu = true
                             }
                         } else {
                             null
@@ -448,20 +487,39 @@ internal fun AnimeDetailsScreen(
                     item { AnimeCatalogueStatus(androidStringResource(R.string.tsz_anime_no_episodes)) }
                 }
                 items(filtered, key = Episode::id, contentType = { "anime_episode" }) { episode ->
-                    AnimeEpisodeTile(
-                        source = entry.source,
+                    val status = downloadStatuses[episode.id]
+                    AnimeEpisodeSwipe(
                         episode = episode,
-                        coverUrl = display.thumbnail_url,
-                        selected = episode.id in selection,
-                        enabled = !saving,
-                        onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
-                        onSelect = { toggleSelection(episode.id) },
-                        onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
-                        onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
-                        onMarkPrevious = { markPrevious(episode) },
-                        downloadStatus = downloadStatuses[episode.id],
-                        onDownload = { enqueue(listOf(episode)) },
-                    )
+                        downloadStatus = status,
+                        enabled = !saving && selected.isEmpty(),
+                        onToggleSeen = { mutate { markSeen(setOf(episode.id), !episode.seen) } },
+                        onToggleBookmark = {
+                            mutate { library.setEpisodesBookmarked(setOf(episode.id), !episode.bookmark) }
+                        },
+                        onDownload = {
+                            when (status) {
+                                null -> enqueue(listOf(episode))
+                                AnimeDownloadStatus.Failed -> downloads.retry(episode.id)
+                                else -> downloads.remove(episode.id)
+                            }
+                        },
+                    ) {
+                        AnimeEpisodeTile(
+                            source = entry.source,
+                            episode = episode,
+                            coverUrl = display.thumbnail_url,
+                            showNumberOnly = details.episodeDisplay.showNumberOnly,
+                            selected = episode.id in selection,
+                            enabled = !saving,
+                            onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
+                            onSelect = { toggleSelection(episode.id, fromLongPress = true) },
+                            onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
+                            onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
+                            onMarkPrevious = { markPrevious(episode) },
+                            downloadStatus = downloadStatuses[episode.id],
+                            onDownload = { enqueue(listOf(episode)) },
+                        )
+                    }
                 }
             }
 
@@ -504,7 +562,7 @@ internal fun AnimeDetailsScreen(
             onAdd = { mutate { shelfSelection = library.shelfIds(match.adding.id) } },
             onOpen = {
                 duplicate = null
-                openAnime(context, match.existing.id)
+                openDetails(match.existing.id)
             },
             onMigrate = {
                 migrate.launch(AnimeMigrationActivity.fromAnime(context, match.existing.id, match.adding.id))
@@ -517,14 +575,46 @@ internal fun AnimeDetailsScreen(
             mutate { model.setFavorite(true, selectedShelves) }
         }
     }
+    display.thumbnail_url?.takeIf { showCover && it.isNotBlank() }?.let { url ->
+        AnimeCoverDialog(entry.source, display.title, url) { showCover = false }
+    }
+    if (editingNotes && saved != null) {
+        AnimeNotesDialog(
+            initial = notes,
+            saving = saving,
+            saveError = notesSaveError,
+            onDismiss = {
+                notesSaveError = false
+                editingNotes = false
+            },
+        ) { text ->
+            notesSaveError = false
+            mutate(onError = { notesSaveError = true }) {
+                library.setNotes(saved.id, text)
+                editingNotes = false
+            }
+        }
+    }
     if (showFilter) {
         AnimeEpisodeFilterSheet(
             display = details.episodeDisplay,
             groups = episodeState.groups,
             excludedGroups = excludedGroups,
             onDismiss = { showFilter = false },
+            // Same episodes the store marks: excluded subtitle groups are skipped.
+            canMarkUntilLastWatched = saved != null && !saving &&
+                episodesBeforeLastWatched(ordered.filterAnimeGroups(excludedGroups)).isNotEmpty(),
+            onMarkUntilLastWatched = {
+                if (saved != null) {
+                    showFilter = false
+                    mutate {
+                        val changed = withContext(Dispatchers.IO) { library.markUntilLastWatched(saved.id) }
+                        syncWatchedProgress(changed)
+                    }
+                }
+            },
         ) { displayOptions, groups ->
-            showFilter = false
+            // Applies at once and stays open, as the book chapter dialog does.
             mutate { model.setEpisodeDisplay(displayOptions, groups) }
         }
     }
@@ -533,7 +623,7 @@ internal fun AnimeDetailsScreen(
 private data class AnimeDuplicateMatch(val existing: Anime, val adding: Anime)
 
 @Composable
-private fun AnimeShelfPicker(
+internal fun AnimeShelfPicker(
     shelves: List<AnimeCategory>,
     initial: Set<Long>,
     onDismiss: () -> Unit,
@@ -594,3 +684,8 @@ internal fun rememberAnimeImage(source: AnimeSource?, url: String?): ImageReques
         }.build()
     }
 }
+
+/** Days until the earliest episode the source dates in the future (0 = within a day), or null when none is. */
+internal fun nextAiringDays(episodes: List<Episode>, now: Long): Int? =
+    episodes.asSequence().map { it.dateUpload }.filter { it > now }.minOrNull()
+        ?.let { ((it - now) / java.util.concurrent.TimeUnit.DAYS.toMillis(1)).toInt() }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_retry_failed">Fehlgeschlagene wiederholen</string>
+    <string name="tsz_anime_clear_failed">Fehlgeschlagene entfernen</string>
+    <string name="tsz_anime_delete_after_watched">Anime-Folgen nach dem Ansehen löschen</string>
+</resources>

@@ -104,6 +104,9 @@ object SettingsDownloadScreen : SearchableSettings {
                     preference = downloadPreferences.removeAfterMarkedAsRead,
                     title = stringResource(MR.strings.pref_remove_after_marked_as_read),
                 ),
+                *listOfNotNull(
+                    eu.kanade.presentation.tsuzuki.settings.animeDeleteAfterWatchedPreference(),
+                ).toTypedArray(),
                 Preference.PreferenceItem.ListPreference(
                     preference = downloadPreferences.removeAfterReadSlots,
                     entries = mapOf(

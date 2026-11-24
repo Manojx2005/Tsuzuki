@@ -73,10 +73,29 @@ internal class AnimeLibraryStore(
             memo,
             scanlator,
             animeMemo,
+            seen,
+            bookmark,
+            lastSecondSeen,
+            totalSeconds,
+            source,
+            cover,
         ->
         val visible = memo[UPDATE_MEMO_KEY] == JsonPrimitive(true) &&
             !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
-        AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateFetch) to visible
+        AnimeUpdateEpisode(
+            animeId = animeId,
+            title = title,
+            episodeId = episodeId,
+            name = name,
+            previewUrl = previewUrl,
+            timestamp = dateFetch,
+            seen = seen,
+            bookmark = bookmark,
+            lastSecondSeen = lastSecondSeen,
+            totalSeconds = totalSeconds,
+            sourceId = source,
+            coverUrl = cover,
+        ) to visible
     }.subscribeToList().map { rows ->
         rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
     }
@@ -127,7 +146,16 @@ internal class AnimeLibraryStore(
         (anime.awaitBySourceAndUrl(source, result.url) ?: saveAnime(source, result)).id
     }
 
+    fun observeNotes(id: Long) = database.animesQueries.getNotes(id)
+        .subscribeToOneOrNull(Dispatchers.IO).distinctUntilChanged()
+
+    suspend fun setNotes(id: Long, notes: String) = database.animesQueries.setNotes(notes = notes, id = id)
+
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
+
+    fun observeWatchedEpisodeIds(animeId: Long) = episodes.subscribeByAnimeId(animeId).map { items ->
+        items.filter { it.seen }.mapTo(hashSetOf()) { it.id }
+    }.distinctUntilChanged()
     suspend fun getEpisodes(animeId: Long) = episodes.awaitByAnimeId(animeId)
 
     fun observeExcludedGroups(animeId: Long) = database.animesQueries.getById(animeId)
@@ -161,6 +189,31 @@ internal class AnimeLibraryStore(
             if (favorite) shelves.setForAnime(entry.id, shelfIds)
             entry.id
         }.also { if (!favorite) prunePreviewFrames(it, null) }
+
+    /** Catalogue actions change membership without saving partial source metadata over the cached entry. */
+    suspend fun setCachedFavorite(id: Long, favorite: Boolean, shelfIds: Set<Long> = emptySet()) {
+        database.transaction {
+            checkNotNull(anime.awaitById(id))
+            anime.setFavorite(id, favorite, System.currentTimeMillis())
+            if (favorite) shelves.setForAnime(id, shelfIds)
+        }
+        if (!favorite) prunePreviewFrames(id, null)
+    }
+
+    suspend fun setLibraryFavorites(ids: Set<Long>, favorite: Boolean) {
+        database.transaction {
+            for (id in ids) {
+                val entry = anime.awaitById(id) ?: continue
+                anime.setFavorite(id, favorite, entry.dateAdded)
+            }
+        }
+    }
+
+    suspend fun moveLibraryAnime(ids: Set<Long>, shelfIds: Set<Long>) = database.transaction {
+        for (id in ids) {
+            if (anime.awaitById(id)?.favorite == true) shelves.setForAnime(id, shelfIds)
+        }
+    }
 
     suspend fun migrateFavorite(
         originalId: Long,
@@ -312,6 +365,14 @@ internal class AnimeLibraryStore(
             )
         }
 
+    suspend fun markUntilLastWatched(animeId: Long): List<Episode> = database.transactionWithResult {
+        val show = checkNotNull(anime.awaitById(animeId))
+        val ordered = episodes.awaitByAnimeId(animeId).filterAnimeGroups(show.memo.excludedAnimeGroups())
+            .sortedWith(animeEpisodeNumberOrder)
+        val ids = episodesBeforeLastWatched(ordered).mapTo(mutableSetOf(), Episode::id)
+        setEpisodesSeen(ids, seen = true)
+    }
+
     suspend fun setEpisodesSeen(ids: Set<Long>, seen: Boolean): List<Episode> = database.transactionWithResult {
         val newlySeen = mutableListOf<Episode>()
         ids.forEach { id ->
@@ -323,6 +384,14 @@ internal class AnimeLibraryStore(
             if (seen && !episode.seen) newlySeen += episode
         }
         newlySeen
+    }
+
+    /** The episodes as stored now, for [restoreEpisodeProgress] if a combined action fails part way. */
+    suspend fun episodeProgress(ids: Set<Long>): List<Episode> = ids.mapNotNull { episodes.awaitById(it) }
+
+    /** Puts watched state and resume position back exactly as [episodeProgress] read them. */
+    suspend fun restoreEpisodeProgress(saved: List<Episode>) = database.transaction {
+        saved.forEach { episodes.updateProgress(it.id, it.seen, it.lastSecondSeen, it.totalSeconds) }
     }
 
     suspend fun setEpisodesBookmarked(ids: Set<Long>, bookmarked: Boolean) = database.transaction {
@@ -457,6 +526,12 @@ internal data class AnimeUpdateEpisode(
     val name: String,
     val previewUrl: String?,
     val timestamp: Long,
+    val seen: Boolean = false,
+    val bookmark: Boolean = false,
+    val lastSecondSeen: Long = 0,
+    val totalSeconds: Long = 0,
+    val sourceId: Long = 0,
+    val coverUrl: String? = null,
 )
 
 private const val UPDATE_MEMO_KEY = "tsuzuki:library-update"

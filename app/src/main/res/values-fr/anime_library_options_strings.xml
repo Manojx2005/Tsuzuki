@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_sort_last_watched">Dernier visionnage</string>
+    <string name="tsz_anime_sort_latest_episode">Dernier épisode</string>
+    <string name="tsz_anime_sort_unwatched_count">Épisodes non vus</string>
+    <string name="tsz_anime_sort_total_episodes">Total d\'épisodes</string>
+</resources>

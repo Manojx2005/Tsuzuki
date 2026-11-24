@@ -133,6 +133,7 @@ internal class AnimePlayerModel(
     private var wantsPlayback = !restoredPaused
     private var waitingForFile = false
     private var tracker = AnimePlaybackProgress()
+    private val offlinePlaybackOwner = Any()
     private var loadingJob: Job? = null
     private var episodeGroupsJob: Job? = null
     private var countdownJob: Job? = null
@@ -457,7 +458,7 @@ internal class AnimePlayerModel(
                         .catch { error -> logcat(LogPriority.WARN, error) { "Could not observe anime episode groups" } }
                         .collect { groups -> updateEpisodeQueue(episodes, id, groups) }
                 }
-                val offline = downloads.offlineVideo(anime.source, anime.id, episode.id)
+                val offline = downloads.offlineVideo(anime.source, anime.id, episode.id, offlinePlaybackOwner)
                 if (offline != null) {
                     queueVideo(offline)
                     return@launch
@@ -881,5 +882,6 @@ internal class AnimePlayerModel(
         writes.close()
         abandonFocus()
         backend.close()
+        downloads.releaseOfflinePlayback(offlinePlaybackOwner)
     }
 }

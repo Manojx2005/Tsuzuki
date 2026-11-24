@@ -22,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
+import eu.kanade.presentation.tsuzuki.anime.allPageAnimeRows
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeLibraryBadges
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -31,7 +34,7 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
 
 @Composable
-fun LibraryPager(
+internal fun LibraryPager(
     state: PagerState,
     contentPadding: PaddingValues,
     hasActiveFilters: Boolean,
@@ -53,6 +56,7 @@ fun LibraryPager(
     getLoadMoreKey: (Category) -> Long = { 0 },
     isCategoryLoading: (Category) -> Boolean = { false },
     mixedLibrary: Boolean = false,
+    animeSelection: AnimeLibrarySelection? = null,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
@@ -118,7 +122,7 @@ fun LibraryPager(
         val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
         val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
 
-        if (mixedLibrary && (displayMode != LibraryDisplayMode.List || items.isEmpty())) {
+        if (mixedLibrary && displayMode != LibraryDisplayMode.List) {
             eu.kanade.presentation.tsuzuki.library.TsuzukiMixedLibraryGrid(
                 items = items,
                 columns = columns,
@@ -134,12 +138,14 @@ fun LibraryPager(
                 loadMoreKey = loadMoreKey,
                 titleMaxLines = titleMaxLines,
                 anime = allPageAnime,
+                animeSelection = animeSelection,
             )
             return@HorizontalPager
         }
 
         when (displayMode) {
             LibraryDisplayMode.List -> {
+                val animeBadges = if (allPageAnime.isNotEmpty()) rememberAnimeLibraryBadges() else null
                 LibraryList(
                     items = items,
                     contentPadding = contentPadding,
@@ -152,6 +158,11 @@ fun LibraryPager(
                     showUrl = showUrlInList,
                     onLoadMore = onLoadMoreForCategory,
                     loadMoreKey = loadMoreKey,
+                    append = {
+                        if (animeBadges != null) {
+                            allPageAnimeRows(allPageAnime, animeSelection, selection.isNotEmpty(), animeBadges)
+                        }
+                    },
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {

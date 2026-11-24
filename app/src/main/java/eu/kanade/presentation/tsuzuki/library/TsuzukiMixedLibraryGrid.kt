@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,8 +41,9 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiSharedCover
+import eu.kanade.presentation.tsuzuki.anime.AnimeLibrarySelection
 import eu.kanade.presentation.tsuzuki.anime.allPageAnimeSection
-import eu.kanade.presentation.tsuzuki.anime.openAnime
+import eu.kanade.presentation.tsuzuki.anime.rememberAnimeLibraryBadges
 import eu.kanade.presentation.tsuzuki.selection.TsuzukiSelectedCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.entries.anime.model.Anime
@@ -57,7 +57,7 @@ import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 /** Board LibraryMixed, with the stock click, range-selection, resume and paging callbacks. */
 @Composable
-fun TsuzukiMixedLibraryGrid(
+internal fun TsuzukiMixedLibraryGrid(
     items: List<LibraryItem>,
     columns: Int,
     showTitle: Boolean,
@@ -73,9 +73,11 @@ fun TsuzukiMixedLibraryGrid(
     titleMaxLines: Int,
     // AY-INT item 1: the anime section, on the first shelf page of All only (see [rememberAllPageAnime]).
     anime: List<Anime> = emptyList(),
+    animeSelection: AnimeLibrarySelection? = null,
 ) {
-    val context = LocalContext.current
+    val selecting = selection.isNotEmpty() || animeSelection?.ids?.isNotEmpty() == true
     val animeTitle = stringResource(MR.strings.tsz_anime_media)
+    val animeBadges = if (anime.isNotEmpty()) rememberAnimeLibraryBadges() else null
     FastScrollLazyVerticalGrid(
         columns = if (columns == 0) GridCells.Adaptive(100.dp) else GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
@@ -94,7 +96,7 @@ fun TsuzukiMixedLibraryGrid(
                     .clip(shape)
                     // Board Q9Selection: selected books keep full strength with an accent ring + check;
                     // the others dim while a selection is active.
-                    .alpha(if (selection.isNotEmpty() && manga.id !in selection) 0.55f else 1f)
+                    .alpha(if (selecting && manga.id !in selection) 0.55f else 1f)
                     .tsuzukiClickable(
                         role = Role.Button,
                         onClick = { onClick(book) },
@@ -153,7 +155,7 @@ fun TsuzukiMixedLibraryGrid(
                         DownloadsBadge(item.badges.downloadCount)
                         LanguageBadge(item.badges.isLocal, item.badges.sourceLanguage)
                     }
-                    if (onContinueReading != null && item.unreadCount > 0) {
+                    if (animeSelection?.ids.isNullOrEmpty() && onContinueReading != null && item.unreadCount > 0) {
                         FilledIconButton(
                             onClick = { onContinueReading(book) },
                             modifier = Modifier.align(Alignment.BottomEnd),
@@ -186,7 +188,7 @@ fun TsuzukiMixedLibraryGrid(
                 }
             }
         }
-        allPageAnimeSection(anime, animeTitle) { openAnime(context, it) }
+        if (animeBadges != null) allPageAnimeSection(anime, animeTitle, animeSelection, selecting, animeBadges)
         loadMoreSentinel(loadMoreKey, onLoadMore)
     }
 }

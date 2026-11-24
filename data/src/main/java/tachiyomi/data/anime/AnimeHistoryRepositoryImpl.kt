@@ -2,6 +2,7 @@ package tachiyomi.data.anime
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import kotlinx.coroutines.flow.map
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.data.subscribeToOne
@@ -66,6 +67,13 @@ class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryR
         completedStatus = SAnime.COMPLETED.toLong(),
         mapper = ::AnimeWatchStats,
     ).subscribeToOne()
+
+    override fun subscribeWatchDays(start: LocalDate, end: LocalDate) =
+        database.anime_watch_daysQueries.getWatchDays(start.toEpochDay(), end.toEpochDay()) { day, seconds ->
+            day to (seconds ?: 0L)
+        }
+            .subscribeToList()
+            .map { rows -> rows.associate { (day, seconds) -> LocalDate.ofEpochDay(day) to seconds } }
 
     override suspend fun recordWatchDay(episodeId: Long, day: LocalDate, watchSeconds: Long) {
         if (watchSeconds > 0) {

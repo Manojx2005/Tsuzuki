@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Bookmark
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.TabTitle
+import eu.kanade.presentation.components.TabbedDialog
+import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.theme.tsuzuki.DotCoverFilter
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiAdaptiveSheet
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiMenuItem
@@ -59,10 +65,16 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeDisplay
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeEpisodeSort
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus
 import eu.kanade.tachiyomi.tsuzuki.anime.isExcludedAnimeGroup
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.CheckboxItem
+import tachiyomi.presentation.core.components.RadioItem
+import tachiyomi.presentation.core.components.SortItem
+import tachiyomi.presentation.core.components.TriStateItem
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
@@ -139,6 +151,7 @@ internal fun AnimeEpisodeTile(
     onBookmark: (Boolean) -> Unit,
     onMarkPrevious: () -> Unit,
     downloadStatus: AnimeDownloadStatus?,
+    showNumberOnly: Boolean = false,
     onDownload: () -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -149,8 +162,12 @@ internal fun AnimeEpisodeTile(
         stringResource(R.string.tsz_anime_filler).takeIf { episode.fillermark },
         stringResource(R.string.tsz_anime_watched).takeIf { episode.seen },
     )
-    val title = episode.displayNumber()?.let { stringResource(R.string.tsz_anime_episode_title, it, episode.name) }
-        ?: episode.name
+    val number = episode.displayNumber()
+    val title = when {
+        number == null -> episode.name
+        showNumberOnly -> stringResource(R.string.tsz_anime_history_episode, number)
+        else -> stringResource(R.string.tsz_anime_episode_title, number, episode.name)
+    }
     TsuzukiTile(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,76 +276,99 @@ internal fun AnimeEpisodeActions(
     }
 }
 
+/**
+ * Episode list settings use the chapter dialog's Filter, Sort and Display tabs. Changes apply immediately.
+ */
 @Composable
 internal fun AnimeEpisodeFilterSheet(
     display: AnimeEpisodeDisplay,
     groups: List<String>,
     excludedGroups: Set<String>,
     onDismiss: () -> Unit,
+    canMarkUntilLastWatched: Boolean,
+    onMarkUntilLastWatched: () -> Unit,
     onSave: (AnimeEpisodeDisplay, Set<String>) -> Unit,
 ) {
-    var draft by remember(display) { mutableStateOf(display) }
-    var groupDraft by remember(excludedGroups) { mutableStateOf(excludedGroups) }
-    TsuzukiAdaptiveSheet(onDismissRequest = onDismiss) { close ->
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Text(
-                tsuzukiMenuLabel(mokoStringResource(MR.strings.action_filter)),
-                style = MaterialTheme.typography.displaySmall,
-            )
-            LazyColumn(Modifier.weight(1f, fill = false)) {
-                item {
-                    TsuzukiPillRow(
-                        labels = listOf(
-                            stringResource(R.string.tsz_anime_episode_number),
-                            mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
-                        ),
-                        selected = if (draft.sortByDate) 1 else 0,
-                        onClick = { draft = draft.copy(sortByDate = it == 1) },
-                    )
-                    TsuzukiPillRow(
-                        labels = listOf(
-                            mokoStringResource(MR.strings.action_asc),
-                            mokoStringResource(MR.strings.action_desc),
-                        ),
-                        selected = if (draft.ascending) 0 else 1,
-                        onClick = { draft = draft.copy(ascending = it == 0) },
-                    )
-                    AnimeEpisodeFilterOption(
-                        stringResource(R.string.tsz_anime_unseen_only),
-                        draft.unseenOnly,
-                    ) { draft = draft.copy(unseenOnly = !draft.unseenOnly) }
-                    AnimeEpisodeFilterOption(
-                        stringResource(R.string.tsz_anime_bookmarked_only),
-                        draft.bookmarkedOnly,
-                    ) { draft = draft.copy(bookmarkedOnly = !draft.bookmarkedOnly) }
+    TabbedDialog(
+        onDismissRequest = onDismiss,
+        tabTitles = listOf(
+            TabTitle.Text(mokoStringResource(MR.strings.action_filter)),
+            TabTitle.Text(mokoStringResource(MR.strings.action_sort)),
+            TabTitle.Text(mokoStringResource(MR.strings.action_display)),
+        ),
+    ) { page ->
+        Column(Modifier.padding(vertical = TabbedDialogPaddings.Vertical).verticalScroll(rememberScrollState())) {
+            if (page == 0) {
+                // "Watched", the mirror of the stored unwatched filter (only watched = hide unwatched).
+                TriStateItem(stringResource(R.string.tsz_anime_watched), display.unseen.mirrored()) {
+                    onSave(display.copy(unseen = it.mirrored()), excludedGroups)
+                }
+                TriStateItem(mokoStringResource(MR.strings.label_downloaded), display.downloaded) {
+                    onSave(display.copy(downloaded = it), excludedGroups)
+                }
+                TriStateItem(mokoStringResource(MR.strings.action_filter_bookmarked), display.bookmarked) {
+                    onSave(display.copy(bookmarked = it), excludedGroups)
                 }
                 if (groups.isNotEmpty()) {
-                    item {
-                        Text(
-                            tsuzukiMenuLabel(stringResource(R.string.tsz_anime_exclude_groups)),
-                            color = TsuzukiTheme.tokens.mutedText,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                    items(groups, key = { it }) { group ->
-                        val excluded = group.isExcludedAnimeGroup(groupDraft)
-                        AnimeEpisodeFilterOption(group, excluded) {
-                            groupDraft = if (excluded) {
-                                groupDraft.filterNot { it.equals(group, ignoreCase = true) }.toSet()
-                            } else {
-                                groupDraft + group
-                            }
+                    Text(
+                        tsuzukiMenuLabel(stringResource(R.string.tsz_anime_exclude_groups)),
+                        color = TsuzukiTheme.tokens.mutedText,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    groups.forEach { group ->
+                        val excluded = group.isExcludedAnimeGroup(excludedGroups)
+                        CheckboxItem(group, excluded) {
+                            onSave(
+                                display,
+                                if (excluded) {
+                                    excludedGroups.filterNot { it.equals(group, ignoreCase = true) }.toSet()
+                                } else {
+                                    excludedGroups + group
+                                },
+                            )
                         }
                     }
                 }
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = { close(onDismiss) }) {
-                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_cancel)))
+                OutlinedButton(
+                    onClick = onMarkUntilLastWatched,
+                    enabled = canMarkUntilLastWatched,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
+                        .heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(28.dp),
+                ) {
+                    Text(tsuzukiMenuLabel(stringResource(R.string.tsz_anime_mark_until_last_watched)))
                 }
-                TextButton(onClick = { close { onSave(draft, groupDraft) } }) {
-                    Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_apply)))
+            } else if (page == 1) {
+                listOf(
+                    AnimeEpisodeSort.SOURCE to mokoStringResource(MR.strings.sort_by_source),
+                    AnimeEpisodeSort.NUMBER to stringResource(R.string.tsz_anime_episode_number),
+                    AnimeEpisodeSort.UPLOAD_DATE to mokoStringResource(MR.strings.tsz_chapter_filter_upload_date),
+                ).forEach { (sort, label) ->
+                    SortItem(
+                        label = tsuzukiMenuLabel(label),
+                        sortDescending = (!display.ascending).takeIf { display.sort == sort },
+                    ) {
+                        val next = if (display.sort == sort) {
+                            display.copy(ascending = !display.ascending)
+                        } else {
+                            display.copy(sort = sort)
+                        }
+                        onSave(next, excludedGroups)
+                    }
+                }
+            } else {
+                RadioItem(
+                    label = tsuzukiMenuLabel(mokoStringResource(MR.strings.show_title)),
+                    selected = !display.showNumberOnly,
+                ) {
+                    onSave(display.copy(showNumberOnly = false), excludedGroups)
+                }
+                RadioItem(
+                    label = tsuzukiMenuLabel(stringResource(R.string.tsz_anime_episode_number)),
+                    selected = display.showNumberOnly,
+                ) {
+                    onSave(display.copy(showNumberOnly = true), excludedGroups)
                 }
             }
         }
@@ -352,4 +392,10 @@ private val Episode.playFraction: Float
 
 private fun Episode.displayNumber(): String? = episodeNumber.takeIf { it.isFinite() && it >= 0 }?.let {
     NumberFormat.getNumberInstance().apply { isGroupingUsed = false }.format(it)
+}
+
+private fun TriState.mirrored(): TriState = when (this) {
+    TriState.DISABLED -> TriState.DISABLED
+    TriState.ENABLED_IS -> TriState.ENABLED_NOT
+    TriState.ENABLED_NOT -> TriState.ENABLED_IS
 }

@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.data.AlternativeTitlesColumnAdapter
 import tachiyomi.data.Chapters
 import tachiyomi.data.Database
@@ -257,16 +258,34 @@ class AnimeDatabaseTest {
             val episodes = EpisodeRepositoryImpl(db)
             val prunes = mutableListOf<Pair<Long, Set<Long>?>>()
             val store = AnimeLibraryStore(
-                db, anime, AnimeCategoryRepositoryImpl(db), episodes, AnimeHistoryRepositoryImpl(db),
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
                 prunePreviewFrames = { id, retained ->
                     // The callback must run after commit: files must never disappear for a rolled-back deletion.
-                    assertEquals(retained, retained?.let { episodes.awaitByAnimeId(id).mapTo(hashSetOf(), Episode::id) })
+                    assertEquals(
+                        retained,
+                        retained?.let {
+                            episodes.awaitByAnimeId(id).mapTo(hashSetOf(), Episode::id)
+                        },
+                    )
                     prunes += id to retained
                 },
             )
-            val show = SAnime.create().apply { url = "/previews"; title = "Preview cleanup" }
-            val first = SEpisode.create().apply { url = "/first"; name = "First" }
-            val second = SEpisode.create().apply { url = "/second"; name = "Second" }
+            val show = SAnime.create().apply {
+                url = "/previews"
+                title = "Preview cleanup"
+            }
+            val first = SEpisode.create().apply {
+                url = "/first"
+                name = "First"
+            }
+            val second = SEpisode.create().apply {
+                url = "/second"
+                name = "Second"
+            }
             val id = store.setFavorite(8, show, true, emptySet())
             assertTrue(prunes.isEmpty())
             store.syncEpisodes(8, show, listOf(first, second))
@@ -315,6 +334,92 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun savingAnimeNotesDoesNotWriteFavoriteState() = runBlocking {
+        withDatabase { driver, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/anime", title = "Anime", favorite = true))
+            driver.sql(
+                """
+                CREATE TRIGGER reject_notes_favorite_write
+                BEFORE UPDATE OF favorite ON animes
+                BEGIN
+                    SELECT raise(ABORT, 'Notes must not write favorite');
+                END
+                """.trimIndent(),
+            )
+
+            store.setNotes(id, "A note")
+            assertEquals("A note", store.observeNotes(id).first())
+            assertTrue(checkNotNull(anime.awaitById(id)).favorite)
+            store.setNotes(id, "")
+            assertEquals("", store.observeNotes(id).first())
+        }
+    }
+
+    @Test
+    fun cachedCatalogueFavoriteKeepsInitializedAnimeDetails() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val categories = AnimeCategoryRepositoryImpl(db)
+            val pruned = mutableListOf<Long>()
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                categories,
+                EpisodeRepositoryImpl(db),
+                AnimeHistoryRepositoryImpl(db),
+                prunePreviewFrames = { id, _ -> pruned += id },
+            )
+            val original = Anime(
+                source = 8,
+                url = "/anime",
+                title = "Full title",
+                description = "Full description",
+                initialized = true,
+                fetchType = FetchType.Seasons,
+                episodeFlags = 99,
+                notes = "Keep these notes",
+            )
+            val id = anime.insert(original)
+            val thinResult = SAnime.create().apply {
+                url = original.url
+                title = "Short title"
+                description = "Short description"
+            }
+            val cachedId = store.cacheSearchResult(original.source, thinResult)
+            assertEquals(id, cachedId)
+            val before = checkNotNull(anime.awaitById(id))
+            store.saveShelf(null, "Watching")
+            val shelfId = categories.awaitAll().single { !it.isSystem }.id
+
+            store.setCachedFavorite(cachedId, favorite = true, shelfIds = setOf(shelfId))
+            val added = checkNotNull(anime.awaitById(id))
+            assertTrue(added.favorite)
+            assertTrue(added.dateAdded > 0L)
+            assertEquals(setOf(shelfId), store.shelfIds(id))
+
+            store.setCachedFavorite(cachedId, favorite = false)
+            val removed = checkNotNull(anime.awaitById(id))
+            assertFalse(removed.favorite)
+            assertEquals(added.dateAdded, removed.dateAdded)
+            assertEquals(listOf(id), pruned)
+            assertEquals(before.title, removed.title)
+            assertEquals(before.description, removed.description)
+            assertEquals(before.initialized, removed.initialized)
+            assertEquals(before.fetchType, removed.fetchType)
+            assertEquals(before.episodeFlags, removed.episodeFlags)
+            assertEquals(before.notes, removed.notes)
+        }
+    }
+
+    @Test
     fun continueWatchingUsesTheMostRecentFavoriteAndAdvancesWhenItsEpisodeIsSeen() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)
@@ -359,6 +464,43 @@ class AnimeDatabaseTest {
             assertEquals(10L, history.awaitByEpisodeId(one)?.timeWatched)
             assertEquals(20L, history.awaitByEpisodeId(two)?.timeWatched)
             assertEquals(null, history.awaitByEpisodeId(one)?.lastSeen)
+        }
+    }
+
+    @Test
+    fun restoringEpisodeProgressPutsBackWatchedStateAndPosition() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val store =
+                AnimeLibraryStore(db, anime, AnimeCategoryRepositoryImpl(db), episodes, AnimeHistoryRepositoryImpl(db))
+            val show = SAnime.create().apply {
+                url = "/show"
+                title = "Show"
+            }
+            val sourceEpisodes = listOf("started", "seen", "fresh").mapIndexed { i, url ->
+                SEpisode.create().apply {
+                    this.url = url
+                    name = url
+                    episode_number = (i + 1).toFloat()
+                }
+            }
+            val id = store.syncEpisodes(8, show, sourceEpisodes).id
+            val byUrl = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            episodes.updateProgress(byUrl.getValue("started").id, seen = false, lastSecondSeen = 40, totalSeconds = 100)
+            store.setEpisodesSeen(setOf(byUrl.getValue("seen").id), true)
+            val ids = byUrl.values.mapTo(hashSetOf(), Episode::id)
+            val before = store.episodeProgress(ids)
+
+            // Unwatching resets positions; the restore must bring the 40 s resume point back too.
+            store.setEpisodesSeen(ids, false)
+            store.restoreEpisodeProgress(before)
+
+            val after = episodes.awaitByAnimeId(id).associateBy(Episode::url)
+            assertEquals(40L, after.getValue("started").lastSecondSeen)
+            assertFalse(after.getValue("started").seen)
+            assertTrue(after.getValue("seen").seen)
+            assertFalse(after.getValue("fresh").seen)
         }
     }
 
@@ -681,6 +823,58 @@ class AnimeDatabaseTest {
     }
 
     @Test
+    fun markUntilLastWatchedLeavesResumeAndExcludedReleasesUntouched() = runBlocking {
+        withDatabase { _, db ->
+            val anime = AnimeRepositoryImpl(db)
+            val episodes = EpisodeRepositoryImpl(db)
+            val store = AnimeLibraryStore(
+                db,
+                anime,
+                AnimeCategoryRepositoryImpl(db),
+                episodes,
+                AnimeHistoryRepositoryImpl(db),
+            )
+            val id = anime.insert(Anime(source = 8, url = "/anime", title = "Anime"))
+            store.setEpisodeDisplay(id, AnimeEpisodeDisplay(), setOf("Hidden Team"))
+            val ids = episodes.insertAll(
+                listOf(
+                    Episode(id, "/later", "Later", episodeNumber = 5.0, sourceOrder = 0),
+                    Episode(
+                        id,
+                        "/anchor",
+                        "Resume here",
+                        bookmark = true,
+                        lastSecondSeen = 35,
+                        totalSeconds = 100,
+                        episodeNumber = 4.0,
+                        sourceOrder = 1,
+                    ),
+                    Episode(id, "/already", "Already watched", seen = true, episodeNumber = 3.0, sourceOrder = 2),
+                    Episode(id, "/hidden-early", "Hidden early", scanlator = "Hidden Team", episodeNumber = 2.0),
+                    Episode(id, "/first", "First", bookmark = true, episodeNumber = 1.0, sourceOrder = 3),
+                    Episode(
+                        id,
+                        "/hidden-late",
+                        "Hidden late",
+                        seen = true,
+                        scanlator = "Hidden Team",
+                        episodeNumber = 6.0,
+                    ),
+                ),
+            )
+            val before = store.getEpisodes(id).associateBy(Episode::id)
+
+            assertEquals(listOf(ids[4]), store.markUntilLastWatched(id).map(Episode::id))
+            val after = store.getEpisodes(id).associateBy(Episode::id)
+            assertTrue(after.getValue(ids[4]).seen)
+            assertTrue(after.getValue(ids[4]).bookmark)
+            assertEquals(before - ids[4], after - ids[4])
+            assertEquals(ids[1], store.observeEpisodes(id).first().resume?.id)
+            assertTrue(store.markUntilLastWatched(id).isEmpty())
+        }
+    }
+
+    @Test
     fun updatesExcludeInitialImportsAndRetainAnEpisodeAcrossRefreshes() = runBlocking {
         withDatabase { _, db ->
             val anime = AnimeRepositoryImpl(db)
@@ -794,7 +988,12 @@ class AnimeDatabaseTest {
             )
             val id = anime.insert(Anime(source = 8, url = "/show", title = "Show", episodeFlags = 0x123))
             val other = anime.insert(Anime(source = 8, url = "/other", title = "Other"))
-            val display = AnimeEpisodeDisplay(true, true, true, true)
+            val display = AnimeEpisodeDisplay(
+                sort = AnimeEpisodeSort.UPLOAD_DATE,
+                ascending = true,
+                unseen = TriState.ENABLED_IS,
+                bookmarked = TriState.ENABLED_IS,
+            )
             store.setEpisodeDisplay(id, display)
             val flags = checkNotNull(store.getAnime(id)).episodeFlags
             assertEquals(0x123L, flags and 0xffffL)
@@ -1125,6 +1324,11 @@ class AnimeDatabaseTest {
             val before = history.subscribeWatchStats(today).first()
             assertEquals(AnimeWatchStats(391, 210, 7_891, 2, 0), before)
             assertTrue(before.hasWatchData)
+            assertEquals(
+                mapOf(today.minusDays(1) to 120L, today to 210L),
+                history.subscribeWatchDays(today.minusDays(1), today).first(),
+            )
+            assertEquals(mapOf(today to 210L), history.subscribeWatchDays(today, today).first())
 
             episodes.updateProgress(last, seen = true, lastSecondSeen = 0, totalSeconds = 600)
             history.removeHistory(ended)

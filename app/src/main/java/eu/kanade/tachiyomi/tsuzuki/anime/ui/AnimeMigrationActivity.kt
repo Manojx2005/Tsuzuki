@@ -103,6 +103,8 @@ class AnimeMigrationActivity : BaseActivity() {
         val sources by rememberAnimeBrowseSources()
         val stubs = rememberAnimeSourceStubs(sources)
         val sourceId = intent.getLongExtra(SOURCE, -1)
+        val selectedIds = remember { intent.getLongArrayExtra(SELECTION)?.toSet().orEmpty() }
+        val hasList = sourceId != -1L || selectedIds.size > 1
         var selected by rememberSaveable { mutableLongStateOf(intent.getLongExtra(ANIME, -1)) }
         var originalSnapshot by remember(selected) { mutableStateOf<Anime?>(null) }
         val original = originalSnapshot ?: favorites?.firstOrNull { it.anime.id == selected }?.anime
@@ -110,8 +112,8 @@ class AnimeMigrationActivity : BaseActivity() {
         LaunchedEffect(original) { originalSnapshot = original }
         val enabled = TsuzukiAnime.enabled
         LaunchedEffect(enabled) { if (!enabled) finish() }
-        val back: () -> Unit = { if (sourceId != -1L && selected != -1L) selected = -1 else finish() }
-        BackHandler(enabled = selected != -1L && sourceId != -1L, onBack = back)
+        val back: () -> Unit = { if (hasList && selected != -1L) selected = -1 else finish() }
+        BackHandler(enabled = selected != -1L && hasList, onBack = back)
 
         if (original != null) {
             key(original.id) {
@@ -142,7 +144,9 @@ class AnimeMigrationActivity : BaseActivity() {
                     if (favorites == null) {
                         item { AnimeCatalogueStatus(null) }
                     } else {
-                        val titles = favorites.orEmpty().map { it.anime }.filter { it.source == sourceId }
+                        val titles = favorites.orEmpty().map { it.anime }.filter {
+                            it.id in selectedIds || it.source == sourceId
+                        }
                         if (titles.isEmpty()) item { AnimeCatalogueStatus(stringResource(MR.strings.no_results_found)) }
                         items(titles, key = Anime::id) { anime ->
                             TsuzukiTile(
@@ -154,7 +158,9 @@ class AnimeMigrationActivity : BaseActivity() {
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    AnimeCover(source, anime.toSourceAnime(), Modifier.width(44.dp))
+                                    val titleSource =
+                                        source ?: sources.firstOrNull { it.source.id == anime.source }?.source
+                                    AnimeCover(titleSource, anime.toSourceAnime(), Modifier.width(44.dp))
                                     Text(
                                         tsuzukiMenuLabel(anime.title),
                                         color = TsuzukiTheme.tokens.dotOn,
@@ -275,11 +281,18 @@ class AnimeMigrationActivity : BaseActivity() {
         private const val ANIME = "migration_anime_id"
         private const val SOURCE = "migration_source_id"
         private const val TARGET = "migration_target_id"
+        private const val SELECTION = "migration_selection"
 
         internal fun fromAnime(context: Context, id: Long, targetId: Long? = null) =
             Intent(context, AnimeMigrationActivity::class.java).putExtra(ANIME, id).apply {
                 if (targetId != null) putExtra(TARGET, targetId)
             }
+
+        internal fun fromSelection(context: Context, ids: Set<Long>) = if (ids.size == 1) {
+            fromAnime(context, ids.single())
+        } else {
+            Intent(context, AnimeMigrationActivity::class.java).putExtra(SELECTION, ids.toLongArray())
+        }
 
         internal fun fromSource(context: Context, id: Long) =
             Intent(context, AnimeMigrationActivity::class.java).putExtra(SOURCE, id)

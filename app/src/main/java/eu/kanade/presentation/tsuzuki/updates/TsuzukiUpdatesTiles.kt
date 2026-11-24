@@ -42,6 +42,7 @@ fun TsuzukiUpdatesTiles(
     toSave: Int,
     onSaveAll: () -> Unit,
     modifier: Modifier = Modifier,
+    unit: String? = null,
 ) {
     val t = TsuzukiTheme.tokens
     val shape = RoundedCornerShape(18.dp)
@@ -80,7 +81,7 @@ fun TsuzukiUpdatesTiles(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    up(stringResource(MR.strings.tsz_ch)),
+                    up(unit ?: stringResource(MR.strings.tsz_ch)),
                     modifier = Modifier.align(Alignment.Bottom).padding(bottom = 3.dp),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

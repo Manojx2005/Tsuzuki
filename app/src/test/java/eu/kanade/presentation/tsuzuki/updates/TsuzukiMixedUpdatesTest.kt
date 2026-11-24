@@ -3,6 +3,7 @@ package eu.kanade.presentation.tsuzuki.updates
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeUpdateEpisode
+import eu.kanade.tachiyomi.ui.updates.UpdatesFilter
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -116,9 +117,34 @@ class TsuzukiMixedUpdatesTest {
     }
 
     @Test
-    fun `save all skips episodes already in the download queue`() {
-        val episodes = listOf(episode(1, 10), episode(2, 20), episode(3, 30), episode(3, 30))
+    fun `save all skips watched episodes and episodes already in the download queue`() {
+        val episodes = listOf(
+            episode(1, 10),
+            episode(2, 20),
+            episode(3, 30),
+            episode(3, 30),
+            episode(4, 40).copy(seen = true),
+        )
         assertEquals(listOf(1L, 3L), episodesToSave(episodes, inQueue = setOf(2L)).map { it.episodeId })
         assertEquals(emptyList<Long>(), episodesToSave(episodes, inQueue = setOf(1L, 2L, 3L)).map { it.episodeId })
+    }
+
+    @Test
+    fun `all counts only unwatched episodes as new`() {
+        fun counts(episodes: List<AnimeUpdateEpisode>, filter: UpdatesFilter): Pair<Int, Int> {
+            val anime = AnimeUpdatesSlots(
+                mediaPills = null,
+                airingStrip = null,
+                screen = null,
+                newEpisodes = episodes,
+                episodesToSave = episodesToSave(episodes, inQueue = setOf(2L)),
+            )
+            return updatesTileCounts(unread = 3, chaptersToSave = 2, anime = anime, filter = filter)
+        }
+
+        val episodes = listOf(episode(1, 10), episode(2, 20), episode(3, 30).copy(seen = true))
+        assertEquals(5 to 3, counts(episodes, UpdatesFilter.ALL))
+        assertEquals(4 to 2, counts(listOf(episodes[0].copy(seen = true)) + episodes.drop(1), UpdatesFilter.ALL))
+        assertEquals(3 to 2, counts(episodes, UpdatesFilter.NOVELS))
     }
 }
