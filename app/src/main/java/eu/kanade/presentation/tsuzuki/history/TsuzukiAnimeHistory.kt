@@ -162,6 +162,10 @@ internal fun TsuzukiAnimeHistory(rows: List<AnimeHistoryDisplay>, searchQuery: S
         EmptyScreen(stringRes = MR.strings.no_results_found)
     } else {
         FastScrollLazyColumn {
+            // Above the list, as the book History tiles are.
+            item(key = "anime-history-stats") {
+                TsuzukiAnimeHistoryStatsTiles(rows)
+            }
             for ((day, episodes) in groups) {
                 item(key = "anime-history-$day") {
                     TsuzukiSectionLabel(relativeDateText(day))

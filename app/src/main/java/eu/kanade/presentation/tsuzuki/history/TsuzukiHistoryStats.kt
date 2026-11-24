@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,13 +26,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
+import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.tsuzuki.ReadingDays
+import tachiyomi.domain.history.anime.model.AnimeHistoryDisplay
+import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.time.LocalDate
 import java.util.Calendar
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 /** What the History board's stat tiles show, from the history table. */
 internal data class HistoryStats(val todayMinutes: Int, val chaptersToday: Int)
@@ -62,17 +69,12 @@ fun TsuzukiHistoryStatsTiles(modifier: Modifier = Modifier) {
     val history by remember { Injekt.get<GetHistory>().subscribe(query = "", limit = 500) }
         .collectAsState(initial = emptyList())
     val stats = remember(history) { historyStats(history, startOfToday()) }
-    val readingDays = remember { Injekt.get<eu.kanade.tachiyomi.tsuzuki.ReadingDays>() }
+    val readingDays = remember { Injekt.get<ReadingDays>() }
     val daysRaw by remember { readingDays.changes() }.collectAsState(initial = "")
     val streak = remember(daysRaw) {
-        eu.kanade.tachiyomi.tsuzuki.ReadingDays.streak(readingDays.days(), java.time.LocalDate.now())
+        ReadingDays.streak(readingDays.days(), LocalDate.now())
     }
-    FlowRow(
-        modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-        maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 3,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    StatTilesRow(modifier) {
         StatTile(
             stringResource(MR.strings.tsz_today),
             stats.todayMinutes,
@@ -92,6 +94,65 @@ fun TsuzukiHistoryStatsTiles(modifier: Modifier = Modifier) {
             Modifier.weight(1f),
         )
     }
+}
+
+/** Anime pill (AP9): today's watch time and episodes, and the watch streak (a day counts from one minute watched). */
+internal data class AnimeHistoryStats(val todayMinutes: Int, val episodesToday: Int, val streak: Int)
+
+/** [watchSeconds] is seconds watched per day (the watch-days table); [rows] are the anime History rows. */
+internal fun animeHistoryStats(
+    rows: List<AnimeHistoryDisplay>,
+    watchSeconds: Map<LocalDate, Long>,
+    today: LocalDate,
+    startOfToday: Long,
+): AnimeHistoryStats = AnimeHistoryStats(
+    todayMinutes = ((watchSeconds[today] ?: 0L) / 60L).toInt(),
+    episodesToday = rows.filter { it.lastSeen.time >= startOfToday }.distinctBy { it.episodeId }.size,
+    streak = ReadingDays.streak(watchSeconds.mapValues { it.value * 1_000L }, today),
+)
+
+/** Days of watch time read for the streak; a longer run shows as this many days. */
+private const val ANIME_STREAK_WINDOW_DAYS = 366L
+
+/** The book History tiles for the Anime pill: Today, Episodes and Streak, from watch time and anime history. */
+@Composable
+internal fun TsuzukiAnimeHistoryStatsTiles(rows: List<AnimeHistoryDisplay>, modifier: Modifier = Modifier) {
+    val today = remember { LocalDate.now() }
+    val watchDays by remember(today) {
+        Injekt.get<AnimeHistoryRepository>().subscribeWatchDays(today.minusDays(ANIME_STREAK_WINDOW_DAYS), today)
+    }.collectAsState(initial = emptyMap())
+    val stats = remember(rows, watchDays, today) { animeHistoryStats(rows, watchDays, today, startOfToday()) }
+    StatTilesRow(modifier) {
+        StatTile(
+            stringResource(MR.strings.tsz_today),
+            stats.todayMinutes,
+            stringResource(MR.strings.tsz_min),
+            Modifier.weight(1f),
+        )
+        StatTile(
+            androidStringResource(R.string.tsz_anime_player_episodes),
+            stats.episodesToday,
+            androidStringResource(R.string.tsz_anime_ep),
+            Modifier.weight(1f),
+        )
+        StatTile(
+            stringResource(MR.strings.tsz_streak),
+            stats.streak,
+            stringResource(MR.strings.tsz_days),
+            Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun StatTilesRow(modifier: Modifier, content: @Composable FlowRowScope.() -> Unit) {
+    FlowRow(
+        modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 3,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        content = content,
+    )
 }
 
 @Composable
