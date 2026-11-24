@@ -31,6 +31,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
     A tall Continue Watching widget also shows this week's and this month's watch time.
   - Downloads: the anime queue can pause or resume everything, retry or clear failed episodes and move an episode
     to the top or bottom. A new setting deletes anime episodes after you watch them (off by default).
+  - Anime details use the book details layout: the same header, action tiles and description with genre pills and
+    notes, and on tablets the same two-pane split. Episode lists can select a range with a second long-press, sort
+    by source order, show episode numbers only, and mark every episode before the last one you watched.
+  - History shows Today, Episodes and Streak tiles for anime. On tablets, Updates previews the tapped episode next
+    to the list, and in Updates › All episodes can be selected together with chapters.
 - Anime is easier to find: Home always shows Read and Watch, and Settings, More and the first-run setup can turn
   anime on. Links from Aniyomi and Animetail that add an extension repository open in Tsuzuki.
 - Novels: look up words offline in English and Japanese right away (the dictionaries are now built in), or import
@@ -42,6 +47,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Settings > Data and storage counts anime and episodes and includes downloaded episodes in the storage total.
 - The anime download notification shows real progress, which episode of how many, Pause, Cancel and Retry, and
   says when it is waiting for Wi-Fi.
+- Removing anime from the Library asks first, as for books, and can also delete their downloaded episodes.
+- Anime catalogues and details open and close with the same fade and cover movement as book screens.
+
+### Fixed
+- Anime details no longer close when the screen rotates or after returning from the player in landscape.
+- Downloaded episodes are kept while you are still watching them, even with "delete after watching" on.
 
 ## [0.2.1]
 
