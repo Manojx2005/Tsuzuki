@@ -1063,6 +1063,10 @@
     <string name="tsz_follow_book_sub">颜色随阅读的书籍变化</string>
     <string name="tsz_chapter_filter_mark_previous">将此前章节标为已读（%1$d）</string>
     <string name="tsz_streak">连续阅读</string>
+    <string name="tsz_action_list_view">列表视图</string>
+    <string name="tsz_action_last_only">仅最新</string>
+    <string name="tsz_action_group_by_book">按作品分组</string>
+    <string name="tsz_custom_sources">自定义来源</string>
     <string name="tsz_days">天</string>
     <string name="tsz_stats_title">统计与目标</string>
     <string name="tsz_stats_today_goal">今日目标</string>

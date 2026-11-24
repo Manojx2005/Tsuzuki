@@ -1427,6 +1427,10 @@
     <string name="tsz_follow_book_sub">Colours change with what you read</string>
     <string name="tsz_chapter_filter_mark_previous">Mark previous read (%1$d)</string>
     <string name="tsz_streak">Streak</string>
+    <string name="tsz_action_list_view">List view</string>
+    <string name="tsz_action_last_only">Last only</string>
+    <string name="tsz_action_group_by_book">Group by book</string>
+    <string name="tsz_custom_sources">Custom sources</string>
     <string name="tsz_days">days</string>
     <string name="tsz_stats_title">Stats &amp; goals</string>
     <string name="tsz_stats_today_goal">Today\'s goal</string>

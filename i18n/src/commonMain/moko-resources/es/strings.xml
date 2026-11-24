@@ -1050,6 +1050,10 @@
     <string name="tsz_follow_book_sub">Los colores cambian con lo que lees</string>
     <string name="tsz_chapter_filter_mark_previous">Marcar anteriores como leídos (%1$d)</string>
     <string name="tsz_streak">Racha</string>
+    <string name="tsz_action_list_view">Vista de lista</string>
+    <string name="tsz_action_last_only">Solo el último</string>
+    <string name="tsz_action_group_by_book">Agrupar por obra</string>
+    <string name="tsz_custom_sources">Fuentes personalizadas</string>
     <string name="tsz_days">días</string>
     <string name="tsz_stats_title">Estadísticas y objetivos</string>
     <string name="tsz_stats_today_goal">Objetivo de hoy</string>

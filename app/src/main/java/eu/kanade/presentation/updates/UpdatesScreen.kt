@@ -402,7 +402,9 @@ private fun UpdatesAppBar(
                         onClick = onFilterClicked,
                     ),
                     AppBar.Action(
-                        title = if (groupByNovel) "List View" else "Group by Novel",
+                        title = stringResource(
+                            if (groupByNovel) MR.strings.tsz_action_list_view else MR.strings.tsz_action_group_by_book,
+                        ),
                         icon = if (groupByNovel) Icons.Outlined.ViewList else Icons.Outlined.GridView,
                         onClick = onToggleGroupByNovel,
                     ),
