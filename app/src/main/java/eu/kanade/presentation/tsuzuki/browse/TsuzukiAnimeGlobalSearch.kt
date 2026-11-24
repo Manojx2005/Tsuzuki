@@ -107,14 +107,18 @@ internal class AnimeGlobalSearch {
     }
 
     companion object {
-        @Volatile private var animeFirst = false
+        @Volatile private var animeFirst: String? = null
 
-        /** The next global search opens on the Anime pill (Browse › Anime toolbar, AP10). */
-        fun openAnimeFirst() {
-            animeFirst = true
+        /**
+         * The next global search opens on the Anime pill (Browse › Anime toolbar, AP10) and, from anime details
+         * (title, author or genre tap), searches [query] there at once.
+         */
+        fun openAnimeFirst(query: String = "") {
+            animeFirst = query
         }
 
-        internal fun consumeAnimeFirst(): Boolean = animeFirst.also { animeFirst = false }
+        /** The query the next global search should run on the Anime pill, or null when none was requested. */
+        internal fun consumeAnimeFirst(): String? = animeFirst.also { animeFirst = null }
     }
 
     suspend fun search(sources: List<RegisteredAnimeSource>, submitted: String) = coroutineScope {
@@ -159,7 +163,7 @@ internal fun rememberAnimeGlobalSearch(allowed: Boolean): AnimeGlobalSearch? {
     val available by rememberAnimeBrowseSources()
     val (_, pins) = rememberAnimeSourcePins()
     val model = remember {
-        AnimeGlobalSearch().also { if (AnimeGlobalSearch.consumeAnimeFirst()) it.select(true, null) }
+        AnimeGlobalSearch().also { model -> AnimeGlobalSearch.consumeAnimeFirst()?.let { model.select(true, it) } }
     }
     val selected = model.selected
     val submitted = model.query
