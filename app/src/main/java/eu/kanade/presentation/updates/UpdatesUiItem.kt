@@ -85,6 +85,7 @@ internal fun LazyListScope.updatesUiItems(
     onClickCover: (UpdatesItem) -> Unit,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
+    animeSelection: eu.kanade.presentation.tsuzuki.updates.AnimeAllSelection? = null,
 ) {
     items(
         items = uiModels,
@@ -122,6 +123,7 @@ internal fun LazyListScope.updatesUiItems(
             is UpdatesUiModel.Anime -> eu.kanade.presentation.tsuzuki.updates.TsuzukiAnimeUpdateEntry(
                 item.item,
                 Modifier.animateItem(),
+                animeSelection,
             )
             is UpdatesUiModel.Item -> {
                 val updatesItem = item.item

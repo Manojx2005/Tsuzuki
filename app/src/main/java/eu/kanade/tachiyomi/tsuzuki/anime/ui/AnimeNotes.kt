@@ -1,11 +1,8 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -15,11 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
-import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
-import eu.kanade.presentation.theme.tsuzuki.tsuzukiClickable
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -60,23 +53,4 @@ internal fun AnimeNotesDialog(
             TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(MR.strings.action_cancel)) }
         },
     )
-}
-
-/** The saved notes under the details header, as book details show theirs. */
-@Composable
-internal fun AnimeNotesTile(notes: String, onClick: () -> Unit) {
-    val tokens = TsuzukiTheme.tokens
-    TsuzukiTile(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).tsuzukiClickable(role = Role.Button, onClick = onClick),
-        padding = 14.dp,
-    ) {
-        Column {
-            Text(
-                tsuzukiMenuLabel(stringResource(MR.strings.action_edit_notes)),
-                color = tokens.mutedText,
-                style = MaterialTheme.typography.labelMedium,
-            )
-            Text(notes, color = tokens.dotOn, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
 }

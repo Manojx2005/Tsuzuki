@@ -285,9 +285,16 @@ internal fun TsuzukiAnimeUpdateGroupEntry(group: AnimeUpdateGroup, modifier: Mod
     }
 }
 
-/** One new episode in Updates › All, drawn like a book update row; tapping plays it. */
+/**
+ * One new episode in Updates › All, drawn like a book update row; tapping plays it. With [selection]
+ * (AP9-ALL-SELECT) a long press selects it next to books, and taps toggle while anything is selected.
+ */
 @Composable
-internal fun TsuzukiAnimeUpdateEntry(entry: AnimeUpdateEpisode, modifier: Modifier = Modifier) {
+internal fun TsuzukiAnimeUpdateEntry(
+    entry: AnimeUpdateEpisode,
+    modifier: Modifier = Modifier,
+    selection: AnimeAllSelection? = null,
+) {
     val context = LocalContext.current
     val downloads = remember { Injekt.get<AnimeDownloads>() }
     val queue by downloads.state.collectAsState()
@@ -295,17 +302,20 @@ internal fun TsuzukiAnimeUpdateEntry(entry: AnimeUpdateEpisode, modifier: Modifi
     val scope = rememberCoroutineScope()
     AnimeUpdateTile(
         entry = entry,
-        selected = false,
+        selected = selection?.isSelected(entry) == true,
         downloadStatus = status,
-        onClick = { playAnimeEpisode(context, entry) },
-        onLongClick = null,
+        onClick = {
+            if (selection?.selecting == true) selection.toggle(entry) else playAnimeEpisode(context, entry)
+        },
+        onLongClick = selection?.let { { it.toggle(entry) } },
         onDownload = {
             if (status == AnimeDownloadStatus.Failed) {
                 downloads.retry(entry.episodeId)
             } else {
                 scope.launchIO { queueAnimeUpdates(Injekt.get(), downloads, listOf(entry)) }
             }
-        },
+            Unit
+        }.takeUnless { selection?.selecting == true },
         modifier = modifier,
     )
 }

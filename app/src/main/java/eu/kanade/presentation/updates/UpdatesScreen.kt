@@ -84,8 +84,12 @@ internal fun UpdateScreen(
     onLoadMore: () -> Unit = {},
     anime: eu.kanade.presentation.tsuzuki.updates.AnimeUpdatesSlots? = null,
 ) {
-    BackHandler(enabled = state.selectionMode) {
+    // Tsuzuki (AP9-ALL-SELECT): new-episode rows in All join the selection.
+    val allAnime = anime?.allSelection
+    val selectionMode = eu.kanade.presentation.tsuzuki.updates.updatesSelecting(state.selectionMode, anime)
+    BackHandler(enabled = selectionMode) {
         onSelectAll(false)
+        allAnime?.clear()
     }
 
     val tsuzuki = eu.kanade.presentation.tsuzuki.settings.isTsuzukiStyle()
@@ -103,14 +107,38 @@ internal fun UpdateScreen(
                 groupByNovel = state.groupByNovel,
                 onFilterClicked = { onFilterClicked() },
                 hasFilters = hasActiveFilters,
-                actionModeCounter = state.selected.size,
-                onSelectAll = { onSelectAll(true) },
-                onInvertSelection = { onInvertSelection() },
-                onCancelActionMode = { onSelectAll(false) },
+                actionModeCounter = eu.kanade.presentation.tsuzuki.updates.updatesSelectedCount(
+                    state.selected.size,
+                    anime,
+                ),
+                onSelectAll = {
+                    onSelectAll(true)
+                    allAnime?.selectAll()
+                },
+                onInvertSelection = {
+                    onInvertSelection()
+                    allAnime?.invert()
+                },
+                onCancelActionMode = {
+                    onSelectAll(false)
+                    allAnime?.clear()
+                },
                 scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
+            if (allAnime != null) {
+                return@Scaffold eu.kanade.presentation.tsuzuki.updates.TsuzukiMixedUpdatesBottomBar(
+                    books = state.selected,
+                    anime = allAnime,
+                    snackbar = snackbarHostState,
+                    onClearBooks = { onSelectAll(false) },
+                    onDownloadChapter = onDownloadChapter,
+                    onMultiBookmarkClicked = onMultiBookmarkClicked,
+                    onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+                    onMultiDeleteClicked = onMultiDeleteClicked,
+                )
+            }
             UpdatesBottomBar(
                 selected = state.selected,
                 onDownloadChapter = onDownloadChapter,
@@ -164,7 +192,7 @@ internal fun UpdateScreen(
                             isRefreshing = false
                         }
                     },
-                    enabled = !state.selectionMode,
+                    enabled = !selectionMode,
                     indicatorPadding = contentPadding,
                 ) {
                     val lazyListState = rememberLazyListState()
@@ -330,11 +358,12 @@ internal fun UpdateScreen(
                                     anime,
                                     state.filter,
                                 ),
-                                selectionMode = state.selectionMode,
+                                selectionMode = selectionMode,
                                 onUpdateSelected = onUpdateSelected,
                                 onClickCover = onClickCover,
                                 onClickUpdate = onOpenChapter,
                                 onDownloadChapter = onDownloadChapter,
+                                animeSelection = allAnime,
                             )
                         }
                     }

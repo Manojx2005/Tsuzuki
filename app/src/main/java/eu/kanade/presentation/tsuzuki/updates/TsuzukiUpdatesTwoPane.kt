@@ -117,6 +117,7 @@ internal fun TsuzukiUpdatesTwoPane(
     anime: AnimeUpdatesSlots? = null,
 ) {
     val t = TsuzukiTheme.tokens
+    val selecting = updatesSelecting(state.selectionMode, anime)
     var pendingSave by remember { mutableStateOf<List<UpdatesItem>?>(null) }
     val groups = remember(state.items, state.groupByNovel) {
         if (state.groupByNovel) state.getNovelGroups() else emptyList()
@@ -272,7 +273,7 @@ internal fun TsuzukiUpdatesTwoPane(
                             text = relativeDateText(model.date),
                             contentPadding = PaddingValues(start = 4.dp, end = 4.dp, top = 14.dp, bottom = 6.dp),
                         )
-                        is UpdatesUiModel.Anime -> TsuzukiAnimeUpdateEntry(model.item)
+                        is UpdatesUiModel.Anime -> TsuzukiAnimeUpdateEntry(model.item, selection = anime?.allSelection)
                         is UpdatesUiModel.Item -> {
                             val item = model.item
                             UpdateRow(
@@ -281,11 +282,11 @@ internal fun TsuzukiUpdatesTwoPane(
                                 cover = item.update.coverData,
                                 read = item.update.read,
                                 saved = item.downloadStateProvider() == Download.State.DOWNLOADED,
-                                highlighted = !state.selectionMode &&
+                                highlighted = !selecting &&
                                     item.update.chapterId == selectedItem?.update?.chapterId,
                                 selectedForAction = item.selected,
                                 onClick = {
-                                    if (state.selectionMode) {
+                                    if (selecting) {
                                         onUpdateSelected(item, !item.selected, false)
                                     } else {
                                         onSelectKey(item.update.chapterId)
