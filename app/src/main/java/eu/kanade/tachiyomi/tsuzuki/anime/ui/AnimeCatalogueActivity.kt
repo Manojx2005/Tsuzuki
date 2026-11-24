@@ -549,6 +549,7 @@ private fun AnimeCatalogueNotice(
         } else {
             LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item { AnimeDetailsHeader(source = null, anime = cached) }
+                item { AnimeDetailsDescription(cached, notes = "", defaultExpanded = true, onEditNotes = {}) }
                 item { AnimeCatalogueStatus(message) }
             }
         }

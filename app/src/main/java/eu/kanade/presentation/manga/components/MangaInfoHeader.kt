@@ -751,7 +751,7 @@ private fun descriptionAnnotator(loadImages: Boolean, linkStyle: SpanStyle) = re
 }
 
 @Composable
-private fun MangaSummary(
+internal fun MangaSummary(
     description: String,
     notes: String,
     expanded: Boolean,
@@ -858,7 +858,7 @@ private fun TagsChip(
 }
 
 @Composable
-private fun RowScope.MangaActionButton(
+internal fun RowScope.MangaActionButton(
     title: String,
     icon: ImageVector,
     color: Color,

@@ -6,7 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -66,6 +66,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
 import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -80,11 +81,13 @@ import eu.kanade.tachiyomi.tsuzuki.anime.episodesBeforeLastWatched
 import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
+import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
@@ -165,6 +168,11 @@ internal fun AnimeDetailsScreen(
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf(false) }
     var showTracking by remember { mutableStateOf(false) }
+    // The book action row's tracker count ("2 trackers", accent) on the Tracking tile.
+    val tracking = remember { Injekt.get<AnimeTracking>() }
+    val trackingCount by remember(saved?.id) {
+        saved?.let { tracking.observe(it.id).map { tracks -> tracks.size } } ?: flowOf(0)
+    }.collectAsState(0)
     var showFilter by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var externalUrl by remember(display.url) { mutableStateOf<String?>(null) }
@@ -377,72 +385,85 @@ internal fun AnimeDetailsScreen(
             indicatorPadding = padding,
         ) {
             fun LazyListScope.overview(expanded: Boolean) {
+                // AP7: one item laid out like the book header (MangaScreen): info, action row, resume tile, then the
+                // description with notes and genres, so the gaps between them are the book's, not the list spacing.
                 item(key = "anime-overview") {
-                    AnimeDetailsHeader(
-                        entry.source,
-                        display,
-                        coverWidth = if (expanded) 156.dp else 104.dp,
-                        onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
-                        sharedCoverKey = sharedCoverKey,
-                    )
-                }
-                if (notes.isNotBlank()) {
-                    item(key = "anime-notes") { AnimeNotesTile(notes) { editingNotes = true } }
-                }
-                if (seasonChoices.isNotEmpty()) {
-                    item(key = "anime-seasons") {
-                        val format = NumberFormat.getNumberInstance().apply { isGroupingUsed = false }
-                        TsuzukiPillRow(
-                            labels = seasonChoices.map { season ->
-                                season.seasonNumber.takeIf { it.isFinite() && it >= 0 }?.let {
-                                    androidStringResource(R.string.tsz_anime_season_short, format.format(it))
-                                } ?: season.title
-                            },
-                            selected = seasonChoices.indexOfFirst { it.id == saved?.id },
-                            onClick = { index ->
-                                val season = seasonChoices[index]
-                                if (season.id != saved?.id) openDetails(season.id)
-                            },
+                    Column {
+                        AnimeDetailsHeader(
+                            entry.source,
+                            display,
+                            isTabletUi = expanded,
+                            onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
+                            sharedCoverKey = sharedCoverKey,
                         )
-                    }
-                }
-                item(key = "anime-actions") {
-                    val eligible = filtered.filter { episode ->
-                        val status = downloadStatuses[episode.id]
-                        status == null || status == AnimeDownloadStatus.Failed
-                    }
-                    AnimeLibraryActions(
-                        nextAiringDays = nextAiringDays(episodeState.items, System.currentTimeMillis()),
-                        favorite = saved?.favorite == true,
-                        enabled = !saving && selected.isEmpty(),
-                        onFavorite = {
-                            if (saved?.favorite == true) {
-                                mutate { model.setFavorite(false, emptySet()) }
-                            } else {
-                                mutate {
-                                    val id = saved?.id ?: library.cacheSearchResult(entry.source.id, display)
-                                    val adding = checkNotNull(library.getAnime(id))
-                                    val existing = library.findDuplicate(adding)
-                                    if (existing == null) {
-                                        shelfSelection = library.shelfIds(id)
-                                    } else {
-                                        duplicate = AnimeDuplicateMatch(existing, adding)
+                        if (seasonChoices.isNotEmpty()) {
+                            val format = NumberFormat.getNumberInstance().apply { isGroupingUsed = false }
+                            TsuzukiPillRow(
+                                labels = seasonChoices.map { season ->
+                                    season.seasonNumber.takeIf { it.isFinite() && it >= 0 }?.let {
+                                        androidStringResource(R.string.tsz_anime_season_short, format.format(it))
+                                    } ?: season.title
+                                },
+                                selected = seasonChoices.indexOfFirst { it.id == saved?.id },
+                                onClick = { index ->
+                                    val season = seasonChoices[index]
+                                    if (season.id != saved?.id) openDetails(season.id)
+                                },
+                            )
+                        }
+                        val eligible = filtered.filter { episode ->
+                            val status = downloadStatuses[episode.id]
+                            status == null || status == AnimeDownloadStatus.Failed
+                        }
+                        AnimeLibraryActions(
+                            trackingCount = trackingCount,
+                            nextAiringDays = nextAiringDays(episodeState.items, System.currentTimeMillis()),
+                            favorite = saved?.favorite == true,
+                            enabled = !saving && selected.isEmpty(),
+                            onFavorite = {
+                                if (saved?.favorite == true) {
+                                    mutate { model.setFavorite(false, emptySet()) }
+                                } else {
+                                    mutate {
+                                        val id = saved?.id ?: library.cacheSearchResult(entry.source.id, display)
+                                        val adding = checkNotNull(library.getAnime(id))
+                                        val existing = library.findDuplicate(adding)
+                                        if (existing == null) {
+                                            shelfSelection = library.shelfIds(id)
+                                        } else {
+                                            duplicate = AnimeDuplicateMatch(existing, adding)
+                                        }
                                     }
                                 }
+                            },
+                            onTrack = if (saved != null) ({ showTracking = true }) else null,
+                            onSave = if (eligible.isNotEmpty()) {
+                                {
+                                    selection = eligible.map(Episode::id).toLongArray()
+                                }
+                            } else {
+                                null
+                            },
+                            onExternal = externalUrl?.let { url ->
+                                {
+                                    context.startActivity(
+                                        WebViewActivity.newIntent(context, url, title = display.title),
+                                    )
+                                }
+                            },
+                        )
+                        episodeState.resume?.let { next ->
+                            Box(Modifier.padding(vertical = 8.dp)) {
+                                AnimeResumeTile(next, selected.isEmpty()) { play(next) }
                             }
-                        },
-                        onTrack = if (saved != null) ({ showTracking = true }) else null,
-                        onSave = if (eligible.isNotEmpty()) {
-                            {
-                                selection = eligible.map(Episode::id).toLongArray()
-                            }
-                        } else {
-                            null
-                        },
-                        onExternal = externalUrl?.let { url ->
-                            { context.startActivity(WebViewActivity.newIntent(context, url, title = display.title)) }
-                        },
-                    )
+                        }
+                        AnimeDetailsDescription(
+                            anime = display,
+                            notes = notes,
+                            defaultExpanded = expanded,
+                            onEditNotes = { if (saved != null) editingNotes = true },
+                        )
+                    }
                 }
                 if (details.refreshFailed || saveError) {
                     item(key = "anime-detail-error") {
@@ -452,9 +473,6 @@ internal fun AnimeDetailsScreen(
             }
 
             fun LazyListScope.episodes() {
-                episodeState.resume?.let { next ->
-                    item { AnimeResumeTile(next, selected.isEmpty()) { play(next) } }
-                }
                 if (episodeState.items.isNotEmpty() || episodeState.groups.isNotEmpty()) {
                     item {
                         Row(
@@ -523,15 +541,17 @@ internal fun AnimeDetailsScreen(
                 }
             }
 
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                if (maxWidth >= 840.dp) {
+            // AP7: the same tablet switch as book details (MangaScreen's isTabletUi), so both use two panes alike.
+            Box(Modifier.fillMaxSize()) {
+                if (isTabletUi()) {
                     Row(
                         Modifier.fillMaxSize().padding(padding).padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         LazyColumn(
                             modifier = Modifier.weight(0.43f).fillMaxHeight(),
-                            contentPadding = PaddingValues(vertical = 12.dp),
+                            // The header brings its own 16dp top gap, as in the book pane.
+                            contentPadding = PaddingValues(bottom = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             overview(expanded = true)
@@ -664,8 +684,20 @@ internal fun AnimeShelfPicker(
 }
 
 @Composable
-internal fun AnimeCover(source: AnimeSource?, anime: SAnime, modifier: Modifier = Modifier) {
-    MangaCover.Book(rememberAnimeImage(source, anime.thumbnail_url), modifier = modifier, generatedTitle = anime.title)
+internal fun AnimeCover(
+    source: AnimeSource?,
+    anime: SAnime,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    contentDescription: String = "",
+) {
+    MangaCover.Book(
+        rememberAnimeImage(source, anime.thumbnail_url),
+        modifier = modifier,
+        contentDescription = contentDescription,
+        onClick = onClick,
+        generatedTitle = anime.title,
+    )
 }
 
 @Composable
