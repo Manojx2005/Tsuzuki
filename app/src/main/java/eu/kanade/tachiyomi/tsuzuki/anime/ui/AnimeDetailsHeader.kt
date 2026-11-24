@@ -89,6 +89,8 @@ internal fun AnimeDetailsHeader(
     appBarPadding: Dp = 0.dp,
     onCoverClick: (() -> Unit)? = null,
     sharedCoverKey: String? = null,
+    /** Tapping the title or author searches it, as in book details; null where there is no navigator. */
+    onSearch: ((String) -> Unit)? = null,
 ) {
     Box {
         // Backdrop, as MangaInfoBox draws it.
@@ -119,7 +121,7 @@ internal fun AnimeDetailsHeader(
                 ) {
                     AnimeCover(source, anime, Modifier.fillMaxWidth(0.65f).then(cover), onCoverClick, coverLabel)
                     Spacer(modifier = Modifier.height(16.dp))
-                    AnimeContentInfo(anime, source?.name, TextAlign.Center)
+                    AnimeContentInfo(anime, source?.name, TextAlign.Center, onSearch)
                 }
             } else {
                 Row(
@@ -137,7 +139,7 @@ internal fun AnimeDetailsHeader(
                         coverLabel,
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        AnimeContentInfo(anime, source?.name, null)
+                        AnimeContentInfo(anime, source?.name, null, onSearch)
                     }
                 }
             }
@@ -147,7 +149,12 @@ internal fun AnimeDetailsHeader(
 
 /** MangaContentInfo for an anime: no alternative titles or shelves row, and no tap-to-search yet. */
 @Composable
-private fun ColumnScope.AnimeContentInfo(anime: SAnime, sourceName: String?, textAlign: TextAlign?) {
+private fun ColumnScope.AnimeContentInfo(
+    anime: SAnime,
+    sourceName: String?,
+    textAlign: TextAlign?,
+    onSearch: ((String) -> Unit)?,
+) {
     val context = LocalContext.current
     val tokens = TsuzukiTheme.tokens
     val title = anime.title
@@ -161,7 +168,7 @@ private fun ColumnScope.AnimeContentInfo(anime: SAnime, sourceName: String?, tex
         },
         modifier = Modifier.clickableNoIndication(
             onLongClick = { if (title.isNotBlank()) context.copyToClipboard(title, title) },
-            onClick = {},
+            onClick = { if (title.isNotBlank()) onSearch?.invoke(title) },
         ),
         textAlign = textAlign,
     )
@@ -183,7 +190,7 @@ private fun ColumnScope.AnimeContentInfo(anime: SAnime, sourceName: String?, tex
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.clickableNoIndication(
                 onLongClick = { if (!author.isNullOrBlank()) context.copyToClipboard(author, author) },
-                onClick = {},
+                onClick = { if (!author.isNullOrBlank()) onSearch?.invoke(author) },
             ),
             textAlign = textAlign,
         )
@@ -345,7 +352,7 @@ internal fun AnimeLibraryActions(
 
 /**
  * The book's description block (ExpandableMangaDescription in the Tsuzuki themes): summary with notes, the expand
- * arrow and two rows of genre pills. Genres copy to the clipboard; there is no anime tag search yet.
+ * arrow and two rows of genre pills. Genres copy to the clipboard and, with [onTagSearch], search the genre.
  */
 @Composable
 internal fun AnimeDetailsDescription(
@@ -353,6 +360,7 @@ internal fun AnimeDetailsDescription(
     notes: String,
     defaultExpanded: Boolean,
     onEditNotes: () -> Unit,
+    onTagSearch: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
@@ -364,7 +372,7 @@ internal fun AnimeDetailsDescription(
         defaultExpanded = defaultExpanded,
         hasSummary = !description.isNullOrBlank() || notes.isNotBlank(),
         tags = tags,
-        onTagSearch = null,
+        onTagSearch = onTagSearch,
         onCopyTag = { context.copyToClipboard(it, it) },
     ) { expanded ->
         MangaSummary(

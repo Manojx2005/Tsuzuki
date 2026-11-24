@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.ImageRequest
@@ -68,6 +69,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiBackground
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
+import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearch
 import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
@@ -85,6 +87,8 @@ import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.NovelGlobalSearchScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.CancellationException
@@ -121,6 +125,16 @@ internal fun AnimeDetailsScreen(
     val tokens = TsuzukiTheme.tokens
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    // AP7: title, author and genre taps search them on the Anime pill of global search, as book details do. Only
+    // where details sit in the main navigator (AnimeDetailsRoute); the catalogue Activity has none.
+    val navigator = LocalNavigator.current
+    val searchAnime: ((String) -> Unit)? = navigator?.let { nav ->
+        { query ->
+            AnimeGlobalSearch.openAnimeFirst(query)
+            val hideManga = Injekt.get<BasePreferences>().hideMangaUi.get()
+            nav.push(if (hideManga) NovelGlobalSearchScreen(query) else GlobalSearchScreen(query))
+        }
+    }
     // Seasons and duplicates open in place when these details are in place (AnimeDetailsRoute), else the Activity.
     val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
     val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
@@ -399,6 +413,7 @@ internal fun AnimeDetailsScreen(
                             isTabletUi = expanded,
                             onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
                             sharedCoverKey = sharedCoverKey,
+                            onSearch = searchAnime,
                         )
                         if (seasonChoices.isNotEmpty()) {
                             val format = NumberFormat.getNumberInstance().apply { isGroupingUsed = false }
@@ -468,6 +483,7 @@ internal fun AnimeDetailsScreen(
                             notes = notes,
                             defaultExpanded = expanded,
                             onEditNotes = { if (saved != null) editingNotes = true },
+                            onTagSearch = searchAnime,
                         )
                     }
                 }

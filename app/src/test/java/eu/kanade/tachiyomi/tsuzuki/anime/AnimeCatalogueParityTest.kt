@@ -5,7 +5,6 @@ import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearch
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.animeCatalogueColumns
 import eu.kanade.tachiyomi.tsuzuki.anime.ui.catalogueMigrationId
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -13,10 +12,11 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 class AnimeCatalogueParityTest {
     @Test
     fun animeFirstGlobalSearchIsUsedOnce() {
-        assertFalse(AnimeGlobalSearch.consumeAnimeFirst())
+        AnimeGlobalSearch.consumeAnimeFirst()
+        assertEquals(null, AnimeGlobalSearch.consumeAnimeFirst())
         AnimeGlobalSearch.openAnimeFirst()
-        assertTrue(AnimeGlobalSearch.consumeAnimeFirst())
-        assertFalse(AnimeGlobalSearch.consumeAnimeFirst())
+        assertEquals("", AnimeGlobalSearch.consumeAnimeFirst())
+        assertEquals(null, AnimeGlobalSearch.consumeAnimeFirst())
     }
 
     @Test
