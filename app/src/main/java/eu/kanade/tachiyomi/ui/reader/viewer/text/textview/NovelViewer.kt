@@ -293,6 +293,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
         }.apply {
             isFillViewport = true
+            // Tsuzuki: the menu's top padding must not clip text into a blank band under the bar (READER-TOP-GAP).
+            clipToPadding = false
             scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
             isScrollbarFadingEnabled = false
             isHorizontalScrollBarEnabled = false
@@ -988,7 +990,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     val targetInScroll = if (feedback != null) {
                         eu.kanade.tachiyomi.tsuzuki.reader.novelHighlightScrollTarget(
                             block.container.top + scrollTarget.top + scrollTarget.totalPaddingTop + targetInChunk,
-                            readerChromeTopPx,
+                            (readerChromeTopPx - scrollViewTopInWindow()).coerceAtLeast(0),
                             (16 * activity.resources.displayMetrics.density).toInt(),
                             scrollView.paddingTop,
                         )
@@ -1888,11 +1890,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         )
         // A scroll target cannot be negative: the first line needs real space below visible chrome.
         // Keep this outside the story blocks so their saved progress coordinates do not change.
-        val top = if (readerChromeTopPx > 0) {
-            readerChromeTopPx + (16 * activity.resources.displayMetrics.density).toInt()
-        } else {
-            0
-        }
+        val top = eu.kanade.tachiyomi.tsuzuki.reader.novelChromeTopPadding(
+            readerChromeTopPx,
+            scrollViewTopInWindow(),
+            (16 * activity.resources.displayMetrics.density).toInt(),
+        )
         if (scrollView.paddingBottom == extra && scrollView.paddingTop == top) return
         val oldMax =
             (contentContainer.height + scrollView.paddingTop + scrollView.paddingBottom - scrollView.height)
@@ -1916,6 +1918,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
         }
     }
+
+    // The menu bar height is measured from the window top; the reader sits below the system inset.
+    private fun scrollViewTopInWindow(): Int = IntArray(2).also(scrollView::getLocationInWindow)[1]
 
     private fun applyTextViewStyles(textView: TextView) {
         val fontSize = preferences.novelFontSize.get()
