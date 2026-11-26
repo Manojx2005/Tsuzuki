@@ -292,7 +292,7 @@ internal fun AnimePlayerContent(
                 },
                 modifier = Modifier.align(Alignment.BottomEnd)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(end = 24.dp, bottom = if (showControls) 124.dp else 40.dp),
+                    .padding(end = 24.dp, bottom = if (showControls) 104.dp else 40.dp),
             )
         }
         if (locked) {
