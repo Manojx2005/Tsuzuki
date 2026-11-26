@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.player
 
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -25,23 +26,58 @@ internal fun rankAnimeVideos(videos: List<Video>, preferred: Int): List<Video> =
     }.thenByDescending { it.preferred }.thenByDescending { it.bitrate ?: 0 },
 )
 
-internal class AnimeStreamQueue(videos: List<Video>, preferred: Int, first: Pair<Video, Video>? = null) {
-    private val candidates = animePlaybackOrder(videos, preferred).let { ordered ->
-        if (first == null) ordered else listOf(first.second) + ordered.filterNot { it === first.first }
-    }.iterator()
+/**
+ * The videos the player tries, in [animePlaybackOrder]. ANIME-FAST-START: with a [loader] the queue also takes the
+ * hosters that answer after playback started: when the known videos are used up it waits for the remaining
+ * hosters ([AnimeHosterLoader.awaitSettled]) and goes on with their videos before giving up. Without one (the user
+ * picked a server) it stays on the videos it was given.
+ */
+internal class AnimeStreamQueue(
+    videos: List<Video>,
+    private val preferred: Int,
+    first: Pair<Video, Video>? = null,
+    private val loader: AnimeHosterLoader? = null,
+) {
+    private val tried = mutableListOf<Video>()
+    private var pending: Video? = first?.second
+    private var known = videos
+
+    init {
+        first?.let { tried += it.first }
+    }
 
     suspend fun next(resolve: suspend (Video) -> Video): Video? {
-        while (candidates.hasNext()) {
+        while (true) {
+            val candidate = take() ?: return null
             try {
-                return resolve(candidates.next())
+                return resolve(candidate)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
                 // The source may offer an expired embed alongside other hosts.
             }
         }
-        return null
     }
+
+    private suspend fun take(): Video? {
+        pending?.let {
+            pending = null
+            return it
+        }
+        loader?.let { known = it.videos() }
+        untried()?.let { return it }
+        val loader = loader ?: return null
+        if (!loader.settled()) {
+            AnimeLog.i("stream fallback: waiting for the hosters still loading")
+            loader.awaitSettled()
+        }
+        known = loader.videos()
+        return untried()
+    }
+
+    private fun untried(): Video? = animePlaybackOrder(known, preferred).firstOrNull { video ->
+        tried.none { it === video }
+    }?.also { tried += it }
 }
 
 internal fun adjacentAnimeEpisodes(episodes: List<Episode>, id: Long): Pair<Episode?, Episode?> {
