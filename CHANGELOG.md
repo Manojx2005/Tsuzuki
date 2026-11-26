@@ -9,6 +9,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Anime details: Edit info changes an anime's title, author, artist, synopsis, status and tags. Your edits stay when
+  the source refreshes, and Reset brings back the source's details.
+- Anime details: tap the title or author, or Search in a genre's menu, to search it on the Anime pill of Global
+  search, as for books.
+- Watch shows a preview card even before you have played anything: "Start watching" for the newest show in your
+  library.
+
+### Changed
+- Anime episodes start much sooner when a source has a slow mirror: playback begins with the first good stream and
+  the slower ones keep loading for the quality list and as a fallback.
+- More of the app is translated: the Library filter sheet, EPUB import, edit entry, mass import, advanced and
+  library settings, source filter presets, quick migrate and tracker sign-in, and the History, Updates and Browse
+  toolbar labels.
+
+### Fixed
+- Opening the reader panel no longer leaves a blank band above the text.
+- Starting or resuming an anime episode no longer shows a stuck frame for a moment.
+
 ## [0.2.2] - 2026-11-24
 
 ### Added
