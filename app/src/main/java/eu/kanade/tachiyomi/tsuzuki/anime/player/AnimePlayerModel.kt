@@ -151,6 +151,9 @@ internal class AnimePlayerModel(
     private var streams: AnimeStreamQueue? = null
     private var hosterLoader: AnimeHosterLoader? = null
     private var hosterChoiceJob: Job? = null
+
+    /** ANIME-FAST-START: the hosters still loading after playback started; cancelled with the episode. */
+    private var hosterJob: Job? = null
     private var fileWatchdog: Job? = null
     private var source: RegisteredAnimeSource? = null
     private var candidates = emptyList<Video>()
@@ -262,7 +265,9 @@ internal class AnimePlayerModel(
                 AnimeLog.i("play after end with unknown duration: loading the stream again from 0")
                 cancelCountdown()
                 tracker.skipNextIncrement()
-                mutableState.update { it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true, revealed = false) }
+                mutableState.update {
+                    it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true, revealed = false)
+                }
                 queueVideo(video)
             }
         }
@@ -336,7 +341,7 @@ internal class AnimePlayerModel(
         if (candidates.isEmpty() || (resolution == quality.get() && resolution == state.value.resolution)) return
         quality.set(resolution)
         saveProgress()
-        streams = AnimeStreamQueue(candidates, resolution)
+        streams = AnimeStreamQueue(candidates, resolution, loader = hosterLoader)
         tryNextStream()
     }
 
@@ -418,6 +423,8 @@ internal class AnimePlayerModel(
         cancelledCountdown = false
         loadingJob?.cancel()
         hosterChoiceJob?.cancel()
+        hosterJob?.cancel()
+        hosterJob = null
         fileWatchdog?.cancel()
         episodeGroupsJob?.cancel()
         waitingForFile = false
@@ -483,6 +490,11 @@ internal class AnimePlayerModel(
                     entry to AnimeHosterLoader(hosters, { AnimeStreamResolver.hosterVideos(entry.source, it) })
                 }
                 val selectedQuality = quality.get()
+                // ANIME-FAST-START: the hosters load in a job of their own, so the ones still loading when
+                // playback starts keep going (quality sheet, fallback) until the episode changes or closes.
+                val hosters = Job(viewModelScope.coroutineContext[Job])
+                hosterJob = hosters
+                loader.start(CoroutineScope(viewModelScope.coroutineContext + hosters + Dispatchers.IO))
                 val first = withContext(Dispatchers.IO) {
                     val resolvePreferred: (suspend (Video) -> Video?)? = if (selectedQuality <= 0) {
                         { candidate ->
@@ -498,11 +510,17 @@ internal class AnimePlayerModel(
                     } else {
                         null
                     }
-                    loader.loadAll(resolvePreferred)
+                    loader.awaitPlayable(selectedQuality, resolvePreferred)
                 }
                 hosterLoader = loader
                 val videos = loader.videos()
-                AnimeLog.i("source returned ${videos.size} video(s) (+${SystemClock.elapsedRealtime() - openedAt} ms)")
+                val answered = loader.states.value.filterNot { it.hoster.lazy }
+                AnimeLog.i(
+                    "source returned ${videos.size} video(s) from " +
+                        "${answered.count { it.state is AnimeHosterState.Ready }}/${answered.size} hoster(s)" +
+                        "${if (loader.settled()) "" else ", the rest still loading"} " +
+                        "(+${SystemClock.elapsedRealtime() - openedAt} ms)",
+                )
                 videos.forEach { AnimeLog.d("candidate ${describeAnimeVideo(it)}") }
                 source = entry
                 candidates = videos
@@ -513,14 +531,35 @@ internal class AnimePlayerModel(
                 }
                 val qualities = candidates.mapNotNull(Video::animeResolution).distinct().sortedDescending()
                 mutableState.update { it.copy(qualities = qualities, hosters = hosterLoader?.states?.value.orEmpty()) }
-                streams = AnimeStreamQueue(candidates, selectedQuality, first)
+                streams = AnimeStreamQueue(candidates, selectedQuality, first, loader)
                 tryNextStream()
+                if (!loader.settled()) followLateHosters(loader, hosters, openedAt)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 AnimeLog.e("Could not open anime episode", e)
                 fail(e)
             }
+        }
+    }
+
+    /** ANIME-FAST-START: hosters that answer after playback started reach the quality sheet and [candidates]. */
+    private fun followLateHosters(loader: AnimeHosterLoader, hosters: Job, openedAt: Long) {
+        val scope = CoroutineScope(viewModelScope.coroutineContext + hosters)
+        scope.launch {
+            loader.states.collect { list ->
+                if (hosterLoader !== loader) return@collect
+                candidates = loader.videos()
+                val qualities = candidates.mapNotNull(Video::animeResolution).distinct().sortedDescending()
+                mutableState.update { it.copy(hosters = list, qualities = qualities) }
+            }
+        }
+        scope.launch {
+            loader.awaitSettled()
+            AnimeLog.i(
+                "all hosters answered: ${loader.videos().size} video(s) " +
+                    "(+${SystemClock.elapsedRealtime() - openedAt} ms)",
+            )
         }
     }
 

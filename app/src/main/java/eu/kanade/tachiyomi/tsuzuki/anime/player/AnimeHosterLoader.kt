@@ -4,7 +4,8 @@ import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,22 @@ internal data class AnimeHosterEntry(val hoster: Hoster, val state: AnimeHosterS
 
 internal const val ANIME_HOSTER_TIMEOUT_MS = 20_000L
 
+/** ANIME-FAST-START: once one hoster has a video that fits the quality, how long the others still get. */
+internal const val ANIME_HOSTER_GRACE_MS = 900L
+
+/** ANIME-FAST-START: with a chosen quality nobody has (yet), how long before the closest one plays. */
+internal const val ANIME_HOSTER_CLOSEST_GRACE_MS = 3_000L
+
+private val AnimeHosterState.isSettled: Boolean
+    get() = this is AnimeHosterState.Ready || this is AnimeHosterState.Error
+
+private fun List<AnimeHosterEntry>.readyVideos(): List<Video> =
+    flatMap { (it.state as? AnimeHosterState.Ready)?.videos.orEmpty() }
+
+/** On Auto ([quality] <= 0) any video with an address fits; otherwise only one of that resolution. */
+internal fun animeVideoMatches(video: Video, quality: Int): Boolean =
+    video.videoUrl.isNotBlank() && (quality <= 0 || video.animeResolution == quality)
+
 /**
  * Loads an episode's hosters the way Aniyomi's `HosterLoader` does: every non-lazy hoster at once, each with its
  * own time limit, so one dead or hanging mirror can't fail or stall the episode; a lazy hoster waits until the
@@ -43,33 +60,76 @@ internal class AnimeHosterLoader(
     private val mutableStates = MutableStateFlow(hosters.map { AnimeHosterEntry(it, AnimeHosterState.Idle) })
     val states: StateFlow<List<AnimeHosterEntry>> = mutableStates.asStateFlow()
 
-    /** On Auto, a successfully resolved preferred video can start before the remaining hosters finish. */
-    suspend fun loadAll(resolvePreferred: (suspend (Video) -> Video?)? = null): Pair<Video, Video>? = coroutineScope {
-        val loading = launch {
+    private var background: Job? = null
+
+    /** Every non-lazy hoster at once, waiting for all of them (downloads). */
+    suspend fun loadAll() = coroutineScope {
+        mutableStates.value.forEachIndexed { index, entry ->
+            if (!entry.hoster.lazy && entry.state == AnimeHosterState.Idle) launch { load(index) }
+        }
+    }
+
+    /**
+     * ANIME-FAST-START: starts every non-lazy hoster in [scope], which the player owns, so the hosters that are
+     * still loading when playback starts keep loading and reach the quality sheet and the stream fallback.
+     */
+    fun start(scope: CoroutineScope) {
+        if (background != null) return
+        background = scope.launch {
             mutableStates.value.forEachIndexed { index, entry ->
                 if (!entry.hoster.lazy && entry.state == AnimeHosterState.Idle) launch { load(index) }
             }
         }
-        if (resolvePreferred == null) {
-            loading.join()
-            return@coroutineScope null
-        }
-        val attempted = mutableSetOf<Video>()
+    }
+
+    /** True once every non-lazy hoster has an answer (videos, an error or a timeout), or loading was stopped. */
+    fun settled(entries: List<AnimeHosterEntry> = mutableStates.value): Boolean =
+        background?.isActive == false || entries.none { !it.hoster.lazy && !it.state.isSettled }
+
+    /** Waits until [settled]; returns at once when loading was cancelled (a cancelled hoster goes back to Idle). */
+    suspend fun awaitSettled() {
+        background?.join()
+    }
+
+    /**
+     * ANIME-FAST-START: waits until playback can start, after [start]. It returns
+     * - at once with the resolved pair when a source-`preferred` video resolves ([resolvePreferred], Auto only),
+     * - when every non-lazy hoster has answered (a single hoster never waits on a grace),
+     * - [graceMs] after the first hoster with a video, once a video satisfies [quality] (Auto: any; a chosen
+     *   quality: that resolution), so a preferred or matching one that is about to arrive can still win,
+     * - [closestGraceMs] after the first hoster with a video, with whatever there is (the closest quality).
+     * The source's own 20 s per-hoster limit stays the worst case.
+     */
+    suspend fun awaitPlayable(
+        quality: Int,
+        resolvePreferred: (suspend (Video) -> Video?)? = null,
+        graceMs: Long = ANIME_HOSTER_GRACE_MS,
+        closestGraceMs: Long = ANIME_HOSTER_CLOSEST_GRACE_MS,
+    ): Pair<Video, Video>? {
+        val attempted = mutableListOf<Video>()
         var preferred: Pair<Video, Video>? = null
-        states.first { entries ->
-            val ready = entries.flatMap { (it.state as? AnimeHosterState.Ready)?.videos.orEmpty() }
-            for (candidate in ready) {
-                if (!candidate.preferred || candidate.videoUrl.isBlank() || !attempted.add(candidate)) continue
-                val resolved = resolvePreferred(candidate) ?: continue
-                preferred = candidate to resolved
-                break
+        suspend fun check(entries: List<AnimeHosterEntry>): Boolean {
+            if (resolvePreferred != null && preferred == null) {
+                for (candidate in entries.readyVideos()) {
+                    if (!candidate.preferred || candidate.videoUrl.isBlank()) continue
+                    if (attempted.any { it === candidate }) continue
+                    attempted += candidate
+                    preferred = resolvePreferred(candidate)?.let { candidate to it } ?: continue
+                    break
+                }
             }
-            preferred != null || entries.none {
-                !it.hoster.lazy && (it.state == AnimeHosterState.Idle || it.state == AnimeHosterState.Loading)
-            }
+            return preferred != null || settled(entries)
         }
-        if (preferred != null) loading.cancelAndJoin() else loading.join()
-        preferred
+        // Phase 1: something playable, or nothing left to wait for.
+        states.first { entries -> check(entries) || entries.readyVideos().any { it.videoUrl.isNotBlank() } }
+        if (preferred != null || settled()) return preferred
+        // Phase 2: a short grace for a preferred or matching video, then a longer one for the closest.
+        val matched = withTimeoutOrNull(graceMs) { states.first { check(it) } } != null
+        if (matched || states.value.readyVideos().any { animeVideoMatches(it, quality) }) return preferred
+        withTimeoutOrNull((closestGraceMs - graceMs).coerceAtLeast(0)) {
+            states.first { entries -> check(entries) || entries.readyVideos().any { animeVideoMatches(it, quality) } }
+        }
+        return preferred
     }
 
     /** Loads one hoster now (a lazy one the user picked, or a retry). */
@@ -121,8 +181,7 @@ internal class AnimeHosterLoader(
     }
 
     /** Every loaded video in source order: hosters in `sortHosters()` order, videos in `sortVideos()` order. */
-    fun videos(): List<Video> =
-        mutableStates.value.flatMap { (it.state as? AnimeHosterState.Ready)?.videos.orEmpty() }
+    fun videos(): List<Video> = mutableStates.value.readyVideos()
 }
 
 /**

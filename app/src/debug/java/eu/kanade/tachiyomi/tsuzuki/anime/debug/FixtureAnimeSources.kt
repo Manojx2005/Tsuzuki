@@ -44,7 +44,7 @@ internal abstract class FixtureCatalogueSource : AnimeHttpSource() {
     final override val lang = "all"
     final override val supportsLatest = true
 
-    /** True for the lib16 source (case 16 only), false for the hoster source (cases 01–15). */
+    /** True for the lib16 source (case 16 only), false for the hoster source (cases 01–15, 17). */
     protected abstract val noHosters: Boolean
 
     override fun headersBuilder(): Headers.Builder = Headers.Builder()
@@ -84,7 +84,7 @@ internal abstract class FixtureCatalogueSource : AnimeHttpSource() {
         baseUrl + "/api/videos/${FixtureJson.caseOf(episode.url)}.json"
 }
 
-/** Cases 01–15: hosters, lazy and failing hosters, headers, tracks, timestamps, mpvArgs. */
+/** Cases 01–15 and 17: hosters, lazy, failing and slow hosters, headers, tracks, timestamps, mpvArgs. */
 internal class FixtureAnimeSource : FixtureCatalogueSource(), ConfigurableAnimeSource {
     override val name = "Tsuzuki Fixture"
     override val id = FixtureAnimeSources.FIXTURE_ID
@@ -95,7 +95,9 @@ internal class FixtureAnimeSource : FixtureCatalogueSource(), ConfigurableAnimeS
 
     override suspend fun getVideoList(hoster: Hoster): List<Video> {
         if (hoster.internalData == FixtureJson.THROWS) throw IOException("Fixture hoster ${hoster.hosterName} failed")
-        return FixtureJson.videos(Json.parseToJsonElement(hoster.internalData).jsonObject)
+        val item = Json.parseToJsonElement(hoster.internalData).jsonObject
+        if (FixtureJson.isSlowList(item)) fetch("/api/slow.json")
+        return FixtureJson.videos(item)
     }
 
     override fun List<Video>.sortVideos(): List<Video> = FixtureJson.preferQuality(this, preferredQuality())

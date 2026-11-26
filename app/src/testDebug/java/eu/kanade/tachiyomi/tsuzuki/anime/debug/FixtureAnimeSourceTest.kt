@@ -81,6 +81,23 @@ class FixtureAnimeSourceTest {
     }
 
     @Test
+    fun `case 17 slow hoster has to ask the source, the fast one comes with its video`() {
+        val hosters = FixtureJson.hosters(
+            videosJson(
+                """{"name": "A", "videos": [${video("/media/hls/1080/index.m3u8", "1080p")}], "slowList": true},""" +
+                    """{"name": "B", "videos": [${video("/media/hls/720/index.m3u8")}]}""",
+            ),
+        )
+        hosters.map { it.lazy } shouldBe listOf(false, false)
+        hosters[0].videoList shouldBe null
+        hosters[1].videoList!!.single().resolution shouldBe 720
+        val slow = kotlinx.serialization.json.Json.parseToJsonElement(hosters[0].internalData)
+            as kotlinx.serialization.json.JsonObject
+        FixtureJson.isSlowList(slow) shouldBe true
+        FixtureJson.videos(slow).single().resolution shouldBe 1080
+    }
+
+    @Test
     fun `cases 05, 07, 08, 09 and 11 map every video field`() {
         val json = videosJson(
             """{"name": "F", "videos": [

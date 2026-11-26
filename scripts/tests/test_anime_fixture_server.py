@@ -83,6 +83,10 @@ class FixtureServerTest(unittest.TestCase):
         status, _, body = self.get("/stall/ok.mp4")
         self.assertGreaterEqual(time.monotonic() - start, 0.25)  # Windows timer granularity
         self.assertEqual((status, body), (200, DATA))
+        start = time.monotonic()
+        status, _, body = self.get("/api/slow.json")
+        self.assertGreaterEqual(time.monotonic() - start, 0.25)  # case 17's slow hoster list
+        self.assertEqual((status, json.loads(body)), (200, {}))
 
     def test_paths_cannot_leave_media(self):
         self.assertEqual(self.get("/media/../serve.py")[0], 404)
@@ -95,7 +99,7 @@ class FixtureServerTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("application/json", headers["Content-Type"])
         anime = json.loads(body)
-        self.assertEqual([a["case"] for a in anime], [f"{n:02d}" for n in range(1, 17)])
+        self.assertEqual([a["case"] for a in anime], [f"{n:02d}" for n in range(1, 18)])
         self.assertEqual([a["case"] for a in anime if a["noHosters"]], ["16"])
 
         episodes = json.loads(self.get("/api/episodes/01.json")[2])
