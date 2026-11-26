@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.data.subscribeToOne
+import tachiyomi.domain.entries.anime.model.editedAnimeTitle
 import tachiyomi.domain.history.anime.model.AnimeHistory
 import tachiyomi.domain.history.anime.model.AnimeHistoryDisplay
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
@@ -44,10 +45,12 @@ class AnimeHistoryRepositoryImpl(private val database: Database) : AnimeHistoryR
             position,
             duration,
             lastSeen,
+            animeMemo,
         ->
         AnimeHistoryDisplay(
             animeId,
-            title,
+            // AP7-EDIT: History and the Continue Watching widget show the user's edited title.
+            animeMemo.editedAnimeTitle(title),
             thumbnailUrl,
             episodeId,
             name,

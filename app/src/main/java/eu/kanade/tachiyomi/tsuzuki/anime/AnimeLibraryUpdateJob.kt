@@ -62,7 +62,11 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
         // AP8: "Update shelf" passes one shelf; otherwise the whole anime library.
         val shelf = inputData.getLong(SHELF, -1L)
         val shows = if (shelf >= 0) {
-            library.observeLibrary().first().filter { shelf in it.shelfIds }.map { it.anime }
+            // The stored rows, not the Library's display entries with the user's edits (AP7-EDIT).
+            val ids = library.observeLibrary().first().filter {
+                shelf in it.shelfIds
+            }.mapTo(hashSetOf()) { it.anime.id }
+            library.getLibrary().filter { it.id in ids }
         } else {
             library.getLibrary()
         }

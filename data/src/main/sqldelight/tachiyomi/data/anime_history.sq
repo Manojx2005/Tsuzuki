@@ -55,7 +55,7 @@ ORDER BY anime_history.last_seen DESC, anime_history._id DESC;
 getHistory:
 SELECT animes._id AS anime_id, animes.title, animes.thumbnail_url,
     episodes._id AS episode_id, episodes.name AS episode_name, episodes.episode_number, episodes.preview_url,
-    episodes.seen, episodes.last_second_seen, episodes.total_seconds, anime_history.last_seen
+    episodes.seen, episodes.last_second_seen, episodes.total_seconds, anime_history.last_seen, animes.memo AS anime_memo
 FROM anime_history
 JOIN episodes ON episodes._id = anime_history.episode_id
 JOIN animes ON animes._id = episodes.anime_id

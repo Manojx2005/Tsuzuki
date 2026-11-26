@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_edit_info_note">Your changes stay when the details refresh. Reset shows the source’s details again.</string>
+</resources>

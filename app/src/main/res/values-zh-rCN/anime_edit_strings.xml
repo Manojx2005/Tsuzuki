@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_edit_info_note">刷新详情时会保留你的修改。重置后将重新显示来源的详情。</string>
+</resources>

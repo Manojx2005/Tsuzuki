@@ -70,6 +70,7 @@ import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.anime.AnimeTrackingSheet
 import eu.kanade.presentation.tsuzuki.anime.displayName
 import eu.kanade.presentation.tsuzuki.browse.AnimeGlobalSearch
+import eu.kanade.presentation.tsuzuki.details.TsuzukiEditAnimeDialog
 import eu.kanade.presentation.tsuzuki.selection.LocalSelectionEpisodes
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
@@ -87,6 +88,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
+import eu.kanade.tachiyomi.tsuzuki.anime.withUserEdits
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.NovelGlobalSearchScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -153,6 +155,7 @@ internal fun AnimeDetailsScreen(
     }.collectAsState(null)
     val notes = storedNotes ?: saved?.notes.orEmpty()
     var editingNotes by rememberSaveable { mutableStateOf(false) }
+    var editingInfo by rememberSaveable { mutableStateOf(false) }
     var notesSaveError by remember { mutableStateOf(false) }
     var showCover by rememberSaveable { mutableStateOf(false) }
     val excludedGroups = saved?.memo?.excludedAnimeGroups().orEmpty()
@@ -170,7 +173,9 @@ internal fun AnimeDetailsScreen(
         saved?.let { library.observeEpisodes(it.id) } ?: flowOf(null)
     }.collectAsState(null)
     val episodeState = loadedEpisodes ?: emptyEpisodes
+    // The source's details; [shown] adds the user's edits (AP7-EDIT) and is only for display.
     val display = details.display
+    val shown = remember(display, saved?.memo) { display.withUserEdits(saved?.memo) }
     val filtered = remember(episodeState, details.episodeDisplay, downloadStatuses) {
         details.episodeDisplay.apply(
             episodeState.items,
@@ -228,7 +233,7 @@ internal fun AnimeDetailsScreen(
     }
 
     fun enqueue(episodes: List<Episode>) {
-        downloads.enqueue(entry.source.id, entry.source.name, display.title, episodes)
+        downloads.enqueue(entry.source.id, entry.source.name, shown.title, episodes)
     }
 
     fun toggleSelection(id: Long, fromLongPress: Boolean = false) {
@@ -289,6 +294,14 @@ internal fun AnimeDetailsScreen(
                                         migrate.launch(AnimeMigrationActivity.fromAnime(context, saved.id))
                                     },
                                 )
+                                // AP7-EDIT: the book details' Edit entry; the edits survive source refreshes.
+                                TsuzukiMenuItem(
+                                    text = stringResource(MR.strings.action_edit),
+                                    onClick = {
+                                        showMenu = false
+                                        editingInfo = true
+                                    },
+                                )
                                 TsuzukiMenuItem(
                                     text = stringResource(MR.strings.action_edit_notes),
                                     onClick = {
@@ -317,7 +330,7 @@ internal fun AnimeDetailsScreen(
                                     onClick = {
                                         showMenu = false
                                         context.startActivity(
-                                            WebViewActivity.newIntent(context, url, title = display.title),
+                                            WebViewActivity.newIntent(context, url, title = shown.title),
                                         )
                                     },
                                 )
@@ -409,7 +422,7 @@ internal fun AnimeDetailsScreen(
                     Column {
                         AnimeDetailsHeader(
                             entry.source,
-                            display,
+                            shown,
                             isTabletUi = expanded,
                             onCoverClick = { showCover = true }.takeIf { !display.thumbnail_url.isNullOrBlank() },
                             sharedCoverKey = sharedCoverKey,
@@ -468,7 +481,7 @@ internal fun AnimeDetailsScreen(
                             onExternal = externalUrl?.let { url ->
                                 {
                                     context.startActivity(
-                                        WebViewActivity.newIntent(context, url, title = display.title),
+                                        WebViewActivity.newIntent(context, url, title = shown.title),
                                     )
                                 }
                             },
@@ -479,7 +492,7 @@ internal fun AnimeDetailsScreen(
                             }
                         }
                         AnimeDetailsDescription(
-                            anime = display,
+                            anime = shown,
                             notes = notes,
                             defaultExpanded = expanded,
                             onEditNotes = { if (saved != null) editingNotes = true },
@@ -633,7 +646,7 @@ internal fun AnimeDetailsScreen(
         }
     }
     display.thumbnail_url?.takeIf { showCover && it.isNotBlank() }?.let { url ->
-        AnimeCoverDialog(entry.source, display.title, url) { showCover = false }
+        AnimeCoverDialog(entry.source, shown.title, url) { showCover = false }
     }
     if (editingNotes && saved != null) {
         AnimeNotesDialog(
@@ -651,6 +664,13 @@ internal fun AnimeDetailsScreen(
                 editingNotes = false
             }
         }
+    }
+    if (editingInfo && saved != null) {
+        TsuzukiEditAnimeDialog(
+            anime = saved,
+            onDismissRequest = { editingInfo = false },
+            onSave = { edits -> mutate { model.setUserEdits(edits) } },
+        )
     }
     if (showFilter) {
         AnimeEpisodeFilterSheet(

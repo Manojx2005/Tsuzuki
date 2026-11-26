@@ -187,7 +187,7 @@ internal fun TsuzukiEditMangaDialog(
 }
 
 @Composable
-private fun EditInfoTile(
+internal fun EditInfoTile(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -245,7 +245,7 @@ private fun EditTileField(
 }
 
 @Composable
-private fun EditStatusTile(status: Long, onStatusChange: (Long) -> Unit) {
+internal fun EditStatusTile(status: Long, onStatusChange: (Long) -> Unit) {
     val options = listOf(
         SManga.UNKNOWN to MR.strings.unknown,
         SManga.ONGOING to MR.strings.ongoing,
@@ -278,7 +278,7 @@ private fun EditStatusTile(status: Long, onStatusChange: (Long) -> Unit) {
 }
 
 @Composable
-private fun EditTagsTile(tags: List<String>, onTagsChange: (List<String>) -> Unit) {
+internal fun EditTagsTile(tags: List<String>, onTagsChange: (List<String>) -> Unit) {
     val tokens = TsuzukiTheme.tokens
     var newTag by remember { mutableStateOf("") }
     val addLabel = stringResource(MR.strings.action_add)
@@ -339,6 +339,6 @@ private fun EditTagsTile(tags: List<String>, onTagsChange: (List<String>) -> Uni
 }
 
 @Composable
-private fun EditSectionLabel(label: String) {
+internal fun EditSectionLabel(label: String) {
     TsuzukiSectionLabel(label, contentPadding = PaddingValues(0.dp))
 }

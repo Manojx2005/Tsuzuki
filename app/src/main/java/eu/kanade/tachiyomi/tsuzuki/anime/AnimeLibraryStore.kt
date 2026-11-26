@@ -21,7 +21,14 @@ import tachiyomi.data.subscribeToList
 import tachiyomi.data.subscribeToOneOrNull
 import tachiyomi.domain.category.anime.model.AnimeCategory
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
+import tachiyomi.domain.entries.anime.model.ANIME_USER_EDITS
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.AnimeUserEdits
+import tachiyomi.domain.entries.anime.model.animeUserEdits
+import tachiyomi.domain.entries.anime.model.editedAnimeTitle
+import tachiyomi.domain.entries.anime.model.editedText
+import tachiyomi.domain.entries.anime.model.withAnimeUserEdits
+import tachiyomi.domain.entries.anime.model.withUserEdits
 import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import tachiyomi.domain.history.anime.repository.AnimeHistoryRepository
 import tachiyomi.domain.items.episode.model.Episode
@@ -89,7 +96,7 @@ internal class AnimeLibraryStore(
             !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
         AnimeUpdateEpisode(
             animeId = animeId,
-            title = title,
+            title = animeMemo.editedAnimeTitle(title),
             episodeId = episodeId,
             name = name,
             previewUrl = previewUrl,
@@ -117,7 +124,8 @@ internal class AnimeLibraryStore(
                 animeMemo,
             ->
             val visible = !scanlator.isExcludedAnimeGroup(animeMemo.excludedAnimeGroups())
-            AnimeUpdateEpisode(animeId, title, episodeId, name, previewUrl, dateUpload) to visible
+            AnimeUpdateEpisode(animeId, animeMemo.editedAnimeTitle(title), episodeId, name, previewUrl, dateUpload) to
+                visible
         }.subscribeToList().map { rows ->
             rows.mapNotNull { (entry, visible) -> entry.takeIf { visible } }
         }
@@ -126,8 +134,11 @@ internal class AnimeLibraryStore(
 
     fun observeSeasons(parentId: Long) = anime.subscribeSeasons(parentId)
 
+    /** The library as shown: the user's edited details applied (AP7-EDIT). Never save these entries. */
     fun observeLibrary() = combine(anime.subscribeLibrary(), shelves.subscribeMemberships()) { items, memberships ->
-        items.map { (entry) -> AnimeLibraryEntry(entry, memberships[entry.id].orEmpty().ifEmpty { setOf(0L) }) }
+        items.map { (entry) ->
+            AnimeLibraryEntry(entry.withUserEdits(), memberships[entry.id].orEmpty().ifEmpty { setOf(0L) })
+        }
     }
 
     fun observeContinueWatching() = history.subscribeContinueWatching().map { entries ->
@@ -136,12 +147,12 @@ internal class AnimeLibraryStore(
             val last = episodes.awaitById(entry.episodeId) ?: return@firstNotNullOfOrNull null
             val excluded = show.memo.excludedAnimeGroups()
             if (!last.seen && !last.scanlator.isExcludedAnimeGroup(excluded)) {
-                return@firstNotNullOfOrNull ContinueAnime(show, last)
+                return@firstNotNullOfOrNull ContinueAnime(show.withUserEdits(), last)
             }
             val ordered = episodes.awaitByAnimeId(show.id).sortedWith(animeEpisodeNumberOrder)
             val next = ordered.dropWhile { it.id != last.id }.drop(1)
                 .firstOrNull { !it.seen && !it.scanlator.isExcludedAnimeGroup(excluded) }
-            next?.let { ContinueAnime(show, it) }
+            next?.let { ContinueAnime(show.withUserEdits(), it) }
         }
     }
 
@@ -150,7 +161,8 @@ internal class AnimeLibraryStore(
      * first unwatched episode of the most recently added show (owner 2026-11-25: Watch showed no preview card on a
      * library that had not been played from yet).
      */
-    fun observeWatchHero() = combine(observeContinueWatching(), anime.subscribeLibrary()) { resume, items ->
+    // observeLibrary() applies the user's edits (AP7-EDIT), so the hero shows the edited title.
+    fun observeWatchHero() = combine(observeContinueWatching(), observeLibrary()) { resume, items ->
         resume ?: items.map { it.anime }.sortedByDescending { it.dateAdded }.firstNotNullOfOrNull { show ->
             firstUnwatchedEpisode(episodes.awaitByAnimeId(show.id), show.memo.excludedAnimeGroups())
                 ?.let { ContinueAnime(show, it, fromHistory = false) }
@@ -167,6 +179,13 @@ internal class AnimeLibraryStore(
         .subscribeToOneOrNull(Dispatchers.IO).distinctUntilChanged()
 
     suspend fun setNotes(id: Long, notes: String) = database.animesQueries.setNotes(notes = notes, id = id)
+
+    /** Stores the user's own details beside the source fields; null or empty edits remove them (Reset). */
+    suspend fun setUserEdits(id: Long, edits: AnimeUserEdits?) = database.transaction {
+        val show = anime.awaitById(id) ?: return@transaction
+        val memo = show.memo.withAnimeUserEdits(edits)
+        if (memo != show.memo) anime.update(show.copy(memo = memo))
+    }
 
     suspend fun getEpisode(id: Long) = episodes.awaitById(id)
 
@@ -263,7 +282,7 @@ internal class AnimeLibraryStore(
                 dateAdded = added,
                 memo = target.memo.withExcludedAnimeGroups(
                     target.memo.excludedAnimeGroups() + original.memo.excludedAnimeGroups(),
-                ),
+                ).withFallbackUserEdits(original.memo),
             ),
         )
         if (mode == AnimeMigrationMode.REPLACE) anime.setFavorite(originalId, false, original.dateAdded)
@@ -449,7 +468,7 @@ internal class AnimeLibraryStore(
             seasonNumber = show.season_number.takeIf { it.isFinite() && it >= 0 } ?: stored.seasonNumber,
             favorite = favorite ?: stored.favorite,
             dateAdded = if (favorite == true && !stored.favorite) System.currentTimeMillis() else stored.dateAdded,
-            memo = JsonObject(stored.memo + (show.memo - ANIME_EXCLUDED_GROUPS)),
+            memo = mergeAnimeMemo(stored.memo, show.memo),
         )
         val id = if (stored.id == -1L) anime.insert(updated) else stored.id
         val entry = updated.copy(id = id)
@@ -472,7 +491,32 @@ internal fun Anime.toSourceAnime(): SAnime = SAnime.create().also { source ->
     source.fetch_type = fetchType
     source.season_number = seasonNumber
     source.initialized = initialized
-    source.memo = JsonObject(memo - ANIME_EXCLUDED_GROUPS)
+    source.memo = JsonObject(memo - ANIME_EXCLUDED_GROUPS - ANIME_USER_EDITS)
+}
+
+/**
+ * The stored memo with the source's memo keys over it. The app's own keys (excluded subtitle groups, the user's edited
+ * details) always come from [stored], so a refresh, favourite or catalogue save never drops or overwrites them.
+ */
+internal fun mergeAnimeMemo(stored: JsonObject, incoming: JsonObject): JsonObject =
+    JsonObject(stored + (incoming - ANIME_EXCLUDED_GROUPS - ANIME_USER_EDITS))
+
+/** Keeps these edits when there are any, else takes [original]'s (migration target, backup restore onto a saved row). */
+internal fun JsonObject.withFallbackUserEdits(original: JsonObject): JsonObject =
+    if (animeUserEdits().isEmpty) withAnimeUserEdits(original.animeUserEdits()) else this
+
+/** These details as shown: the user's edits in the stored [memo] applied (AP7-EDIT). Display only, never saved. */
+internal fun SAnime.withUserEdits(memo: JsonObject?): SAnime {
+    val edits = memo?.animeUserEdits() ?: return this
+    if (edits.isEmpty) return this
+    return copy().also { shown ->
+        edits.title?.let { shown.title = it }
+        shown.author = editedText(edits.author, author)
+        shown.artist = editedText(edits.artist, artist)
+        shown.description = editedText(edits.description, description)
+        edits.genres?.let { shown.genre = it.joinToString(", ") }
+        edits.status?.let { shown.status = it.toInt() }
+    }
 }
 
 internal fun Episode.toSourceEpisode(): SEpisode = SEpisode.create().also { source ->

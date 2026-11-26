@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tsz_anime_edit_info_note">詳細を更新しても変更は保持されます。リセットするとソースの詳細に戻ります。</string>
+</resources>

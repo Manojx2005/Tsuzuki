@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.AnimeUserEdits
 
 internal data class AnimeDetailsState(
     val display: SAnime,
@@ -56,7 +57,10 @@ internal class AnimeDetailsScreenModel(
     }
 
     suspend fun setFavorite(favorite: Boolean, shelves: Set<Long>) {
-        val id = library.setFavorite(entry.source.id, state.value.display, favorite, shelves)
+        // The stored row when there is one: the first frame may show the Library's entry with the user's edits.
+        val display = state.value.display
+        val show = library.getAnime(entry.source.id, display.url)?.toSourceAnime() ?: display
+        val id = library.setFavorite(entry.source.id, show, favorite, shelves)
         val saved = library.getAnime(id)
         mutableState.update { it.copy(saved = saved) }
     }
@@ -64,6 +68,12 @@ internal class AnimeDetailsScreenModel(
     suspend fun setEpisodeDisplay(display: AnimeEpisodeDisplay, excludedGroups: Set<String>) {
         val id = state.value.saved?.id ?: return
         library.setEpisodeDisplay(id, display, excludedGroups)
+        reloadSaved()
+    }
+
+    suspend fun setUserEdits(edits: AnimeUserEdits?) {
+        val id = state.value.saved?.id ?: return
+        library.setUserEdits(id, edits)
         reloadSaved()
     }
 
