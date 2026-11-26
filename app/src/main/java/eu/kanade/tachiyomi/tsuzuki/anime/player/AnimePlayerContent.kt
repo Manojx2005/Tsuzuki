@@ -171,6 +171,28 @@ internal fun AnimePlayerContent(
                     )
                 },
         )
+        // Owner 2026-11-25: resuming looked stuck for a frame or two (mpv holds its first frame until the audio
+        // output starts). Keep the video covered until its clock moves, then fade it in.
+        androidx.compose.animation.AnimatedVisibility(
+            visible = !state.revealed && !state.failed,
+            enter = androidx.compose.animation.EnterTransition.None,
+            exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(REVEAL_FADE_MS)),
+        ) {
+            Box(Modifier.fillMaxSize().background(tokens.background), contentAlignment = Alignment.Center) {
+                if (!state.loading && state.position >= 1.0) {
+                    Text(
+                        tsuzukiMenuLabel(
+                            stringResource(
+                                R.string.tsz_anime_player_resuming_at,
+                                DateUtils.formatElapsedTime(state.position.toLong()),
+                            ),
+                        ),
+                        color = tokens.dotOn,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            }
+        }
         if (showControls) {
             Box(
                 Modifier.fillMaxSize().background(
@@ -611,3 +633,6 @@ private fun PlayerIcon(icon: ImageVector, description: String, enabled: Boolean 
         )
     }
 }
+
+/** How long the video takes to fade in once its clock moves. */
+private const val REVEAL_FADE_MS = 180

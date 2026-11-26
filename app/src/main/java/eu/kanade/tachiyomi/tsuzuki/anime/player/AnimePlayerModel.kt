@@ -70,6 +70,11 @@ internal data class AnimePlayerState(
     val settings: AnimePlayerSettings = AnimePlayerSettings(),
     val tracks: List<AnimePlayerTrack> = emptyList(),
     val loading: Boolean = true,
+    /**
+     * False from each load until the video clock has moved (or playback is paused): the screen keeps the video
+     * covered so the first frame mpv shows while its audio output starts never looks stuck (owner 2026-11-25).
+     */
+    val revealed: Boolean = false,
     val playing: Boolean = false,
     val ended: Boolean = false,
     val failed: Boolean = false,
@@ -257,7 +262,7 @@ internal class AnimePlayerModel(
                 AnimeLog.i("play after end with unknown duration: loading the stream again from 0")
                 cancelCountdown()
                 tracker.skipNextIncrement()
-                mutableState.update { it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true) }
+                mutableState.update { it.copy(position = 0.0, bufferedUntil = 0.0, ended = false, loading = true, revealed = false) }
                 queueVideo(video)
             }
         }
@@ -392,7 +397,7 @@ internal class AnimePlayerModel(
             val current = state.value
             openEpisode(episode, current.position.takeUnless { animeStartIsAtEnd(it, current.duration) } ?: 0.0)
         } else if (request is AnimePlayback.Request.Direct) {
-            mutableState.update { it.copy(loading = true, failed = false) }
+            mutableState.update { it.copy(loading = true, failed = false, revealed = false) }
             queueVideo(request.video)
         }
     }
@@ -546,6 +551,7 @@ internal class AnimePlayerModel(
         mutableState.update {
             it.copy(
                 loading = true,
+                revealed = false,
                 failed = false,
                 ended = false,
                 tracks = emptyList(),
@@ -629,6 +635,7 @@ internal class AnimePlayerModel(
                 restartPending = false
             }
             if (foreground) tracker.onPosition(seconds, state.value.settings.speed)
+            if (!state.value.revealed && seconds >= revealFrom + REVEAL_CLOCK_MOVED_SECONDS) reveal()
             if (abs(state.value.position - seconds) >= 0.1) {
                 mutableState.update { it.copy(position = seconds) }
             }
@@ -660,6 +667,12 @@ internal class AnimePlayerModel(
             fileWatchdog?.cancel()
             waitingForFile = false
             mutableState.update { it.copy(loading = false) }
+            revealFrom = state.value.position
+            revealTimeout?.cancel()
+            revealTimeout = viewModelScope.launch {
+                delay(REVEAL_TIMEOUT_MS)
+                reveal()
+            }
             restartIfStartedAtEnd()
             refreshTracks()
             syncPause()
@@ -829,6 +842,14 @@ internal class AnimePlayerModel(
         syncPause()
     }
 
+    private var revealFrom = 0.0
+    private var revealTimeout: Job? = null
+
+    private fun reveal() {
+        revealTimeout?.cancel()
+        if (!state.value.revealed) mutableState.update { it.copy(revealed = true) }
+    }
+
     private fun syncPause() {
         val current = state.value
         val playing = foreground && attached && focused && wantsPlayback &&
@@ -837,6 +858,8 @@ internal class AnimePlayerModel(
         if (current.playing != playing) tracker.skipNextIncrement()
         if (initialized) backend.setPaused(!playing)
         mutableState.update { it.copy(playing = playing) }
+        // A paused or finished video has nothing to wait for: show the frame it stopped on.
+        if (!playing && !current.loading && !current.revealed) reveal()
     }
 
     private fun capturePreview(closing: Boolean = false) {
@@ -897,3 +920,9 @@ internal class AnimePlayerModel(
         downloads.releaseOfflinePlayback(offlinePlaybackOwner)
     }
 }
+
+/** The clock counts as moving once it is this far past where the file was loaded. */
+private const val REVEAL_CLOCK_MOVED_SECONDS = 0.04
+
+/** Never keep the video covered longer than this after the file loads. */
+private const val REVEAL_TIMEOUT_MS = 1_500L
