@@ -54,4 +54,12 @@ class NovelReaderFeedbackTest {
         assertEquals("#128bad47", novelCssColor(colors.readAlongFill))
         assertEquals(0xff242424.toInt(), colors.readAlongInk)
     }
+
+    @Test
+    fun `chrome top padding is measured from the reader top, not the window top`() {
+        assertEquals(0, novelChromeTopPadding(0, 100, 42))
+        assertEquals(315, novelChromeTopPadding(273, 0, 42))
+        assertEquals(215, novelChromeTopPadding(273, 100, 42))
+        assertEquals(42, novelChromeTopPadding(80, 100, 42))
+    }
 }

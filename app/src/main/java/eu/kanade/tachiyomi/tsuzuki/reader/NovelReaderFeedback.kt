@@ -49,3 +49,14 @@ internal fun novelHighlightScrollTarget(lineTopPx: Int, topBarPx: Int, gapPx: In
 
 internal fun novelEndCardClearance(hasCard: Boolean, bottomBarPx: Int, gapPx: Int): Int =
     if (hasCard && bottomBarPx > 0) bottomBarPx + gapPx.coerceAtLeast(0) else 0
+
+/**
+ * Top padding for the TextView reader while the menu is visible: the bar's bottom edge (window coordinates)
+ * relative to the reader's own top, plus a gap. Zero when the menu is hidden.
+ */
+internal fun novelChromeTopPadding(chromeBottomInWindowPx: Int, viewTopInWindowPx: Int, gapPx: Int): Int =
+    if (chromeBottomInWindowPx <= 0) {
+        0
+    } else {
+        (chromeBottomInWindowPx - viewTopInWindowPx).coerceAtLeast(0) + gapPx.coerceAtLeast(0)
+    }
