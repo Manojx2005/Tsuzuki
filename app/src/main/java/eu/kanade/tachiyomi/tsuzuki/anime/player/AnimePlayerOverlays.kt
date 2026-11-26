@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,7 +61,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
 import eu.kanade.tachiyomi.tsuzuki.anime.preview.AnimeEpisodeThumbnail
 import tachiyomi.i18n.MR
-import androidx.compose.runtime.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
@@ -83,7 +83,10 @@ internal fun AnimeSeekRippleOverlay(ripple: AnimeSeekRipple, modifier: Modifier)
             modifier.width(maxWidth * 0.33f).fillMaxHeight().clip(shape).background(tokens.dotOn.copy(alpha = 0.08f)),
             contentAlignment = Alignment.Center,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     val alphas = listOf(1f, 0.6f, 0.3f).let { if (ripple.forward) it.reversed() else it }
                     alphas.forEach { alpha ->
@@ -97,7 +100,10 @@ internal fun AnimeSeekRippleOverlay(ripple: AnimeSeekRipple, modifier: Modifier)
                 }
                 Text(
                     tsuzukiMenuLabel(
-                        stringResource(R.string.tsz_anime_player_skip, if (ripple.forward) ripple.seconds else -ripple.seconds),
+                        stringResource(
+                            R.string.tsz_anime_player_skip,
+                            if (ripple.forward) ripple.seconds else -ripple.seconds,
+                        ),
                     ),
                     color = tokens.dotOn,
                     style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp),
@@ -319,7 +325,10 @@ internal fun AnimeNextUp(seconds: Int, state: AnimePlayerState, onPlay: () -> Un
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 64.sp, lineHeight = 60.sp),
             )
             state.next?.let { next ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     val sourceId = state.sourceId
                     if (sourceId != null) {
                         AnimeEpisodeThumbnail(
@@ -376,7 +385,10 @@ internal fun AnimeNextUp(seconds: Int, state: AnimePlayerState, onPlay: () -> Un
                     contentColor = tokens.dotOn,
                     border = tokens.tileBorder?.let { BorderStroke(1.dp, it) },
                 ) {
-                    Box(Modifier.heightIn(min = 48.dp).padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier.heightIn(min = 48.dp).padding(horizontal = 18.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
                         Text(tsuzukiMenuLabel(mokoStringResource(MR.strings.action_cancel)), style = animeActionStyle())
                     }
                 }

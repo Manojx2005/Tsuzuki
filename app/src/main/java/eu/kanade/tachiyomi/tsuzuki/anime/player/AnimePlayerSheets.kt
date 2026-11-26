@@ -200,7 +200,13 @@ internal fun AnimePlayerDrawer(
             }
             Surface(
                 modifier = Modifier.width(panelWidth).fillMaxHeight(),
-                shape = if (isWide && !tokens.isDot) RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp) else RectangleShape,
+                shape = if (isWide &&
+                    !tokens.isDot
+                ) {
+                    RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
+                } else {
+                    RectangleShape
+                },
                 color = if (tokens.isDot) tokens.tile else tokens.background,
                 contentColor = tokens.dotOn,
                 border = tokens.tileBorder?.takeIf { isWide }?.let { BorderStroke(1.dp, it) },
@@ -264,7 +270,12 @@ internal fun AnimePlayerOption(
         ) {
             Box(Modifier.width(18.dp), contentAlignment = Alignment.Center) {
                 if (selected) {
-                    Icon(Icons.Outlined.Check, contentDescription = null, tint = tokens.accent, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Outlined.Check,
+                        contentDescription = null,
+                        tint = tokens.accent,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
             Text(

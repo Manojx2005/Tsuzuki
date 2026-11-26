@@ -116,20 +116,24 @@ internal fun AnimePlayerContent(
     var sheet by rememberSaveable { mutableStateOf<AnimePlayerSheet?>(null) }
     var level by remember { mutableStateOf<Pair<Boolean, Float>?>(null) }
     var ripple by remember { mutableStateOf<AnimeSeekRipple?>(null) }
+    // The settings menu lives in the top bar, so the controls must not auto-hide while it is open.
+    var menuOpen by remember { mutableStateOf(false) }
     val settings = state.settings
     var interaction by remember { mutableIntStateOf(0) }
     var lastNotice by rememberSaveable { mutableIntStateOf(0) }
     val snackbar = remember { SnackbarHostState() }
     val fallback = stringResource(R.string.tsz_anime_player_fallback)
     val covered = !state.revealed && !state.failed
-    val showControls = visible && !locked && !covered && state.nextIn == null
+    // Overlays (board: Episodes, Audio & subtitles) sit over the bare frame, so the chrome hides behind them.
+    val showControls = visible && !locked && !covered && state.nextIn == null && sheet == null
 
-    LaunchedEffect(visible, locked, state.playing, interaction, sheet) {
-        if (visible && state.playing && !locked && sheet == null) {
+    LaunchedEffect(visible, locked, state.playing, interaction, sheet, menuOpen) {
+        if (visible && state.playing && !locked && sheet == null && !menuOpen) {
             delay(3_000)
             visible = false
         }
     }
+    LaunchedEffect(showControls) { if (!showControls) menuOpen = false }
     LaunchedEffect(state.fallbackNotice) {
         if (state.fallbackNotice > lastNotice) {
             lastNotice = state.fallbackNotice
@@ -208,7 +212,9 @@ internal fun AnimePlayerContent(
                     )
                 },
         )
-        ripple?.let { AnimeSeekRippleOverlay(it, Modifier.align(if (it.forward) Alignment.CenterEnd else Alignment.CenterStart)) }
+        ripple?.let {
+            AnimeSeekRippleOverlay(it, Modifier.align(if (it.forward) Alignment.CenterEnd else Alignment.CenterStart))
+        }
         // Owner 2026-11-25: resuming looked stuck for a frame or two (mpv holds its first frame until the audio
         // output starts). Keep the video covered until its clock moves, then fade it in (board "Dot · Resume").
         androidx.compose.animation.AnimatedVisibility(
@@ -218,7 +224,7 @@ internal fun AnimePlayerContent(
         ) {
             AnimeResumeCover(state, onBack)
         }
-        if (!showControls && !covered && state.nextIn == null && state.duration > 0) {
+        if (!showControls && sheet == null && !covered && state.nextIn == null && state.duration > 0) {
             AnimeHairlineProgress(state.position / state.duration, Modifier.align(Alignment.BottomCenter))
         }
         if (showControls) {
@@ -240,6 +246,8 @@ internal fun AnimePlayerContent(
                     onBack = onBack,
                     model = model,
                     onPictureInPicture = onPictureInPicture,
+                    showMenu = menuOpen,
+                    onMenu = { menuOpen = it },
                     onSheet = { sheet = it },
                     modifier = Modifier.align(Alignment.TopCenter).padding(start = 16.dp, end = 16.dp, top = 14.dp),
                 )
@@ -373,12 +381,17 @@ private fun AnimePlayerTopBar(
     onBack: () -> Unit,
     model: AnimePlayerModel,
     onPictureInPicture: (() -> Unit)?,
+    showMenu: Boolean,
+    onMenu: (Boolean) -> Unit,
     onSheet: (AnimePlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tokens = TsuzukiTheme.tokens
-    var showMenu by remember { mutableStateOf(false) }
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         AnimePlayerIcon(
             Icons.AutoMirrored.Outlined.ArrowBack,
             mokoStringResource(MR.strings.action_webview_back),
@@ -419,9 +432,9 @@ private fun AnimePlayerTopBar(
         }
         Box {
             AnimePlayerIcon(Icons.Outlined.Settings, stringResource(R.string.tsz_anime_player_settings)) {
-                showMenu = true
+                onMenu(true)
             }
-            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+            DropdownMenu(expanded = showMenu, onDismissRequest = { onMenu(false) }) {
                 if (state.qualities.isNotEmpty() || state.hosters.any { !it.isPlainList }) {
                     val quality = stringResource(R.string.tsz_anime_player_quality)
                     TsuzukiMenuItem(
@@ -429,7 +442,7 @@ private fun AnimePlayerTopBar(
                             "$quality · " + stringResource(R.string.tsz_anime_player_quality_value, it)
                         } ?: quality,
                         onClick = {
-                            showMenu = false
+                            onMenu(false)
                             onSheet(AnimePlayerSheet.QUALITY)
                         },
                     )
@@ -437,7 +450,7 @@ private fun AnimePlayerTopBar(
                 TsuzukiMenuItem(
                     text = stringResource(R.string.tsz_anime_player_video),
                     onClick = {
-                        showMenu = false
+                        onMenu(false)
                         onSheet(AnimePlayerSheet.VIDEO)
                     },
                 )
@@ -450,16 +463,20 @@ private fun AnimePlayerTopBar(
                         },
                     ),
                     onClick = {
-                        showMenu = false
+                        onMenu(false)
                         onOrientationLock()
                     },
                 )
                 TsuzukiMenuItem(
                     text = stringResource(
-                        if (state.autoplay) R.string.tsz_anime_player_autoplay_off else R.string.tsz_anime_player_autoplay_on,
+                        if (state.autoplay) {
+                            R.string.tsz_anime_player_autoplay_off
+                        } else {
+                            R.string.tsz_anime_player_autoplay_on
+                        },
                     ),
                     onClick = {
-                        showMenu = false
+                        onMenu(false)
                         model.setAutoplay(!state.autoplay)
                     },
                 )
@@ -707,13 +724,27 @@ internal fun AnimePlayerAction(
                 if (label == null) {
                     PaddingValues(10.dp)
                 } else {
-                    PaddingValues(horizontal = if (filled) (if (tokens.isDot) 14.dp else 18.dp) else animeActionPadding())
+                    PaddingValues(
+                        horizontal = if (filled) (if (tokens.isDot) 14.dp else 18.dp) else animeActionPadding(),
+                    )
                 },
             ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(icon, contentDescription = description ?: label, modifier = Modifier.size(if (label == null) 22.dp else 18.dp))
+            Icon(
+                icon,
+                contentDescription = description ?: label,
+                modifier = Modifier.size(
+                    if (label ==
+                        null
+                    ) {
+                        22.dp
+                    } else {
+                        18.dp
+                    },
+                ),
+            )
             if (label != null) {
                 Text(
                     tsuzukiMenuLabel(label),

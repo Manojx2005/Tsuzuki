@@ -238,7 +238,10 @@ internal fun AnimeAudioSubsPanel(state: AnimePlayerState, model: AnimePlayerMode
 @Composable
 private fun AnimeTrackColumn(title: String, modifier: Modifier, content: @Composable () -> Unit) {
     val tokens = TsuzukiTheme.tokens
-    Column(modifier.fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        modifier.fillMaxHeight().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(
             tsuzukiMenuLabel(title),
             modifier = Modifier.padding(bottom = 6.dp),
@@ -263,7 +266,14 @@ private fun AnimeLookChip(label: String, selected: Boolean, modifier: Modifier, 
             else -> tokens.tile
         },
         contentColor = if (!dot && selected) tokens.onAccent else tokens.dotOn,
-        border = if (dot) BorderStroke(1.dp, if (selected) tokens.accent else tokens.tileBorder ?: tokens.track) else null,
+        border = if (dot) {
+            BorderStroke(
+                1.dp,
+                if (selected) tokens.accent else tokens.tileBorder ?: tokens.track,
+            )
+        } else {
+            null
+        },
     ) {
         Box(Modifier.heightIn(min = 40.dp), contentAlignment = Alignment.Center) {
             Text(
@@ -287,13 +297,22 @@ private fun AnimeSubtitleSample(scale: Float, style: AnimeSubtitleStyle) {
     val ink = remember(style.color) { Color(android.graphics.Color.parseColor(style.color.mpv)) }
     Box(
         Modifier.fillMaxWidth().heightIn(min = 96.dp)
-            .background(tokens.dotOn.copy(alpha = 0.08f), RoundedCornerShape(if (tokens.isDot) tokens.tileRadius else 16.dp))
+            .background(
+                tokens.dotOn.copy(alpha = 0.08f),
+                RoundedCornerShape(if (tokens.isDot) tokens.tileRadius else 16.dp),
+            )
             .padding(bottom = 12.dp, start = 8.dp, end = 8.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Text(
             stringResource(R.string.tsz_anime_player_sub_sample),
-            modifier = if (box) Modifier.background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 6.dp, vertical = 2.dp) else Modifier,
+            modifier = if (box) {
+                Modifier.background(
+                    Color.Black.copy(alpha = 0.6f),
+                ).padding(horizontal = 6.dp, vertical = 2.dp)
+            } else {
+                Modifier
+            },
             color = ink,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = (15 * scale).sp,
