@@ -69,4 +69,23 @@
     <string name="tsz_anime_player_sub_grey">회색</string>
     <string name="tsz_anime_player_sub_none">없음</string>
     <string name="tsz_anime_player_resuming_at">%s부터 이어서 재생</string>
+    <string name="tsz_anime_player_audio_subtitles">오디오 및 자막</string>
+    <string name="tsz_anime_player_settings">플레이어 설정</string>
+    <string name="tsz_anime_player_speed_value">속도 %s</string>
+    <string name="tsz_anime_player_lock_short">잠금</string>
+    <string name="tsz_anime_player_tap_again">더 넘기려면 다시 탭</string>
+    <string name="tsz_anime_player_next_episode_in">다음 에피소드까지</string>
+    <string name="tsz_anime_player_play_now">지금 재생</string>
+    <string name="tsz_anime_player_subtitle_look">자막 모양</string>
+    <string name="tsz_anime_player_sub_size_small">소</string>
+    <string name="tsz_anime_player_sub_size_medium">중</string>
+    <string name="tsz_anime_player_sub_size_large">대</string>
+    <string name="tsz_anime_player_sub_box">상자</string>
+    <string name="tsz_anime_player_sub_sample">자막 미리보기</string>
+    <string name="tsz_anime_player_now_playing">재생 중</string>
+    <string name="tsz_anime_player_minutes_left">%d분 남음</string>
+    <string name="tsz_anime_player_minutes">%d분</string>
+    <string name="tsz_anime_player_watched">시청함</string>
+    <string name="tsz_anime_player_saved">저장됨</string>
+    <string name="tsz_anime_player_episode_label">%1$s화 · %2$s</string>
 </resources>

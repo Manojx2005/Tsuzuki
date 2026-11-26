@@ -57,6 +57,9 @@ import kotlin.math.roundToLong
 
 internal data class AnimePlayerState(
     val title: String = "",
+    /** PLAYER-REDESIGN: the anime's source and cover, for episode thumbnails in the drawer and next-up card. */
+    val sourceId: Long? = null,
+    val coverUrl: String? = null,
     val episode: Episode? = null,
     val episodes: List<Episode> = emptyList(),
     val previous: Episode? = null,
@@ -438,6 +441,8 @@ internal class AnimePlayerModel(
         mutableState.update { current ->
             AnimePlayerState(
                 title = current.title,
+                sourceId = current.sourceId,
+                coverUrl = current.coverUrl,
                 autoplay = current.autoplay,
                 settings = current.settings,
                 fallbackNotice = current.fallbackNotice,
@@ -461,6 +466,8 @@ internal class AnimePlayerModel(
                 mutableState.update {
                     it.copy(
                         title = anime.memo.editedAnimeTitle(anime.title),
+                        sourceId = anime.source,
+                        coverUrl = anime.thumbnailUrl,
                         episode = episode,
                         position = start,
                     )

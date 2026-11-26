@@ -69,4 +69,23 @@
     <string name="tsz_anime_player_sub_grey">Gris</string>
     <string name="tsz_anime_player_sub_none">Ninguno</string>
     <string name="tsz_anime_player_resuming_at">Reanudando en %s</string>
+    <string name="tsz_anime_player_audio_subtitles">Audio y subtítulos</string>
+    <string name="tsz_anime_player_settings">Ajustes del reproductor</string>
+    <string name="tsz_anime_player_speed_value">Velocidad %s</string>
+    <string name="tsz_anime_player_lock_short">Bloquear</string>
+    <string name="tsz_anime_player_tap_again">Toca otra vez para más</string>
+    <string name="tsz_anime_player_next_episode_in">Siguiente episodio en</string>
+    <string name="tsz_anime_player_play_now">Reproducir ya</string>
+    <string name="tsz_anime_player_subtitle_look">Aspecto de subtítulos</string>
+    <string name="tsz_anime_player_sub_size_small">S</string>
+    <string name="tsz_anime_player_sub_size_medium">M</string>
+    <string name="tsz_anime_player_sub_size_large">L</string>
+    <string name="tsz_anime_player_sub_box">Caja</string>
+    <string name="tsz_anime_player_sub_sample">Línea de subtítulo de ejemplo</string>
+    <string name="tsz_anime_player_now_playing">Reproduciendo</string>
+    <string name="tsz_anime_player_minutes_left">quedan %d min</string>
+    <string name="tsz_anime_player_minutes">%d min</string>
+    <string name="tsz_anime_player_watched">Visto</string>
+    <string name="tsz_anime_player_saved">Guardado</string>
+    <string name="tsz_anime_player_episode_label">E%1$s · %2$s</string>
 </resources>

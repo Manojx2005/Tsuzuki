@@ -69,4 +69,23 @@
     <string name="tsz_anime_player_sub_grey">Grey</string>
     <string name="tsz_anime_player_sub_none">None</string>
     <string name="tsz_anime_player_resuming_at">Resuming at %s</string>
+    <string name="tsz_anime_player_audio_subtitles">Audio &amp; subtitles</string>
+    <string name="tsz_anime_player_settings">Player settings</string>
+    <string name="tsz_anime_player_speed_value">Speed %s</string>
+    <string name="tsz_anime_player_lock_short">Lock</string>
+    <string name="tsz_anime_player_tap_again">Tap again for more</string>
+    <string name="tsz_anime_player_next_episode_in">Next episode in</string>
+    <string name="tsz_anime_player_play_now">Play now</string>
+    <string name="tsz_anime_player_subtitle_look">Subtitle look</string>
+    <string name="tsz_anime_player_sub_size_small">S</string>
+    <string name="tsz_anime_player_sub_size_medium">M</string>
+    <string name="tsz_anime_player_sub_size_large">L</string>
+    <string name="tsz_anime_player_sub_box">Box</string>
+    <string name="tsz_anime_player_sub_sample">Sample subtitle line</string>
+    <string name="tsz_anime_player_now_playing">Now playing</string>
+    <string name="tsz_anime_player_minutes_left">%d min left</string>
+    <string name="tsz_anime_player_minutes">%d min</string>
+    <string name="tsz_anime_player_watched">Watched</string>
+    <string name="tsz_anime_player_saved">Saved</string>
+    <string name="tsz_anime_player_episode_label">E%1$s · %2$s</string>
 </resources>
