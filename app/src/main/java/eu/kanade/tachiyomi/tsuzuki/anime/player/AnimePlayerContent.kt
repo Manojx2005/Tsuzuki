@@ -315,6 +315,8 @@ internal fun AnimePlayerContent(
         if (state.failed) {
             val context = LocalContext.current
             val copy = remember(state.error) { state.error?.let { errorCopyForUi(it) } }
+            // The tile is translucent; over a bright last frame it was unreadable, so dim the frame first.
+            Box(Modifier.fillMaxSize().background(tokens.background.copy(alpha = 0.8f)))
             TsuzukiTile(Modifier.align(Alignment.Center), padding = 16.dp) {
                 Text(
                     tsuzukiMenuLabel(mokoStringResource(MR.strings.tsz_anime_debug_playback_error)),
