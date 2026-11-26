@@ -287,6 +287,14 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
     }
 
+    override fun chapters(): List<AnimeFileChapter> {
+        val count = MPVLib.getPropertyInt("chapter-list/count") ?: 0
+        return (0 until count).mapNotNull { index ->
+            val start = MPVLib.getPropertyDouble("chapter-list/$index/time") ?: return@mapNotNull null
+            AnimeFileChapter(MPVLib.getPropertyString("chapter-list/$index/title"), start)
+        }
+    }
+
     override fun selectTrack(kind: AnimeTrackKind, id: Int?) {
         val property = if (kind == AnimeTrackKind.SUBTITLE) "sid" else "aid"
         MpvPlayer.property(property, id?.toString() ?: "no")

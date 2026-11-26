@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">あらすじをスキップ</string>
     <string name="tsz_anime_skip_button">ボタンを表示</string>
     <string name="tsz_anime_skip_auto">自動スキップ</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">動画にチャプターがあるときは AniSkip を使わない</string>
     <string name="tsz_anime_skip_intro_delay">オープニングの待機時間</string>
     <string name="tsz_anime_skip_seconds">%1$d 秒</string>
     <string name="tsz_anime_player_picture_in_picture">ピクチャー イン ピクチャー</string>

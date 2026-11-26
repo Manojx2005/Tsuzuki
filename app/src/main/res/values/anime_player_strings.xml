@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">Skip recap</string>
     <string name="tsz_anime_skip_button">Show button</string>
     <string name="tsz_anime_skip_auto">Auto-skip</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">Don\'t use AniSkip when the video has chapters</string>
     <string name="tsz_anime_skip_intro_delay">Opening delay</string>
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Picture-in-picture</string>

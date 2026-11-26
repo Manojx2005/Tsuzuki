@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -612,56 +613,65 @@ private fun AnimePlayerTimeline(
     val progress = if (duration > 0) (state.position / duration).toFloat().coerceIn(0f, 1f) else 0f
     val buffered = if (duration > 0) (state.bufferedUntil / duration).toFloat().coerceIn(0f, 1f) else 0f
     val current = preview ?: progress
-    // Chapter ticks: where an AniSkip segment starts or ends, not at the very start or end of the episode.
-    val ticks = remember(state.aniSkipSegments, duration) {
-        if (duration <= 0) {
-            emptyList()
-        } else {
-            state.aniSkipSegments.flatMap { listOf(it.start, it.end) }
-                .filter { it > 0.5 && it < duration - 0.5 }
-                .map { (it / duration).toFloat() }
-                .distinct()
-        }
-    }
+    // AY5 chapter ticks: where each chapter of the merged list (file chapters, source stamps, AniSkip) starts.
+    val ticks = remember(state.chapters, duration) { state.chapters.tickFractions(duration) }
+    // The chapter under the playhead (or under the finger while scrubbing), beside the time when there is room.
+    val chapterName = state.chapters.chapterAt(current * duration)?.name
     val timeStyle = animeTimeStyle()
-    Row(
-        modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Text(DateUtils.formatElapsedTime((current * duration).toLong()), color = tokens.dotOn, style = timeStyle)
-        Box(Modifier.weight(1f).height(44.dp), contentAlignment = Alignment.Center) {
-            AnimeScrubber(current, buffered, ticks, Modifier.fillMaxWidth().height(20.dp))
-            Slider(
-                value = current,
-                onValueChange = {
-                    onInteract()
-                    preview = it
-                },
-                onValueChangeFinished = {
-                    preview?.let { onSeek(it * duration) }
-                    preview = null
-                },
-                enabled = duration > 0 && !state.loading,
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.Transparent,
-                    disabledThumbColor = Color.Transparent,
-                    activeTrackColor = Color.Transparent,
-                    inactiveTrackColor = Color.Transparent,
-                    disabledActiveTrackColor = Color.Transparent,
-                    disabledInactiveTrackColor = Color.Transparent,
-                ),
+    BoxWithConstraints(modifier) {
+        val roomForChapter = maxWidth >= ANIME_CHAPTER_LABEL_MIN_WIDTH
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(DateUtils.formatElapsedTime((current * duration).toLong()), color = tokens.dotOn, style = timeStyle)
+            if (roomForChapter && chapterName != null) {
+                Text(
+                    tsuzukiMenuLabel(chapterName),
+                    color = tokens.mutedText,
+                    style = timeStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 160.dp),
+                )
+            }
+            Box(Modifier.weight(1f).height(44.dp), contentAlignment = Alignment.Center) {
+                AnimeScrubber(current, buffered, ticks, Modifier.fillMaxWidth().height(20.dp))
+                Slider(
+                    value = current,
+                    onValueChange = {
+                        onInteract()
+                        preview = it
+                    },
+                    onValueChangeFinished = {
+                        preview?.let { onSeek(it * duration) }
+                        preview = null
+                    },
+                    enabled = duration > 0 && !state.loading,
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.Transparent,
+                        disabledThumbColor = Color.Transparent,
+                        activeTrackColor = Color.Transparent,
+                        inactiveTrackColor = Color.Transparent,
+                        disabledActiveTrackColor = Color.Transparent,
+                        disabledInactiveTrackColor = Color.Transparent,
+                    ),
+                )
+            }
+            Text(
+                "−" + DateUtils.formatElapsedTime(((1f - current) * duration).toLong()),
+                color = tokens.mutedText,
+                style = timeStyle,
             )
         }
-        Text(
-            "−" + DateUtils.formatElapsedTime(((1f - current) * duration).toLong()),
-            color = tokens.mutedText,
-            style = timeStyle,
-        )
     }
 }
 
-/** Board scrubber: flat track, buffered, played (accent) and a round thumb; white ticks at AniSkip chapters. */
+/** Below this width (portrait phones) the seek bar keeps its chapter ticks but drops the chapter name. */
+private val ANIME_CHAPTER_LABEL_MIN_WIDTH = 520.dp
+
+/** Board scrubber: flat track, buffered, played (accent) and a round thumb; white ticks where chapters start. */
 @Composable
 private fun AnimeScrubber(progress: Float, buffered: Float, ticks: List<Float>, modifier: Modifier) {
     val tokens = TsuzukiTheme.tokens
@@ -683,7 +693,10 @@ private fun AnimeScrubber(progress: Float, buffered: Float, ticks: List<Float>, 
         ticks.forEach { fraction ->
             drawRect(
                 tokens.dotOn.copy(alpha = 0.6f),
-                Offset(size.width * fraction - tickWidth / 2, (size.height - tickHeight) / 2),
+                Offset(
+                    (size.width * fraction - tickWidth / 2).coerceIn(0f, size.width - tickWidth),
+                    (size.height - tickHeight) / 2,
+                ),
                 Size(tickWidth, tickHeight),
             )
         }

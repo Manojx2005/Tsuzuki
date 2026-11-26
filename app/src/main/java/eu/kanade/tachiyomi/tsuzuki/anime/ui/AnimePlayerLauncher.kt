@@ -28,8 +28,12 @@ internal interface AnimePlayerBackend : AutoCloseable {
     fun applySettings(settings: AnimePlayerSettings)
     fun tracks(): List<AnimePlayerTrack>
     fun selectTrack(kind: AnimeTrackKind, id: Int?)
+
     /** Submit a video-only screenshot before native teardown; encoding is asynchronous. */
     fun capturePreview(): java.io.File? = null
+
+    /** AY5: the file's chapters (mpv `chapter-list`), read after FILE_LOADED. */
+    fun chapters(): List<eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeFileChapter> = emptyList()
 
     /** AY4: the title mpv shows (PiP, its own OSD); "Anime — Episode". */
     fun setMediaTitle(title: String) = Unit

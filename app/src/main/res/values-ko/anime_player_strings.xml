@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">줄거리 요약 건너뛰기</string>
     <string name="tsz_anime_skip_button">버튼 표시</string>
     <string name="tsz_anime_skip_auto">자동 건너뛰기</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">동영상에 챕터가 있으면 AniSkip 사용 안 함</string>
     <string name="tsz_anime_skip_intro_delay">오프닝 대기 시간</string>
     <string name="tsz_anime_skip_seconds">%1$d초</string>
     <string name="tsz_anime_player_picture_in_picture">화면 속 화면</string>

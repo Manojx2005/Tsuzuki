@@ -10,6 +10,7 @@ import android.os.SystemClock
 import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eu.kanade.tachiyomi.animesource.model.TimeStamp
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.tsuzuki.anime.AnimeLibraryStore
@@ -86,17 +87,27 @@ internal data class AnimePlayerState(
     val nextIn: Int? = null,
     val fallbackNotice: Int = 0,
     val aniSkipSegments: List<AniSkipSegment> = emptyList(),
+    /** AY5: the file's own chapters (mpv `chapter-list`), read once the file has loaded. */
+    val fileChapters: List<AnimeFileChapter> = emptyList(),
+    /** AY5: the playing video's `Video.timestamps` from the source. */
+    val timestamps: List<TimeStamp> = emptyList(),
+    /** AY5: [fileChapters], [timestamps] and [aniSkipSegments] merged; see [mergeAnimeChapters]. */
+    val chapters: List<AnimeChapter> = emptyList(),
     /** AY1: the episode's hosters and their loading state, for the quality sheet. */
     val hosters: List<AnimeHosterEntry> = emptyList(),
     /** AY4: mpv is waiting for data or a seek; [playing] stays true so the screen stays on. */
     val buffering: Boolean = false,
 ) {
+    /**
+     * The opening, ending or recap under the playhead. AniSkip segments only exist while AniSkip is on; a source's
+     * own stamps are offered whatever the AniSkip mode (auto-skip still needs [AniSkipMode.AUTO]).
+     */
     val activeAniSkip: AniSkipSegment?
-        get() = if (loading || failed || ended || settings.aniSkipMode == AniSkipMode.OFF) {
-            null
-        } else {
-            aniSkipSegments.atPosition(position)
-        }
+        get() = if (loading || failed || ended) null else chapters.skipSegments().atPosition(position)
+
+    /** The same state with [chapters] merged again from its inputs. */
+    fun withMergedChapters(): AnimePlayerState =
+        copy(chapters = mergeAnimeChapters(fileChapters, timestamps, aniSkipSegments, duration))
 }
 
 internal class AnimePlayerModel(
@@ -171,6 +182,7 @@ internal class AnimePlayerModel(
     private var restartPending = false
     private var aniSkipJob: Job? = null
     private var aniSkipAttempt: Pair<Long, Long>? = null
+    private var aniSkipGateLogged: Pair<Long, Long>? = null
     private val skippedSegments = mutableSetOf<AniSkipSegment>()
 
     val shouldResume: Boolean get() = wantsPlayback
@@ -601,6 +613,10 @@ internal class AnimePlayerModel(
                 failed = false,
                 ended = false,
                 tracks = emptyList(),
+                fileChapters = emptyList(),
+                timestamps = emptyList(),
+                aniSkipSegments = emptyList(),
+                chapters = emptyList(),
                 bufferedUntil = it.position,
                 fallbackNotice = it.fallbackNotice + if (fallback) 1 else 0,
             )
@@ -658,7 +674,15 @@ internal class AnimePlayerModel(
         resumeChecked = loadedStart <= 0 || keepRestoredStart
         keepRestoredStart = false
         restartPending = false
-        mutableState.update { it.copy(resolution = video.animeResolution, buffering = false) }
+        resetAniSkip()
+        mutableState.update {
+            it.copy(
+                resolution = video.animeResolution,
+                buffering = false,
+                fileChapters = emptyList(),
+                timestamps = video.timestamps,
+            ).withMergedChapters()
+        }
         backend.setMediaTitle(animeMediaTitle(state.value.title, state.value.episode?.name))
         backend.load(video, state.value.position, subtitles)
         // AY1: mpv can stall without FILE_LOADED or an error; treat silence as a failed stream.
@@ -691,7 +715,7 @@ internal class AnimePlayerModel(
         override fun onDuration(seconds: Double) = onMain {
             if (!seconds.isFinite() || seconds <= 0 || (!waitingForFile && state.value.loading)) return@onMain
             tracker.onDuration(seconds)
-            mutableState.update { it.copy(duration = seconds) }
+            mutableState.update { it.copy(duration = seconds).withMergedChapters() }
             restartIfStartedAtEnd()
             loadAniSkip()
         }
@@ -712,7 +736,9 @@ internal class AnimePlayerModel(
             if (!waitingForFile) return@onMain
             fileWatchdog?.cancel()
             waitingForFile = false
-            mutableState.update { it.copy(loading = false) }
+            val chapters = backend.chapters()
+            if (chapters.isNotEmpty()) AnimeLog.i("file has ${chapters.size} chapter(s)")
+            mutableState.update { it.copy(loading = false, fileChapters = chapters).withMergedChapters() }
             revealFrom = state.value.position
             revealTimeout?.cancel()
             revealTimeout = viewModelScope.launch {
@@ -770,7 +796,7 @@ internal class AnimePlayerModel(
         aniSkipJob?.cancel()
         aniSkipJob = null
         aniSkipAttempt = null
-        mutableState.update { it.copy(aniSkipSegments = emptyList()) }
+        mutableState.update { it.copy(aniSkipSegments = emptyList()).withMergedChapters() }
     }
 
     private fun loadAniSkip() {
@@ -782,14 +808,32 @@ internal class AnimePlayerModel(
             return
         }
         val attempt = episode.id to current.duration.roundToLong()
+        if (!shouldRequestAniSkip(
+                current.settings.aniSkipMode,
+                current.settings.aniSkipIgnoreWithChapters,
+                current.fileChapters,
+                current.timestamps,
+            )
+        ) {
+            if (aniSkipGateLogged != attempt) {
+                aniSkipGateLogged = attempt
+                AnimeLog.i(
+                    "AniSkip not requested: the video has ${current.fileChapters.size} chapter(s) and " +
+                        "${current.timestamps.size} source timestamp(s)",
+                )
+            }
+            if (aniSkipAttempt != null || current.aniSkipSegments.isNotEmpty()) resetAniSkip()
+            return
+        }
         if (aniSkipAttempt == attempt) return
+        AnimeLog.i("AniSkip lookup for episode ${episode.id}")
         resetAniSkip()
         aniSkipAttempt = attempt
         aniSkipJob = viewModelScope.launch {
             try {
                 val segments = aniSkip.segments(episode, current.duration)
                 if (aniSkipAttempt == attempt) {
-                    mutableState.update { it.copy(aniSkipSegments = segments) }
+                    mutableState.update { it.copy(aniSkipSegments = segments).withMergedChapters() }
                     autoSkipIfReady()
                 }
             } catch (error: CancellationException) {

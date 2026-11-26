@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">Pular resumo</string>
     <string name="tsz_anime_skip_button">Mostrar botão</string>
     <string name="tsz_anime_skip_auto">Pular automaticamente</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">Não usar o AniSkip quando o vídeo tiver capítulos</string>
     <string name="tsz_anime_skip_intro_delay">Atraso da abertura</string>
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Picture-in-picture</string>
