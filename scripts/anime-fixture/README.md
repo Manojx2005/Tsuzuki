@@ -5,7 +5,7 @@ without depending on a live site. It pairs with the debug-only **Tsuzuki Fixture
 AY0, in `app/src/debug`), which reads the case JSON below. Preview and release builds don't contain that source.
 
 Debug-build sources (registered by `AnimeSourceManager` through `debugBuiltInAnimeSources`, found by class name so
-main code never imports them): **Tsuzuki Fixture**, id `7311000000000001`, cases 01–15, with a "Preferred quality"
+main code never imports them): **Tsuzuki Fixture**, id `7311000000000001`, cases 01–15 and 17, with a "Preferred quality"
 setting (`preferred_quality`, 1080/720/480, default 720) read by `sortVideos`; **Tsuzuki Fixture lib16 no hosters**,
 id `7311000000000016`, case 16, which implements only `getVideoList(episode)`. Both send `User-Agent:
 TsuzukiFixture/1` and `Referer: http://127.0.0.1:8765/`, and show under Browse › Anime › Sources (not in the
@@ -50,6 +50,7 @@ adb -s <serial> reverse --remove tcp:8765        # afterwards
 | `/fail/<file>` | 500 |
 | `/slow/<file>` | waits `--slow-seconds` before answering |
 | `/stall/<file>` | sends about the first 2 s of the file, waits `--stall-seconds`, then the rest |
+| `/api/slow.json` | waits `--slow-seconds`, then `{}` (case 17's slow hoster list) |
 | `/api/anime.json` | the case list: `case`, `title`, `url`, `thumbnail`, `noHosters` |
 | `/api/episodes/<case>.json` | two episodes (2 then 1): `url`, `name`, `number`, `dateUpload`, `previewUrl` |
 | `/api/videos/<case>.json` | `hosters[]`: `name`, `lazy`, `throws`, `videos[]` (`url`, `quality`, `preferred`, `headers`, `subtitleTracks`, `mpvArgs`, `timestamps`) |
@@ -79,3 +80,4 @@ The anime title is the case name. The source maps the video JSON onto `Hoster`/`
 | 14 stall mid-stream | `/stall/ok.mp4` | buffering indicator during the stall (AY4) |
 | 15 sortVideos honours quality | 1080/720/480 in that order | the "Preferred quality" setting's choice plays first |
 | 16 lib16 no hosters | served by the second source, which only implements `getVideoList(episode)` | plays (AY1 detection) |
+| 17 slow mirror beside a fast one | hoster A (1080p) answers `getVideoList(hoster)` after `--slow-seconds`; hoster B (720p) at once | ANIME-FAST-START: B starts about 1 s after the tap; A joins the quality sheet when it arrives |

@@ -39,7 +39,7 @@ mimetypes.add_type("application/x-subrip", ".srt")
 
 # --- Cases -----------------------------------------------------------------------------------------------
 # The source maps these onto Hoster/Video objects. A hoster with "throws" makes getVideoList(hoster) throw;
-# "lazy" marks Hoster.lazy. Video "headers" are Video.headers (None = use the source's headers).
+# "lazy" marks Hoster.lazy; "slowList" makes getVideoList(hoster) wait on /api/slow.json first. Video "headers" are Video.headers (None = use the source's headers).
 
 def video(path, quality="720p", **extra):
     return {"url": BASE + path, "quality": quality, **extra}
@@ -101,6 +101,11 @@ CASES: dict[str, dict] = {
     # Served by FixtureNoHosterAnimeSource, which only implements getVideoList(episode).
     "16": {"title": "16 lib16 no hosters", "noHosters": True,
            "hosters": [hoster("Fixture", [video("/media/ok.mp4")])]},
+    # ANIME-FAST-START: hoster A answers getVideoList(hoster) only after --slow-seconds; B has its video at once.
+    "17": {"title": "17 slow mirror beside a fast one", "hosters": [
+        hoster("A (slow list, 1080p)", [video("/media/hls/1080/index.m3u8", "1080p")], slowList=True),
+        hoster("B (fast, 720p)", [video("/media/hls/720/index.m3u8", "720p")]),
+    ]},
 }
 
 
@@ -198,6 +203,9 @@ class Handler(BaseHTTPRequestHandler):
     def _api(self, name: str, head: bool) -> None:
         if name == "anime.json":
             return self._json(anime_list(), head)
+        if name == "slow.json":  # case 17's slow hoster asks this before returning its videos
+            time.sleep(self.slow_seconds)
+            return self._json({}, head)
         m = re.fullmatch(r"(episodes|videos)/(\d\d)\.json", name)
         if m and m.group(2) in CASES:
             return self._json(episodes(m.group(2)) if m.group(1) == "episodes" else videos(m.group(2)), head)

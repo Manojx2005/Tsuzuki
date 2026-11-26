@@ -67,14 +67,18 @@ internal object FixtureJson {
             val item = element.jsonObject
             val throws = item.bool("throws") ?: false
             val lazy = item.bool("lazy") ?: false
+            val slow = isSlowList(item)
             Hoster(
                 hosterUrl = "#$index",
                 hosterName = item.string("name")!!,
-                videoList = if (throws || lazy) null else videos(item),
+                videoList = if (throws || lazy || slow) null else videos(item),
                 internalData = if (throws) THROWS else item.toString(),
                 lazy = lazy,
             )
         }
+
+    /** Case 17: a hoster whose `getVideoList(hoster)` first waits on the server's slow route. */
+    fun isSlowList(hoster: JsonObject): Boolean = hoster.bool("slowList") ?: false
 
     /** All videos of the first hoster; what the lib16 source returns from `getVideoList(episode)`. */
     fun firstHosterVideos(json: String): List<Video> =
