@@ -68,4 +68,5 @@
     <string name="tsz_anime_player_sub_black">검은색</string>
     <string name="tsz_anime_player_sub_grey">회색</string>
     <string name="tsz_anime_player_sub_none">없음</string>
+    <string name="tsz_anime_player_resuming_at">%s부터 이어서 재생</string>
 </resources>
