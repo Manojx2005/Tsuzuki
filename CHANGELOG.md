@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-28
+
 ### Added
 - Anime details: Edit info changes an anime's title, author, artist, synopsis, status and tags. Your edits stay when
   the source refreshes, and Reset brings back the source's details.
