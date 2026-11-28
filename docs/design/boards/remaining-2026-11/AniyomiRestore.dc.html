@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Restore an Aniyomi backup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+</style>
+</helmet>
+<div style="width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:28px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">AY8 · MOVING FROM ANIYOMI</div>
+<h1 style="margin:0;font-family:{{display}};font-size:48px;line-height:1.05;font-weight:800">{{titleText}}</h1>
+<p style="margin:0;max-width:860px;font-size:14px;line-height:1.6;color:{{muted}}">The existing Restore backup flow accepts an Aniyomi .tachibk. The preview says it came from Aniyomi and counts what will be restored, books and anime separately, before anything is written.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;flex:1">
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}};display:flex;flex-direction:column;gap:10px;padding:22px 14px;box-sizing:border-box">
+<div style="font-family:{{display}};font-size:22px;font-weight:800">{{restoreText}}</div>
+<div style="display:flex;align-items:center;gap:8px;background:{{tile}};border:1px solid {{line}};border-radius:14px;padding:10px">
+<div style="flex:1;display:flex;flex-direction:column;gap:2px"><div style="font-size:11px;font-weight:700">aniyomi_2026-11-20.tachibk</div><div style="font-size:9px;color:{{muted}}">{{fromText}}</div></div>
+<div style="font-size:9px;font-weight:700;color:{{accent}};border:1px solid {{accent}};border-radius:10px;padding:3px 8px">ANIYOMI</div>
+</div>
+<div style="font-size:10px;letter-spacing:2px;color:{{muted}}">{{willText}}</div>
+<sc-for list="{{counts}}" as="c" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;justify-content:space-between;min-height:34px;border-bottom:1px solid {{line}};font-size:11px"><span>{{c.label}}</span><b>{{c.value}}</b></div>
+</sc-for>
+<div style="flex:1"></div>
+<a href="#" style="min-height:44px;border-radius:22px;background:{{accent}};color:{{onAccent}};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;text-decoration:none">{{restoreAction}}</a>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Preview</b><br>Same restore preview as AP-20, with an origin badge. Real counts from the file; a row with 0 is left out.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}};display:flex;flex-direction:column;gap:10px;padding:22px 14px;box-sizing:border-box">
+<div style="font-family:{{display}};font-size:22px;font-weight:800">{{restoreText}}</div>
+<div style="font-size:10px;letter-spacing:2px;color:{{muted}}">{{doneText}}</div>
+<sc-for list="{{done}}" as="d" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;justify-content:space-between;min-height:34px;border-bottom:1px solid {{line}};font-size:11px"><span>{{d.label}}</span><b style="color:{{d.ink}}">{{d.value}}</b></div>
+</sc-for>
+<div style="background:{{tile}};border:1px solid {{line}};border-radius:14px;padding:10px;font-size:10px;line-height:1.5;color:{{muted}}">{{skipNote}}</div>
+<div style="flex:1"></div>
+<a href="#" style="min-height:44px;border-radius:22px;border:1.5px solid {{accent}};color:{{accent}};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;text-decoration:none">{{extAction}}</a>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Result</b><br>Anime whose extension isn't installed are still restored (as Aniyomi does) and wait for it; the button opens Anime extensions.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;line-height:1.55;padding-top:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">RULES</div>
+<div><b>Detect</b> · Aniyomi's anime fields in the backup proto; no extra picker or setting.</div>
+<div><b>Maps</b> · anime, episodes (seen, position), anime categories → shelves, history, trackers; anime source preferences by name.</div>
+<div><b>Merge</b> · an anime already in the library keeps the newer progress (same rule as books).</div>
+<div><b>Anime off</b> · still restored (AP-17) and shown once Anime is turned on; the preview says so.</div>
+<div><b>Not restored</b> · Aniyomi app settings that Tsuzuki doesn't have; listed by count in the result.</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    const up = (s) => dot ? s.toUpperCase() : s;
+    const fg = dot ? '#ffffff' : '#f5efe2';
+    const muted = dot ? '#a3a3a3' : '#b9c2d6';
+    return {
+      bg: dot ? '#000000' : '#16213e', fg, muted,
+      tile: dot ? '#161616' : '#2a3a63', line: dot ? '#2e2e2e' : '#3a4c78', frame: dot ? '#262626' : '#0e1730',
+      accent: dot ? '#ff3b30' : '#e8b04a', onAccent: dot ? '#ffffff' : '#16213e',
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif", body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      titleText: up('Bring your anime over'),
+      restoreText: up('Restore backup'), fromText: up('Made by Aniyomi · 20 Nov'),
+      willText: up('Will restore'), restoreAction: up('Restore'),
+      counts: [
+        { label: up('Books'), value: '[N]' }, { label: up('Anime'), value: '[N]' }, { label: up('Episodes watched'), value: '[N]' },
+        { label: up('Shelves'), value: '[N]' }, { label: up('Trackers'), value: '[N]' }
+      ],
+      doneText: up('Restored'),
+      done: [
+        { label: up('Anime'), value: '[N]', ink: fg }, { label: up('Waiting for an extension'), value: '[N]', ink: muted }, { label: up('Settings not restored'), value: '[N]', ink: muted }
+      ],
+      skipNote: 'Aniyomi settings Tsuzuki has no match for were left out.',
+      extAction: up('Anime extensions')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Player screenshot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+/* 3 s loop: tap at 20 %, white flash 0 → 35 % → 0 in 150 ms, snackbar rises 300 ms (Enter) and leaves at 80 % in 200 ms (Exit). */
+@keyframes flash{0%,20%{opacity:0}22%{opacity:.35}25%,100%{opacity:0}}
+@keyframes snack{0%,25%{transform:translateY(140%);animation-timing-function:cubic-bezier(0.05,0.7,0.1,1)}35%,80%{transform:translateY(0);animation-timing-function:cubic-bezier(0.3,0,0.8,0.15)}86.6%,100%{transform:translateY(140%)}}
+.flash{animation:flash var(--cyc) infinite linear}.snack{animation:snack var(--cyc) infinite}
+</style>
+</helmet>
+<div style="--cyc:{{cycle}};width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:28px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">A6.7 · SAVE A FRAME</div>
+<h1 style="margin:0;font-family:{{display}};font-size:48px;line-height:1.05;font-weight:800">{{titleText}}</h1>
+<p style="margin:0;max-width:860px;font-size:14px;line-height:1.6;color:{{muted}}">A Screenshot action in the player's options sheet. It saves the video frame only (no subtitles, no controls) to Pictures/Tsuzuki, then offers Share. No storage permission on Android 10+.</p>
+</div>
+<div style="display:flex;gap:40px;flex:1;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:520px;height:270px;border-radius:30px;border:9px solid {{frame}};overflow:hidden;background:#0b0b0b">
+<div style="position:absolute;inset:0;background:linear-gradient(135deg,#0c8599,#1b3a4b 60%,#0b0b0b)"></div>
+<div style="position:absolute;right:0;top:0;bottom:0;width:230px;background:{{sheet}};border-left:1px solid {{line}};padding:16px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:10px;letter-spacing:2px;color:{{muted}}">{{optionsText}}</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:10px;min-height:36px;border-radius:12px;padding:0 10px;background:{{r.bg}};border:{{r.border}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{r.ink}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.icon}}"></path></svg>
+<div style="font-size:11px;font-weight:700;color:{{r.ink}}">{{r.label}}</div>
+</div>
+</sc-for>
+</div>
+<div class="flash" style="position:absolute;inset:0;background:#ffffff;pointer-events:none"></div>
+<div class="snack" style="position:absolute;left:16px;bottom:14px;width:300px;height:44px;border-radius:22px;background:{{tile}};border:1px solid {{line}};display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px;box-sizing:border-box">
+<div style="font-size:11px">{{savedText}}</div>
+<a href="#" style="min-height:32px;display:inline-flex;align-items:center;padding:0 14px;border-radius:16px;color:{{accent}};font-size:11px;font-weight:700;text-decoration:none">{{shareText}}</a>
+</div>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:520px"><b style="color:{{accent}}">Options sheet · Screenshot row</b><br>Tapping closes nothing: a 150 ms white flash over the picture confirms the frame, the snackbar rises (300 ms, Enter) for 4 s. Reduced motion: no flash, the snackbar fades.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;line-height:1.55;max-width:420px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">RULES</div>
+<div><b>Place</b> · options sheet, after Audio / Subtitles / Speed, before Open in another app.</div>
+<div><b>File</b> · <code>Title - EP 12 - 00-14-32.png</code> (title, episode, position), unsafe characters replaced.</div>
+<div><b>Where</b> · MediaStore <code>Pictures/Tsuzuki/</code>; written on IO; the cache copy is deleted after.</div>
+<div><b>Share</b> · opens the system share sheet with the saved image.</div>
+<div><b>Fails</b> · snackbar “Couldn't save the screenshot” in the same place, no Share.</div>
+<div><b>Not offered</b> · while the resume cover is still up (no frame yet).</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"speed":{"editor":"enum","options":["1x","0.25x"],"default":"1x"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    const up = (s) => dot ? s.toUpperCase() : s;
+    const accent = dot ? '#ff3b30' : '#e8b04a';
+    const fg = dot ? '#ffffff' : '#f5efe2';
+    const tile = dot ? '#161616' : '#2a3a63';
+    const row = (label, icon, hi) => ({ label: up(label), icon, ink: hi ? accent : fg, bg: hi ? tile : 'transparent', border: hi ? '1.5px solid ' + accent : '1px solid transparent' });
+    return {
+      bg: dot ? '#000000' : '#16213e', sheet: dot ? '#111111' : '#22325a', fg, muted: dot ? '#a3a3a3' : '#b9c2d6',
+      tile, line: dot ? '#2e2e2e' : '#3a4c78', frame: dot ? '#262626' : '#0e1730', accent,
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif", body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      cycle: (this.props.speed ?? '1x') === '0.25x' ? '12s' : '3s',
+      titleText: up('Keep this frame'), optionsText: up('Options'),
+      savedText: up('Saved to Pictures/Tsuzuki'), shareText: up('Share'),
+      rows: [
+        row('Audio', 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', false),
+        row('Subtitles', 'M3 5h18v14H3zM7 15h4M13 15h4', false),
+        row('Speed', 'M12 12l4-4M4 18a8 8 0 1 1 16 0', false),
+        row('Screenshot', 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', true),
+        row('Open in another app', 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6', false)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
