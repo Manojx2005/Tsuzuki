@@ -43,3 +43,13 @@ internal fun novelRecapParagraphs(content: String): List<String> {
     val excerpt = beforeNote.filter { it.length >= 24 && !noteStart.containsMatchIn(it) }.takeLast(3)
     return if (excerpt.size >= 2) excerpt else emptyList()
 }
+
+/**
+ * The chapter read just before [chapterId] in reading order. Taken from the full sorted list, not the
+ * reader's list: "skip read" / filters / "downloaded only" drop exactly the chapter just finished, which
+ * would make the recap silently disappear (or recap the wrong chapter) for people using them.
+ */
+internal fun <T> previousChapterForRecap(sortedAscending: List<T>, chapterId: Long, idOf: (T) -> Long): T? {
+    val index = sortedAscending.indexOfFirst { idOf(it) == chapterId }
+    return sortedAscending.getOrNull(index - 1)?.takeIf { index > 0 }
+}

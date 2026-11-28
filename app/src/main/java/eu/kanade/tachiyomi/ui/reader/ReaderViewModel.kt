@@ -422,7 +422,7 @@ class ReaderViewModel @JvmOverloads constructor(
 
                 val chapter = chapterList.first { chapterId == it.chapter.id }
                 if (manga.isNovel && readerPreferences.novelChapterRecap.get() && !incognitoMode) {
-                    chapterList.getOrNull(chapterList.indexOf(chapter) - 1)?.let { previous ->
+                    novelRecapPreviousChapter(manga)?.let { previous ->
                         novelRecap.prepare(manga, chapterId, previous, source)
                     }
                 }
@@ -1085,6 +1085,13 @@ class ReaderViewModel @JvmOverloads constructor(
         if (readerPreferences.novelChapterRecap.get()) {
             viewModelScope.launch(Dispatchers.IO) { novelRecap.cacheExcerpt(mangaId, chapterId, content) }
         }
+    }
+
+    private suspend fun novelRecapPreviousChapter(manga: Manga): ReaderChapter? {
+        val sorted = getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
+            .sortedWith(getChapterSort(manga, sortDescending = false))
+        return eu.kanade.tachiyomi.tsuzuki.reader.previousChapterForRecap(sorted, chapterId) { it.id }
+            ?.let { ReaderChapter(it.toDbChapter()) }
     }
 
     internal fun novelRecapFor(chapterId: Long?) =

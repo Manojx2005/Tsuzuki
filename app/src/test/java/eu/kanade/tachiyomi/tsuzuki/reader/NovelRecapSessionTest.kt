@@ -50,6 +50,69 @@ class NovelRecapSessionTest {
     }
 
     @Test
+    fun onlineNovelWithNoOfflineTextFetchesPreviousChapterFromSource() = kotlinx.coroutines.runBlocking {
+        // Real time: the fetch runs on Dispatchers.IO, which runTest's virtual clock would time out.
+        withColdCache {
+            val source = mockk<eu.kanade.tachiyomi.source.Source>()
+            val chapter = chapter()
+            val page = Page(0, url = "/novel/chapter-1")
+            val first = "The archivist lowered the ledger onto the table."
+            val second = "She heard the bells ring from the locked tower."
+            every { source.isNovelSource } returns true
+            coEvery { source.getPageList(chapter.chapter) } returns listOf(page)
+            coEvery { source.fetchPageText(page) } returns "<p>$first</p><p>$second</p>"
+            val session = session()
+
+            session.prepare(Manga.create().copy(id = 1), 3, chapter, source)
+
+            assertEquals(listOf(first, second), session.forChapter(3)?.paragraphs)
+        }
+    }
+
+    @Test
+    fun onlineFetchFailureStillOpensWithoutRecap() = runTest {
+        withColdCache {
+            val source = mockk<eu.kanade.tachiyomi.source.Source>()
+            every { source.isNovelSource } returns true
+            coEvery { source.getPageList(any()) } throws java.io.IOException("offline")
+            val session = session()
+
+            session.prepare(Manga.create().copy(id = 1), 3, chapter(), source)
+
+            assertEquals(null, session.forChapter(3))
+        }
+    }
+
+    @Test
+    fun blockingSourceDoesNotHoldTheChapterOpenPastTheTimeout() {
+        kotlinx.coroutines.runBlocking {
+            withColdCache {
+                val source = mockk<eu.kanade.tachiyomi.source.Source>()
+                every { source.isNovelSource } returns true
+                coEvery { source.getPageList(any()) } answers {
+                    Thread.sleep(10_000)
+                    emptyList()
+                }
+                val session = session()
+                val started = System.nanoTime()
+
+                session.prepare(Manga.create().copy(id = 1), 3, chapter(), source)
+
+                assertEquals(null, session.forChapter(3))
+                assert((System.nanoTime() - started) / 1_000_000 < 6_000)
+            }
+        }
+    }
+
+    @Test
+    fun previousChapterIgnoresReaderFilters() {
+        val all = listOf(1L, 2L, 3L, 4L)
+        assertEquals(3L, previousChapterForRecap(all, 4L) { it })
+        assertEquals(null, previousChapterForRecap(all, 1L) { it })
+        assertEquals(null, previousChapterForRecap(all, 99L) { it })
+    }
+
+    @Test
     fun localFetchCancellationPropagates() {
         assertThrows(CancellationException::class.java) {
             runTest {
