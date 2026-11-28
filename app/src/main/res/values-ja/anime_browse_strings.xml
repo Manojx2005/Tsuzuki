@@ -56,4 +56,6 @@
     <!-- A6.8: local anime source. -->
     <string name="tsz_local_anime">ローカルアニメ</string>
     <string name="tsz_local_anime_on_device">この端末</string>
+    <string name="tsz_local_anime_empty">まだ動画がありません</string>
+    <string name="tsz_local_anime_empty_hint">作品ごとにフォルダを作り、ここに入れてください:</string>
 </resources>

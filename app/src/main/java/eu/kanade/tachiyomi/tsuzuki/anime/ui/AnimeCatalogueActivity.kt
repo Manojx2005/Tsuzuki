@@ -481,7 +481,11 @@ private fun AnimeCatalogueScreen(
                     }
                 } else if (shows.itemCount == 0) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        AnimeCatalogueStatus(stringResource(MR.strings.no_results_found))
+                        if (source is eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource) {
+                            eu.kanade.presentation.tsuzuki.anime.LocalAnimeEmptyFolder()
+                        } else {
+                            AnimeCatalogueStatus(stringResource(MR.strings.no_results_found))
+                        }
                     }
                 }
             }
