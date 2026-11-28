@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Novel recap: shows again after a break (it took the previous chapter from a filtered list), fetches the previous
   chapter when it is not downloaded, and appears as an overlay when you resume mid-chapter.
 - Extensions: the "JS" tag follows the theme accent, and the source's "Reverse chapter list" setting is translated.
+- Anime: Continue watching from Watch or the anime Library no longer waits for every extension to load first.
+- Anime: videos from extensions that serve them through their own local server (newer extensions) now play.
 
 ## [0.2.3] - 2026-11-28
 
