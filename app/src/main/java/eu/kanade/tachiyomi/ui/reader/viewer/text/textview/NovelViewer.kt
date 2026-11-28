@@ -26,6 +26,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import eu.kanade.presentation.tsuzuki.components.createReaderErrorView
 import eu.kanade.presentation.tsuzuki.components.createReaderLoadingView
+import eu.kanade.presentation.tsuzuki.components.fadeInReaderContent
 import eu.kanade.presentation.tsuzuki.dictionary.DICTIONARY_SELECTION_MENU_ID
 import eu.kanade.presentation.tsuzuki.dictionary.addDictionaryAction
 import eu.kanade.presentation.tsuzuki.reader.NovelChapterEndTransition
@@ -1561,6 +1562,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             when (state) {
                 Page.State.Ready -> {
                     hideLoadingIndicator()
+                    contentContainer.fadeInReaderContent()
                     displayChapter(chapters.currChapter, page)
                     restoreProgress(page, enteredViaPrevious)
                     activity.viewModel.setNovelVisibleChapter(page.chapter.chapter)
