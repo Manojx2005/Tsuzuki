@@ -28,6 +28,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 import kotlin.random.Random
 
+/**
+ * Tsuzuki (board remaining-2026-11/Main, V8.2): the face upright in the body face and the message bolder.
+ * Null (default) keeps upstream's look.
+ */
+data class EmptyScreenStyle(val face: androidx.compose.ui.text.TextStyle, val message: androidx.compose.ui.text.TextStyle)
+
+val LocalEmptyScreenStyle = androidx.compose.runtime.staticCompositionLocalOf<EmptyScreenStyle?> { null }
+
 data class EmptyScreenAction(
     val stringRes: StringResource,
     val icon: ImageVector,
@@ -54,6 +62,7 @@ fun EmptyScreen(
     actions: List<EmptyScreenAction>? = null,
 ) {
     val face = remember { getRandomErrorFace() }
+    val tsuzuki = LocalEmptyScreenStyle.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -66,7 +75,7 @@ fun EmptyScreen(
             Text(
                 text = face,
                 modifier = Modifier.secondaryItemAlpha(),
-                style = MaterialTheme.typography.displayMedium,
+                style = tsuzuki?.face ?: MaterialTheme.typography.displayMedium,
             )
         }
 
@@ -75,7 +84,7 @@ fun EmptyScreen(
             modifier = Modifier
                 .paddingFromBaseline(top = 24.dp)
                 .secondaryItemAlpha(),
-            style = MaterialTheme.typography.bodyMedium,
+            style = tsuzuki?.message ?: MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
 

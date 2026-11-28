@@ -166,6 +166,7 @@ fun ProvideBookPalette(palette: BookPalette?, content: @Composable () -> Unit) {
         CompositionLocalProvider(
             LocalTsuzukiTokens provides tokens,
             tachiyomi.presentation.core.theme.LocalActiveColor provides tokens.activeColor,
+            tachiyomi.presentation.core.screens.LocalEmptyScreenStyle provides tsuzukiEmptyScreenStyle(tokens),
             content = content,
         )
     }
