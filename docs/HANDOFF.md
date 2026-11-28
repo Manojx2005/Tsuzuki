@@ -74,10 +74,10 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 
 | Card | What | Lane | Status |
 |---|---|---|---|
-| SM0 | Measurement kit in `scripts/perf/` (release-as-claudeqa build, jank, frames, strip, Perfetto trace) | Claude | `claude-working` |
-| SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` (after SM0) |
-| SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | `ready` |
-| SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `ready` |
+| SM0 | Measurement kit in `scripts/perf/` (release-as-claudeqa build, jank, frames, strip, Perfetto trace) | Claude | **`done`** (`b3fb860d4`) |
+| SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` — profiles merged (Tsuzuki rules 347 → 3,067 baseline, 248 → 1,192 startup); tabs/Settings journey and fresh-install measurement wait for the Device lock |
+| SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | **`done` — no-go, accepted** (Claude review 2026-11-28; current transition kept; branch holds only the result) |
+| SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `codex-working` (2026-11-28, `.worktrees/sm3`) |
 | SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **board ready, awaiting owner approval** — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
 | SM5 | Implement the motion system | Claude/Codex | after SM4 |
 | SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
@@ -87,6 +87,54 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 Codex prompt: `Read AGENTS.md, docs/HANDOFF.md ("Batch SM") and docs/SMOOTHNESS_PLAN.md. Take the first SM card
 marked ready for your lane, measure with scripts/perf before and after on a release build, commit on
 tsuzuki/<card>, fill the Result, set review. Device use only under the Device lock rule.`
+
+### SM2 Result (Codex, 2026-11-28)
+
+**Claude review (2026-11-28): accepted.** Six release runs per build and theme on the S22 is the protocol in
+`SMOOTHNESS_PLAN.md`; both layout-gated trials push Dot details open past the 300 ms MotionOpen budget and the
+one-frame delay changes nothing measurable, so keeping the current transition is right. Takeaway for SM3: **Back
+from details is the heaviest moment** (longest UI frame 54–80 ms median vs 19–31 ms on open), so the Library being
+recomposed and laid out on return is a bigger target than the details first frame.
+
+**Performance no-go.** Keep the existing transition. The two layout-gated builds missed the 300 ms
+MotionOpen budget in Dot. The one-frame tween delay retained the abrupt first visible fade and left
+the median slow-frame counts unchanged in both themes. Commit `49933178d` on `tsuzuki/sm2` records
+the result. The experimental patches are in the evidence directory.
+
+**Release A/B.** S22 RZCWA139X1X at 120 Hz, optimized arm64 `claudeqa`, `speed-profile` after each
+install. Baseline is `e42c5703d`. The same cached 3,956-chapter novel in Library › All was used in
+each theme and build. One warm-up and six measured J3 details opens and Backs per build and theme.
+The table gives median / worst. UI values are in ms, and first 150 ms is measured from the first
+valid app frame in framestats.
+
+| Build | Theme | Open longest UI | Open UI first 150 | Open frames >16.7 ms | Back longest UI | Back UI first 150 | Back frames >16.7 ms |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Baseline | Dot | 30.8 / 59.1 | 40.7 / 96.3 | 3 / 5 | 80.2 / 92.2 | 94.9 / 97.1 | 4 / 5 |
+| Deferred | Dot | 23.9 / 51.2 | 39.9 / 85.1 | 4 / 6 | 62.9 / 67.7 | 102.6 / 119.7 | 5.5 / 6 |
+| Seekable | Dot | 25.6 / 42.1 | 39.8 / 75.5 | 4 / 5 | 54.6 / 60.4 | 91.1 / 98.7 | 4 / 5 |
+| One-frame delay | Dot | 31.3 / 72.1 | 44.2 / 105.3 | 3 / 4 | 71.2 / 74.4 | 90.4 / 102.0 | 4 / 6 |
+| Baseline | Colour | 24.2 / 50.9 | 38.4 / 88.5 | 2 / 3 | 64.1 / 77.7 | 85.2 / 96.7 | 3 / 4 |
+| Deferred | Colour | 23.2 / 41.7 | 32.7 / 68.8 | 3.5 / 5 | 53.6 / 74.6 | 84.4 / 111.7 | 5 / 5 |
+| Seekable | Colour | 19.4 / 24.9 | 28.5 / 43.5 | 3 / 4 | 57.4 / 71.0 | 92.0 / 125.4 | 5 / 5 |
+| One-frame delay | Colour | 26.2 / 57.3 | 43.0 / 97.3 | 2 / 4 | 67.1 / 77.7 | 85.6 / 95.4 | 3 / 5 |
+
+- `TsuzukiSharedCover.kt` and `Navigator.kt` were used in the deferred and seekable trials. They
+  held pushes for cover placement with 100 ms and 75 ms deadlines, respectively. Separate recordings
+  put Dot tap-to-settled at about 263 ms baseline, 350 ms deferred, 326 ms seekable and 293 ms with
+  the one-frame tween delay. Colour was about 235, 309, 291 and 277 ms, respectively. These are
+  visual estimates from one native-PTS clip per build/theme. The benchmark and recording runs were
+  separate, so the every-frame threshold during motion remains unverified.
+- Perfetto found 32.0 ms in `AndroidOwner:measureAndLayout` on baseline and 37.2 ms in the deferred
+  trial. SM3 can use these traces to target the details layout cost before another gating attempt.
+- All three trials assembled as optimized releases. Scoped Spotless passed twice and
+  `:app:testDebugUnitTest` passed 1,524 tests on each trial. S22 ordinary and immediate Back returned
+  to Library. Tablet spot checks covered the settings rail in Dot/Colour and in-place anime details
+  with Back in Dot. The tablet scratch library lacks a book for J3 and its fixture anime source
+  is debug-only. Both scratch devices were returned to the baseline on Dot Home and both crash
+  buffers were empty.
+- Evidence in `.worktrees/sm2/app/build/review-evidence/sm2/`. Includes raw framestats, per-theme
+  summaries, native-PTS video strips, traces and long slices, hashes in `apk-sha256.txt`, three trial
+  diffs, build/test logs and device handback captures.
 
 ## Batch AP — anime parity for 0.2.2 (owner 2026-11-22) — start here
 
@@ -127,6 +175,19 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 **v0.2.3 released (Claude, 2026-11-28, owner: "release and work on the next cards"):** `cff662eeb` (versionCode 29) gated (1,678 tests, migrations, Preview + Release, anime ABI OK, 10 APKs 16 KB-aligned), `main` pushed, stale 2016 `v0.2.3` tag deleted locally, annotated `v0.2.3` pushed; Release run `46107131879` succeeded: https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.2.3 (5 APKs).
 
 **PLAYER-RESUME merged (Claude, 2026-11-28, `fae9c62b8`, not pushed).** Owner on 0.2.3: resume/start "gets stuck for 4-5 frames and then starts", plus a long wait. Screen recordings (tablet, fixture) showed mpv's first still frame through the resume cover while the player window faded in (the video layer is under the window and not faded with it). Fixes in `AnimePlayerActivity` (surface handed to mpv only after `onEnterAnimationComplete`, 700 ms fallback), `MpvAnimePlayerLauncher` (resume = keyframe start: `hr-seek=no` until PLAYBACK_RESTART, then `default`), `AnimePlayerModel` (cover lifts after 0.3 s of real playback from the lowest clock value seen; the 3 s guard waits while buffering). Tablet recordings after: details → cover → picture at keyframe+0.4 s, every frame advancing; keyframe restart 160–230 ms after loadfile (mp4 and HLS). 1,691 tests / 0. Not yet on the owner's phone (needs a release). Evidence: scratch recordings only.
+
+**SM1 progress (Claude, 2026-11-28, uncommitted generator work committed with this note):** new
+`baseline-profile/.../TsuzukiJourneysProfileGenerator.kt` (Library media switch, Watch + anime library, tabs/sheets/
+Settings as separate tests; nav taps pick the bottom-most match because Browse has its own "その他" header and the
+labelled nav node is not clickable); `BaselineProfileGenerator` accepts a reader showing a scrolling TextView (the
+native reader no longer exposes its text to UiAutomator). Collected on the S22 against a **non-minified** release
+build installed as `claudeqa` (temporary `.claudeqa` suffix on the release block; the plugin's nonMinifiedRelease
+would otherwise install as the production package): novel journey, media switch, Watch, startup. Merged with
+`scripts/perf/merge-profiles.py` (union of H/S/P per descriptor, existing rules kept): baseline 47,557 → 61,573 rules
+(Tsuzuki 347 → 3,067), startup 34,382 → 39,623 (248 → 1,192). Release builds and packages `assets/dexopt/baseline.prof`
+(29,006 → 30,860 bytes). Open: the tabs/sheets/Settings journey still fails ("Navigation item missing: その他" at one
+step — needs a device look), and the fresh-install J1–J8 measurement (`build-qa-release.sh --fresh`); both wait for
+Codex SM3's Device lock. `:baseline-profile:spotlessCheck` still stops on the old `constants.kt` filename rule.
 
 **Owner 2026-11-28: "transition animations are not smooth throughout the app" (Claude, partly done).** Measured an optimized release build (`claudeqa` suffix, speed-profile compiled) on the S22 at 120 Hz: tab switches 2–6 % janky frames; opening book details has a 20–40 ms main-thread frame at the tap (Perfetto: `Recomposer:recompose` 19 ms, then `AndroidOwner:measureAndLayout` 39 ms on the first layout), occasional 50 ms spikes. Background markdown parsing (`MarkdownRender immediate = false`) was A/B tested (6 runs each) and showed no clear gain — not shipped. Owner then said the problem is timing ("slow or abrupt") and content popping in, on reader/player open, tabs, sheets and menus. **MOTION-300 merged (`db7d1c460`, owner chose 300 ms):** `TsuzukiMotion.SHARED_MS` 450 → 300 (Back and pushes; anime screen motion too) and the four `tsuzuki_reader_*` activity animations 450 → 300 (reader and player); details open stays 180 ms; specs.md and design README updated. App tests 1,524 / 0. **Owner named the pop-ins: anime episodes on opening details, and Manga → Anime moving differently from Novels → Manga. MEDIA-SLIDE + ANIME-POPIN merged (`daf53a610`, not pushed):** books ↔ anime library no longer fades the whole screen (3-line `libraryMediaTransition` hook in upstream `HomeScreen.kt`); the segment highlight slides from the segment left (`TsuzukiSegments(slideFrom)`, `LibraryMediaSlide`); anime details get the stored row from the Library route and `AnimeCatalogueActivity` so episodes load on the first frame; episode rows fade in (150 ms); the continue tile's space is held while episodes load; anime Library / Watch show "library is empty" only after the database answers. S22 recordings: Manga → Anime and Anime → Novels slide with a steady header; anime details: no layout jump (debug build, episodes ~0.6 s after tap). 1,691 tests / 0. Release-build anime details not checked (the fixture source is debug-only). Tools: `trace_processor` v59.1 launcher in Claude's scratchpad (`perfetto-dl/`).
 
@@ -1406,7 +1467,7 @@ tablet and the S22** (owner 2026-11-12: anime-lane implementers may use adb; PAR
 script with what you saw at each step in Result. The review lane re-runs it on the merged branch. Aniyomi is
 Apache-2.0: adapting its code is allowed with the header line from §1.
 
-**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: free (Claude 2026-11-24; claudeqa = AP batch 2 on tablet and S22; S22 on wireless adb 192.168.40.243:37553; fixture server may still run on 8765)` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
+**Device lock** (one thread on the devices at a time; edit this line before and after): `Devices: Codex SM3 (2026-11-28, owner confirmed both test devices free, release profiling)` **Still open from the stopped Codex RECAP-F review (2026-11-15 22:49):** its last tablet run failed ("Later paged position incorrectly fell back to the previous chapter", `.worktrees/review-recap-f/app/build/review-evidence/recap-f/tablet-paged-final-instrumentation.txt`); `animescratch` is **unrestored with `animescratch.test` installed on both devices**, and its review fixes are uncommitted in `.worktrees/review-recap-f`. Claude did not touch them; `tablet-before.tar` / `s22-before.tar` and `restore-scratch.py` are there. Owner decides: resume that review, or restore.
 
 **Lane 1 prompt (anime):** `Read AGENTS.md, docs/HANDOFF.md and docs/ANIME_ANIYOMI_PARITY.md. You are the anime lane: finish A6.4 if it is still yours, then take the next ready card in the Batch AY order.`
 

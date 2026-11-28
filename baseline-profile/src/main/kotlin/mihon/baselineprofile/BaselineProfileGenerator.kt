@@ -50,8 +50,17 @@ class BaselineProfileGenerator {
 
             device.waitAndClick(By.text(Pattern.compile(Pattern.quote(bookTitle), Pattern.CASE_INSENSITIVE)))
             device.waitAndClick(By.text(Pattern.compile("(?iu)(start|resume|開始|再開)\\s*·.*")))
-            check(device.wait(Until.hasObject(By.textContains(readerText)), 10_000)) {
-                "The selected novel did not render the expected cached chapter text"
+            // The native reader no longer exposes its text to UiAutomator (2026-11-28); a scrolling text view in
+            // the reader counts as loaded when the text itself cannot be seen.
+            val textShown = device.wait(Until.hasObject(By.textContains(readerText)), 5_000)
+            check(
+                textShown ||
+                    device.wait(
+                        Until.hasObject(By.scrollable(true).hasDescendant(By.clazz("android.widget.TextView"))),
+                        10_000,
+                    ),
+            ) {
+                "The selected novel did not open in the reader"
             }
             device.waitForIdle()
             device.pressBack()
