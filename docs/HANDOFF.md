@@ -77,7 +77,15 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 - **Follow-up (same day):** A6.8 empty local folder now shows the board's folder layout (merged). **A6.7 checked on the S22** (rvapscratch debug build, Colour, AY0 fixture over adb reverse): Settings menu shows スクリーンショット only once the picture is up; tapping saved `Pictures/Tsuzuki/01 plain mp4 - EP 2 - 00-00-00.png`, a clean 1280×720 video frame (no controls, no subtitles), snackbar 「Pictures/Tsuzuki に保存しました」 with 共有; crash buffer empty. rvapscratch now runs this build. Menus: the motion board's 150 ms / 0.92 scale is **not** applied — Material 3's DropdownMenu animation (120 ms, 0.8) is fixed inside the library; matching it needs a custom popup, left as is.
 - **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions.
 
-## Current state — 0.2.4 release in progress (Claude, 2026-11-29) — Codex: start here
+## Current state — 0.2.4 released (2026-11-29)
+
+[Tsuzuki v0.2.4](https://github.com/Manojx2005/Tsuzuki/releases/tag/v0.2.4) is the latest stable release, versionCode 30, tagged at `8bad91450`. The [Release workflow](https://github.com/Manojx2005/Tsuzuki/actions/runs/46163192171) succeeded. All five uploaded APK digests match the SHA-256 values in the release notes.
+
+- On the S22 Colour scratch app, episodes 1 and 2 were saved. Playing episode 1 queued episode 3, which then showed as downloaded. Enabling duplicate-seen and watching only the original episode 3 marked both it and its Group B release seen (2/4 to 4/4). Fixture servers stopped, adb reverse removed and auto-rotation restored.
+- Final commit passed 1,724 tests, SQLDelight migration checks, Preview and Release builds, anime ABI, 16 KB alignment and baseline profile checks (3,572 Tsuzuki rules). The first S22 run measured 13.6% slow fling frames, all in one measured fling. The repeat passed on the same commit with 22 ms open, 32 ms Back and 14/718 slow fling frames (1.9%, limit 2%). Local evidence is in `.worktrees/_evidence/watch-extras/`. The merged worktree was removed.
+- Still open for the owner: real Simkl sign-in and sync. The player warm-up and extension-local HTTP server changes below also lack a real-source device check.
+
+### Archived pre-release handoff (Claude, 2026-11-29)
 
 Owner asked (2026-11-28/29): "Release 0.2.4" → "Compare with Aniyomi first, then release" → "also check any other player code"
 → "add download-ahead and duplicate-seen too" → "save what you did for codex".
