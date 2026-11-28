@@ -50,4 +50,8 @@
     <string name="tsz_anime_migration_replace">Reemplazar</string>
     <string name="tsz_anime_turn_on">Activar</string>
     <string name="tsz_onboarding_watch_anime">¿También quieres ver anime?</string>
+    <!-- A6.6: time left until AniList's next episode (compact). -->
+    <string name="tsz_anime_airing_in_minutes">%1$d min</string>
+    <string name="tsz_anime_airing_in_hours">%1$d h</string>
+    <string name="tsz_anime_airing_in_days">%1$d d %2$d h</string>
 </resources>

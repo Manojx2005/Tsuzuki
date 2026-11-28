@@ -49,4 +49,8 @@
     <string name="tsz_anime_migration_replace">替换</string>
     <string name="tsz_anime_turn_on">开启</string>
     <string name="tsz_onboarding_watch_anime">也想看动画吗？</string>
+    <!-- A6.6: time left until AniList's next episode (compact). -->
+    <string name="tsz_anime_airing_in_minutes">%1$d分钟</string>
+    <string name="tsz_anime_airing_in_hours">%1$d小时</string>
+    <string name="tsz_anime_airing_in_days">%1$d天%2$d小时</string>
 </resources>

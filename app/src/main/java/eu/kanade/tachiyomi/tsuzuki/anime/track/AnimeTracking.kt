@@ -17,6 +17,7 @@ internal class AnimeTracking(
     preferences: PreferenceStore,
 ) {
     val autoUpdate = preferences.getBoolean("tsuzuki_anime_auto_update_track", true)
+    val airing = AnimeAiringSchedule(preferences)
     private val writes = Mutex()
 
     val services: List<Tracker>
@@ -36,6 +37,16 @@ internal class AnimeTracking(
         val candidate = result.track(animeId, trackerId)
         val current = api.entry(candidate) ?: api.update(candidate, AnimeTrackEdit(status = AnimeTrackStatus.PLANNING))
         tracks.upsert(current)
+        // A6.6: a new AniList binding shows its next airing time at once instead of after the next update.
+        if (trackerId == trackers.aniList.id) {
+            try {
+                airing.put(animeId, trackers.aniList.anime.nextAiring(current.remoteId))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // The next library update tries again.
+            }
+        }
     }
 
     suspend fun edit(selected: AnimeTrack, edit: AnimeTrackEdit) = writes.withLock {
@@ -59,6 +70,19 @@ internal class AnimeTracking(
             val api = provider(local.syncId) ?: continue
             api.entry(local)?.let { tracks.upsert(it) }
         }
+    }
+
+    /**
+     * A6.6: store AniList's next airing episode for [animeId] when it is bound to AniList (logged in); clears it
+     * when the binding is gone or AniList has nothing scheduled. Errors keep the last stored value.
+     */
+    suspend fun refreshAiring(animeId: Long) {
+        val track = tracks.awaitByAnimeId(animeId).firstOrNull { it.syncId == trackers.aniList.id }
+        if (track == null || !trackers.aniList.isLoggedIn) {
+            airing.put(animeId, null)
+            return
+        }
+        airing.put(animeId, trackers.aniList.anime.nextAiring(track.remoteId))
     }
 
     suspend fun syncProgress(animeId: Long, number: Double): Boolean = writes.withLock {

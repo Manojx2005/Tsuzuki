@@ -91,8 +91,33 @@ internal fun rememberAnimeAiringToday(store: AnimeLibraryStore): AnimeUpdateEpis
     val schedule by remember(store, day) {
         store.observeAiringEpisodes(day.first, day.last + 1)
     }.collectAsState(emptyList())
-    val today = schedule.filter { it.timestamp in day }
+    // A6.6: AniList's real times win over the source's dates for the same anime.
+    val tracking = remember { Injekt.get<eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking>() }
+    val aniList by remember(tracking) { tracking.airing.observe() }.collectAsState(emptyMap())
+    val library by remember(store) { store.observeLibrary() }.collectAsState(emptyList())
+    val titles = library.associate { it.anime.id to it.anime.title }
+    val episodeLabel = androidx.compose.ui.platform.LocalContext.current
+    val today = mergeAiringToday(schedule, aniList, titles, day) { number ->
+        episodeLabel.getString(R.string.tsz_anime_history_episode, number.toString())
+    }
     return today.firstOrNull { it.timestamp >= now.toEpochMilli() } ?: today.lastOrNull()
+}
+
+/**
+ * A6.6: today's airing entries, AniList first: an anime with an AniList time today shows that time (its source
+ * estimates are dropped); only library anime ([titles]) are listed. Sorted by time.
+ */
+internal fun mergeAiringToday(
+    source: List<AnimeUpdateEpisode>,
+    aniList: Map<Long, eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeNextAiring>,
+    titles: Map<Long, String>,
+    day: LongRange,
+    episodeName: (Int) -> String,
+): List<AnimeUpdateEpisode> {
+    val real = aniList.filter { (id, next) -> next.airingAt in day && id in titles }
+        .map { (id, next) -> AnimeUpdateEpisode(id, titles.getValue(id), -1L, episodeName(next.episode), null, next.airingAt) }
+    val realIds = real.mapTo(hashSetOf()) { it.animeId }
+    return (source.filter { it.timestamp in day && it.animeId !in realIds } + real).sortedBy { it.timestamp }
 }
 
 @Composable

@@ -90,6 +90,7 @@ import eu.kanade.tachiyomi.tsuzuki.anime.excludedAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.filterAnimeGroups
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTrackProgressJob
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
+import eu.kanade.tachiyomi.tsuzuki.anime.track.upcoming
 import eu.kanade.tachiyomi.tsuzuki.anime.withUserEdits
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.NovelGlobalSearchScreen
@@ -203,6 +204,9 @@ internal fun AnimeDetailsScreen(
     val trackingCount by remember(saved?.id) {
         saved?.let { tracking.observe(it.id).map { tracks -> tracks.size } } ?: flowOf(0)
     }.collectAsState(0)
+    val aniListAiring by remember(saved?.id) {
+        saved?.let { anime -> tracking.airing.observe().map { it[anime.id] } } ?: flowOf(null)
+    }.collectAsState(null)
     var showFilter by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var externalUrl by remember(display.url) { mutableStateOf<String?>(null) }
@@ -457,6 +461,7 @@ internal fun AnimeDetailsScreen(
                         AnimeLibraryActions(
                             trackingCount = trackingCount,
                             nextAiringDays = nextAiringDays(episodeState.items, System.currentTimeMillis()),
+                            aniListAiring = aniListAiring.upcoming(System.currentTimeMillis()),
                             favorite = saved?.favorite == true,
                             enabled = !saving && selected.isEmpty(),
                             onFavorite = {
