@@ -26,7 +26,12 @@ class LocalAnimeFilesTest {
     @Test
     fun sidecarSubtitlesPairByBaseName() {
         val siblings = listOf(
-            "Show - 01.mkv", "Show - 01.ass", "Show - 01.en.srt", "Show - 02.srt", "cover.jpg", "Show - 01.txt",
+            "Show - 01.mkv",
+            "Show - 01.ass",
+            "Show - 01.en.srt",
+            "Show - 02.srt",
+            "cover.jpg",
+            "Show - 01.txt",
         )
         assertEquals(
             listOf("Show - 01.ass" to "", "Show - 01.en.srt" to "en"),

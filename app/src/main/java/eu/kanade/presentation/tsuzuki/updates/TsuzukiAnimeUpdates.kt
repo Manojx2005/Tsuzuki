@@ -115,7 +115,9 @@ internal fun mergeAiringToday(
     episodeName: (Int) -> String,
 ): List<AnimeUpdateEpisode> {
     val real = aniList.filter { (id, next) -> next.airingAt in day && id in titles }
-        .map { (id, next) -> AnimeUpdateEpisode(id, titles.getValue(id), -1L, episodeName(next.episode), null, next.airingAt) }
+        .map { (id, next) ->
+            AnimeUpdateEpisode(id, titles.getValue(id), -1L, episodeName(next.episode), null, next.airingAt)
+        }
     val realIds = real.mapTo(hashSetOf()) { it.animeId }
     return (source.filter { it.timestamp in day && it.animeId !in realIds } + real).sortedBy { it.timestamp }
 }

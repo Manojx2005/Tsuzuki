@@ -106,7 +106,9 @@ internal class LocalAnimeSource(
         val siblings = folder.listFiles().orEmpty().filter { !it.isDirectory }.associateBy { it.name.orEmpty() }
         val video = siblings[fileName] ?: return@withContext emptyList()
         val subtitles = localSubtitlesFor(fileName, siblings.keys.toList()).mapNotNull { (name, tag) ->
-            siblings[name]?.let { Track(LocalAnimeVideos.issue(it.uri.toString()), tag.ifBlank { name.fileExtension() }) }
+            siblings[name]?.let {
+                Track(LocalAnimeVideos.issue(it.uri.toString()), tag.ifBlank { name.fileExtension() })
+            }
         }
         listOf(
             Video(

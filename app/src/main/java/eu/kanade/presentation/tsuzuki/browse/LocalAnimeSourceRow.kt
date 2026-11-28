@@ -41,7 +41,12 @@ internal fun LocalAnimeSourceRow(name: String, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Outlined.VideoLibrary, contentDescription = null, tint = tokens.accent, modifier = Modifier.size(28.dp))
+        Icon(
+            Icons.Outlined.VideoLibrary,
+            contentDescription = null,
+            tint = tokens.accent,
+            modifier = Modifier.size(28.dp),
+        )
         Text(tsuzukiMenuLabel(name), style = MaterialTheme.typography.titleSmall, color = tokens.dotOn)
     }
 }

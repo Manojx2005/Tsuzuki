@@ -15,7 +15,12 @@ internal sealed interface AnimeScreenshotResult {
  * "Title - EP 12 - 00-14-32": anime title, episode number (or the episode's name when it has no number) and the
  * playback position. Characters a file name can't hold are replaced by the saver (`DiskUtil.buildValidFilename`).
  */
-internal fun animeScreenshotName(title: String, episodeNumber: Double, episodeName: String, positionSeconds: Double): String {
+internal fun animeScreenshotName(
+    title: String,
+    episodeNumber: Double,
+    episodeName: String,
+    positionSeconds: Double,
+): String {
     val episode = if (episodeNumber >= 0) {
         "EP " + if (episodeNumber % 1.0 == 0.0) episodeNumber.toLong().toString() else episodeNumber.toString()
     } else {

@@ -125,7 +125,11 @@ class BackupFileValidator(
         // AP-20: the anime the restore will actually use (the format AnimeBackupSummary picked).
         val animeContents = animeCounts[anime.format] ?: AnimeContents()
         val fromAniyomi = anime.format != null && anime.format != AnimeBackupFormat.TSUZUKI // AY8 preview badge
-        return Results(missingSources, missingTrackers, Contents(books, shelves, historyEntries, animeContents, fromAniyomi))
+        return Results(
+            missingSources,
+            missingTrackers,
+            Contents(books, shelves, historyEntries, animeContents, fromAniyomi),
+        )
     }
 
     data class Results(

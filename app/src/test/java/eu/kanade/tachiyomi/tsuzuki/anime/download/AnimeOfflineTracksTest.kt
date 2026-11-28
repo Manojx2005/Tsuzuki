@@ -26,8 +26,20 @@ class AnimeOfflineTracksTest {
         val rebuilt = AnimeOfflineTracks.offlineVideo(video, folder)
         assertEquals(video.absolutePath, rebuilt.videoUrl)
         assertEquals("1080p", rebuilt.videoTitle)
-        assertEquals(listOf(File(folder, "subtitle-0.ass").absolutePath to "English"), rebuilt.subtitleTracks.map { it.url to it.lang })
-        assertEquals(listOf(File(folder, "audio-0.m4a").absolutePath to "Japanese"), rebuilt.audioTracks.map { it.url to it.lang })
+        assertEquals(
+            listOf(File(folder, "subtitle-0.ass").absolutePath to "English"),
+            rebuilt.subtitleTracks.map {
+                it.url to
+                    it.lang
+            },
+        )
+        assertEquals(
+            listOf(File(folder, "audio-0.m4a").absolutePath to "Japanese"),
+            rebuilt.audioTracks.map {
+                it.url to
+                    it.lang
+            },
+        )
         assertEquals(listOf("demuxer-lavf-o" to "fflags=+genpts"), rebuilt.mpvArgs)
     }
 

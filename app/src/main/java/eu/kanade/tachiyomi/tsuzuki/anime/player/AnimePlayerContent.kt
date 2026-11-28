@@ -87,8 +87,8 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
+import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.delay
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR

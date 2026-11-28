@@ -32,7 +32,10 @@ import kotlin.random.Random
  * Tsuzuki (board remaining-2026-11/Main, V8.2): the face upright in the body face and the message bolder.
  * Null (default) keeps upstream's look.
  */
-data class EmptyScreenStyle(val face: androidx.compose.ui.text.TextStyle, val message: androidx.compose.ui.text.TextStyle)
+data class EmptyScreenStyle(
+    val face: androidx.compose.ui.text.TextStyle,
+    val message: androidx.compose.ui.text.TextStyle,
+)
 
 val LocalEmptyScreenStyle = androidx.compose.runtime.staticCompositionLocalOf<EmptyScreenStyle?> { null }
 
