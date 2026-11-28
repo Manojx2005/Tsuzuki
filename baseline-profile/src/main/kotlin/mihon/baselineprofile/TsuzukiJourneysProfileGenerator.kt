@@ -50,8 +50,12 @@ class TsuzukiJourneysProfileGenerator {
         if (device.scrollToAndTap(By.text(SETTINGS))) {
             device.tapIfPresent(By.text(APPEARANCE))
             device.waitForIdle()
-            device.pressBack()
-            device.pressBack()
+            // Back out only as far as the bottom bar: one Back too many leaves the app.
+            repeat(3) {
+                if (device.hasObject(By.desc(HOME))) return@repeat
+                device.pressBack()
+                device.waitForIdle()
+            }
         }
         device.tapNav(HOME)
     }
@@ -135,7 +139,7 @@ class TsuzukiJourneysProfileGenerator {
  * Bottom bar (phone) / rail (tablet) items carry the label as their content description and as text. Compose can
  * replace a node between finding and clicking it (StaleObjectException), so a tap is retried with a fresh lookup.
  */
-private fun UiDevice.tapNav(label: Pattern) {
+private fun UiDevice.tapNav(label: Pattern, retried: Boolean = false) {
     // Pages reuse nav labels (Browse has an "その他" / Other section): take the match nearest the bottom bar
     // (phones) or the left rail (tablets), and tap its centre: the labelled node itself is not clickable.
     repeat(3) {
@@ -163,6 +167,12 @@ private fun UiDevice.tapNav(label: Pattern) {
                 waitForIdle()
             }
         }
+    }
+    // A sheet or menu left open covers the bar: close it once and try again.
+    if (!retried) {
+        pressBack()
+        waitForIdle()
+        return tapNav(label, retried = true)
     }
     error("Navigation item missing: $label")
 }
