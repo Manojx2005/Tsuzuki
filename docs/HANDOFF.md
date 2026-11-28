@@ -66,6 +66,28 @@ Not in 0.1.1: anime (all of it stays behind its switch, unmerged), R13 dictionar
 
 Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary that satisfies the literal NT1 native-string rule. The owner reports the tablet connected by USB and the S22 available over wireless debugging. Independent review may use both; this app implementer still does not run device QA. This is permission to investigate, not a waiver of NT1, lexicon licensing or the owner listening go/no-go.
 
+## Batch SM — smoothness (owner 2026-11-28) — start here
+
+Owner: the app does not feel as smooth as major apps; plan everything so Codex can help, then implement. **Full
+plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure only on a release build
+(`scripts/perf/`), J1–J8 journeys, ≥ 6 runs, before and after.
+
+| Card | What | Lane | Status |
+|---|---|---|---|
+| SM0 | Measurement kit in `scripts/perf/` (release-as-claudeqa build, jank, frames, strip, Perfetto trace) | Claude | `claude-working` |
+| SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` (after SM0) |
+| SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | `ready` |
+| SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `ready` |
+| SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | `ready` |
+| SM5 | Implement the motion system | Claude/Codex | after SM4 |
+| SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
+| SM7 | Smooth scrolling of big lists | Codex | `ready` |
+| SM8 | Release gate: profile presence + jank thresholds | Claude | after SM1 |
+
+Codex prompt: `Read AGENTS.md, docs/HANDOFF.md ("Batch SM") and docs/SMOOTHNESS_PLAN.md. Take the first SM card
+marked ready for your lane, measure with scripts/perf before and after on a release build, commit on
+tsuzuki/<card>, fill the Result, set review. Device use only under the Device lock rule.`
+
 ## Batch AP — anime parity for 0.2.2 (owner 2026-11-22) — start here
 
 Owner: every feature the novel and manga tabs have must exist for anime, with the same design; plus the bugs he
