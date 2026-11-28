@@ -83,8 +83,11 @@ internal val NOVEL_RECAP_VIEWPORT_SCRIPT = """
         });
         var samples = [];
         blocks.forEach(function(el) {
+            // Half an em: a real line fragment (even one CJK character) is wider; a trailing space that overhangs
+            // the hidden prior column into the visible one (about 3 CSS px on the tablet) is not.
+            var minExtent = Math.max(1, 0.5 * (parseFloat(getComputedStyle(el).fontSize) || 16));
             if (!el.matches('pre[data-tsundoku-plain-text]')) {
-                samples.push({text: el.innerText, rects: Array.from(el.getClientRects())});
+                samples.push({text: el.innerText, rects: Array.from(el.getClientRects()), min: minExtent});
                 return;
             }
             // Plain novels are one pre element. Measure its newline paragraphs as DOM ranges.
@@ -107,7 +110,7 @@ internal val NOVEL_RECAP_VIEWPORT_SCRIPT = """
                     }
                     if (began && end <= part.end) {
                         range.setEnd(part.node, end - part.start);
-                        samples.push({text: trimmed, rects: Array.from(range.getClientRects())});
+                        samples.push({text: trimmed, rects: Array.from(range.getClientRects()), min: minExtent});
                         break;
                     }
                 }
@@ -126,11 +129,18 @@ internal val NOVEL_RECAP_VIEWPORT_SCRIPT = """
             clipTop = Math.max(clipTop, bodyRect.top);
             clipBottom = Math.min(clipBottom, bodyRect.bottom);
         }
+        // RECAP-VIEWPORT-F: a paragraph is on the settled page only when a fragment overlaps the clip by at least
+        // half an em both ways, so whitespace slivers from the hidden prior column don't count as visible text.
+        function onPage(r, min) {
+            var w = Math.min(r.right, clipRight) - Math.max(r.left, clipLeft);
+            var h = Math.min(r.bottom, clipBottom) - Math.max(r.top, clipTop);
+            return w >= min && h >= min;
+        }
         var before = [];
         for (var i = 0; i < samples.length; i++) {
-            var rects = samples[i].rects;
+            var rects = samples[i].rects, min = samples[i].min;
             if (!rects.length) continue;
-            if (rects.some(function(r) { return r.bottom > clipTop && r.top < clipBottom && r.right > clipLeft && r.left < clipRight; })) return before.slice(-16);
+            if (rects.some(function(r) { return onPage(r, min); })) return before.slice(-16);
             // Stop before content on a future page, even if a preceding page has no prose.
             if (rects.some(function(r) { return (r.right > clipLeft && r.left < clipRight && r.top >= clipBottom) || r.left >= clipRight; })) return before.slice(-16);
             var text = samples[i].text;
