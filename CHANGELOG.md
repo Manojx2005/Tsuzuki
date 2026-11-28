@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 - Opening and closing the reader and the video player, and going back, now take 300 ms instead of 450 ms.
+- Library: switching to Anime slides like switching between Novels and Manga, instead of fading the whole screen.
+- Anime details: episodes appear with the page instead of popping in, and the page no longer jumps when the
+  continue button arrives; the anime library no longer flashes "empty" while it loads.
 
 ### Fixed
 - Starting or resuming an anime episode no longer flashes a still frame before playing, and resuming starts
