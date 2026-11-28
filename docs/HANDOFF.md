@@ -78,7 +78,7 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 | SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` (after SM0) |
 | SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | `ready` |
 | SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `ready` |
-| SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | `ready` |
+| SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **board ready, awaiting owner approval** — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
 | SM5 | Implement the motion system | Claude/Codex | after SM4 |
 | SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
 | SM7 | Smooth scrolling of big lists | Codex | `ready` |
