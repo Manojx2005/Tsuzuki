@@ -32,6 +32,9 @@ internal interface AnimePlayerBackend : AutoCloseable {
     /** Submit a video-only screenshot before native teardown; encoding is asynchronous. */
     fun capturePreview(): java.io.File? = null
 
+    /** A6.7: write the current video frame (no subtitles, no controls) to [target]; false when not possible. */
+    fun captureScreenshot(target: java.io.File): Boolean = false
+
     /** AY5: the file's chapters (mpv `chapter-list`), read after FILE_LOADED. */
     fun chapters(): List<eu.kanade.tachiyomi.tsuzuki.anime.player.AnimeFileChapter> = emptyList()
 

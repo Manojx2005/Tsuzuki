@@ -325,6 +325,12 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         return target
     }
 
+    override fun captureScreenshot(target: File): Boolean {
+        if (!created) return false
+        MpvPlayer.command("async", "screenshot-to-file", target.path, "video")
+        return true
+    }
+
     override fun close() {
         eventObserver?.let(MpvPlayer::removeObserver)
         eventObserver = null

@@ -94,4 +94,9 @@
     <string name="tsz_anime_external_ask">Choose each time</string>
     <string name="tsz_anime_external_uninstalled">%1$s (not installed)</string>
     <string name="tsz_anime_external_missing">No app could open this video, so it plays in Tsuzuki</string>
+    <!-- A6.7: save the frame on screen. -->
+    <string name="tsz_anime_player_screenshot">Screenshot</string>
+    <string name="tsz_anime_player_screenshot_saved">Saved to Pictures/Tsuzuki</string>
+    <string name="tsz_anime_player_screenshot_failed">Couldn’t save the screenshot</string>
+    <string name="tsz_anime_player_screenshot_share">Share</string>
 </resources>

@@ -87,6 +87,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiTile
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiMenuLabel
 import eu.kanade.presentation.tsuzuki.components.errorHeading
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.tsuzuki.error.errorCopyForUi
 import kotlinx.coroutines.delay
 import tachiyomi.domain.items.episode.model.Episode
@@ -124,6 +125,31 @@ internal fun AnimePlayerContent(
     var lastNotice by rememberSaveable { mutableIntStateOf(0) }
     val snackbar = remember { SnackbarHostState() }
     val fallback = stringResource(R.string.tsz_anime_player_fallback)
+    // A6.7: a short white flash over the picture, then "Saved to Pictures/Tsuzuki" with Share.
+    var screenshotFlash by remember { mutableIntStateOf(0) }
+    val screenshotContext = LocalContext.current
+    val screenshotSaved = stringResource(R.string.tsz_anime_player_screenshot_saved)
+    val screenshotFailed = stringResource(R.string.tsz_anime_player_screenshot_failed)
+    val screenshotShare = stringResource(R.string.tsz_anime_player_screenshot_share)
+    LaunchedEffect(model) {
+        model.screenshots.collect { result ->
+            when (result) {
+                is AnimeScreenshotResult.Saved -> {
+                    val action = snackbar.showSnackbar(
+                        screenshotSaved,
+                        actionLabel = screenshotShare,
+                        duration = androidx.compose.material3.SnackbarDuration.Short,
+                    )
+                    if (action == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        screenshotContext.startActivity(
+                            result.uri.toShareIntent(screenshotContext, "image/png"),
+                        )
+                    }
+                }
+                AnimeScreenshotResult.Failed -> snackbar.showSnackbar(screenshotFailed)
+            }
+        }
+    }
     val covered = !state.revealed && !state.failed
     // Overlays (board: Episodes, Audio & subtitles) sit over the bare frame, so the chrome hides behind them.
     val showControls = visible && !locked && !covered && state.nextIn == null && sheet == null
@@ -251,6 +277,10 @@ internal fun AnimePlayerContent(
                     onMenu = { menuOpen = it },
                     onSheet = { sheet = it },
                     modifier = Modifier.align(Alignment.TopCenter).padding(start = 16.dp, end = 16.dp, top = 14.dp),
+                    onScreenshot = {
+                        screenshotFlash++
+                        model.saveScreenshot()
+                    },
                 )
                 if (!state.loading && !state.failed) {
                     AnimePlayerTransport(state, model, Modifier.align(Alignment.Center)) { interaction++ }
@@ -363,6 +393,7 @@ internal fun AnimePlayerContent(
                 )
             }
         }
+        AnimeScreenshotFlash(screenshotFlash)
         SnackbarHost(
             hostState = snackbar,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp),
@@ -388,6 +419,7 @@ private fun AnimePlayerTopBar(
     onMenu: (Boolean) -> Unit,
     onSheet: (AnimePlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
+    onScreenshot: () -> Unit = {},
 ) {
     val tokens = TsuzukiTheme.tokens
     Row(
@@ -457,6 +489,16 @@ private fun AnimePlayerTopBar(
                         onSheet(AnimePlayerSheet.VIDEO)
                     },
                 )
+                // A6.7: not offered until a frame is on screen (the resume cover is still up before that).
+                if (state.revealed && !state.loading && !state.failed) {
+                    TsuzukiMenuItem(
+                        text = stringResource(R.string.tsz_anime_player_screenshot),
+                        onClick = {
+                            onMenu(false)
+                            onScreenshot()
+                        },
+                    )
+                }
                 TsuzukiMenuItem(
                     text = stringResource(
                         if (orientationLocked) {
@@ -855,3 +897,20 @@ private const val SEEK_RIPPLE_MS = 800L
 
 /** How long the video takes to fade in once its clock moves. */
 private const val REVEAL_FADE_MS = 180
+
+/** A6.7: white over the picture, 35 % → 0 in 150 ms on each tap; none under reduced motion. */
+@Composable
+private fun AnimeScreenshotFlash(trigger: Int) {
+    if (trigger == 0 || eu.kanade.presentation.theme.tsuzuki.rememberReduceMotion()) return
+    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(trigger) {
+        alpha.snapTo(0.35f)
+        alpha.animateTo(0f, androidx.compose.animation.core.tween(150))
+    }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer { this.alpha = alpha.value }
+            .background(androidx.compose.ui.graphics.Color.White),
+    )
+}
