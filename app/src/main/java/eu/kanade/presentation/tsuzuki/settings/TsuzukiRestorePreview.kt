@@ -1,5 +1,7 @@
 package eu.kanade.presentation.tsuzuki.settings
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,12 +42,27 @@ internal fun TsuzukiRestorePreview(contents: BackupFileValidator.Contents) {
         )
     }
     TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
-        Text(
-            text = if (tokens.isDot) heading.uppercase() else heading,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            color = tokens.dotOn,
-        )
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Text(
+                text = if (tokens.isDot) heading.uppercase() else heading,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = tokens.dotOn,
+                modifier = Modifier.weight(1f),
+            )
+            // AY8 (board remaining-2026-11/AniyomiRestore): the file was made by Aniyomi.
+            if (contents.fromAniyomi) {
+                Text(
+                    text = "ANIYOMI",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = tokens.accent,
+                    modifier = Modifier
+                        .border(1.dp, tokens.accent, androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                )
+            }
+        }
         listOf(counts, animeCounts).filter { it.isNotEmpty() }.forEach { row ->
             CountRow(row, format)
         }
