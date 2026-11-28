@@ -186,12 +186,15 @@ internal fun AnimeDetailsScreen(
             downloadStatuses.filterValues { it == AnimeDownloadStatus.Saved }.keys,
         )
     }
-    val ordered = remember(episodeState.items) { episodeState.items.sortedWith(animeEpisodeNumberOrder) }
+    // Episode actions use number order, regardless of the active display sort.
+    val ordered by remember(episodeState.items) {
+        lazy(LazyThreadSafetyMode.NONE) { episodeState.items.sortedWith(animeEpisodeNumberOrder) }
+    }
     val shelves by remember { library.observeShelves() }.collectAsState(emptyList())
     var shelfSelection by remember { mutableStateOf<Set<Long>?>(null) }
     var duplicate by remember { mutableStateOf<AnimeDuplicateMatch?>(null) }
     var selection by rememberSaveable(anime.url) { mutableStateOf(longArrayOf()) }
-    val selected = episodeState.items.filter { it.id in selection }
+    val selected = if (selection.isEmpty()) emptyList() else episodeState.items.filter { it.id in selection }
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf(false) }
     var showTracking by remember { mutableStateOf(false) }

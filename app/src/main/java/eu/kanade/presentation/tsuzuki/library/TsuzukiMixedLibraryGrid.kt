@@ -105,6 +105,7 @@ internal fun TsuzukiMixedLibraryGrid(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Box(Modifier.fillMaxWidth().height(160.dp)) {
+                    val badges = item.badges
                     MangaCover.Book(
                         data = MangaCoverModel(
                             mangaId = manga.id,
@@ -145,15 +146,15 @@ internal fun TsuzukiMixedLibraryGrid(
                     )
                     if (manga.id !in selection) {
                         Box(Modifier.align(Alignment.TopEnd).padding(4.dp)) {
-                            UnreadBadge(item.badges.unreadCount)
+                            UnreadBadge(badges.unreadCount)
                         }
                     }
                     Row(
                         modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                        DownloadsBadge(item.badges.downloadCount)
-                        LanguageBadge(item.badges.isLocal, item.badges.sourceLanguage)
+                        DownloadsBadge(badges.downloadCount)
+                        LanguageBadge(badges.isLocal, badges.sourceLanguage)
                     }
                     if (animeSelection?.ids.isNullOrEmpty() && onContinueReading != null && item.unreadCount > 0) {
                         FilledIconButton(

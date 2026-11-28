@@ -69,7 +69,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -150,11 +150,12 @@ fun MangaInfoBox(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .matchParentSize()
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        brush = Brush.verticalGradient(colors = backdropGradientColors),
-                    )
+                .drawWithCache {
+                    val gradient = Brush.verticalGradient(colors = backdropGradientColors)
+                    onDrawWithContent {
+                        drawContent()
+                        drawRect(brush = gradient)
+                    }
                 }
                 .blur(4.dp)
                 .alpha(0.2f),

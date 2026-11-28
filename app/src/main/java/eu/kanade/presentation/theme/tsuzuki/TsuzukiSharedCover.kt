@@ -42,7 +42,10 @@ fun TsuzukiNavigatorTransition(navigator: Navigator, modifier: Modifier = Modifi
     val easing = TsuzukiMotion.Standard
     val fade = tween<Float>(duration, easing = easing)
     SharedTransitionLayout(modifier) {
-        CompositionLocalProvider(LocalSharedCoverScope provides this, LocalCoverDuration provides duration) {
+        CompositionLocalProvider(
+            LocalSharedCoverScope provides if (reduced) null else this,
+            LocalCoverDuration provides duration,
+        ) {
             ScreenTransition(
                 navigator = navigator,
                 transition = { fadeIn(fade) togetherWith fadeOut(fade) },
@@ -67,7 +70,7 @@ fun Modifier.tsuzukiSharedCover(mangaId: Long): Modifier =
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun Modifier.tsuzukiSharedCover(key: String): Modifier {
-    if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE || rememberReduceMotion()) return this
+    if (TsuzukiTheme.tokens.style == TsuzukiStyle.NONE) return this
     val shared = LocalSharedCoverScope.current ?: return this
     val visibility = LocalCoverVisibilityScope.current ?: return this
     val duration = LocalCoverDuration.current

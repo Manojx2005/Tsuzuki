@@ -227,24 +227,31 @@ internal fun ReaderTextMetrics(preferences: ReaderPreferences, quick: Boolean = 
             decimalInput = true,
         )
     }
+    val stackedControls: @Composable () -> Unit = {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            sizeControl()
+            spacingControl()
+        }
+    }
     val isDot = TsuzukiTheme.tokens.isDot
     CompositionLocalProvider(
         LocalStackedSettingsLabel provides { label ->
             if (isDot) label.uppercase() else label
         },
     ) {
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            if (quick && maxWidth >= 350.dp * LocalDensity.current.fontScale) {
-                Row {
-                    Column(Modifier.weight(1f)) { sizeControl() }
-                    Column(Modifier.weight(1f)) { spacingControl() }
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    sizeControl()
-                    spacingControl()
+        if (quick) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                if (maxWidth >= 350.dp * LocalDensity.current.fontScale) {
+                    Row {
+                        Column(Modifier.weight(1f)) { sizeControl() }
+                        Column(Modifier.weight(1f)) { spacingControl() }
+                    }
+                } else {
+                    stackedControls()
                 }
             }
+        } else {
+            stackedControls()
         }
     }
 }
