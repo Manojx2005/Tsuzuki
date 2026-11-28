@@ -10,8 +10,8 @@ import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
-import uy.kohesive.injekt.Injekt
 import kotlinx.collections.immutable.toImmutableMap
+import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /** Settings › Downloads: delete a saved episode once it is watched (anime counterpart of the book option, AP11). */

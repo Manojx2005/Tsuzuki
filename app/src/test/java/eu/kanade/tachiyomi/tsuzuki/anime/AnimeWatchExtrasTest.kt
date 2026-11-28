@@ -12,11 +12,23 @@ class AnimeWatchExtrasTest {
 
     @Test
     fun downloadsAheadOnlyWhenCurrentAndNextAreSaved() {
-        val result = animeEpisodesToDownloadAhead(ordered, currentId = 2, saved = setOf(2, 3), inQueue = setOf(2, 3, 6), amount = 3)
+        val result =
+            animeEpisodesToDownloadAhead(
+                ordered,
+                currentId = 2,
+                saved = setOf(2, 3),
+                inQueue = setOf(2, 3, 6),
+                amount = 3,
+            )
         // After the next episode (3): 4 is seen, 6 is already queued → 5, 7, 8.
         assertEquals(listOf(5L, 7L, 8L), result.map { it.id })
         assertEquals(emptyList<Long>(), animeEpisodesToDownloadAhead(ordered, 2, setOf(2), emptySet(), 3).map { it.id })
-        assertEquals(emptyList<Long>(), animeEpisodesToDownloadAhead(ordered, 2, setOf(2, 3), emptySet(), 0).map { it.id })
+        assertEquals(
+            emptyList<Long>(),
+            animeEpisodesToDownloadAhead(ordered, 2, setOf(2, 3), emptySet(), 0).map {
+                it.id
+            },
+        )
         assertEquals(emptyList<Long>(), animeEpisodesToDownloadAhead(ordered, 8, setOf(8), emptySet(), 3).map { it.id })
     }
 
