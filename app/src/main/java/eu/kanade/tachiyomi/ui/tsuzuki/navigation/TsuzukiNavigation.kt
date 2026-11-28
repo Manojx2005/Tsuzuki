@@ -63,3 +63,25 @@ internal fun keepAnimeLibraryTabAvailable(tabNavigator: TabNavigator) {
 
 internal fun isAnimeLibraryKey(key: String?, animeEnabled: Boolean = TsuzukiAnime.enabled): Boolean =
     animeEnabled && key == AnimeLibraryTab.key
+
+/** Books library <-> anime library: the media segments change, the screen does not (owner 2026-11-28). */
+internal fun isLibraryMediaSwitch(
+    from: cafe.adriel.voyager.navigator.tab.Tab,
+    to: cafe.adriel.voyager.navigator.tab.Tab,
+): Boolean {
+    val books = setOf<cafe.adriel.voyager.navigator.tab.Tab>(NovelsTab, LibraryTab)
+    return (from in books && to == AnimeLibraryTab) || (from == AnimeLibraryTab && to in books)
+}
+
+/** No transition for the books <-> anime library media switch; null keeps the normal tab fade. */
+internal fun libraryMediaTransition(
+    from: cafe.adriel.voyager.navigator.tab.Tab,
+    to: cafe.adriel.voyager.navigator.tab.Tab,
+): androidx.compose.animation.ContentTransform? = if (isLibraryMediaSwitch(from, to)) {
+    androidx.compose.animation.ContentTransform(
+        androidx.compose.animation.EnterTransition.None,
+        androidx.compose.animation.ExitTransition.None,
+    )
+} else {
+    null
+}

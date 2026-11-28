@@ -30,8 +30,10 @@ internal class AnimeDetailsScreenModel(
     private val initial: SAnime,
     private val library: AnimeLibraryStore,
     private val scope: CoroutineScope,
+    /** The stored row when the opener already has it (Library): the episodes start loading on the first frame. */
+    initialSaved: Anime? = null,
 ) {
-    private val mutableState = MutableStateFlow(AnimeDetailsState(initial))
+    private val mutableState = MutableStateFlow(AnimeDetailsState(initial, saved = initialSaved))
     val state = mutableState.asStateFlow()
     private var refreshJob: Job? = null
 

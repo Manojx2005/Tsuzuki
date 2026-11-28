@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -41,12 +43,15 @@ internal data class AnimeDetailsRoute(val animeId: Long) : Screen() {
         val library = remember { Injekt.get<AnimeLibraryStore>() }
         val sources = remember { Injekt.get<AnimeSourceManager>() }
         // Drawn on the first frame when the Library handed over a loaded entry, so the cover has a target to move to.
-        val primed = remember { primedAnime.remove(animeId)?.let { sources.readyDetails(it) } }
+        val primedRow = remember { primedAnime.remove(animeId) }
+        val primed = remember { primedRow?.let { sources.readyDetails(it) } }
+        // The stored row goes to the details screen too, so its episodes load on the first frame (no pop-in).
+        var row by remember { mutableStateOf(primedRow) }
         val details by produceState(primed) {
             if (value != null) return@produceState
             value = try {
                 sources.ensureLoaded()
-                library.getAnime(animeId)?.let { sources.readyDetails(it) }
+                library.getAnime(animeId)?.also { row = it }?.let { sources.readyDetails(it) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -70,6 +75,7 @@ internal data class AnimeDetailsRoute(val animeId: Long) : Screen() {
             resumeUrl = null,
             onBack = { navigator.pop() },
             sharedCoverKey = animeSharedCoverKey(animeId),
+            savedAnime = row,
         ) { episode, track ->
             AnimePlayback.launchEpisode(context, episode.id, track)
         }

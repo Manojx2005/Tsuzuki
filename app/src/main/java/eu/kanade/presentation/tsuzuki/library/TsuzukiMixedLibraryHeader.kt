@@ -63,8 +63,10 @@ fun TsuzukiMixedLibraryHeader(
                 if (onOpenAnime != null) add(stringResource(MR.strings.tsz_anime_media))
             }
             val selected = if (hideMangaUi) 0 else filters.indexOf(filter)
+            val slideFrom = remember { LibraryMediaSlide.take() }
             val onSelect: (Int) -> Unit = {
                 if (onOpenAnime != null && it == labels.lastIndex) {
+                    LibraryMediaSlide.leave(selected)
                     onOpenAnime()
                 } else {
                     onFilterChanged()
@@ -72,7 +74,7 @@ fun TsuzukiMixedLibraryHeader(
                 }
             }
             if (onOpenAnime != null) {
-                TsuzukiSegments(labels, selected, onSelect)
+                TsuzukiSegments(labels, selected, onSelect, slideFrom = slideFrom)
             } else {
                 TsuzukiPillRow(labels, selected, onSelect)
             }

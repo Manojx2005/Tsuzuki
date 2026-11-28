@@ -147,6 +147,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                 saved?.toSourceAnime(),
                                 resume?.takeIf { it.animeId == savedId }?.url,
                                 availableSources.mapTo(hashSetOf()) { it.source.id },
+                                savedRow = saved,
                             )
                         } else {
                             AnimeCatalogueLocation.Missing(sources.stub(actualSource)?.name, saved)
@@ -254,6 +255,7 @@ class AnimeCatalogueActivity : BaseActivity() {
                                     library,
                                     result.resumeUrl,
                                     back,
+                                    savedAnime = result.savedRow?.takeIf { it.url == anime.url },
                                 ) { episode, track ->
                                     AnimePlayback.launchEpisode(this@AnimeCatalogueActivity, episode.id, track)
                                 }
@@ -273,6 +275,8 @@ private sealed interface AnimeCatalogueLocation {
         val saved: SAnime?,
         val resumeUrl: String?,
         val availableSourceIds: Set<Long>,
+        /** The stored row of [saved], so its details load their episodes on the first frame. */
+        val savedRow: Anime? = null,
     ) : AnimeCatalogueLocation
     data class Missing(val name: String?, val anime: Anime? = null) : AnimeCatalogueLocation
 }

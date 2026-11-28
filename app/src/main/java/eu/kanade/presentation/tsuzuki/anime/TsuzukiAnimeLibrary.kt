@@ -140,7 +140,9 @@ internal data object AnimeLibraryTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val store = remember { Injekt.get<AnimeLibraryStore>() }
-        val library by remember { store.observeLibrary() }.collectAsState(emptyList())
+        // Null until the database answers, so "your anime library is empty" never flashes (owner 2026-11-28).
+        val loadedLibrary by remember { store.observeLibrary() }.collectAsState(null)
+        val library = loadedLibrary.orEmpty()
         val shelves by remember { store.observeShelves() }.collectAsState(emptyList())
         val groupSeasons by remember { animeSeasonGrouping(Injekt.get()) }.collectAsState()
         var selectedShelf by rememberSaveable { mutableLongStateOf(0L) }
@@ -172,16 +174,17 @@ internal data object AnimeLibraryTab : Tab {
         val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         val columnCount by (if (landscape) libraryPrefs.landscapeColumns else libraryPrefs.portraitColumns)
             .collectAsState()
-        val filtered = remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options, trackedIds) {
-            val matches = library.filter {
-                shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
-                    (!downloadedOnly || it.anime.id in savedAnime)
+        val filtered =
+            remember(library, shelfId, search, groupSeasons, downloadedOnly, savedAnime, options, trackedIds) {
+                val matches = library.filter {
+                    shelfId in it.shelfIds && it.anime.title.contains(search, ignoreCase = true) &&
+                        (!downloadedOnly || it.anime.id in savedAnime)
+                }
+                val order = applyAnimeLibraryOptions(matches.map { it.anime }, options, savedAnime, trackedIds)
+                    .withIndex().associate { (index, anime) -> anime.id to index }
+                val sorted = matches.filter { it.anime.id in order }.sortedBy { order.getValue(it.anime.id) }
+                if (groupSeasons && search.isEmpty()) groupAnimeSeasons(sorted) else sorted
             }
-            val order = applyAnimeLibraryOptions(matches.map { it.anime }, options, savedAnime, trackedIds)
-                .withIndex().associate { (index, anime) -> anime.id to index }
-            val sorted = matches.filter { it.anime.id in order }.sortedBy { order.getValue(it.anime.id) }
-            if (groupSeasons && search.isEmpty()) groupAnimeSeasons(sorted) else sorted
-        }
         val selection = remember { AnimeLibrarySelection() }
         val actions = remember { AnimeLibraryActions() }
         val actionModel = viewModel<AnimeLibraryActionModel>()
@@ -273,7 +276,7 @@ internal data object AnimeLibraryTab : Tab {
                         },
                     )
                 }
-                if (filtered.isEmpty()) {
+                if (filtered.isEmpty() && loadedLibrary != null) {
                     val message = if (library.isEmpty()) {
                         MR.strings.tsz_anime_library_empty
                     } else {
@@ -302,10 +305,19 @@ internal data object AnimeLibraryTab : Tab {
                             selection.range(id, visibleIds)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
-                        val onOpen = { if (selecting) selection.toggle(id) else openAnimeInPlace(item.anime, navigator::push) }
+                        val onOpen = {
+                            if (selecting) selection.toggle(id) else openAnimeInPlace(item.anime, navigator::push)
+                        }
                         val itemBadges = badges.forAnime(item.anime)
                         if (options.display == AnimeLibraryDisplay.LIST) {
-                            AnimeLibraryListRow(item.anime, id in selection.ids, selecting, itemBadges, onLongClick, onOpen)
+                            AnimeLibraryListRow(
+                                item.anime,
+                                id in selection.ids,
+                                selecting,
+                                itemBadges,
+                                onLongClick,
+                                onOpen,
+                            )
                         } else {
                             AnimeLibraryCover(
                                 item.anime,
@@ -336,8 +348,10 @@ private fun AnimeLibraryMedia(onMediaChange: () -> Unit) {
         if (!hideManga) add(stringResource(TDMR.strings.label_manga))
         add(stringResource(MR.strings.tsz_anime_media))
     }
-    TsuzukiSegments(labels, selected = labels.lastIndex, onClick = { selected ->
+    val slideFrom = remember { eu.kanade.presentation.tsuzuki.library.LibraryMediaSlide.take() }
+    TsuzukiSegments(labels, selected = labels.lastIndex, slideFrom = slideFrom, onClick = { selected ->
         if (selected != labels.lastIndex) {
+            eu.kanade.presentation.tsuzuki.library.LibraryMediaSlide.leave(labels.lastIndex)
             onMediaChange()
             if (joined) {
                 val filter = when (selected) {
@@ -360,7 +374,8 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }
     val next by remember { store.observeWatchHero() }.collectAsState(null)
-    val library by remember { store.observeLibrary() }.collectAsState(emptyList())
+    val loadedLibrary by remember { store.observeLibrary() }.collectAsState(null)
+    val library = loadedLibrary.orEmpty()
     val airing = rememberAnimeAiringToday(store)
     val tokens = TsuzukiTheme.tokens
     BoxWithConstraints {
@@ -391,7 +406,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
                     }
                 }
             }
-            if (library.isEmpty()) {
+            if (loadedLibrary != null && library.isEmpty()) {
                 item {
                     TsuzukiTile(Modifier.fillMaxWidth(), padding = 16.dp) {
                         Text(

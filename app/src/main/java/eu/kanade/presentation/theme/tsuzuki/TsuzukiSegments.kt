@@ -46,6 +46,8 @@ fun TsuzukiSegments(
     selected: Int,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier.padding(horizontal = 16.dp),
+    /** Where the highlight starts when this control replaces another one (Library books ↔ anime). */
+    slideFrom: Float? = null,
 ) {
     if (LocalDensity.current.fontScale >= 1.5f) {
         TsuzukiPillRow(labels, selected, onClick, modifier)
@@ -55,11 +57,10 @@ fun TsuzukiSegments(
     val shape = RoundedCornerShape(22.dp)
     // Continuous motion stays in the layer; label contrast changes only at segment midpoints.
     val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
-    val position = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = selected.toFloat(),
-        animationSpec = tsuzukiTween(TsuzukiMotion.TOGGLE_MS),
-        label = "segment",
-    )
+    val spec = tsuzukiTween<Float>(TsuzukiMotion.TOGGLE_MS)
+    val animatable = remember { androidx.compose.animation.core.Animatable(slideFrom ?: selected.toFloat()) }
+    androidx.compose.runtime.LaunchedEffect(selected) { animatable.animateTo(selected.toFloat(), spec) }
+    val position = animatable.asState()
     val highlightedIndex by remember(position, labels.size) {
         derivedStateOf { if (position.value < -0.5f) -1 else highlightedSegment(position.value, labels.size) }
     }
