@@ -32,7 +32,12 @@ private val noteStart = Regex(
 )
 
 internal fun novelRecapParagraphs(content: String): List<String> {
-    val normalized = normalizedProseParagraphs(content)
+    return novelRecapCompletedParagraphs(normalizedProseParagraphs(content))
+}
+
+/** Rendered plain text must not be parsed as HTML or estimated from a saved scroll percentage. */
+internal fun novelRecapCompletedParagraphs(paragraphs: List<String>): List<String> {
+    val normalized = paragraphs.map { it.replace(whitespace, " ").trim() }
     val lastNote = normalized.indexOfLast { noteStart.containsMatchIn(it) }
     val beforeNote = if (lastNote > 0 && normalized.take(lastNote).count { it.length >= 24 } >= 2) {
         normalized.take(lastNote)
@@ -65,27 +70,6 @@ private fun normalizedProseParagraphs(content: String): List<String> {
         else -> text.lines()
     }
     return paragraphs.map { it.replace(whitespace, " ").trim() }
-}
-
-/**
- * The prose the reader has just passed when a chapter reopens at [progress] (0..1 of the chapter, the
- * same fraction both renderers restore): the last paragraphs that end before that point, with the same
- * filters as [novelRecapParagraphs]. Empty when fewer than two qualify, which means the position is in
- * the opening paragraphs and the caller falls back to the previous chapter.
- */
-internal fun novelRecapParagraphsBefore(content: String, progress: Float): List<String> {
-    val paragraphs = normalizedProseParagraphs(content)
-    val total = paragraphs.sumOf { it.length }
-    if (total <= 0 || progress <= 0f) return emptyList()
-    val position = progress.coerceAtMost(1f) * total
-    var end = 0
-    val passed = ArrayList<String>()
-    for (paragraph in paragraphs) {
-        end += paragraph.length
-        if (end > position) break
-        passed += paragraph
-    }
-    return recapExcerpt(passed)
 }
 
 internal enum class NovelRecapMode { None, CardAboveText, ResumeOverlay }

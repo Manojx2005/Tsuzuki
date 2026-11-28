@@ -78,7 +78,7 @@ internal fun ReaderActivity.createNovelRecapView(chapterId: Long?, preferences: 
                     activity = this@createNovelRecapView,
                     recap = recap,
                     preferences = preferences,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 6.dp, bottom = 18.dp),
                     onDismiss = {
                         viewModel.dismissNovelRecap(recap.chapterId)
                         visibility = View.GONE
@@ -104,6 +104,8 @@ internal fun NovelResumeRecapOverlay(
 ) {
     val recap by viewModel.novelResumeRecap.collectAsState()
     val current = recap ?: return
+    val visibleChapterId = state.novelVisibleChapter?.id ?: state.currentChapter?.chapter?.id
+    if (current.chapterId != visibleChapterId) return
     val progress by rememberUpdatedState(state.novelProgressPercent to state.novelPageIndex)
     LaunchedEffect(current.chapterId) {
         // Restoring the position moves the progress by itself: wait for it to land, then watch for the reader.
@@ -152,7 +154,7 @@ private fun NovelRecapCard(
     val ink = Color(if (theme == "custom" && customInk != 0) customInk else textColor)
     val foreground = if (tokens.isDot) tokens.dotOn else ink
     val fill = if (tokens.isDot) tokens.tile else lerp(page, ink, 0.08f)
-    val shape = RoundedCornerShape(tokens.tileRadius)
+    val shape = RoundedCornerShape(24.dp)
     val title = novelRecapLabel(
         composeStringResource(MR.strings.tsz_reader_recap_previously),
         recap.previousChapter,
@@ -164,7 +166,7 @@ private fun NovelRecapCard(
             .then(if (floating && !tokens.isDot) Modifier.shadow(8.dp, shape) else Modifier)
             .background(fill, shape)
             .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -192,7 +194,7 @@ private fun NovelRecapCard(
         val face by preferences.novelFontFamily.collectAsState()
         val readerFont = rememberNovelFontFamily(face)
         val bodyStyle = MaterialTheme.typography.bodyMedium.let { base ->
-            base.copy(fontSize = 13.sp, fontFamily = readerFont ?: base.fontFamily)
+            base.copy(fontSize = 13.sp, lineHeight = 20.8.sp, fontFamily = readerFont ?: base.fontFamily)
         }
         Column(body, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(

@@ -68,40 +68,18 @@ class NovelRecapTest {
         assertTrue(shouldShowNovelRecap(lastRead, lastRead + 2 * day))
     }
 
-    private val fifth = "Morning came grey and quiet over the sleeping harbour."
-    private val sixth = "Nobody on the quay remembered the stranger's face."
-
     @Test
-    fun resumeTakesTheLastParagraphsBeforeThePosition() {
-        val html = listOf(first, second, third, fourth, fifth, sixth).joinToString("") { "<p>$it</p>" }
-        // Roughly 60% in: the first three paragraphs lie fully behind the reader.
-        assertEquals(listOf(first, second, third), novelRecapParagraphsBefore(html, 0.55f))
-        // Near the end: the last three that finished before the position.
-        assertEquals(listOf(third, fourth, fifth), novelRecapParagraphsBefore(html, 0.9f))
-    }
-
-    @Test
-    fun resumeWorksOnPlainTextAndAppliesTheSameFilters() {
-        val plain = "$first\n\n...\n\n$second\n\n$third\n\n$fourth"
-        assertEquals(listOf(first, second), novelRecapParagraphsBefore(plain, 0.5f))
-        val withNote = "<p>$first</p><p>A note from the author: thanks for reading, please follow along.</p>" +
-            "<p>$second</p><p>$third</p><p>$fourth</p>"
-        assertEquals(listOf(first, second), novelRecapParagraphsBefore(withNote, 0.7f))
-    }
-
-    @Test
-    fun resumeInTheOpeningParagraphsHasNoExcerptSoTheCallerFallsBack() {
-        val html = listOf(first, second, third, fourth).joinToString("") { "<p>$it</p>" }
-        assertEquals(emptyList<String>(), novelRecapParagraphsBefore(html, 0.1f))
-        assertEquals(emptyList<String>(), novelRecapParagraphsBefore(html, 0.3f))
-        assertEquals(emptyList<String>(), novelRecapParagraphsBefore(html, 0f))
-        assertEquals(emptyList<String>(), novelRecapParagraphsBefore("", 0.5f))
-    }
-
-    @Test
-    fun resumeAtTheEndOfTheChapterUsesTheClosingParagraphs() {
-        val html = listOf(first, second, third).joinToString("") { "<p>$it</p>" }
-        assertEquals(listOf(first, second, third), novelRecapParagraphsBefore(html, 1f))
+    fun completedRenderedParagraphsKeepLiteralMarkupAndUseOnlyPassedProse() {
+        val literal = "The sign read <North Gate> and nobody knew who had written it."
+        assertEquals(
+            listOf(second, third, literal),
+            novelRecapCompletedParagraphs(listOf(first, second, third, literal)),
+        )
+        assertEquals(
+            listOf(first, second),
+            novelRecapCompletedParagraphs(listOf(first, second, "Author's notes", third)),
+        )
+        assertEquals(emptyList<String>(), novelRecapCompletedParagraphs(listOf(first, "Short.")))
     }
 
     @Test

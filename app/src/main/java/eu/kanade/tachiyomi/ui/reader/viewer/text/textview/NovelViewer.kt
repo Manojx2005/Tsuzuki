@@ -2054,6 +2054,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 isRestoringScroll = false
                 lastSavedProgress = progress
                 activity.onNovelProgressChanged(progress)
+                eu.kanade.presentation.tsuzuki.reader.reportNativeNovelRecapViewport(
+                    activity,
+                    loaded.chapter.chapter.id,
+                    loaded.block,
+                    scrollView,
+                )
             }
         }
 

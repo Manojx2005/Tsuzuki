@@ -2621,6 +2621,14 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
     private fun liftRestoreGuard(token: Int) {
         if (token != scrollRestoreToken) return
         isRestoringScroll = false
+        webView.postOnAnimation {
+            eu.kanade.presentation.tsuzuki.reader.reportWebNovelRecapViewport(
+                activity,
+                currentPage?.chapter?.chapter?.id,
+                { !isDestroyed && token == scrollRestoreToken },
+                { script, callback -> evaluateJavascriptSafe(script, callback) },
+            )
+        }
         evaluateJavascriptSafe(
             "(function(){ if (window.$TSUNDOKU_OBJECT_NAME && window.$TSUNDOKU_OBJECT_NAME.runtime && window.$TSUNDOKU_OBJECT_NAME.runtime.resetChapterTracking) window.$TSUNDOKU_OBJECT_NAME.runtime.resetChapterTracking(); })();",
             null,

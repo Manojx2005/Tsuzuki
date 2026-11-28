@@ -135,7 +135,7 @@ class NovelRecapSessionTest {
             // Nothing is injected above the text; the overlay waits for the chapter's own text.
             assertEquals(null, session.forChapter(3))
             assertEquals(null, session.overlay.value)
-            session.onChapterContent(3, current.joinToString("") { "<p>$it</p>" })
+            session.onResumeViewport(3, current.take(3))
             assertEquals(current.take(3), session.overlay.value?.paragraphs)
             assertEquals(80, session.overlay.value?.resumePercent)
             session.dismiss(3)
@@ -156,7 +156,7 @@ class NovelRecapSessionTest {
             val session = session()
 
             session.prepare(Manga.create().copy(id = 1), 3, chapter, source, entryProgress = 0.05f)
-            session.onChapterContent(3, "<p>Only one opening paragraph is long enough here.</p><p>Short.</p>")
+            session.onResumeViewport(3, listOf("Only one completed opening paragraph is long enough here."))
 
             assertEquals(listOf(first, second), session.overlay.value?.paragraphs)
         }
@@ -174,9 +174,72 @@ class NovelRecapSessionTest {
             )
 
             session.prepare(Manga.create().copy(id = 1), 3, null, mockk(), entryProgress = 0.6f)
-            session.onChapterContent(3, text.joinToString("\n\n"))
+            session.onResumeViewport(3, text.take(2))
 
             assertEquals(text.take(2), session.overlay.value?.paragraphs)
+        }
+    }
+
+    @Test
+    fun actualViewportWinsOverSavedScrollRatioAndDismissedReportsStayDismissed() = runTest {
+        withColdCache {
+            val session = session()
+            val completed = listOf(
+                "The first completed paragraph is entirely above the restored viewport.",
+                "The second completed paragraph is also entirely above the restored viewport.",
+            )
+            session.prepare(Manga.create().copy(id = 1), 3, null, mockk(), entryProgress = 0.5f)
+            session.onResumeViewport(4, completed)
+            assertEquals(null, session.overlay.value)
+            session.onResumeViewport(3, completed)
+            assertEquals(completed, session.overlay.value?.paragraphs)
+            assertEquals(50, session.overlay.value?.resumePercent)
+            session.dismiss(3)
+            session.onResumeViewport(3, completed)
+            assertEquals(null, session.overlay.value)
+            session.prepare(Manga.create().copy(id = 1), 3, null, mockk(), entryProgress = 0.5f)
+            session.dismiss(3)
+            session.onResumeViewport(3, completed)
+            assertEquals(null, session.overlay.value)
+        }
+    }
+
+    @Test
+    fun chapterSwitchWhileViewportSelectionRunsCannotPublishTheOldOverlay() = runTest {
+        withColdCache {
+            val session = session()
+            session.prepare(Manga.create().copy(id = 1), 3, null, mockk(), entryProgress = 0.5f)
+            val started = java.util.concurrent.CountDownLatch(1)
+            val release = java.util.concurrent.CountDownLatch(1)
+            val paragraphs = object : AbstractList<String>() {
+                override val size = 2
+                override fun get(index: Int): String {
+                    if (index == 0) {
+                        started.countDown()
+                        check(release.await(3, java.util.concurrent.TimeUnit.SECONDS))
+                    }
+                    return "Completed paragraph $index is entirely before the restored viewport."
+                }
+            }
+            val workerFailure = java.util.concurrent.atomic.AtomicReference<Throwable?>()
+            val worker = kotlin.concurrent.thread {
+                try {
+                    session.onResumeViewport(3, paragraphs)
+                } catch (error: Throwable) {
+                    workerFailure.set(error)
+                }
+            }
+            try {
+                check(started.await(3, java.util.concurrent.TimeUnit.SECONDS))
+                session.onChapterChanged(4)
+            } finally {
+                release.countDown()
+                worker.join(3000)
+            }
+            check(!worker.isAlive)
+            workerFailure.get()?.let { throw it }
+            assertEquals(null, session.overlay.value)
+            assertEquals(false, session.needsViewport(3))
         }
     }
 

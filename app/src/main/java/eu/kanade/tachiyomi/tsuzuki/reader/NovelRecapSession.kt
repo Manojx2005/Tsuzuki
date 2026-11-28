@@ -52,13 +52,14 @@ internal class NovelRecapSession(
 
     @Volatile private var pendingResume: PendingResume? = null
     private val resumeOverlay = MutableStateFlow<NovelRecap?>(null)
+    private val resumeLock = Any()
 
     /** The recap to float over the reader when the chapter resumed past its top. */
     val overlay: StateFlow<NovelRecap?> get() = resumeOverlay
 
     fun forChapter(chapterId: Long?): NovelRecap? = recap?.takeIf { it.chapterId == chapterId }
 
-    fun dismiss(chapterId: Long) {
+    fun dismiss(chapterId: Long) = synchronized(resumeLock) {
         if (recap?.chapterId == chapterId) recap = null
         if (pendingResume?.chapterId == chapterId) pendingResume = null
         resumeOverlay.value = resumeOverlay.value?.takeIf { it.chapterId != chapterId }
@@ -67,33 +68,34 @@ internal class NovelRecapSession(
     /** Debug builds only: `run-as <app id> touch cache/force-recap` makes the 24 hour rule true. */
     private fun forcedForTesting() = BuildConfig.DEBUG && File(context.cacheDir, "force-recap").exists()
 
-    /**
-     * The chapter's raw text, once a viewer has it. For a resumed chapter this is when the overlay recap is
-     * built: the prose just before the restored position, or the previous chapter's excerpt when that
-     * position is still in the opening paragraphs.
-     */
-    fun onChapterContent(chapterId: Long, content: String) {
+    fun needsViewport(chapterId: Long): Boolean = pendingResume?.chapterId == chapterId
+
+    fun onChapterChanged(chapterId: Long?) = synchronized(resumeLock) {
+        if (chapterId == null) return
+        pendingResume = pendingResume?.takeIf { it.chapterId == chapterId }
+        resumeOverlay.value = resumeOverlay.value?.takeIf { it.chapterId == chapterId }
+        recap = recap?.takeIf { it.chapterId == chapterId }
+    }
+
+    /** Called only after the matching renderer restores its viewport; these paragraphs are fully behind it. */
+    fun onResumeViewport(chapterId: Long, completedParagraphs: List<String>) {
         val pending = pendingResume?.takeIf { it.chapterId == chapterId } ?: return
-        pendingResume = null
-        val before = try {
-            novelRecapParagraphsBefore(content, pending.progress)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logcat(LogPriority.DEBUG, e) { "Could not build the resume recap from this chapter" }
-            emptyList()
-        }
-        // Prose from this chapter needs no chapter name; the previous chapter's excerpt keeps its own.
+        val before = novelRecapCompletedParagraphs(completedParagraphs)
         val fromPrevious = before.isEmpty()
         val paragraphs = before.ifEmpty { pending.fallback }
-        if (paragraphs.isNotEmpty()) {
-            resumeOverlay.value = NovelRecap(
-                chapterId,
-                paragraphs,
-                (pending.progress * 100).roundToInt(),
-                previousChapter = pending.previousChapter.takeIf { fromPrevious },
-                lastReadAt = pending.lastReadAt,
-            )
+        synchronized(resumeLock) {
+            // Dismissal, another restore callback or a chapter switch may have invalidated this work.
+            if (pendingResume !== pending) return
+            pendingResume = null
+            if (paragraphs.isNotEmpty()) {
+                resumeOverlay.value = NovelRecap(
+                    chapterId,
+                    paragraphs,
+                    (pending.progress * 100).roundToInt(),
+                    previousChapter = pending.previousChapter.takeIf { fromPrevious },
+                    lastReadAt = pending.lastReadAt,
+                )
+            }
         }
     }
 

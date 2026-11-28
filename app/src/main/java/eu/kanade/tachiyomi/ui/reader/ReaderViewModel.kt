@@ -471,6 +471,7 @@ class ReaderViewModel @JvmOverloads constructor(
         )
 
         withUIContext {
+            novelRecap.onChapterChanged(chapter.chapter.id)
             mutableState.update {
                 // Add new references first to avoid unnecessary recycling
                 newChapters.ref()
@@ -805,6 +806,7 @@ class ReaderViewModel @JvmOverloads constructor(
      * Also triggers auto-download of ahead chapters on chapter change.
      */
     fun setNovelVisibleChapter(chapter: Chapter?) {
+        novelRecap.onChapterChanged(chapter?.id)
         mutableState.update { it.copy(novelVisibleChapter = chapter) }
         downloadNextChapters()
 
@@ -1088,7 +1090,6 @@ class ReaderViewModel @JvmOverloads constructor(
         viewModelScope.launch(Dispatchers.Default) { novelEstimates.cacheWords(chapterId, content) }
         if (readerPreferences.novelChapterRecap.get()) {
             viewModelScope.launch(Dispatchers.IO) { novelRecap.cacheExcerpt(mangaId, chapterId, content) }
-            viewModelScope.launch(Dispatchers.Default) { novelRecap.onChapterContent(chapterId, content) }
         }
     }
 
@@ -1105,6 +1106,17 @@ class ReaderViewModel @JvmOverloads constructor(
     internal fun dismissNovelRecap(chapterId: Long) = novelRecap.dismiss(chapterId)
 
     internal val novelResumeRecap get() = novelRecap.overlay
+
+    internal fun needsNovelRecapViewport(chapterId: Long) =
+        !incognitoMode && readerPreferences.novelChapterRecap.get() &&
+            state.value.currentChapter?.chapter?.id == chapterId && novelRecap.needsViewport(chapterId)
+
+    internal fun noteNovelRecapViewport(chapterId: Long, paragraphs: List<String>) {
+        if (!needsNovelRecapViewport(chapterId)) return
+        viewModelScope.launch(Dispatchers.Default) {
+            if (needsNovelRecapViewport(chapterId)) novelRecap.onResumeViewport(chapterId, paragraphs)
+        }
+    }
 
     internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) {
         if (incognitoMode) return
