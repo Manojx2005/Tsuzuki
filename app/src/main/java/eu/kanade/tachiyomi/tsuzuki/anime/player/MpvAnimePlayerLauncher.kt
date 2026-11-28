@@ -108,6 +108,13 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     }
 
     private var pausedForCache = false
+
+    /**
+     * Owner 2026-11-28: resuming stuck for a few frames and started late. A precise (hr) seek to `start` decodes and
+     * drops every frame from the keyframe before it; a resume does not need that. The first seek of a resumed file
+     * goes to the keyframe, and precise seeking comes back once playback has restarted.
+     */
+    private var keyframeStart = false
     private var seeking = false
 
     private fun reportBuffering(listener: AnimePlayerBackend.Listener) = listener.onBuffering(pausedForCache || seeking)
@@ -156,6 +163,11 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 MPVLib.mpvEventId.MPV_EVENT_SEEK -> listener.onSeek()
                 MPVLib.mpvEventId.MPV_EVENT_START_FILE -> AnimeLog.i("mpv START_FILE (${sinceLoad()})")
                 MPVLib.mpvEventId.MPV_EVENT_END_FILE -> AnimeLog.i("mpv END_FILE (${sinceLoad()})")
+                MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> if (keyframeStart) {
+                    keyframeStart = false
+                    MpvPlayer.property("hr-seek", "default")
+                    AnimeLog.i("mpv resumed at a keyframe (${sinceLoad()})")
+                }
                 MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
                     AnimeLog.i("mpv FILE_LOADED (${sinceLoad()})")
                     listener.onLoaded()
@@ -186,6 +198,8 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
             listener?.onError(e.message)
             return
         }
+        keyframeStart = resumePosition.isFinite() && resumePosition > 0
+        MpvPlayer.property("hr-seek", if (keyframeStart) "no" else "default")
         val headers = video.headers
         MpvPlayer.property("referrer", headers?.get("Referer").orEmpty())
         MpvPlayer.property("user-agent", headers?.get("User-Agent") ?: defaultUserAgent.orEmpty())

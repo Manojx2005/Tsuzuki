@@ -727,7 +727,12 @@ internal class AnimePlayerModel(
                 restartPending = false
             }
             if (foreground) tracker.onPosition(seconds, state.value.settings.speed)
-            if (!state.value.revealed && seconds >= revealFrom + REVEAL_CLOCK_MOVED_SECONDS) reveal()
+            if (!state.value.revealed) {
+                // mpv first reports the requested start, then plays from the keyframe before it: measure from the
+                // lowest clock value seen, or the cover would stay up for the stretch back to the keyframe.
+                if (revealFrom.isNaN() || seconds < revealFrom) revealFrom = seconds
+                if (seconds >= revealFrom + REVEAL_CLOCK_MOVED_SECONDS && !state.value.buffering) reveal()
+            }
             if (abs(state.value.position - seconds) >= 0.1) {
                 mutableState.update { it.copy(position = seconds) }
             }
@@ -761,10 +766,12 @@ internal class AnimePlayerModel(
             val chapters = backend.chapters()
             if (chapters.isNotEmpty()) AnimeLog.i("file has ${chapters.size} chapter(s)")
             mutableState.update { it.copy(loading = false, fileChapters = chapters).withMergedChapters() }
-            revealFrom = state.value.position
+            revealFrom = Double.NaN
             revealTimeout?.cancel()
             revealTimeout = viewModelScope.launch {
+                // Only a guard for a clock that never reports; a buffering start keeps its cover.
                 delay(REVEAL_TIMEOUT_MS)
+                while (state.value.buffering) delay(REVEAL_POLL_MS)
                 reveal()
             }
             restartIfStartedAtEnd()
@@ -1055,7 +1062,9 @@ internal class AnimePlayerModel(
 }
 
 /** The clock counts as moving once it is this far past where the file was loaded. */
-private const val REVEAL_CLOCK_MOVED_SECONDS = 0.04
+/** About seven frames at 24 fps: the picture is flowing, not just the audio clock (owner 2026-11-28). */
+private const val REVEAL_CLOCK_MOVED_SECONDS = 0.3
 
 /** Never keep the video covered longer than this after the file loads. */
-private const val REVEAL_TIMEOUT_MS = 1_500L
+private const val REVEAL_TIMEOUT_MS = 3_000L
+private const val REVEAL_POLL_MS = 100L
