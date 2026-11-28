@@ -213,9 +213,3 @@ internal fun bindTsuzukiPageError(binding: ReaderErrorBinding, error: Throwable?
 
 /** Loading stages appear only after this long (motion system rule 2). */
 private const val READER_LOADING_DELAY_MS = 300L
-
-/** SM6: chapter text that arrived after a real wait fades in over 150 ms instead of popping. */
-internal fun android.view.View.fadeInReaderContent() {
-    alpha = 0f
-    animate().alpha(1f).setDuration(TsuzukiMotion.REDUCED_MS.toLong()).start()
-}
