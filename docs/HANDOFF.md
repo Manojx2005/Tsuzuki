@@ -102,7 +102,7 @@ cards target **0.2.2**. Codex has no usage right now; Claude self-reviews under 
 
 **AP line merged into `main` (Claude, 2026-11-24, `c02aecf32`, no push):** `tsuzuki/ap-integration` = every AP card branch, the RV-AP fix branches, AP5 rollback, anime History cover / in-place details, AP12 cache serialize and AP11 safe delete. One conflict (`AnimeDownloads.remove`): kept AP9's `remove` / `removeAndAwait` / `removeEpisode`, with `removeEpisode` = `editForRemoval { if (it.episodeId == id) it.removing() else it }`. Gate on the merged tree: `assembleDebug`, `:data:verifySqlDelightMigration`, all-module `testDebugUnitTest` **1,605 tests, 0 failures**. Tablet (Colour, claudeqa, existing data kept: schema 40, 2 anime / 4 episodes / 2 history rows): History › cover → details in place; episode sheet has Filter / Sort / Display; Display › 話数 shows "第2話" only, back to ソースタイトル restores titles; Sort lists ソースに基づいた順 / 話数 / 公開日; Mark until last watched shown on Filter (disabled: both episodes watched); crash buffer empty. Not checked on device: range select (fixture has 2 episodes), migrate entry (one anime source installed), S22 (not connected). Still open for parity: AP7 header pixel match; AP9 tablet preview pane; anime rows in Updates › All long-press.
 
-**AY5 started (2026-11-26, agent, branch `tsuzuki/ay5` on top of `tsuzuki/player-redesign`, not merged):** source `Video.timestamps` + mpv `chapter-list` merged with AniSkip (pure merge function), chapter ticks + current chapter name on the scrubber, Skip intro from a source Opening stamp without AniSkip, setting "Don't use AniSkip when the video has chapters" (default on). Found while checking the redesign: the player ignored source-supplied OP/ED stamps, one reason the owner sees Skip intro so rarely.
+**AY5 device-checked (2026-11-26 agent, 2026-11-28 Claude tablet check; branch `tsuzuki/ay5` `a22bef9f1` + `6326e6f6c` on top of `tsuzuki/player-redesign`, not merged — waits on the redesign approval):** source `Video.timestamps` + mpv `chapter-list` merged with AniSkip (pure merge function), chapter ticks + current chapter name on the scrubber, Skip intro from a source Opening stamp without AniSkip, setting "Don't use AniSkip when the video has chapters" (default on). Found while checking the redesign: the player ignored source-supplied OP/ED stamps, one reason the owner sees Skip intro so rarely.
 
 **`main` release-gated after the 2026-11-26 merges (Claude, `292d41495`):** 1,666 all-module tests / 0 failures, migrations, Preview + Release (`-Penable-updater`) built, anime ABI check OK, all 10 APKs 16 KB-aligned. Ready for a 0.2.3 (version bump + CHANGELOG heading) whenever the owner wants one; the player redesign is not in it unless merged first.
 
@@ -1755,7 +1755,13 @@ Fresh-install preflight (Codex, 2026-11-22): tablet Debug had a false anime pref
 #### AY5 Anime: chapters and source timestamps (T3) — `ready` (needs `tsuzuki/a6.5`; lane 1)
 PARITY §5 AY5, finding 12. mpv `chapter-list` + `Video.timestamps` merged with AniSkip; seek-bar ticks; "no AniSkip
 when the video has chapters".
-Result: _pending_
+Result (2026-11-28, Claude): `tsuzuki/ay5` `a22bef9f1` (merge function `AnimeChapters.kt` + 240-line test, seek-bar ticks and
+chapter name, source-stamp skip, setting, 8 locales) + `6326e6f6c` (mpv's "(unnamed)" title hidden; fixture
+`make-media.sh` keeps chapter titles via `-map_metadata 4`). Tablet, claudeqa, Dot, fixture server: case 10
+(mkv chapters) ticks at 20 s / 70 s of 90 s, label OPENING → PART A; case 11 (source stamps, no AniSkip) ticks at
+5/15/45/55 s, オープニングをスキップ shown at 8 s, tap lands at 15 s. Crash buffer empty. Evidence
+`.worktrees/qa-ap/evidence/ay5/`. Not checked: S22 (not connected), Colour, AniSkip + chapters together on a live
+source. Branch sits on the unmerged player redesign; merge both together after the owner approves the redesign.
 
 #### AY7 Anime: offline episodes keep subtitles, audio and options (T3) — `ready` (needs `tsuzuki/a6.8`; lane 1)
 PARITY §5 AY7, finding 14. Sidecar with external tracks, `mpvArgs` and quality; support table per container.
