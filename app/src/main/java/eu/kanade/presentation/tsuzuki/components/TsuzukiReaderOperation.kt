@@ -4,16 +4,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.children
@@ -21,6 +26,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.presentation.theme.tsuzuki.TsuzukiMotion
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiStyle
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
@@ -30,6 +36,7 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tachiyomi.i18n.MR
@@ -68,14 +75,28 @@ internal fun ReaderActivity.createReaderLoadingView(key: Any): View? {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
         setContent {
             TachiyomiTheme {
-                TsuzukiLoadingStages(
-                    viewModel.state.value.viewerChapters?.currChapter?.chapter?.name.orEmpty(),
-                    listOf(stringResource(MR.strings.tsz_error_open)),
-                    0,
-                    operationKey = key,
-                    onRetry = { viewModel.reloadChapter(fromSource = false) },
-                    onCancel = { finish() },
+                // SM6 (motion system rule 2): a cached chapter opens in a few hundred ms; show the loading stages
+                // only when the wait is real, and fade them in instead of flashing them.
+                var shown by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    delay(READER_LOADING_DELAY_MS)
+                    shown = true
+                }
+                val alpha by animateFloatAsState(
+                    targetValue = if (shown) 1f else 0f,
+                    animationSpec = tween(TsuzukiMotion.REDUCED_MS),
+                    label = "readerLoading",
                 )
+                Box(Modifier.graphicsLayer { this.alpha = alpha }) {
+                    TsuzukiLoadingStages(
+                        viewModel.state.value.viewerChapters?.currChapter?.chapter?.name.orEmpty(),
+                        listOf(stringResource(MR.strings.tsz_error_open)),
+                        0,
+                        operationKey = key,
+                        onRetry = { viewModel.reloadChapter(fromSource = false) },
+                        onCancel = { finish() },
+                    )
+                }
             }
         }
     }
@@ -189,3 +210,6 @@ internal fun bindTsuzukiPageError(binding: ReaderErrorBinding, error: Throwable?
         }
     }
 }
+
+/** Loading stages appear only after this long (motion system rule 2). */
+private const val READER_LOADING_DELAY_MS = 300L
