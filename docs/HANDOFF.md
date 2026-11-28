@@ -1902,12 +1902,21 @@ migration). Tests: track selection with tags like `ja`, `jpn`, `Japanese`, force
 per-anime override wins.
 Result: _pending_
 
-#### A6.5 Anime: open episodes in an external player (T2) — `claude-working` (Claude 2026-11-22, `.worktrees/a6-5`, `tsuzuki/a6.5` from `tsuzuki/ay6-f` `3c1db54b0`; lane 1; see Batch AY notes)
+#### A6.5 Anime: open episodes in an external player (T2) — **`done`** (merged `7b085f30b`, 2026-11-28, Claude self-review on owner waiver)
 A PlayerSettings row "Play with": Tsuzuki · external app. External: `ACTION_VIEW` with the resolved stream URL,
 type `video/*`, the hoster's headers and title as the extras mpv-android, VLC and MX Player read; resume position
 passed in and, when the app returns a position (MX/mpv), saved as progress and seen at ≥ 90 %. No external app →
 snackbar, play in Tsuzuki. Tests: intent extras per player, position result handling.
-Result: _pending_
+Result (2026-11-28, Claude): `tsuzuki/a6.5` `c7303cc6e`. New `player/AnimeExternalPlayer.kt` (choice, launch, intent,
+result parsing, installed players; extras/keys from Aniyomi ExternalIntents, Apache-2.0); `AnimePlayerModel.queueVideo`
+hands the resolved stream to the activity instead of mpv; `AnimePlayerActivity` launches for result (not relaunched
+after process death), saves the returned position through the normal progress write (seen at 85 %, the app's rule,
+not the card's 90 %); no app → toast + plays in Tsuzuki; a downloaded HLS playlist always plays in Tsuzuki.
+Settings › Player › 再生アプリ: Tsuzuki / 毎回選ぶ / installed players. 5 strings × 8 locales. 13 tests; all-module
+1,691 / 0. S22 (claudeqa, MX Player, fixture case 01): picker lists installed players; MX opens the stream at the
+saved 0:34 with Referer/UA; Back returns 47.8 s / 60 → episode row 47/60 unseen, Watch card "残り00:13"; second run
+55.8 s → seen, card moves on. Not checked: VLC / mpv-android (not installed), chooser mode, downloaded file.
+Seen in passing (not A6.5): after a rotation the Watch list keeps its scroll, so the hero can sit above the fold.
 
 #### A6.6 Anime: next-episode airing times from AniList (T3) — `ready` (needs `tsuzuki/ay7`; lane 1)
 For anime bound to AniList (A3.5), read `nextAiringEpisode { episode airingAt }` in the existing tracker refresh

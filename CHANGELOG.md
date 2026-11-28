@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Anime: Play with lets episodes open in another video app (MX Player, VLC, mpv and others) or ask each time;
+  where you stop there is saved as your progress.
+
 ## [0.2.3] - 2026-11-28
 
 ### Added
