@@ -70,11 +70,11 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 
 - **Card cleanup:** 34 stale headings marked superseded/done with the reason (shipped in 0.2.x, branch fully in `main`, or replaced).
 - **Leftovers merged** `6e0a57055` (`tsuzuki/leftovers`): RECAP-FIX/RECAP-F/RECAP-VIEWPORT-F, READER-DEFAULTS (720 dp column), A11Y1, Tsuzuki MAL registration (**existing MAL sign-ins must sign in again — say so in the changelog**). DICT-F/DICT-HINT-F superseded by AP12.
-- **New boards** (`docs/design/boards/remaining-2026-11/`, canvas https://claude.ai/artifact/81kRWPKPFGGu6BAwyqYT1P) — **awaiting owner approval**; built from them anyway on the owner's "Continue".
+- **New boards** (`docs/design/boards/remaining-2026-11/`, canvas https://claude.ai/artifact/81kRWPKPFGGu6BAwyqYT1P) — **approved by the owner 2026-11-28** ("Boards approved"); the merged cards follow them.
 - **Cards merged** `982334a53` (`tsuzuki/v8.2`): V8.2, A6.6, A6.7, A6.8, AY7, AY8. 1,718 tests / 0 failures; Debug + claudeqa release built.
 - **Devices:** S22 claudeqa release — empty state (download queue) matches the board; Browse › Anime shows no Local anime because that scratch app has no storage folder (setting one needs the system picker). Test show `localanime/Fixture Show/` pushed under `/sdcard/Test`, `/sdcard/Documents` and the three `Documents/Tsuzuki-*-Scratch` folders on the S22. Crash buffers empty on both devices. Not seen: screenshot, airing tile, offline tracks, recap port.
 - **V8.6:** owner "With the current one" read as: help links stay.
-- **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions, approving the new boards.
+- **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions.
 
 ## Batch SM — smoothness (owner 2026-11-28) — start here
 

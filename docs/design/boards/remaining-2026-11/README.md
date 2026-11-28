@@ -1,4 +1,4 @@
-# Remaining boards (Claude, 2026-11-28) — awaiting owner approval
+# Remaining boards (Claude, 2026-11-28) — approved by the owner 2026-11-28
 
 Live canvas (owner's Claude account, private): https://claude.ai/artifact/81kRWPKPFGGu6BAwyqYT1P
 Drawn because these cards had no board (AGENTS.md: "ask the owner for it instead of inventing a layout"; owner
