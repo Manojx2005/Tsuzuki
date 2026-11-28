@@ -57,4 +57,6 @@
     <!-- A6.8: local anime source. -->
     <string name="tsz_local_anime">Anime local</string>
     <string name="tsz_local_anime_on_device">En este dispositivo</string>
+    <string name="tsz_local_anime_empty">Aún no hay vídeos</string>
+    <string name="tsz_local_anime_empty_hint">Pon cada serie en su propia carpeta aquí:</string>
 </resources>

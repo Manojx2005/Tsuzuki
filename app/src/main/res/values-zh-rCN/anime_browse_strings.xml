@@ -56,4 +56,6 @@
     <!-- A6.8: local anime source. -->
     <string name="tsz_local_anime">本地动画</string>
     <string name="tsz_local_anime_on_device">此设备</string>
+    <string name="tsz_local_anime_empty">还没有视频</string>
+    <string name="tsz_local_anime_empty_hint">请为每部作品建一个文件夹，放在这里：</string>
 </resources>
