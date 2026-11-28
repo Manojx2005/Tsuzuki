@@ -99,4 +99,11 @@
     <string name="tsz_anime_player_screenshot_saved">In Pictures/Tsuzuki gespeichert</string>
     <string name="tsz_anime_player_screenshot_failed">Bildschirmfoto konnte nicht gespeichert werden</string>
     <string name="tsz_anime_player_screenshot_share">Teilen</string>
+    <!-- Aniyomi parity: watching extras. -->
+    <string name="tsz_anime_watching">Anschauen</string>
+    <string name="tsz_anime_mark_duplicates_seen">Andere Fassungen als gesehen markieren</string>
+    <string name="tsz_anime_mark_duplicates_seen_summary">Wenn eine Folge gesehen ist, werden ungesehene Folgen mit derselben Nummer (Release einer anderen Gruppe) ebenfalls als gesehen markiert</string>
+    <string name="tsz_anime_download_ahead">Beim Anschauen vorausladen</string>
+    <string name="tsz_anime_download_ahead_summary">Nur beim Anschauen einer heruntergeladenen Folge, deren nächste Folge ebenfalls heruntergeladen ist</string>
+    <string name="tsz_anime_download_ahead_count">%1$d Folgen</string>
 </resources>

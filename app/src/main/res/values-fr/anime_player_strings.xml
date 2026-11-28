@@ -99,4 +99,11 @@
     <string name="tsz_anime_player_screenshot_saved">Enregistrée dans Pictures/Tsuzuki</string>
     <string name="tsz_anime_player_screenshot_failed">Impossible d’enregistrer la capture</string>
     <string name="tsz_anime_player_screenshot_share">Partager</string>
+    <!-- Aniyomi parity: watching extras. -->
+    <string name="tsz_anime_watching">Visionnage</string>
+    <string name="tsz_anime_mark_duplicates_seen">Marquer les autres versions comme vues</string>
+    <string name="tsz_anime_mark_duplicates_seen_summary">Quand un épisode est vu, les épisodes non vus portant le même numéro (la version d’un autre groupe) sont aussi marqués vus</string>
+    <string name="tsz_anime_download_ahead">Télécharger à l’avance pendant le visionnage</string>
+    <string name="tsz_anime_download_ahead_summary">Seulement en regardant un épisode téléchargé dont l’épisode suivant est aussi téléchargé</string>
+    <string name="tsz_anime_download_ahead_count">%1$d épisodes</string>
 </resources>

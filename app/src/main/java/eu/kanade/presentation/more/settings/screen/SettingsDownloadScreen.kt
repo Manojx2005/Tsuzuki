@@ -106,6 +106,7 @@ object SettingsDownloadScreen : SearchableSettings {
                 ),
                 *listOfNotNull(
                     eu.kanade.presentation.tsuzuki.settings.animeDeleteAfterWatchedPreference(),
+                    eu.kanade.presentation.tsuzuki.settings.animeDownloadAheadPreference(),
                 ).toTypedArray(),
                 Preference.PreferenceItem.ListPreference(
                     preference = downloadPreferences.removeAfterReadSlots,

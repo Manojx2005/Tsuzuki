@@ -131,6 +131,11 @@ internal class AnimePlayerModel(
     private val quality = playerPreferences.quality
     private val autoplay = playerPreferences.autoplay
     private val externalPlayer = playerPreferences.externalPlayer
+    private val downloadAhead = eu.kanade.tachiyomi.tsuzuki.anime.animeDownloadAhead(preferences)
+    private val markDuplicatesSeen = eu.kanade.tachiyomi.tsuzuki.anime.animeMarkDuplicatesSeen(preferences)
+
+    /** The episode whose download-ahead check already ran (once per episode, past 35 %). */
+    private var downloadAheadChecked: Long? = null
 
     /** A6.5: set once no app could open the video, so Tsuzuki plays this episode itself. */
     private var externalUnavailable = false
@@ -201,7 +206,10 @@ internal class AnimePlayerModel(
                 try {
                     when (write) {
                         is PlaybackWrite.Progress -> library.saveProgress(write.episodeId, write.checkpoint)
-                            ?.let { AnimeTrackProgressJob.enqueue(context, it) }
+                            ?.let { seen ->
+                                AnimeTrackProgressJob.enqueue(context, seen)
+                                markDuplicatesOf(seen)
+                            }
                         PlaybackWrite.RefreshWidget -> refreshWatchingWidget(context)
                     }
                 } catch (e: CancellationException) {
@@ -605,6 +613,47 @@ internal class AnimePlayerModel(
             .also { AnimeLog.i("resolved video ${describeAnimeVideo(it)}") }
     }
 
+    /** Aniyomi parity: other unseen episodes with the same number become seen too (when the setting is on). */
+    private suspend fun markDuplicatesOf(seen: Episode) {
+        if (!markDuplicatesSeen.get()) return
+        val duplicates = eu.kanade.tachiyomi.tsuzuki.anime.animeDuplicateEpisodes(library.getEpisodes(seen.animeId), seen)
+        if (duplicates.isNotEmpty()) library.setEpisodesSeen(duplicates, true)
+    }
+
+    /** Aniyomi parity: past 35 % of a saved episode whose next one is saved too, queue the next N unseen ones. */
+    private fun checkDownloadAhead(seconds: Double) {
+        val current = state.value
+        val episode = current.episode ?: return
+        val amount = downloadAhead.get()
+        if (amount <= 0 || downloadAheadChecked == episode.id || current.duration <= 0) return
+        if (seconds < current.duration * eu.kanade.tachiyomi.tsuzuki.anime.ANIME_DOWNLOAD_AHEAD_FRACTION) return
+        downloadAheadChecked = episode.id
+        val ordered = current.episodes.sortedWith(eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodeNumberOrder)
+        processScope.launch(Dispatchers.IO) {
+            try {
+                val queue = downloads.state.value
+                val saved = queue.entries.filter { it.status == eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloadStatus.Saved }
+                    .mapTo(hashSetOf()) { it.episodeId }
+                val ahead = eu.kanade.tachiyomi.tsuzuki.anime.animeEpisodesToDownloadAhead(
+                    ordered,
+                    episode.id,
+                    saved,
+                    queue.entries.mapTo(hashSetOf()) { it.episodeId },
+                    amount,
+                )
+                if (ahead.isEmpty()) return@launch
+                val anime = library.getAnime(episode.animeId) ?: return@launch
+                val sourceName = Injekt.get<AnimeSourceManager>().get(anime.source)?.source?.name.orEmpty()
+                AnimeLog.i("download ahead: ${ahead.size} episode(s) of anime ${anime.id}")
+                downloads.enqueue(anime.source, sourceName, anime.memo.editedAnimeTitle(anime.title), ahead)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AnimeLog.w("could not queue episodes ahead", e)
+            }
+        }
+    }
+
     /** The extension's local HTTP server for the playing video, if it needs one (closed on the next one). */
     @Volatile private var localServer: eu.kanade.tachiyomi.animesource.model.HttpServer? = null
 
@@ -753,6 +802,7 @@ internal class AnimePlayerModel(
                 restartPending = false
             }
             if (foreground) tracker.onPosition(seconds, state.value.settings.speed)
+            checkDownloadAhead(seconds)
             if (!state.value.revealed) {
                 // mpv first reports the requested start, then plays from the keyframe before it: measure from the
                 // lowest clock value seen, or the cover would stay up for the stretch back to the keyframe.

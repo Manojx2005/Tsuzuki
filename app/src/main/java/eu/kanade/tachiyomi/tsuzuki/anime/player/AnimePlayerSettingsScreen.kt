@@ -276,6 +276,19 @@ internal object AnimePlayerSettingsScreen : SearchableSettings {
                     ),
                 ),
             ),
+            Preference.PreferenceGroup(
+                title = stringResource(R.string.tsz_anime_watching),
+                preferenceItems = listOf(
+                    // Aniyomi parity (owner 2026-11-28): another release of the same episode counts as watched.
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = remember {
+                            eu.kanade.tachiyomi.tsuzuki.anime.animeMarkDuplicatesSeen(Injekt.get())
+                        },
+                        title = stringResource(R.string.tsz_anime_mark_duplicates_seen),
+                        subtitle = stringResource(R.string.tsz_anime_mark_duplicates_seen_summary),
+                    ),
+                ),
+            ),
         )
     }
 }

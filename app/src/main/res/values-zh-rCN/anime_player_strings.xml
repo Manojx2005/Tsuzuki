@@ -99,4 +99,11 @@
     <string name="tsz_anime_player_screenshot_saved">已保存到 Pictures/Tsuzuki</string>
     <string name="tsz_anime_player_screenshot_failed">无法保存截图</string>
     <string name="tsz_anime_player_screenshot_share">分享</string>
+    <!-- Aniyomi parity: watching extras. -->
+    <string name="tsz_anime_watching">观看</string>
+    <string name="tsz_anime_mark_duplicates_seen">将同集数的其他版本标记为已看</string>
+    <string name="tsz_anime_mark_duplicates_seen_summary">看完一集后，同一集数的未看剧集（其他字幕组的版本等）也会标记为已看</string>
+    <string name="tsz_anime_download_ahead">观看时预先下载</string>
+    <string name="tsz_anime_download_ahead_summary">仅在观看已下载的剧集且下一集也已下载时</string>
+    <string name="tsz_anime_download_ahead_count">%1$d 集</string>
 </resources>
