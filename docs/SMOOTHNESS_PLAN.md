@@ -150,6 +150,16 @@ Add to the release gate (`scripts/perf/`): fresh-install profile presence check,
 on the S22 with thresholds (initially: janky ≤ 8 %, longest UI frame ≤ 33 ms); a regression blocks the tag
 unless the owner waives it. Document in HANDOFF release steps.
 
+### SM9 — Back to the Library under 33 ms (C/X, added 2026-11-28 from SM8)
+Why: the SM8 gate measures Back from book details at 36–41 ms median longest UI frame (S22 release, fresh
+install). Perfetto (2026-11-28): first frame 25.6 ms of which `Compose:onForgotten` 18.3 ms (the details screen's
+state torn down), then ~90 ms later a 51 ms frame with `AndroidOwner:measureAndLayout` 39 ms (the Library laid out
+again — Voyager disposes it while details is open). Options to evaluate with a Compose-tracing build
+(`androidx.compose.runtime:runtime-tracing` in a measurement-only variant): keep the previous screen composed but
+skipped under a pushed screen (memory cost), lighter Library first layout (grid item, anime row, header), defer the
+details teardown off the Back frame. Acceptance: Back median ≤ 33 ms in `release-gate.sh`, then lower its Back limit
+from 50 to 33.
+
 ## 4. Order and parallelism
 
 SM0 → **SM1** (Claude, now) → SM2 and SM3 in parallel (different files: navigator vs screens) → SM6/SM7 (Codex,

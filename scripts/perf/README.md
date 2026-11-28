@@ -9,6 +9,8 @@ Devices and rules: `AGENTS.md` (Test on devices). Never install on the owner's p
 | `jank.sh <serial> <label> tap x y \| key code \| swipe x1 y1 x2 y2` | One action's frames: count, frames over 16.7 ms, longest UI-thread frame and when, UI ms in the first 150 ms. Stops unless `claudeqa` is in front. `SETTLE=2.5` for long actions. |
 | `frames.py <framestats.txt> [--summary]` | The parser behind `jank.sh`; without `--summary` prints every frame `offset:total/ui` ms. |
 | `strip.sh <video> <start> <len> <fps> <out.png> [cols]` | Contact sheet of a `screenrecord` file, for motion and pop-in. |
+| `release-gate.sh [serial]` | **Run before every tag** (SM8): tests + migrations, Preview + Release builds, anime ABI, 16 KB alignment, bundled baseline profile and its Tsuzuki coverage; with a serial, fresh-install smoothness thresholds (open ≤ 33 ms, Back ≤ 50 ms median longest UI frame; chapter-list flings ≤ 2 % slow frames). Exit 1 = do not tag unless the owner waives it. `GATE_DEVICE_ONLY=1` reruns only the device part. |
+| `merge-profiles.py <existing> <collected…> -o <out>` | Merge collected ART profiles into the shipped ones (union of flags, existing rules kept). |
 | `trace.sh <serial> start <s>` … `trace.sh <serial> pull <out>` | Perfetto with app tracing around an action. `long-slices.sql` lists main-thread slices over 8 ms. |
 
 ## Journeys (J1–J8)
