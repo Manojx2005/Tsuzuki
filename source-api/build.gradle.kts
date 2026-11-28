@@ -20,7 +20,8 @@ dependencies {
     implementation(libs.injekt)
     implementation(libs.rxJava)
     implementation(libs.jsoup)
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    // Exposed: the app starts an extension's HttpServer (a NanoHTTPD) for localhost videos (Aniyomi parity).
+    api("org.nanohttpd:nanohttpd:2.3.1")
 
     implementation(libs.androidx.preference)
 

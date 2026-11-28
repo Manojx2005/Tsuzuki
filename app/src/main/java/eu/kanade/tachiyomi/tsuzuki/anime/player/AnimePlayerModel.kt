@@ -601,8 +601,34 @@ internal class AnimePlayerModel(
         val video = withTimeoutOrNull(ANIME_HOSTER_TIMEOUT_MS) {
             AnimeStreamResolver.resolve(entry.source, entry.libVersion, candidate)
         } ?: throw AnimeStreamException("The source did not resolve the stream within 20 s")
-        return AnimeStreamResolver.withSourceHeaders(entry.source, video)
+        return withLocalServer(entry, AnimeStreamResolver.withSourceHeaders(entry.source, video))
             .also { AnimeLog.i("resolved video ${describeAnimeVideo(it)}") }
+    }
+
+    /** The extension's local HTTP server for the playing video, if it needs one (closed on the next one). */
+    @Volatile private var localServer: eu.kanade.tachiyomi.animesource.model.HttpServer? = null
+
+    /**
+     * Aniyomi comparison (2026-11-28): extensions (lib 17) can hand out `http://localhost:1/...` placeholders and
+     * serve the stream from a local server they create (`createHttpServer`); Aniyomi starts it and rewrites the
+     * addresses to its port before `loadfile` (`Video.copyHttpServer`). Without it those videos could not play.
+     */
+    private fun withLocalServer(entry: RegisteredAnimeSource, video: Video): Video {
+        if (!video.usesHttpServer()) return video
+        val http = entry.source as? eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+            ?: throw AnimeStreamException("The source needs a local server it does not provide")
+        stopLocalServer()
+        val server = checkNotNull(http.createHttpServer()) { "The source did not create its local server" }
+        server.start()
+        if (!server.isRunning()) throw AnimeStreamException("The source's local server did not start")
+        localServer = server
+        AnimeLog.i("local server for ${entry.extensionName} on port ${server.listeningPort}")
+        return video.copyHttpServer(server.listeningPort)
+    }
+
+    private fun stopLocalServer() {
+        localServer?.let { runCatching { it.stop() } }
+        localServer = null
     }
 
     private fun tryNextStream(fallback: Boolean = false) {
@@ -1106,6 +1132,7 @@ internal class AnimePlayerModel(
         writes.close()
         abandonFocus()
         backend.close()
+        stopLocalServer()
         downloads.releaseOfflinePlayback(offlinePlaybackOwner)
     }
 }

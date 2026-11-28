@@ -140,6 +140,7 @@ internal data object AnimeLibraryTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val store = remember { Injekt.get<AnimeLibraryStore>() }
+        WarmAnimeSources()
         // Null until the database answers, so "your anime library is empty" never flashes (owner 2026-11-28).
         val loadedLibrary by remember { store.observeLibrary() }.collectAsState(null)
         val library = loadedLibrary.orEmpty()
@@ -373,6 +374,7 @@ internal fun TsuzukiAnimeWatch(bottomPad: Dp, onBrowse: () -> Unit) {
     val navigator = LocalNavigator.currentOrThrow
     val tabNavigator = LocalTabNavigator.current
     val store = remember { Injekt.get<AnimeLibraryStore>() }
+    WarmAnimeSources()
     val next by remember { store.observeWatchHero() }.collectAsState(null)
     val loadedLibrary by remember { store.observeLibrary() }.collectAsState(null)
     val library = loadedLibrary.orEmpty()
@@ -646,3 +648,28 @@ internal fun AnimeLibraryListRow(
 @Composable
 internal fun AnimeCategory.displayName(): String =
     if (isSystem) stringResource(MR.strings.label_default) else name
+
+/**
+ * PLAYER-WARM (Aniyomi comparison, 2026-11-28): Aniyomi's extensions are loaded long before its player opens; here
+ * they were loaded by the first screen that asked, so Continue watching straight from Watch or the anime Library
+ * paid for loading every installed extension before the episode could even be requested. Load them in the
+ * background while these screens are up (a no-op once loaded; idle work only, after the first frame).
+ */
+@Composable
+private fun WarmAnimeSources() {
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(ANIME_SOURCES_WARM_DELAY_MS)
+        try {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                Injekt.get<eu.kanade.tachiyomi.tsuzuki.anime.AnimeSourceManager>().ensureLoaded()
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            eu.kanade.tachiyomi.tsuzuki.anime.AnimeLog.w("could not warm the anime sources", e)
+        }
+    }
+}
+
+/** Long enough for the screen's first frames to draw before extension loading competes for the CPU. */
+private const val ANIME_SOURCES_WARM_DELAY_MS = 600L
