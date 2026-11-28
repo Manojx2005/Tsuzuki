@@ -307,9 +307,9 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
                 MpvPlayer.command("sub-add", *externalTrackArgs(address, track.lang))
             }
             audio.forEach { track ->
-                track.url.toHttpUrlOrNull()?.let {
-                    MpvPlayer.command("audio-add", *externalTrackArgs(it.toString(), track.lang))
-                }
+                // AY7: a saved episode's audio is a bare absolute path in its own folder, like its video.
+                val address = track.url.toHttpUrlOrNull()?.toString() ?: track.url.takeIf { it.startsWith("/") }
+                address?.let { MpvPlayer.command("audio-add", *externalTrackArgs(it, track.lang)) }
                     ?: AnimeLog.w("skipped an audio track that is not an http(s) address")
             }
         }
