@@ -74,6 +74,7 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 - **Cards merged** `982334a53` (`tsuzuki/v8.2`): V8.2, A6.6, A6.7, A6.8, AY7, AY8. 1,718 tests / 0 failures; Debug + claudeqa release built.
 - **Devices:** S22 claudeqa release — empty state (download queue) matches the board; Browse › Anime shows no Local anime because that scratch app has no storage folder (setting one needs the system picker). Test show `localanime/Fixture Show/` pushed under `/sdcard/Test`, `/sdcard/Documents` and the three `Documents/Tsuzuki-*-Scratch` folders on the S22. Crash buffers empty on both devices. Not seen: screenshot, airing tile, offline tracks, recap port.
 - **V8.6:** owner "With the current one" read as: help links stay.
+- **Follow-up (same day):** A6.8 empty local folder now shows the board's folder layout (merged). **A6.7 checked on the S22** (rvapscratch debug build, Colour, AY0 fixture over adb reverse): Settings menu shows スクリーンショット only once the picture is up; tapping saved `Pictures/Tsuzuki/01 plain mp4 - EP 2 - 00-00-00.png`, a clean 1280×720 video frame (no controls, no subtitles), snackbar 「Pictures/Tsuzuki に保存しました」 with 共有; crash buffer empty. rvapscratch now runs this build. Menus: the motion board's 150 ms / 0.92 scale is **not** applied — Material 3's DropdownMenu animation (120 ms, 0.8) is fixed inside the library; matching it needs a custom popup, left as is.
 - **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions.
 
 ## Batch SM — smoothness (owner 2026-11-28) — start here
@@ -2077,7 +2078,7 @@ real time in R-A3's "Airing today", replacing the estimate only when AniList has
 behaviour. Hide when unknown. Tests: parsing, "today" in the device time zone, estimate vs real precedence.
 Result: _pending_
 
-#### A6.7 Anime: player screenshot (T2) — **`done`** (merged 982334a53 (settings menu Screenshot, flash, Pictures/Tsuzuki + Share); not run on a device; cleanup 2026-11-28)
+#### A6.7 Anime: player screenshot (T2) — **`done`** (merged 982334a53 (settings menu Screenshot, flash, Pictures/Tsuzuki + Share); S22 checked 2026-11-28; cleanup 2026-11-28)
 A camera action in the player options sheet (R-A2 `AnimePlayerSheets.kt`): mpv `screenshot-to-file` (video only,
 no subtitles toggle) into the cache, then MediaStore `Pictures/Tsuzuki/`, snackbar with Share. No storage
 permission on Android 10+. Tests: file naming (title, episode, timestamp), MediaStore insert on IO.
