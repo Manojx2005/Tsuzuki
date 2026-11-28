@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Predictive Back</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+/* Commit: 0-10% rest, 10-50% finger drags (linear = finger), 50-58% release -> leaves (250 ms accelerate), rest. */
+@keyframes cTop{0%,10%{transform:translateX(0) scale(1);border-radius:0;opacity:1}
+ 50%{transform:translateX(24px) scale(0.9);border-radius:28px;opacity:1;animation-timing-function:cubic-bezier(0.3,0,0.8,0.15)}
+ 58%{transform:translateX(330px) scale(0.9);border-radius:28px;opacity:1}
+ 59%,100%{transform:translateX(330px) scale(0.9);opacity:0}}
+@keyframes cBack{0%,10%{transform:translateX(-30px);filter:brightness(.55)}50%{transform:translateX(-18px);filter:brightness(.75)}58%,100%{transform:translateX(0);filter:brightness(1)}}
+@keyframes cFinger{0%,9%{left:2px;opacity:0}10%{left:2px;opacity:1}50%{left:150px;opacity:1}51%,100%{left:150px;opacity:0}}
+/* Cancel: drag to 30%, released before the commit point -> settles back (250 ms decelerate). */
+@keyframes kTop{0%,10%{transform:translateX(0) scale(1);border-radius:0}
+ 35%{transform:translateX(10px) scale(0.95);border-radius:18px;animation-timing-function:cubic-bezier(0.05,0.7,0.1,1)}
+ 43%,100%{transform:translateX(0) scale(1);border-radius:0}}
+@keyframes kBack{0%,10%{filter:brightness(.55)}35%{filter:brightness(.65)}43%,100%{filter:brightness(.55)}}
+@keyframes kFinger{0%,9%{left:2px;opacity:0}10%{left:2px;opacity:1}35%{left:70px;opacity:1}36%,100%{left:70px;opacity:0}}
+.cTop{animation:cTop var(--cyc) infinite linear}.cBack{animation:cBack var(--cyc) infinite linear}.cF{animation:cFinger var(--cyc) infinite linear}
+.kTop{animation:kTop var(--cyc) infinite linear}.kBack{animation:kBack var(--cyc) infinite linear}.kF{animation:kFinger var(--cyc) infinite linear}
+</style>
+</helmet>
+<div style="width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:26px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px;--cyc:{{cycle}}">
+<div style="display:flex;justify-content:space-between;gap:32px;align-items:flex-end">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;letter-spacing:2px;color:{{muted}}">PREDICTIVE BACK · ANDROID 14+</div><h1 style="margin:0;font-family:{{display}};font-size:48px;line-height:1.05;font-weight:800">{{titleText}}</h1></div>
+<p style="margin:0;max-width:520px;font-size:14px;line-height:1.55;color:{{muted}}">Swipe from either edge and the page shrinks toward the middle, follows the finger and shows where Back goes. Let go past the commit point and it leaves; let go early and it settles back. The Back button and key still use the 300 ms pop.</p>
+</div>
+<div style="display:flex;gap:56px;justify-content:center;flex:1">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:300px;height:620px;border-radius:40px;border:10px solid {{frame}};overflow:hidden;background:{{bg}}">
+<div class="cBack" style="position:absolute;inset:0;padding:24px 16px;display:flex;flex-direction:column;gap:12px;background:{{bg}}"><div style="font-family:{{display}};font-size:28px;font-weight:800">{{libraryText}}</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"><sc-for list="{{covers}}" as="c" hint-placeholder-count="9"><div style="height:110px;border-radius:12px;background:{{c.color}}"></div></sc-for></div></div>
+<div class="cTop" style="position:absolute;inset:0;padding:24px 16px;display:flex;flex-direction:column;gap:12px;background:{{surface}};overflow:hidden;transform-origin:50% 50%"><div style="display:flex;gap:12px"><div style="width:96px;height:138px;border-radius:12px;background:#c2492f"></div><div style="font-family:{{display}};font-size:20px;font-weight:800;padding-top:6px">{{bookText}}</div></div><div style="height:48px;border-radius:16px;background:{{accent}}"></div><sc-for list="{{rows}}" as="r" hint-placeholder-count="6"><div style="height:44px;border-radius:12px;background:{{tile}}"></div></sc-for></div>
+<div class="cF" style="position:absolute;top:300px;width:36px;height:36px;border-radius:18px;background:{{fingerFill}};border:2px solid {{fg}}"></div>
+</div>
+<div style="font-size:14px"><b style="color:{{accent}}">Commit</b> · past 35 % of the width, or a flick</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:300px;height:620px;border-radius:40px;border:10px solid {{frame}};overflow:hidden;background:{{bg}}">
+<div class="kBack" style="position:absolute;inset:0;padding:24px 16px;display:flex;flex-direction:column;gap:12px;background:{{bg}}"><div style="font-family:{{display}};font-size:28px;font-weight:800">{{libraryText}}</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"><sc-for list="{{covers}}" as="c" hint-placeholder-count="9"><div style="height:110px;border-radius:12px;background:{{c.color}}"></div></sc-for></div></div>
+<div class="kTop" style="position:absolute;inset:0;padding:24px 16px;display:flex;flex-direction:column;gap:12px;background:{{surface}};overflow:hidden"><div style="display:flex;gap:12px"><div style="width:96px;height:138px;border-radius:12px;background:#c2492f"></div><div style="font-family:{{display}};font-size:20px;font-weight:800;padding-top:6px">{{bookText}}</div></div><div style="height:48px;border-radius:16px;background:{{accent}}"></div><sc-for list="{{rows}}" as="r" hint-placeholder-count="6"><div style="height:44px;border-radius:12px;background:{{tile}}"></div></sc-for></div>
+<div class="kF" style="position:absolute;top:300px;width:36px;height:36px;border-radius:18px;background:{{fingerFill}};border:2px solid {{fg}}"></div>
+</div>
+<div style="font-size:14px"><b style="color:{{accent}}">Cancel</b> · released early, settles back in 250 ms</div>
+</div>
+<div style="width:300px;display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:20px;background:{{tile}};border:1px solid {{line}};font-size:13px;line-height:1.5;align-self:center">
+<div style="font-size:12px;letter-spacing:2px;color:{{muted}}">WHILE THE FINGER IS DOWN</div>
+<div>Page scale 1 → 0.90 and corners 0 → 28 dp with drag progress.</div>
+<div>Page moves up to 24 dp toward the finger's side.</div>
+<div>Screen behind: starts 30 dp left, 55 % brightness; moves and lightens with progress.</div>
+<div style="font-size:12px;letter-spacing:2px;color:{{muted}};margin-top:6px">AFTER RELEASE</div>
+<div>Commit: page leaves sideways in 250 ms (exit curve); behind settles at 0 dp, full brightness.</div>
+<div>Cancel: back to full size in 250 ms (enter curve).</div>
+<div style="font-size:12px;letter-spacing:2px;color:{{muted}};margin-top:6px">WHERE</div>
+<div>Every pushed screen (details, settings, browse source, migration). Reader and player keep the system's own back-to-app animation.</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"speed":{"editor":"enum","options":["1x","0.25x"],"default":"1x"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    const slow = (this.props.speed ?? '1x') === '0.25x';
+    return {
+      bg: dot ? '#000000' : '#16213e', surface: dot ? '#0a0a0a' : '#1a2747', fg: dot ? '#ffffff' : '#f5efe2', muted: dot ? '#a3a3a3' : '#b9c2d6',
+      tile: dot ? '#141414' : '#1f2d4f', line: dot ? '#2a2a2a' : '#33446e', frame: dot ? '#262626' : '#0e1730',
+      accent: dot ? '#ff3b30' : '#e8b04a', fingerFill: dot ? 'rgba(255,255,255,0.25)' : 'rgba(245,239,226,0.25)',
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif", body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      titleText: dot ? 'THE PAGE FOLLOWS YOU' : 'The page follows your finger',
+      libraryText: dot ? 'LIBRARY' : 'Library', bookText: dot ? 'SWORD GOD' : 'Sword God',
+      cycle: slow ? '14s' : '3.5s',
+      covers: ['#3b5bdb', '#c2492f', '#2f9e44', '#e8b04a', '#7048e8', '#0c8599', '#e64980', '#495057', '#f08c00'].map((color) => ({ color })),
+      rows: [1, 2, 3, 4, 5, 6]
+    };
+  }
+}
+</script>
+</body>
+</html>

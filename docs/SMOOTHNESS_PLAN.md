@@ -111,6 +111,8 @@ Do not change layout or design; small upstream diffs only (AGENTS.md).
 Acceptance: J3/J5 longest UI frame at the tap ≤ 16.7 ms median (release, S22), per-change before/after table.
 
 ### SM4 — Motion system board (C, owner approval required before SM5)
+Board: https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r — offline copy with every value written out:
+`docs/design/boards/motion-2026-11/README.md` (+ the `.dc.html` sources). SM5 implements from that README.
 Why: §1 last row. One motion language is what makes major apps read as smooth.
 Board (Claude Design, Dot + Colour, phone + tablet) covering: navigation push/pop as **shared-axis X**
 (slide 30 dp + fade, 300 ms, emphasized-decelerate in / accelerate out), **predictive Back** (screen follows the

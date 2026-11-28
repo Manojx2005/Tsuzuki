@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tabs, media switch, sheets</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+/* Tabs (3 s): fade-through at 20%: A out in 70 ms, B in over 130 ms after it; back at 70%. Pill slides 200 ms. */
+@keyframes tA{0%,20%{opacity:1}22.3%,70%{opacity:0}72.3%,76.6%{opacity:0}76.7%,100%{opacity:1}}
+@keyframes tB{0%,22.3%{opacity:0}26.6%,70%{opacity:1}72.3%,100%{opacity:0}}
+@keyframes tPill{0%,20%{left:6px}26.6%,70%{left:calc(50% + 2px)}76.6%,100%{left:6px}}
+.tA{animation:tA var(--cyc) infinite linear}.tB{animation:tB var(--cyc) infinite linear}
+.tPill{animation:tPill var(--cyc) infinite cubic-bezier(0.2,0,0,1)}
+/* Media switch (3 s): highlight slides 200 ms, header still, grid crossfades 150 ms in place. */
+@keyframes mHi{0%,20%{left:calc(50% + 2px)}26.6%,70%{left:calc(75% + 1px)}76.6%,100%{left:calc(50% + 2px)}}
+@keyframes mBook{0%,20%{opacity:1}25%,70%{opacity:0}75%,100%{opacity:1}}
+@keyframes mAnime{0%,20%{opacity:0}25%,70%{opacity:1}75%,100%{opacity:0}}
+.mHi{animation:mHi var(--cyc) infinite cubic-bezier(0.2,0,0,1)}.mBook{animation:mBook var(--cyc) infinite linear}.mAnime{animation:mAnime var(--cyc) infinite linear}
+/* Sheet (3 s): enters 300 ms emphasized decelerate at 20%, leaves 200 ms emphasized accelerate at 70%. */
+@keyframes sUp{0%,20%{transform:translateY(100%);animation-timing-function:cubic-bezier(0.05,0.7,0.1,1)}30%,70%{transform:translateY(0);animation-timing-function:cubic-bezier(0.3,0,0.8,0.15)}76.6%,100%{transform:translateY(100%)}}
+@keyframes sScrim{0%,20%{opacity:0}30%,70%{opacity:1}76.6%,100%{opacity:0}}
+.sUp{animation:sUp var(--cyc) infinite}.sScrim{animation:sScrim var(--cyc) infinite linear}
+</style>
+</helmet>
+<div style="width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:24px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px;--cyc:{{cycle}}">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;letter-spacing:2px;color:{{muted}}">STAYING ON THE SAME LEVEL</div><h1 style="margin:0;font-family:{{display}};font-size:48px;line-height:1.05;font-weight:800">{{titleText}}</h1></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;flex:1">
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}}">
+<div class="tA" style="position:absolute;inset:0;padding:22px 14px;display:flex;flex-direction:column;gap:10px"><div style="font-family:{{display}};font-size:24px;font-weight:800">{{homeText}}</div><div style="height:150px;border-radius:16px;background:#c2492f"></div><div style="height:70px;border-radius:16px;background:{{tile}}"></div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"><div style="height:80px;border-radius:14px;background:{{tile}}"></div><div style="height:80px;border-radius:14px;background:{{tile}}"></div></div></div>
+<div class="tB" style="position:absolute;inset:0;padding:22px 14px;display:flex;flex-direction:column;gap:10px"><div style="font-family:{{display}};font-size:24px;font-weight:800">{{libraryText}}</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><sc-for list="{{covers}}" as="c" hint-placeholder-count="9"><div style="height:90px;border-radius:10px;background:{{c.color}}"></div></sc-for></div></div>
+<div style="position:absolute;left:12px;right:12px;bottom:14px;height:46px;border-radius:23px;background:{{tile}};border:1px solid {{line}}"><div class="tPill" style="position:absolute;top:5px;width:calc(50% - 8px);height:34px;border-radius:17px;background:{{fg}}"></div></div>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Home tabs · fade-through 200 ms</b><br>Old tab fades out in 70 ms, new one fades in over 130 ms. The nav pill slides 200 ms (standard). Unchanged from today, kept because tabs are siblings, not depth.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}}">
+<div style="position:absolute;inset:0;padding:22px 14px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:{{display}};font-size:24px;font-weight:800">{{libraryText}}</div>
+<div style="position:relative;height:36px;border-radius:18px;background:{{tile}};font-size:9px;display:flex;align-items:center"><div class="mHi" style="position:absolute;top:4px;width:calc(25% - 6px);height:28px;border-radius:14px;background:{{fg}}"></div><span style="position:relative;flex:1;text-align:center;mix-blend-mode:difference;color:#ffffff">ALL</span><span style="position:relative;flex:1;text-align:center;mix-blend-mode:difference;color:#ffffff">NOVEL</span><span style="position:relative;flex:1;text-align:center;mix-blend-mode:difference;color:#ffffff">MANGA</span><span style="position:relative;flex:1;text-align:center;mix-blend-mode:difference;color:#ffffff">ANIME</span></div>
+<div style="position:relative;height:330px">
+<div class="mBook" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-content:start"><sc-for list="{{covers}}" as="c" hint-placeholder-count="9"><div style="height:96px;border-radius:10px;background:{{c.color}}"></div></sc-for></div>
+<div class="mAnime" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start"><sc-for list="{{anime}}" as="c" hint-placeholder-count="4"><div style="height:150px;border-radius:12px;background:{{c.color}}"></div></sc-for></div>
+</div>
+</div>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Library media · in place</b><br>Novels, Manga and Anime are one control: the highlight slides 200 ms, the header never moves, the grid crossfades 150 ms (built 2026-11-28).</div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}}">
+<div style="position:absolute;inset:0;padding:22px 14px;display:flex;flex-direction:column;gap:10px"><div style="font-family:{{display}};font-size:24px;font-weight:800">{{libraryText}}</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><sc-for list="{{covers}}" as="c" hint-placeholder-count="9"><div style="height:90px;border-radius:10px;background:{{c.color}}"></div></sc-for></div></div>
+<div class="sScrim" style="position:absolute;inset:0;background:rgba(0,0,0,0.45)"></div>
+<div class="sUp" style="position:absolute;left:0;right:0;bottom:0;height:300px;border-radius:26px 26px 0 0;background:{{sheet}};padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="align-self:center;width:36px;height:4px;border-radius:2px;background:{{line}}"></div><div style="font-family:{{display}};font-size:18px;font-weight:800">{{filterText}}</div><div style="height:34px;border-radius:17px;background:{{tile}}"></div><div style="height:34px;border-radius:17px;background:{{tile}}"></div><div style="height:34px;border-radius:17px;background:{{tile}}"></div><div style="height:34px;border-radius:17px;background:{{tile}}"></div></div>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Sheets and menus</b><br>Enter 300 ms (enter curve), leave 200 ms (exit curve), scrim fades with them. Same in Dot and Colour: Colour's overshoot spring goes, so both themes move alike. Menus: 150 ms fade + 0.92 → 1 scale from the anchor.</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"speed":{"editor":"enum","options":["1x","0.25x"],"default":"1x"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    const slow = (this.props.speed ?? '1x') === '0.25x';
+    return {
+      bg: dot ? '#000000' : '#16213e', sheet: dot ? '#111111' : '#22325a', fg: dot ? '#ffffff' : '#f5efe2', muted: dot ? '#a3a3a3' : '#b9c2d6',
+      tile: dot ? '#161616' : '#2a3a63', line: dot ? '#2e2e2e' : '#3a4c78', frame: dot ? '#262626' : '#0e1730',
+      accent: dot ? '#ff3b30' : '#e8b04a',
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif", body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      titleText: dot ? 'SIBLINGS FADE, SHEETS RISE' : 'Siblings fade, sheets rise',
+      homeText: dot ? 'HOME' : 'Home', libraryText: dot ? 'LIBRARY' : 'Library', filterText: dot ? 'FILTER' : 'Filter',
+      cycle: slow ? '12s' : '3s',
+      covers: ['#3b5bdb', '#c2492f', '#2f9e44', '#e8b04a', '#7048e8', '#0c8599', '#e64980', '#495057', '#f08c00'].map((color) => ({ color })),
+      anime: ['#0c8599', '#e64980', '#7048e8', '#2f9e44'].map((color) => ({ color }))
+    };
+  }
+}
+</script>
+</body>
+</html>

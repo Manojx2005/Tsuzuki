@@ -1,0 +1,19 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-28T15:20:00Z"},
+  "title": "Tsuzuki Motion System",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1200, "h": 900, "title": "Motion tokens and rules", "is_interactive": true},
+    "Nav.dc.html": {"x": 1280, "y": 0, "w": 1200, "h": 900, "title": "Navigation: shared axis X", "is_interactive": true},
+    "Back.dc.html": {"x": 0, "y": 1020, "w": 1200, "h": 900, "title": "Predictive Back", "is_interactive": true},
+    "TabsSheets.dc.html": {"x": 1280, "y": 1020, "w": 1200, "h": 900, "title": "Tabs, media switch, sheets", "is_interactive": true},
+    "ReaderPlayer.dc.html": {"x": 0, "y": 2040, "w": 1200, "h": 900, "title": "Reader and player", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Nav.dc.html", "Back.dc.html", "TabsSheets.dc.html", "ReaderPlayer.dc.html"],
+  "notes": {
+    "title": {"x": 0, "y": -300, "text": "Tsuzuki motion system (SM4) — one language for every move", "kind": "title1", "maxW": 2480}
+  },
+  "designSystems": []
+}

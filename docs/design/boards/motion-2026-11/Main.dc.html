@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion tokens</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+@keyframes run{0%,12%{left:0}62%,100%{left:calc(100% - 14px)}}
+.track{position:relative;height:14px;border-radius:7px}
+.ball{position:absolute;top:0;width:14px;height:14px;border-radius:7px;animation:run 2.4s infinite}
+.e-emph-in{animation-timing-function:cubic-bezier(0.05,0.7,0.1,1)}
+.e-emph-out{animation-timing-function:cubic-bezier(0.3,0,0.8,0.15)}
+.e-std{animation-timing-function:cubic-bezier(0.2,0,0,1)}
+.e-spring{animation-timing-function:cubic-bezier(0.34,1.4,0.64,1)}
+.e-linear{animation-timing-function:linear}
+</style>
+</helmet>
+<div style="width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:28px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">TSUZUKI · MOTION SYSTEM · SM4</div>
+<h1 style="margin:0;font-family:{{display}};font-size:56px;line-height:1;font-weight:800">{{titleText}}</h1>
+</div>
+<div style="font-size:14px;max-width:420px;line-height:1.5;color:{{muted}}">One axis, one curve family, one rule for arrivals. Everything below replaces today's mix (450 ms crossfades, separate window animations, fades for tabs).</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:14px;padding:24px;border-radius:22px;background:{{tile}};border:1px solid {{line}}">
+<div style="font-size:12px;letter-spacing:2px;color:{{muted}}">CURVES — DOT PLAYS EACH ONE</div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><b>Enter · emphasized decelerate</b><span style="color:{{muted}}">0.05, 0.7, 0.1, 1</span></div><div class="track" style="background:{{line}}"><div class="ball e-emph-in" style="background:{{accent}}"></div></div><div style="font-size:12px;color:{{muted}}">Anything arriving: pushed screens, sheets, reader, player.</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><b>Exit · emphasized accelerate</b><span style="color:{{muted}}">0.3, 0, 0.8, 0.15</span></div><div class="track" style="background:{{line}}"><div class="ball e-emph-out" style="background:{{accent}}"></div></div><div style="font-size:12px;color:{{muted}}">Anything leaving for good: popped screens, closed sheets.</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><b>Standard</b><span style="color:{{muted}}">0.2, 0, 0, 1</span></div><div class="track" style="background:{{line}}"><div class="ball e-std" style="background:{{accent}}"></div></div><div style="font-size:12px;color:{{muted}}">Things that move and stay: segments, toggles, shared cover.</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><b>Finger (predictive Back)</b><span style="color:{{muted}}">linear to the finger</span></div><div class="track" style="background:{{line}}"><div class="ball e-linear" style="background:{{accent}}"></div></div><div style="font-size:12px;color:{{muted}}">While a gesture is held, motion is the finger, not a curve.</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;padding:24px;border-radius:22px;background:{{tile}};border:1px solid {{line}}">
+<div style="font-size:12px;letter-spacing:2px;color:{{muted}}">DURATIONS</div>
+<sc-for list="{{durations}}" as="d" hint-placeholder-count="8">
+<div style="display:flex;align-items:center;gap:14px;font-size:14px">
+<div style="width:64px;font-family:{{display}};font-size:22px;font-weight:800;color:{{accent}}">{{d.ms}}</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:2px"><b>{{d.what}}</b><span style="font-size:12px;color:{{muted}}">{{d.note}}</span></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div style="padding:22px;border-radius:22px;background:{{tile}};border:1px solid {{line}};display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:2px;color:{{accent}}">RULE 1 · READY, THEN MOVE</div><div style="font-size:14px;line-height:1.5">A screen is built while the old one still shows; the move starts on the next frame. No frame over 8 ms once motion starts (120 Hz).</div></div>
+<div style="padding:22px;border-radius:22px;background:{{tile}};border:1px solid {{line}};display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:2px;color:{{accent}}">RULE 2 · NOTHING PUSHES</div><div style="font-size:14px;line-height:1.5">Late content fades in over 150 ms into space kept for it. Never "empty" before data answers. Lists, buttons and counts never shift the page.</div></div>
+<div style="padding:22px;border-radius:22px;background:{{tile}};border:1px solid {{line}};display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:2px;color:{{accent}}">RULE 3 · REDUCED MOTION</div><div style="font-size:14px;line-height:1.5">System animations off or the app's Reduce motion: every move becomes a 150 ms crossfade. No slides, scales or flying covers.</div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    return {
+      bg: dot ? '#000000' : '#16213e',
+      fg: dot ? '#ffffff' : '#f5efe2',
+      muted: dot ? '#a3a3a3' : '#b9c2d6',
+      tile: dot ? '#111111' : '#1f2d4f',
+      line: dot ? '#2a2a2a' : '#33446e',
+      accent: dot ? '#ff3b30' : '#e8b04a',
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif",
+      body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      titleText: dot ? 'ONE MOTION' : 'One motion',
+      durations: [
+        { ms: '100', what: 'Press', note: 'Scale to 0.97 and back (unchanged)' },
+        { ms: '150', what: 'Arrivals and reduced motion', note: 'Late content fade-in; every move when motion is reduced' },
+        { ms: '200', what: 'Segments, toggles, tab fade-through, sheet exit', note: 'Library media highlight slides here' },
+        { ms: '300', what: 'Push / pop, sheets enter, reader and player', note: 'Shared axis X; reader and player shared axis Z' },
+        { ms: '180', what: 'Book details open (owner 2026-11-14)', note: 'Cover flies, page fades; 300 ms total budget kept' },
+        { ms: '250', what: 'Back released / cancelled', note: 'Finishes from wherever the finger let go' },
+        { ms: '600', what: 'Theme reveal', note: 'Circular reveal from the picked card (unchanged)' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

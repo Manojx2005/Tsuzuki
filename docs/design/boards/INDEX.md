@@ -405,3 +405,9 @@ filters (pills on `Extensions`), download settings (`UpdateSchedule`), tracking 
 `fixes-2026-11/`: 19 phone boards (Dot + Colour) for cards Q1–Q12 in `docs/HANDOFF.md` — reader menu, end of chapter,
 save chapters, library, details, browse, reader quick sheet, full reader settings (Text, Page), Appearance themes.
 See `fixes-2026-11/README.md`. These replace the older boards where they overlap.
+
+## Motion system (Batch SM4, 2026-11-28)
+
+Five live artboards (tokens and rules, navigation shared axis X, predictive Back, tabs/media/sheets, reader and
+player shared axis Z): [`motion-2026-11/README.md`](motion-2026-11/README.md) has every value; the `.dc.html`
+sources are beside it. Canvas: https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (owner account).
