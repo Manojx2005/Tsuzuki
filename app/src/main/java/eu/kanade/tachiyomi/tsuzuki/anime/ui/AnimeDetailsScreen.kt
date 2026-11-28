@@ -44,10 +44,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -122,6 +124,8 @@ internal fun AnimeDetailsScreen(
     resumeUrl: String?,
     onBack: () -> Unit,
     sharedCoverKey: String? = null,
+    /** Owner 2026-11-28: episodes popped in after details opened; with the stored row they load at once. */
+    savedAnime: Anime? = null,
     launchPlayer: (Episode, Boolean) -> Unit,
 ) {
     val tokens = TsuzukiTheme.tokens
@@ -139,7 +143,7 @@ internal fun AnimeDetailsScreen(
     }
     // Seasons and duplicates open in place when these details are in place (AnimeDetailsRoute), else the Activity.
     val openDetails = eu.kanade.presentation.tsuzuki.anime.rememberAnimeDetailsOpener()
-    val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope) }
+    val model = remember(entry, anime.url) { AnimeDetailsScreenModel(entry, anime, library, scope, savedAnime) }
     val migrate = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) scope.launch { model.reloadSaved() }
     }
@@ -490,6 +494,18 @@ internal fun AnimeDetailsScreen(
                             Box(Modifier.padding(vertical = 8.dp)) {
                                 AnimeResumeTile(next, selected.isEmpty()) { play(next) }
                             }
+                        } ?: run {
+                            // A library entry almost always has a next episode: keep its tile's space while the
+                            // episodes load, so the page does not jump when it arrives (owner 2026-11-28).
+                            if (loadedEpisodes == null && saved?.favorite == true) {
+                                Box(
+                                    Modifier.padding(vertical = 8.dp)
+                                        .alpha(0f)
+                                        .clearAndSetSemantics {},
+                                ) {
+                                    AnimeResumeTile(Episode(animeId = saved.id, url = "", name = ""), false) {}
+                                }
+                            }
                         }
                         AnimeDetailsDescription(
                             anime = shown,
@@ -541,38 +557,47 @@ internal fun AnimeDetailsScreen(
                 }
                 items(filtered, key = Episode::id, contentType = { "anime_episode" }) { episode ->
                     val status = downloadStatuses[episode.id]
-                    AnimeEpisodeSwipe(
-                        episode = episode,
-                        downloadStatus = status,
-                        enabled = !saving && selected.isEmpty(),
-                        onToggleSeen = { mutate { markSeen(setOf(episode.id), !episode.seen) } },
-                        onToggleBookmark = {
-                            mutate { library.setEpisodesBookmarked(setOf(episode.id), !episode.bookmark) }
-                        },
-                        onDownload = {
-                            when (status) {
-                                null -> enqueue(listOf(episode))
-                                AnimeDownloadStatus.Failed -> downloads.retry(episode.id)
-                                else -> downloads.remove(episode.id)
-                            }
-                        },
+                    // Rows that arrive after the screen fade in instead of popping (owner 2026-11-28).
+                    androidx.compose.foundation.layout.Box(
+                        Modifier.animateItem(
+                            fadeInSpec = androidx.compose.animation.core.tween(EPISODE_FADE_IN_MS),
+                            placementSpec = null,
+                            fadeOutSpec = null,
+                        ),
                     ) {
-                        AnimeEpisodeTile(
-                            source = entry.source,
+                        AnimeEpisodeSwipe(
                             episode = episode,
-                            coverUrl = display.thumbnail_url,
-                            showNumberOnly = details.episodeDisplay.showNumberOnly,
-                            selected = episode.id in selection,
-                            selectionMode = selected.isNotEmpty(),
-                            enabled = !saving,
-                            onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
-                            onSelect = { toggleSelection(episode.id, fromLongPress = true) },
-                            onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
-                            onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
-                            onMarkPrevious = { markPrevious(episode) },
-                            downloadStatus = downloadStatuses[episode.id],
-                            onDownload = { enqueue(listOf(episode)) },
-                        )
+                            downloadStatus = status,
+                            enabled = !saving && selected.isEmpty(),
+                            onToggleSeen = { mutate { markSeen(setOf(episode.id), !episode.seen) } },
+                            onToggleBookmark = {
+                                mutate { library.setEpisodesBookmarked(setOf(episode.id), !episode.bookmark) }
+                            },
+                            onDownload = {
+                                when (status) {
+                                    null -> enqueue(listOf(episode))
+                                    AnimeDownloadStatus.Failed -> downloads.retry(episode.id)
+                                    else -> downloads.remove(episode.id)
+                                }
+                            },
+                        ) {
+                            AnimeEpisodeTile(
+                                source = entry.source,
+                                episode = episode,
+                                coverUrl = display.thumbnail_url,
+                                showNumberOnly = details.episodeDisplay.showNumberOnly,
+                                selected = episode.id in selection,
+                                selectionMode = selected.isNotEmpty(),
+                                enabled = !saving,
+                                onClick = { if (selected.isEmpty()) play(episode) else toggleSelection(episode.id) },
+                                onSelect = { toggleSelection(episode.id, fromLongPress = true) },
+                                onMarkSeen = { mutate { markSeen(setOf(episode.id), it) } },
+                                onBookmark = { mutate { library.setEpisodesBookmarked(setOf(episode.id), it) } },
+                                onMarkPrevious = { markPrevious(episode) },
+                                downloadStatus = downloadStatuses[episode.id],
+                                onDownload = { enqueue(listOf(episode)) },
+                            )
+                        }
                     }
                 }
             }
@@ -778,3 +803,6 @@ internal fun rememberAnimeImage(source: AnimeSource?, url: String?): ImageReques
 internal fun nextAiringDays(episodes: List<Episode>, now: Long): Int? =
     episodes.asSequence().map { it.dateUpload }.filter { it > now }.minOrNull()
         ?.let { ((it - now) / java.util.concurrent.TimeUnit.DAYS.toMillis(1)).toInt() }
+
+/** Episode rows that arrive after the details screen fade in over this long. */
+private const val EPISODE_FADE_IN_MS = 150

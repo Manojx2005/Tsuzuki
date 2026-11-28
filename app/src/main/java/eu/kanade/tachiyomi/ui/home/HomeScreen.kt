@@ -240,6 +240,12 @@ object HomeScreen : Screen() {
                             AnimatedContent(
                                 targetState = tabNavigator.current,
                                 transitionSpec = {
+                                    // Tsuzuki: books <-> anime library is a media switch, not a tab change.
+                                    eu.kanade.tachiyomi.ui.tsuzuki.navigation.libraryMediaTransition(
+                                        initialState,
+                                        targetState,
+                                    )
+                                        ?.let { return@AnimatedContent it }
                                     materialFadeThroughIn(
                                         initialScale = 1f,
                                         durationMillis = TabFadeDuration,
