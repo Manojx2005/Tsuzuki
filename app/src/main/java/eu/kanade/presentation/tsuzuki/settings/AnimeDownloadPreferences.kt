@@ -50,7 +50,7 @@ internal fun animeDownloadAheadPreference(): Preference.PreferenceItem.ListPrefe
     return Preference.PreferenceItem.ListPreference(
         preference = remember { eu.kanade.tachiyomi.tsuzuki.anime.animeDownloadAhead(Injekt.get()) },
         entries = entries.toImmutableMap(),
+        // The group's note ("only when the current and next are downloaded") covers it; the row shows its value.
         title = stringResource(R.string.tsz_anime_download_ahead),
-        subtitle = stringResource(R.string.tsz_anime_download_ahead_summary),
     )
 }

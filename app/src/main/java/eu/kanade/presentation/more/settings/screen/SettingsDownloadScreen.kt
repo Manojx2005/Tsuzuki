@@ -106,7 +106,6 @@ object SettingsDownloadScreen : SearchableSettings {
                 ),
                 *listOfNotNull(
                     eu.kanade.presentation.tsuzuki.settings.animeDeleteAfterWatchedPreference(),
-                    eu.kanade.presentation.tsuzuki.settings.animeDownloadAheadPreference(),
                 ).toTypedArray(),
                 Preference.PreferenceItem.ListPreference(
                     preference = downloadPreferences.removeAfterReadSlots,
@@ -222,6 +221,7 @@ object SettingsDownloadScreen : SearchableSettings {
                         },
                     title = stringResource(MR.strings.auto_download_while_reading),
                 ),
+                *listOfNotNull(eu.kanade.presentation.tsuzuki.settings.animeDownloadAheadPreference()).toTypedArray(),
                 Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.download_ahead_info)),
             ),
         )
