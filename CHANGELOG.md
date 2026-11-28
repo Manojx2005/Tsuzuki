@@ -9,19 +9,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-11-28
+
 ### Added
 - Anime: Play with lets episodes open in another video app (MX Player, VLC, mpv and others) or ask each time;
   where you stop there is saved as your progress.
+- Anime: Simkl tracking. Sign in under Settings › Tracking › Anime trackers; status, watched episodes and your
+  rating are sent to Simkl (changes made on Simkl's site are not read back).
+- Anime: real next-episode airing times from AniList for anime tracked there, on the details page and in Airing
+  today.
+- Anime: Screenshot in the player's settings menu saves the current frame to Pictures/Tsuzuki, with Share.
+- Anime: Local anime. Put each show in its own folder under `localanime/` in Tsuzuki's storage folder (mp4, mkv or
+  webm, with optional cover.jpg, details.json and matching .srt/.ass subtitles); it appears in Browse › Anime under
+  On this device.
+- Anime: downloaded episodes keep the source's extra subtitles, audio tracks and player options.
+- Restoring an Aniyomi backup now says so in the restore preview.
+- Predictive Back: swiping back previews the screen behind (details, settings pages, browse); screens now slide
+  in with a short shared-axis motion.
 
 ### Changed
+- Smoother overall: Tsuzuki's own screens are included in the startup profile, details pages draw their first
+  frame faster, and going back to the Library takes about 30 ms instead of 40.
 - Opening and closing the reader and the video player, and going back, now take 300 ms instead of 450 ms.
 - Library: switching to Anime slides like switching between Novels and Manga, instead of fading the whole screen.
 - Anime details: episodes appear with the page instead of popping in, and the page no longer jumps when the
   continue button arrives; the anime library no longer flashes "empty" while it loads.
+- Empty lists show their face upright in the body font, with a clearer message.
+- Tablet novel reader: smaller side margins by default (reading column up to 720 dp).
+- MyAnimeList now signs in through Tsuzuki's own registration. **If you were signed in to MyAnimeList, sign in
+  again** under Settings › Tracking.
+- Screen reader: pills, section labels, the Home hero and the custom source wizard announce their state.
 
 ### Fixed
 - Starting or resuming an anime episode no longer flashes a still frame before playing, and resuming starts
   sooner (from the nearest keyframe).
+- Novel recap: shows again after a break (it took the previous chapter from a filtered list), fetches the previous
+  chapter when it is not downloaded, and appears as an overlay when you resume mid-chapter.
+- Extensions: the "JS" tag follows the theme accent, and the source's "Reverse chapter list" setting is translated.
 
 ## [0.2.3] - 2026-11-28
 
