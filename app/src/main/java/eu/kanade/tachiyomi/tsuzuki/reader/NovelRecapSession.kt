@@ -42,7 +42,13 @@ internal class NovelRecapSession(
     @Volatile private var recap: NovelRecap? = null
 
     /** A chapter reopened mid-way: waiting for its text so the recap can come from just before the resume point. */
-    private class PendingResume(val chapterId: Long, val progress: Float, val fallback: List<String>)
+    private class PendingResume(
+        val chapterId: Long,
+        val progress: Float,
+        val fallback: List<String>,
+        val previousChapter: String? = null,
+        val lastReadAt: Long? = null,
+    )
 
     @Volatile private var pendingResume: PendingResume? = null
     private val resumeOverlay = MutableStateFlow<NovelRecap?>(null)
@@ -69,16 +75,25 @@ internal class NovelRecapSession(
     fun onChapterContent(chapterId: Long, content: String) {
         val pending = pendingResume?.takeIf { it.chapterId == chapterId } ?: return
         pendingResume = null
-        val paragraphs = try {
-            novelRecapParagraphsBefore(content, pending.progress).ifEmpty { pending.fallback }
+        val before = try {
+            novelRecapParagraphsBefore(content, pending.progress)
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
-            pending.fallback
+        } catch (e: Exception) {
+            logcat(LogPriority.DEBUG, e) { "Could not build the resume recap from this chapter" }
+            emptyList()
         }
+        // Prose from this chapter needs no chapter name; the previous chapter's excerpt keeps its own.
+        val fromPrevious = before.isEmpty()
+        val paragraphs = before.ifEmpty { pending.fallback }
         if (paragraphs.isNotEmpty()) {
-            resumeOverlay.value =
-                NovelRecap(chapterId, paragraphs, (pending.progress * 100).roundToInt())
+            resumeOverlay.value = NovelRecap(
+                chapterId,
+                paragraphs,
+                (pending.progress * 100).roundToInt(),
+                previousChapter = pending.previousChapter.takeIf { fromPrevious },
+                lastReadAt = pending.lastReadAt,
+            )
         }
     }
 
@@ -102,7 +117,7 @@ internal class NovelRecapSession(
             val resume = mode == NovelRecapMode.ResumeOverlay
             val previousModel = previous?.chapter?.toDomainChapter()
             if (previous == null || previousModel == null) {
-                if (resume) pendingResume = PendingResume(chapterId, entryProgress, emptyList())
+                if (resume) pendingResume = PendingResume(chapterId, entryProgress, emptyList(), lastReadAt = lastRead)
                 return
             }
             val cached = readExcerpt(manga.id, previousModel.id)
@@ -118,10 +133,11 @@ internal class NovelRecapSession(
                     ?: fetchFromSource(previous, source)
                 content?.let(::novelRecapParagraphs).orEmpty()
             }
+            val previousName = previousModel.name.takeIf(String::isNotBlank)
             if (resume) {
-                pendingResume = PendingResume(chapterId, entryProgress, paragraphs)
+                pendingResume = PendingResume(chapterId, entryProgress, paragraphs, previousName, lastRead)
             } else if (paragraphs.isNotEmpty()) {
-                recap = NovelRecap(chapterId, paragraphs)
+                recap = NovelRecap(chapterId, paragraphs, previousChapter = previousName, lastReadAt = lastRead)
             }
             if (paragraphs.isNotEmpty() && cached == null) {
                 try {

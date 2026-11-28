@@ -105,11 +105,23 @@ class NovelRecapTest {
     }
 
     @Test
+    fun labelJoinsTheKnownPartsLikeTheBoard() {
+        assertEquals("Previously · Ch. 4 · 2 days ago", novelRecapLabel("Previously", "Ch. 4", "2 days ago"))
+        assertEquals("Previously · 2 days ago", novelRecapLabel("Previously", null, "2 days ago"))
+        assertEquals("Previously · Ch. 4", novelRecapLabel("Previously", "  Ch. 4 ", null))
+        assertEquals("Previously", novelRecapLabel("Previously", " ", ""))
+    }
+
+    @Test
     fun modeSeparatesFreshOpensFromResumesAndRespectsTheGap() {
         assertEquals(NovelRecapMode.None, novelRecapMode(due = false, entryProgress = 0.4f))
         assertEquals(NovelRecapMode.None, novelRecapMode(due = false, entryProgress = 0f))
         assertEquals(NovelRecapMode.CardAboveText, novelRecapMode(due = true, entryProgress = 0f))
         assertEquals(NovelRecapMode.ResumeOverlay, novelRecapMode(due = true, entryProgress = 0.01f))
+        assertEquals(NovelRecapMode.ResumeOverlay, novelRecapMode(due = true, entryProgress = 0.98f))
+        // Reopening a finished chapter shows its last screen: no overlay repeating what is visible.
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = true, entryProgress = 0.99f))
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = true, entryProgress = 1f))
     }
 
     @Test

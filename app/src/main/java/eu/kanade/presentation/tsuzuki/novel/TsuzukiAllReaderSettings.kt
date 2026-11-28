@@ -411,20 +411,7 @@ private fun ReaderPreview(preferences: ReaderPreferences, activity: Activity?) {
     val size by preferences.novelFontSize.collectAsState()
     val spacing by preferences.novelLineHeight.collectAsState()
     val alignment by preferences.novelTextAlign.collectAsState()
-    val context = LocalContext.current
-    val family by produceState<FontFamily?>(null, face, context) {
-        value = when (face) {
-            "literata" -> FontFamily(Font(R.font.lnr_literata))
-            "serif", "Georgia, serif", "Times New Roman, serif" -> FontFamily.Serif
-            "sans-serif", "Arial, sans-serif" -> FontFamily.SansSerif
-            "monospace" -> FontFamily.Monospace
-            else -> withContext(Dispatchers.IO) {
-                val fonts = FontManager(context)
-                fonts.getInstalledFonts().firstOrNull { it.path == face }?.let(fonts::getTypeface)
-                    ?.let { FontFamily(it) }
-            }
-        }
-    }
+    val family = rememberNovelFontFamily(face)
     val colours = when {
         theme == NovelPageColour.CUSTOM.key ->
             Color(customPage.takeUnless { it == 0 } ?: 0xFFFFFFFF.toInt()) to
@@ -476,4 +463,24 @@ internal fun ReaderSettingsResetDialog(preferences: ReaderPreferences, onDismiss
             TextButton(onClick = onDismiss) { Text(tsuzukiMenuLabel(stringResource(MR.strings.action_cancel))) }
         },
     )
+}
+
+/** The novel reader's chosen face as a Compose family (null while an installed font loads, or if it is missing). */
+@Composable
+internal fun rememberNovelFontFamily(face: String): FontFamily? {
+    val context = LocalContext.current
+    val family by produceState<FontFamily?>(null, face, context) {
+        value = when (face) {
+            "literata" -> FontFamily(Font(R.font.lnr_literata))
+            "serif", "Georgia, serif", "Times New Roman, serif" -> FontFamily.Serif
+            "sans-serif", "Arial, sans-serif" -> FontFamily.SansSerif
+            "monospace" -> FontFamily.Monospace
+            else -> withContext(Dispatchers.IO) {
+                val fonts = FontManager(context)
+                fonts.getInstalledFonts().firstOrNull { it.path == face }?.let(fonts::getTypeface)
+                    ?.let { FontFamily(it) }
+            }
+        }
+    }
+    return family
 }

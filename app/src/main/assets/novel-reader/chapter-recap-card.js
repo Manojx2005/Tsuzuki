@@ -42,12 +42,14 @@
         header.appendChild(dismiss);
         card.appendChild(header);
 
-        data.paragraphs.forEach(function (paragraph) {
-            var text = document.createElement('div');
-            text.textContent = paragraph;
-            text.style.cssText = 'margin-top:8px;overflow-wrap:anywhere;';
-            card.appendChild(text);
-        });
+        // Board: the excerpt is set in the reader's own face at 13px, at most six lines; the label keeps the UI face.
+        var body = document.createElement('div');
+        body.textContent = data.paragraphs.join('\n\n');
+        body.style.cssText = 'margin-top:8px;overflow-wrap:anywhere;white-space:pre-line;line-height:1.5;' +
+            'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;';
+        body.style.setProperty('font-family', page.fontFamily, 'important');
+        body.style.setProperty('font-size', '13px', 'important');
+        card.appendChild(body);
         document.body.insertBefore(card, document.body.firstChild);
         window.__tszNovelRecapHeight = function () {
             return card.isConnected ? card.offsetHeight + 24 : 0;

@@ -4,7 +4,22 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
 import java.util.concurrent.TimeUnit
 
-internal data class NovelRecap(val chapterId: Long, val paragraphs: List<String>, val resumePercent: Int = 0)
+/**
+ * [previousChapter] names the chapter the paragraphs come from when it is not the one being opened; [lastReadAt]
+ * is when the book was last read (epoch ms). Both are null when unknown and then left out of the label.
+ */
+internal data class NovelRecap(
+    val chapterId: Long,
+    val paragraphs: List<String>,
+    val resumePercent: Int = 0,
+    val previousChapter: String? = null,
+    val lastReadAt: Long? = null,
+)
+
+/** The board's label: "Previously · Ch. 4 · 2 days ago", with whichever parts are known. */
+internal fun novelRecapLabel(title: String, previousChapter: String?, relativeTime: String?): String =
+    listOfNotNull(title, previousChapter?.trim()?.takeIf(String::isNotEmpty), relativeTime?.takeIf(String::isNotEmpty))
+        .joinToString(" · ")
 
 internal fun shouldShowNovelRecap(lastReadAt: Long?, now: Long): Boolean =
     lastReadAt != null && lastReadAt > 0L && now - lastReadAt >= TimeUnit.HOURS.toMillis(24)
@@ -75,12 +90,17 @@ internal fun novelRecapParagraphsBefore(content: String, progress: Float): List<
 
 internal enum class NovelRecapMode { None, CardAboveText, ResumeOverlay }
 
+internal const val NOVEL_RECAP_FINISHED_PROGRESS = 0.99f
+
 /**
  * Reopening mid-chapter restores a position past the top, where a card above the text would be off
  * screen; that case shows the recap as an overlay instead. [entryProgress] is what the viewers restore.
  */
 internal fun novelRecapMode(due: Boolean, entryProgress: Float): NovelRecapMode = when {
     !due -> NovelRecapMode.None
+    // A finished chapter reopens on its last screen: the closing paragraphs are already visible, so an
+    // overlay would only repeat them on top of themselves.
+    entryProgress >= NOVEL_RECAP_FINISHED_PROGRESS -> NovelRecapMode.None
     entryProgress > 0f -> NovelRecapMode.ResumeOverlay
     else -> NovelRecapMode.CardAboveText
 }

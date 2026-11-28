@@ -1,6 +1,7 @@
 package eu.kanade.presentation.tsuzuki.reader
 
 import android.app.Activity
+import android.text.format.DateUtils
 import android.view.View
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
@@ -35,12 +36,16 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.theme.tsuzuki.tsuzukiTokensFor
+import eu.kanade.presentation.tsuzuki.novel.rememberNovelFontFamily
 import eu.kanade.tachiyomi.tsuzuki.reader.NovelRecap
+import eu.kanade.tachiyomi.tsuzuki.reader.novelRecapLabel
 import eu.kanade.tachiyomi.tsuzuki.reader.novelRecapScrolledAway
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
@@ -127,6 +132,7 @@ internal fun NovelResumeRecapOverlay(
 
 private const val NOVEL_RECAP_SETTLE_MS = 4_000L
 private const val NOVEL_RECAP_SETTLE_PAUSE_MS = 400L
+private const val NOVEL_RECAP_CARD_MAX_LINES = 6
 
 @Composable
 private fun NovelRecapCard(
@@ -147,14 +153,18 @@ private fun NovelRecapCard(
     val foreground = if (tokens.isDot) tokens.dotOn else ink
     val fill = if (tokens.isDot) tokens.tile else lerp(page, ink, 0.08f)
     val shape = RoundedCornerShape(tokens.tileRadius)
-    val title = composeStringResource(MR.strings.tsz_reader_recap_previously)
+    val title = novelRecapLabel(
+        composeStringResource(MR.strings.tsz_reader_recap_previously),
+        recap.previousChapter,
+        recap.lastReadAt?.let(::novelRecapRelativeTime),
+    )
     val dismiss = composeStringResource(MR.strings.tsz_reader_recap_dismiss)
     Column(
         modifier = modifier
             .then(if (floating && !tokens.isDot) Modifier.shadow(8.dp, shape) else Modifier)
             .background(fill, shape)
             .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -178,10 +188,20 @@ private fun NovelRecapCard(
         } else {
             Modifier
         }
+        // Board: body 13 sp in the reader's own font, at most six lines on the card above the text.
+        val face by preferences.novelFontFamily.collectAsState()
+        val readerFont = rememberNovelFontFamily(face)
+        val bodyStyle = MaterialTheme.typography.bodyMedium.let { base ->
+            base.copy(fontSize = 13.sp, fontFamily = readerFont ?: base.fontFamily)
+        }
         Column(body, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            recap.paragraphs.forEach { paragraph ->
-                Text(paragraph, style = MaterialTheme.typography.bodyMedium, color = foreground)
-            }
+            Text(
+                recap.paragraphs.joinToString("\n\n"),
+                style = bodyStyle,
+                color = foreground,
+                maxLines = if (floating) Int.MAX_VALUE else NOVEL_RECAP_CARD_MAX_LINES,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -192,7 +212,14 @@ internal fun ReaderActivity.webNovelRecapScript(chapterId: Long): String {
     fun String.cased() = if (tokens.isDot) uppercase() else this
     val payload = JSONObject()
         .put("chapterId", recap.chapterId.toString())
-        .put("title", stringResource(MR.strings.tsz_reader_recap_previously).cased())
+        .put(
+            "title",
+            novelRecapLabel(
+                stringResource(MR.strings.tsz_reader_recap_previously),
+                recap.previousChapter,
+                recap.lastReadAt?.let(::novelRecapRelativeTime),
+            ).cased(),
+        )
         .put("dismiss", stringResource(MR.strings.tsz_reader_recap_dismiss).cased())
         .put("paragraphs", JSONArray(recap.paragraphs))
         .apply {
@@ -209,3 +236,7 @@ internal fun ReaderActivity.webNovelRecapScript(chapterId: Long): String {
         .replace("\u2029", "\\u2029")
     return NovelWebViewJsAssets.loadWith(this, "chapter-recap-card.js", mapOf("RECAP" to payload))
 }
+
+/** "2 days ago" / "2 日前" in the device language (platform formatter, no app strings). */
+private fun novelRecapRelativeTime(readAt: Long): String =
+    DateUtils.getRelativeTimeSpanString(readAt, System.currentTimeMillis(), DateUtils.DAY_IN_MILLIS).toString()
