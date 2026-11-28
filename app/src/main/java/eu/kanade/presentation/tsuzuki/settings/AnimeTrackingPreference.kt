@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking
+import eu.kanade.tachiyomi.util.system.openInBrowser
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

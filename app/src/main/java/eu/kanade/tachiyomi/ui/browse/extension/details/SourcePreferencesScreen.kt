@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.extension.details
 
-import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
 import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
@@ -41,8 +39,10 @@ import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
