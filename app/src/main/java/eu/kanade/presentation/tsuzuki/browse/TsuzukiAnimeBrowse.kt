@@ -151,13 +151,33 @@ private fun animeSourcesTabContent(
         }
     }
     val needle = query?.trim().orEmpty()
+    // A6.8: the local anime source sits first under "On this device", and only while its folder exists.
+    val localPackage = eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource.PACKAGE
+    val localSource = sources.firstOrNull { it.extensionPackage == localPackage }
+    val localPresent by produceState(false, localSource) {
+        value = localSource != null && kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            (localSource.source as? eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource)?.baseDirectory() != null
+        }
+    }
+    val local = localSource?.takeIf {
+        localPresent && (needle.isEmpty() || it.source.name.contains(needle, ignoreCase = true))
+    }
     val ordered = remember(sources, pins, needle) {
-        sources.filter { needle.isEmpty() || it.source.name.contains(needle, ignoreCase = true) }
+        sources.filter { it.extensionPackage != localPackage }
+            .filter { needle.isEmpty() || it.source.name.contains(needle, ignoreCase = true) }
             .sortedWith(compareBy({ it.source.id.toString() !in pins }, { it.source.name.lowercase() }))
     }
     val pinnedCount = ordered.count { it.source.id.toString() in pins }
     LazyColumn(contentPadding = padding, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (sources.isEmpty()) {
+        if (local != null) {
+            item(key = "local_anime") {
+                TsuzukiSectionLabel(androidStringResource(R.string.tsz_local_anime_on_device))
+                eu.kanade.presentation.tsuzuki.browse.LocalAnimeSourceRow(local.source.name) {
+                    openAnimeCatalogue(context, local.source.id, latest = false)
+                }
+            }
+        }
+        if (sources.none { it.extensionPackage != localPackage }) {
             item {
                 val navigator = LocalNavigator.currentOrThrow
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {

@@ -53,4 +53,7 @@
     <string name="tsz_anime_airing_in_minutes">%1$d분</string>
     <string name="tsz_anime_airing_in_hours">%1$d시간</string>
     <string name="tsz_anime_airing_in_days">%1$d일 %2$d시간</string>
+    <!-- A6.8: local anime source. -->
+    <string name="tsz_local_anime">로컬 애니메이션</string>
+    <string name="tsz_local_anime_on_device">이 기기</string>
 </resources>

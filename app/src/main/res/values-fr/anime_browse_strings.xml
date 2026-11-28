@@ -54,4 +54,7 @@
     <string name="tsz_anime_airing_in_minutes">%1$d min</string>
     <string name="tsz_anime_airing_in_hours">%1$d h</string>
     <string name="tsz_anime_airing_in_days">%1$d j %2$d h</string>
+    <!-- A6.8: local anime source. -->
+    <string name="tsz_local_anime">Anime locaux</string>
+    <string name="tsz_local_anime_on_device">Sur cet appareil</string>
 </resources>
