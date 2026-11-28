@@ -75,7 +75,7 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 | Card | What | Lane | Status |
 |---|---|---|---|
 | SM0 | Measurement kit in `scripts/perf/` (release-as-claudeqa build, jank, frames, strip, Perfetto trace) | Claude | **`done`** (`b3fb860d4`) |
-| SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` — profiles merged (Tsuzuki rules 347 → 3,067 baseline, 248 → 1,192 startup); tabs/Settings journey and fresh-install measurement wait for the Device lock |
+| SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | **`done`** (2026-11-28): all five journeys collect; Tsuzuki rules 347 → 3,572 baseline, 248 → 1,192 startup; fresh-install A/B in the SM1 Result |
 | SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | **`done` — no-go, accepted** (Claude review 2026-11-28; current transition kept; branch holds only the result) |
 | SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex → Claude | **`done`** (merged 2026-11-28; Codex work + Claude fix, see SM3 Result) |
 | SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **`done` — owner approved 2026-11-28**; values in `specs.md` §Motion and `boards/motion-2026-11/README.md` — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
@@ -87,6 +87,32 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 Codex prompt: `Read AGENTS.md, docs/HANDOFF.md ("Batch SM") and docs/SMOOTHNESS_PLAN.md. Take the first SM card
 marked ready for your lane, measure with scripts/perf before and after on a release build, commit on
 tsuzuki/<card>, fill the Result, set review. Device use only under the Device lock rule.`
+
+### SM1 Result (Claude, 2026-11-28)
+
+`baseline-profile/.../TsuzukiJourneysProfileGenerator.kt` (Library media switch; Watch + anime library; Home tabs,
+Library filter sheet, Settings › Appearance) plus the existing novel and startup journeys, collected on the S22
+from a non-minified release build installed as `claudeqa`; merged by `scripts/perf/merge-profiles.py` (existing
+rules kept, H/S/P flags unioned). Baseline 47,557 → 64,840 rules (Tsuzuki 347 → 3,572), startup 34,382 → 39,623
+(Tsuzuki 248 → 1,192). Generator fixes: nav taps pick the bottom-most match (Browse has its own "その他"), tap its
+centre (the labelled node is not clickable), recover once from a covering sheet, back out only to the bottom bar;
+the novel journey accepts a reader showing a scrolling TextView (its text is no longer exposed to UiAutomator).
+
+**Fresh-install A/B** (S22, same code = `main` at `89877b066`, only the profile files differ; per variant
+`cmd package compile --reset`, one launch so ProfileInstaller writes the bundled profile, `compile -m speed-profile
+-f`, then J3 open/back × 6, Dot; median / worst):
+
+| | Old profile (A) | New profile (B) |
+|---|---:|---:|
+| Open longest UI | 35 / 42 ms | **19 / 33 ms** |
+| Open UI in first 150 ms | 61.5 ms | **43 ms** |
+| Back longest UI | 35 / 51 ms | 41 / 48 ms (no change within spread) |
+| Back UI in first 150 ms | 73.5 ms | 72 ms |
+
+Home tab round trip: inconclusive (one tab per variant had a burst of slow frames, different tabs — content loading,
+not the profile). **Release step (SM8 will automate it):** when Tsuzuki screens or journeys changed since the last
+collection, re-run the five journeys (`docs/PERFORMANCE.md` + this result) and merge before tagging; check the APK has
+`assets/dexopt/baseline.prof`.
 
 ### SM3 Result (Codex implementation, finished by Claude, 2026-11-28)
 
