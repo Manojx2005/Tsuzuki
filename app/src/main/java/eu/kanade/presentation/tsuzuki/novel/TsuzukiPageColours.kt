@@ -68,8 +68,8 @@ internal fun TsuzukiPageColourPicker(
 ) {
     val tokens = TsuzukiTheme.tokens
     val theme by preferences.novelTheme.collectAsState()
-    val customInk by preferences.novelFontColor.collectAsState()
-    val customPage by preferences.novelBackgroundColor.collectAsState()
+    val customInk = if (includeCustom) preferences.novelFontColor.collectAsState().value else 0
+    val customPage = if (includeCustom) preferences.novelBackgroundColor.collectAsState().value else 0
     var editCustom by rememberSaveable { mutableStateOf<String?>(null) }
     val rowSize = if (LocalDensity.current.fontScale >= 1.5f) minOf(columns, 3) else columns
     val options = NovelPageColour.entries.filter { includeCustom || it != NovelPageColour.CUSTOM }
@@ -164,7 +164,7 @@ internal fun TsuzukiPageColourPicker(
             }
         }
     }
-    editCustom?.let { field ->
+    editCustom?.takeIf { includeCustom }?.let { field ->
         val ink = field == "ink"
         ColorPickerDialog(
             title = tsuzukiMenuLabel(

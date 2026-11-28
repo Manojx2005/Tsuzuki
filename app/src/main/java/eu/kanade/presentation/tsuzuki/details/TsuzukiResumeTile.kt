@@ -42,6 +42,7 @@ internal fun TsuzukiDetailsResumeTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // All chapters, not the filtered list: a "downloaded only" filter must not skip the real next unread chapter.
     val next = remember(state.chapters, state.manga) { state.chapters.getNextUnread(state.manga) }
     TsuzukiResumeTile(
         readCount = state.chapters.count { it.chapter.read },
