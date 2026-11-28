@@ -9,9 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.2.4] - 2026-11-28
+## [0.2.4] - 2026-11-29
 
 ### Added
+- Anime: In Settings › Downloads, choose 2, 3, 5 or 10 episodes to download ahead. When the current and next
+  episodes are already saved, watching 35% of the current episode queues upcoming unwatched episodes.
+- Anime: In Player settings › Watching, turn on marking other releases of the same episode as seen when you
+  finish watching one. Both new settings are off by default.
 - Anime: Play with lets episodes open in another video app (MX Player, VLC, mpv and others) or ask each time;
   where you stop there is saved as your progress.
 - Anime: Simkl tracking. Sign in under Settings › Tracking › Anime trackers; status, watched episodes and your
