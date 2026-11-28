@@ -46,7 +46,8 @@ done
 note "16 KB alignment checked"
 
 for apk in app/build/outputs/apk/release/*.apk; do
-  unzip -l "$apk" | grep -q "assets/dexopt/baseline.prof" || bad "no baseline profile in $apk"
+  # Not grep -q: it stops reading early, unzip then dies of SIGPIPE and pipefail reports a false failure.
+  unzip -l "$apk" | grep "assets/dexopt/baseline.prof" >/dev/null || bad "no baseline profile in $apk"
 done
 tsz=$(grep -c tsuzuki app/src/main/baselineProfiles/baseline-prof.txt)
 note "baseline profile: $tsz Tsuzuki rules (SM1 collected 3,572 on 2026-11-28)"
