@@ -77,6 +77,12 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 - **Follow-up (same day):** A6.8 empty local folder now shows the board's folder layout (merged). **A6.7 checked on the S22** (rvapscratch debug build, Colour, AY0 fixture over adb reverse): Settings menu shows スクリーンショット only once the picture is up; tapping saved `Pictures/Tsuzuki/01 plain mp4 - EP 2 - 00-00-00.png`, a clean 1280×720 video frame (no controls, no subtitles), snackbar 「Pictures/Tsuzuki に保存しました」 with 共有; crash buffer empty. rvapscratch now runs this build. Menus: the motion board's 150 ms / 0.92 scale is **not** applied — Material 3's DropdownMenu animation (120 ms, 0.8) is fixed inside the library; matching it needs a custom popup, left as is.
 - **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions.
 
+## V8 phone pass + Simkl (Claude, 2026-11-28, owner: "Do the V8 pass and i allow you do find the api key and apply it")
+
+- **V8 (S22, claudeqa release, Dot, Japanese):** phone Settings fine; WebView with a real page (novgo.net) fine; extension list's "JS" tag was `Color.Yellow` in every theme and the source settings toggle "Reverse chapter list" was hardcoded English → **V8.7** (`ExtensionsScreen.kt` uses `LocalActiveColor`, `SourcePreferencesScreen.kt` uses `tsz_reverse_chapter_list*`, 8 locales). Widget picker: preview layouts exist for all three widgets; the S22 launcher shows the device user's calendar/widgets, so it was not browsed.
+- **A5.4 Simkl:** owner signed in to simkl.com in the built-in browser and verified the email; Claude registered **"Tsuzuki" (Simkl app #8276561)** — AUTH V2, "Mobile, desktop & browser apps", PKCE S256, redirect `tsuzuki://simkl-auth`, contact = GitHub issues (not the owner's email). The client id is public by Simkl's design and lives in `tsuzuki/anime/track/simkl/SimklAuth.kt`; there is **no client secret**. Tracker id **300** (Aniyomi's Simkl id 101 is NovelList here — an Aniyomi backup's Simkl tracks are not mapped yet). Sync is write-only within Simkl's API rules (no `/sync/all-items` polling): status → `/sync/add-to-list`, episodes → `/sync/history` / `/history/remove`, rating → `/sync/ratings`, POSTs ≥ 1.1 s apart; tokens (7 days) refreshed by the interceptor only. Settings › Tracking shows 「アニメのトラッカー › SIMKL ログイン」; tapping it opens Simkl's sign-in in the phone browser. The consent page for this client id was confirmed in the built-in browser ("Allow Tsuzuki to use your Simkl account?") and **not approved**. Not verified: a full sign-in, search, and a synced episode — needs the owner to sign in on the phone. Simkl's API rule 1 (link back to the item) is met by the tracker row's link; API terms are free for non-commercial apps.
+- 1,722 tests / 0 failures; crash buffer empty.
+
 ## Batch SM — smoothness (owner 2026-11-28) — start here
 
 Owner: the app does not feel as smooth as major apps; plan everything so Codex can help, then implement. **Full
@@ -2352,7 +2358,7 @@ migration). Tests for filtering and next-episode.
   Clear the filter and check that the same releases return. Check Dot and Colour and that
   a source with no group labels does not show the group control.
 
-#### A5.4 Anime: Simkl tracker (T3) — `blocked` (owner: register a Simkl API client; then needs `tsuzuki/a5.3`)
+#### A5.4 Anime: Simkl tracker (T3) — **`done`** (merged 2026-11-28; Tsuzuki Simkl app #8276561 registered with the owner's permission, AUTH V2 PKCE, public client id in code, no secret; write-only sync; user sign-in on a device not done)
 Board `10-anime/AnimeTracking` (Simkl row). Needs a Simkl client id/secret registered by the owner and stored as
 build secrets, never in the repo. Then: OAuth login, search/bind, episode progress sync on seen, stored in
 `anime_sync` like AniList/MAL (A3.5). Torrent sources and torrent player settings stay out (owner has not asked).
@@ -2898,7 +2904,7 @@ the Getting started guide from the empty library. R-A5 awaits the A3.5 commit.
 
 **Review (Codex RV1, 2026-11-08):** Pass. S22 Time format kept its title on one line in Japanese and English, with only the English Dot value ellipsised. The Japanese Native chip fits. The Updates caption is upright on both displays, and tablet Listen shows the localised offline voice name. Earshot measured the 13.71 s local capture at −19.6 LUFS (AudioSet Speech 0.72; 92.55% digital silence). The unrelated GuidesStep URL change was dropped in `a8cfedf0f`. Evidence: `v76-*` in the RV1 evidence folder.
 
-#### V8 Built-but-never-seen screens (Claude) — `claude-working` (tablet pass 2026-11-19; widget picker, extension details, WebView, phone Settings and S22 still open)
+#### V8 Built-but-never-seen screens (Claude) — **`done`** (phone pass 2026-11-28, S22 claudeqa release, Dot: Settings and WebView fine; bugs fixed as V8.7; widget picker preview reviewed from its layouts only — that S22 launcher shows personal widgets, not browsed)
 WORKPLAN 4A: widget picker preview, unopened menus (manga reader top bar, extension details, web view, migration
 config, download queue Cancel all), mass import batch cards, phone Settings layout. NewUpdate screen moves to V12
 (needs a public release). One English pass on the S22 if the owner approved it in V0. Bugs → `V8.n`.
