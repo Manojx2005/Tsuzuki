@@ -40,30 +40,32 @@ Other shared parts:
 - **Primary button:** 52–56 dp tall, fully rounded, accent background, on-accent text, 14–15 sp ExtraBold.
 - **Secondary button:** the same shape, but a tile background with normal text.
 
-Motion everywhere, from board `MotionSpec`:
+Motion everywhere: **the motion system approved by the owner on 2026-11-28 (Batch SM, card SM4)**. Full values
+and per-transition detail: `docs/design/boards/motion-2026-11/README.md`; live board
+https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r. It replaces board `MotionSpec`'s mix where they differ.
 
-- **Easing curves:**
-  - Enter: `cubic-bezier(0.05, 0.7, 0.1, 1)`.
-  - Exit: `(0.3, 0, 0.8, 0.15)`.
-  - Standard: `(0.2, 0, 0, 1)`.
-  - Spring: `(0.34, 1.4, 0.64, 1)`, for small pops.
-- **Durations:**
-  - 100 ms: press feedback (scale to 0.97).
-  - 200 ms: toggles, chips and tab pills.
-  - 300 ms: sheets, nav and tile expand.
-  - 400 ms: stack shuffle and page turn.
-  - 300 ms (owner 2026-11-28, was 450 ms: "feels slow"): reader/player open and close, and return
-    navigation. Owner 2026-11-14:
-    opening book details has a 300 ms total budget; its synchronized cover/fade uses
-    200 ms, reserving 100 ms for navigation and composition. Device verification pending.
-  - 600 ms: the theme switch reveal.
-- **Colour vs Dot:**
-  - Colour is smooth: backgrounds morph between books, covers fly as shared elements, and sheets use springs.
-  - Dot keeps the same timings, but fills and fades advance in 8 steps (dot by dot). There's no colour morph, and the red dot pulses once on arrival.
+- **Curves:** Enter `cubic-bezier(0.05, 0.7, 0.1, 1)` for arrivals; Exit `(0.3, 0, 0.8, 0.15)` for departures;
+  Standard `(0.2, 0, 0, 1)` for things that move and stay; predictive Back follows the finger (linear). The Spring
+  curve is no longer used for sheets.
+- **Durations:** 100 ms press (0.97) · 150 ms late-content fade-in, menus, reduced motion · 200 ms segments,
+  toggles, nav pill, tab fade-through (70 out + 130 in), sheet exit · 300 ms push/pop, sheet enter, reader and player
+  open · 180 ms book details open (cover flies; owner 2026-11-14, 300 ms total budget) · 250 ms Back release,
+  reader/player close · 400 ms stack shuffle · 600 ms theme reveal.
+- **Navigation:** shared axis X — new screen +30 dp → 0 and fades in from 90 ms; old screen 0 → −30 dp and fades
+  out in 90 ms; Back mirrors it. Predictive Back: page follows the finger (scale to 0.90, 28 dp corners, up to 24 dp
+  sideways), commit past 35 % or a flick, 250 ms either way.
+- **Reader and player:** shared axis Z — incoming 0.92 → 1 with fade (300 ms, Enter), outgoing 1 → 1.05 and fades
+  in 90 ms; close mirrors in 250 ms (Exit); centre pivot.
+- **Sheets and menus:** sheets rise 300 ms (Enter), drop 200 ms (Exit), scrim 0 → 45 %, the same in Dot and Colour;
+  menus fade 150 ms with scale 0.92 → 1 from their anchor.
+- **Colour vs Dot:** the same motion in both themes. Colour keeps its colour morphs between books; Dot keeps its
+  stepped fills inside components (progress, dots), never on screen transitions.
 - **Rules:**
-  - Everything is interruptible.
-  - Never animate text someone is reading.
-  - With reduce-motion on, every transition becomes a 150 ms fade.
+  - Ready, then move: the next screen is built before motion starts (SM2 showed gating hurts the 300 ms budget, so
+    this is met by lighter screens, SM3, not by delaying motion).
+  - Nothing pushes: late content fades in over 150 ms into space kept for it; never "empty" before data answers.
+  - Everything is interruptible; never animate text someone is reading.
+  - Reduced motion: every transition becomes a 150 ms crossfade.
   - Nothing runs longer than 600 ms.
 
 ## ChapterFilter (book details → filter icon)

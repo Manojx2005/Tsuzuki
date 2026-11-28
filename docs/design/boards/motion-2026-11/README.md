@@ -1,8 +1,7 @@
 # Motion system board (Batch SM, card SM4) — 2026-11-28
 
 Live canvas (owner's Claude account, private): https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r
-Status: **awaiting owner approval** (see `docs/HANDOFF.md`, Batch SM). Until approved, these values are a proposal;
-`docs/design/specs.md` §Motion still holds the shipped values.
+Status: **approved by the owner 2026-11-28.** `docs/design/specs.md` §Motion now carries these values.
 
 The `.dc.html` files are the board sources (Claude Design canvas format): the layout is the markup, the colours and
 copy per theme are in `renderVals()` at the bottom, and **every timing is a CSS `@keyframes` block in `<helmet>`**

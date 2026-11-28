@@ -78,8 +78,8 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 | SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` — profiles merged (Tsuzuki rules 347 → 3,067 baseline, 248 → 1,192 startup); tabs/Settings journey and fresh-install measurement wait for the Device lock |
 | SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | **`done` — no-go, accepted** (Claude review 2026-11-28; current transition kept; branch holds only the result) |
 | SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `codex-working` (2026-11-28, `.worktrees/sm3`) |
-| SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **board ready, awaiting owner approval** — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
-| SM5 | Implement the motion system | Claude/Codex | after SM4 |
+| SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **`done` — owner approved 2026-11-28**; values in `specs.md` §Motion and `boards/motion-2026-11/README.md` — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
+| SM5 | Implement the motion system | Claude/Codex | `claude-working` (2026-11-28): reader/player Z and sheets first; navigation X + predictive Back after SM3 merges (SM3 edits `TsuzukiSharedCover.kt`) |
 | SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
 | SM7 | Smooth scrolling of big lists | Codex | `ready` |
 | SM8 | Release gate: profile presence + jank thresholds | Claude | after SM1 |
