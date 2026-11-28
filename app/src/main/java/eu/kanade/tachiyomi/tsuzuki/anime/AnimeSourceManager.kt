@@ -112,7 +112,7 @@ internal fun animeLoadFailureMessage(results: List<AnimeLoadResult>): String? {
 
 /** A6.8: the built-in local anime source (lib 15: plain video lists, episodes without the combined update API). */
 internal fun localAnimeSource(context: Context): RegisteredAnimeSource = RegisteredAnimeSource(
-    eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource(context, Injekt.get()),
+    eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource(context, Injekt.get(), Injekt.get()),
     extensionPackage = eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource.PACKAGE,
     extensionName = context.getString(eu.kanade.tachiyomi.R.string.tsz_local_anime),
     libVersion = 15.0,

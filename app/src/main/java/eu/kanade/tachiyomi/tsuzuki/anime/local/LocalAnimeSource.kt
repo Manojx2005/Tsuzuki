@@ -26,6 +26,7 @@ import tachiyomi.domain.storage.service.StorageManager
 internal class LocalAnimeSource(
     private val context: Context,
     private val storage: StorageManager,
+    private val storagePreferences: tachiyomi.domain.storage.service.StoragePreferences,
 ) : AnimeCatalogueSource {
     override val id: Long = LOCAL_ANIME_SOURCE_ID
     override val name: String get() = context.getString(R.string.tsz_local_anime)
@@ -35,8 +36,12 @@ internal class LocalAnimeSource(
     private val json = Json { ignoreUnknownKeys = true }
 
     /** The folder beside the local manga folder, or null while it does not exist. */
-    fun baseDirectory(): UniFile? =
-        storage.getLocalSourceDirectory()?.parentFile?.findFile(LOCAL_ANIME_FOLDER)?.takeIf { it.isDirectory }
+    fun baseDirectory(): UniFile? {
+        // A tree picked through the system picker has no parentFile, so start from the storage root itself.
+        val root = UniFile.fromUri(context, android.net.Uri.parse(storagePreferences.baseStorageDirectory.get()))
+            ?: storage.getLocalSourceDirectory()?.parentFile
+        return root?.findFile(LOCAL_ANIME_FOLDER)?.takeIf { it.isDirectory }
+    }
 
     private fun shows(): List<UniFile> =
         baseDirectory()?.listFiles().orEmpty().filter { it.isDirectory && !it.name.isNullOrBlank() }
