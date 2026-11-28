@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">Pular resumo</string>
     <string name="tsz_anime_skip_button">Mostrar botão</string>
     <string name="tsz_anime_skip_auto">Pular automaticamente</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">Não usar o AniSkip quando o vídeo tiver capítulos</string>
     <string name="tsz_anime_skip_intro_delay">Atraso da abertura</string>
     <string name="tsz_anime_skip_seconds">%1$d s</string>
     <string name="tsz_anime_player_picture_in_picture">Picture-in-picture</string>
@@ -69,4 +70,23 @@
     <string name="tsz_anime_player_sub_grey">Cinza</string>
     <string name="tsz_anime_player_sub_none">Nenhum</string>
     <string name="tsz_anime_player_resuming_at">Retomando em %s</string>
+    <string name="tsz_anime_player_audio_subtitles">Áudio e legendas</string>
+    <string name="tsz_anime_player_settings">Configurações do player</string>
+    <string name="tsz_anime_player_speed_value">Velocidade %s</string>
+    <string name="tsz_anime_player_lock_short">Bloquear</string>
+    <string name="tsz_anime_player_tap_again">Toque de novo para mais</string>
+    <string name="tsz_anime_player_next_episode_in">Próximo episódio em</string>
+    <string name="tsz_anime_player_play_now">Reproduzir agora</string>
+    <string name="tsz_anime_player_subtitle_look">Aparência das legendas</string>
+    <string name="tsz_anime_player_sub_size_small">P</string>
+    <string name="tsz_anime_player_sub_size_medium">M</string>
+    <string name="tsz_anime_player_sub_size_large">G</string>
+    <string name="tsz_anime_player_sub_box">Caixa</string>
+    <string name="tsz_anime_player_sub_sample">Linha de legenda de exemplo</string>
+    <string name="tsz_anime_player_now_playing">Reproduzindo</string>
+    <string name="tsz_anime_player_minutes_left">faltam %d min</string>
+    <string name="tsz_anime_player_minutes">%d min</string>
+    <string name="tsz_anime_player_watched">Assistido</string>
+    <string name="tsz_anime_player_saved">Salvo</string>
+    <string name="tsz_anime_player_episode_label">E%1$s · %2$s</string>
 </resources>

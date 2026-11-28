@@ -118,6 +118,14 @@ internal object AnimePlayerSettingsScreen : SearchableSettings {
                                 ?.let { mode -> update { it.copy(aniSkipMode = mode) } }
                         },
                     ),
+                    if (settings.aniSkipMode != AniSkipMode.OFF) {
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = preferences.aniSkipIgnoreWithChapters,
+                            title = stringResource(R.string.tsz_anime_aniskip_ignore_chapters),
+                        )
+                    } else {
+                        null
+                    },
                     if (settings.aniSkipMode == AniSkipMode.AUTO) {
                         Preference.PreferenceItem.SliderPreference(
                             value = settings.aniSkipIntroDelay,

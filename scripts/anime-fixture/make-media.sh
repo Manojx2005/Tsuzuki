@@ -110,7 +110,7 @@ ffmpeg "${q[@]}" -f lavfi -i "testsrc2=size=640x360:rate=24:duration=90" \
   -f lavfi -i "sine=frequency=440:sample_rate=44100:duration=90" \
   -f lavfi -i "sine=frequency=880:sample_rate=44100:duration=90" \
   -i tracks.ass -i chapters.txt \
-  -map 0:v -map 1:a -map 2:a -map 3:s -map_chapters 4 -map_metadata -1 \
+  -map 0:v -map 1:a -map 2:a -map 3:s -map_chapters 4 -map_metadata 4 \
   -vf "$(label '%{pts\:hms}' 40)" "${x264[@]}" -crf 38 -g 48 \
   -c:a aac -b:a 32k -c:s ass \
   -metadata:s:a:0 language=jpn -metadata:s:a:0 title="Japanese (440 Hz)" \

@@ -36,6 +36,8 @@ internal data class AnimePlayerSettings(
     val volumeGesture: Boolean = true,
     val aniSkipMode: AniSkipMode = AniSkipMode.OFF,
     val aniSkipIntroDelay: Int = 3,
+    /** AY5: "Don't use AniSkip when the video has chapters" (on, as in Aniyomi). */
+    val aniSkipIgnoreWithChapters: Boolean = true,
     val subtitleStyle: AnimeSubtitleStyle = AnimeSubtitleStyle(),
 )
 
@@ -69,6 +71,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
     val volumeGesture = store.getBoolean("tsuzuki_anime_player_volume_gesture", true)
     private val aniSkipMode = store.getString("tsuzuki_anime_player_aniskip", AniSkipMode.OFF.name)
     private val aniSkipIntroDelay = store.getInt("tsuzuki_anime_player_aniskip_intro_delay", 3)
+    val aniSkipIgnoreWithChapters = store.getBoolean("tsuzuki_anime_player_aniskip_ignore_chapters", true)
     val subtitleStyle = AnimeSubtitleStylePreferences(store)
 
     fun get() = AnimePlayerSettings(
@@ -81,6 +84,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
         volumeGesture = volumeGesture.get(),
         aniSkipMode = AniSkipMode.entries.firstOrNull { it.name == aniSkipMode.get() } ?: AniSkipMode.OFF,
         aniSkipIntroDelay = aniSkipIntroDelay.get().coerceIn(0, 30),
+        aniSkipIgnoreWithChapters = aniSkipIgnoreWithChapters.get(),
         subtitleStyle = subtitleStyle.get(),
     )
 
@@ -94,6 +98,7 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
         volumeGesture.set(settings.volumeGesture)
         aniSkipMode.set(settings.aniSkipMode.name)
         aniSkipIntroDelay.set(settings.aniSkipIntroDelay.coerceIn(0, 30))
+        aniSkipIgnoreWithChapters.set(settings.aniSkipIgnoreWithChapters)
         subtitleStyle.set(settings.subtitleStyle)
     }
 

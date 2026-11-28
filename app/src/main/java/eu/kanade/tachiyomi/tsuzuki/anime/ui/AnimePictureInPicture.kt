@@ -80,6 +80,14 @@ internal class AnimePictureInPicture(
         }
     }
 
+    /** PLAYER-REDESIGN: the top bar's picture-in-picture button. */
+    fun enter(controls: AnimePipControls): Boolean = try {
+        activity.enterPictureInPictureMode(params(controls))
+    } catch (e: IllegalStateException) {
+        logcat(LogPriority.WARN, e) { "Could not enter anime picture-in-picture" }
+        false
+    }
+
     fun close() {
         activity.unregisterReceiver(receiver)
     }

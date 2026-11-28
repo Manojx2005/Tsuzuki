@@ -287,6 +287,16 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         }
     }
 
+    override fun chapters(): List<AnimeFileChapter> {
+        val count = MPVLib.getPropertyInt("chapter-list/count") ?: 0
+        return (0 until count).mapNotNull { index ->
+            val start = MPVLib.getPropertyDouble("chapter-list/$index/time") ?: return@mapNotNull null
+            // mpv reports an untitled chapter as "(unnamed)"; the seek bar shows no name for it.
+            val title = MPVLib.getPropertyString("chapter-list/$index/title")?.takeUnless { it == "(unnamed)" }
+            AnimeFileChapter(title, start)
+        }
+    }
+
     override fun selectTrack(kind: AnimeTrackKind, id: Int?) {
         val property = if (kind == AnimeTrackKind.SUBTITLE) "sid" else "aid"
         MpvPlayer.property(property, id?.toString() ?: "no")

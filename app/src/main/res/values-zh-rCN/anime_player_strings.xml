@@ -42,6 +42,7 @@
     <string name="tsz_anime_skip_recap">跳过前情回顾</string>
     <string name="tsz_anime_skip_button">显示按钮</string>
     <string name="tsz_anime_skip_auto">自动跳过</string>
+    <string name="tsz_anime_aniskip_ignore_chapters">视频有章节时不使用 AniSkip</string>
     <string name="tsz_anime_skip_intro_delay">片头等待时间</string>
     <string name="tsz_anime_skip_seconds">%1$d 秒</string>
     <string name="tsz_anime_player_picture_in_picture">画中画</string>
@@ -69,4 +70,23 @@
     <string name="tsz_anime_player_sub_grey">灰色</string>
     <string name="tsz_anime_player_sub_none">无</string>
     <string name="tsz_anime_player_resuming_at">从 %s 继续</string>
+    <string name="tsz_anime_player_audio_subtitles">音频和字幕</string>
+    <string name="tsz_anime_player_settings">播放器设置</string>
+    <string name="tsz_anime_player_speed_value">速度 %s</string>
+    <string name="tsz_anime_player_lock_short">锁定</string>
+    <string name="tsz_anime_player_tap_again">再次点按继续</string>
+    <string name="tsz_anime_player_next_episode_in">下一集倒计时</string>
+    <string name="tsz_anime_player_play_now">立即播放</string>
+    <string name="tsz_anime_player_subtitle_look">字幕外观</string>
+    <string name="tsz_anime_player_sub_size_small">小</string>
+    <string name="tsz_anime_player_sub_size_medium">中</string>
+    <string name="tsz_anime_player_sub_size_large">大</string>
+    <string name="tsz_anime_player_sub_box">方框</string>
+    <string name="tsz_anime_player_sub_sample">字幕示例</string>
+    <string name="tsz_anime_player_now_playing">正在播放</string>
+    <string name="tsz_anime_player_minutes_left">剩余 %d 分钟</string>
+    <string name="tsz_anime_player_minutes">%d 分钟</string>
+    <string name="tsz_anime_player_watched">已看</string>
+    <string name="tsz_anime_player_saved">已保存</string>
+    <string name="tsz_anime_player_episode_label">第%1$s集 · %2$s</string>
 </resources>

@@ -165,6 +165,12 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                     },
                     orientationLocked = orientationLocked,
                     pictureInPicture = inPip || enteringPip,
+                    onPictureInPicture = pip?.takeIf { animeEnabled && preferPip }?.let { helper ->
+                        {
+                            val controls = state.pipControls(enabled = true, inPip = false)
+                            if (!state.loading && !state.failed) helper.enter(controls)
+                        }
+                    },
                     onLevelGesture = ::adjustLevel,
                     surface = { modifier ->
                         AndroidView(
