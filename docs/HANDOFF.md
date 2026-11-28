@@ -117,6 +117,8 @@ Owner asked (2026-11-28/29): "Release 0.2.4" → "Compare with Aniyomi first, th
 - 6 new `tsz_anime_*` strings in all 8 locales (`anime_player_strings.xml`). `AnimeWatchExtrasTest` (2 tests) and
   the locale test pass; full suite, spotless and device check **not run yet**.
 
+**Update (Claude, 2026-11-29, usage limit reached):** watch-extras now `spotless`-clean, **1,724 tests / 0**; Download ahead moved into Settings › Downloads › 事前ダウンロード (shows its value; checked on the S22 rvapscratch build — row and 無効/2話/3話/5話/10話 dialog fine). Device state left: rvapscratch has 01 plain mp4 episodes 1–2 saved, episode 3 from the fixture's --new-episodes, Download ahead set to 2; **next: play episode 1 past 35 % and check episode 3 is queued**, then steps 3–5 below. Fixture server stopped; adb reverse tcp:8765 still set on the S22 (remove after). `main` is clean (the stray .claudeqa line was restored).
+
 **Next steps (in order):**
 1. On `tsuzuki/watch-extras`: scoped `spotlessApply` (restore untouched files), full `testDebugUnitTest`.
 2. Device check (S22 `rvapscratch` debug build + AY0 fixture over `adb reverse`, see scripts/anime-fixture/README):
