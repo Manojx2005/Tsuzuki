@@ -99,4 +99,11 @@
     <string name="tsz_anime_player_screenshot_saved">Pictures/Tsuzuki に保存しました</string>
     <string name="tsz_anime_player_screenshot_failed">スクリーンショットを保存できませんでした</string>
     <string name="tsz_anime_player_screenshot_share">共有</string>
+    <!-- Aniyomi parity: watching extras. -->
+    <string name="tsz_anime_watching">視聴</string>
+    <string name="tsz_anime_mark_duplicates_seen">同じ話数の他の版も視聴済みにする</string>
+    <string name="tsz_anime_mark_duplicates_seen_summary">エピソードを視聴すると、同じ話数の未視聴エピソード（別グループの版など）も視聴済みになります</string>
+    <string name="tsz_anime_download_ahead">視聴中に先読みダウンロード</string>
+    <string name="tsz_anime_download_ahead_summary">保存済みのエピソードを視聴中で、次のエピソードも保存済みの場合のみ</string>
+    <string name="tsz_anime_download_ahead_count">%1$d話</string>
 </resources>

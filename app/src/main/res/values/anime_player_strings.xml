@@ -99,4 +99,11 @@
     <string name="tsz_anime_player_screenshot_saved">Saved to Pictures/Tsuzuki</string>
     <string name="tsz_anime_player_screenshot_failed">Couldn’t save the screenshot</string>
     <string name="tsz_anime_player_screenshot_share">Share</string>
+    <!-- Aniyomi parity: watching extras. -->
+    <string name="tsz_anime_watching">Watching</string>
+    <string name="tsz_anime_mark_duplicates_seen">Mark other copies as watched</string>
+    <string name="tsz_anime_mark_duplicates_seen_summary">When an episode is watched, unwatched episodes with the same number (another group’s release) are marked watched too</string>
+    <string name="tsz_anime_download_ahead">Download ahead while watching</string>
+    <string name="tsz_anime_download_ahead_summary">Only while watching a downloaded episode whose next episode is downloaded too</string>
+    <string name="tsz_anime_download_ahead_count">%1$d episodes</string>
 </resources>

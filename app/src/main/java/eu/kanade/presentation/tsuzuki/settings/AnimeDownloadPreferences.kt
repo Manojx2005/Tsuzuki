@@ -10,6 +10,7 @@ import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.tsuzuki.anime.TsuzukiAnime
 import eu.kanade.tachiyomi.tsuzuki.anime.download.AnimeDownloads
+import kotlinx.collections.immutable.toImmutableMap
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -36,4 +37,20 @@ internal fun animeDownloadWifiPreference(): Preference? {
             onCheckedChanged = downloads::setWifiOnly,
         )
     }
+}
+
+/** Settings › Downloads: Aniyomi's "Download ahead" while watching saved episodes (owner 2026-11-28). */
+@Composable
+internal fun animeDownloadAheadPreference(): Preference.PreferenceItem.ListPreference<Int>? {
+    if (!TsuzukiAnime.enabled) return null
+    val off = tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.disabled)
+    val entries = eu.kanade.tachiyomi.tsuzuki.anime.ANIME_DOWNLOAD_AHEAD_CHOICES.associateWith { count ->
+        if (count == 0) off else stringResource(R.string.tsz_anime_download_ahead_count, count)
+    }
+    return Preference.PreferenceItem.ListPreference(
+        preference = remember { eu.kanade.tachiyomi.tsuzuki.anime.animeDownloadAhead(Injekt.get()) },
+        entries = entries.toImmutableMap(),
+        // The group's note ("only when the current and next are downloaded") covers it; the row shows its value.
+        title = stringResource(R.string.tsz_anime_download_ahead),
+    )
 }
