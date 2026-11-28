@@ -32,6 +32,7 @@ import eu.kanade.presentation.theme.tsuzuki.TsuzukiProgressBar
 import eu.kanade.presentation.theme.tsuzuki.TsuzukiTheme
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
+import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,14 +42,8 @@ internal fun TsuzukiDetailsResumeTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val next = remember(state.chapters, state.manga) {
-        val chapters = state.processedChapters
-        if (state.manga.sortDescending()) {
-            chapters.findLast { !it.chapter.read }
-        } else {
-            chapters.find { !it.chapter.read }
-        }?.chapter
-    }
+    // All chapters, not the filtered list: a "downloaded only" filter must not skip the real next unread chapter.
+    val next = remember(state.chapters, state.manga) { state.chapters.getNextUnread(state.manga) }
     TsuzukiResumeTile(
         readCount = state.chapters.count { it.chapter.read },
         total = state.chapters.size,
