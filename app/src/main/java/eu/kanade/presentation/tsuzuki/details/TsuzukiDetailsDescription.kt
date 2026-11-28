@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -62,7 +63,7 @@ internal fun TsuzukiDetailsDescription(
     }
 }
 
-private enum class GenreSlot { TAGS, MEASURE_MORE, MORE }
+private enum class GenreSlot { MEASURE_MORE, MORE }
 
 @Composable
 private fun TsuzukiGenreRows(
@@ -74,16 +75,17 @@ private fun TsuzukiGenreRows(
         val width = constraints.maxWidth
         val gap = 8.dp.roundToPx()
         val itemConstraints = constraints.copy(minWidth = 0, minHeight = 0)
-        val chips = subcompose(GenreSlot.TAGS) {
-            tags.forEachIndexed { index, tag ->
-                key(index, tag) {
-                    GenreChip(tag, onSearch, onCopy)
-                }
-            }
-        }.map { it.measure(itemConstraints) }
-        val widths = chips.map { it.width }
+        val chips = mutableListOf<Placeable>()
+        // The packing scan stops at the first tag that would need a third row.
+        val widths = tags.asSequence().mapIndexed { index, tag ->
+            chips.getOrElse(index) {
+                subcompose(index) {
+                    key(tag) { GenreChip(tag, onSearch, onCopy) }
+                }.single().measure(itemConstraints).also { chips.add(it) }
+            }.width
+        }.asIterable()
         val shown = genresFittingTwoLines(widths, width, gap)
-        val visible = if (shown == chips.size) {
+        val visible = if (shown == tags.size) {
             chips
         } else {
             // Reserve the width of the largest possible count before deciding which tags fit.
@@ -121,7 +123,7 @@ private fun TsuzukiGenreRows(
 }
 
 /** Count only chips that fit in two rows, optionally reserving room for the overflow chip. */
-internal fun genresFittingTwoLines(widths: List<Int>, maxWidth: Int, gap: Int, moreWidth: Int? = null): Int {
+internal fun genresFittingTwoLines(widths: Iterable<Int>, maxWidth: Int, gap: Int, moreWidth: Int? = null): Int {
     var row = 1
     var used = 0
     var shown = 0
