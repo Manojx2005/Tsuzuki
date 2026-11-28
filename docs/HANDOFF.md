@@ -77,6 +77,64 @@ Owner 2026-11-14 (this chat): Resume ERR1, then investigate a neural TTS binary 
 - **Follow-up (same day):** A6.8 empty local folder now shows the board's folder layout (merged). **A6.7 checked on the S22** (rvapscratch debug build, Colour, AY0 fixture over adb reverse): Settings menu shows スクリーンショット only once the picture is up; tapping saved `Pictures/Tsuzuki/01 plain mp4 - EP 2 - 00-00-00.png`, a clean 1280×720 video frame (no controls, no subtitles), snackbar 「Pictures/Tsuzuki に保存しました」 with 共有; crash buffer empty. rvapscratch now runs this build. Menus: the motion board's 150 ms / 0.92 scale is **not** applied — Material 3's DropdownMenu animation (120 ms, 0.8) is fixed inside the library; matching it needs a custom popup, left as is.
 - **Still owner-only:** A5.4 Simkl (API client), other tracker registrations, anime schema questions.
 
+## Current state — 0.2.4 release in progress (Claude, 2026-11-29) — Codex: start here
+
+Owner asked (2026-11-28/29): "Release 0.2.4" → "Compare with Aniyomi first, then release" → "also check any other player code"
+→ "add download-ahead and duplicate-seen too" → "save what you did for codex".
+
+**Done and merged into `main` (local, nothing pushed, no tag yet):**
+- `19c24f8fe` release commit: versionCode **30**, versionName **0.2.4**, `CHANGELOG.md` section `[0.2.4] - 2026-11-28`
+  (plus `47d2758b6` adding the two player fixes below). The release gate **passed on `19c24f8fe`** (1,722 tests,
+  ABI ok, 16 KB ok, profile 3,572 rules; S22 open 18 ms, Back 30 ms, flings 0 %), but `main` has moved since, so it
+  must be re-run on the final commit.
+- **Aniyomi player comparison** (Aniyomi `PlayerActivity`, `PlayerViewModel`, `AniyomiMPVView`, `PlayerUtils` read
+  from GitHub main) → `9c88c3e53` merge of `tsuzuki/player-warm` (`17ff7bcb0`):
+  1. `TsuzukiAnimeLibrary.kt` `WarmAnimeSources()` — Watch and the anime Library load the anime extensions in the
+     background 0.6 s after appearing (Continue watching used to pay for loading every extension before requesting
+     the episode; Aniyomi's are loaded long before its player opens). Likely cause of the owner's "long wait before
+     anything".
+  2. `AnimePlayerModel.withLocalServer()` — extensions (lib 17) that hand out `http://localhost:1/...` placeholders get
+     their `createHttpServer()` started and the video rewritten with `Video.copyHttpServer(port)` before loading, as
+     Aniyomi's `setVideo` does; stopped on the next video and in `onCleared`. `source-api/build.gradle.kts`:
+     NanoHTTPD `implementation` → `api` (same jar in the APK; the app now compiles against `HttpServer`).
+  - Same as Aniyomi already: mpv init/options, per-file `loadfile` options, 85 % = seen, seen episodes restart,
+    progress + history checkpoints, preferred-video-first hoster loading, `content://` → fd (Aniyomi `openContentFd`),
+    track language choice, AniSkip, PiP, audio focus.
+  - Deliberately different: resume uses a keyframe start (`hr-seek=no` until PLAYBACK_RESTART) instead of Aniyomi's
+    precise `start` seek — starts sooner, may land a second or two early.
+  - Not verified on a device: the warm-up (scratch apps have only the fixture source) and the local server (no test
+    source uses one).
+
+**In progress — branch `tsuzuki/watch-extras` (`dbc37cd3b`, worktree `.worktrees/watch-extras`), NOT merged:**
+- Download ahead (Aniyomi `downloadNextEpisodes`): `tsuzuki/anime/AnimeWatchExtras.kt`
+  (`animeDownloadAhead` pref `tsuzuki_anime_download_ahead`, choices 0/2/3/5/10, default off;
+  `animeEpisodesToDownloadAhead` — only when the current AND next episode are saved, then the next N unseen, not
+  queued); `AnimePlayerModel.checkDownloadAhead()` runs once per episode past 35 %; setting in Settings › Downloads
+  (`animeDownloadAheadPreference()`, one line added to upstream `SettingsDownloadScreen.kt`).
+- Mark duplicates seen (Aniyomi `markDuplicateSeenEpisodeAsSeen`): pref `tsuzuki_anime_mark_duplicates_seen`,
+  default off; `animeDuplicateEpisodes` (same recognised number, unseen, number ≥ 0); applied in the player's progress
+  write when an episode becomes seen; switch in anime player settings, group 「視聴」 (Watching).
+- 6 new `tsz_anime_*` strings in all 8 locales (`anime_player_strings.xml`). `AnimeWatchExtrasTest` (2 tests) and
+  the locale test pass; full suite, spotless and device check **not run yet**.
+
+**Next steps (in order):**
+1. On `tsuzuki/watch-extras`: scoped `spotlessApply` (restore untouched files), full `testDebugUnitTest`.
+2. Device check (S22 `rvapscratch` debug build + AY0 fixture over `adb reverse`, see scripts/anime-fixture/README):
+   save episodes 1–2 of a fixture case, set Download ahead = 2, play episode 1 past 35 % → episodes 3–4 queued;
+   duplicate-seen with two releases of the same number.
+3. Merge into `main`, add both features to `CHANGELOG.md` [0.2.4] → Added.
+4. Re-run `scripts/perf/release-gate.sh 192.168.40.243:36973` (S22 over wireless adb; set
+   `accelerometer_rotation 0` first, `1` after) on the final `main`. **If the gate is stopped mid-run, check
+   `git status`: `build-qa-release.sh` leaves `applicationIdSuffix = ".claudeqa"` in `app/build.gradle.kts` — restore it
+   with `git show HEAD:app/build.gradle.kts > app/build.gradle.kts` before committing (happened once on 2026-11-29).**
+5. Release as 0.2.3 was: push `main`, push annotated tag `v0.2.4`, watch the Release workflow, check the 5 APKs on
+   https://github.com/Manojx2005/Tsuzuki/releases. Pushing/tagging needs the owner's go — the owner said
+   "Release 0.2.4", which covers it for this release only.
+6. Record the result here and in `docs/design/README.md` if a screen changed.
+
+**Owner-only still open:** a real Simkl sign-in + episode sync on a phone; anime schema questions; other tracker
+registrations.
+
 ## V8 phone pass + Simkl (Claude, 2026-11-28, owner: "Do the V8 pass and i allow you do find the api key and apply it")
 
 - **V8 (S22, claudeqa release, Dot, Japanese):** phone Settings fine; WebView with a real page (novgo.net) fine; extension list's "JS" tag was `Color.Yellow` in every theme and the source settings toggle "Reverse chapter list" was hardcoded English → **V8.7** (`ExtensionsScreen.kt` uses `LocalActiveColor`, `SourcePreferencesScreen.kt` uses `tsz_reverse_chapter_list*`, 8 locales). Widget picker: preview layouts exist for all three widgets; the S22 launcher shows the device user's calendar/widgets, so it was not browsed.
