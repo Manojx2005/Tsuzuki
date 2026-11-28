@@ -79,8 +79,8 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 | SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | **`done` — no-go, accepted** (Claude review 2026-11-28; current transition kept; branch holds only the result) |
 | SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex → Claude | **`done`** (merged 2026-11-28; Codex work + Claude fix, see SM3 Result) |
 | SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **`done` — owner approved 2026-11-28**; values in `specs.md` §Motion and `boards/motion-2026-11/README.md` — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
-| SM5 | Implement the motion system | Claude/Codex | `claude-working` (2026-11-28): **part 1 on `tsuzuki/sm5`** (reader/player shared axis Z, sheets on the Enter curve in both themes; builds, 1,524 app tests) — device check waits for the Device lock; part 2 (navigation X + predictive Back) after SM3 merges (SM3 edits `TsuzukiSharedCover.kt`); menus still use Material's own 120 ms fade/scale, close to the spec's 150 ms |
-| SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
+| SM5 | Implement the motion system | Claude | **`done`** (merged `b8f85cbfe`, 2026-11-28): reader/player shared axis Z, sheets on the Enter curve in both themes, navigation shared axis X (`TsuzukiScreenHost`), predictive Back; S22 release recordings checked (push, key Back, gesture commit, reader open/close). Not verified: a gesture *cancel* (adb swipes cross the system commit threshold — needs a finger), Colour, tablet. Menus still Material's own 120 ms fade/scale |
+| SM6 | Pop-in audit + fixes across J1–J8 | Codex → Claude | `claude-working` (seen so far: the reader opens on black with a spinner before the text) |
 | SM7 | Smooth scrolling of big lists | Codex | `ready` |
 | SM8 | Release gate: profile presence + jank thresholds | Claude | after SM1 |
 
