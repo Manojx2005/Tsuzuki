@@ -71,10 +71,25 @@ internal object AnimePlayerSettingsScreen : SearchableSettings {
 
         val style = settings.subtitleStyle
         val off = stringResource(R.string.tsz_anime_player_track_off)
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val players = androidx.compose.runtime.remember { installedAnimeVideoPlayers(context) }
+        val chosenPlayer = preferences.externalPlayer.get()
+        val playWith = buildMap {
+            put(AnimeExternalChoice.Tsuzuki.stored, stringResource(R.string.tsz_anime_external_tsuzuki))
+            put(AnimeExternalChoice.Ask.stored, stringResource(R.string.tsz_anime_external_ask))
+            players.forEach { (packageName, label) -> put(packageName, label) }
+            // A saved app that was uninstalled stays listed (and falls back to the chooser when played).
+            if (chosenPlayer !in this) put(chosenPlayer, stringResource(R.string.tsz_anime_external_uninstalled, chosenPlayer))
+        }
         return listOf(
             Preference.PreferenceGroup(
                 title = mokoStringResource(MR.strings.tsz_tts_playback_settings),
                 preferenceItems = listOfNotNull(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = preferences.externalPlayer,
+                        entries = playWith,
+                        title = stringResource(R.string.tsz_anime_external_play_with),
+                    ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = preferences.autoplay,
                         title = stringResource(R.string.tsz_anime_player_autoplay),

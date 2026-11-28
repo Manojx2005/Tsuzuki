@@ -89,4 +89,9 @@
     <string name="tsz_anime_player_watched">Vu</string>
     <string name="tsz_anime_player_saved">Enregistré</string>
     <string name="tsz_anime_player_episode_label">É%1$s · %2$s</string>
+    <string name="tsz_anime_external_play_with">Lire avec</string>
+    <string name="tsz_anime_external_tsuzuki">Tsuzuki</string>
+    <string name="tsz_anime_external_ask">Choisir à chaque fois</string>
+    <string name="tsz_anime_external_uninstalled">%1$s (non installée)</string>
+    <string name="tsz_anime_external_missing">Aucune app n’a pu ouvrir cette vidéo, elle est lue dans Tsuzuki</string>
 </resources>

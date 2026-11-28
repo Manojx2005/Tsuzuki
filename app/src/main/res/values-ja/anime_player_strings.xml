@@ -89,4 +89,9 @@
     <string name="tsz_anime_player_watched">視聴済み</string>
     <string name="tsz_anime_player_saved">保存済み</string>
     <string name="tsz_anime_player_episode_label">第%1$s話 · %2$s</string>
+    <string name="tsz_anime_external_play_with">再生アプリ</string>
+    <string name="tsz_anime_external_tsuzuki">Tsuzuki</string>
+    <string name="tsz_anime_external_ask">毎回選ぶ</string>
+    <string name="tsz_anime_external_uninstalled">%1$s（未インストール）</string>
+    <string name="tsz_anime_external_missing">この動画を開けるアプリがないため、Tsuzuki で再生します</string>
 </resources>

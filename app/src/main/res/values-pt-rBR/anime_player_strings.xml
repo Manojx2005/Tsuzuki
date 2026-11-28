@@ -89,4 +89,9 @@
     <string name="tsz_anime_player_watched">Assistido</string>
     <string name="tsz_anime_player_saved">Salvo</string>
     <string name="tsz_anime_player_episode_label">E%1$s · %2$s</string>
+    <string name="tsz_anime_external_play_with">Reproduzir com</string>
+    <string name="tsz_anime_external_tsuzuki">Tsuzuki</string>
+    <string name="tsz_anime_external_ask">Escolher sempre</string>
+    <string name="tsz_anime_external_uninstalled">%1$s (não instalado)</string>
+    <string name="tsz_anime_external_missing">Nenhum app conseguiu abrir este vídeo, então ele toca no Tsuzuki</string>
 </resources>
