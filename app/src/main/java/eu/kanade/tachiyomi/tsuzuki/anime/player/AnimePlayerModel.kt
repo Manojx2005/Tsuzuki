@@ -1017,6 +1017,55 @@ internal class AnimePlayerModel(
         }
     }
 
+    private val screenshotResults = kotlinx.coroutines.flow.MutableSharedFlow<AnimeScreenshotResult>(extraBufferCapacity = 1)
+
+    /** A6.7: one event per Screenshot tap (snackbar "Saved to Pictures/Tsuzuki" + Share, or the failure line). */
+    val screenshots = screenshotResults as kotlinx.coroutines.flow.SharedFlow<AnimeScreenshotResult>
+
+    /** A6.7: save the frame on screen to Pictures/Tsuzuki; not offered while the resume cover is still up. */
+    fun saveScreenshot() {
+        val current = state.value
+        val episode = current.episode
+        if (!initialized || !attached || current.loading || current.failed || !current.revealed || episode == null) {
+            screenshotResults.tryEmit(AnimeScreenshotResult.Failed)
+            return
+        }
+        val raw = File(File(context.cacheDir, "anime-screenshots").apply { mkdirs() }, "shot-${java.util.UUID.randomUUID()}.png")
+        val requested = try {
+            backend.captureScreenshot(raw)
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Could not request an anime screenshot" }
+            false
+        }
+        if (!requested) {
+            screenshotResults.tryEmit(AnimeScreenshotResult.Failed)
+            return
+        }
+        val name = animeScreenshotName(current.title, episode.episodeNumber, episode.name, current.position)
+        processScope.launch(Dispatchers.IO) {
+            val result = try {
+                if (!awaitCompletePng(raw)) {
+                    AnimeScreenshotResult.Failed
+                } else {
+                    val image = eu.kanade.tachiyomi.data.saver.Image.Page(
+                        inputStream = { raw.inputStream() },
+                        name = name,
+                        location = eu.kanade.tachiyomi.data.saver.Location.Pictures.create(),
+                    )
+                    AnimeScreenshotResult.Saved(Injekt.get<eu.kanade.tachiyomi.data.saver.ImageSaver>().save(image))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) { "Could not save an anime screenshot" }
+                AnimeScreenshotResult.Failed
+            } finally {
+                raw.delete()
+            }
+            screenshotResults.tryEmit(result)
+        }
+    }
+
     /** A6.5: the other app returned; save where it stopped (it may report nothing). */
     fun onExternalResult(result: AnimeExternalResult?) {
         val start = state.value.external?.positionMs?.div(1000.0) ?: 0.0

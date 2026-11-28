@@ -97,7 +97,8 @@ internal class AnimeSourceManager(
             return AnimeSourceManager(
                 Injekt.get(),
                 loadExtensions = { withContext(Dispatchers.IO) { AnimeExtensionLoader.loadExtensions(appContext) } },
-                builtIn = ::debugBuiltInAnimeSources,
+                // A6.8: the local anime source is always registered; Browse lists it only while its folder exists.
+                builtIn = { debugBuiltInAnimeSources() + localAnimeSource(appContext) },
             )
         }
     }
@@ -108,6 +109,14 @@ internal fun animeLoadFailureMessage(results: List<AnimeLoadResult>): String? {
     val errors = results.count { it == AnimeLoadResult.Error }
     return if (errors == 0) null else "$errors anime extension(s) failed to load (signature, trust or loader error)"
 }
+
+/** A6.8: the built-in local anime source (lib 15: plain video lists, episodes without the combined update API). */
+internal fun localAnimeSource(context: Context): RegisteredAnimeSource = RegisteredAnimeSource(
+    eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource(context, Injekt.get(), Injekt.get()),
+    extensionPackage = eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeSource.PACKAGE,
+    extensionName = context.getString(eu.kanade.tachiyomi.R.string.tsz_local_anime),
+    libVersion = 15.0,
+)
 
 /** Class name of the debug-only fixture sources (`app/src/debug`); absent from preview and release builds. */
 internal const val FIXTURE_SOURCES_CLASS = "eu.kanade.tachiyomi.tsuzuki.anime.debug.FixtureAnimeSources"

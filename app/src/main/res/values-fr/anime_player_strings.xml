@@ -94,4 +94,9 @@
     <string name="tsz_anime_external_ask">Choisir à chaque fois</string>
     <string name="tsz_anime_external_uninstalled">%1$s (non installée)</string>
     <string name="tsz_anime_external_missing">Aucune app n’a pu ouvrir cette vidéo, elle est lue dans Tsuzuki</string>
+    <!-- A6.7: save the frame on screen. -->
+    <string name="tsz_anime_player_screenshot">Capture d’écran</string>
+    <string name="tsz_anime_player_screenshot_saved">Enregistrée dans Pictures/Tsuzuki</string>
+    <string name="tsz_anime_player_screenshot_failed">Impossible d’enregistrer la capture</string>
+    <string name="tsz_anime_player_screenshot_share">Partager</string>
 </resources>

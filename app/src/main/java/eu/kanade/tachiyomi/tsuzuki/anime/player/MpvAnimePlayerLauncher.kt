@@ -40,10 +40,33 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
     private var logObserver: MPVLib.LogObserver? = null
     private var loadStartedAt = 0L
     private var listener: AnimePlayerBackend.Listener? = null
+    private var contentResolver: android.content.ContentResolver? = null
+
+    /** A6.8: descriptors of local anime files mpv is reading (fd://N); closed on the next load and on close. */
+    private val openDescriptors = mutableListOf<android.os.ParcelFileDescriptor>()
+
+    /** A6.8: an issued local content:// file as fd://N (mpv cannot open content://); anything else unchanged. */
+    private fun playableAddress(url: String): String? {
+        if (!eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeVideos.isIssued(url)) return url
+        val descriptor = try {
+            contentResolver?.openFileDescriptor(android.net.Uri.parse(url), "r")
+        } catch (e: Exception) {
+            AnimeLog.w("could not open a local anime file", e)
+            null
+        } ?: return null
+        openDescriptors += descriptor
+        return "fd://${descriptor.fd}"
+    }
+
+    private fun closeDescriptors() {
+        openDescriptors.forEach { runCatching { it.close() } }
+        openDescriptors.clear()
+    }
 
     /** Same order as BaseMPVView.initialize(): create, options, init, then post-init options and observers. */
     override fun initialize(context: Context, listener: AnimePlayerBackend.Listener) {
         previewCache = context.cacheDir
+        contentResolver = context.applicationContext.contentResolver
         val configDir = File(context.filesDir, "mpv").apply { mkdirs() }
         // Aniyomi copies cacert.pem from assets into the mpv config dir and points tls-ca-file at it.
         val caFile = File(configDir, "cacert.pem")
@@ -198,6 +221,12 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
             listener?.onError(e.message)
             return
         }
+        closeDescriptors()
+        // A6.8: the validated address is swapped for the descriptor only after the URL check passed.
+        command[1] = playableAddress(video.videoUrl) ?: run {
+            listener?.onError("The local video file could not be opened")
+            return
+        }
         keyframeStart = resumePosition.isFinite() && resumePosition > 0
         MpvPlayer.property("hr-seek", if (keyframeStart) "no" else "default")
         val headers = video.headers
@@ -274,12 +303,13 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         externalTracks?.let { (subtitles, audio) ->
             externalTracks = null
             subtitles.forEach { track ->
-                MpvPlayer.command("sub-add", *externalTrackArgs(track.url, track.lang))
+                val address = playableAddress(track.url) ?: return@forEach
+                MpvPlayer.command("sub-add", *externalTrackArgs(address, track.lang))
             }
             audio.forEach { track ->
-                track.url.toHttpUrlOrNull()?.let {
-                    MpvPlayer.command("audio-add", *externalTrackArgs(it.toString(), track.lang))
-                }
+                // AY7: a saved episode's audio is a bare absolute path in its own folder, like its video.
+                val address = track.url.toHttpUrlOrNull()?.toString() ?: track.url.takeIf { it.startsWith("/") }
+                address?.let { MpvPlayer.command("audio-add", *externalTrackArgs(it, track.lang)) }
                     ?: AnimeLog.w("skipped an audio track that is not an http(s) address")
             }
         }
@@ -325,11 +355,18 @@ private class MpvAnimePlayerBackend : AnimePlayerBackend {
         return target
     }
 
+    override fun captureScreenshot(target: File): Boolean {
+        if (!created) return false
+        MpvPlayer.command("async", "screenshot-to-file", target.path, "video")
+        return true
+    }
+
     override fun close() {
         eventObserver?.let(MpvPlayer::removeObserver)
         eventObserver = null
         logObserver?.let(MpvPlayer::removeLogObserver)
         logObserver = null
+        closeDescriptors()
         if (created) {
             created = false
             MpvPlayer.destroy()

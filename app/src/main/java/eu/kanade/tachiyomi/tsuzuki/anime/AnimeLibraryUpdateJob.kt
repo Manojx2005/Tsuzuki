@@ -89,6 +89,14 @@ internal class AnimeLibraryUpdateJob(context: Context, params: WorkerParameters)
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) { "Could not update library anime " + show.id }
             }
+            // A6.6: AniList's real next airing time, once per anime per update; a failure keeps the last value.
+            try {
+                Injekt.get<eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeTracking>().refreshAiring(show.id)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN) { "Could not read the AniList airing time for anime " + show.id }
+            }
         }
         Result.success()
     }

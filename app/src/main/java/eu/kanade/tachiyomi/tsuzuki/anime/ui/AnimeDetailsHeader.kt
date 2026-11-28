@@ -298,6 +298,7 @@ internal fun AnimeLibraryActions(
     saveEnabled: Boolean = true,
     nextAiringDays: Int? = null,
     trackingCount: Int = 0,
+    aniListAiring: eu.kanade.tachiyomi.tsuzuki.anime.track.AnimeNextAiring? = null,
 ) {
     val tokens = TsuzukiTheme.tokens
     val defaultColor = tokens.dotOn
@@ -310,7 +311,19 @@ internal fun AnimeLibraryActions(
             color = if (favorite) activeColor else defaultColor,
             onClick = onFavorite.whenEnabled(),
         )
-        if (nextAiringDays != null) {
+        if (aniListAiring != null) {
+            // A6.6: AniList's real next episode replaces the estimate (board remaining-2026-11/Airing).
+            MangaActionButton(
+                title = androidx.compose.ui.res.stringResource(
+                    R.string.tsz_anime_episode_title,
+                    aniListAiring.episode.toString(),
+                    airingCountdownLabel(aniListAiring.airingAt),
+                ),
+                icon = Icons.Default.HourglassEmpty,
+                color = activeColor,
+                onClick = {},
+            )
+        } else if (nextAiringDays != null) {
             MangaActionButton(
                 title = if (nextAiringDays == 0) {
                     stringResource(MR.strings.manga_interval_expected_update_soon)
@@ -389,3 +402,15 @@ internal fun AnimeDetailsDescription(
 }
 
 private const val DISABLED_TILE_ALPHA = 0.38f
+
+/** A6.6: "42m", "5h", "2d 4h" until [airingAt] (localized units). */
+@Composable
+internal fun airingCountdownLabel(airingAt: Long): String =
+    when (val left = eu.kanade.tachiyomi.tsuzuki.anime.track.airingCountdown(airingAt, System.currentTimeMillis())) {
+        is eu.kanade.tachiyomi.tsuzuki.anime.track.AiringCountdown.Minutes ->
+            androidx.compose.ui.res.stringResource(R.string.tsz_anime_airing_in_minutes, left.minutes)
+        is eu.kanade.tachiyomi.tsuzuki.anime.track.AiringCountdown.Hours ->
+            androidx.compose.ui.res.stringResource(R.string.tsz_anime_airing_in_hours, left.hours)
+        is eu.kanade.tachiyomi.tsuzuki.anime.track.AiringCountdown.Days ->
+            androidx.compose.ui.res.stringResource(R.string.tsz_anime_airing_in_days, left.days, left.hours)
+    }

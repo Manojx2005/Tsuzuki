@@ -94,4 +94,9 @@
     <string name="tsz_anime_external_ask">毎回選ぶ</string>
     <string name="tsz_anime_external_uninstalled">%1$s（未インストール）</string>
     <string name="tsz_anime_external_missing">この動画を開けるアプリがないため、Tsuzuki で再生します</string>
+    <!-- A6.7: save the frame on screen. -->
+    <string name="tsz_anime_player_screenshot">スクリーンショット</string>
+    <string name="tsz_anime_player_screenshot_saved">Pictures/Tsuzuki に保存しました</string>
+    <string name="tsz_anime_player_screenshot_failed">スクリーンショットを保存できませんでした</string>
+    <string name="tsz_anime_player_screenshot_share">共有</string>
 </resources>

@@ -49,4 +49,11 @@
     <string name="tsz_anime_migration_replace">교체</string>
     <string name="tsz_anime_turn_on">켜기</string>
     <string name="tsz_onboarding_watch_anime">애니메이션도 시청하시겠어요?</string>
+    <!-- A6.6: time left until AniList's next episode (compact). -->
+    <string name="tsz_anime_airing_in_minutes">%1$d분</string>
+    <string name="tsz_anime_airing_in_hours">%1$d시간</string>
+    <string name="tsz_anime_airing_in_days">%1$d일 %2$d시간</string>
+    <!-- A6.8: local anime source. -->
+    <string name="tsz_local_anime">로컬 애니메이션</string>
+    <string name="tsz_local_anime_on_device">이 기기</string>
 </resources>

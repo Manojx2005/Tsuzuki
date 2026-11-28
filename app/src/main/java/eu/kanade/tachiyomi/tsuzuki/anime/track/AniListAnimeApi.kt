@@ -44,6 +44,13 @@ internal class AniListAnimeApi(private val client: OkHttpClient, private val jso
         return entry.toTrack(checkNotNull(entry.media), track)
     }
 
+    /** A6.6: AniList's next airing episode for [remoteId], or null when none is scheduled. */
+    suspend fun nextAiring(remoteId: Long): AnimeNextAiring? {
+        val media = request(AIRING, buildJsonObject { put("id", remoteId) }).getValue("Media")
+        val next = json.decodeFromJsonElement<AiringMedia>(media).nextAiringEpisode ?: return null
+        return AnimeNextAiring(next.episode, next.airingAt * 1000)
+    }
+
     private suspend fun request(query: String, variables: JsonObject): JsonObject {
         val body = buildJsonObject {
             put("query", query)
@@ -66,6 +73,12 @@ internal class AniListAnimeApi(private val client: OkHttpClient, private val jso
             put("day", date?.dayOfMonth)
         }
     }
+
+    @Serializable
+    private data class AiringMedia(val nextAiringEpisode: NextEpisode? = null)
+
+    @Serializable
+    private data class NextEpisode(val episode: Int, val airingAt: Long)
 
     @Serializable
     private data class SearchPage(val media: List<Media>)
@@ -150,6 +163,12 @@ internal class AniListAnimeApi(private val client: OkHttpClient, private val jso
         val ENTRY = $$"""
             query AnimeEntry($id: Int) {
                 Media(id: $id, type: ANIME) { $${MEDIA} mediaListEntry { $${LIST} } }
+            }
+        """.trimIndent()
+
+        val AIRING = $$"""
+            query AnimeAiring($id: Int) {
+                Media(id: $id, type: ANIME) { nextAiringEpisode { episode airingAt } }
             }
         """.trimIndent()
 

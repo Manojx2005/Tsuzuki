@@ -35,6 +35,8 @@ internal fun checkAnimeVideoUrl(url: String) {
     val scheme = url.substringBefore(':', "").lowercase()
     val hasScheme = url.contains(':') && scheme.isNotEmpty() && scheme.all { it.isLetterOrDigit() || it in "+-." }
     if (hasScheme) {
+        // A6.8: content:// only for files the local anime source issued; the backend opens those as fd://.
+        if (scheme == "content" && eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeVideos.isIssued(url)) return
         if (scheme != "http" && scheme != "https") throw AnimeUnsupportedVideoUrlException(scheme)
     } else if (!url.startsWith("/")) {
         throw AnimeUnsupportedVideoUrlException("none")

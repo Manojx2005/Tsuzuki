@@ -80,6 +80,8 @@ private fun BaseTachiyomiTheme(
         CompositionLocalProvider(
             LocalTsuzukiTokens provides tokens,
             tachiyomi.presentation.core.theme.LocalActiveColor provides tokens.activeColor,
+            tachiyomi.presentation.core.screens.LocalEmptyScreenStyle provides
+                eu.kanade.presentation.theme.tsuzuki.tsuzukiEmptyScreenStyle(tokens),
             eu.kanade.presentation.theme.tsuzuki.LocalDotColourCovers provides
                 eu.kanade.presentation.theme.tsuzuki.rememberDotColourCovers(),
             content = content,

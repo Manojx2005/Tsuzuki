@@ -351,7 +351,7 @@ internal class AnimeDownloads(
                     AnimeLog.w("could not clean the saved segments of episode ${entry.episodeId}", e)
                 }
             }
-            Video(videoUrl = file.absolutePath)
+            AnimeOfflineTracks.offlineVideo(file, folder)
         }
 
     fun releaseOfflinePlayback(playbackOwner: Any) {
@@ -480,6 +480,15 @@ internal class AnimeDownloads(
                 try {
                     AnimeVideoTransfer(client, video, preferred).download(folder) {
                         mutableProgress.value = entry.episodeId to it
+                    }
+                    // AY7: subtitles, audio and mpv options travel with the episode; a missing track never
+                    // fails a saved video.
+                    try {
+                        AnimeOfflineTracks.save(client, video, folder)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logcat(LogPriority.WARN) { "Could not save the episode's tracks (${e.javaClass.simpleName})" }
                     }
                     saved = true
                     break

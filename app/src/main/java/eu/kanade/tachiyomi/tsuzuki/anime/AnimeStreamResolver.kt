@@ -112,6 +112,10 @@ internal object AnimeStreamResolver {
 
     @Suppress("DEPRECATION")
     suspend fun resolve(source: AnimeSource, libVersion: Double, video: Video): Video = callAnimeSource {
+        // A6.8: a file the local anime source handed out plays as it is (the player opens it itself).
+        if (eu.kanade.tachiyomi.tsuzuki.anime.local.LocalAnimeVideos.isIssued(video.videoUrl)) {
+            return@callAnimeSource video.copy(initialized = true)
+        }
         val result = when {
             source !is AnimeHttpSource -> video
             // An initialized video must not be sent back into the extension.

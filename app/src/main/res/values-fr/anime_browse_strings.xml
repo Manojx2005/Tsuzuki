@@ -50,4 +50,11 @@
     <string name="tsz_anime_migration_replace">Remplacer</string>
     <string name="tsz_anime_turn_on">Activer</string>
     <string name="tsz_onboarding_watch_anime">Regarder aussi des animés ?</string>
+    <!-- A6.6: time left until AniList's next episode (compact). -->
+    <string name="tsz_anime_airing_in_minutes">%1$d min</string>
+    <string name="tsz_anime_airing_in_hours">%1$d h</string>
+    <string name="tsz_anime_airing_in_days">%1$d j %2$d h</string>
+    <!-- A6.8: local anime source. -->
+    <string name="tsz_local_anime">Anime locaux</string>
+    <string name="tsz_local_anime_on_device">Sur cet appareil</string>
 </resources>
