@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,12 +57,14 @@ fun TsuzukiAccentPicker(uiPreferences: UiPreferences) {
             modifier = Modifier.padding(top = 2.dp),
         )
         FlowRow(
-            Modifier.padding(top = 12.dp),
+            Modifier.padding(top = 12.dp).selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TsuzukiAccentSwatch.entries.forEach { swatch ->
                 val isSelected = swatch == current
+                // A11Y1: spoken in the app language (was the English enum name).
+                val swatchName = stringResource(swatch.spokenName())
                 Box(
                     Modifier
                         .size(48.dp)
@@ -70,7 +73,7 @@ fun TsuzukiAccentPicker(uiPreferences: UiPreferences) {
                         .semantics {
                             this.selected = isSelected
                             role = Role.RadioButton
-                            contentDescription = swatch.name.lowercase().replaceFirstChar { it.uppercase() }
+                            contentDescription = swatchName
                         },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -114,4 +117,15 @@ internal fun TsuzukiDotCoverPicker(uiPreferences: UiPreferences) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
+}
+
+private fun TsuzukiAccentSwatch.spokenName() = when (this) {
+    TsuzukiAccentSwatch.GOLD -> MR.strings.tsz_accent_swatch_gold
+    TsuzukiAccentSwatch.AMBER -> MR.strings.tsz_accent_swatch_amber
+    TsuzukiAccentSwatch.CORAL -> MR.strings.tsz_accent_swatch_coral
+    TsuzukiAccentSwatch.ROSE -> MR.strings.tsz_accent_swatch_rose
+    TsuzukiAccentSwatch.VIOLET -> MR.strings.tsz_accent_swatch_violet
+    TsuzukiAccentSwatch.SKY -> MR.strings.tsz_accent_swatch_sky
+    TsuzukiAccentSwatch.MINT -> MR.strings.tsz_accent_swatch_mint
+    TsuzukiAccentSwatch.WHITE -> MR.strings.tsz_accent_swatch_white
 }

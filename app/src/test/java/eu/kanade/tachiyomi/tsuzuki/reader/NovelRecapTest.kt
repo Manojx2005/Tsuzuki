@@ -67,4 +67,47 @@ class NovelRecapTest {
         assertTrue(shouldShowNovelRecap(lastRead, lastRead + day))
         assertTrue(shouldShowNovelRecap(lastRead, lastRead + 2 * day))
     }
+
+    @Test
+    fun completedRenderedParagraphsKeepLiteralMarkupAndUseOnlyPassedProse() {
+        val literal = "The sign read <North Gate> and nobody knew who had written it."
+        assertEquals(
+            listOf(second, third, literal),
+            novelRecapCompletedParagraphs(listOf(first, second, third, literal)),
+        )
+        assertEquals(
+            listOf(first, second),
+            novelRecapCompletedParagraphs(listOf(first, second, "Author's notes", third)),
+        )
+        assertEquals(emptyList<String>(), novelRecapCompletedParagraphs(listOf(first, "Short.")))
+    }
+
+    @Test
+    fun labelJoinsTheKnownPartsLikeTheBoard() {
+        assertEquals("Previously · Ch. 4 · 2 days ago", novelRecapLabel("Previously", "Ch. 4", "2 days ago"))
+        assertEquals("Previously · 2 days ago", novelRecapLabel("Previously", null, "2 days ago"))
+        assertEquals("Previously · Ch. 4", novelRecapLabel("Previously", "  Ch. 4 ", null))
+        assertEquals("Previously", novelRecapLabel("Previously", " ", ""))
+    }
+
+    @Test
+    fun modeSeparatesFreshOpensFromResumesAndRespectsTheGap() {
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = false, entryProgress = 0.4f))
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = false, entryProgress = 0f))
+        assertEquals(NovelRecapMode.CardAboveText, novelRecapMode(due = true, entryProgress = 0f))
+        assertEquals(NovelRecapMode.ResumeOverlay, novelRecapMode(due = true, entryProgress = 0.01f))
+        assertEquals(NovelRecapMode.ResumeOverlay, novelRecapMode(due = true, entryProgress = 0.98f))
+        // Reopening a finished chapter shows its last screen: no overlay repeating what is visible.
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = true, entryProgress = 0.99f))
+        assertEquals(NovelRecapMode.None, novelRecapMode(due = true, entryProgress = 1f))
+    }
+
+    @Test
+    fun overlayGoesAwayAfterTwoPointsOfProgressOrAPagedTurn() {
+        assertFalse(novelRecapScrolledAway(40, 40, 3, 3))
+        assertFalse(novelRecapScrolledAway(40, 41, 3, 3))
+        assertTrue(novelRecapScrolledAway(40, 42, 3, 3))
+        assertTrue(novelRecapScrolledAway(40, 38, 3, 3))
+        assertTrue(novelRecapScrolledAway(40, 40, 3, 4))
+    }
 }

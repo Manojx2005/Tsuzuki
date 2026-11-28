@@ -27,6 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -88,7 +91,8 @@ fun TsuzukiPill(
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+            // A11Y1: Dot draws capitals; TalkBack reads the label as written ("NEW" is not spelled out).
+            modifier = Modifier.weight(1f, fill = false).semantics { contentDescription = text },
         )
         count?.let {
             Text(text = "$it", color = ink.copy(alpha = 0.72f), style = MaterialTheme.typography.labelLarge)
@@ -153,7 +157,11 @@ fun TsuzukiSectionLabel(
 ) {
     Text(
         text = text.uppercase(),
-        modifier = modifier.padding(contentPadding),
+        // A11Y1: a heading for TalkBack's heading navigation, read as written rather than in capitals.
+        modifier = modifier.padding(contentPadding).semantics {
+            heading()
+            contentDescription = text
+        },
         fontSize = 11.sp,
         fontWeight = FontWeight.ExtraBold,
         letterSpacing = 1.sp,

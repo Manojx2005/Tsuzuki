@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.DropdownMenu
@@ -274,7 +275,7 @@ private fun MangaQueueRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = if (error != null) {
-                    Modifier.clickable {
+                    Modifier.clickable(role = Role.Button) {
                         context.copyToClipboard(errorLabel, eu.kanade.tachiyomi.tsuzuki.error.redactErrorText(error))
                     }
                 } else {

@@ -64,6 +64,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -416,23 +417,26 @@ private fun Header(subtitle: String?, filtersOpen: Boolean, onBack: () -> Unit, 
 }
 
 @Composable
-private fun RoundButton(icon: ImageVector, description: String, onClick: () -> Unit, active: Boolean = false) {
+private fun RoundButton(icon: ImageVector, description: String, onClick: () -> Unit, active: Boolean? = null) {
     val t = TsuzukiTheme.tokens
+    val on = active == true
     val border = t.tileBorder
     Box(
         Modifier
             .minimumInteractiveComponentSize()
             .size(44.dp)
             .clip(CircleShape)
-            .background(if (active) t.accent else t.tile)
-            .then(if (!active && border != null) Modifier.border(1.dp, border, CircleShape) else Modifier)
-            .tsuzukiClickable(role = Role.Button, onClick = onClick),
+            .background(if (on) t.accent else t.tile)
+            .then(if (!on && border != null) Modifier.border(1.dp, border, CircleShape) else Modifier)
+            .tsuzukiClickable(role = Role.Button, onClick = onClick)
+            // A11Y1: a toggle (the filters button) says open/closed, not only by turning red.
+            .then(if (active != null) Modifier.semantics { selected = active } else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             icon,
             contentDescription = description,
-            tint = if (active) t.onAccent else MaterialTheme.colorScheme.onSurface,
+            tint = if (on) t.onAccent else MaterialTheme.colorScheme.onSurface,
         )
     }
 }

@@ -2083,4 +2083,14 @@
     <string name="tsz_str6_tl_hint_default">Paste your token</string>
     <string name="tsz_str6_tl_extract_failed">Could not extract auth value from input</string>
     <string name="tsz_str6_tl_use">Use</string>
+    <string name="tsz_accent_swatch_gold">Gold</string>
+    <string name="tsz_accent_swatch_amber">Amber</string>
+    <string name="tsz_accent_swatch_coral">Coral</string>
+    <string name="tsz_accent_swatch_rose">Rose</string>
+    <string name="tsz_accent_swatch_violet">Violet</string>
+    <string name="tsz_accent_swatch_sky">Sky</string>
+    <string name="tsz_accent_swatch_mint">Mint</string>
+    <string name="tsz_accent_swatch_white">White</string>
+    <string name="tsz_a11y_page_of">Page %1$d of %2$d</string>
+    <string name="tsz_a11y_current_step">Current step</string>
 </resources>

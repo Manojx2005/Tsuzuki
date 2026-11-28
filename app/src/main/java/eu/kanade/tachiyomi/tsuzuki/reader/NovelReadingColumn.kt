@@ -7,9 +7,10 @@ import android.widget.LinearLayout
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import kotlin.math.roundToInt
 
-internal const val NOVEL_READING_WIDTH_DP = 600
+// Keep modest gutters on a portrait tablet while bounding long landscape lines.
+internal const val NOVEL_READING_WIDTH_DP = 720
 
-internal fun usesNovelReadingColumn(smallestWidthDp: Int): Boolean = smallestWidthDp >= NOVEL_READING_WIDTH_DP
+internal fun usesNovelReadingColumn(smallestWidthDp: Int): Boolean = smallestWidthDp >= 600
 
 internal data class NovelColumnInsets(val left: Int, val right: Int)
 

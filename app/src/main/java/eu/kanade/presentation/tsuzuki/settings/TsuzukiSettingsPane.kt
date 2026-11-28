@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,7 +78,7 @@ internal fun TsuzukiValuePreferenceRow(title: String, value: String, icon: Image
         modifier = Modifier
             .highlightBackground(LocalPreferenceHighlighted.current)
             .sizeIn(minHeight = LocalPreferenceMinHeight.current)
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .fillMaxWidth()
             .padding(horizontal = PrefsHorizontalPadding, vertical = PrefsVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,

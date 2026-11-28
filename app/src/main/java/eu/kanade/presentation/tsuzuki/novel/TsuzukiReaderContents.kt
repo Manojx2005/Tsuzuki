@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -123,11 +125,9 @@ fun TsuzukiReaderContents(
             Box(
                 Modifier.fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.55f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onDismissRequest,
-                    ),
+                    // A11Y1: a tap detector, not clickable, so TalkBack doesn't focus a screen-sized
+                    // "double-tap to activate" scrim; Back closes the contents.
+                    .pointerInput(onDismissRequest) { detectTapGestures { onDismissRequest() } },
             )
         }
         AnimatedVisibility(
@@ -154,12 +154,8 @@ fun TsuzukiReaderContents(
                         .clip(shape)
                         .background(MaterialTheme.colorScheme.surfaceContainerLow)
                         .then(tokens.tileBorder?.let { Modifier.border(1.dp, it, shape) } ?: Modifier)
-                        // Swallow taps so they don't reach the scrim.
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                        )
+                        // Swallow taps so they don't reach the scrim (not clickable: no extra TalkBack node).
+                        .pointerInput(Unit) { detectTapGestures { } }
                         .statusBarsPadding()
                         .navigationBarsPadding(),
                 ) {

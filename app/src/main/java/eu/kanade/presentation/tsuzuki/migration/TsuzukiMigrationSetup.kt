@@ -63,7 +63,7 @@ internal fun TsuzukiMigrateBookRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 3.dp)
             .clip(RoundedCornerShape(tokens.tileRadius))
-            .clickable(onClick = onClick),
+            .clickable(role = Role.Button, onClick = onClick),
         padding = 10.dp,
     ) {
         Row(

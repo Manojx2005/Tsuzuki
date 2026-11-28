@@ -293,11 +293,11 @@ class MyAnimeListApi(
     }
 
     companion object {
-        private const val CLIENT_ID = "d0464a21fd4f1ee11cd033ed3b476946"
+        private const val CLIENT_ID = "63d4f99d5bd3945886701660b1f75fee"
 
         private const val BASE_OAUTH_URL = "https://myanimelist.net/v1/oauth2"
         private const val BASE_API_URL = "https://api.myanimelist.net/v2"
-        private const val REDIRECT_URL = "tsundoku://myanimelist-auth"
+        private const val REDIRECT_URL = "tsuzuki://myanimelist-auth"
 
         private const val SEARCH_FIELDS =
             "id,title,synopsis,num_chapters,mean,main_picture,status,media_type,start_date," +

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Airing times</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&amp;family=Space+Mono:wght@400;700&amp;family=Instrument+Serif&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff3b30}a:hover{color:#ff6a61}
+</style>
+</helmet>
+<div style="width:1200px;height:900px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:28px;background:{{bg}};color:{{fg}};font-family:{{body}};background-image:{{dots}};background-size:16px 16px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">A6.6 · ANILIST NEXT EPISODE</div>
+<h1 style="margin:0;font-family:{{display}};font-size:48px;line-height:1.05;font-weight:800">{{titleText}}</h1>
+<p style="margin:0;max-width:860px;font-size:14px;line-height:1.6;color:{{muted}}">Anime bound to AniList show the real next episode and time; everything else keeps today's estimate (“in 2 days”). Unknown: the tile is hidden. Read once per anime per library update, never polled.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;flex:1">
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}};display:flex;flex-direction:column;gap:10px;padding:18px 14px;box-sizing:border-box">
+<div style="display:flex;gap:10px"><div style="width:78px;height:110px;border-radius:12px;background:#0c8599"></div><div style="display:flex;flex-direction:column;gap:6px;justify-content:flex-end"><div style="font-family:{{display}};font-size:19px;font-weight:800;line-height:1.1">{{showTitle}}</div><div style="font-size:10px;color:{{muted}}">{{meta}}</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<div style="background:{{tile}};border:1px solid {{line}};border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;gap:3px"><div style="font-size:8px;color:{{muted}}">{{lblStatus}}</div><div style="font-size:11px;font-weight:700">{{valStatus}}</div></div>
+<div style="background:{{tile}};border:1.5px solid {{accent}};border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;gap:3px"><div style="font-size:8px;color:{{accent}}">{{lblNext}}</div><div style="font-size:11px;font-weight:700">{{valNext}}</div><div style="font-size:9px;color:{{muted}}">{{valWhen}}</div></div>
+<div style="background:{{tile}};border:1px solid {{line}};border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;gap:3px"><div style="font-size:8px;color:{{muted}}">{{lblEps}}</div><div style="font-size:11px;font-weight:700">12 / 24</div></div>
+</div>
+<div style="height:64px;border-radius:20px;background:{{tile}};border:1px solid {{line}};display:flex;align-items:center;gap:10px;padding:0 12px"><div style="width:36px;height:36px;border-radius:18px;background:{{accent}}"></div><div style="font-size:11px;font-weight:700">{{resume}}</div></div>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Details header · Next tile</b><br>Replaces the estimate tile in place: “EP 13” over “in 2d 4h” (under 1 h: “in 42 min”). Same tile, accent outline only while AniList has a time.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="position:relative;width:250px;height:520px;border-radius:36px;border:9px solid {{frame}};overflow:hidden;background:{{bg}};display:flex;flex-direction:column;gap:10px;padding:22px 14px;box-sizing:border-box">
+<div style="font-family:{{display}};font-size:24px;font-weight:800">{{watchText}}</div>
+<div style="font-size:10px;letter-spacing:2px;color:{{muted}}">{{todayText}}</div>
+<sc-for list="{{today}}" as="r" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px;background:{{tile}};border:1px solid {{line}};border-radius:16px;padding:8px"><div style="width:34px;height:48px;border-radius:8px;background:{{r.color}}"></div><div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="font-size:11px;font-weight:700">{{r.name}}</div><div style="font-size:9px;color:{{muted}}">{{r.ep}}</div></div><div style="font-size:12px;font-weight:700;color:{{r.timeColor}}">{{r.time}}</div></div>
+</sc-for>
+</div>
+<div style="text-align:center;font-size:13px;line-height:1.5;max-width:300px"><b style="color:{{accent}}">Watch Home · Airing today</b><br>A real time (device time zone, 24 h per system setting) on the right; an estimated row keeps “today” in muted ink. Sorted by time, estimates last.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px;padding-top:8px">
+<div style="font-size:13px;letter-spacing:2px;color:{{muted}}">RULES</div>
+<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;line-height:1.55">
+<div><b>Source</b> · AniList <code>nextAiringEpisode { episode airingAt }</code> in the existing tracker refresh.</div>
+<div><b>Precedence</b> · AniList time &gt; R-A3 estimate &gt; hidden.</div>
+<div><b>“Today”</b> · same calendar day in the device time zone.</div>
+<div><b>Stale</b> · an airingAt in the past is dropped until the next refresh (never “−3 h”).</div>
+<div><b>Copy</b> · relative: in 42 min / in 5 h / in 2d 4h; absolute on Home: 21:30.</div>
+<div><b>Reduced motion</b> · nothing moves here.</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dot","Colour"],"default":"Dot"},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dot = (this.props.theme ?? 'Dot') === 'Dot';
+    const up = (s) => dot ? s.toUpperCase() : s;
+    const accent = dot ? '#ff3b30' : '#e8b04a';
+    const muted = dot ? '#a3a3a3' : '#b9c2d6';
+    return {
+      bg: dot ? '#000000' : '#16213e', fg: dot ? '#ffffff' : '#f5efe2', muted,
+      tile: dot ? '#161616' : '#2a3a63', line: dot ? '#2e2e2e' : '#3a4c78', frame: dot ? '#262626' : '#0e1730', accent,
+      display: dot ? "'Doto', monospace" : "'Instrument Serif', serif", body: dot ? "'Space Mono', monospace" : "'Manrope', sans-serif",
+      dots: dot ? 'radial-gradient(#1d1d1d 1px, transparent 1px)' : 'none',
+      titleText: up('When the next episode airs'),
+      showTitle: up('Sample Show'), meta: up('TV · 2026 · Airing'),
+      lblStatus: up('Status'), valStatus: up('Airing'), lblNext: up('Next'), valNext: 'EP 13', valWhen: up('in 2d 4h'), lblEps: up('Watched'),
+      resume: up('Resume · EP 12'),
+      watchText: up('Watch'), todayText: up('Airing today'),
+      today: [
+        { name: up('Sample Show'), ep: 'EP 13', time: '21:30', color: '#0c8599', timeColor: accent },
+        { name: up('Another Show'), ep: 'EP 5', time: '23:00', color: '#e64980', timeColor: accent },
+        { name: up('Estimated Show'), ep: 'EP 8', time: up('today'), color: '#7048e8', timeColor: muted }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

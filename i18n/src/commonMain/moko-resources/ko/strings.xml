@@ -1706,4 +1706,14 @@
     <string name="tsz_str6_tl_hint_default">토큰을 붙여넣으세요</string>
     <string name="tsz_str6_tl_extract_failed">입력에서 인증 값을 추출하지 못했습니다</string>
     <string name="tsz_str6_tl_use">사용</string>
+    <string name="tsz_accent_swatch_gold">골드</string>
+    <string name="tsz_accent_swatch_amber">앰버</string>
+    <string name="tsz_accent_swatch_coral">코랄</string>
+    <string name="tsz_accent_swatch_rose">로즈</string>
+    <string name="tsz_accent_swatch_violet">바이올렛</string>
+    <string name="tsz_accent_swatch_sky">스카이</string>
+    <string name="tsz_accent_swatch_mint">민트</string>
+    <string name="tsz_accent_swatch_white">화이트</string>
+    <string name="tsz_a11y_page_of">%2$d개 중 %1$d번째</string>
+    <string name="tsz_a11y_current_step">현재 단계</string>
 </resources>

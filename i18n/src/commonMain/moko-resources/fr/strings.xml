@@ -1700,4 +1700,14 @@
     <string name="tsz_str6_tl_hint_default">Collez votre jeton</string>
     <string name="tsz_str6_tl_extract_failed">Impossible d'extraire la valeur d'authentification de la saisie</string>
     <string name="tsz_str6_tl_use">Utiliser</string>
+    <string name="tsz_accent_swatch_gold">Or</string>
+    <string name="tsz_accent_swatch_amber">Ambre</string>
+    <string name="tsz_accent_swatch_coral">Corail</string>
+    <string name="tsz_accent_swatch_rose">Rose</string>
+    <string name="tsz_accent_swatch_violet">Violet</string>
+    <string name="tsz_accent_swatch_sky">Bleu ciel</string>
+    <string name="tsz_accent_swatch_mint">Menthe</string>
+    <string name="tsz_accent_swatch_white">Blanc</string>
+    <string name="tsz_a11y_page_of">Page %1$d sur %2$d</string>
+    <string name="tsz_a11y_current_step">Étape actuelle</string>
 </resources>

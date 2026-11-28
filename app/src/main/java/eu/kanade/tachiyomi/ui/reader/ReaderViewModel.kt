@@ -422,9 +422,13 @@ class ReaderViewModel @JvmOverloads constructor(
 
                 val chapter = chapterList.first { chapterId == it.chapter.id }
                 if (manga.isNovel && readerPreferences.novelChapterRecap.get() && !incognitoMode) {
-                    chapterList.getOrNull(chapterList.indexOf(chapter) - 1)?.let { previous ->
-                        novelRecap.prepare(manga, chapterId, previous, source)
-                    }
+                    val entryProgress = eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress(
+                        chapter.chapter.last_page_read,
+                        chapter.chapter.read,
+                        libraryPreferences.novelReadProgress100.get(),
+                        enteredViaPrevious = false,
+                    )
+                    novelRecap.prepare(manga, chapterId, novelRecapPreviousChapter(manga), source, entryProgress)
                 }
                 loadChapter(loader!!, chapter)
             } catch (e: Throwable) {
@@ -467,6 +471,7 @@ class ReaderViewModel @JvmOverloads constructor(
         )
 
         withUIContext {
+            novelRecap.onChapterChanged(chapter.chapter.id)
             mutableState.update {
                 // Add new references first to avoid unnecessary recycling
                 newChapters.ref()
@@ -801,6 +806,7 @@ class ReaderViewModel @JvmOverloads constructor(
      * Also triggers auto-download of ahead chapters on chapter change.
      */
     fun setNovelVisibleChapter(chapter: Chapter?) {
+        novelRecap.onChapterChanged(chapter?.id)
         mutableState.update { it.copy(novelVisibleChapter = chapter) }
         downloadNextChapters()
 
@@ -1087,10 +1093,30 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
+    private suspend fun novelRecapPreviousChapter(manga: Manga): ReaderChapter? {
+        val sorted = getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
+            .sortedWith(getChapterSort(manga, sortDescending = false))
+        return eu.kanade.tachiyomi.tsuzuki.reader.previousChapterForRecap(sorted, chapterId) { it.id }
+            ?.let { ReaderChapter(it.toDbChapter()) }
+    }
+
     internal fun novelRecapFor(chapterId: Long?) =
         if (readerPreferences.novelChapterRecap.get()) novelRecap.forChapter(chapterId) else null
 
     internal fun dismissNovelRecap(chapterId: Long) = novelRecap.dismiss(chapterId)
+
+    internal val novelResumeRecap get() = novelRecap.overlay
+
+    internal fun needsNovelRecapViewport(chapterId: Long) =
+        !incognitoMode && readerPreferences.novelChapterRecap.get() &&
+            state.value.currentChapter?.chapter?.id == chapterId && novelRecap.needsViewport(chapterId)
+
+    internal fun noteNovelRecapViewport(chapterId: Long, paragraphs: List<String>) {
+        if (!needsNovelRecapViewport(chapterId)) return
+        viewModelScope.launch(Dispatchers.Default) {
+            if (needsNovelRecapViewport(chapterId)) novelRecap.onResumeViewport(chapterId, paragraphs)
+        }
+    }
 
     internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) {
         if (incognitoMode) return

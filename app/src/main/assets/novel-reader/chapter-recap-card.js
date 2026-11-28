@@ -9,7 +9,7 @@
         card.dataset.chapterId = data.chapterId;
         card.setAttribute('aria-label', data.title);
         card.style.cssText = 'display:block;box-sizing:border-box;break-inside:avoid;' +
-            'margin:12px 0;padding:4px 16px 16px;border-radius:24px;' +
+            'margin:6px 0 18px;padding:20px;border-radius:24px;' +
             'text-align:start;text-indent:0;letter-spacing:normal;user-select:none;color:' + ink + ';' +
             'font:14px/1.5 ' + (data.ink ? 'monospace' : 'sans-serif') + ';background:' +
             (data.tile || 'color-mix(in srgb,' + page.color + ' 8%,' + page.backgroundColor + ')') + ';' +
@@ -23,12 +23,13 @@
         header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;';
         var title = document.createElement('strong');
         title.textContent = data.title;
+        title.style.cssText = 'min-width:0;overflow-wrap:anywhere;';
         header.appendChild(title);
         var dismiss = document.createElement('button');
         dismiss.type = 'button';
         dismiss.textContent = data.dismiss;
         dismiss.style.cssText = 'min-height:48px;background:transparent;border:0;' +
-            'padding:0 8px;cursor:pointer;font:inherit;color:' + (data.accent || ink);
+            'flex:0 0 auto;white-space:nowrap;padding:0 8px;cursor:pointer;font:inherit;color:' + (data.accent || ink);
         dismiss.style.setProperty('color', data.accent || ink, 'important');
         dismiss.onclick = function () {
             card.remove();
@@ -42,12 +43,14 @@
         header.appendChild(dismiss);
         card.appendChild(header);
 
-        data.paragraphs.forEach(function (paragraph) {
-            var text = document.createElement('div');
-            text.textContent = paragraph;
-            text.style.cssText = 'margin-top:8px;overflow-wrap:anywhere;';
-            card.appendChild(text);
-        });
+        // Board: the excerpt is set in the reader's own face at 13px, at most six lines; the label keeps the UI face.
+        var body = document.createElement('div');
+        body.textContent = data.paragraphs.join('\n\n');
+        body.style.cssText = 'margin-top:8px;overflow-wrap:anywhere;white-space:pre-line;line-height:1.6;' +
+            'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;';
+        body.style.setProperty('font-family', page.fontFamily, 'important');
+        body.style.setProperty('font-size', '13px', 'important');
+        card.appendChild(body);
         document.body.insertBefore(card, document.body.firstChild);
         window.__tszNovelRecapHeight = function () {
             return card.isConnected ? card.offsetHeight + 24 : 0;
