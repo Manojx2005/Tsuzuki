@@ -38,18 +38,17 @@ internal fun navigatorCoverDuration(isDetails: Boolean, event: StackEvent, reduc
 fun TsuzukiNavigatorTransition(navigator: Navigator, modifier: Modifier = Modifier) {
     val reduced = rememberReduceMotion()
     val duration = navigatorCoverDuration(navigator.lastItem is MangaScreen, navigator.lastEvent, reduced)
-    // Full-screen fades use the same smooth curve in both themes.
-    val easing = TsuzukiMotion.Standard
-    val fade = tween<Float>(duration, easing = easing)
     SharedTransitionLayout(modifier) {
         CompositionLocalProvider(
             LocalSharedCoverScope provides if (reduced) null else this,
             LocalCoverDuration provides duration,
         ) {
-            ScreenTransition(
-                navigator = navigator,
-                transition = { fadeIn(fade) togetherWith fadeOut(fade) },
-            )
+            // SM5: shared axis X and predictive Back (motion system, owner 2026-11-28).
+            TsuzukiScreenHost(navigator, duration, reduced) { screen, scope ->
+                navigator.saveableState("transition", screen) {
+                    TsuzukiAnimatedScreen(scope) { screen.Content() }
+                }
+            }
         }
     }
 }
