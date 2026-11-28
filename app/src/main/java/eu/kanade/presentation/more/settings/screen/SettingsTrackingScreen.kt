@@ -179,7 +179,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 title = stringResource(MR.strings.tsz_track_min_chapters_novels),
                 subtitle = stringResource(MR.strings.tsz_track_min_chapters_novels_summary),
             ),
-            *eu.kanade.presentation.tsuzuki.settings.animeTrackingPreferences().toTypedArray(),
+            *eu.kanade.presentation.tsuzuki.settings.animeTrackingPreferences { dialog = LogoutDialog(it) }.toTypedArray(),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
                 preferenceItems = listOf(

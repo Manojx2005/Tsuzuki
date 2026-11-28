@@ -343,6 +343,9 @@
                 <data
                     android:scheme="tsuzuki"
                     android:host="myanimelist-auth" />
+                <data
+                    android:scheme="tsuzuki"
+                    android:host="simkl-auth" />
             </intent-filter>
         </activity>
 

@@ -58,4 +58,5 @@
     <string name="tsz_local_anime_on_device">この端末</string>
     <string name="tsz_local_anime_empty">まだ動画がありません</string>
     <string name="tsz_local_anime_empty_hint">作品ごとにフォルダを作り、ここに入れてください:</string>
+    <string name="tsz_anime_trackers">アニメのトラッカー</string>
 </resources>

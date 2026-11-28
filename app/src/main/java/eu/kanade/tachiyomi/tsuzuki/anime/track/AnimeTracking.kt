@@ -21,7 +21,7 @@ internal class AnimeTracking(
     private val writes = Mutex()
 
     val services: List<Tracker>
-        get() = listOf(trackers.aniList, trackers.myAnimeList, trackers.kitsu)
+        get() = listOf(trackers.aniList, trackers.myAnimeList, trackers.kitsu, eu.kanade.tachiyomi.tsuzuki.anime.track.simkl.Simkl.instance)
 
     fun observe(animeId: Long) = tracks.subscribeByAnimeId(animeId)
 
@@ -111,6 +111,7 @@ internal class AnimeTracking(
         id == trackers.aniList.id && trackers.aniList.isLoggedIn -> trackers.aniList.anime
         id == trackers.myAnimeList.id && trackers.myAnimeList.isLoggedIn -> trackers.myAnimeList.anime
         id == trackers.kitsu.id && trackers.kitsu.isLoggedIn -> trackers.kitsu.anime
+        id == eu.kanade.tachiyomi.tsuzuki.anime.track.simkl.Simkl.SIMKL_ID && eu.kanade.tachiyomi.tsuzuki.anime.track.simkl.Simkl.instance.isLoggedIn -> eu.kanade.tachiyomi.tsuzuki.anime.track.simkl.Simkl.instance.anime
         else -> null
     }
 }

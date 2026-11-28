@@ -30,6 +30,7 @@ class TrackLoginActivity : BaseOAuthLoginActivity() {
                 "myanimelist-auth" -> handleMyAnimeList(data["code"])
                 "shikimori-auth" -> handleShikimori(data["code"])
                 "hikka-auth" -> handleHikka(data["reference"])
+                "simkl-auth" -> eu.kanade.tachiyomi.tsuzuki.anime.track.simkl.handleSimklCallback(data)
             }
             returnToSettings()
         }
