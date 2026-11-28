@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SM5: reader / player open, shared axis Z — grows 0.92 -> 1 and fades in over 300 ms (Enter), centre pivot. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shareInterpolator="true" android:interpolator="@interpolator/tsuzuki_standard">
+    android:interpolator="@interpolator/tsuzuki_enter"
+    android:shareInterpolator="true">
     <alpha android:duration="300" android:fromAlpha="0" android:toAlpha="1" />
-    <scale android:duration="300" android:fromXScale="0.94" android:toXScale="1"
-        android:fromYScale="0.94" android:toYScale="1"
-        android:pivotX="50%p" android:pivotY="85%p" />
+    <scale android:duration="300" android:fromXScale="0.92" android:toXScale="1"
+        android:fromYScale="0.92" android:toYScale="1"
+        android:pivotX="50%p" android:pivotY="50%p" />
 </set>

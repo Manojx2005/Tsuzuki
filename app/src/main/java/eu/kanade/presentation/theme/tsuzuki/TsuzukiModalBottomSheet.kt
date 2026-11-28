@@ -33,18 +33,16 @@ import kotlinx.coroutines.withContext
 /** Sheet-only scheme: Material3 uses defaultSpatial for show/settle and fastEffects for hide. */
 private class SheetMotionScheme(
     private val base: MotionScheme,
-    private val dot: Boolean,
     private val reduced: Boolean,
 ) : MotionScheme by base {
     override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = when {
         reduced -> snap()
-        dot -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.Enter)
-        else -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.Spring)
+        // Motion system (SM4, owner 2026-11-28): sheets move alike in Dot and Colour; Colour's spring is gone.
+        else -> tween(TsuzukiMotion.SHEET_MS, easing = TsuzukiMotion.Enter)
     }
 
     override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = when {
         reduced -> snap()
-        dot -> tween(200, easing = TsuzukiMotion.Exit)
         else -> tween(200, easing = TsuzukiMotion.Exit)
     }
 }
@@ -65,9 +63,8 @@ fun TsuzukiModalBottomSheet(
 ) {
     val reduced = rememberReduceMotion()
     val currentReduced by rememberUpdatedState(reduced)
-    val dot = TsuzukiTheme.tokens.isDot
     val base = MaterialTheme.motionScheme
-    val scheme = remember(base, dot, reduced) { SheetMotionScheme(base, dot, reduced) }
+    val scheme = remember(base, reduced) { SheetMotionScheme(base, reduced) }
     val scope = rememberCoroutineScope()
     val alpha = remember { Animatable(if (reduced) 0f else 1f) }
     var closing by remember { mutableStateOf(false) }

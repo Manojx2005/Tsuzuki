@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SM5: the screen left behind when the reader / player opens — grows 1 -> 1.05 over 300 ms (Enter), gone in 90 ms. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shareInterpolator="true" android:interpolator="@interpolator/tsuzuki_standard">
-    <alpha android:duration="300" android:fromAlpha="1" android:toAlpha="0" />
-    <scale android:duration="300" android:fromXScale="1" android:toXScale="1.03"
-        android:fromYScale="1" android:toYScale="1.03"
-        android:pivotX="50%p" android:pivotY="85%p" />
+    android:shareInterpolator="false">
+    <alpha android:duration="90" android:fromAlpha="1" android:toAlpha="0"
+        android:interpolator="@android:anim/linear_interpolator" />
+    <scale android:duration="300" android:fromXScale="1" android:toXScale="1.05"
+        android:fromYScale="1" android:toYScale="1.05"
+        android:pivotX="50%p" android:pivotY="50%p"
+        android:interpolator="@interpolator/tsuzuki_enter" />
 </set>

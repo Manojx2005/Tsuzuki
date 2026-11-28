@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SM5: reader / player closing — shrinks 1 -> 0.92 and fades out over 250 ms (Exit), centre pivot. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shareInterpolator="true" android:interpolator="@interpolator/tsuzuki_standard">
-    <alpha android:duration="300" android:fromAlpha="1" android:toAlpha="0" />
-    <scale android:duration="300" android:fromXScale="1" android:toXScale="0.94"
-        android:fromYScale="1" android:toYScale="0.94"
-        android:pivotX="50%p" android:pivotY="85%p" />
+    android:interpolator="@interpolator/tsuzuki_exit"
+    android:shareInterpolator="true">
+    <alpha android:duration="250" android:fromAlpha="1" android:toAlpha="0" />
+    <scale android:duration="250" android:fromXScale="1" android:toXScale="0.92"
+        android:fromYScale="1" android:toYScale="0.92"
+        android:pivotX="50%p" android:pivotY="50%p" />
 </set>

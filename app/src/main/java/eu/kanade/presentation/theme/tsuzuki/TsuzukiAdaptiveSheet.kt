@@ -45,10 +45,8 @@ fun TsuzukiAdaptiveSheet(
         return
     }
     val reduced = rememberReduceMotion()
-    val enter = tsuzukiTween<Float>(
-        TsuzukiMotion.SHEET_MS,
-        if (TsuzukiTheme.tokens.isDot) TsuzukiMotion.Enter else TsuzukiMotion.Spring,
-    )
+    // Motion system (SM4, owner 2026-11-28): the same Enter curve in Dot and Colour.
+    val enter = tsuzukiTween<Float>(TsuzukiMotion.SHEET_MS, TsuzukiMotion.Enter)
     val exit = tsuzukiTween<Float>(200, TsuzukiMotion.Exit)
     val progress = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()

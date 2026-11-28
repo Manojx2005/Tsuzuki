@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SM5: the screen coming back when the reader / player closes — 1.05 -> 1 and fades in, 250 ms (mirror of open). -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shareInterpolator="true" android:interpolator="@interpolator/tsuzuki_standard">
-    <alpha android:duration="300" android:fromAlpha="0" android:toAlpha="1" />
-    <scale android:duration="300" android:fromXScale="1.03" android:toXScale="1"
-        android:fromYScale="1.03" android:toYScale="1"
-        android:pivotX="50%p" android:pivotY="85%p" />
+    android:interpolator="@interpolator/tsuzuki_enter"
+    android:shareInterpolator="true">
+    <alpha android:duration="250" android:fromAlpha="0" android:toAlpha="1" />
+    <scale android:duration="250" android:fromXScale="1.05" android:toXScale="1"
+        android:fromYScale="1.05" android:toYScale="1"
+        android:pivotX="50%p" android:pivotY="50%p" />
 </set>
