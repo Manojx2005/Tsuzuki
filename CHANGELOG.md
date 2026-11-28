@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Anime: Play with lets episodes open in another video app (MX Player, VLC, mpv and others) or ask each time;
   where you stop there is saved as your progress.
 
+### Fixed
+- Starting or resuming an anime episode no longer flashes a still frame before playing, and resuming starts
+  sooner (from the nearest keyframe).
+
 ## [0.2.3] - 2026-11-28
 
 ### Added
