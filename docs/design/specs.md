@@ -52,7 +52,8 @@ Motion everywhere, from board `MotionSpec`:
   - 200 ms: toggles, chips and tab pills.
   - 300 ms: sheets, nav and tile expand.
   - 400 ms: stack shuffle and page turn.
-  - 450 ms: shared cover into the reader and return navigation. Owner 2026-11-14:
+  - 300 ms (owner 2026-11-28, was 450 ms: "feels slow"): reader/player open and close, and return
+    navigation. Owner 2026-11-14:
     opening book details has a 300 ms total budget; its synchronized cover/fade uses
     200 ms, reserving 100 ms for navigation and composition. Device verification pending.
   - 600 ms: the theme switch reveal.
