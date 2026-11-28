@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.extension.details
 
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.MR
 import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
@@ -140,8 +142,8 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
 
         val reverseChapterPref = SwitchPreferenceCompat(requireContext()).apply {
             key = "reverse_chapter_list_$sourceId"
-            title = "Reverse chapter list"
-            summary = "Reverse the order of chapters fetched from this source"
+            title = context.stringResource(MR.strings.tsz_reverse_chapter_list)
+            summary = context.stringResource(MR.strings.tsz_reverse_chapter_list_summary)
             isIconSpaceReserved = false
             isSingleLineTitle = false
 

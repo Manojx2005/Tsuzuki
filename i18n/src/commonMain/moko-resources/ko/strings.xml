@@ -1716,4 +1716,6 @@
     <string name="tsz_accent_swatch_white">화이트</string>
     <string name="tsz_a11y_page_of">%2$d개 중 %1$d번째</string>
     <string name="tsz_a11y_current_step">현재 단계</string>
+    <string name="tsz_reverse_chapter_list">챕터 목록 뒤집기</string>
+    <string name="tsz_reverse_chapter_list_summary">이 소스에서 가져온 챕터의 순서를 뒤집습니다</string>
 </resources>
