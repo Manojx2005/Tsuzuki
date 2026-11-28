@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.tsuzuki.reader
 
 import android.content.Context
 import android.util.AtomicFile
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.data.download.ChapterContentReader
 import eu.kanade.tachiyomi.data.download.DownloadProvider
@@ -13,6 +14,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -25,10 +28,11 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.IOException
+import kotlin.math.roundToInt
 import kotlin.time.Clock
 
 internal class NovelRecapSession(
-    context: Context,
+    private val context: Context,
     downloadProvider: DownloadProvider,
     private val historyFor: suspend (Long) -> List<History> = { Injekt.get<GetHistory>().await(it) },
 ) {
@@ -37,20 +41,70 @@ internal class NovelRecapSession(
 
     @Volatile private var recap: NovelRecap? = null
 
+    /** A chapter reopened mid-way: waiting for its text so the recap can come from just before the resume point. */
+    private class PendingResume(val chapterId: Long, val progress: Float, val fallback: List<String>)
+
+    @Volatile private var pendingResume: PendingResume? = null
+    private val resumeOverlay = MutableStateFlow<NovelRecap?>(null)
+
+    /** The recap to float over the reader when the chapter resumed past its top. */
+    val overlay: StateFlow<NovelRecap?> get() = resumeOverlay
+
     fun forChapter(chapterId: Long?): NovelRecap? = recap?.takeIf { it.chapterId == chapterId }
 
     fun dismiss(chapterId: Long) {
         if (recap?.chapterId == chapterId) recap = null
+        if (pendingResume?.chapterId == chapterId) pendingResume = null
+        resumeOverlay.value = resumeOverlay.value?.takeIf { it.chapterId != chapterId }
     }
 
-    /** Called before the novel reader stamps its new history entry, on IO. */
-    suspend fun prepare(manga: Manga, chapterId: Long, previous: ReaderChapter, source: Source) {
+    /** Debug builds only: `run-as <app id> touch cache/force-recap` makes the 24 hour rule true. */
+    private fun forcedForTesting() = BuildConfig.DEBUG && File(context.cacheDir, "force-recap").exists()
+
+    /**
+     * The chapter's raw text, once a viewer has it. For a resumed chapter this is when the overlay recap is
+     * built: the prose just before the restored position, or the previous chapter's excerpt when that
+     * position is still in the opening paragraphs.
+     */
+    fun onChapterContent(chapterId: Long, content: String) {
+        val pending = pendingResume?.takeIf { it.chapterId == chapterId } ?: return
+        pendingResume = null
+        val paragraphs = try {
+            novelRecapParagraphsBefore(content, pending.progress).ifEmpty { pending.fallback }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            pending.fallback
+        }
+        if (paragraphs.isNotEmpty()) {
+            resumeOverlay.value =
+                NovelRecap(chapterId, paragraphs, (pending.progress * 100).roundToInt())
+        }
+    }
+
+    /**
+     * Called before the novel reader stamps its new history entry, on IO. [entryProgress] is the position
+     * the viewers will restore (0 for a fresh open); [previous] is null for the first chapter.
+     */
+    suspend fun prepare(
+        manga: Manga,
+        chapterId: Long,
+        previous: ReaderChapter?,
+        source: Source,
+        entryProgress: Float = 0f,
+    ) {
         try {
             val history = historyFor(manga.id)
             val lastRead = history.mapNotNull { it.readAt?.time }.maxOrNull()
-            if (!shouldShowNovelRecap(lastRead, Clock.System.now().toEpochMilliseconds())) return
-
-            val previousModel = previous.chapter.toDomainChapter() ?: return
+            val due = shouldShowNovelRecap(lastRead, Clock.System.now().toEpochMilliseconds()) || forcedForTesting()
+            val mode = novelRecapMode(due, entryProgress)
+            if (mode == NovelRecapMode.None) return
+            val resume = mode == NovelRecapMode.ResumeOverlay
+            val previousModel = previous?.chapter?.toDomainChapter()
+            if (previous == null || previousModel == null) {
+                if (resume) pendingResume = PendingResume(chapterId, entryProgress, emptyList())
+                return
+            }
             val cached = readExcerpt(manga.id, previousModel.id)
             val paragraphs = cached ?: run {
                 val content = previous.pages?.firstNotNullOfOrNull { it.text }
@@ -64,9 +118,12 @@ internal class NovelRecapSession(
                     ?: fetchFromSource(previous, source)
                 content?.let(::novelRecapParagraphs).orEmpty()
             }
-            if (paragraphs.isEmpty()) return
-            recap = NovelRecap(chapterId, paragraphs)
-            if (cached == null) {
+            if (resume) {
+                pendingResume = PendingResume(chapterId, entryProgress, paragraphs)
+            } else if (paragraphs.isNotEmpty()) {
+                recap = NovelRecap(chapterId, paragraphs)
+            }
+            if (paragraphs.isNotEmpty() && cached == null) {
                 try {
                     writeExcerpt(manga.id, previousModel.id, paragraphs)
                 } catch (e: CancellationException) {

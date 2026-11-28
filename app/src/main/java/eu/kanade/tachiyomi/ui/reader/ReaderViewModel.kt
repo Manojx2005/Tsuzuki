@@ -422,9 +422,13 @@ class ReaderViewModel @JvmOverloads constructor(
 
                 val chapter = chapterList.first { chapterId == it.chapter.id }
                 if (manga.isNovel && readerPreferences.novelChapterRecap.get() && !incognitoMode) {
-                    novelRecapPreviousChapter(manga)?.let { previous ->
-                        novelRecap.prepare(manga, chapterId, previous, source)
-                    }
+                    val entryProgress = eu.kanade.tachiyomi.tsuzuki.reader.novelEntryProgress(
+                        chapter.chapter.last_page_read,
+                        chapter.chapter.read,
+                        libraryPreferences.novelReadProgress100.get(),
+                        enteredViaPrevious = false,
+                    )
+                    novelRecap.prepare(manga, chapterId, novelRecapPreviousChapter(manga), source, entryProgress)
                 }
                 loadChapter(loader!!, chapter)
             } catch (e: Throwable) {
@@ -1084,6 +1088,7 @@ class ReaderViewModel @JvmOverloads constructor(
         viewModelScope.launch(Dispatchers.Default) { novelEstimates.cacheWords(chapterId, content) }
         if (readerPreferences.novelChapterRecap.get()) {
             viewModelScope.launch(Dispatchers.IO) { novelRecap.cacheExcerpt(mangaId, chapterId, content) }
+            viewModelScope.launch(Dispatchers.Default) { novelRecap.onChapterContent(chapterId, content) }
         }
     }
 
@@ -1098,6 +1103,8 @@ class ReaderViewModel @JvmOverloads constructor(
         if (readerPreferences.novelChapterRecap.get()) novelRecap.forChapter(chapterId) else null
 
     internal fun dismissNovelRecap(chapterId: Long) = novelRecap.dismiss(chapterId)
+
+    internal val novelResumeRecap get() = novelRecap.overlay
 
     internal fun noteNovelReadingProgress(page: ReaderPage, progress: Int, listening: Boolean) {
         if (incognitoMode) return

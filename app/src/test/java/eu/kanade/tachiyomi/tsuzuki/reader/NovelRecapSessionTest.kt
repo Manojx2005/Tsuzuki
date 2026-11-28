@@ -113,6 +113,74 @@ class NovelRecapSessionTest {
     }
 
     @Test
+    fun resumedChapterGetsAnOverlayFromTheTextBeforeThePosition() = runTest {
+        withColdCache {
+            val source = mockk<LocalNovelSource>()
+            val chapter = chapter()
+            val page = Page(0, url = "local")
+            val previousFirst = "The archivist lowered the ledger onto the table."
+            val previousSecond = "She heard the bells ring from the locked tower."
+            coEvery { source.getPageList(chapter.chapter) } returns listOf(page)
+            coEvery { source.fetchPageText(page) } returns "$previousFirst\n\n$previousSecond"
+            val session = session()
+            val current = listOf(
+                "A light came on in the window above the gate.",
+                "The stranger stepped out into the rain without a word.",
+                "Morning came grey and quiet over the sleeping harbour.",
+                "Nobody on the quay remembered the stranger's face.",
+            )
+
+            session.prepare(Manga.create().copy(id = 1), 3, chapter, source, entryProgress = 0.8f)
+
+            // Nothing is injected above the text; the overlay waits for the chapter's own text.
+            assertEquals(null, session.forChapter(3))
+            assertEquals(null, session.overlay.value)
+            session.onChapterContent(3, current.joinToString("") { "<p>$it</p>" })
+            assertEquals(current.take(3), session.overlay.value?.paragraphs)
+            assertEquals(80, session.overlay.value?.resumePercent)
+            session.dismiss(3)
+            assertEquals(null, session.overlay.value)
+        }
+    }
+
+    @Test
+    fun resumeInTheOpeningParagraphsFallsBackToThePreviousChapter() = runTest {
+        withColdCache {
+            val source = mockk<LocalNovelSource>()
+            val chapter = chapter()
+            val page = Page(0, url = "local")
+            val first = "The archivist lowered the ledger onto the table."
+            val second = "She heard the bells ring from the locked tower."
+            coEvery { source.getPageList(chapter.chapter) } returns listOf(page)
+            coEvery { source.fetchPageText(page) } returns "$first\n\n$second"
+            val session = session()
+
+            session.prepare(Manga.create().copy(id = 1), 3, chapter, source, entryProgress = 0.05f)
+            session.onChapterContent(3, "<p>Only one opening paragraph is long enough here.</p><p>Short.</p>")
+
+            assertEquals(listOf(first, second), session.overlay.value?.paragraphs)
+        }
+    }
+
+    @Test
+    fun resumedFirstChapterWithNoPreviousStillGetsAnOverlay() = runTest {
+        withColdCache {
+            val session = session()
+            val text = listOf(
+                "A light came on in the window above the gate.",
+                "The stranger stepped out into the rain without a word.",
+                "Morning came grey and quiet over the sleeping harbour.",
+                "Nobody on the quay remembered the stranger's face.",
+            )
+
+            session.prepare(Manga.create().copy(id = 1), 3, null, mockk(), entryProgress = 0.6f)
+            session.onChapterContent(3, text.joinToString("\n\n"))
+
+            assertEquals(text.take(2), session.overlay.value?.paragraphs)
+        }
+    }
+
+    @Test
     fun localFetchCancellationPropagates() {
         assertThrows(CancellationException::class.java) {
             runTest {

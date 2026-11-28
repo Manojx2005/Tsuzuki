@@ -29,6 +29,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -88,6 +89,7 @@ import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySelection
 import eu.kanade.presentation.tsuzuki.dictionary.ReaderDictionarySheet
 import eu.kanade.presentation.tsuzuki.novel.novelReaderChapterLabel
+import eu.kanade.presentation.tsuzuki.reader.NovelResumeRecapOverlay
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiAdjacentNavigation
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReaderChromeRequests
 import eu.kanade.presentation.tsuzuki.reader.TsuzukiReadingEstimateLabel
@@ -496,6 +498,25 @@ class ReaderActivity : BaseActivity() {
             }
 
             ContentOverlay(state = state)
+
+            NovelResumeRecapOverlay(
+                activity = this@ReaderActivity,
+                viewModel = viewModel,
+                state = state,
+                preferences = readerPreferences,
+                insets = with(density) {
+                    PaddingValues(
+                        start = novelSystemInsets.left.toDp(),
+                        top = novelSystemInsets.top.toDp() +
+                            if (isNovelMode && novelStatusBarEnabled && !statusBarAtBottomEdge) {
+                                statusBarHeightPx.toDp()
+                            } else {
+                                0.dp
+                            },
+                        end = novelSystemInsets.right.toDp(),
+                    )
+                },
+            )
 
             val statusBarAtBottom = novelStatusBarPosition != "top"
             val ttsOverlayBottomPadding = if (
