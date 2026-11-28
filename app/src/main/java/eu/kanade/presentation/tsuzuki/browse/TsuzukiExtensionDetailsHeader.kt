@@ -62,7 +62,7 @@ fun TsuzukiExtensionDetailsHeader(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Row(
-            Modifier.clickable {
+            Modifier.clickable(role = Role.Button) {
                 context.copyToClipboard("Extension Debug information", extensionDebugInfo(extension))
             },
             verticalAlignment = Alignment.CenterVertically,

@@ -1707,4 +1707,12 @@
     <string name="tsz_str6_tl_hint_default">粘贴你的令牌</string>
     <string name="tsz_str6_tl_extract_failed">无法从输入中提取认证值</string>
     <string name="tsz_str6_tl_use">使用</string>
+    <string name="tsz_accent_swatch_gold">金色</string>
+    <string name="tsz_accent_swatch_amber">琥珀色</string>
+    <string name="tsz_accent_swatch_coral">珊瑚色</string>
+    <string name="tsz_accent_swatch_rose">玫瑰色</string>
+    <string name="tsz_accent_swatch_violet">紫罗兰色</string>
+    <string name="tsz_accent_swatch_sky">天蓝色</string>
+    <string name="tsz_accent_swatch_mint">薄荷色</string>
+    <string name="tsz_accent_swatch_white">白色</string>
 </resources>

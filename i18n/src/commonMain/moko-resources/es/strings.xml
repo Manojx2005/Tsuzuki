@@ -1694,4 +1694,12 @@
     <string name="tsz_str6_tl_hint_default">Pega tu token</string>
     <string name="tsz_str6_tl_extract_failed">No se pudo extraer el valor de autenticación de lo introducido</string>
     <string name="tsz_str6_tl_use">Usar</string>
+    <string name="tsz_accent_swatch_gold">Dorado</string>
+    <string name="tsz_accent_swatch_amber">Ámbar</string>
+    <string name="tsz_accent_swatch_coral">Coral</string>
+    <string name="tsz_accent_swatch_rose">Rosa</string>
+    <string name="tsz_accent_swatch_violet">Violeta</string>
+    <string name="tsz_accent_swatch_sky">Celeste</string>
+    <string name="tsz_accent_swatch_mint">Menta</string>
+    <string name="tsz_accent_swatch_white">Blanco</string>
 </resources>

@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import eu.kanade.presentation.components.dialogProperties
@@ -79,14 +81,13 @@ fun TsuzukiAdaptiveSheet(
     Dialog(onDismissRequest = { close(onDismissRequest) }, properties = dialogProperties) {
         BackHandler { close(onDismissRequest) }
         Box(
-            Modifier.fillMaxSize().clickable(interactionSource = null, indication = null) {
-                close(onDismissRequest)
-            },
+            // A11Y1: tap detectors instead of clickable, so TalkBack sees the sheet, not a screen-sized button.
+            Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { close(onDismissRequest) } },
             contentAlignment = Alignment.Center,
         ) {
             Surface(
                 modifier = Modifier.requiredWidthIn(max = 460.dp)
-                    .clickable(interactionSource = null, indication = null, onClick = {})
+                    .pointerInput(Unit) { detectTapGestures { } }
                     .systemBarsPadding().padding(vertical = 16.dp)
                     .graphicsLayer {
                         alpha = progress.value.coerceIn(0f, 1f)

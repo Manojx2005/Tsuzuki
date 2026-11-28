@@ -1707,4 +1707,12 @@
     <string name="tsz_str6_tl_hint_default">Token einfügen</string>
     <string name="tsz_str6_tl_extract_failed">Aus der Eingabe konnte kein Authentifizierungswert gelesen werden</string>
     <string name="tsz_str6_tl_use">Verwenden</string>
+    <string name="tsz_accent_swatch_gold">Gold</string>
+    <string name="tsz_accent_swatch_amber">Bernstein</string>
+    <string name="tsz_accent_swatch_coral">Koralle</string>
+    <string name="tsz_accent_swatch_rose">Rosa</string>
+    <string name="tsz_accent_swatch_violet">Violett</string>
+    <string name="tsz_accent_swatch_sky">Himmelblau</string>
+    <string name="tsz_accent_swatch_mint">Mint</string>
+    <string name="tsz_accent_swatch_white">Weiß</string>
 </resources>
