@@ -27,6 +27,18 @@ class NovelReadingColumnTest {
     }
 
     @Test
+    fun defaultPortraitTabletUsesModestGuttersInBothRenderers() {
+        val inset = novelColumnInsets(753, 16, 16, NOVEL_READING_WIDTH_DP)
+        assertEquals(NovelColumnInsets(0, 1), inset)
+        assertEquals(16, 16 + inset.left)
+        assertEquals(17, 16 + inset.right)
+        assertEquals(720, 753 - 32 - inset.left - inset.right)
+        val css = novelReadingColumnCss(16, 16, "paged", " !important")
+        assertTrue(css.contains("max-width: 720px"))
+        assertTrue(css.contains("min-width: 752px"))
+    }
+
+    @Test
     fun asymmetricUserMarginsStayOnTheirRespectiveSides() {
         val inset = novelColumnInsets(1200, 16, 80, 600)
         assertEquals(NovelColumnInsets(252, 252), inset)
