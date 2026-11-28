@@ -159,6 +159,9 @@ again — Voyager disposes it while details is open). Options to evaluate with a
 skipped under a pushed screen (memory cost), lighter Library first layout (grid item, anime row, header), defer the
 details teardown off the Back frame. Acceptance: Back median ≤ 33 ms in `release-gate.sh`, then lower its Back limit
 from 50 to 33.
+**Result (2026-11-28, done):** the bottom bar built every tab's `Tab.options` on each Library layout (~9 ms);
+`tsuzukiTabTitle()` returns the same titles without it. Back median 30 ms (twice), gate limit now 33 ms. The details
+teardown (~12 ms `onForgotten`) is still on the first Back frame.
 
 ## 4. Order and parallelism
 
