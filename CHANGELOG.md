@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Anime: Play with lets episodes open in another video app (MX Player, VLC, mpv and others) or ask each time;
   where you stop there is saved as your progress.
 
+### Changed
+- Opening and closing the reader and the video player, and going back, now take 300 ms instead of 450 ms.
+
 ### Fixed
 - Starting or resuming an anime episode no longer flashes a still frame before playing, and resuming starts
   sooner (from the nearest keyframe).
