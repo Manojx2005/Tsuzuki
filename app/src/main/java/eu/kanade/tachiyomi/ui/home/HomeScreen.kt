@@ -442,7 +442,11 @@ object HomeScreen : Screen() {
         return tabs.map { tab ->
             val destination = if (tab is NovelsTab) libraryTab else tab
             val selected = TsuzukiNavigation.selected(current) == tab
-            val label = if (tab is NovelsTab) stringResource(MR.strings.label_library) else tab.options.title
+            val label = if (tab is NovelsTab) {
+                stringResource(MR.strings.label_library)
+            } else {
+                eu.kanade.tachiyomi.ui.tsuzuki.navigation.tsuzukiTabTitle(tab)
+            }
             val icon = when (tab) {
                 is TsuzukiHomeTab -> Icons.Outlined.GridView
                 is NovelsTab -> Icons.AutoMirrored.Outlined.MenuBook
