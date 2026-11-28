@@ -9,8 +9,8 @@
 # (assets/dexopt/baseline.prof) in every Release APK and the source profile's Tsuzuki coverage; then, with a device,
 # a fresh-install smoothness run (release build installed as the claudeqa scratch package, bundled profile only):
 # book details open and Back x6 from Library > All and 6 flings of the details chapter list.
-# Thresholds (SM8): median longest UI frame <= 33 ms to open details and <= 50 ms for Back (Back measures 39-41 ms
-# on 2026-11-28: the Library is rebuilt after details is disposed — card SM9 brings it under 33 ms, then lower this);
+# Thresholds (SM8, SM9): median longest UI frame <= 33 ms to open details and for Back (Back measured 30 ms after
+# SM9 on 2026-11-28 — little margin, so a FAIL just over 33 ms is worth one rerun before treating it as a regression);
 # chapter-list flings <= 2 % of frames over 16.7 ms. A miss prints FAIL and the script exits 1: do not tag unless the owner waives it.
 # The device run needs a library whose first book in Library > All has a long chapter list (S22 claudeqa has one).
 set -uo pipefail
@@ -85,7 +85,7 @@ import re, statistics, sys
 rows = [l for l in open(sys.argv[1], encoding='utf-8') if ':' in l]
 def ui(label): return [int(m) for l in rows if l.startswith(label) for m in re.findall(r'maxUI=(\d+)ms', l)]
 bad = 0
-for label, limit in (('open', 33), ('back', 50)):
+for label, limit in (('open', 33), ('back', 33)):
     v = ui(label)
     if not v: print(f'FAIL no {label} samples'); bad = 1; continue
     med = statistics.median(v)

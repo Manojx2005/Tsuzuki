@@ -85,3 +85,17 @@ internal fun libraryMediaTransition(
 } else {
     null
 }
+
+/**
+ * SM9 (2026-11-28): the Tsuzuki bar draws its own icons and needs only the title, but `Tab.options` inflates each
+ * tab's animated-vector icon (2–3.5 ms per tab, Perfetto), and the bar is rebuilt on every Back. Titles come straight
+ * from the same strings the tabs use.
+ */
+@Composable
+internal fun tsuzukiTabTitle(tab: cafe.adriel.voyager.navigator.tab.Tab): String = when (tab) {
+    is TsuzukiHomeTab -> tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.tsz_home)
+    is UpdatesTab -> tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.label_recent_updates)
+    is BrowseTab -> tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.browse)
+    is MoreTab -> tachiyomi.presentation.core.i18n.stringResource(tachiyomi.i18n.MR.strings.label_more)
+    else -> tab.options.title
+}
