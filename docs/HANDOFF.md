@@ -77,7 +77,7 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 | SM0 | Measurement kit in `scripts/perf/` (release-as-claudeqa build, jank, frames, strip, Perfetto trace) | Claude | **`done`** (`b3fb860d4`) |
 | SM1 | Baseline + startup profile covering Tsuzuki journeys J1–J8; release-gate step | Claude (devices) | `claude-working` — profiles merged (Tsuzuki rules 347 → 3,067 baseline, 248 → 1,192 startup); tabs/Settings journey and fresh-install measurement wait for the Device lock |
 | SM2 | Navigation motion starts after the next screen's first frame | Claude/Codex | **`done` — no-go, accepted** (Claude review 2026-11-28; current transition kept; branch holds only the result) |
-| SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex | `claude-working` (owner 2026-11-28: Claude finishes the Codex cards; Codex thread stopped at 16:19 with uncommitted work in `.worktrees/sm3`) |
+| SM3 | Lighter first frames: book/anime details header, chip rows, reader sheets, grid item | Codex → Claude | **`done`** (merged 2026-11-28; Codex work + Claude fix, see SM3 Result) |
 | SM4 | Motion system board: shared-axis nav, predictive Back, one curve family | Claude (owner approval) | **`done` — owner approved 2026-11-28**; values in `specs.md` §Motion and `boards/motion-2026-11/README.md` — https://claude.ai/artifact/BsV5GpMxfMVQ4ku4KHEg2r (5 live artboards: tokens/rules, nav shared axis X, predictive Back, tabs/media/sheets, reader/player shared axis Z; Dot/Colour and ¼× speed tweaks) |
 | SM5 | Implement the motion system | Claude/Codex | `claude-working` (2026-11-28): **part 1 on `tsuzuki/sm5`** (reader/player shared axis Z, sheets on the Enter curve in both themes; builds, 1,524 app tests) — device check waits for the Device lock; part 2 (navigation X + predictive Back) after SM3 merges (SM3 edits `TsuzukiSharedCover.kt`); menus still use Material's own 120 ms fade/scale, close to the spec's 150 ms |
 | SM6 | Pop-in audit + fixes across J1–J8 | Codex | `ready` |
@@ -87,6 +87,30 @@ plan, measurements, tools and acceptance: `docs/SMOOTHNESS_PLAN.md`.** Measure o
 Codex prompt: `Read AGENTS.md, docs/HANDOFF.md ("Batch SM") and docs/SMOOTHNESS_PLAN.md. Take the first SM card
 marked ready for your lane, measure with scripts/perf before and after on a release build, commit on
 tsuzuki/<card>, fill the Result, set review. Device use only under the Device lock rule.`
+
+### SM3 Result (Codex implementation, finished by Claude, 2026-11-28)
+
+The Codex thread stopped at 16:19 with uncommitted work in `.worktrees/sm3`; at the owner's request Claude committed
+it unchanged (`c008994a1`, to preserve it), then reverted one part (`ad0f26c97`): the resume tile picked the next
+unread chapter from the *filtered* list, so a downloaded-only filter would skip the real next chapter — a behaviour
+change, not a speed-up. Kept: cached backdrop gradients (book `MangaInfoHeader.kt`, anime header), genre chips
+composed only until two rows are full (`TsuzukiDetailsDescription.kt`), reader text metrics skip
+`BoxWithConstraints` outside the quick panel, the page colour picker reads custom colours only when shown, anime
+episode order computed lazily, and shared-cover reduced motion decided once per navigator instead of one settings
+observer per cover (`TsuzukiSharedCover.kt`). Builds; 1,524 app tests.
+
+S22 release `claudeqa` (base `e42c5703d`, the same base as Codex's SM2 baseline), Dot, Library › All, the same
+3,956-chapter novel, 1 warm-up + 6 runs, median / worst:
+
+| | Baseline (SM2 table) | SM3 |
+|---|---:|---:|
+| Open longest UI | 30.8 / 59.1 ms | 23 / 35 ms |
+| Back longest UI | 80.2 / 92.2 ms | 46.5 / 61 ms |
+| Back UI in first 150 ms | 94.9 / 97.1 ms | 68 / 79 ms |
+| Back frames > 16.7 ms | 4 / 5 | 2 / 3 |
+
+Caveat: the baseline is Codex's session, not an interleaved A/B; the Back gain (~40 %) is well outside the run
+spread. Colour not measured.
 
 ### SM2 Result (Codex, 2026-11-28)
 
