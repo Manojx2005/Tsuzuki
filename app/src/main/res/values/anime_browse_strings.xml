@@ -59,4 +59,5 @@
     <string name="tsz_local_anime_on_device">On this device</string>
     <string name="tsz_local_anime_empty">No videos yet</string>
     <string name="tsz_local_anime_empty_hint">Put each show in its own folder here:</string>
+    <string name="tsz_anime_trackers">Anime trackers</string>
 </resources>

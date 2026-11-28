@@ -1933,4 +1933,6 @@
     <string name="tsz_accent_swatch_white">ホワイト</string>
     <string name="tsz_a11y_page_of">%2$d件中%1$d件目</string>
     <string name="tsz_a11y_current_step">現在のステップ</string>
+    <string name="tsz_reverse_chapter_list">章の順番を逆にする</string>
+    <string name="tsz_reverse_chapter_list_summary">このソースから取得した章を逆順に並べます</string>
 </resources>

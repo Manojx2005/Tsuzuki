@@ -59,4 +59,5 @@
     <string name="tsz_local_anime_on_device">Auf diesem Gerät</string>
     <string name="tsz_local_anime_empty">Noch keine Videos</string>
     <string name="tsz_local_anime_empty_hint">Lege jede Serie in einen eigenen Ordner hier:</string>
+    <string name="tsz_anime_trackers">Anime-Tracker</string>
 </resources>

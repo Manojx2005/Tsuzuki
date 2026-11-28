@@ -502,7 +502,9 @@ private fun ExtensionItemContent(
                     hasAlreadyShownAnElement = true
                     Text(
                         text = "JS",
-                        color = Color.Yellow,
+                        // V8.7: the theme accent in Tsuzuki themes (Dot keeps red as its only accent).
+                        color = tachiyomi.presentation.core.theme.LocalActiveColor.current
+                            .takeIf { it != Color.Unspecified } ?: Color.Yellow,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                     )
                 }

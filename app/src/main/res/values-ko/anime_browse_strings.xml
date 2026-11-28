@@ -58,4 +58,5 @@
     <string name="tsz_local_anime_on_device">이 기기</string>
     <string name="tsz_local_anime_empty">아직 동영상이 없습니다</string>
     <string name="tsz_local_anime_empty_hint">작품마다 폴더를 만들어 여기에 넣으세요:</string>
+    <string name="tsz_anime_trackers">애니메이션 트래커</string>
 </resources>

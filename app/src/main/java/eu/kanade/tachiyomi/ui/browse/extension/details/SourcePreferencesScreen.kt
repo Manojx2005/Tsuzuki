@@ -39,8 +39,10 @@ import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
@@ -140,8 +142,8 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
 
         val reverseChapterPref = SwitchPreferenceCompat(requireContext()).apply {
             key = "reverse_chapter_list_$sourceId"
-            title = "Reverse chapter list"
-            summary = "Reverse the order of chapters fetched from this source"
+            title = context.stringResource(MR.strings.tsz_reverse_chapter_list)
+            summary = context.stringResource(MR.strings.tsz_reverse_chapter_list_summary)
             isIconSpaceReserved = false
             isSingleLineTitle = false
 

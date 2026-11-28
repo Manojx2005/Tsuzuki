@@ -1704,4 +1704,6 @@
     <string name="tsz_accent_swatch_white">Blanco</string>
     <string name="tsz_a11y_page_of">Página %1$d de %2$d</string>
     <string name="tsz_a11y_current_step">Paso actual</string>
+    <string name="tsz_reverse_chapter_list">Invertir lista de capítulos</string>
+    <string name="tsz_reverse_chapter_list_summary">Invierte el orden de los capítulos obtenidos de esta fuente</string>
 </resources>
