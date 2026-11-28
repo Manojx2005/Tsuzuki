@@ -1714,4 +1714,6 @@
     <string name="tsz_accent_swatch_sky">스카이</string>
     <string name="tsz_accent_swatch_mint">민트</string>
     <string name="tsz_accent_swatch_white">화이트</string>
+    <string name="tsz_a11y_page_of">%2$d개 중 %1$d번째</string>
+    <string name="tsz_a11y_current_step">현재 단계</string>
 </resources>

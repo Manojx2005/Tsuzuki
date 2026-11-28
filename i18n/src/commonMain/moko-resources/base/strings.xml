@@ -2091,4 +2091,6 @@
     <string name="tsz_accent_swatch_sky">Sky</string>
     <string name="tsz_accent_swatch_mint">Mint</string>
     <string name="tsz_accent_swatch_white">White</string>
+    <string name="tsz_a11y_page_of">Page %1$d of %2$d</string>
+    <string name="tsz_a11y_current_step">Current step</string>
 </resources>

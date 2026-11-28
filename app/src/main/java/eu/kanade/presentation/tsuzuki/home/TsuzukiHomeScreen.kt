@@ -59,6 +59,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -335,7 +337,12 @@ private fun PhoneHeroText(book: HomeBook, count: Int, activeIndex: Int, modifier
     val t = TsuzukiTheme.tokens
     Column(modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (count > 1) {
-            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            // A11Y1: the dots are drawn state only; TalkBack hears "page n of m" once for the row.
+            val position = stringResource(MR.strings.tsz_a11y_page_of, activeIndex + 1, count)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.clearAndSetSemantics { contentDescription = position },
+            ) {
                 repeat(count) { Pip(selected = it == activeIndex) }
             }
         }

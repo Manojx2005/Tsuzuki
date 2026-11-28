@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
@@ -209,8 +211,11 @@ internal fun TsuzukiCustomSourceSetup(
 private fun WizardStepRow(number: Int, step: SelectorWizardStep, first: Boolean) {
     val tokens = TsuzukiTheme.tokens
     val current = number == 1
+    val currentLabel = stringResource(MR.strings.tsz_a11y_current_step)
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = if (first) 0.dp else 14.dp),
+        // A11Y1: the current step is drawn in the accent only; say it too, and read the row as one item.
+        modifier = Modifier.fillMaxWidth().padding(top = if (first) 0.dp else 14.dp)
+            .semantics(mergeDescendants = true) { if (current) stateDescription = currentLabel },
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -1715,4 +1715,6 @@
     <string name="tsz_accent_swatch_sky">Himmelblau</string>
     <string name="tsz_accent_swatch_mint">Mint</string>
     <string name="tsz_accent_swatch_white">Weiß</string>
+    <string name="tsz_a11y_page_of">Seite %1$d von %2$d</string>
+    <string name="tsz_a11y_current_step">Aktueller Schritt</string>
 </resources>

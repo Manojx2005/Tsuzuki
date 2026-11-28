@@ -1715,4 +1715,6 @@
     <string name="tsz_accent_swatch_sky">天蓝色</string>
     <string name="tsz_accent_swatch_mint">薄荷色</string>
     <string name="tsz_accent_swatch_white">白色</string>
+    <string name="tsz_a11y_page_of">第 %1$d 页，共 %2$d 页</string>
+    <string name="tsz_a11y_current_step">当前步骤</string>
 </resources>

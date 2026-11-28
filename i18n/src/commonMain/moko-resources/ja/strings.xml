@@ -1931,4 +1931,6 @@
     <string name="tsz_accent_swatch_sky">スカイ</string>
     <string name="tsz_accent_swatch_mint">ミント</string>
     <string name="tsz_accent_swatch_white">ホワイト</string>
+    <string name="tsz_a11y_page_of">%2$d件中%1$d件目</string>
+    <string name="tsz_a11y_current_step">現在のステップ</string>
 </resources>
