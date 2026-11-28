@@ -16,8 +16,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   search, as for books.
 - Watch shows a preview card even before you have played anything: "Start watching" for the newest show in your
   library.
+- Anime player: the seek bar marks chapters and shows the current chapter's name. Skip intro also works from the
+  opening and ending times a source sends, without AniSkip; a new setting skips AniSkip when the video already has
+  chapters (on by default).
 
 ### Changed
+- The anime player is redesigned: a cleaner control layout with Speed, Lock, Episodes, Audio & subtitles and Next
+  episode along the bottom, an episodes side panel, one Audio & subtitles panel with a preview, a ±85 s skip, a
+  next-episode countdown and a "Resuming at" cover while the video catches up.
 - Anime episodes start much sooner when a source has a slow mirror: playback begins with the first good stream and
   the slower ones keep loading for the quality list and as a fallback.
 - More of the app is translated: the Library filter sheet, EPUB import, edit entry, mass import, advanced and
