@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.tsuzuki.anime.ui
 
 import android.app.PictureInPictureUiState
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,6 +18,7 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,8 +44,10 @@ import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerContent
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerModel
 import eu.kanade.tachiyomi.tsuzuki.anime.player.AnimePlayerPreferences
 import eu.kanade.tachiyomi.tsuzuki.anime.player.animeKeyAction
+import eu.kanade.tachiyomi.tsuzuki.anime.player.parseAnimeExternalResult
 import eu.kanade.tachiyomi.tsuzuki.anime.player.perform
 import eu.kanade.tachiyomi.tsuzuki.anime.player.runsOnDown
+import eu.kanade.tachiyomi.tsuzuki.anime.player.toIntent
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -63,6 +67,16 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
     private val audio by lazy { getSystemService(AudioManager::class.java) }
     private var session: AnimeMediaSession? = null
     private var started = false
+
+    /** A6.5: another app is playing the episode; kept across process death so it is not opened twice. */
+    private var externalOpen = false
+    private val externalPlayer = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        externalOpen = false
+        val extras = result.data?.extras
+        @Suppress("DEPRECATION")
+        model?.onExternalResult(extras?.let { bundle -> parseAnimeExternalResult { bundle.get(it) } })
+        finish()
+    }
 
     /** AY4: headphones unplugged or a Bluetooth headset dropped: pause, as every player does. */
     private val noisy = object : BroadcastReceiver() {
@@ -134,6 +148,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
             }
         }
         orientationLocked = savedInstanceState?.getBoolean(ORIENTATION_LOCKED) == true
+        externalOpen = savedInstanceState?.getBoolean(EXTERNAL_OPEN) == true
         applyOrientation()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         systemBars.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -148,6 +163,20 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
                 LaunchedEffect(pipControls) { pip?.update(pipControls) }
                 LaunchedEffect(state) { session?.update(state) }
                 LaunchedEffect(animeEnabled) { if (!animeEnabled) finish() }
+                LaunchedEffect(state.external) {
+                    val launch = state.external ?: return@LaunchedEffect
+                    if (externalOpen) return@LaunchedEffect
+                    externalOpen = true
+                    try {
+                        externalPlayer.launch(launch.toIntent(this@AnimePlayerActivity))
+                    } catch (e: ActivityNotFoundException) {
+                        AnimeLog.w("no app opens the video externally", e)
+                        externalOpen = false
+                        Toast.makeText(this@AnimePlayerActivity, R.string.tsz_anime_external_missing, Toast.LENGTH_LONG)
+                            .show()
+                        player.onExternalUnavailable()
+                    }
+                }
                 LaunchedEffect(state.playing, inPip) {
                     if (state.playing && !inPip) {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -339,6 +368,7 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
             outState.putBoolean(PAUSED, !player.shouldResume)
         }
         outState.putBoolean(ORIENTATION_LOCKED, orientationLocked)
+        outState.putBoolean(EXTERNAL_OPEN, externalOpen)
     }
 
     override fun onDestroy() {
@@ -358,5 +388,6 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         const val POSITION = "anime_position"
         const val PAUSED = "anime_paused"
         const val ORIENTATION_LOCKED = "anime_orientation_locked"
+        const val EXTERNAL_OPEN = "anime_external_open"
     }
 }

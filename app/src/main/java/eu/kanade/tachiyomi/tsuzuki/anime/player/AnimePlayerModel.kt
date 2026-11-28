@@ -97,6 +97,8 @@ internal data class AnimePlayerState(
     val hosters: List<AnimeHosterEntry> = emptyList(),
     /** AY4: mpv is waiting for data or a seek; [playing] stays true so the screen stays on. */
     val buffering: Boolean = false,
+    /** A6.5: the episode goes to another app ("Play with"); the activity starts it and reports back. */
+    val external: AnimeExternalLaunch? = null,
 ) {
     /**
      * The opening, ending or recap under the playhead. AniSkip segments only exist while AniSkip is on; a source's
@@ -128,6 +130,10 @@ internal class AnimePlayerModel(
     private val playerPreferences = AnimePlayerPreferences(preferences)
     private val quality = playerPreferences.quality
     private val autoplay = playerPreferences.autoplay
+    private val externalPlayer = playerPreferences.externalPlayer
+
+    /** A6.5: set once no app could open the video, so Tsuzuki plays this episode itself. */
+    private var externalUnavailable = false
     private val mutableState = MutableStateFlow(
         AnimePlayerState(autoplay = autoplay.get(), settings = playerPreferences.get()),
     )
@@ -651,6 +657,22 @@ internal class AnimePlayerModel(
 
     private fun queueVideo(video: Video) {
         cancelPendingLoad()
+        if (!externalUnavailable) {
+            val launch = animeExternalLaunch(
+                choice = AnimeExternalChoice.from(externalPlayer.get()),
+                url = video.videoUrl,
+                title = animeMediaTitle(state.value.title, state.value.episode?.name),
+                positionSeconds = state.value.position,
+                headers = video.headers?.toMap().orEmpty(),
+                subtitles = video.subtitleTracks.map { AnimeExternalLaunch.Subtitle(it.url, it.lang) },
+            )
+            if (launch != null) {
+                currentVideo = video
+                AnimeLog.i("external player ${launch.packageName ?: "chooser"} for ${describeAnimeVideo(video)}")
+                mutableState.update { it.copy(external = launch) }
+                return
+            }
+        }
         videoPreparation = viewModelScope.launch {
             val subtitles = prepareAnimeSubtitleTracks(video.subtitleTracks) { File(context.cacheDir, "anime-subs") }
             pendingLoad = PendingLoad(video, subtitles)
@@ -986,6 +1008,27 @@ internal class AnimePlayerModel(
                 logcat(LogPriority.WARN, e) { "Could not save anime preview capture" }
             }
         }
+    }
+
+    /** A6.5: the other app returned; save where it stopped (it may report nothing). */
+    fun onExternalResult(result: AnimeExternalResult?) {
+        val start = state.value.external?.positionMs?.div(1000.0) ?: 0.0
+        mutableState.update { it.copy(external = null) }
+        AnimeLog.i("external player returned ${result ?: "no position"}")
+        if (result == null || (request as? AnimePlayback.Request.Episode)?.track != true) return
+        val episodeId = state.value.episode?.id ?: return
+        val watched = (result.position - start).coerceIn(0.0, result.duration).toLong()
+        writes.trySend(
+            PlaybackWrite.Progress(episodeId, AnimePlaybackCheckpoint(result.position, result.duration, watched)),
+        )
+        writes.trySend(PlaybackWrite.RefreshWidget)
+    }
+
+    /** A6.5: no app could open the video; play it here instead. */
+    fun onExternalUnavailable() {
+        externalUnavailable = true
+        mutableState.update { it.copy(external = null) }
+        currentVideo?.let(::queueVideo)
     }
 
     private fun saveProgress() {

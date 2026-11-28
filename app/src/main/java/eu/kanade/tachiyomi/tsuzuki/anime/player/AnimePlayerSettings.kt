@@ -48,6 +48,9 @@ internal class AnimePlayerPreferences(private val store: PreferenceStore) {
     )
     val quality = store.getInt("tsuzuki_anime_player_quality", 0)
     val autoplay = store.getBoolean("tsuzuki_anime_player_autoplay", true)
+
+    /** A6.5 "Play with": "" Tsuzuki, "*" choose each time, else a package name; see [AnimeExternalChoice]. */
+    val externalPlayer = store.getString("tsuzuki_anime_player_external", "")
     val pictureInPicture = store.getBoolean("tsuzuki_anime_player_picture_in_picture", true)
     val preferredSubtitle = store.getString("tsuzuki_anime_player_subtitle", "")
     val preferredAudio = store.getString("tsuzuki_anime_player_audio", "")
