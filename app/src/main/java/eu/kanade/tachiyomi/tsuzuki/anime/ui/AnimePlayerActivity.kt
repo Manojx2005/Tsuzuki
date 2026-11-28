@@ -149,6 +149,8 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         }
         orientationLocked = savedInstanceState?.getBoolean(ORIENTATION_LOCKED) == true
         externalOpen = savedInstanceState?.getBoolean(EXTERNAL_OPEN) == true
+        // No enter animation runs after a recreation, and some launchers skip it: never wait longer than this.
+        window.decorView.postDelayed(::enterDone, if (savedInstanceState != null) 0L else ENTER_FALLBACK_MS)
         applyOrientation()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         systemBars.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -320,15 +322,44 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         }
     }
 
-    override fun surfaceCreated(holder: SurfaceHolder) {
+    /*
+     * Owner 2026-11-28: "stuck for 4-5 frames, then it starts". The window fades in on open, and the video layer sits
+     * below it, so mpv's first (still) frame showed through the resume cover until the fade ended. The surface goes
+     * to mpv only once the opening animation is over; the cover is up for that time anyway.
+     */
+    private var entered = false
+    private var waitingSurface: SurfaceHolder? = null
+    private var waitingSize: Pair<Int, Int>? = null
+
+    override fun onEnterAnimationComplete() {
+        super.onEnterAnimationComplete()
+        enterDone()
+    }
+
+    private fun enterDone() {
+        if (entered) return
+        entered = true
+        val holder = waitingSurface ?: return
+        waitingSurface = null
         model?.attach(holder.surface)
+        waitingSize?.let { (width, height) -> model?.resize(width, height) }
+        waitingSize = null
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        if (entered) model?.attach(holder.surface) else waitingSurface = holder
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        model?.resize(width, height)
+        if (entered) model?.resize(width, height) else waitingSize = width to height
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        if (waitingSurface === holder) {
+            waitingSurface = null
+            waitingSize = null
+            return
+        }
         model?.detach(closing = isFinishing)
     }
 
@@ -389,5 +420,6 @@ class AnimePlayerActivity : BaseActivity(), SurfaceHolder.Callback {
         const val PAUSED = "anime_paused"
         const val ORIENTATION_LOCKED = "anime_orientation_locked"
         const val EXTERNAL_OPEN = "anime_external_open"
+        const val ENTER_FALLBACK_MS = 700L
     }
 }
